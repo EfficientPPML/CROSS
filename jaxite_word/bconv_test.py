@@ -119,55 +119,6 @@ class BConvContextTest(parameterized.TestCase):
         out_0_b = _bconv.basis_change(in_tower_0_b, control_index=0) # 20 mod 17 -> 3 -> 3
         self.assertEqual(out_0_b[0,0,0], 3)
 
-    @absltest.skip("BConv requires changing modulus, which is incompatible with Shoup Format as it requires changing value representation.")
-    @parameterized.named_parameters(*TEST_PARAMS)
-    def test_shoup_context(self, partCtCloneCoef, original_moduli, target_moduli, QHatInvModq, QHatModp, reference_result):
-        """
-        Verifies that basis_change works with ShoupContext
-        """
-        key = jax.random.PRNGKey(0)
-        in_tower = jax.numpy.array(partCtCloneCoef, dtype=jnp.uint64).T
-        reference_result = jax.numpy.array(reference_result, dtype=jnp.uint64).T
-
-        overall_moduli = original_moduli + target_moduli
-        original_index = list(range(len(original_moduli)))
-        target_index = list(range(len(original_moduli), len(overall_moduli)))
-
-        _bconv = bconv.BConvShoup(overall_moduli)
-        _bconv.control_gen([(original_index, target_index)])
-
-        in_formatted = _bconv.ff_ctx_origin[0].to_computation_format(in_tower)
-        out_formatted = _bconv.basis_change(in_formatted)
-        out = _bconv.ff_ctx_target[0].to_original_format(out_formatted)
-        
-        np.testing.assert_array_equal(reference_result, out)
-
-    @absltest.skip("BConv requires changing modulus, which is incompatible with Montgomery Format as it requires changing value representation.")
-    @parameterized.named_parameters(*TEST_PARAMS)
-    def test_montgomery_context(self, partCtCloneCoef, original_moduli, target_moduli, QHatInvModq, QHatModp, reference_result):
-        """
-        Verifies that basis_change works with MontgomeryContext
-        """
-        key = jax.random.PRNGKey(0)
-        in_tower = jax.numpy.array(partCtCloneCoef, dtype=jnp.uint64).T
-        reference_result = jax.numpy.array(reference_result, dtype=jnp.uint64).T
-
-        overall_moduli = original_moduli + target_moduli
-        original_index = list(range(len(original_moduli)))
-        target_index = list(range(len(original_moduli), len(overall_moduli)))
-
-        _bconv = bconv.BConvMontgomery(overall_moduli)
-        _bconv.control_gen([(original_index, target_index)])
-        
-        # Montgomery context requires input in computation format
-        in_formatted = _bconv.ff_ctx_origin[0].to_computation_format(in_tower.astype(jnp.uint64))
-        # in_formatted_back = _bconv.ff_ctx_origin.to_original_format(in_formatted) # Removed redundant line
-        out_formatted = _bconv.basis_change(in_formatted)
-        out = _bconv.ff_ctx_target[0].to_original_format(out_formatted)
-
-        np.testing.assert_array_equal(reference_result, out)
-
-
 class BConvBATTest(absltest.TestCase):
     def setUp(self):
         super().setUp()

@@ -161,33 +161,6 @@ class HEMul:
     # ---------- Step 1: Rescale ----------
     self.ct_refer.set_batch_ciphertext(in_ciphertexts)
     temp_res = self.ct_refer.rescale()
-    ############## Do not remove following code ##############
-    # last_towers = in_ciphertexts[..., -1]
-    # self.ct_last_limb.set_batch_ciphertext(last_towers.astype(jnp.uint32))
-    # self.ct_last_limb.to_coeffs_form()
-    # self.ct_last_limb.modmul(self.power_of_last_tower_inv_psi)
-    # ct_last_limb_modred = self.ct_last_limb.get_batch_ciphertext().astype(jnp.uint32)[..., None]
-    # condition = ct_last_limb_modred < self.moduli_threshold
-    # result_if_lt_threshold = ct_last_limb_modred
-    # result_if_ge_threshold = jnp.array(self.drop_last_moduli, jnp.uint64) - self.last_tower_moduli + ct_last_limb_modred
-    # last_poly_switch_modulus_coef = jnp.where(
-    #     condition, result_if_lt_threshold, result_if_ge_threshold
-    # )
-    # last_poly_switch_modulus_coef_twisted = (
-    #     last_poly_switch_modulus_coef.astype(jnp.uint64) * self.gammas_power_of_psi_no_last
-    # )
-
-    # self.ct_obj.set_batch_ciphertext(last_poly_switch_modulus_coef_twisted)
-    # self.ct_obj.mod_reduce()
-    # self.ct_obj.to_ntt_form()
-    # mod_reduce_last_res_unreduced = self.ct_obj.get_batch_ciphertext()
-    # self.ct_obj.set_batch_ciphertext(in_ciphertexts[..., :-1])
-    # self.ct_obj.modmul(self.betas)
-    # new_coeff_mul_beta = self.ct_obj.get_batch_ciphertext().astype(jnp.uint32)
-    # temp2 = new_coeff_mul_beta.astype(jnp.uint64) + mod_reduce_last_res_unreduced.astype(jnp.uint64)
-    # temp_res = jnp.where ( temp2 > self.drop_last_moduli_arr, temp2 - self.drop_last_moduli_arr, temp2 )
-    # self.ct_obj.set_batch_ciphertext(temp_res)
-    ############## Do not remove above code ##############
     self.ct_obj.set_batch_ciphertext(temp_res.reshape(self.post_rescale_shape))
 
     # ---------- Step 2: Homomorphic multiplication core (inline) ----------
