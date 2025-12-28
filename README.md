@@ -222,6 +222,7 @@ Our mission is to build an open-sourced SoTA library for the community.
 - If you find this repository helpful, please consider giving it a star :)
 - For any questions, please feel free to open an issue.
 - For any suggestions or new features, please feel free to open a pull request.
+- Anything else, u email jianming.tong@gatech.edu
 
 ```
 @inproceedings{tong2025CROSS, 
