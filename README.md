@@ -1,4 +1,4 @@
-# CROSS: Enable AI Accelerator for Homomorphic Encryption [Paper](https://arxiv.org/abs/2501.07047)
+# CROSS: Enable AI Accelerator for Homomorphic Encryption [Paper](https://arxiv.org/pdf/2501.07047v3)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)  
 
 - For Artifact Evaluation, please navigate into the jaxite_word folder.
