@@ -5,7 +5,7 @@
 - Artifact Evaluation: please navigate to the jaxite_word folder.
 
 # 1. What is CROSS?
-CROSS is the first project to enable AI Accelerator, such as Google TPUs, to accelerate Homomorphic Encryption and achieves the State-of-the-art (SotA) Number Theory Transformation throughput, and SotA energy efficiency (performance per watt) among existing devices, as shown in the figure below.
+CROSS is the first project to enable AI Accelerator, such as Google TPUs, to accelerate Homomorphic Encryption and achieves the State-of-the-art (SotA) throughput and energy efficiency (performance per watt) in HE operators (e.g., HE-Multiplication, HE-Rotation) and HE kernerls (e.g., Number Theory Transformation throughput), among commodity devices (CPUs, GPUs, FPGAs). The detailed flow is shown in the figure below.
 
 <img src="./figure_drawer/cross_overview.png" width="800">
 
