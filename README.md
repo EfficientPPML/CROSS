@@ -1,10 +1,11 @@
-# CROSS: Enable AI Accelerator for Homomorphic Encryption [Paper](https://arxiv.org/pdf/2501.07047v3)
+# CROSS: Enable AI Accelerator for Homomorphic Encryption 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)  
 
-- For Artifact Evaluation, please navigate into the jaxite_word folder.
+- [Paper](https://arxiv.org/pdf/2501.07047v3)
+- Artifact Evaluation: please navigate to the jaxite_word folder.
 
-# 1. What's CROSS?
-PROVE is the first project to enable AI Accelerator, such as Google TPUs, to accelerate Homomorphic Encryption and achieves the State-of-the-art (SotA) Number Theory Transformation throughput, and SotA energy efficiency (performance per watt) among existing devices, as shown in the figure below.
+# 1. What is CROSS?
+CROSS is the first project to enable AI Accelerator, such as Google TPUs, to accelerate Homomorphic Encryption and achieves the State-of-the-art (SotA) Number Theory Transformation throughput, and SotA energy efficiency (performance per watt) among existing devices, as shown in the figure below.
 
 <img src="./figure_drawer/cross_overview.png" width="800">
 
@@ -13,7 +14,7 @@ The state-of-the-art performance relies on two key optimizations, including Basi
 <img src="./figure_drawer/cross_contribution.png" width="800">
 
 This repo contains 
-- Python JAX implementation (in `jaxite_word`) to deploy Homomorphic Encryption workload on Google's TPUs. The subset of CROSS repo is integrated into Google's [jaxite](https://github.com/google/jaxite) library to enable TPU for accelerate the CKKS scheme.
+- Python JAX implementation (in `jaxite_word`) to deploy Homomorphic Encryption workload on Google's TPUs. A subset of CROSS repo is integrated into Google's [jaxite](https://github.com/google/jaxite) library to enable TPU for accelerate the CKKS scheme.
 - The digit detection model (using 5-layer CNN for digit detection under MNIST dataset), which won the 2nd-place at Unversity DEMO @ DAC'25. 
 
 Notes:
@@ -222,7 +223,14 @@ Our mission is to build an open-sourced SoTA library for the community.
 - If you find this repository helpful, please consider giving it a star :)
 - For any questions, please feel free to open an issue.
 - For any suggestions or new features, please feel free to open a pull request.
-- Anything else, u email jianming.tong@gatech.edu
+
+# Contact
+- Jianming Tong, Georgia Institute of Technology, jianming.tong@gatech.edu
+- Jingtian Dang, Georgia Institute of Technology, dangjingtian@gatech.edu
+- Tushar Krishna, Georgia Institute of Technology, tushar@ece.gatech.edu
+
+
+# Citation
 
 ```
 @inproceedings{tong2025CROSS, 
