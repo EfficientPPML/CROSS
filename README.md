@@ -5,7 +5,7 @@
 - Artifact Evaluation: please navigate to the jaxite_word folder.
 
 # 1. What is CROSS?
-CROSS is the first project to enable AI Accelerator, such as Google TPUs, to accelerate Homomorphic Encryption and achieves the State-of-the-art (SotA) throughput and energy efficiency (performance per watt) in HE operators (e.g., HE-Multiplication, HE-Rotation) and HE kernerls (e.g., Number Theory Transformation throughput), among commodity devices (CPUs, GPUs, FPGAs). The detailed flow is shown in the figure below.
+CROSS is the first project to enable AI Accelerator, such as Google TPUs, to accelerate Homomorphic Encryption and achieves the State-of-the-art (SotA) throughput and energy efficiency (performance per watt) in HE operators (e.g., HE-Multiplication, HE-Rotation) and HE kernerls (e.g., Number Theory Transformation throughput) among commodity devices (CPUs, GPUs, FPGAs). The detailed flow is shown in the figure below.
 
 <img src="./figure_drawer/cross_overview.png" width="800">
 
@@ -19,7 +19,7 @@ This repo contains
 
 Notes:
 - It's called jaxite_word as it adopts word-level homomorphic encryption scheme ([CKKS](https://eprint.iacr.org/2016/421.pdf)).
-- TPU could be programmed by JAX, PyTorch and TensorFlow. We choose JAX to make it aligned with existing bit-level homomorphic encryption library [jaxite](https://github.com/google/jaxite). JAX itself is a hardware agnostic library which could run on CPU, GPU and TPU, such that CROSS could run on CPU and GPU as well for functional testing. For performance testing, we recommend implementing a customized CUDA for GPU to get better performance.
+- TPU could be programmed by JAX, PyTorch and TensorFlow. We choose JAX to make it aligned with existing bit-level homomorphic encryption library [jaxite](https://github.com/google/jaxite). JAX itself is a hardware agnostic library which could run on CPU, GPU and TPU, such that CROSS could run on CPU and GPU as well for functional testing. For performance evaluation on GPU, we recommend implementing a customized CUDA kernel to get better performance.
 - CROSS is verified against [OpenFHE](https://github.com/openfheorg/openfhe-development). And CROSS could directly take encrypted ciphertext value from OpenFHE and accelerate it on TPU.
 
 
@@ -233,15 +233,16 @@ Our mission is to build an open-sourced SoTA library for the community.
 # Citation
 
 ```
-@inproceedings{tong2025CROSS, 
-   author = {Jianming Tong and Tianhao Huang and Leo de Castro and Anirudh Itagi and Jingtian Dang and Anupam Golder and Asra Ali and Jevin Jiang and Jeremy Kun and Arvind and G. Edward Suh and Tushar Krishna},
-   title = {Leveraging ASIC AI Chips for Homomorphic Encryption}, 
-   year = {2026}, 
-   publisher = {Association for Computing Machinery}, 
-   address = {Australia}, 
-   keywords = {AI ASICs, TPU, Fully Homomorphic Encryption}, 
-   location = {Australia}, 
-   series = {HPCA'26} }
+@inproceedings{tong2025CROSS,
+author = {Jianming Tong and Tianhao Huang and Jingtian Dang and Leo de Castro and Anirudh Itagi and Anupam
+Golder and Asra Ali and Jevin Jiang and Jeremy Kun and Arvind and G. Edward Suh and Tushar Krishna},
+title = {Leveraging ASIC AI Chips for Homomorphic Encryption},
+year = {2026},
+publisher = {2026 IEEE International Symposium on High Performance Computer Architecture (HPCA)},
+address = {Australia},
+keywords = {AI ASICs, TPU, Fully Homomorphic Encryption},
+location = {Australia},
+series = {HPCA'26} }
 ```
 
 Enjoy! :D
