@@ -2,6 +2,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)  
 
 - [Paper](https://arxiv.org/pdf/2501.07047v3)
+- [Tutorial](https://efficientppml.github.io/CROSS_Tutorial/)
 - Artifact Evaluation: please navigate to the jaxite_word folder.
 
 # 1. What is CROSS?
