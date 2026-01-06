@@ -286,7 +286,7 @@ class PerformanceTest(parameterized.TestCase):
         ],
     )
 
-  @absltest.skip("test single implementation")
+  # @absltest.skip("test single implementation")
   @parameterized.named_parameters(*TEST_BATCH_MATMODMUL_MAPPING)
   def test_conv(
       self,
