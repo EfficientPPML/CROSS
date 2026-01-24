@@ -46,28 +46,34 @@ class Ciphertext:
     self.num_elements = shapes['num_elements']
     self.num_moduli = shapes['num_moduli']
     self.degree = shapes['degree']
+    log_degree = int(math.log2(self.degree))
     self.precision = shapes['precision']
     if 'degree_layout' in shapes:
       self.degree_layout = shapes['degree_layout']
     else:
       self.degree_layout = (self.degree, )
+
+    if len(self.degree_layout) == 2:
+      self.r = self.degree_layout[0]
+      self.c = self.degree_layout[1]
+    else:
+      self.r = 1 << (log_degree // 2)
+      self.c = self.degree // self.r
+
     if self.precision <= 32:
       self.modulus_dtype = jnp.uint32
     else:
       self.modulus_dtype = jnp.uint64
+
     if parameters is not None and 'moduli' in parameters:
       self.moduli = parameters['moduli']
     else:
       self.moduli = util.find_moduli_ntt(self.num_moduli, self.precision, 2 * self.degree)
+
     # NTT Parameters
-    log_degree = int(math.log2(self.degree))
     if parameters is not None and 'finite_field_context' in parameters:
-      self.r = parameters['r']
-      self.c = parameters['c']
       finite_field_context = parameters['finite_field_context'](moduli=self.moduli)
     else:
-      self.r = 1 << (log_degree // 2)
-      self.c = self.degree // self.r
       finite_field_context = ff_context.BarrettContext(moduli=self.moduli)
 
     ntt_params = {

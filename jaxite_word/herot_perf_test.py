@@ -1,7 +1,7 @@
 import os
 """A module for operations on test CKKS evaluation kernels including.
 
-- HEMul
+- HERot
 """
 # Third-party imports
 import jax
