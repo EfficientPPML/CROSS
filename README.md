@@ -5,7 +5,7 @@
 
 
 <h3 align="center">
-Immediate, fast, and cheap HE serving for everyone
+TPU-accelerated, free, immediate, fast, and cheap HE serving for everyone
 </h3>
 <p align="center">
 | <a href="https://arxiv.org/abs/2501.07047">paper</a> |
