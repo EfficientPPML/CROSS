@@ -1,3 +1,25 @@
+<!-- markdownlint-disable MD001 MD041 -->
+<p align="center">
+  <img alt="FEATHER" src="figure_drawer/cross_logo.png" width=30%>
+</p>
+
+
+<h3 align="center">
+Immediate, fast, and cheap HE serving for everyone
+</h3>
+<p align="center">
+| <a href="https://arxiv.org/abs/2501.07047">paper</a> |
+<a href="https://github.com/EfficientPPML/CROSS">code</a> |
+<a href="https://efficientppml.github.io/CROSS_Tutorial/">tutorial</a> |
+<a href="https://youtu.be/TFnQPlLZs1E">HPCA Talk</a> |
+<a href="https://docs.google.com/presentation/d/15WgTXtnLK3Lxjai3YHxKrbEG_WGTeQvcgBvzXs47-1s/edit?usp=sharing">slides</a> |
+</p>
+
+🔥 We have delivered a tutorial at ASPLOS'26 to help you get started with CROSS. Please visit [CPA_tutorial](https://efficientppml.github.io/CROSS_Tutorial/) to learn more.
+For questions, please drop an email to our community [email](cpacommunity@googlegroups.com).
+
+---
+
 # CROSS: Enable AI Accelerator for Homomorphic Encryption 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)  
 
