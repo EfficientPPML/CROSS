@@ -1,6 +1,6 @@
 <!-- markdownlint-disable MD001 MD041 -->
 <p align="center">
-  <img alt="FEATHER" src="figure_drawer/cross_logo.png" width=30%>
+  <img alt="FEATHER" src="figure_drawer/cross_logo.png" width=15%>
 </p>
 
 
@@ -12,6 +12,7 @@ Immediate, fast, and cheap HE serving for everyone
 <a href="https://github.com/EfficientPPML/CROSS">code</a> |
 <a href="https://efficientppml.github.io/CROSS_Tutorial/">tutorial</a> |
 <a href="https://youtu.be/TFnQPlLZs1E">HPCA Talk</a> |
+<a href="https://youtu.be/cN79ELoecNI?si=W4iwt0XoRQ0jhRo6">Microsoft Talk</a> |
 <a href="https://docs.google.com/presentation/d/15WgTXtnLK3Lxjai3YHxKrbEG_WGTeQvcgBvzXs47-1s/edit?usp=sharing">slides</a> |
 </p>
 
