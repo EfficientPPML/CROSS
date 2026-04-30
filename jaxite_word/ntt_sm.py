@@ -124,7 +124,7 @@ class NTTContextBase():
     Returns:
         The NTT Context.
     """
-    def __init__(self, moduli: int, parameters: dict):
+    def __init__(self, moduli, parameters: dict):
         self.ff_ctx = parameters.get("finite_field_context", None)
         self.num_bytes = 4
 
@@ -154,33 +154,62 @@ class NTTContextBase():
     # Offline Functions
     ########################
     def ntt_coefficients_precompute(self):
+        """Negacyclic NTT twiddles with psi factors fused:
+        - step1[k,i] = omega_col^(ki) * psi^(ci)
+        - step2[k,j] = omega^(kj) * psi^j
+        - step3 unchanged
+        """
         omega_col = pow(self.omega, self.c, self.moduli)
         omega_row = pow(self.omega, self.r, self.moduli)
         tf_step1 = gen_twiddle_matrix(self.r, self.r, self.moduli, omega_col)
+        # Fuse psi^(c*i) into step1 column i
+        for i in range(self.r):
+            factor = pow(self.psi, self.c * i, self.moduli)
+            tf_step1[:, i] = (tf_step1[:, i] * factor) % self.moduli
         tf_step2 = gen_twiddle_matrix(self.r, self.c, self.moduli, self.omega)
+        # Fuse psi^j into step2 column j
+        for j in range(self.c):
+            factor = pow(self.psi, j, self.moduli)
+            tf_step2[:, j] = (tf_step2[:, j] * factor) % self.moduli
         tf_step3 = gen_twiddle_matrix(self.c, self.c, self.moduli, omega_row)
         return tf_step1, tf_step2, tf_step3
 
     def intt_coefficients_precompute(self):
+        """Negacyclic iNTT twiddles with inv_psi factors fused:
+        - step1 unchanged
+        - step2[k,j] = omega_inv^(kj)/c * inv_psi^j
+        - step3[i,k] = inv_omega_col^(ik)/r * inv_psi^(ci)
+        """
+        inv_psi = pow(self.psi, -1, self.moduli)
         omega_col = pow(self.omega, self.c, self.moduli)
         omega_row = pow(self.omega, self.r, self.moduli)
         inv_omega_col = pow(omega_col, -1, self.moduli)
         inv_omega_row = pow(omega_row, -1, self.moduli)
         intt_tf_step1 = gen_twiddle_matrix(self.c, self.c, self.moduli, inv_omega_row)
         intt_tf_step2 = gen_twiddle_matrix_inv(self.r, self.c, self.moduli, self.omega)
-        # Precompute col_inv * step2 to merge the two multiplication steps in intt
+        # Fuse inv_psi^j into step2 column j
+        for j in range(self.c):
+            factor = pow(inv_psi, j, self.moduli)
+            intt_tf_step2[:, j] = (intt_tf_step2[:, j] * factor) % self.moduli
         col_inv = pow(self.c, -1, self.moduli)
         row_inv = pow(self.r, -1, self.moduli)
         intt_tf_step2 = (intt_tf_step2 * col_inv) % self.moduli
         intt_tf_step3 = gen_twiddle_matrix(self.r, self.r, self.moduli, inv_omega_col)
+        # Fuse inv_psi^(c*i) into step3 row i
+        for i in range(self.r):
+            factor = pow(inv_psi, self.c * i, self.moduli)
+            intt_tf_step3[i, :] = (intt_tf_step3[i, :] * factor) % self.moduli
         intt_tf_step3 = (intt_tf_step3 * row_inv) % self.moduli
         return intt_tf_step1, intt_tf_step2, intt_tf_step3
 
     def to_computation_format(self, a: np.ndarray):
-        return self.ff_ctx.to_computation_format(a)
+        # Cast to uint64 first: Mont's `(a << 32) % uint64_moduli` would
+        # otherwise silently promote to float64 (when `a` is signed int64)
+        # and lose precision for values that exceed the 53-bit mantissa.
+        return self.ff_ctx.to_computation_format(a.astype(jnp.uint64)).astype(jnp.uint32)
 
     def to_original_format(self, a: np.ndarray):
-        return self.ff_ctx.to_original_format(a)
+        return self.ff_ctx.to_original_format(a.astype(jnp.uint64)).astype(jnp.uint32)
 
     def basis_aligned_transformation(self, matrix: np.ndarray):
         n_row, n_col = matrix.shape # might not be the same as self.r and self.c
@@ -328,7 +357,7 @@ class NTTContextBase():
 
 
 class NTTBarrettContext(NTTContextBase):
-    def __init__(self, moduli: int, parameters: dict):
+    def __init__(self, moduli, parameters: dict):
         super().__init__(moduli, parameters)
         if type(self.moduli) is int:
             self.moduli = [self.moduli]
@@ -337,7 +366,7 @@ class NTTBarrettContext(NTTContextBase):
 
 
 class NTTMontgomeryContext(NTTContextBase):
-    def __init__(self, moduli: int, parameters: dict):
+    def __init__(self, moduli, parameters: dict):
         super().__init__(moduli, parameters)
         if type(self.moduli) is int:
             self.moduli = [self.moduli]
@@ -346,7 +375,7 @@ class NTTMontgomeryContext(NTTContextBase):
 
 
 class NTTBATLazyContext(NTTContextBase):
-    def __init__(self, moduli: int, parameters: dict):
+    def __init__(self, moduli, parameters: dict):
         super().__init__(moduli, parameters)
         if type(self.moduli) is int:
             self.moduli = [self.moduli]
@@ -417,7 +446,7 @@ class NTTShoupContext(NTTContextBase):
         Note that Shoup's Reduction is NOT compatible with Basis Aligned Transformation (BAT).
         We use 1-d convolution to perform matrix multiplication for Shoup.
     """
-    def __init__(self, moduli: int, parameters: dict):
+    def __init__(self, moduli, parameters: dict):
         super().__init__(moduli, parameters)
         if type(self.moduli) is int:
             self.moduli = [self.moduli]

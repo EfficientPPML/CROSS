@@ -4,7 +4,7 @@ import jax
 import jax.numpy as jnp
 import util
 
-from ciphertext import Ciphertext
+from rescale import HERescale
 from absl.testing import absltest
 from absl.testing import parameterized
 
@@ -48,43 +48,33 @@ Element 1: 0: EVAL: [187797345 346468403 400091616 779213129 237567707 272698807
   # @absltest.skip("test a single experiment")
   def test_rescale_ciphertext(self):
     in_ciphertexts_arr = jnp.array(self.in_ciphertexts, jnp.uint32)
-    in_ciphertexts_reshaped = jnp.transpose(in_ciphertexts_arr, (0, 2, 1))[None, ...]
+    in_ciphertexts_reshaped = in_ciphertexts_arr[None, ...]
     input_shape = in_ciphertexts_reshaped.shape
     output_shape = (input_shape[0], input_shape[1], input_shape[2], input_shape[3] - 1)
-    shapes = {'batch': 1, 'num_elements': 2, 'degree': 16, 'num_moduli': 5, 'precision': 32}
-    params = {'moduli': self.q_towers, 'r': self.r, 'c': self.c}
     degree_layout = (self.r, self.c)
-    ct = Ciphertext(shapes, params)
-    ct.modulus_switch_control_gen(degree_layout=degree_layout)
-    ct.set_batch_ciphertext(in_ciphertexts_reshaped.reshape(input_shape[0], input_shape[1], *degree_layout,  input_shape[3]))
-    ct.rescale()
-    final_result_custom = ct.get_batch_ciphertext().reshape(output_shape)
+    he_rescale = HERescale(batch=1, num_elements=2, moduli=self.q_towers, r=self.r, c=self.c, degree_layout=degree_layout)
+    he_rescale.control_gen()
+    in_data = in_ciphertexts_reshaped.reshape(input_shape[0], input_shape[1], *degree_layout, input_shape[3])
+    final_result_custom = he_rescale.rescale(in_data).reshape(output_shape)
 
-    final_result_custom_reshaped = jnp.transpose(final_result_custom[0], (0, 2, 1))
-    np.testing.assert_array_equal(final_result_custom_reshaped, self.final_result_ref)
+    np.testing.assert_array_equal(final_result_custom[0], self.final_result_ref)
 
   # @absltest.skip("test a single experiment")
   def test_rescale_ciphertext_multibatch(self):
     in_ciphertexts_arr = jnp.array(self.in_ciphertexts, jnp.uint32)
     # Tile input to make it batch size 2
     in_ciphertexts_arr = jnp.tile(in_ciphertexts_arr[None, ...], (2, 1, 1, 1))
-    # Shape is (Batch, Elements, Moduli, Degree) -> needs to be (Batch, Elements, Degree, Moduli)
-    in_ciphertexts_reshaped = jnp.transpose(in_ciphertexts_arr, (0, 1, 3, 2))
-    input_shape = in_ciphertexts_reshaped.shape
+    input_shape = in_ciphertexts_arr.shape
     output_shape = (input_shape[0], input_shape[1], input_shape[2], input_shape[3] - 1)
     degree_layout = (self.r, self.c)
-    shapes = {'batch': 2, 'num_elements': 2, 'degree': 16, 'num_moduli': 5, 'precision': 32}
-    params = {'moduli': self.q_towers, 'r': self.r, 'c': self.c}
-    ct = Ciphertext(shapes, params)
-    ct.modulus_switch_control_gen(degree_layout=degree_layout)
-    ct.set_batch_ciphertext(in_ciphertexts_reshaped.reshape(input_shape[0], input_shape[1], *degree_layout, input_shape[3]))
-    ct.rescale()
-    final_result_custom = ct.get_batch_ciphertext().reshape(output_shape)
-    final_result_custom_reshaped = jnp.transpose(final_result_custom, (0, 1, 3, 2))
+    he_rescale = HERescale(batch=2, num_elements=2, moduli=self.q_towers, r=self.r, c=self.c, degree_layout=degree_layout)
+    he_rescale.control_gen()
+    in_data = in_ciphertexts_arr.reshape(input_shape[0], input_shape[1], *degree_layout, input_shape[3])
+    final_result_custom = he_rescale.rescale(in_data).reshape(output_shape)
 
     # Check both batch elements match the reference
-    np.testing.assert_array_equal(final_result_custom_reshaped[0], self.final_result_ref)
-    np.testing.assert_array_equal(final_result_custom_reshaped[1], self.final_result_ref)
+    np.testing.assert_array_equal(final_result_custom[0], self.final_result_ref)
+    np.testing.assert_array_equal(final_result_custom[1], self.final_result_ref)
 
 
 if __name__ == "__main__":

@@ -5,12 +5,10 @@ This module provides the BConv class and subclasses which handle basis extension
 using efficient modular reduction. It is designed to work with
 vectorized operations on JAX arrays.
 """
-import functools
 import jax
 import jax.numpy as jnp
 import util
 import finite_field as ff_context
-import numpy as np
 
 # Maintain 64-bit precision for large integer arithmetic
 jax.config.update("jax_enable_x64", True)

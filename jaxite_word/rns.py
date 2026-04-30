@@ -6,7 +6,6 @@ Assume:
 """
 
 import dataclasses
-from typing import Any
 
 import jax.numpy as jnp
 import util

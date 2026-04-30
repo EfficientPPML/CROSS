@@ -8,6 +8,7 @@ from typing import List
 import math
 from absl.testing import absltest
 from absl.testing import parameterized
+from polynomial import Polynomial
 
 import numpy as np
 
@@ -231,40 +232,134 @@ Element 1: 0: EVAL: [57836071 153702706 229297322 80758737 203662737 160080880 2
     degree = r * c
     # degree_layout = (r*c, )
     degree_layout = (r, c)
-    coefMap = precompute_auto_map(degree, find_automorphism_index_2n_complex(1, degree))
-    np.testing.assert_array_equal(coefMap, [4,5,6,7,3,2,0,1,14,15,13,12,8,9,10,11])
+    coef_map = precompute_auto_map(degree, find_automorphism_index_2n_complex(1, 2 * degree))
+    np.testing.assert_array_equal(coef_map, [4,5,6,7,3,2,0,1,14,15,13,12,8,9,10,11])
 
-    rotate_in_ciphertext = jnp.array(self.rotate_in_ciphertext, dtype=jnp.uint32).transpose(0, 2, 1).reshape(batch, -1, *degree_layout, len(self.rotate_in_ciphertext_moduli))
-    self.final_result_ref = jnp.array(self.final_result_ref, dtype=jnp.uint32).transpose(0, 2, 1).reshape(batch, -1, degree, len(self.rotate_in_ciphertext_moduli))
+    rotate_in_ciphertext = jnp.array(self.rotate_in_ciphertext, dtype=jnp.uint32).reshape(batch, -1, *degree_layout, len(self.rotate_in_ciphertext_moduli))
+    self.final_result_ref = jnp.array(self.final_result_ref, dtype=jnp.uint32).reshape(batch, -1, degree, len(self.rotate_in_ciphertext_moduli))
     rotate_in_ciphertext_moduli = self.rotate_in_ciphertext_moduli
-    evalkey_b_vector = jnp.array(self.evalkey_b_vector_ref, dtype=jnp.uint64).transpose(0, 2, 1).reshape(dnum, *degree_layout, len(self.evalkey_b_vector_moduli))
+    evalkey_b_vector = jnp.array(self.evalkey_b_vector_ref, dtype=jnp.uint64).reshape(dnum, *degree_layout, len(self.evalkey_b_vector_moduli))
     extend_moduli = self.evalkey_b_vector_moduli[len(rotate_in_ciphertext_moduli):]
-    evalkey_a_vector = jnp.array(self.evalkey_a_vector_ref, dtype=jnp.uint64).transpose(0, 2, 1).reshape(dnum, *degree_layout, len(self.evalkey_a_vector_moduli))
+    evalkey_a_vector = jnp.array(self.evalkey_a_vector_ref, dtype=jnp.uint64).reshape(dnum, *degree_layout, len(self.evalkey_a_vector_moduli))
+    ct_in_shapes = {'batch': batch, 'num_elements': 1, 'degree': degree, 'precision': 32, 'num_moduli': len(rotate_in_ciphertext_moduli), 'degree_layout': degree_layout}
+    ct_in = Polynomial(ct_in_shapes, parameters={'moduli': rotate_in_ciphertext_moduli, "BAT_lazy": False})
+    ct_in.polynomial = rotate_in_ciphertext
 
     # Instantiate HERot
     herot_obj = herot.HERot(r, c, dnum, rotate_in_ciphertext_moduli, extend_moduli)
 
     # Run control_gen
     herot_obj.control_gen(batch=batch, degree_layout=degree_layout)
-    herot_obj.setup_rotate(evalkey_a_vector, evalkey_b_vector, coefMap)
-    final_result_test = herot_obj.rotate(rotate_in_ciphertext)
-    np.testing.assert_array_equal(final_result_test, self.final_result_ref)
+    herot_obj.setup_rotate(evalkey_a_vector, evalkey_b_vector, coef_map)
+    final_result_test = herot_obj.rotate(ct_in)
+    np.testing.assert_array_equal(final_result_test.polynomial, self.final_result_ref)
 
     # Run rotate
     # Use JIT compilation for rotate as typically done in tests
     jit_rotate = jax.jit(
         herot_obj.rotate,
-        # static_argnames might be needed if arguments affect shape/compilation,
-        # but here most complexity is inside.
-        # However, checking rotate_flatten code:
-        # None of the args passed here seem static except maybe internal params which are now bound.
     )
 
     final_result_custom = jit_rotate(
-        rotate_in_ciphertext,
+        ct_in,
     )
 
-    np.testing.assert_array_equal(final_result_custom, self.final_result_ref)
+    np.testing.assert_array_equal(final_result_custom.polynomial, self.final_result_ref)
+
+
+class HERotDegree2048Test(absltest.TestCase):
+  """End-to-end HE rotation correctness test at production ring dimension.
+
+  Verifies the Barrett `int(m)` fix (finite_field.py) and the per-product
+  modular reduction in rotation key_switch (herot.py) work at degree=2048.
+  Without these fixes, herot produces garbage output at this scale.
+
+  Uses the same parameters as HEMulDegree2048Test for consistency.
+  """
+
+  def setUp(self):
+    super().setUp()
+    self.degree = 2048
+    self.num_slots = 1024
+    self.r, self.c = 32, 64
+    self.dnum = 3
+    self.q_towers = [
+        1073971201, 1073872897, 1073668097,
+        1073815553, 1073692673, 1073750017,
+    ]
+    self.p_towers = [2147565569, 2147573761, 2147577857, 2147721217]
+    self.scaling_factor = self.q_towers[0] * self.q_towers[1]
+    self.sigma = 3.190000057220458984375
+
+  def test_rotate_by_1_degree_2048(self):
+    """HE rotation by 1 slot at degree=2048 matches plaintext rotation."""
+    import ckks_ctx
+    import key_gen as kg
+    import he_params
+
+    rot_idx = 1
+
+    # Build CKKSContext (handles key gen, encoding, rotation keys)
+    key_pair = kg.gen_pke_pair(self.q_towers, self.p_towers, self.degree)
+    params = {
+        "degree": self.degree,
+        "num_slots": self.num_slots,
+        "scaling_factor": self.scaling_factor,
+        "output_scale": self.scaling_factor,
+        "q_towers": self.q_towers,
+        "p_towers": self.p_towers,
+        "p": 60,
+        "CKKS_M_FACTOR": 1,
+        "max_bits_in_word": 61,
+        "noise_scale_degree": 1,
+        "composite_degree": 1,
+        "public_key": key_pair["public_key"],
+        "secret_key": key_pair["secret_key"],
+    }
+    ctx = ckks_ctx.CKKSContext(params)
+    ctx.program_initialization(
+        total_hemul_levels=1,
+        total_rotation_indices=[rot_idx],
+        dnum=self.dnum, r=self.r, c=self.c, batch=1,
+    )
+
+    # Encode + encrypt an 8-slot test vector
+    input_vals = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+    slots = [complex(v, 0) for v in input_vals] + [complex(0)] * (self.num_slots - len(input_vals))
+    pt = ctx.encode(slots)
+    ct = ctx.encrypt(pt)
+
+    # Reshape to 5D for the level-indexed rotation wrapper
+    M = len(self.q_towers)
+    ct_5d = Polynomial(
+        {"batch": 1, "num_elements": 2, "degree": self.degree,
+         "num_moduli": M, "precision": 32,
+         "degree_layout": (self.r, self.c)},
+        {"moduli": self.q_towers},
+    )
+    ct_5d.polynomial = ct.polynomial.reshape(1, 2, self.r, self.c, M).astype(jnp.uint32)
+
+    # Rotate
+    level = ctx.max_level
+    rotated = ctx.he_rot[level, rot_idx].rotate(ct_5d)
+
+    # Decrypt
+    dec_ct = Polynomial(
+        {"batch": 1, "num_elements": 2, "degree": self.degree,
+         "precision": 32, "num_moduli": rotated.num_moduli,
+         "degree_layout": (self.degree,)},
+        {"moduli": self.q_towers[:rotated.num_moduli]},
+    )
+    dec_ct.polynomial = rotated.polynomial.reshape(1, 2, self.degree, rotated.num_moduli)
+    decrypted = ctx.decrypt(dec_ct)
+    decoded = ctx.decode(decrypted, is_ntt=False)
+    got = [v.real for v in decoded[:len(input_vals) + 1]]
+
+    # Expected: slots rotated left by 1
+    expected = input_vals[1:] + [0.0]
+    np.testing.assert_array_almost_equal(got[:len(expected)], expected, decimal=3,
+        err_msg=f"HE rotation by {rot_idx} at degree=2048 mismatch. "
+                f"Got {got}, expected {expected}")
 
 
 if __name__ == "__main__":

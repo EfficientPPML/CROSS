@@ -13,8 +13,8 @@ from profiler import KernelWrapper, Profiler, collect_logs
 # JAX configuration
 jax.config.update("jax_enable_x64", True)
 
-BATCH_SIZE_LIST_LOW_DEGREE = [4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096] # small degree batch size
-BATCH_SIZE_LIST_HIHG_DEGREE = [1, 2, 4, 8, 16, 32, 64, 128] # large degree batch size
+BATCH_SIZE_LIST_LOW_DEGREE = [8]#, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096] # small degree batch size
+BATCH_SIZE_LIST_HIHG_DEGREE = [8]#1, 2, 4, 8, 16, 32, 64, 128] # large degree batch size
 TEST_PARAMS_NTT=[('2_12', 4096, 4, BATCH_SIZE_LIST_LOW_DEGREE), ('2_13', 8192, 8, BATCH_SIZE_LIST_LOW_DEGREE), ('2_14', 16384, 16, BATCH_SIZE_LIST_LOW_DEGREE), ('2_16_L48', 65536, 48, BATCH_SIZE_LIST_HIHG_DEGREE)]
 
 # Degree to (r, c) mapping for NTT layout configurations

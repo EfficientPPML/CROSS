@@ -1,14 +1,21 @@
-from absl.testing import absltest
-from absl.testing import parameterized
 import jax
 import jax.numpy as jnp
-import key_gen as kg
-import ckks_ctx
 import numpy as np
+
+import ckks_ctx
+import hemul
+import herot
+import polynomial
+import rescale
 import util
-from hemul import HEMul
-from herot import HERot
-from ciphertext import Ciphertext
+import key_gen as kg
+from absl.testing import absltest
+from absl.testing import parameterized
+
+HEMul = hemul.HEMul
+Polynomial = polynomial.Polynomial
+HERot = herot.HERot
+HERescale = rescale.HERescale
 
 jax.config.update('jax_enable_x64', True)
 jax.config.update('jax_traceback_filtering', 'off')
@@ -27,7 +34,7 @@ class CKKSContextTest(parameterized.TestCase):
     self.dnum = 3
     self.r, self.c = 4, 4
 
-    self.scalingFactor = 563019763943521
+    self.scaling_factor = 563019763943521
     self.q_towers = [1073742881, 1073742721, 1073741441, 1073741857, 524353]
     self.p_towers = [1073740609, 1073739937, 1073739649]
     self.q = 696985728458547852910430465530901300664961
@@ -43,8 +50,8 @@ class CKKSContextTest(parameterized.TestCase):
     self.params = {
         "degree": self.degree,
         "num_slots": self.num_slots,
-        "scalingFactor": self.scalingFactor,
-        "output_scale": self.scalingFactor,
+        "scaling_factor": self.scaling_factor,
+        "output_scale": self.scaling_factor,
         "q_towers": self.q_towers,
         "p_towers": self.p_towers,
         "p": self.p,
@@ -99,10 +106,11 @@ class CKKSContextTest(parameterized.TestCase):
   def test_ckks_context_encrypt_rotate_decrypt(self):
     # Paramters Setup
     rotate_idx = 1
-    coef_map = util.precompute_auto_map(self.degree, kg.find_automorphism_index_2n_complex(rotate_idx, self.degree))
+    coef_map = util.precompute_auto_map(self.degree, kg.find_automorphism_index_2n_complex(rotate_idx, 2 * self.degree))
     # initialization
     herot_obj = HERot(self.r, self.c, self.dnum, self.q_towers, self.p_towers)
-    ek = kg.gen_rotation_key(self.params["secret_key"], self.q_towers, self.p_towers, rot_index=rotate_idx, dnum=self.dnum, noise_std=self.sigma, noise_scale=self.noise_scale_degree)
+    ek_dict = kg.gen_rotation_key(self.params["secret_key"], self.q_towers, self.p_towers, rotate_idx, dnum=self.dnum, noise_std=self.sigma, noise_scale=self.noise_scale_degree)
+    ek = ek_dict[rotate_idx]
     herot_obj.setup_rotate(jnp.array(ek["a"], jnp.uint64).transpose(0,2,1).reshape(self.dnum,*self.degree_layout,-1), jnp.array(ek["b"], jnp.uint64).transpose(0,2,1).reshape(self.dnum,*self.degree_layout,-1), coef_map)
     herot_obj.control_gen(batch=1, degree_layout=self.degree_layout)
     ctx = ckks_ctx.CKKSContext(self.params)
@@ -111,10 +119,10 @@ class CKKSContextTest(parameterized.TestCase):
     # Step 2: Encryption
     encrypted_ct = ctx.encrypt(encoded_ct)
     # Step 3: Rotate
-    result = herot_obj.rotate(encrypted_ct.ciphertext.reshape(1, 2, *self.degree_layout, len(self.q_towers)))
-    encrypted_ct.set_batch_ciphertext(result.reshape(1,2,self.degree,len(self.q_towers)))
+    encrypted_ct.polynomial = encrypted_ct.polynomial.reshape(1, 2, *self.degree_layout, len(self.q_towers))
+    result_ct = herot_obj.rotate(encrypted_ct)
     # Step 4: Decryption
-    decrypted_ct = ctx.decrypt(encrypted_ct)
+    decrypted_ct = ctx.decrypt(result_ct)
     # Step 5: Decoding
     decoded_values = ctx.decode(decrypted_ct)
     np.testing.assert_array_almost_equal(decoded_values, self.real_values_rotate_result, decimal=3)
@@ -127,23 +135,27 @@ class CKKSContextTest(parameterized.TestCase):
     ct_params = {'moduli': self.q_towers, 'r': self.r, 'c': self.c}
     params = self.params.copy()
     params.update({
-        "output_scale": (self.scalingFactor/self.q_towers[-1]),
+        "output_scale": (self.scaling_factor/self.q_towers[-1]),
     })
     # Initialization
     ctx = ckks_ctx.CKKSContext(params)
-    ct = Ciphertext(ct_shapes, ct_params)
-    ct.modulus_switch_control_gen(degree_layout=self.degree_layout)
+    he_rescale = HERescale(batch=batch, num_elements=num_elements, moduli=self.q_towers, r=self.r, c=self.c, degree_layout=self.degree_layout)
+    he_rescale.control_gen()
 
     # Step 1: Encoding
     encoded_ct = ctx.encode(self.real_values_input_in1)
     # Step 2: Encryption
     encrypted_ct = ctx.encrypt(encoded_ct)
     # Step 3: Rescale
-    ct.set_batch_ciphertext(encrypted_ct.ciphertext.reshape(batch, num_elements, *self.degree_layout, num_moduli))
-    ct.rescale()
-    # Step 4: Decryption
-    ct.ciphertext = ct.ciphertext.reshape(batch, num_elements, degree, num_moduli-1)
-    decrypted_ct = ctx.decrypt(ct)
+    in_data = encrypted_ct.polynomial.reshape(batch, num_elements, *self.degree_layout, num_moduli)
+    rescaled_data = he_rescale.rescale(in_data)
+    # Step 4: Decryption — wrap result in a Polynomial for decrypt
+    ct_out = Polynomial(
+        {'batch': batch, 'num_elements': num_elements, 'degree': degree,
+         'num_moduli': num_moduli - 1, 'precision': 32, 'degree_layout': self.degree_layout},
+        {'moduli': self.q_towers[:-1], 'r': self.r, 'c': self.c})
+    ct_out.polynomial = rescaled_data.reshape(batch, num_elements, degree, num_moduli - 1)
+    decrypted_ct = ctx.decrypt(ct_out)
     # Step 5: Decoding
     decoded_values = ctx.decode(decrypted_ct)
     np.testing.assert_array_almost_equal(decoded_values, self.real_values_input_in1, decimal=3)
@@ -163,7 +175,7 @@ class CKKSContextTest(parameterized.TestCase):
     params = self.params.copy()
     params.update({
         "evaluation_key": [eval_key_a, eval_key_b],
-        "output_scale": (self.scalingFactor/self.q_towers[-1])**2,
+        "output_scale": (self.scaling_factor/self.q_towers[-1])**2,
     })
     # Initialization
     ctx = ckks_ctx.CKKSContext(params)
@@ -177,15 +189,64 @@ class CKKSContextTest(parameterized.TestCase):
     encrypted_ct1 = ctx.encrypt(encoded_ct1)
     encrypted_ct2 = ctx.encrypt(encoded_ct2)
     # Step 3: Homomorphic Multiplication
-    in_cts = jnp.concatenate([encrypted_ct1.ciphertext, encrypted_ct2.ciphertext], axis=1).reshape(batch, 2*num_elements, r, c, len(self.q_towers)).astype(jnp.uint32)
-    encrypted_result = he_mul.mul(in_cts)
+    in_cts_array = jnp.concatenate([encrypted_ct1.polynomial, encrypted_ct2.polynomial], axis=1).reshape(batch, 2*num_elements, r, c, len(self.q_towers)).astype(jnp.uint32)
+    ct_in_shapes = {'batch': batch, 'num_elements': 2*num_elements, 'degree': self.degree, 'precision': 32, 'num_moduli': len(self.q_towers), 'degree_layout': (r, c)}
+    ct_in = Polynomial(ct_in_shapes, parameters={'moduli': self.q_towers})
+    ct_in.polynomial = in_cts_array
+    encrypted_result = he_mul.mul(ct_in)
     # Step 4: Decryption
     encrypted_ct1.drop_last_modulus()
-    encrypted_ct1.set_batch_ciphertext(encrypted_result.reshape(batch, 2, self.degree, len(self.q_towers)-1))
+    encrypted_ct1.set_batch_polynomial(encrypted_result.polynomial.reshape(batch, 2, self.degree, len(self.q_towers)-1))
     decrypted_result = ctx.decrypt(encrypted_ct1)
     # Step 5: Decoding
     decoded_values = ctx.decode(decrypted_result, is_ntt=False)
     np.testing.assert_array_almost_equal(decoded_values, self.real_values_multiply_result, decimal=3)
+
+  # @absltest.skip("test a single experiment")
+  def test_ckks_context_composite_rescale(self):
+    """
+    Test that composite rescaling correctly calculates scale factors.
+
+    This test verifies the mathematical correctness of composite scaling:
+    - composite_degree=k groups k moduli into a single logical scale
+    - composite_scale_factor = product of last k moduli
+    - After rescale: effective_scale = original_scale / composite_scale_factor
+
+    This follows the algorithm from ePrint 2023/1462:
+    "High-precision RNS-CKKS on fixed but smaller word-size architectures"
+    """
+    # Test with different composite_degree values
+    for composite_degree in [1, 2]:
+        # Calculate expected composite scale
+        expected_composite_scale = 1
+        for i in range(composite_degree):
+            expected_composite_scale *= self.q_towers[-(i + 1)]
+
+        params = self.params.copy()
+        params.update({
+            "composite_degree": composite_degree,
+            "output_scale": self.scaling_factor,
+        })
+
+        ctx = ckks_ctx.CKKSContext(params)
+
+        # Verify composite scale factor
+        self.assertEqual(
+            ctx.composite_scale_factor,
+            expected_composite_scale,
+            f"Failed for composite_degree={composite_degree}"
+        )
+
+        # Calculate effective scale bits
+        composite_bits = expected_composite_scale.bit_length()
+        expected_bits_per_modulus = composite_bits / composite_degree
+
+        # For 30-bit moduli, composite degree k should give ~k*30 bits
+        self.assertGreater(
+            expected_bits_per_modulus,
+            15,  # Each modulus contributes at least 15 bits
+            f"composite_degree={composite_degree} should use reasonable moduli"
+        )
 
 
 if __name__ == "__main__":

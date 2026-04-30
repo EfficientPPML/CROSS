@@ -51,7 +51,13 @@ def create_sharding():
   else:
     mesh_shape = (1, 1)
 
-  mesh = jax.make_mesh(mesh_shape, ('x', 'y'))
+  # Auto axes: let JAX propagate sharding through ops whose batching
+  # rules emit reshapes (e.g. vmapped conv_general_dilated, used by
+  # NTTCiphertextShoupContext.ntt — fails in JAX 0.9.x Explicit mode
+  # because _conv_general_dilated_batch_rule folds the vmap axis into
+  # the conv W dim via an unannotated reshape).
+  mesh = jax.make_mesh(mesh_shape, ('x', 'y'),
+                       axis_types=(jax.sharding.AxisType.Auto,) * 2)
   shd.set_mesh(mesh)
 
   partition_spec = jax.sharding.PartitionSpec
@@ -458,27 +464,148 @@ def find_moduli_ntt(total_number, precision, ntt_length):
     return overall_moduli
 
 
+def compute_num_p_towers(q_towers, dnum, aux_bits=None):
+  """Compute the required number of P-tower primes for HYBRID key-switching.
+
+  In the HYBRID scheme, the Q modulus chain is split into `dnum` partitions.
+  The approximate basis extension during key-switching requires:
+
+      P_product >= max_partition(product of Q-moduli in partition)
+
+  This function computes the minimum number of P-tower primes (each of
+  `aux_bits` size) needed to satisfy this constraint.
+
+  Matches OpenFHE's EstimateLogP logic (rns-cryptoparameters.cpp:407-466).
+
+  Args:
+    q_towers: List of Q-tower moduli (integers).
+    dnum: Number of key-switch partitions (numLargeDigits / numPartQ).
+    aux_bits: Bit size of each P-tower prime. If None, uses the bit size
+        of the first Q-tower modulus.
+
+  Returns:
+    sizeP: Number of P-tower primes required.
+  """
+  size_q = len(q_towers)
+  if dnum <= 0:
+    raise ValueError(f"dnum must be positive, got {dnum}")
+  if size_q == 0:
+    return 0
+
+  # Towers per partition (alpha)
+  alpha = (size_q + dnum - 1) // dnum
+
+  if aux_bits is None:
+    aux_bits = q_towers[0].bit_length()
+
+  # Compute bit sizes of each Q-tower
+  qi_bits = [int(q).bit_length() for q in q_towers]
+
+  # Find the maximum total bit-size across all partitions
+  max_bits = 0
+  num_parts = (size_q + alpha - 1) // alpha
+  for j in range(num_parts):
+    start = j * alpha
+    end = min(start + alpha, size_q)
+    part_bits = sum(qi_bits[start:end])
+    if part_bits > max_bits:
+      max_bits = part_bits
+
+  # Number of P-primes needed: ceil(maxBits / auxBits)
+  # Add 1 for margin (matches OpenFHE's addOne logic)
+  size_p = math.ceil(max_bits / aux_bits) + 1
+  return size_p
+
+
+def generate_p_towers(q_towers, dnum, degree, aux_bits=None):
+  """Generate P-tower primes for HYBRID key-switching.
+
+  Automatically computes the required number of P-tower primes based on
+  the Q-tower configuration and dnum, then generates NTT-friendly primes
+  that don't overlap with Q-towers.
+
+  Matches OpenFHE's P-prime generation (rns-cryptoparameters.cpp:151-177).
+
+  Args:
+    q_towers: List of Q-tower moduli (integers).
+    dnum: Number of key-switch partitions.
+    degree: Ring polynomial degree (N). Primes must satisfy p ≡ 1 (mod 2N).
+    aux_bits: Bit size of each P-tower prime. If None, uses the bit size
+        of the first Q-tower modulus.
+
+  Returns:
+    p_towers: List of P-tower primes.
+  """
+  if aux_bits is None:
+    aux_bits = q_towers[0].bit_length()
+
+  size_p = compute_num_p_towers(q_towers, dnum, aux_bits)
+  ntt_length = 2 * degree  # Primes must satisfy p ≡ 1 (mod 2N)
+  q_set = set(int(q) for q in q_towers)
+
+  # Generate primes: search downward from 2^aux_bits, skip Q-tower primes
+  p_towers = []
+  limit = 2 ** aux_bits
+  k = (limit - 1) // ntt_length
+
+  while len(p_towers) < size_p and k > 0:
+    candidate = k * ntt_length + 1
+    if candidate not in q_set and is_prime_deterministic(candidate):
+      p_towers.append(candidate)
+    k -= 1
+
+  if len(p_towers) < size_p:
+    raise ValueError(
+        f"Could not find enough P-tower primes: need {size_p}, found "
+        f"{len(p_towers)}. Try increasing aux_bits (currently {aux_bits}).")
+
+  return p_towers
+
+
 def gamma_beta_calculation(moduli_list, perf_test=False):
+  """Computes gamma and beta parameters for approximate modulus switching.
+
+  These parameters are used in the "modulus down" operation within a CRT
+  context, specifically for the last modulus in the `moduli_list`.
+
+  Args:
+    moduli_list: A list of prime moduli. The last modulus in the list is
+      treated as the target modulus `q_l`, and the product of the preceding
+      moduli forms `Q`.
+    perf_test: If True, returns random parameters for performance testing
+      instead of computing the actual values.
+
+  Returns:
+    A tuple containing two JAX arrays:
+      - gammas: An array of gamma_i values, one for each modulus in
+        `moduli_list[:-1]`.
+      - betas: An array of beta_i values, one for each modulus in
+        `moduli_list[:-1]`.
+  """
   if perf_test:
     # Shapes: gammas: (len(moduli_list)-1,), betas: (len(moduli_list)-1,)
     assert len(moduli_list) > 1, "moduli_list must have at least 2 moduli"
-    gamma_rand = random_parameters((len(moduli_list)-1,), moduli_list[:-1], dtype=jnp.uint64)
-    beta_rand = random_parameters((len(moduli_list)-1,), moduli_list[:-1], dtype=jnp.uint64)
+    gamma_rand = random_parameters(
+        (len(moduli_list) - 1,), moduli_list[:-1], dtype=jnp.uint64
+    )
+    beta_rand = random_parameters(
+        (len(moduli_list) - 1,), moduli_list[:-1], dtype=jnp.uint64
+    )
     return jnp.array(gamma_rand, jnp.uint64), jnp.array(beta_rand, jnp.uint64)
   # Compute Q as the product of the moduli for the remaining towers.
-  Q = 1
+  q_prod = 1
   for m in moduli_list[:-1]:
-    Q *= m
+    q_prod *= m
 
   num_towers = len(moduli_list)
   q_l = moduli_list[-1]
-  # Compute Q_inv_mod_ql: the inverse of Q modulo q_l.
-  Q_inv_mod_ql = modinv(Q, q_l)
+  # Compute q_inv_mod_ql: the inverse of Q modulo q_l.
+  q_inv_mod_ql = modinv(q_prod, q_l)
 
   # Compute gamma_common such that:
-  # Q * Q_inv_mod_ql = 1 + gamma_common * q_l.
-  # Hence, gamma_common = (Q * Q_inv_mod_ql - 1) // q_l.
-  gamma_common = (Q * Q_inv_mod_ql - 1) // q_l
+  # Q * q_inv_mod_ql = 1 + gamma_common * q_l.
+  # Hence, gamma_common = (Q * q_inv_mod_ql - 1) // q_l.
+  gamma_common = (q_prod * q_inv_mod_ql - 1) // q_l
 
   # For each remaining tower compute gamma_i and beta_i.
   gammas = []
@@ -490,6 +617,7 @@ def gamma_beta_calculation(moduli_list, perf_test=False):
     gammas.append(gamma_i)
     betas.append(beta_i)
   return jnp.array(gammas, jnp.uint64), jnp.array(betas, jnp.uint64)
+
 
 ####################################
 # Random Functions
@@ -536,31 +664,39 @@ def random_parameters(shape, modulus_list, dtype=jnp.int32):
   for modulus in modulus_list:
     if modulus < min_modulus:
       min_modulus = modulus
-  return jax.random.randint(random_key, shape=shape, minval=0, maxval=min_modulus-1, dtype=dtype)
+  return jax.random.randint(
+      random_key, shape=shape, minval=0, maxval=min_modulus - 1, dtype=dtype
+  )
 
 
 ####################################
 # Parse Functions
 ####################################
-def parse_ciphertext_string(input_str):
-  """
-  Parses the input string into two objects:
-    - data: a list of element groups, each a list of evaluations (list of lists of numbers).
-            Shape: (num_element, num_eval, num_numbers)
-    - modulus: a one-dimensional list of modulus values corresponding to each evaluation index.
-                All element groups are assumed to share the same modulus per evaluation.
+def parse_ciphertext_string(input_str, transpose_last_two=True):
+  """Parses the input string into two objects.
 
-  Parameters:
-      input_str (str): The string containing the input data.
+    - data: a list of element groups, each a list of evaluations (list of lists
+    of numbers).
+            Shape: (num_element, num_numbers, num_eval)
+    - modulus: a one-dimensional list of modulus values corresponding to each
+    evaluation index.
+                All element groups are assumed to share the same modulus per
+                evaluation.
+
+  Args:
+    input_str (str): The string containing the input data.
+    transpose_last_two (bool): Whether to transpose the last two dimensions of
+      each element group in the data.
 
   Returns:
-      tuple: (data, modulus) as described.
+      tuple: (data, modulus) as described (with swapped inner dimensions for
+      data).
   """
   data = []
   global_modulus = []  # This will store the modulus once per evaluation index.
 
   # Holds the current element's data evaluations.
-  current_data_group = None
+  current_data_group = []
 
   # Process the input line by line.
   for line in input_str.strip().splitlines():
@@ -573,37 +709,63 @@ def parse_ciphertext_string(input_str):
       data.append(current_data_group)
 
       # Check if there is extra content on the same line after the header.
-      header_match = re.match(r'^Element\s+\d+:\s*(.*)', line)
+      header_match = re.match(r"^Element\s+\d+:\s*(.*)", line)
       if header_match:
         remainder = header_match.group(1).strip()
         if remainder:
           # Process an evaluation if it appears on the same line.
-          if eval_match := re.match(r'^(\d+):\s*EVAL:\s*\[(.*?)\]\s*modulus:\s*(\d+)', remainder):
+          if eval_match := re.match(
+              r"^(\d+):\s*EVAL:\s*\[(.*?)\]\s*modulus:\s*(\d+)", remainder
+          ):
             numbers_str = eval_match.group(2)
             mod_val = int(eval_match.group(3))
-            numbers = [int(num) for num in numbers_str.split()]
+            numbers = [
+                int(num) for num in numbers_str.split()
+            ]
             current_data_group.append(numbers)
-            # For the first element group, record the modulus; otherwise, check consistency.
+            # For the first element group, record the modulus;
+            # otherwise, check consistency.
             eval_idx = len(current_data_group) - 1
             if len(data) == 1:
               global_modulus.append(mod_val)
             else:
-              if eval_idx < len(global_modulus) and global_modulus[eval_idx] != mod_val:
-                raise ValueError(f"Inconsistent modulus at evaluation index {eval_idx}")
+              if (
+                  eval_idx < len(global_modulus)
+                  and global_modulus[eval_idx] != mod_val
+              ):
+                raise ValueError(
+                    f"Inconsistent modulus at evaluation index {eval_idx}"
+                )
 
     # Otherwise, check if the line is an evaluation line.
-    elif eval_match := re.match(r'^(\d+):\s*EVAL:\s*\[(.*?)\]\s*modulus:\s*(\d+)', line):
+    elif eval_match := re.match(
+        r"^(\d+):\s*EVAL:\s*\[(.*?)\]\s*modulus:\s*(\d+)", line
+    ):
       numbers_str = eval_match.group(2)
       mod_val = int(eval_match.group(3))
       numbers = [int(num) for num in numbers_str.split()]
       current_data_group.append(numbers)
       eval_idx = len(current_data_group) - 1
-      # For the first element group, record the modulus; for subsequent groups, check consistency.
+      # For the first element group, record the modulus;
+      # for subsequent groups, check consistency.
       if len(data) == 1:
         global_modulus.append(mod_val)
       else:
-        if eval_idx < len(global_modulus) and global_modulus[eval_idx] != mod_val:
-          raise ValueError(f"Inconsistent modulus at evaluation index {eval_idx}")
+        if (
+            eval_idx < len(global_modulus)
+            and global_modulus[eval_idx] != mod_val
+        ):
+          raise ValueError(
+              f"Inconsistent modulus at evaluation index {eval_idx}"
+          )
+
+  # Transpose the last two dimensions for each element group.
+  # Current shape per element: (num_eval, num_numbers)
+  # Target shape per element: (num_numbers, num_eval)
+  if transpose_last_two:
+    for i in range(len(data)):
+      if data[i]:
+        data[i] = [list(x) for x in zip(*data[i])]
 
   return data, global_modulus
 
@@ -643,7 +805,6 @@ def bit_reverse_indices(n: int) -> jnp.ndarray:
         for i in range(bits)
     )
     return rev
-
 
 
 ####################################
@@ -1120,3 +1281,63 @@ roof_of_unity = {
   degree: params["root_of_unity"]
   for degree, params in NTT_PARAMETERS_BY_DEGREE.items()
 }
+
+
+# ============================================================================
+# Bootstrap Chebyshev coefficient computation
+# ============================================================================
+
+def compute_bootstrap_chebyshev_coefficients(K, R, degree):
+  """Compute Chebyshev coefficients for the CKKS bootstrap seed function.
+
+  The bootstrap's approximate modular reduction uses a Chebyshev polynomial
+  followed by R double-angle iterations to compute sin(2*pi*K*x)/(2*pi*K).
+
+  The seed function approximated by Chebyshev is:
+
+    f(x) = (2*pi)^{-1/2^R} * cos(2*pi/2^R * (x - 0.25))
+
+  projected onto the Chebyshev basis on the interval [-K, K].
+
+  After R double-angle iterations (y -> 2*y^2 + scalar_i), this seed
+  produces the full modular reduction function sin(2*pi*K*x)/(2*pi*K).
+
+  This matches OpenFHE's coefficient generation (see ckksrns-fhe.h and
+  ckksrns-schemeswitching.cpp for the formula comments).
+
+  Args:
+    K: Overflow count parameter (512 for uniform ternary, 28 for sparse).
+    R: Number of double-angle iterations (6 for uniform, 3 for sparse).
+    degree: Chebyshev polynomial degree (88 for uniform, 44 for sparse).
+
+  Returns:
+    List of degree+1 Chebyshev coefficients (c_0 NOT halved).
+    The coefficients are for the RESCALED interval [-1, 1] (mapped from [-K, K]).
+  """
+  import numpy as np
+
+  n = degree + 1
+  a, b = -float(K), float(K)
+  bMinusA = 0.5 * (b - a)
+  bPlusA = 0.5 * (a + b)
+  PiByN = np.pi / n
+
+  # The seed function
+  c0 = (2 * np.pi) ** (-1.0 / (2 ** R))
+  freq = 2 * np.pi / (2 ** R)
+
+  def f(x):
+    return c0 * np.cos(freq * (x - 0.25))
+
+  # Evaluate at Chebyshev nodes mapped to [a, b]
+  fpts = np.array([f(np.cos(PiByN * (i + 0.5)) * bMinusA + bPlusA) for i in range(n)])
+
+  # Chebyshev projection (matches OpenFHE's EvalChebyshevCoefficients exactly)
+  multFactor = 2.0 / n
+  coeffs = np.zeros(n)
+  for i in range(n):
+    for j in range(n):
+      coeffs[i] += fpts[j] * np.cos(PiByN * i * (j + 0.5))
+    coeffs[i] *= multFactor
+
+  return coeffs.tolist()

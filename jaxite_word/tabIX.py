@@ -105,7 +105,7 @@ def find_automorphism_index_2n_complex(i: int, m: int) -> int:
         g = (g * g0) & mask
     return int(g)
 
-COEF_AUTOMORPHISM_MAP = jnp.array(precompute_auto_map(65536, find_automorphism_index_2n_complex(1, 65536)), dtype=jnp.uint16)
+COEF_AUTOMORPHISM_MAP = jnp.array(precompute_auto_map(65536, find_automorphism_index_2n_complex(1, 2*65536)), dtype=jnp.uint16)
 
 class CKKSEvalBootstrappingTest(parameterized.TestCase):
   """A base class for running bootstrap tests.

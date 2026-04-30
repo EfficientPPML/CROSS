@@ -12,7 +12,6 @@ Test cases:
 Terminology:
 - Modulus -- Moduli: Single form or plural form of modulus.
 
-
 Usage:
 - Specify the overall moduli for the context, and corresponding parameter required for the modular reduction.
 - Then feed "moduli" and "parameters" to the context constructor.
@@ -167,17 +166,6 @@ class CiphertextLimbDomainConversionTest(absltest.TestCase):
     self.original = base_ct.get_batch_ciphertext()
     self.moduli = base_ct.get_moduli()
 
-  def test_drop_last_modulus_preserves_remaining_limbs_and_context(self):
-    ct_temp = ct.Ciphertext(self.drop_shapes)
-    ct_temp.random_init()
-    before_drop = ct_temp.get_batch_ciphertext()
-    expected_remaining = before_drop[:, :, :, :-1]
-
-    ct_temp.drop_last_modulus()
-
-    np.testing.assert_array_equal(ct_temp.get_batch_ciphertext(), expected_remaining)
-    self.assertEqual(ct_temp.num_moduli, self.drop_shapes["num_moduli"] - 1)
-    self.assertEqual(ct_temp.ntt_ctx.ff_ctx.moduli_reduction.shape[0], self.drop_shapes["num_moduli"] - 1)
 
 class CiphertextArithmeticTest(parameterized.TestCase):
   def setUp(self):

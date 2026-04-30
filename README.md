@@ -1,3 +1,5 @@
+
+
 <!-- markdownlint-disable MD001 MD041 -->
 <p align="center">
   <img alt="FEATHER" src="figure_drawer/cross_logo.png" width=15%>
@@ -21,14 +23,10 @@ For questions, please drop an email to our community [email](cpacommunity@google
 
 ---
 
-# CROSS: Enable AI Accelerator for Homomorphic Encryption 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)  
+# CROSS: Enable AI Accelerator for Homomorphic Encryption
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-- [Paper](https://arxiv.org/pdf/2501.07047v3)
-- [Tutorial](https://efficientppml.github.io/CROSS_Tutorial/)
-- Artifact Evaluation: please navigate to the jaxite_word folder.
-
-# 1. What is CROSS?
+# What is CROSS?
 CROSS is the first project to enable AI Accelerator, such as Google TPUs, to accelerate Homomorphic Encryption and achieves the State-of-the-art (SotA) throughput and energy efficiency (performance per watt) in HE operators (e.g., HE-Multiplication, HE-Rotation) and HE kernerls (e.g., Number Theory Transformation throughput) among commodity devices (CPUs, GPUs, FPGAs). The detailed flow is shown in the figure below.
 
 <img src="./figure_drawer/cross_overview.png" width="800">
@@ -45,6 +43,58 @@ Notes:
 - It's called jaxite_word as it adopts word-level homomorphic encryption scheme ([CKKS](https://eprint.iacr.org/2016/421.pdf)).
 - TPU could be programmed by JAX, PyTorch and TensorFlow. We choose JAX to make it aligned with existing bit-level homomorphic encryption library [jaxite](https://github.com/google/jaxite). JAX itself is a hardware agnostic library which could run on CPU, GPU and TPU, such that CROSS could run on CPU and GPU as well for functional testing. For performance evaluation on GPU, we recommend implementing a customized CUDA kernel to get better performance.
 - CROSS is verified against [OpenFHE](https://github.com/openfheorg/openfhe-development). And CROSS could directly take encrypted ciphertext value from OpenFHE and accelerate it on TPU.
+
+- Artifact Evaluation: please navigate to the jaxite_word folder.
+
+# 1. Quickstart
+
+```bash
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+chmod +x ./Miniconda3-latest-Linux-x86_64.sh
+./Miniconda3-latest-Linux-x86_64.sh
+# follow instructions and set up launch into .bashrc
+```
+
+```bash
+conda create --name jaxite python=3.13 && conda activate jaxite
+pip install -U "jax[tpu]" xprof absl-py pandas gmpy2
+```
+
+A ciphertext is a 3-D `jax.Array` of `(num_elements, num_towers, degree)`.
+Fresh ciphertexts live at `max_level = (num_q - 1) // composite_degree`; each
+rescale consumes one level.
+
+## 1.1 Context-level HE operator API
+
+`jaxite_word/he_ops.py`, `jaxite_word/he_params.py`, `jaxite_word/ptct_mul.py`,
+plus extensions to `ckks_ctx.py`, `hemul.py`, `finite_field.py`, `ntt_mm.py`,
+`ciphertext.py`. Documented in `jaxite_word/API_REFERENCE.md`.
+
+`CKKSContext.program_initialization(...)` is an offline step that builds a
+shared `HEParameterCache` (NTT / Barrett / per-level BConv / pre-allocated
+ciphertext helpers) and exposes level-indexed accessors.
+
+```python
+ctx = CKKSContext(params)
+ctx.program_initialization(
+    total_hemul_levels=3,
+    total_rotation_indices=[1, 2],
+    dnum=3, r=4, c=4, batch=1)
+
+result = ctx.he_mul[level].mul(ct1, ct2)              # ct × ct (rescale + relin)
+ct3   = ctx.he_mul[level].hemul_no_relin(ct1, ct2)    # 3-element output
+ct2   = ctx.he_mul[level].relinearize(ct3)            # back to 2-element
+rot   = ctx.he_rot[level, k].rotate(ct)
+op    = ctx.ptct_mul[level]; op.set_plaintext(pt_ntt); ct_out = op.mul(ct_in)
+ct_lo = ctx.he_rescale[src, dst](ct)
+```
+
+Underlying classes added: `HEMulAtLevel`, `HERotAtLevel`, `HERescaleOp`,
+`HEPtCtMulAtLevel`, `HEBsgsMatVecAtLevel`, plus `SlicedNTTContext` and
+`SlicedBarrettContext` that share parent twiddle/Barrett tables.
+
+Tests: `ckks_ctx_test.py`, `hemul_test.py`, `herot_test.py`, `ptct_mul_test.py`.
+
 
 
 # 2. TPU Setup
@@ -163,6 +213,8 @@ where `<item>` could take following keys to launch corresponding tests.
 - `ckks_ctx`: Encoding, Encryption, Decoding, Decryption and end-to-end multiplication, rotation and rescaling.
 - `add`: homomorphic encryption addition.
 - `sub`: homomorphic encryption subtraction.
+- `bsgs`: homomorphic encryption baby-step-giant-step implementation for matrix multiplication.
+- `matvec`: homomorphic encryption matrix vector multiplication implementation.
 
 For each kernel, we offer `<item>_test.py` for functional correctness testing, and `<item>_performance_test.py` for performance testing.
 
@@ -232,7 +284,6 @@ Note that 9090 could be changed into any port that u prefer. Once it's completed
 ```bash
 python3 <path_to_cross>/profile_analysis/analyze_trace_json.py <profiling_folder>/filtered_events.json
 ```
-
 
 ## 4 Artifact Evaluation
 For reproducing our results in the HPCA'26 paper, please navigate into the jaxite_word folder, and run following command to obtain the results for each individual table or figure.
