@@ -40,8 +40,6 @@ import jax.numpy as jnp
 
 import bsgs as _bsgs
 import ckks_ctx
-import decrypt_fast
-import encrypt_fast
 from herot import HERot
 import key_gen as kg
 from matvec import make_ptct_rescale_fn
@@ -173,7 +171,6 @@ CI, H_IN, W_IN = 1, 28, 28
 CO, KH, KW = 5, 2, 2
 H_OUT, W_OUT = 14, 14
 CONV_AREA = H_OUT * W_OUT
-CONV_OUT_SIZE = CO * CONV_AREA
 FC1_IN, FC1_OUT = 980, 100
 FC2_IN, FC2_OUT = 100, 10
 
@@ -284,33 +281,6 @@ def resolve_indices(n_images: int, n: int, indices: str) -> list[int]:
     if count < 1:
         raise ValueError("At least one image must be selected.")
     return list(range(count))
-
-
-def build_conv1_toeplitz(W1: np.ndarray) -> np.ndarray:
-    """Build the (CO*CONV_AREA, KH*KW*CONV_AREA) Toeplitz matrix for conv1.
-
-    The packed input vector laid out by `pack_lola_input` consists of 4 stride-
-    channels (rs in [0, 4)) of CONV_AREA=196 spatial cells each, total 784
-    slots. Conv1 (1->5, 2x2, stride 2) maps this to 5 output channels of 196
-    cells, total 980 slots. Each output cell is the dot product of the trained
-    2x2 kernel with the four corresponding input cells from the four stride
-    channels. The whole conv1 thus reduces to a single (980, 784) sparse
-    matrix-vector product whose nonzero diagonals are at indices
-    `(rs - co) * CONV_AREA mod NUM_SLOTS` for `(co, rs) in [0, CO) x
-    [0, KH*KW)`. Identical packing convention to ORION's stride-2 multiplexing
-    (Gazelle / `models/lola.py` in the orion repo).
-    """
-    W1_flat = W1.ravel()  # (5*4=20)
-    M = np.zeros((CO * CONV_AREA, KH * KW * CONV_AREA), dtype=np.float64)
-    eye_block = np.eye(CONV_AREA, dtype=np.float64)
-    for co in range(CO):
-        for r_ in range(KH):
-            for s_ in range(KW):
-                rs = r_ * 2 + s_
-                w = W1_flat[co * KH * KW + r_ * KW + s_]
-                M[co * CONV_AREA: (co + 1) * CONV_AREA,
-                  rs * CONV_AREA: (rs + 1) * CONV_AREA] = w * eye_block
-    return M
 
 
 def build_conv1_bias_slots(b1: np.ndarray) -> np.ndarray:
@@ -711,7 +681,7 @@ class LoLAHE:
             raise ValueError(
                 f"encrypt() only valid at batch=1; current batch={self._batch}. "
                 f"Use encrypt_batch(...).")
-        ct_np = encrypt_fast.fast_encode_encrypt(
+        ct_np = ckks_ctx.fast_encode_encrypt(
             [complex(float(v)) for v in slots[:NUM_SLOTS]],
             self.ctx, scale=self._sf,
         )                                                # (2, N, M) uint64
@@ -732,7 +702,7 @@ class LoLAHE:
                 f"encrypt_batch got {B} slot vectors but model batch={self._batch}.")
         cts = []
         for slots in slots_list:
-            ct_np = encrypt_fast.fast_encode_encrypt(
+            ct_np = ckks_ctx.fast_encode_encrypt(
                 [complex(float(v)) for v in slots[:NUM_SLOTS]],
                 self.ctx, scale=self._sf,
             )
@@ -759,7 +729,7 @@ class LoLAHE:
         old_bypass = getattr(cc, "BYPASS_DECODE_STDDEV_CHECK", False)
         cc.BYPASS_DECODE_STDDEV_CHECK = True
         try:
-            return decrypt_fast.fast_decrypt_decode(
+            return ckks_ctx.fast_decrypt_decode(
                 ct_np, self.ctx, scale, slots_to_decode=slots_to_decode
             )
         finally:
@@ -769,8 +739,8 @@ class LoLAHE:
         """Decrypt a (B, 2, R, C, M) ciphertext into a list of B slot arrays.
 
         Each batch index decrypts independently on CPU (the cached
-        decrypt_fast tables are shared, only the per-call SK*INTT runs
-        per item).
+        ckks_ctx decrypt tables are shared, only the per-call SK*INTT
+        runs per item).
         """
         if scale is None:
             scale = self._sf
@@ -784,7 +754,7 @@ class LoLAHE:
         cc.BYPASS_DECODE_STDDEV_CHECK = True
         try:
             return [
-                decrypt_fast.fast_decrypt_decode(
+                ckks_ctx.fast_decrypt_decode(
                     ct_np[b], self.ctx, scale, slots_to_decode=slots_to_decode)
                 for b in range(B)
             ]
@@ -1093,7 +1063,66 @@ class LoLAHE:
         # (loop vs fused: 331 -> 288 ms median at 7Q+3P B=1; full A/B
         # writeup in demos/TRIALS.md "Conv1 XLA scan-fusion").
         self.build_conv1_fused_jit(self.ctx.max_level)
+        # Build the single-graph end-to-end fused-forward closure (mirrors
+        # the LeNet/AlexNetTiny pattern; required for `pipelined_infer_multichip`).
+        self._build_fused_forward()
         print(f"[precompute] done in {time.perf_counter() - t0:.1f}s")
+
+    # --------------------------------------------------------------
+    # End-to-end fused-forward closure (used by `pipelined_infer_multichip`)
+    # --------------------------------------------------------------
+    def _build_fused_forward(self) -> None:
+        """Single-graph closure: ct.polynomial → out.polynomial.
+
+        Composes all 5 stages on raw arrays (bypassing `BSGSMatVec.mul()`
+        which would construct fresh Polynomial wrappers without ntt_ctx
+        and fail JIT tracing). Exposes the closure on `_jit_fused_forward`
+        and the convenience attributes `_R, _C, _DEGREE, _Q, _BATCH, _SF,
+        _L_fc` that `multichip_pipeline.pipelined_infer_multichip` reads.
+        """
+        L_max = self.ctx.max_level
+        if L_max not in getattr(self, "_jit_conv1_fused", {}):
+            self.build_conv1_fused_jit(L_max)
+        conv1_fused = self._jit_conv1_fused[L_max]
+
+        fc1_inner = self._fc1_bsgs._bsgs
+        fc2_inner = self._fc2_bsgs._bsgs
+
+        def _baby_keys(inner):
+            if inner._baby_eval_a is not None:
+                return (inner._baby_eval_a, inner._baby_eval_b, inner._baby_cm)
+            return (jnp.zeros((0,), dtype=jnp.uint64),
+                    jnp.zeros((0,), dtype=jnp.uint64),
+                    jnp.zeros((0,), dtype=jnp.int32))
+        bk_fc1 = _baby_keys(fc1_inner)
+        bk_fc2 = _baby_keys(fc2_inner)
+        fc1_mul_fn = fc1_inner._mul_fn
+        fc2_mul_fn = fc2_inner._mul_fn
+
+        @jax.jit
+        def fused(ct_polynomial):
+            x = conv1_fused(ct_polynomial)
+            ct = self._mk(x, x.shape[-1])
+            ct = self._fast_he_mul_paths[self._square1_out_level].square(ct)
+            x = fc1_mul_fn(ct.polynomial, *bk_fc1)
+            ct = self._mk(x, x.shape[-1])
+            ct = self._add_encoded_plaintext(ct, self._fc1_bias_pt)
+            ct = self._fast_he_mul_paths[self._square2_out_level].square(ct)
+            x = fc2_mul_fn(ct.polynomial, *bk_fc2)
+            ct = self._mk(x, x.shape[-1])
+            ct = self._add_encoded_plaintext(ct, self._fc2_bias_pt)
+            return ct.polynomial
+
+        self._jit_fused_forward = fused
+
+        # Adapter attributes for `multichip_pipeline.pipelined_infer_multichip`.
+        self._R = R                      # module-level layout constant
+        self._C = C
+        self._DEGREE = self.ctx.degree
+        self._Q = list(self._q_towers)
+        self._BATCH = self._batch
+        self._SF = self._sf
+        self._L_fc = self._logits_level
 
     def _make_dense_bias_slots(self, bias, width):
         slots = np.zeros(NUM_SLOTS)
@@ -1215,6 +1244,13 @@ class LoLAHE:
 
         # Pre-compile the fused XLA graph for conv1 (default fast path).
         self.build_conv1_fused_jit(self.ctx.max_level)
+        # Build the single-graph end-to-end fused-forward (used by
+        # `multichip_pipeline.pipelined_infer_multichip`).
+        try:
+            self._build_fused_forward()
+        except Exception as e:                                          # noqa: BLE001
+            print(f"[fused] WARNING: _build_fused_forward failed: {e}")
+            self._jit_fused_forward = None
 
     # --------------------------------------------------------------
     # Profiler entry point (for perf tests)
@@ -1259,17 +1295,6 @@ class LoLAHE:
 # ---------------------------------------------------------------------------
 # Entry points
 # ---------------------------------------------------------------------------
-def instantiate_model(spec: str | None = None) -> "LoLAHE":
-    """Return a fresh LoLAHE instance. `spec` is accepted for backwards
-    compatibility but is ignored since there is only one variant."""
-    return LoLAHE()
-
-
-def maybe_precompute(model: Any, weights: tuple[np.ndarray, ...]) -> None:
-    if hasattr(model, "precompute_plaintexts"):
-        model.precompute_plaintexts(*weights)
-
-
 def run_demo(
     model,
     title: str,
@@ -1362,6 +1387,27 @@ def main(argv: list[str] | None = None):
     )
     if args.profile:
         print(f"Logs:        {os.path.join(_DEMO_DIR, 'log')}/")
+
+
+# ===========================================================================
+# Multi-chip pipelined inference — re-exports of the shared utility.
+# See `demos/multichip_pipeline.py` for the implementation.
+# ===========================================================================
+from multichip_pipeline import (build_pipeline_pool,                       # noqa: E402
+                                  pipelined_infer_multichip as _pipelined)
+
+
+def pipelined_infer_multichip(model, images, *Wargs, pool=None, n_chips=None):
+    """LoLAHE-specific wrapper around `multichip_pipeline.pipelined_infer_multichip`.
+
+    Slot-packs inputs via `pack_lola_input`; otherwise delegates entirely
+    to the shared utility. `Wargs` is ignored (model state already encodes
+    the weights).
+    """
+    del Wargs
+    return _pipelined(model, images,
+                       pack_fn=pack_lola_input,
+                       pool=pool, n_chips=n_chips)
 
 
 if __name__ == "__main__":

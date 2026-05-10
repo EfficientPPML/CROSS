@@ -1,13 +1,16 @@
 """CI gate for the vectorized encrypt/decrypt fast paths.
 
-Runs `decrypt_fast_test` and `encrypt_fast_test` in one process and prints a
-single PASS/FAIL summary. Returns exit code 0 if all green, nonzero otherwise.
+Runs the `FastEncryptCorrectness` and `FastDecryptCorrectness` classes from
+`ckks_ctx_test` (where the bit-exact tests now live, after both the old
+`encrypt_fast.py` and `decrypt_fast.py` were inlined into `ckks_ctx.py`) in
+one process and prints a single PASS/FAIL summary. Returns exit code 0 if
+all green, nonzero otherwise.
 
-Run before any change to `decrypt_fast.py`, `encrypt_fast.py`, or the
-`LoLAHE.encrypt` / `LoLAHE.decrypt` wrappers.
+Run before any change to the embedded fast-encrypt or fast-decrypt section
+of `ckks_ctx.py`, or the `LoLAHE.encrypt` / `LoLAHE.decrypt` wrappers.
 
 Usage:
-    python3 jaxite_word/run_fast_path_tests.py
+    python3 jaxite_word/fast_encryption_decryption_test.py
 """
 from __future__ import annotations
 import os
@@ -26,13 +29,17 @@ def main():
     import jax
     jax.config.update("jax_enable_x64", True)
 
+    import ckks_ctx_test
     loader = unittest.TestLoader()
     suite = unittest.TestSuite()
-    for module_name in ("decrypt_fast_test", "encrypt_fast_test"):
-        suite.addTests(loader.loadTestsFromName(module_name))
+    suite.addTests(loader.loadTestsFromTestCase(
+        ckks_ctx_test.FastEncryptCorrectness))
+    suite.addTests(loader.loadTestsFromTestCase(
+        ckks_ctx_test.FastDecryptCorrectness))
 
     print(f"[fast-path CI] running {suite.countTestCases()} tests "
-          f"from decrypt_fast_test + encrypt_fast_test ...")
+          f"from ckks_ctx_test::FastEncryptCorrectness + "
+          f"FastDecryptCorrectness ...")
     t0 = time.perf_counter()
     runner = unittest.TextTestRunner(verbosity=2, stream=sys.stdout)
     result = runner.run(suite)

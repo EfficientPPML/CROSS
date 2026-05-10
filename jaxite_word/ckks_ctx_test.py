@@ -1,3 +1,6 @@
+import os
+import sys
+
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -11,6 +14,12 @@ import util
 import key_gen as kg
 from absl.testing import absltest
 from absl.testing import parameterized
+
+# `FastEncryptCorrectness` uses `LoLAHE` from the demos directory.
+_THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+_DEMO_DIR = os.path.abspath(os.path.join(_THIS_DIR, "..", "demos"))
+if _DEMO_DIR not in sys.path:
+    sys.path.insert(0, _DEMO_DIR)
 
 HEMul = hemul.HEMul
 Polynomial = polynomial.Polynomial
@@ -247,6 +256,312 @@ class CKKSContextTest(parameterized.TestCase):
             15,  # Each modulus contributes at least 15 bits
             f"composite_degree={composite_degree} should use reasonable moduli"
         )
+
+
+# ===========================================================================
+# Bit-exact correctness gates for the vectorized fast encrypt/encode and
+# decrypt/decode paths (formerly in `encrypt_fast_test.py` and
+# `decrypt_fast_test.py`).
+#
+# Encrypt side — reference is `ckks_ctx.ckks_encrypt_fall_back` +
+# `ckks_ctx.ckks_encode_fall_back` (pure-Python). We require:
+#   * forward NTT (negacyclic, bit-reversed output) bit-equal to the reference
+#     for random and edge inputs;
+#   * `fast_encrypt_from_plaintext` bit-equal to `ckks_encrypt_fall_back` when
+#     given the same `(v, e)`;
+#   * full `fast_encode_encrypt` round-trip through `fast_decrypt_decode`
+#     recovers the input slot vector within CKKS noise tolerance.
+#
+# Decrypt side — reference is `CKKSContext.decrypt` (pure-Python triple-loop +
+# util.intt_negacyclic_bit_reverse) and `CKKSContext.decode`. We require all
+# RNS coefficients to be **bit-equal**; decoded slot values must be within
+# CKKS noise tolerance.
+#
+# Both classes use `LoLAHE.from_cache(...)` for a fully-initialized
+# CKKSContext; they skip themselves if the cache file is absent.
+# ===========================================================================
+_LOLA_CACHE_PATH = os.path.join(_DEMO_DIR, "log", "lola_cache_7q3p.pkl")
+_LOLA_MODEL = None
+_LOLA_DATA = None
+
+
+def _load_lola_model():
+    global _LOLA_MODEL
+    if _LOLA_MODEL is None:
+        from lola_he import LoLAHE
+        _LOLA_MODEL = LoLAHE.from_cache(_LOLA_CACHE_PATH)
+        ckks_ctx.BYPASS_DECODE_STDDEV_CHECK = True
+    return _LOLA_MODEL
+
+
+def _load_lola_data():
+    """Cached lazy-load of the LoLA evaluation set used by decrypt tests."""
+    global _LOLA_DATA
+    if _LOLA_DATA is None:
+        from lola_he import load_or_generate_data
+        _LOLA_DATA, _ = load_or_generate_data()
+    return _LOLA_DATA
+
+
+def _build_ct(ct_np: np.ndarray, q_towers, deg) -> Polynomial:
+    """Wrap a numpy ciphertext into a Polynomial for the legacy decrypt path."""
+    nq = ct_np.shape[-1]
+    dc = Polynomial(
+        {"batch": 1, "num_elements": 2, "degree": deg,
+         "precision": 32, "num_moduli": nq, "degree_layout": (deg,)},
+        {"moduli": q_towers[:nq]},
+    )
+    dc.polynomial = jnp.array(ct_np).reshape(1, 2, deg, nq)
+    return dc
+
+
+def _ref_ntt(coeffs_per_tower, q_towers, psi_pairs, N):
+    ref = np.empty((N, len(q_towers)), dtype=np.uint64)
+    for m, (qm, psi) in enumerate(zip(q_towers, psi_pairs)):
+        nt = util.ntt_negacyclic_bit_reverse(coeffs_per_tower[m], int(qm), psi)
+        rev = util.bit_reverse_array(nt)
+        ref[:, m] = np.array(rev, dtype=np.uint64)
+    return ref
+
+
+class FastEncryptCorrectness(absltest.TestCase):
+    """Bit-exact tests for the vectorized fast encrypt / encode path."""
+
+    @classmethod
+    def setUpClass(cls):
+        if not os.path.isfile(_LOLA_CACHE_PATH):
+            raise absltest.SkipTest(
+                f"LoLA cache missing at {_LOLA_CACHE_PATH}; run "
+                f"`python3 demos/lola_he.py` to build it (~6 min) "
+                f"before running FastEncryptCorrectness.")
+
+    def test_forward_ntt_random(self):
+        m = _load_lola_model()
+        N = m.ctx.degree
+        M = len(m.ctx.q_towers)
+        psi_pairs = [util.root_of_unity(2 * N, q) for q in m.ctx.q_towers]
+        rng = np.random.default_rng(0xBEEF)
+        coeffs = []
+        for j in range(M):
+            qj = int(m.ctx.q_towers[j])
+            coeffs.append(
+                [int(c) for c in rng.integers(0, qj, size=N, dtype=np.uint64)]
+            )
+        ref = _ref_ntt(coeffs, m.ctx.q_towers, psi_pairs, N)
+        rns = np.zeros((N, M), dtype=np.uint64)
+        for j in range(M):
+            rns[:, j] = np.array(coeffs[j], dtype=np.uint64)
+        cache = ckks_ctx._get_encrypt_cache(m.ctx, M)
+        fast = ckks_ctx.vectorized_ntt(rns, cache)
+        self.assertTrue(np.array_equal(ref, fast))
+
+    def test_forward_ntt_edge(self):
+        m = _load_lola_model()
+        N = m.ctx.degree
+        M = len(m.ctx.q_towers)
+        psi_pairs = [util.root_of_unity(2 * N, q) for q in m.ctx.q_towers]
+        # Edge: zeros, ones, q-1, alternating.
+        coeffs = []
+        for j in range(M):
+            qj = int(m.ctx.q_towers[j])
+            row = ([0, 1, qj - 1, qj // 2] * (N // 4 + 1))[:N]
+            coeffs.append(row)
+        ref = _ref_ntt(coeffs, m.ctx.q_towers, psi_pairs, N)
+        rns = np.zeros((N, M), dtype=np.uint64)
+        for j in range(M):
+            rns[:, j] = np.array(coeffs[j], dtype=np.uint64)
+        cache = ckks_ctx._get_encrypt_cache(m.ctx, M)
+        fast = ckks_ctx.vectorized_ntt(rns, cache)
+        self.assertTrue(np.array_equal(ref, fast))
+
+    def test_encrypt_bit_equal_with_seeded_v_e(self):
+        m = _load_lola_model()
+        from lola_he import NUM_SLOTS
+        N = m.ctx.degree
+        M = len(m.ctx.q_towers)
+        psi_pairs = [util.root_of_unity(2 * N, q) for q in m.ctx.q_towers]
+        # Deterministic v ∈ {0, 1, ..} (small, mirrors sampling shape; the
+        # bit-exact equivalence holds for arbitrary v including ternary).
+        v_coeffs = [(i * 31 + 7) & 1 for i in range(N)]
+        e0_coeffs = [(i * 13 - 5) % 11 - 5 for i in range(N)]
+        e1_coeffs = [(i * 17 + 3) % 11 - 5 for i in range(N)]
+        v_rns, e0_rns, e1_rns = [], [], []
+        for j in range(M):
+            qj = int(m.ctx.q_towers[j])
+            psi = psi_pairs[j]
+            v_rns.append(list(util.bit_reverse_array(
+                util.ntt_negacyclic_bit_reverse(
+                    [c % qj for c in v_coeffs], qj, psi))))
+            e0_rns.append(list(util.bit_reverse_array(
+                util.ntt_negacyclic_bit_reverse(
+                    [c % qj for c in e0_coeffs], qj, psi))))
+            e1_rns.append(list(util.bit_reverse_array(
+                util.ntt_negacyclic_bit_reverse(
+                    [c % qj for c in e1_coeffs], qj, psi))))
+        slots = [complex(i * 0.1, 0.0) for i in range(NUM_SLOTS)]
+        pt = m.ctx.encode(slots)
+        # Use the pure-Python reference (`_fall_back`) for bit-exact baseline.
+        # The default `ckks_encrypt` is now itself the fast path, so a
+        # comparison against it would be tautological.
+        leg = ckks_ctx.ckks_encrypt_fall_back(
+            plaintext=pt.polynomial[0, 0].tolist(),
+            public_key=[
+                [list(m.ctx.public_key[k][j]) for j in range(M)]
+                for k in range(2)
+            ],
+            q_towers=list(m.ctx.q_towers),
+            v=v_rns, e=[e0_rns, e1_rns],
+        )
+        leg_arr = np.array(leg, dtype=np.uint64)               # (2, N, M)
+        pt_eval = np.asarray(pt.polynomial[0, 0], dtype=np.uint64)
+        fast = ckks_ctx.fast_encrypt_from_plaintext(
+            pt_eval, m.ctx, v=v_rns, e=[e0_rns, e1_rns],
+        )
+        self.assertTrue(np.array_equal(leg_arr, fast))
+
+    def test_round_trip_random_slots(self):
+        m = _load_lola_model()
+        from lola_he import NUM_SLOTS, SF
+        rng = np.random.default_rng(0xDEAD)
+        for trial in range(3):
+            slots = np.zeros(NUM_SLOTS, dtype=complex)
+            slots[: 200] = rng.standard_normal(200) * 5.0
+            ct_np = ckks_ctx.fast_encode_encrypt(
+                [complex(v) for v in slots], m.ctx, scale=SF
+            )
+            recovered = ckks_ctx.fast_decrypt_decode(ct_np, m.ctx, SF)
+            err = float(np.max(np.abs(recovered[:200] - slots[:200].real)))
+            self.assertLess(err, 1e-3,
+                            f"trial={trial} round-trip max-err={err:.2e}")
+
+
+class FastDecryptCorrectness(absltest.TestCase):
+    """Bit-exact tests for the vectorized fast decrypt / decode path."""
+
+    @classmethod
+    def setUpClass(cls):
+        if not os.path.isfile(_LOLA_CACHE_PATH):
+            raise absltest.SkipTest(
+                f"LoLA cache missing at {_LOLA_CACHE_PATH}; run "
+                f"`python3 demos/lola_he.py` to build it (~6 min) "
+                f"before running FastDecryptCorrectness.")
+
+    def test_random_ciphertexts_all_levels(self):
+        m = _load_lola_model()
+        deg = m.ctx.degree
+        q_full = m.ctx.q_towers
+        for nq in range(1, len(q_full) + 1):
+            with self.subTest(nq=nq):
+                rng = np.random.default_rng(1234 + nq)
+                ct = np.zeros((2, deg, nq), dtype=np.uint64)
+                for j in range(nq):
+                    ct[0, :, j] = rng.integers(0, int(q_full[j]),
+                                               size=deg, dtype=np.uint64)
+                    ct[1, :, j] = rng.integers(0, int(q_full[j]),
+                                               size=deg, dtype=np.uint64)
+                leg = np.asarray(
+                    m.ctx.decrypt(_build_ct(ct, q_full, deg)).polynomial[0, 0],
+                    dtype=np.uint64)
+                fast = ckks_ctx.fast_decrypt_to_rns_coeffs(ct, m.ctx)
+                self.assertTrue(
+                    np.array_equal(leg, fast),
+                    f"RNS mismatch at nq={nq}: max|diff|="
+                    f"{int(np.max(np.abs(leg.astype(np.int64) - fast.astype(np.int64))))}"
+                )
+
+    def test_edge_coefficients(self):
+        m = _load_lola_model()
+        deg = m.ctx.degree
+        q_full = m.ctx.q_towers
+        for nq in (1, min(4, len(m.ctx.secret_key)),
+                   len(m.ctx.secret_key)):
+            with self.subTest(nq=nq):
+                ct = np.zeros((2, deg, nq), dtype=np.uint64)
+                for j in range(nq):
+                    qv = int(q_full[j])
+                    ct[0, :, j] = np.array(
+                        [0, qv - 1, qv >> 1, (qv >> 1) - 1, (qv >> 1) + 1] *
+                        (deg // 5 + 1), dtype=np.uint64)[:deg]
+                    ct[1, :, j] = np.array(
+                        [qv - 1, 0, 1, qv - 2, qv >> 2] *
+                        (deg // 5 + 1), dtype=np.uint64)[:deg]
+                leg = np.asarray(
+                    m.ctx.decrypt(_build_ct(ct, q_full, deg)).polynomial[0, 0],
+                    dtype=np.uint64)
+                fast = ckks_ctx.fast_decrypt_to_rns_coeffs(ct, m.ctx)
+                self.assertTrue(np.array_equal(leg, fast))
+
+    def test_real_lola_output(self):
+        m = _load_lola_model()
+        from lola_he import (prepare_weights, pack_lola_input,
+                             FC1_OUT, FC1_IN, FC2_OUT, FC2_IN, SF, DEGREE)
+        data = _load_lola_data()
+        weights = prepare_weights(data)
+        img = data["imgs"][0]
+        ct = m.encrypt(pack_lola_input(img))
+        lv = m.ctx.max_level
+        ct = m.conv1_lola(ct, *weights[:2], lv); lv -= 1
+        ct = m.he_mul(ct, lv - 1); lv -= 1
+        ct = m.matmul_he(ct, weights[2].reshape(FC1_OUT, FC1_IN),
+                         FC1_OUT, FC1_IN, lv); lv -= 1
+        ct = m._add_encoded_plaintext(ct, m._fc1_bias_pt)
+        ct = m.he_mul(ct, lv - 1); lv -= 1
+        ct = m.matmul_he(ct, weights[4].reshape(FC2_OUT, FC2_IN),
+                         FC2_OUT, FC2_IN, lv); lv -= 1
+        ct = m._add_encoded_plaintext(ct, m._fc2_bias_pt)
+        nq = ct.num_moduli
+        ct_np = np.asarray(ct.polynomial.reshape(2, DEGREE, nq), dtype=np.uint64)
+        m.ctx.output_scale = SF
+        leg_rns = np.asarray(
+            m.ctx.decrypt(_build_ct(ct_np, m.ctx.q_towers, DEGREE)).polynomial[0, 0],
+            dtype=np.uint64)
+        fast_rns = ckks_ctx.fast_decrypt_to_rns_coeffs(ct_np, m.ctx)
+        self.assertTrue(np.array_equal(leg_rns, fast_rns))
+
+        leg_slots = np.asarray(
+            m.ctx.decode(
+                m.ctx.decrypt(_build_ct(ct_np, m.ctx.q_towers, DEGREE)),
+                is_ntt=False),
+            dtype=complex).real
+        fast_slots = ckks_ctx.fast_decrypt_decode(ct_np, m.ctx, SF)
+        self.assertLess(
+            float(np.max(np.abs(leg_slots[:FC2_OUT] - fast_slots[:FC2_OUT]))),
+            1e-6, "decoded slot values exceed CKKS tolerance",
+        )
+
+    def test_batched_repeated_calls(self):
+        """Cache should stay correct across many decrypt calls at varying nq."""
+        m = _load_lola_model()
+        deg = m.ctx.degree
+        q_full = m.ctx.q_towers
+        rng = np.random.default_rng(0xAA)
+        for trial in range(8):
+            nq = 1 + (trial % 4) * 2          # 1, 3, 5, 7
+            ct = np.zeros((2, deg, nq), dtype=np.uint64)
+            for j in range(nq):
+                ct[0, :, j] = rng.integers(0, int(q_full[j]), size=deg,
+                                            dtype=np.uint64)
+                ct[1, :, j] = rng.integers(0, int(q_full[j]), size=deg,
+                                            dtype=np.uint64)
+            leg = np.asarray(
+                m.ctx.decrypt(_build_ct(ct, q_full, deg)).polynomial[0, 0],
+                dtype=np.uint64)
+            fast = ckks_ctx.fast_decrypt_to_rns_coeffs(ct, m.ctx)
+            self.assertTrue(np.array_equal(leg, fast),
+                            f"trial={trial} nq={nq} batched-call mismatch")
+
+    def test_zero_ciphertext(self):
+        m = _load_lola_model()
+        deg = m.ctx.degree
+        for nq in (1, min(4, len(m.ctx.secret_key)),
+                   len(m.ctx.secret_key)):
+            ct = np.zeros((2, deg, nq), dtype=np.uint64)
+            leg = np.asarray(
+                m.ctx.decrypt(_build_ct(ct, m.ctx.q_towers, deg)).polynomial[0, 0],
+                dtype=np.uint64)
+            fast = ckks_ctx.fast_decrypt_to_rns_coeffs(ct, m.ctx)
+            self.assertTrue(np.array_equal(leg, fast))
+            self.assertTrue(np.all(fast == 0))
 
 
 if __name__ == "__main__":

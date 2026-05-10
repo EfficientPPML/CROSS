@@ -1,9 +1,11 @@
 import cmath
 import math
+import os
 import random
-from typing import List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import jax.numpy as jnp
+import numpy as np
 
 import util
 from he_ops import HEMulAccessor
@@ -180,7 +182,397 @@ def fit_to_native_vector(
   return native
 
 
+# ===========================================================================
+# Vectorized CKKS encrypt + encode (CPU/NumPy uint64).
+#
+# Embedded from the former `encrypt_fast.py` module. Exposes:
+#   * `vectorized_ntt(coeffs, cache)`             - forward negacyclic NTT
+#   * `fast_encrypt_from_plaintext(pt, ctx, ...)` - asymmetric encrypt
+#   * `fast_encode(slots, ctx, ...)`              - slots → plaintext-eval
+#   * `fast_encode_encrypt(slots, ctx, scale)`    - combined entry point
+#
+# Noise sampling uses kernel CSPRNG via `os.urandom` + vectorized Box-Muller.
+# OpenFHE alignment:
+#   * `v` ~ TernaryUniform {-1, 0, +1} matches `OpenFHE::TernaryUniformGenerator`
+#     (`src/core/include/math/ternaryuniformgenerator-impl.h`).
+#   * `e0, e1` ~ continuous Gaussian (Box-Muller) rounded to nearest int.
+#     OpenFHE uses Peikert's CDF inversion or Karney's algorithm to draw from
+#     the *discrete* Gaussian directly. At σ ≈ 3.19 the two distributions
+#     agree to within parts per thousand and produce identical end-to-end
+#     correctness (decrypt ≈ plaintext within CKKS noise tolerance).
+#
+# `_ENCRYPT_CACHE` is keyed by `(id(ctx), num_q)` so repeated encrypts pay
+# the precomputation only once.
+# ===========================================================================
+_TWO_PI = 2.0 * math.pi
+_INV_2_53 = 1.0 / (1 << 53)
+
+
+def _csprng_uniform_open(n: int) -> np.ndarray:
+  """n float64 uniform on (0, 1] from kernel CSPRNG (one syscall)."""
+  raw = os.urandom(8 * n)
+  u64 = np.frombuffer(raw, dtype=np.uint64)
+  return (u64 >> 11).astype(np.float64) * _INV_2_53 + _INV_2_53
+
+
+def _csprng_gaussian(n: int, sigma: float) -> np.ndarray:
+  """n float64 ~ N(0, sigma²) via vectorized Box-Muller (one syscall)."""
+  n_pairs = (n + 1) // 2
+  u = _csprng_uniform_open(2 * n_pairs).reshape(n_pairs, 2)
+  radius = np.sqrt(-2.0 * np.log(u[:, 0]))
+  angle = _TWO_PI * u[:, 1]
+  z = np.empty(2 * n_pairs, dtype=np.float64)
+  z[0::2] = radius * np.cos(angle)
+  z[1::2] = radius * np.sin(angle)
+  return (z[:n] if 2 * n_pairs > n else z) * sigma
+
+
+def _csprng_ternary(n: int) -> np.ndarray:
+  """n samples uniform on {-1, 0, 1} as int64 (matches OpenFHE TernaryUniform).
+
+  2-bit rejection sampling: each byte produces 4 candidate 2-bit values
+  in {0,1,2,3}; reject 3 (yields {0,1,2}); map {0→0, 1→+1, 2→-1}.
+  Acceptance rate 3/4 → ~1.34 bytes/sample expected.
+  """
+  out = np.empty(n, dtype=np.int64)
+  filled = 0
+  while filled < n:
+    need = n - filled
+    n_bytes = max(need * 2 // 3 + 16, 16)
+    raw = np.frombuffer(os.urandom(n_bytes), dtype=np.uint8)
+    cand = np.concatenate([
+        raw & 3, (raw >> 2) & 3, (raw >> 4) & 3, (raw >> 6) & 3,
+    ])
+    accepted = cand[cand < 3].astype(np.int64)
+    signed = np.where(accepted == 2, -1, accepted)
+    take = min(len(signed), need)
+    if take > 0:
+      out[filled:filled + take] = signed[:take]
+      filled += take
+  return out
+
+
+class _EncryptCache:
+  """Per-(ctx, num_q) precomputed tables for forward NTT + encrypt."""
+
+  def __init__(self, q_towers: List[int], psi_pairs: List[int],
+               public_key, degree: int):
+    self.degree = int(degree)
+    self.num_q = len(q_towers)
+    M = self.num_q
+    N = self.degree
+
+    self.q = np.asarray(q_towers, dtype=np.uint64)              # (M,)
+    self.q_int = [int(q) for q in q_towers]
+
+    pk_full_0 = np.asarray(public_key[0], dtype=np.uint64)
+    pk_full_1 = np.asarray(public_key[1], dtype=np.uint64)
+    self.pk0 = pk_full_0[:M].T.copy()                            # (N, M)
+    self.pk1 = pk_full_1[:M].T.copy()                            # (N, M)
+
+    psi_pow = np.zeros((N, M), dtype=np.uint64)
+    for m in range(M):
+      qm = self.q_int[m]
+      psi_m = int(psi_pairs[m])
+      acc = 1
+      for i in range(N):
+        psi_pow[i, m] = acc
+        acc = (acc * psi_m) % qm
+    self.psi_pow = psi_pow
+
+    self.twiddles: Dict[int, np.ndarray] = {}
+    L = N
+    while L >= 2:
+      half = L // 2
+      tw = np.zeros((half, M), dtype=np.uint64)
+      for m in range(M):
+        qm = self.q_int[m]
+        omega_m = pow(int(psi_pairs[m]), 2, qm)
+        w_m = pow(omega_m, N // L, qm)
+        acc = 1
+        for j in range(half):
+          tw[j, m] = acc
+          acc = (acc * w_m) % qm
+      self.twiddles[L] = tw
+      L //= 2
+
+
+_ENCRYPT_CACHE: Dict[Tuple[int, int], _EncryptCache] = {}
+
+
+def _get_encrypt_cache(ctx, num_q: int) -> _EncryptCache:
+  key = (id(ctx), int(num_q))
+  c = _ENCRYPT_CACHE.get(key)
+  if c is None:
+    psi_pairs = [
+        util.root_of_unity(2 * ctx.degree, q) for q in ctx.q_towers[:num_q]
+    ]
+    c = _EncryptCache(
+        q_towers=list(ctx.q_towers[:num_q]),
+        psi_pairs=psi_pairs,
+        public_key=ctx.public_key,
+        degree=ctx.degree,
+    )
+    _ENCRYPT_CACHE[key] = c
+  return c
+
+
+def vectorized_ntt(coeffs: np.ndarray, cache: _EncryptCache) -> np.ndarray:
+  """Forward negacyclic NTT, vectorized over towers.
+
+  Input  : coeffs in coefficient form, shape (N, M) uint64.
+  Output : eval form in BIT-REVERSED order.
+  """
+  N, M = coeffs.shape
+  qb = cache.q.reshape(1, M)
+  a = (coeffs * cache.psi_pow) % qb
+  L = N
+  while L >= 2:
+    half = L // 2
+    n_blocks = N // L
+    a3 = a.reshape(n_blocks, L, M)
+    u = a3[:, :half, :]
+    v = a3[:, half:, :]
+    qb3 = qb.reshape(1, 1, M)
+    diff = (u + qb3 - v) % qb3
+    tw = cache.twiddles[L].reshape(1, half, M)
+    new_v = (diff * tw) % qb3
+    new_u = (u + v) % qb3
+    a = np.concatenate([new_u, new_v], axis=1).reshape(N, M)
+    L //= 2
+  return a
+
+
+def fast_encrypt_from_plaintext(plaintext_eval: np.ndarray, ctx,
+                                v=None, e=None, sigma: float = None,
+                                noise_scale_degree: int = None) -> np.ndarray:
+  """Vectorized CKKS encrypt.
+
+  Args:
+    plaintext_eval     : (N, M) uint64 in NTT eval form (bit-reversed).
+    ctx                : CKKSContext.
+    v                  : (M, N) Python list of NTT-form polynomial; if None
+                         a fresh ternary polynomial is sampled and NTT'd.
+    e                  : (e0, e1) Python lists in NTT form; if None fresh
+                         Gaussian polynomials are sampled and NTT'd.
+    sigma              : Gaussian std for noise sampling (when e is None).
+    noise_scale_degree : ns multiplier on noise term (matches OpenFHE).
+
+  Returns: np.uint64 array of shape (2, N, M) — c0, c1 in eval form.
+  """
+  N, M = plaintext_eval.shape
+  cache = _get_encrypt_cache(ctx, M)
+  qb = cache.q.reshape(1, M)
+  if sigma is None:
+    sigma = float(ctx.parameters.get("sigma", 3.190000057220458984375))
+  if noise_scale_degree is None:
+    noise_scale_degree = int(ctx.parameters.get("noise_scale_degree", 1))
+  ns = int(noise_scale_degree)
+
+  if v is None:
+    v_signed = _csprng_ternary(N)
+    q_int64 = cache.q.astype(np.int64).reshape(1, M)
+    v_rns = np.ascontiguousarray(
+        np.mod(v_signed[:, None], q_int64).astype(np.uint64))
+    v_eval = vectorized_ntt(v_rns, cache)
+  else:
+    v_eval = np.asarray(v, dtype=np.uint64).T.copy()
+
+  if e is None:
+    e_signed_all = np.round(_csprng_gaussian(2 * N, sigma)).astype(np.int64)
+    e0_signed = e_signed_all[:N]
+    e1_signed = e_signed_all[N:]
+    q_int64 = cache.q.astype(np.int64).reshape(1, M)
+    e0_rns = np.ascontiguousarray(
+        np.mod(e0_signed[:, None], q_int64).astype(np.uint64))
+    e1_rns = np.ascontiguousarray(
+        np.mod(e1_signed[:, None], q_int64).astype(np.uint64))
+    e0_eval = vectorized_ntt(e0_rns, cache)
+    e1_eval = vectorized_ntt(e1_rns, cache)
+  else:
+    e0_eval = np.asarray(e[0], dtype=np.uint64).T.copy()
+    e1_eval = np.asarray(e[1], dtype=np.uint64).T.copy()
+
+  # c0 = (v * pk0 + ns * e0 + plaintext) mod q
+  c0 = (v_eval * cache.pk0) % qb
+  c0 = (c0 + (ns * e0_eval) % qb) % qb
+  c0 = (c0 + plaintext_eval) % qb
+  # c1 = (v * pk1 + ns * e1) mod q
+  c1 = (v_eval * cache.pk1) % qb
+  c1 = (c1 + (ns * e1_eval) % qb) % qb
+  return np.stack([c0, c1], axis=0)
+
+
+def fast_encode(slots, ctx, scale: float = None,
+                noise_scale_degree: int = 1) -> np.ndarray:
+  """Vectorized CKKS encode (slots → plaintext eval form).
+
+  Output: (N, M) np.uint64 in NTT eval form (bit-reversed) — directly usable
+  as input to fast_encrypt_from_plaintext.
+  """
+  if scale is None:
+    scale = ctx.scaling_factor
+  N = ctx.degree
+  M = len(ctx.q_towers)
+  cache = _get_encrypt_cache(ctx, M)
+  m = N * 2
+
+  # 1) inverse special FFT on slot vector
+  y = list(slots)
+  FFTSpecialInv(y, m)
+
+  # 2) slot -> coefficients (length N, real)
+  coeffs = slot_to_coeffs(y)
+
+  # 3) scale + log-c bookkeeping
+  scaled = [scale * v for v in coeffs]
+  logc = -(10**9)
+  for v in scaled:
+    a = abs(v)
+    if a != 0.0:
+      logci = int(math.ceil(math.log2(a)))
+      if logc < logci:
+        logc = logci
+  if logc == -(10**9):
+    logc = 0
+  if logc < 0:
+    raise ValueError("Scaling factor too small")
+  max_bits_in_word = ctx.parameters.get("max_bits_in_word", 61)
+  max_bits_value = ctx.parameters.get(
+      "max_bits_value", (1 << 63) - (1 << 9) - 1
+  )
+  log_valid = logc if logc <= max_bits_in_word else max_bits_in_word
+  log_approx = logc - log_valid
+  approx_factor = 2.0**log_approx
+  ints_base = [nearest_int(v / approx_factor) for v in scaled]
+  ints_base = [x + max_bits_value if x < 0 else x for x in ints_base]
+
+  q_int = cache.q_int
+  ints_per_tower = [
+      fit_to_native_vector(ints_base, max_bits_value, q_int[m_id], N)
+      for m_id in range(M)
+  ]
+  if log_approx > 0:
+    step = 1 << log_approx
+    ints_per_tower = [
+        [(x * step) % q_int[m_id] for x in ints_per_tower[m_id]]
+        for m_id in range(M)
+    ]
+  if noise_scale_degree > 1:
+    int_pow_p = int(round(scale))
+    if int_pow_p != 1:
+      power = pow(int_pow_p, noise_scale_degree - 1)
+      ints_per_tower = [
+          [(x * power) % q_int[m_id] for x in ints_per_tower[m_id]]
+          for m_id in range(M)
+      ]
+
+  coeffs_rns = np.empty((N, M), dtype=np.uint64)
+  for m_id in range(M):
+    coeffs_rns[:, m_id] = np.array(ints_per_tower[m_id], dtype=np.uint64)
+
+  return vectorized_ntt(coeffs_rns, cache)
+
+
+def fast_encode_encrypt(slots, ctx, scale: float = None) -> np.ndarray:
+  """Encode + encrypt in one shot. Returns (2, N, M) uint64."""
+  pt_eval = fast_encode(slots, ctx, scale=scale)
+  return fast_encrypt_from_plaintext(pt_eval, ctx)
+
+
+class _LiteCtxForFast:
+  """Minimal CKKSContext-shaped object accepted by `fast_encode` /
+  `fast_encrypt_from_plaintext`. Built on the fly inside `ckks_encrypt` /
+  `ckks_encode` so those free-function APIs can route to the vectorized
+  fast path without forcing callers to construct a full CKKSContext.
+
+  When used by encode-only paths, `public_key` may be a zero-shaped dummy —
+  `_get_encrypt_cache` stores it but `fast_encode` itself never reads
+  `cache.pk0/pk1`.
+  """
+
+  def __init__(self, q_towers, degree, public_key, scaling_factor=None,
+               parameters=None):
+    self.q_towers = list(q_towers)
+    self.degree = int(degree)
+    self.public_key = public_key
+    self.scaling_factor = float(scaling_factor) if scaling_factor is not None \
+        else 1.0
+    self.parameters = dict(parameters) if parameters is not None else {}
+
+
+# Reuse one lite ctx per (q_towers, degree) for encode-only callers so
+# `_get_encrypt_cache` (keyed by id(ctx)) doesn't rebuild twiddles
+# + psi tables on every call. Critical for BSGS-encoding which calls
+# ckks_encode hundreds–thousands of times during cache build.
+_LITE_ENCODE_CTX_CACHE: dict = {}
+
+
+def _get_or_make_encode_ctx(q_towers, degree, scale, max_bits_in_word,
+                              max_bits_value):
+  key = (tuple(int(q) for q in q_towers), int(degree))
+  lite = _LITE_ENCODE_CTX_CACHE.get(key)
+  if lite is None:
+    dummy_pk = np.zeros((2, len(q_towers), int(degree)), dtype=np.uint64)
+    lite = _LiteCtxForFast(
+        q_towers=q_towers,
+        degree=int(degree),
+        public_key=dummy_pk,
+        scaling_factor=scale,
+        parameters={
+            "max_bits_in_word": int(max_bits_in_word),
+            "max_bits_value": int(max_bits_value),
+        },
+    )
+    _LITE_ENCODE_CTX_CACHE[key] = lite
+  else:
+    # Scale may vary call-to-call; max_bits constants almost never do.
+    lite.scaling_factor = float(scale)
+    lite.parameters["max_bits_in_word"] = int(max_bits_in_word)
+    lite.parameters["max_bits_value"] = int(max_bits_value)
+  return lite
+
+
 def ckks_encrypt(
+    plaintext: List[List[int]],
+    public_key,
+    q_towers: List[int],
+    noise_scale_degree: int = 1,
+    sigma=3.190000057220458984375,
+    v=None,
+    e=None,
+):
+  """Fast CKKS encrypt — wraps `encrypt_fast.fast_encrypt_from_plaintext`.
+
+  Same signature + output format as the historical pure-Python triple-loop
+  implementation, but routes to the vectorized NumPy path. When `(v, e)` are
+  None this samples noise via the kernel CSPRNG (`os.urandom` + Box-Muller).
+  When `(v, e)` are supplied, output is bit-exact equivalent to
+  `ckks_encrypt_fall_back` with the same inputs (the bit-exact test suite
+  in `ckks_ctx_test` pins this).
+  """
+  degree = len(plaintext)
+  num_q = len(q_towers)
+  pt_arr = np.asarray(plaintext, dtype=np.uint64)             # (N, M)
+  # Normalize public_key into a numpy array of shape (2, num_q_full, degree).
+  pk_arr = np.asarray(public_key, dtype=np.uint64)
+  if pk_arr.ndim == 3 and pk_arr.shape[1] > num_q:
+    # Caller passed full Q+P pk; the fast path slices the first M rows.
+    pass
+  lite = _LiteCtxForFast(
+      q_towers=q_towers,
+      degree=degree,
+      public_key=pk_arr,
+      parameters={"sigma": sigma, "noise_scale_degree": noise_scale_degree},
+  )
+  ct_arr = fast_encrypt_from_plaintext(
+      pt_arr, lite, v=v, e=e, sigma=sigma,
+      noise_scale_degree=noise_scale_degree)
+  # Convert (2, N, M) uint64 → [c0, c1] list-of-list of ints (legacy format).
+  return [ct_arr[0].tolist(), ct_arr[1].tolist()]
+
+
+def ckks_encrypt_fall_back(
     plaintext: List[List[int]],
     public_key: List[List[List[int]]],
     q_towers: List[int],
@@ -189,6 +581,7 @@ def ckks_encrypt(
     v=None,
     e=None,
 ):
+  """Pure-Python triple-loop reference implementation — bit-exact test reference."""
   # plaintext is now (degree, moduli)
   degree = len(plaintext)
   num_towers = len(q_towers)
@@ -337,8 +730,38 @@ def ckks_encode(
     max_bits_in_word: int = 61,
     max_bits_value: int = (1 << 63) - (1 << 9) - 1,
 ) -> List[List[int]]:
-  """Encode slots to DCRTPoly EVAL form with given (Q,P) towers, NATIVE_INT=64.
+  """Fast CKKS encode — wraps `encrypt_fast.fast_encode`.
 
+  Same signature + output format (list-of-list of ints, shape (degree,
+  moduli)) as the historical pure-Python implementation, but routes to
+  the vectorized NumPy path. `p_towers` is accepted for backward-compat
+  but unused (encode emits Q-tower residues only — same as the legacy
+  reference). bit-exact vs `ckks_encode_fall_back` for the same inputs.
+  """
+  degree = cycl_order // 2
+  # Reuse one lite ctx per (q_towers, degree) so the per-ctx twiddle/psi
+  # cache doesn't rebuild on every call. Encode path does NOT read
+  # pk0/pk1 from the cache — only twiddles + psi_pow + q.
+  lite = _get_or_make_encode_ctx(
+      q_towers, degree, scale, max_bits_in_word, max_bits_value)
+  arr = fast_encode(slots, lite, scale=scale,
+                      noise_scale_degree=noise_scale_degree)  # (N, M) uint64
+  return arr.tolist()
+
+
+def ckks_encode_fall_back(
+    slots: List[complex],
+    cycl_order: int,
+    q_towers: List[int],
+    p_towers: List[int],
+    scale: float,
+    noise_scale_degree: int = 1,
+    max_bits_in_word: int = 61,
+    max_bits_value: int = (1 << 63) - (1 << 9) - 1,
+) -> List[List[int]]:
+  """Pure-Python reference implementation — kept for bit-exact testing.
+
+  Encodes slots to DCRTPoly EVAL form with given (Q,P) towers, NATIVE_INT=64.
   Returns dict with residues for Q and P towers and the scaled integer coeffs.
   """
   nh = len(slots)
@@ -576,6 +999,269 @@ def _crt_combine_rns_plaintext(
 
     result.append(X % M)
   return result
+
+
+# ===========================================================================
+# Vectorized CKKS decrypt + decode (CPU/NumPy uint64).
+#
+# Embedded from the former `decrypt_fast.py` module. Replaces the pure-Python
+# triple-loop SK multiply and per-tower INTT in `ckks_decrypt` with NumPy
+# uint64 vectorized ops; decode (CRT + FFT) is also vectorized.
+#
+# Exposes:
+#   * `fast_decrypt_to_rns_coeffs(ct, ctx)` - vectorized SK·INTT → (N, M)
+#   * `fast_decode(coef_rns, ctx, scale)`   - CRT combine + special FFT
+#   * `fast_decrypt_decode(ct, ctx, scale)` - combined entry point
+#
+# `_DECRYPT_CACHE` is keyed by `(id(ctx), num_moduli)` so repeated decrypts
+# pay the precomputation only once.
+# ===========================================================================
+def _bit_reverse_indices_np(n: int) -> np.ndarray:
+  bits = n.bit_length() - 1
+  idx = np.arange(n, dtype=np.uint64)
+  rev = np.zeros(n, dtype=np.uint64)
+  for i in range(bits):
+    rev |= ((idx >> i) & 1) << (bits - 1 - i)
+  return rev.astype(np.int64)
+
+
+class _DecryptCache:
+  """Per-(ctx, num_moduli) precomputed tables."""
+
+  def __init__(self, q_towers: List[int], psi_pairs: List[int],
+               secret_key: List[List[int]], degree: int):
+    self.degree = int(degree)
+    self.num_moduli = len(q_towers)
+    M = self.num_moduli
+    N = self.degree
+
+    self.q = np.asarray(q_towers, dtype=np.uint64)              # (M,)
+    self.q_int = [int(q) for q in q_towers]
+    self.s = np.asarray(secret_key, dtype=np.uint64).T.copy()    # (N, M)
+
+    # n^(-1) mod q  per tower
+    self.n_inv = np.asarray(
+        [pow(N, -1, q) for q in self.q_int], dtype=np.uint64
+    )                                                            # (M,)
+
+    # psi^(-i) mod q  per tower:  shape (N, M)
+    psi_inv = [pow(int(psi), -1, q) for psi, q in zip(psi_pairs, self.q_int)]
+    psi_inv_pow = np.zeros((N, M), dtype=np.uint64)
+    for m in range(M):
+      acc = 1
+      qm = self.q_int[m]
+      psi_im = psi_inv[m]
+      for i in range(N):
+        psi_inv_pow[i, m] = acc
+        acc = (acc * psi_im) % qm
+    self.psi_inv_pow = psi_inv_pow
+
+    # GS twiddles per iteration length L = N, N/2, ..., 2.
+    # For each L, half = L//2 entries: w_m = inv_omega^(N/L) mod q,
+    # column j = w_m^j mod q.
+    self.twiddles: Dict[int, np.ndarray] = {}
+    for m in range(M):
+      qm = self.q_int[m]
+      omega_m = pow(int(psi_pairs[m]), 2, qm)         # primitive N-th root
+      inv_omega = pow(omega_m, -1, qm)
+    # Build per-tower per-length tables; assemble into (half, M) arrays.
+    L = N
+    while L >= 2:
+      half = L // 2
+      tw = np.zeros((half, M), dtype=np.uint64)
+      for m in range(M):
+        qm = self.q_int[m]
+        inv_omega = pow(pow(int(psi_pairs[m]), 2, qm), -1, qm)
+        w_m = pow(inv_omega, N // L, qm)
+        acc = 1
+        for j in range(half):
+          tw[j, m] = acc
+          acc = (acc * w_m) % qm
+      self.twiddles[L] = tw
+      L //= 2
+
+    self.bit_rev_idx = _bit_reverse_indices_np(N)
+
+
+_DECRYPT_CACHE: Dict[Tuple[int, int], _DecryptCache] = {}
+
+
+def _get_decrypt_cache(ctx, num_moduli: int) -> _DecryptCache:
+  key = (id(ctx), int(num_moduli))
+  c = _DECRYPT_CACHE.get(key)
+  if c is None:
+    psi_pairs = [
+        util.root_of_unity(2 * ctx.degree, q) for q in ctx.q_towers[:num_moduli]
+    ]
+    c = _DecryptCache(
+        q_towers=list(ctx.q_towers[:num_moduli]),
+        psi_pairs=psi_pairs,
+        secret_key=[list(row) for row in ctx.secret_key[:num_moduli]],
+        degree=ctx.degree,
+    )
+    _DECRYPT_CACHE[key] = c
+  return c
+
+
+def _vectorized_intt(eval_arr: np.ndarray, cache: _DecryptCache) -> np.ndarray:
+  """Vectorized inverse negacyclic NTT.
+
+  Input  : eval_arr in bit-reversed eval form, shape (N, M) uint64.
+  Output : coefficient form, shape (N, M) uint64.
+  """
+  N = cache.degree
+  M = cache.num_moduli
+  q = cache.q.reshape(1, M)
+
+  # Step 1: bit-reverse so subsequent GS sees natural order
+  a = eval_arr[cache.bit_rev_idx, :]
+
+  # Step 2: Gentleman-Sande DIF butterflies, length L = N down to 2
+  L = N
+  while L >= 2:
+    half = L // 2
+    n_blocks = N // L
+    a3 = a.reshape(n_blocks, L, M)
+    u = a3[:, :half, :]
+    v = a3[:, half:, :]
+    qb = q.reshape(1, 1, M)
+    new_u = (u + v) % qb
+    diff = (u + qb - v) % qb                # in [0, q)
+    tw = cache.twiddles[L].reshape(1, half, M)
+    new_v = (diff * tw) % qb
+    a = np.concatenate([new_u, new_v], axis=1).reshape(N, M)
+    L //= 2
+
+  # Step 3: bit-reverse back to natural
+  a = a[cache.bit_rev_idx, :]
+
+  # Step 4: divide by n
+  a = (a * cache.n_inv.reshape(1, M)) % q
+
+  # Step 5: negacyclic post-twist by psi^(-i)
+  a = (a * cache.psi_inv_pow) % q
+  return a
+
+
+def fast_decrypt_to_rns_coeffs(ct_polynomial: np.ndarray, ctx) -> np.ndarray:
+  """Vectorized SK multiply + INTT.
+
+  Args:
+    ct_polynomial: shape (num_elements, N, M) uint32/uint64. CKKS ciphertext
+      towers in bit-reversed eval form.
+    ctx: CKKSContext (uses ctx.secret_key, ctx.q_towers, ctx.degree).
+
+  Returns:
+    np.uint64 array of shape (N, M) — RNS coefficients of M(X).
+  """
+  ct = np.asarray(ct_polynomial, dtype=np.uint64)
+  num_elements, N, M = ct.shape
+  cache = _get_decrypt_cache(ctx, M)
+
+  q = cache.q.reshape(1, M)
+  s = cache.s
+
+  # Horner-style: m = c0 + c1*s + c2*s^2 + ...   (mod q per tower, eval form)
+  m = ct[0].copy()
+  if num_elements > 1:
+    s_pow = s.copy()
+    for i in range(1, num_elements):
+      term = (ct[i] * s_pow) % q
+      m = (m + term) % q
+      if i < num_elements - 1:
+        s_pow = (s_pow * s) % q
+
+  return _vectorized_intt(m, cache)
+
+
+def _crt_combine_rns(rns_coeffs: np.ndarray, q_int: List[int]) -> List[int]:
+  """CRT combine from per-tower residues to big-int coefficients.
+
+  rns_coeffs : np.uint64 (N, M).
+  Returns Python list of length N (big ints).
+  """
+  N, M = rns_coeffs.shape
+  Big = 1
+  for q in q_int:
+    Big *= q
+  Mi_list = [Big // qi for qi in q_int]
+  inv_list = [pow(Mi, -1, qi) for Mi, qi in zip(Mi_list, q_int)]
+  weights = [Mi * inv for Mi, inv in zip(Mi_list, inv_list)]   # big ints
+
+  rns_py = rns_coeffs.tolist()                                 # one host pull
+  out = [0] * N
+  for d in range(N):
+    row = rns_py[d]
+    X = 0
+    for i in range(M):
+      X += int(row[i]) * weights[i]
+    out[d] = X % Big
+  return out
+
+
+def fast_decode(coef_rns: np.ndarray, ctx, scale: float,
+                slots_to_decode: int = None) -> np.ndarray:
+  """CRT combine + CKKS FFT to slot values.
+
+  Args:
+    coef_rns        : (N, M) uint64 from fast_decrypt_to_rns_coeffs.
+    ctx             : CKKSContext.
+    scale           : output scaling factor (typically ctx.output_scale).
+    slots_to_decode : how many slot values to return (default = ctx.num_slots).
+                      Decoding always runs on all slots; this only trims output.
+  """
+  N, M = coef_rns.shape
+  q_int = [int(q) for q in ctx.q_towers[:M]]
+  Big = 1
+  for q in q_int:
+    Big *= q
+  Big_half = Big >> 1
+  num_slots = ctx.num_slots
+  slots_out = num_slots if slots_to_decode is None else min(
+      slots_to_decode, num_slots
+  )
+
+  # CRT combine — returns N big ints
+  combined = _crt_combine_rns(coef_rns, q_int)
+
+  # Convert to signed reals (centered around 0), divide by scale.
+  # Must process all num_slots positions (FFTSpecial needs full slot vector).
+  Nh = N // 2
+  scale_inv = 1.0 / float(scale)
+  reals = np.empty(num_slots, dtype=np.float64)
+  imags = np.empty(num_slots, dtype=np.float64)
+  for i in range(num_slots):
+    r = combined[i]
+    if r > Big_half:
+      r -= Big
+    reals[i] = float(r) * scale_inv
+    im = combined[i + Nh]
+    if im > Big_half:
+      im -= Big
+    imags[i] = float(im) * scale_inv
+
+  cur = reals + 1j * imags
+
+  # Mirror ckks_decode's _conjugate + average step.
+  conj = np.empty(num_slots, dtype=np.complex128)
+  conj[0] = complex(cur[0].real, -cur[0].imag)
+  if num_slots > 1:
+    z = cur[num_slots - 1 - np.arange(0, num_slots - 1)]
+    conj[1:num_slots] = -z.imag - 1j * z.real
+  cur = 0.5 * (cur + conj)
+
+  # CKKS special FFT (forward).
+  buf = list(cur)
+  FFTSpecial(buf, N * 2)
+  arr = np.array([z.real for z in buf[:slots_out]], dtype=np.float64)
+  return arr
+
+
+def fast_decrypt_decode(ct_polynomial: np.ndarray, ctx, scale: float,
+                        slots_to_decode: int = None) -> np.ndarray:
+  """End-to-end vectorized decrypt + decode."""
+  rns = fast_decrypt_to_rns_coeffs(ct_polynomial, ctx)
+  return fast_decode(rns, ctx, scale, slots_to_decode=slots_to_decode)
 
 
 ########################
