@@ -37,21 +37,53 @@ def _square_like_mesh_shape(device_count: int) -> Tuple[int, int]:
   return 1, device_count
 
 
-def create_sharding():
-  """Create default batch and replicated shardings for the current device mesh."""
+def create_sharding(shard_dim=None):
+  """Create default batch and replicated shardings for the current device mesh.
+
+  Args:
+    shard_dim: length of the array axis that will carry the ``('x', 'y')``
+      partition, when known. A spec naming both mesh axes splits that axis
+      ``x * y`` ways, and JAX rejects a partition that does not divide evenly,
+      so the mesh is capped to the largest device count dividing ``shard_dim``.
+      Without this an 8-chip host fails with ``... does not evenly divide the
+      dimension size 4`` on shapes that work fine on a 4-chip host.
+      ``None`` keeps the full device mesh.
+  """
   available_devices = jax.devices()
   if not available_devices:
     raise RuntimeError("No devices available for sharding test.")
-  if len(available_devices) == 8:
+  device_count = len(available_devices)
+  if shard_dim is not None:
+    if (
+        isinstance(shard_dim, bool)
+        or not isinstance(shard_dim, int)
+        or shard_dim < 1
+    ):
+      raise ValueError(f"shard_dim must be a positive int, got {shard_dim!r}.")
+    device_count = max(
+        count for count in range(1, device_count + 1) if shard_dim % count == 0
+    )
+  if device_count == 8:
     mesh_shape = (2, 4)
-  elif len(available_devices) == 4:
+  elif device_count == 4:
     mesh_shape = (2, 2)
-  elif len(available_devices) == 2:
+  elif device_count == 2:
     mesh_shape = (2, 1)
   else:
     mesh_shape = (1, 1)
 
-  mesh = jax.make_mesh(mesh_shape, ('x', 'y'))
+  # Auto axis types: let XLA infer the sharding of intermediate ops.
+  # jax.make_mesh defaults to Explicit, which rejects any gather or reshape
+  # whose output sharding it cannot derive -- e.g. the indexed reads in the
+  # batch-second NTT kernels fail with "Use `.at[...].get(out_sharding=)` ...
+  # could not be resolved unambiguously". jaxite_word/util.py already builds
+  # its mesh this way.
+  mesh = jax.make_mesh(
+      mesh_shape,
+      ('x', 'y'),
+      axis_types=(jax.sharding.AxisType.Auto,) * len(mesh_shape),
+      devices=available_devices[:mesh_shape[0] * mesh_shape[1]],
+  )
   shd.set_mesh(mesh)
 
   partition_spec = jax.sharding.PartitionSpec
@@ -230,7 +262,8 @@ def root_of_unity(m: int, q: int) -> int:
       root_of_unity(16, 134219681) # This works with NTT.
       computed_psi = [root_of_unity(m, q) for q in original_modulus]
     """
-    assert (q - 1) % m == 0, "q-1 must be divisible by m"
+    if m <= 0 or (q - 1) % m != 0:
+      raise ValueError("q-1 must be divisible by positive m")
     # Step 1: multiplicative generator of Z_q^*
     g = find_generator(q)
     # Step 2: raise to (q-1)/m to get an m-th root candidate
@@ -245,7 +278,8 @@ def root_of_unity(m: int, q: int) -> int:
         psi = pow(r, k, q)
         if pow(psi, half, q) == q - 1 and pow(psi, m, q) == 1:
             candidates.append(psi)
-    assert candidates, "No primitive m-th root found"
+    if not candidates:
+      raise ValueError("No primitive m-th root found")
     return min(candidates)
 
 
@@ -459,9 +493,10 @@ def find_moduli_ntt(total_number, precision, ntt_length):
 
 
 def gamma_beta_calculation(moduli_list, perf_test=False):
+  if len(moduli_list) <= 1:
+    raise ValueError("moduli_list must have at least 2 moduli")
   if perf_test:
     # Shapes: gammas: (len(moduli_list)-1,), betas: (len(moduli_list)-1,)
-    assert len(moduli_list) > 1, "moduli_list must have at least 2 moduli"
     gamma_rand = random_parameters((len(moduli_list)-1,), moduli_list[:-1], dtype=jnp.uint64)
     beta_rand = random_parameters((len(moduli_list)-1,), moduli_list[:-1], dtype=jnp.uint64)
     return jnp.array(gamma_rand, jnp.uint64), jnp.array(beta_rand, jnp.uint64)
@@ -495,7 +530,8 @@ def gamma_beta_calculation(moduli_list, perf_test=False):
 # Random Functions
 ####################################
 def random_batched_ciphertext(shape, modulus_list, dtype=jnp.int32):
-  assert len(modulus_list) == shape[-1]
+  if not shape or len(modulus_list) != shape[-1]:
+    raise ValueError("modulus_list length must match the final shape dimension")
   random_key = jax.random.key(0)
   return jnp.concatenate(
       [
@@ -513,7 +549,8 @@ def random_batched_ciphertext(shape, modulus_list, dtype=jnp.int32):
 
 
 def random_ciphertext(shape, modulus_list, dtype=jnp.int32):
-  assert len(modulus_list) == shape[-1]
+  if not shape or len(modulus_list) != shape[-1]:
+    raise ValueError("modulus_list length must match the final shape dimension")
   random_key = jax.random.key(0)
   return jnp.concatenate(
       [
