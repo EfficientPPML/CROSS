@@ -1,11 +1,11 @@
-import os
 import jax
 import jax.numpy as jnp
 from absl.testing import absltest
 from absl.testing import parameterized
 import bconv
 import util
-from profiler import KernelWrapper, Profiler, collect_logs
+from profiler import KernelWrapper, Profiler, collect_module_logs
+from profiler import kernel_perf_setup
 
 # Use 64-bit precision as in bconv.py
 jax.config.update("jax_enable_x64", True)
@@ -23,25 +23,25 @@ def _jax_bconv_bat_kernel(data_in, parameters):
   return parameters["bconv"].basis_change_bat(data_in)
 
 def _jax_bconv_kernel(data_in, parameters):
-  return parameters["bconv"].basis_change(data_in)
+  # Fixed-path timing intentionally bypasses public safety routing. This
+  # benchmark measures the dense kernel only; it does not establish correctness
+  # for these large synthetic accumulator envelopes.
+  return parameters["bconv"]._basis_change_dense(data_in)
+
+# The TPU-scale batch sweep is impractical on CPU; trim it there so the suite
+# stays runnable on any device.
+_BATCH_SWEEP = [1, 8, 16, 32, 64, 128, 256] if jax.default_backend() != "cpu" else [1, 8]
 
 class BConvPerformanceTest(parameterized.TestCase):
   
   def setUp(self):
     super().setUp()
-    self.output_trace_root = os.path.join(os.path.dirname(__file__), "log")
-    self.profiler_config = {
-        "iterations": 1,
-        "save_to_file": True,
-    }
+    self.output_trace_root, self.profiler_config = kernel_perf_setup(__file__)
 
   @classmethod
   def tearDownClass(cls):
     super().tearDownClass()
-    # Call collect_logs at the end of the test class execution
-    root_dir = os.path.dirname(os.path.abspath(__file__))
-    print(f"Collecting logs from: {root_dir}")
-    collect_logs(root_dir, output_csv_name="bconv_profiling")
+    collect_module_logs(__file__, "bconv_profiling")
 
   def _create_kernel_wrapper(self, kernel_name, function_to_wrap, batch, degree, limb_in, bconv_obj):
     # Input shape: (batch, degree, limb_in) based on original test usage
@@ -76,11 +76,11 @@ class BConvPerformanceTest(parameterized.TestCase):
     _bconv = bconv.BConvBarrett(overall_moduli)
     _bconv.control_gen([(in_indices, out_indices)], perf_test=True)
 
-    for batch in [1, 8, 16, 32, 64, 128, 256]:
+    for batch in _BATCH_SWEEP:
       print(f"Running for batch size: {batch}")
-      
+
       kernel_name = f"{self._testMethodName}_b{batch}"
-      
+
       kernel_wrapper = self._create_kernel_wrapper(
           kernel_name=kernel_name,
           function_to_wrap=_jax_bconv_bat_kernel,
@@ -102,8 +102,7 @@ class BConvPerformanceTest(parameterized.TestCase):
           },
       )
     
-    profiler_instance.profile_all_profilers()
-    profiler_instance.post_process_all_profilers()
+    profiler_instance.run()
 
   @parameterized.named_parameters(*PERF_TEST_PARAMS)
   def test_basis_change(self, limb_in, limb_out, degree):
@@ -124,11 +123,11 @@ class BConvPerformanceTest(parameterized.TestCase):
     _bconv = bconv.BConvBarrett(overall_moduli)
     _bconv.control_gen([(in_indices, out_indices)], perf_test=True)
 
-    for batch in [1, 8, 16, 32, 64, 128, 256]:
+    for batch in _BATCH_SWEEP:
       print(f"Running for batch size: {batch}")
-      
+
       kernel_name = f"{self._testMethodName}_b{batch}"
-      
+
       kernel_wrapper = self._create_kernel_wrapper(
           kernel_name=kernel_name,
           function_to_wrap=_jax_bconv_kernel,
@@ -137,7 +136,7 @@ class BConvPerformanceTest(parameterized.TestCase):
           limb_in=limb_in,
           bconv_obj=_bconv
       )
-      
+
       profiler_instance.add_profile(
           name=kernel_name,
           kernel_wrapper=kernel_wrapper,
@@ -149,9 +148,102 @@ class BConvPerformanceTest(parameterized.TestCase):
               "kernel_type": "default"
           },
       )
-    
-    profiler_instance.profile_all_profilers()
-    profiler_instance.post_process_all_profilers()
+
+    profiler_instance.run()
+
+  @parameterized.named_parameters(*PERF_TEST_PARAMS)
+  def test_basis_change_montgomery(self, limb_in, limb_out, degree):
+
+    profiler_instance = Profiler(
+        output_trace_path=self.output_trace_root,
+        profile_naming=f"{self._testMethodName}_N{degree}",
+        configuration=self.profiler_config,
+    )
+
+    # Setup bconv object
+    limb_in_modulus = util.find_moduli_ntt(limb_in, 28, degree)
+    limb_out_modulus = util.find_moduli_ntt(limb_out, 28, degree)
+    overall_moduli = limb_in_modulus + limb_out_modulus
+    in_indices = list(range(len(limb_in_modulus)))
+    out_indices = list(range(len(limb_in_modulus), len(overall_moduli)))
+
+    _bconv = bconv.BConvMontgomery(overall_moduli)
+    _bconv.control_gen([(in_indices, out_indices)], perf_test=True)
+
+    for batch in _BATCH_SWEEP:
+      print(f"Running for batch size: {batch}")
+
+      kernel_name = f"{self._testMethodName}_b{batch}"
+
+      kernel_wrapper = self._create_kernel_wrapper(
+          kernel_name=kernel_name,
+          function_to_wrap=_jax_bconv_kernel,
+          batch=batch,
+          degree=degree,
+          limb_in=limb_in,
+          bconv_obj=_bconv
+      )
+
+      profiler_instance.add_profile(
+          name=kernel_name,
+          kernel_wrapper=kernel_wrapper,
+          kernel_setting_cols={
+              "degree": degree,
+              "limb_in": limb_in,
+              "limb_out": limb_out,
+              "batch": batch,
+              "kernel_type": "montgomery"
+          },
+      )
+
+    profiler_instance.run()
+
+  @parameterized.named_parameters(*PERF_TEST_PARAMS)
+  def test_basis_change_montgomery_bat(self, limb_in, limb_out, degree):
+    """CRNS Montgomery with the contraction on the MXU (BAT einsum)."""
+
+    profiler_instance = Profiler(
+        output_trace_path=self.output_trace_root,
+        profile_naming=f"{self._testMethodName}_N{degree}",
+        configuration=self.profiler_config,
+    )
+
+    limb_in_modulus = util.find_moduli_ntt(limb_in, 28, degree)
+    limb_out_modulus = util.find_moduli_ntt(limb_out, 28, degree)
+    overall_moduli = limb_in_modulus + limb_out_modulus
+    in_indices = list(range(len(limb_in_modulus)))
+    out_indices = list(range(len(limb_in_modulus), len(overall_moduli)))
+
+    _bconv = bconv.BConvMontgomery(overall_moduli)
+    _bconv.control_gen([(in_indices, out_indices)], perf_test=True)
+
+    for batch in _BATCH_SWEEP:
+      print(f"Running for batch size: {batch}")
+
+      kernel_name = f"{self._testMethodName}_b{batch}"
+
+      kernel_wrapper = self._create_kernel_wrapper(
+          kernel_name=kernel_name,
+          function_to_wrap=_jax_bconv_bat_kernel,
+          batch=batch,
+          degree=degree,
+          limb_in=limb_in,
+          bconv_obj=_bconv
+      )
+
+      profiler_instance.add_profile(
+          name=kernel_name,
+          kernel_wrapper=kernel_wrapper,
+          kernel_setting_cols={
+              "degree": degree,
+              "limb_in": limb_in,
+              "limb_out": limb_out,
+              "batch": batch,
+              "kernel_type": "montgomery_bat"
+          },
+      )
+
+    profiler_instance.run()
 
 
 if __name__ == "__main__":

@@ -4,7 +4,8 @@ import jax
 import jax.numpy as jnp
 import util
 
-from rescale import HERescale
+import finite_field as ff_context
+from rescale import _HERescaleKernel
 from absl.testing import absltest
 from absl.testing import parameterized
 
@@ -45,6 +46,19 @@ Element 1: 0: EVAL: [187797345 346468403 400091616 779213129 237567707 272698807
 """
     self.final_result_ref = util.parse_ciphertext_string(self.final_result_str)[0]
 
+  def test_control_rejects_invalid_composite_degree(self):
+    kernel = _HERescaleKernel(
+        batch=1,
+        num_elements=2,
+        moduli=self.q_towers,
+        r=self.r,
+        c=self.c,
+        degree_layout=(self.r, self.c),
+    )
+    for invalid in (0, True, len(self.q_towers)):
+      with self.subTest(composite_degree=invalid), self.assertRaises(ValueError):
+        kernel.control_gen(composite_degree=invalid)
+
   # @absltest.skip("test a single experiment")
   def test_rescale_ciphertext(self):
     in_ciphertexts_arr = jnp.array(self.in_ciphertexts, jnp.uint32)
@@ -52,12 +66,168 @@ Element 1: 0: EVAL: [187797345 346468403 400091616 779213129 237567707 272698807
     input_shape = in_ciphertexts_reshaped.shape
     output_shape = (input_shape[0], input_shape[1], input_shape[2], input_shape[3] - 1)
     degree_layout = (self.r, self.c)
-    he_rescale = HERescale(batch=1, num_elements=2, moduli=self.q_towers, r=self.r, c=self.c, degree_layout=degree_layout)
+    he_rescale = _HERescaleKernel(batch=1, num_elements=2, moduli=self.q_towers, r=self.r, c=self.c, degree_layout=degree_layout)
     he_rescale.control_gen()
+    self.assertEqual(he_rescale._lift_reduction_modes, ('direct',))
     in_data = in_ciphertexts_reshaped.reshape(input_shape[0], input_shape[1], *degree_layout, input_shape[3])
-    final_result_custom = he_rescale.rescale(in_data).reshape(output_shape)
+    final_result_custom = he_rescale._rescale_array(in_data).reshape(output_shape)
 
     np.testing.assert_array_equal(final_result_custom[0], self.final_result_ref)
+
+  @parameterized.parameters(1, 2)
+  def test_rescale_ciphertext_montgomery(self, batch):
+    """Montgomery-reduction rescale matches the (Barrett-verified) golden.
+
+    Input/output cross the boundary in Montgomery computation format; all
+    internal modular reductions are Montgomery reductions.
+    """
+    in_ciphertexts_arr = jnp.array(self.in_ciphertexts, jnp.uint64)
+    in_ciphertexts_arr = jnp.tile(in_ciphertexts_arr[None, ...], (batch, 1, 1, 1))
+    input_shape = in_ciphertexts_arr.shape
+    output_shape = (input_shape[0], input_shape[1], input_shape[2], input_shape[3] - 1)
+    degree_layout = (self.r, self.c)
+    he_rescale = _HERescaleKernel(
+        batch=batch, num_elements=2, moduli=self.q_towers, r=self.r, c=self.c,
+        degree_layout=degree_layout,
+        finite_field_context=ff_context.MontgomeryContext)
+    he_rescale.control_gen()
+    in_data = in_ciphertexts_arr.reshape(
+        input_shape[0], input_shape[1], *degree_layout, input_shape[3])
+    in_mont = ff_context.MontgomeryContext(self.q_towers).to_computation_format(in_data)
+    out_mont = he_rescale._rescale_array(in_mont)
+    out = ff_context.MontgomeryContext(self.q_towers[:-1]).to_original_format(
+        jnp.asarray(out_mont, jnp.uint64)).reshape(output_shape)
+
+    for b in range(batch):
+      np.testing.assert_array_equal(out[b], self.final_result_ref)
+
+  def test_rescale_composite_degree2_montgomery_matches_barrett(self):
+    """Montgomery composite rescale (cd=2) == Barrett bit-canonically.
+
+    Exercises the multi-iteration constant encoding (gamma*R^2 / beta*R per
+    iteration column set) that the cd=1 golden twins do not reach.
+    """
+    in_ciphertexts_arr = jnp.array(self.in_ciphertexts, jnp.uint64)[None, ...]
+    degree_layout = (self.r, self.c)
+    in_data = in_ciphertexts_arr.reshape(1, 2, *degree_layout, len(self.q_towers))
+
+    barrett = _HERescaleKernel(batch=1, num_elements=2, moduli=self.q_towers,
+                        r=self.r, c=self.c, degree_layout=degree_layout)
+    barrett.control_gen(composite_degree=2)
+    ref = jnp.asarray(
+        barrett._rescale_array(in_data.astype(jnp.uint32)), jnp.uint64
+    )
+
+    mont = _HERescaleKernel(batch=1, num_elements=2, moduli=self.q_towers,
+                     r=self.r, c=self.c, degree_layout=degree_layout,
+                     finite_field_context=ff_context.MontgomeryContext)
+    mont.control_gen(composite_degree=2)
+    in_mont = ff_context.MontgomeryContext(self.q_towers).to_computation_format(in_data)
+    out = ff_context.MontgomeryContext(self.q_towers[:-2]).to_original_format(
+        jnp.asarray(mont._rescale_array(in_mont), jnp.uint64))
+
+    q_out = jnp.array(self.q_towers[:-2], jnp.uint64)
+    np.testing.assert_array_equal(ref % q_out, out)
+
+  def test_rescale_wide_magnitude_centered_lift(self):
+    """Regression: wide-magnitude chain where a remaining modulus is below
+    half the dropped tower, so the centered lift hits the u64-underflow
+    region that the old `q_j - q_last + last_coeffs` form corrupted (off by
+    2^64 mod q_j). Random inputs exercise the upper-half (false) branch
+    densely; Barrett and Montgomery use entirely different reduction
+    arithmetic (multiply-high vs REDC) on the same lift, so their agreement
+    on the canonical result is strong evidence the lift is exact.
+    """
+    r = c = 4
+    degree = r * c
+    # find_moduli_ntt(_, _, D) yields primes = 1 mod D; the negacyclic NTT
+    # needs = 1 mod 2*degree, so request against 2*degree.
+    remaining = util.find_moduli_ntt(2, 28, 2 * degree)  # ~2^28 remaining towers
+    dropped = util.find_moduli_ntt(1, 31, 2 * degree)    # ~2^31 dropped tower
+    moduli = remaining + dropped                      # dropped tower is last
+    q_last = moduli[-1]
+    self.assertLess(q_last, 1 << 31)                  # inside Montgomery envelope
+    self.assertLess(min(remaining), (q_last - 1) // 2)  # underflow region non-empty
+    degree_layout = (r, c)
+
+    key = jax.random.key(7)
+    cols = []
+    for j, q in enumerate(moduli):
+      cols.append(jax.random.randint(
+          jax.random.fold_in(key, j), (1, 2, degree, 1), 0, q, dtype=jnp.uint32))
+    in_data = jnp.concatenate(cols, axis=-1).reshape(1, 2, *degree_layout, len(moduli))
+
+    barrett = _HERescaleKernel(batch=1, num_elements=2, moduli=moduli,
+                        r=r, c=c, degree_layout=degree_layout)
+    barrett.control_gen()
+    self.assertEqual(barrett._lift_reduction_modes, ('barrett',))
+    ref = jnp.asarray(
+        barrett._rescale_array(in_data.astype(jnp.uint32)), jnp.uint64
+    )
+
+    mont = _HERescaleKernel(batch=1, num_elements=2, moduli=moduli,
+                     r=r, c=c, degree_layout=degree_layout,
+                     finite_field_context=ff_context.MontgomeryContext)
+    mont.control_gen()
+    # uint64 before to_computation_format: it shifts left by 32, which would
+    # overflow a uint32 input to zero.
+    in_mont = ff_context.MontgomeryContext(moduli).to_computation_format(
+        in_data.astype(jnp.uint64))
+    out = ff_context.MontgomeryContext(moduli[:-1]).to_original_format(
+        jnp.asarray(mont._rescale_array(in_mont), jnp.uint64))
+
+    q_out = jnp.array(moduli[:-1], jnp.uint64)
+    np.testing.assert_array_equal(ref % q_out, out % q_out)
+
+  def test_rescale_small_dropped_tower_fast_lift_matches_generic(self):
+    """The no-reduction lift is exact when q_last <= every remaining q."""
+    r = c = 4
+    degree = r * c
+    remaining = util.find_moduli_ntt(3, 30, 2 * degree)
+    dropped = util.find_moduli_ntt(1, 20, 2 * degree)
+    moduli = remaining + dropped
+    self.assertLessEqual(moduli[-1], min(moduli[:-1]))
+
+    key = jax.random.key(11)
+    columns = [
+        jax.random.randint(
+            jax.random.fold_in(key, index),
+            (1, 2, degree, 1),
+            0,
+            modulus,
+            dtype=jnp.uint32,
+        )
+        for index, modulus in enumerate(moduli)
+    ]
+    in_data = jnp.concatenate(columns, axis=-1).reshape(
+        1, 2, r, c, len(moduli)
+    )
+
+    fast = _HERescaleKernel(
+        batch=1,
+        num_elements=2,
+        moduli=moduli,
+        r=r,
+        c=c,
+        degree_layout=(r, c),
+    )
+    fast.control_gen()
+    self.assertEqual(fast._lift_reduction_modes, ('direct',))
+
+    generic = _HERescaleKernel(
+        batch=1,
+        num_elements=2,
+        moduli=moduli,
+        r=r,
+        c=c,
+        degree_layout=(r, c),
+    )
+    generic.control_gen()
+    generic._lift_reduction_modes = ('barrett',)
+
+    np.testing.assert_array_equal(
+        fast._rescale_array(in_data), generic._rescale_array(in_data)
+    )
 
   # @absltest.skip("test a single experiment")
   def test_rescale_ciphertext_multibatch(self):
@@ -67,10 +237,10 @@ Element 1: 0: EVAL: [187797345 346468403 400091616 779213129 237567707 272698807
     input_shape = in_ciphertexts_arr.shape
     output_shape = (input_shape[0], input_shape[1], input_shape[2], input_shape[3] - 1)
     degree_layout = (self.r, self.c)
-    he_rescale = HERescale(batch=2, num_elements=2, moduli=self.q_towers, r=self.r, c=self.c, degree_layout=degree_layout)
+    he_rescale = _HERescaleKernel(batch=2, num_elements=2, moduli=self.q_towers, r=self.r, c=self.c, degree_layout=degree_layout)
     he_rescale.control_gen()
     in_data = in_ciphertexts_arr.reshape(input_shape[0], input_shape[1], *degree_layout, input_shape[3])
-    final_result_custom = he_rescale.rescale(in_data).reshape(output_shape)
+    final_result_custom = he_rescale._rescale_array(in_data).reshape(output_shape)
 
     # Check both batch elements match the reference
     np.testing.assert_array_equal(final_result_custom[0], self.final_result_ref)

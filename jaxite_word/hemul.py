@@ -10,15 +10,19 @@ import util
 
 BarrettContext = finite_field.BarrettContext
 Polynomial = polynomial.Polynomial
-BConvBarrett = bconv.BConvBarrett
-HERescale = rescale.HERescale
+_HERescaleKernel = rescale._HERescaleKernel
 
 
 jax.config.update("jax_enable_x64", True)
 
 
-class HEMul:
-  """HEMul class."""
+class _HEMulKernel:
+  """Private homomorphic-multiplication kernel.
+
+  hemul_no_relin matches OpenFHE EvalMultCore (tensor product only).
+  The full mul pipeline performs its rescale explicitly before calling the
+  tensor operation, preserving the existing CKKS scale convention.
+  """
 
   def __init__(
       self,
@@ -30,6 +34,7 @@ class HEMul:
       original_moduli,
       extend_moduli,
       composite_degree=1,
+      finite_field_context=BarrettContext,
   ):
     self.batch = batch
     self.r = r
@@ -39,6 +44,7 @@ class HEMul:
     self.original_moduli = original_moduli
     self.composite_degree = composite_degree
     self.extend_moduli = extend_moduli
+    self.ff_context_cls = finite_field_context
     self.last_tower_moduli = original_moduli[-1]
     self.evalkey_a_vector = jnp.zeros((dnum, 0), dtype=jnp.uint64)
     self.evalkey_b_vector = jnp.zeros((dnum, 0), dtype=jnp.uint64)
@@ -53,13 +59,13 @@ class HEMul:
       perf_test=False,
       keygen_sizeQ=None,
   ):
-    """Generate control parameters and precompute values for the HEMul operation.
+    """Generate controls and precompute values for multiplication.
 
     Args:
-      degree_layout: The layout of the polynomial degrees. Defaults to (r * c,).
+      degree_layout: The tiled polynomial layout. Defaults to ``(r, c)``.
       composite_degree: The degree of the composite modulus. Defaults to the
-        composite degree of the HEMul object.
-      skip_rescale: Whether to skip the rescaling step.
+        composite degree of the private multiplication kernel.
+      skip_rescale: Whether the full mul pipeline skips its explicit rescale.
       perf_test: Whether to use random parameters instead of computing actual
         roots of unity, useful for performance testing.
       keygen_sizeQ: The number of Q towers that were used during key generation.
@@ -70,33 +76,53 @@ class HEMul:
         If None, falls back to the old behavior (alpha based on drop_last count),
         which only works when keygen_sizeQ equals the current tower count.
     """
-    if degree_layout is not None:
-      self.degree_layout = degree_layout
-    else:
-      self.degree_layout = (self.r, self.c)
+    self.degree_layout = finite_field.canonical_degree_layout(
+        self.r, self.c, degree_layout, '_HEMulKernel.control_gen'
+    )
 
     if composite_degree is None:
       composite_degree = self.composite_degree
-    else:
-      assert composite_degree == self.composite_degree
-    assert composite_degree >= 1, 'composite_degree must be at least 1'
+    elif composite_degree != self.composite_degree:
+      raise ValueError(
+          f'composite_degree={composite_degree} does not match the kernel '
+          f'composite_degree={self.composite_degree}'
+      )
+    if composite_degree < 1:
+      raise ValueError('composite_degree must be at least 1')
 
-    # Handle composite_degree=0 case (no rescaling)
+    self.perf_test = perf_test
+    self.skip_rescale = skip_rescale
+
+    # Determine whether to use split-rescale (cd >= 2 and rescale enabled).
+    # Split-rescale: 1 prime dropped before multiply, (cd-1) primes after.
+    # Split-rescale disabled: output scale grows by q per he_mul,
+    # incompatible with CKKS chain convention. Using standard cd=2 rescale.
+    # See Bug #28 in bts_bug_tracker.md for details.
+    self._use_split_rescale = False
+
     if skip_rescale:
       self.drop_last_extend_moduli = self.original_moduli + self.extend_moduli
       self.drop_last_moduli = self.original_moduli
       self.last_tower_moduli = []
+    elif self._use_split_rescale:
+      # Split rescale: key-switch operates on (NQ-1) towers (after pre-rescale).
+      # Post-rescale drops the remaining (cd-1) primes after relinearization.
+      self.drop_last_moduli = self.original_moduli[:-1]
+      self.drop_last_extend_moduli = (
+          self.original_moduli[:-1] + self.extend_moduli
+      )
+      self.last_tower_moduli = [self.original_moduli[-1]]
+      # Track total output moduli count (NQ - cd)
+      self._output_moduli = self.original_moduli[:-composite_degree]
     else:
+      # cd=1: single rescale before multiply (original behavior)
       self.drop_last_extend_moduli = (
           self.original_moduli[:-composite_degree] + self.extend_moduli
       )
       self.drop_last_moduli = self.original_moduli[:-composite_degree]
       self.last_tower_moduli = self.original_moduli[
           -composite_degree:
-      ]  # List of last moduli for composite
-
-    self.perf_test = perf_test
-    self.skip_rescale = skip_rescale
+      ]
 
     # ==========================================================================
     # 0. Configuration Derivation
@@ -112,34 +138,74 @@ class HEMul:
         overall_sizeQ_in,
         overall_sizeP_in,
     )
-    overall_sizeQ_in_no_last = (
-        sizeQ_in if self.skip_rescale else sizeQ_in - self.composite_degree
-    )
+    if skip_rescale:
+      overall_sizeQ_in_no_last = sizeQ_in
+    elif self._use_split_rescale:
+      # After pre-rescale: NQ-1 towers
+      overall_sizeQ_in_no_last = sizeQ_in - 1
+    else:
+      overall_sizeQ_in_no_last = sizeQ_in - composite_degree
 
     # ==========================================================================
-    # 1. Rescale Control Generation (via HERescale)
+    # 1. Rescale control generation.
     # ==========================================================================
     if not skip_rescale:
-      self._he_rescale = HERescale(
-          batch=self.batch,
-          num_elements=4,
-          moduli=self.original_moduli,
-          r=self.r,
-          c=self.c,
-          degree_layout=self.degree_layout,
-      )
-      self._he_rescale.control_gen(
-          composite_degree=composite_degree, perf_test=perf_test
-      )
+      if self._use_split_rescale:
+        # Pre-rescale: cd=1 on the 4-element input, drops q[-1]
+        self._he_rescale_pre = _HERescaleKernel(
+            batch=self.batch,
+            num_elements=4,
+            moduli=self.original_moduli,
+            r=self.r,
+            c=self.c,
+            degree_layout=self.degree_layout,
+            finite_field_context=self.ff_context_cls,
+        )
+        self._he_rescale_pre.control_gen(
+            composite_degree=1, perf_test=perf_test
+        )
+        # Post-rescale: cd=(composite_degree-1) on the 2-element result,
+        # operates on original_moduli[:-1] and drops (cd-1) more primes
+        post_cd = composite_degree - 1
+        self._he_rescale_post = _HERescaleKernel(
+            batch=self.batch,
+            num_elements=2,
+            moduli=self.original_moduli[:-1],
+            r=self.r,
+            c=self.c,
+            degree_layout=self.degree_layout,
+            finite_field_context=self.ff_context_cls,
+        )
+        self._he_rescale_post.control_gen(
+            composite_degree=post_cd, perf_test=perf_test
+        )
+        self._post_rescale_cd = post_cd
+      else:
+        # cd=1: single rescale before multiply
+        self._he_rescale = _HERescaleKernel(
+            batch=self.batch,
+            num_elements=4,
+            moduli=self.original_moduli,
+            r=self.r,
+            c=self.c,
+            degree_layout=self.degree_layout,
+            finite_field_context=self.ff_context_cls,
+        )
+        self._he_rescale.control_gen(
+            composite_degree=composite_degree, perf_test=perf_test
+        )
 
     # ==========================================================================
     # 2. Instantiate Polynomial Objects
     # ==========================================================================
-    ct_num_moduli = (
-        overall_sizeQ_in
-        if skip_rescale
-        else overall_sizeQ_in - composite_degree
-    )
+    # ct_num_moduli is the tower count used during tensor multiply and key-switch
+    if skip_rescale:
+      ct_num_moduli = overall_sizeQ_in
+    elif self._use_split_rescale:
+      ct_num_moduli = overall_sizeQ_in - 1  # after pre-rescale
+    else:
+      ct_num_moduli = overall_sizeQ_in - composite_degree
+
     ct_shapes = {
         'batch': self.batch,
         'num_elements': 4,
@@ -152,14 +218,43 @@ class HEMul:
         ct_shapes,
         parameters={
             'moduli': self.drop_last_moduli,
-            'finite_field_context': BarrettContext,
+            'finite_field_context': self.ff_context_cls,
+            'r': self.r,
+            'c': self.c,
+        },
+    )
+    ct_single_shapes = dict(ct_shapes)
+    ct_single_shapes['num_elements'] = 1
+    self.ct_single = Polynomial(
+        ct_single_shapes,
+        parameters={
+            'moduli': self.drop_last_moduli,
+            'finite_field_context': self.ff_context_cls,
             'r': self.r,
             'c': self.c,
         },
     )
 
+    # Pre-build the 3-element hemul_no_relin output container once (compile
+    # time); the per-call path only sets its .polynomial. ntt_ctx = ff_ctx keeps
+    # it mod-reduce-only (relinearize never NTTs it).
+    self.ct_no_relin_out = Polynomial(
+        {
+            'batch': self.batch,
+            'num_elements': 3,
+            'degree': self.r * self.c,
+            'num_moduli': len(self.drop_last_moduli),
+            'precision': 32,
+            'degree_layout': self.degree_layout,
+        },
+        parameters={
+            'moduli': self.drop_last_moduli,
+            'ntt_ctx': self.ff_context_cls(moduli=self.drop_last_moduli),
+        },
+    )
+
     # idx_cur_last_tower is the number of Q moduli
-    # after dropping composite_degree limbs
+    # after dropping limbs (1 for split, cd for non-split)
     idx_cur_last_tower = overall_sizeQ_in_no_last
 
     ct_extend_shapes = {
@@ -171,7 +266,11 @@ class HEMul:
         'degree_layout': self.degree_layout,
     }
     self.ct_extend = Polynomial(
-        ct_extend_shapes, parameters={'moduli': self.extend_moduli}
+        ct_extend_shapes,
+        parameters={
+            'moduli': self.extend_moduli,
+            'finite_field_context': self.ff_context_cls,
+        },
     )
 
     # ==========================================================================
@@ -181,7 +280,10 @@ class HEMul:
     # handles psi pre-multiply (in ntt()) and inv_psi post-multiply (in intt())
     # internally, so no external psi manipulation is needed.
 
-    self.bconv = BConvBarrett(self.drop_last_extend_moduli)
+    # BConv backend selected from the injected reduction algorithm (see bconv.make_bconv / BConvMontgomery).
+    self.bconv = bconv.make_bconv(
+        self.ff_context_cls, self.drop_last_extend_moduli
+    )
     control_indices_list = []
     rotate_indices = list(range(idx_cur_last_tower))
     extend_indices = list(
@@ -199,6 +301,13 @@ class HEMul:
     PInvModq_approx_down = [util.modinv(P, q) for q in target_moduli]
     self.PInvModq = jnp.asarray(PInvModq_approx_down, dtype=jnp.uint32).reshape(
         idx_cur_last_tower
+    )
+    # Encode into computation format so modmul(PInvModq) keeps ciphertexts in
+    # the op's representation (identity for Barrett; Montgomery: PInv * R).
+    self.PInvModq = (
+        self.ff_context_cls(moduli=target_moduli)
+        .to_computation_format(self.PInvModq.astype(jnp.uint64))
+        .astype(jnp.uint32)
     )
 
     # ==========================================================================
@@ -268,13 +377,14 @@ class HEMul:
     ct_params_common = {
         'r': self.r,
         'c': self.c,
-        'finite_field_context': BarrettContext,
+        'finite_field_context': self.ff_context_cls,
     }
     self.ks_ct_parts = []
     for part in range(self.ks_numPartQl):
       target_indices = ks_non_select_tower_index_overall[part].tolist()
       target_moduli = [drop_last_extend_moduli[i] for i in target_indices]
       shapes_part = ct_shapes_common.copy()
+      shapes_part['num_elements'] = 1
       shapes_part['num_moduli'] = len(target_moduli)
       params_part = ct_params_common.copy()
       params_part['moduli'] = target_moduli
@@ -325,25 +435,35 @@ class HEMul:
         ],
         axis=-1,
     ).reshape(-1, *self.degree_layout, len(self.drop_last_extend_moduli))
+    # Keys arrive standard-form; encode to computation format so the key-switch product stays in the op's representation (Montgomery: evk*R).
+    evk_ctx = self.ff_context_cls(moduli=self.drop_last_extend_moduli)
+    self.ks_evk_a_precomp = evk_ctx.to_computation_format(
+        self.ks_evk_a_precomp.astype(jnp.uint64)
+    ).astype(jnp.uint64)
+    self.ks_evk_b_precomp = evk_ctx.to_computation_format(
+        self.ks_evk_b_precomp.astype(jnp.uint64)
+    ).astype(jnp.uint64)
 
-  def rescale(self, in_ciphertext_data):
-    """Perform composite rescaling and set the result on self.ct_obj.
-
-    Args:
-        in_ciphertext_data: Raw ciphertext ndarray from the input Polynomial
-          object.
-    """
+  def _rescale_array_unchecked(self, in_ciphertext_data):
+    """Loads the multiply input after its public boundary was validated."""
     if self.skip_rescale:
       self.ct_obj.set_batch_polynomial(
-          in_ciphertext_data.reshape(self.post_rescale_shape)
+          in_ciphertext_data
+      )
+    elif self._use_split_rescale:
+      rescaled = self._he_rescale_pre._rescale_array_unchecked(
+          in_ciphertext_data
+      )
+      self.ct_obj.set_batch_polynomial(
+          rescaled
       )
     else:
-      rescaled = self._he_rescale.rescale(in_ciphertext_data)
+      rescaled = self._he_rescale._rescale_array_unchecked(in_ciphertext_data)
       self.ct_obj.set_batch_polynomial(
-          rescaled.reshape(self.post_rescale_shape)
+          rescaled
       )
 
-  def key_switch(self, last_ele_post_mult):
+  def _key_switch_array(self, last_ele_post_mult):
     """Perform key switching on the last element of a tensor product.
 
     Args:
@@ -353,22 +473,23 @@ class HEMul:
     Returns:
         Key-switched ciphertext ndarray on the extended (Q+P) moduli basis.
     """
-    self.ct_obj.set_batch_polynomial(last_ele_post_mult)
-    ks_input_ntt = self.ct_obj.get_batch_polynomial()
+    self.ct_single.set_batch_polynomial(last_ele_post_mult)
+    ks_input_ntt = self.ct_single.get_batch_polynomial()
 
-    self.ct_obj.to_coeffs_form()
-    partCtCloneCoef = self.ct_obj.get_batch_polynomial()
+    self.ct_single.to_coeffs_form()
+    partCtCloneCoef = self.ct_single.get_batch_polynomial()
 
+    ks_ff = self.ks_ct_drop_last_extend.ntt_ctx.ff_ctx
     ks_res0 = None
     ks_res1 = None
     for part in range(self.ks_numPartQl):
       select_idxs = self.ks_select_tower_index_overall[part]
-      partCtCloneEval = self.bconv.basis_change_bat(
+      partCtCloneEval = self.bconv.basis_change(
           jnp.take(partCtCloneCoef, select_idxs, axis=-1),
           control_index=self.ks_control_start_idx + part,
       ).astype(jnp.uint64)
       ct_part = self.ks_ct_parts[part]
-      ct_part.polynomial = partCtCloneEval.astype(jnp.uint32)
+      ct_part.replace_payload(partCtCloneEval.astype(jnp.uint32))
       ct_part.to_ntt_form()
       partsCtCompl_multi_moduli = ct_part.polynomial
 
@@ -387,7 +508,6 @@ class HEMul:
       # Without this, the accumulated sum `partsCtExt * evk` over `numPartQl`
       # parts can exceed 2^(2*modulus_bits), which the Barrett reduction
       # applied at the end (via mod_reduce) cannot handle correctly.
-      ks_ff = self.ks_ct_drop_last_extend.ntt_ctx.ff_ctx
       prod_b = (
           partsCtExt_cur_part
           * self.ks_evk_b_precomp.astype(jnp.uint64)[part][None, None, :, :]
@@ -406,93 +526,149 @@ class HEMul:
         ks_res1 = ks_res1 + prod_a
 
     ks_result = jnp.concatenate([ks_res0, ks_res1], axis=1)
+    # Canonicalize the sum of ks_numPartQl reduced (possibly lazy) products (see ff_ctx.strictify_after_accumulation).
+    ks_result = ks_ff.strictify_after_accumulation(
+        ks_result, self.ks_numPartQl
+    )
     self.ks_ct_drop_last_extend.set_batch_polynomial(ks_result)
-    self.ks_ct_drop_last_extend.mod_reduce()
     return self.ks_ct_drop_last_extend.get_batch_polynomial()
 
   def mul(self, in_ciphertexts):
-    ct_3elem = self.hemul_no_relin(in_ciphertexts)
-    return self.relinearize(ct_3elem)
+    """Explicitly rescale, tensor multiply, and relinearize."""
+    finite_field.check_ct_operand(
+        self.ff_context_cls,
+        self.overall_sizeQ_in,
+        in_ciphertexts,
+        '_HEMulKernel.mul',
+        batch=self.batch,
+        num_elements=4,
+        degree_layout=self.degree_layout,
+        moduli=self.original_moduli,
+    )
+    return self._mul_array_to_polynomial_unchecked(in_ciphertexts.polynomial)
+
+  def _mul_array_to_polynomial_unchecked(self, in_ciphertext_data):
+    """Private full multiply kernel after the caller validates its boundary."""
+    self._rescale_array_unchecked(in_ciphertext_data)
+    ct_3elem = self._tensor_multiply()
+    return self._relinearize_array_to_polynomial(ct_3elem.polynomial)
 
   def hemul_no_relin(self, in_ciphertexts):
-    """Perform rescale + tensor multiply WITHOUT relinearization.
+    """Perform a tensor multiply without relinearization or rescaling.
 
-    This is steps 1-2 of the full mul() pipeline.
+    This matches OpenFHE EvalMultCore: the output remains on the same modulus
+    towers as the inputs.
     Use relinearize() on the output to complete the multiplication.
 
-    mul() calls hemul_no_relin + relinearize as the combined API.
-
     Args:
-      in_ciphertexts: The input ciphertexts.
+      in_ciphertexts: Inputs already at this kernel's configured
+        tensor/key-switch modulus level. Use control_gen(skip_rescale=True)
+        to operate on the unchanged full-Q input level.
 
     Returns:
-      A 3-element jnp.ndarray (mul0, mul1, mul2) concatenated along
-      axis=1. Shape: (batch, 3, *degree_layout, num_q_after_rescale).
+      Polynomial (3-element: mul0, mul1, mul2) at the input towers.
     """
-    # ---------- Step 1: Rescale ----------
-    self.rescale(in_ciphertexts.polynomial)
+    finite_field.check_ct_operand(
+        self.ff_context_cls,
+        len(self.drop_last_moduli),
+        in_ciphertexts,
+        '_HEMulKernel.hemul_no_relin',
+        batch=self.batch,
+        num_elements=4,
+        degree_layout=self.degree_layout,
+        moduli=self.drop_last_moduli,
+    )
 
-    # ---------- Step 2: Tensor multiply ----------
-    ct_post_mult, last_ele_post_mult = self.ct_obj.polynomial_mult()
+    return self._hemul_no_relin_array_to_polynomial_unchecked(
+        in_ciphertexts.polynomial
+    )
 
-    # Return 3-element concatenation: (mul0, mul1, mul2)
-    return jnp.concatenate([ct_post_mult, last_ele_post_mult], axis=1)
+  def _hemul_no_relin_array_to_polynomial_unchecked(
+      self, in_ciphertext_data
+  ):
+    self.ct_obj.set_batch_polynomial(in_ciphertext_data)
+    return self._tensor_multiply()
 
-  def hemul_no_relin_square(self, in_ciphertexts):
-    """Squaring shortcut: rescale + (a*a, 2*a0*a1, a1*a1) instead of full mul.
+  def _hemul_no_relin_array(self, in_ciphertext_data):
+    """Privately tensor-multiply a canonical rank-5 raw payload."""
+    finite_field.check_rank5_array(
+        in_ciphertext_data,
+        '_HEMulKernel._hemul_no_relin_array',
+        batch=self.batch,
+        num_elements=4,
+        degree_layout=self.degree_layout,
+        num_moduli=len(self.drop_last_moduli),
+    )
+    return self._hemul_no_relin_array_to_polynomial_unchecked(
+        in_ciphertext_data
+    ).polynomial
 
-    For a CKKS multiplicative depth-1 squaring (`a == b`), polynomial_mult's
-    cross term `a0*b1 + a1*b0` simplifies to `2 * a0 * a1`, saving one
-    modmul (3 → 2 in the tensor stage). The caller is expected to pass an
-    `in_ciphertexts` whose 4 elements are `[a0, a1, a0, a1]` (same shape /
-    layout as the standard `hemul_no_relin` input — `_FastHEMulPath.square`
-    already builds this).
+  def _tensor_multiply(self):
+    """Tensor multiply the 4-element value currently loaded in ct_obj."""
+    # ---------- Tensor multiply ----------
+    ct_post_mult, last_ele_post_mult = self.ct_obj._polynomial_mult_array()
 
-    The rescale step still runs on the 4-element shell because rescale
-    operates on the full layout the cached parameter expects.
+    # Reuse the compile-time output context while returning a detached wrapper.
+    ct_3elem = jnp.concatenate([ct_post_mult, last_ele_post_mult], axis=1)
+    return self.ct_no_relin_out._clone_with_payload(
+        ct_3elem.astype(jnp.uint32)
+    )
 
-    Args:
-      in_ciphertexts: 4-element Polynomial wrapping [a0, a1, a0, a1].
-
-    Returns:
-      Same shape as `hemul_no_relin`: (batch, 3, *degree_layout, num_q).
-    """
-    # ---------- Step 1: Rescale (unchanged) ----------
-    self.rescale(in_ciphertexts.polynomial)
-
-    # ---------- Step 2: Squaring shortcut tensor ----------
-    ct_post_mult, last_ele_post_mult = self.ct_obj.polynomial_square()
-
-    return jnp.concatenate([ct_post_mult, last_ele_post_mult], axis=1)
-
-  def relinearize(self, ct_3elem):
+  def relinearize(self, ct_3elem: Polynomial) -> Polynomial:
     """Perform relinearization on a 3-element intermediate result.
 
     Args:
-      ct_3elem: 3-element jnp.ndarray (batch, 3, *degree_layout, num_q),
-        containing (mul0, mul1, mul2) where mul2 is the third element from
-        tensor multiply.
+      ct_3elem: 3-element Polynomial containing (mul0, mul1, mul2).
 
     Returns:
       Polynomial with 2 elements after key switching + approx mod down + add.
+      For split rescale (cd >= 2): also applies post-rescale to drop the
+      remaining (cd-1) primes.
 
     This is steps 3-6 of the full mul() pipeline.
     """
+    finite_field.check_ct_operand(
+        self.ff_context_cls,
+        len(self.drop_last_moduli),
+        ct_3elem,
+        '_HEMulKernel.relinearize',
+        batch=self.batch,
+        num_elements=3,
+        degree_layout=self.degree_layout,
+        moduli=self.drop_last_moduli,
+    )
+    return self._relinearize_array_to_polynomial(ct_3elem.polynomial)
+
+  def _relinearize_array(self, ct_3elem_data):
+    """Privately relinearize a canonical rank-5 raw payload."""
+    finite_field.check_rank5_array(
+        ct_3elem_data,
+        '_HEMulKernel._relinearize_array',
+        batch=self.batch,
+        num_elements=3,
+        degree_layout=self.degree_layout,
+        num_moduli=len(self.drop_last_moduli),
+    )
+    return self._relinearize_array_to_polynomial(ct_3elem_data).polynomial
+
+  def _relinearize_array_to_polynomial(self, arr):
+    """Internal array implementation returning a validated Polynomial."""
     overall_sizeQ_in, overall_sizeP_in = (
         self.overall_sizeQ_in,
         self.overall_sizeP_in,
     )
-    idx_cur_last_tower = (
-        overall_sizeQ_in
-        if self.skip_rescale
-        else overall_sizeQ_in - self.composite_degree
-    )
+    if self.skip_rescale:
+      idx_cur_last_tower = overall_sizeQ_in
+    elif self._use_split_rescale:
+      idx_cur_last_tower = overall_sizeQ_in - 1
+    else:
+      idx_cur_last_tower = overall_sizeQ_in - self.composite_degree
 
-    ct_post_mult = ct_3elem[:, :2, ...]
-    last_ele_post_mult = ct_3elem[:, 2:3, ...]
+    ct_post_mult = arr[:, :2, ...]
+    last_ele_post_mult = arr[:, 2:3, ...]
 
     # ---------- Step 3 & 4: Key switch ----------
-    keyswitch_core_res = self.key_switch(last_ele_post_mult)
+    keyswitch_core_res = self._key_switch_array(last_ele_post_mult)
 
     # ---------- Step 5: Approximate modulus down (via Polynomial) ----------
     result_ciphertext_list = []
@@ -506,7 +682,7 @@ class HEMul:
     )
     self.ct_extend.to_coeffs_form()
     reduced_approx_down = self.ct_extend.get_batch_polynomial()
-    ct_new_basis_coef = self.bconv.basis_change_bat(
+    ct_new_basis_coef = self.bconv.basis_change(
         reduced_approx_down, control_index=0
     ).astype(jnp.uint64)
 
@@ -514,9 +690,17 @@ class HEMul:
       tower_new_basis_coef = ct_new_basis_coef[
           :, element_index : element_index + 1, ...
       ]
-      self.ct_obj.set_batch_polynomial(tower_new_basis_coef.astype(jnp.uint32))
-      self.ct_obj.to_ntt_form()
-      tower_new_basis_jax = self.ct_obj.get_batch_polynomial()
+      self.ct_single.set_batch_polynomial(
+          tower_new_basis_coef.astype(jnp.uint32)
+      )
+      self.ct_single.to_ntt_form()
+      tower_new_basis_jax = self.ct_single.get_batch_polynomial()
+
+      # NTT output may be lazy (Montgomery, [0, 2q)); the modular subtraction
+      # below assumes both operands strict in [0, q).  Identity for Barrett.
+      tower_new_basis_jax = self.ct_single.ntt_ctx.ff_ctx.strictify(
+          tower_new_basis_jax
+      )
 
       current_approx_down_in = approx_down_in_jax[
           :, element_index : element_index + 1, ..., :idx_cur_last_tower
@@ -527,19 +711,49 @@ class HEMul:
           current_approx_down_in - tower_new_basis_jax,
       )
 
-      self.ct_obj.set_batch_polynomial(sub_result)
-      self.ct_obj.modmul(self.PInvModq)
-      reduced_elem_modq = self.ct_obj.get_batch_polynomial()
+      self.ct_single.set_batch_polynomial(sub_result)
+      self.ct_single.replace_payload(
+          self.ct_single.ntt_ctx.ff_ctx.modular_reduction(
+              self.ct_single.to_array().astype(jnp.uint64)
+              * self.PInvModq.astype(jnp.uint64)
+          ).astype(self.ct_single.modulus_dtype)
+      )
+      reduced_elem_modq = self.ct_single.get_batch_polynomial()
+      # modmul's reduction may be lazy (Montgomery); strictify for the final
+      # modular add.  Identity for Barrett.
+      reduced_elem_modq = self.ct_single.ntt_ctx.ff_ctx.strictify(
+          reduced_elem_modq
+      )
 
       result_ciphertext_list.append(reduced_elem_modq)
 
     approx_mod_down_custom = jnp.concatenate(result_ciphertext_list, axis=1)
 
     # ---------- Step 6: Add and return ----------
+    # Strictify lazy tensor-multiply outputs so the single conditional subtract below suffices.
+    ct_post_mult = self.ct_single.ntt_ctx.ff_ctx.strictify(ct_post_mult)
     result = ct_post_mult + approx_mod_down_custom
     val = jnp.where(
         result >= self.q_correction, result - self.q_correction, result
     )
 
-    self.ct_obj.set_batch_polynomial(val)
-    return self.ct_obj
+    # ---------- Step 7: Post-rescale for split rescale (cd >= 2) ----------
+    if self._use_split_rescale:
+      # Apply (cd-1) rescale on the 2-element result to reach the
+      # final output tower count (NQ - composite_degree).
+      post_rescaled = self._he_rescale_post._rescale_array_unchecked(val)
+      output_moduli = self._output_moduli
+      return self.ct_obj._clone_with_payload(
+          post_rescaled,
+          num_elements=2,
+          moduli=output_moduli,
+          ntt_ctx=self._he_rescale_post.ct_work_list[-1].ntt_ctx,
+      )
+
+    # Return a detached wrapper while reusing the immutable context built
+    # during control generation.  Bootstrap may lower the returned value's
+    # level without corrupting this operator's reusable scratch wrapper.
+    return self.ct_obj._clone_with_payload(val, num_elements=2)
+
+
+__all__ = []

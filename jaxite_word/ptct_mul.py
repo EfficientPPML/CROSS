@@ -23,22 +23,47 @@ byte-decomposition over the contraction (NTT twiddles, BConv, key-switch).
 
 For pointwise ops like ct x pt there is no contraction: the VPU runs it as one
 HBM-bound fused kernel, while BAT only adds byte-decomposition and layout
-shuffles. Measured 30-300x slower than VPU at N = 2^12..2^14. Default is VPU;
-reach for BAT inside ntt_mm.py / bconv.py, not here.
+shuffles. Default is VPU; reach for BAT inside ntt_mm.py / bconv.py, not here.
+
+Measured on TPU v6e (batch 1, 2 elements, warm median of 5):
+
+    degree   limbs   mul_vpu    mul_bat     ratio
+      4096       4    160 us     819 us       5.1x
+     16384      16    159 us    10.6 ms      66.4x
+     65536      51    238 us     134 ms     566.0x
+
+The gap widens with size because the VPU path is launch-bound (roughly flat
+from 2^12 to 2^16) while BAT's cost grows with the number of tiny matmuls.
+Two effects compose, and neither is a tuning problem:
+
+  1. The einsum contracts only the 4-byte axis. The modulus index ``m`` is a
+     batched index, not a contraction -- different moduli are independent, so
+     summing over them would be wrong. That leaves a depth-4 contraction on a
+     128-wide MXU (~3% utilization) spread over batch*elems*r*c*M independent
+     4x4x4 matmuls: 6.7M of them at N=65536/M=51. The einsum alone is already
+     14.6 ms, 73x the entire VPU multiply.
+  2. Reconstructing the u64 product from the byte partials costs a further ~9x
+     (14.6 ms -> 134 ms). TPU has no native 64-bit integer unit, so the u64
+     accumulate is emulated in the matmul's output loop. This is not a
+     separable fusion artifact: inserting ``lax.optimization_barrier`` between
+     the einsum and the reconstruct changes nothing (measured 1.0x), because
+     the consumer's dtype is what forces the schedule.
 """
 
 import jax
 import jax.numpy as jnp
 import finite_field
 import polynomial
+import util
 
 Polynomial = polynomial.Polynomial
+# Aliased only for the _HEPtCtMulKernel.__init__ default argument.
 BarrettContext = finite_field.BarrettContext
 jax.config.update("jax_enable_x64", True)
 
 
-class HEPtCtMul:
-  """Polynomial-Plaintext multiplication with optional BAT optimization.
+class _HEPtCtMulKernel:
+  """Private polynomial-plaintext multiplication kernel.
 
   Default path is VPU (element-wise modmul). BAT is opt-in via
   ``mul(ct, use_bat=True)`` after ``precompute_plaintext_bat`` and is only
@@ -53,7 +78,7 @@ class HEPtCtMul:
 
     BAT path (MXU + VPU, opt-in):
       1. Offline: precompute pt_bat[r, c, M*4, 4] via
-      _basis_aligned_transformation
+      util.shifted_mod_bytes
       2. Runtime: ct_bytes = bitcast(ct, u8) → shape (..., r, c, M, 4)
                   reshape ct_bytes to (..., r, c*M, 4) to increase MXU
                   contraction width
@@ -67,28 +92,39 @@ class HEPtCtMul:
     integers), which maps directly to TPU's 8-bit matrix multiply unit.
   """
 
-  def __init__(self, batch, r, c, moduli, degree_layout=None):
+  def __init__(self, batch, r, c, moduli, degree_layout=None,
+               finite_field_context=BarrettContext):
     self.batch = batch
     self.r = r
     self.c = c
     self.moduli = moduli
     self.num_moduli = len(moduli)
-    self.degree_layout = degree_layout or (r, c)
+    self.degree_layout = finite_field.canonical_degree_layout(
+        r, c, degree_layout, '_HEPtCtMulKernel'
+    )
     self.ring_dim = r * c
-    self.barrett_ctx = BarrettContext(moduli=moduli)
+    self.ff_context_cls = finite_field_context
+    self.ff_ctx = finite_field_context(moduli=moduli)
     self.pt_bat = None  # Set by precompute_plaintext_bat
     self.pt_ntt = None  # Set by set_plaintext
 
   def set_plaintext(self, pt_ntt: jnp.ndarray):
     """Set the plaintext polynomial (must be in NTT/EVAL form).
 
+    The plaintext arrives in standard representation. In Montgomery mode it
+    is converted to Montgomery form (pt * R mod q) so that
+    MontRed(ct_mont * pt_mont) keeps the ciphertext in Montgomery form.
+
     Invalidates any previously precomputed BAT representation.
 
     Args:
-        pt_ntt: Plaintext in NTT domain, shape (*degree_layout, num_moduli) or
-          (1, 1, *degree_layout, num_moduli) for broadcasting.
+        pt_ntt: Plaintext in NTT domain (standard representation), shape
+          (*degree_layout, num_moduli) or (1, 1, *degree_layout, num_moduli)
+          for broadcasting.
     """
-    self.pt_ntt = jnp.asarray(pt_ntt, dtype=jnp.uint32)
+    pt = jnp.asarray(pt_ntt, dtype=jnp.uint64)
+    pt = self.ff_ctx.to_computation_format(pt)
+    self.pt_ntt = pt.astype(jnp.uint32)
     self.pt_bat = None  # Invalidate stale BAT
 
   def precompute_plaintext_bat(self, pt_ntt: jnp.ndarray):
@@ -105,21 +141,15 @@ class HEPtCtMul:
       result = sum_a( ct_byte[a] * bat[a, :] )  (8-bit matmul)
 
     Args:
-        pt_ntt: Plaintext in NTT domain, shape (*degree_layout, num_moduli).
+        pt_ntt: Plaintext in NTT domain (standard representation), shape
+          (*degree_layout, num_moduli).
     """
     pt = jnp.asarray(pt_ntt, dtype=jnp.uint64)
+    # Computation-format encode (Montgomery: pt*R), as in set_plaintext.
+    pt = self.ff_ctx.to_computation_format(pt).astype(jnp.uint64)
     moduli_arr = jnp.array(self.moduli, dtype=jnp.uint64)
 
-    # Compute (pt << 8*byte_idx) mod q for each byte position
-    # Shape: (4, *degree_layout, num_moduli)
-    pt_shifted = jnp.stack(
-        [(pt << (8 * byte_idx)) % moduli_arr for byte_idx in range(4)], axis=0
-    ).astype(jnp.uint32)
-
-    # Decompose each shifted value into 4 bytes
-    # bitcast u32 → u8: adds trailing dim of 4
-    # Shape: (4, *degree_layout, num_moduli, 4)
-    pt_bytes = jax.lax.bitcast_convert_type(pt_shifted, jnp.uint8)
+    pt_bytes = util.shifted_mod_bytes(pt, moduli_arr)
 
     # Transpose to (*degree_layout, num_moduli, 4_input, 4_output)
     # = (*degree_layout, M, 4, 4)
@@ -133,7 +163,31 @@ class HEPtCtMul:
     # (*degree_layout, M*4, 4)
     spatial_shape = pt_bat.shape[:ndim]
     self.pt_bat = pt_bat.reshape(*spatial_shape, self.num_moduli * 4, 4)
-    self.pt_ntt = jnp.asarray(pt_ntt, dtype=jnp.uint32)
+    self.pt_ntt = pt.astype(jnp.uint32)
+
+  def _mul_array(self, ct_data, pt_ntt):
+    """Privately multiply a canonical raw payload using the VPU path."""
+    finite_field.check_rank5_array(
+        ct_data,
+        '_HEPtCtMulKernel._mul_array',
+        batch=self.batch,
+        degree_layout=self.degree_layout,
+        num_moduli=self.num_moduli,
+    )
+    if not hasattr(pt_ntt, 'shape') or pt_ntt.shape[-3:] != (
+        *self.degree_layout, self.num_moduli
+    ):
+      raise ValueError(
+          '_HEPtCtMulKernel._mul_array plaintext must end in '
+          f'{(*self.degree_layout, self.num_moduli)}, got '
+          f'{getattr(pt_ntt, "shape", None)}.'
+      )
+    return self._mul_array_unchecked(ct_data, pt_ntt)
+
+  def _mul_array_unchecked(self, ct_data, pt_ntt):
+    product = ct_data.astype(jnp.uint64) * pt_ntt.astype(jnp.uint64)
+    reduced = self.ff_ctx.modular_reduction(product)
+    return self.ff_ctx.strictify(reduced).astype(jnp.uint32)
 
   def mul_vpu(self, ct: Polynomial) -> Polynomial:
     """Polynomial-plaintext multiply using VPU (element-wise modmul).
@@ -151,12 +205,18 @@ class HEPtCtMul:
     if self.pt_ntt is None:
       raise RuntimeError("Plaintext not set. Call set_plaintext() first.")
 
-    ct_data = ct.polynomial.astype(jnp.uint64)
-    pt_data = self.pt_ntt.astype(jnp.uint64)
-    product = ct_data * pt_data
-    reduced = self.barrett_ctx.modular_reduction(product)
-    ct.polynomial = reduced.astype(jnp.uint32)
-    return ct
+    finite_field.check_ct_operand(
+        self.ff_context_cls,
+        self.num_moduli,
+        ct,
+        '_HEPtCtMulKernel.mul',
+        batch=self.batch,
+        degree_layout=self.degree_layout,
+        moduli=self.moduli,
+    )
+    return ct._clone_with_payload(
+        self._mul_array_unchecked(ct.polynomial, self.pt_ntt)
+    )
 
   def mul_bat(self, ct: Polynomial) -> Polynomial:
     """Polynomial-plaintext multiply using BAT (MXU-accelerated).
@@ -167,10 +227,16 @@ class HEPtCtMul:
     leaving only the Barrett reduction on the VPU.
 
     Memory access pattern:
-      - ct bytes: (batch, num_elements, *degree_layout, M*4) — contiguous read
-      - pt_bat:   (*degree_layout, M*4, 4) — precomputed constant, broadcast
-      - The (M*4) contraction dimension is large enough for efficient MXU tiling
-        (e.g., M=50 → contraction dim = 200)
+      - ct bytes: (batch, num_elements, *degree_layout, M, 4) — contiguous read
+      - pt_bat:   (*degree_layout, M, 4, 4) — precomputed constant, broadcast
+      - The contraction is only the 4-byte axis. ``M`` is a *batched* index,
+        not a contraction: each modulus is an independent residue and summing
+        across them would be wrong. So this is a batch of 4x4x4 matmuls, not
+        one wide matmul, and the MXU runs at ~3% utilization. See the module
+        docstring for the measured cost -- this path is much slower than
+        ``mul_vpu`` and exists for comparison, not for production use.
+      - pt_bat is 16 bytes per coefficient against the plaintext's 4, so it
+        also reads 4x the constant traffic of the VPU path.
 
     Args:
         ct: Polynomial with shape (batch, num_elements, *degree_layout,
@@ -185,33 +251,23 @@ class HEPtCtMul:
           " first."
       )
 
+    finite_field.check_ct_operand(
+        self.ff_context_cls,
+        self.num_moduli,
+        ct,
+        '_HEPtCtMulKernel.mul',
+        batch=self.batch,
+        degree_layout=self.degree_layout,
+        moduli=self.moduli,
+    )
+
     ct_data = ct.polynomial  # (batch, elems, r, c, M) u32
 
     # Byte-decompose ciphertext: u32 → 4×u8
     # (batch, elems, r, c, M, 4)
-    ct_bytes = jax.lax.bitcast_convert_type(ct_data, jnp.uint8)
-
-    # Reshape: fold (M, 4) into contraction dimension
-    # (batch, elems, r, c, M*4)
-    orig_shape = ct_bytes.shape
-    spatial = orig_shape[:-2]  # (batch, elems, r, c)
-    ct_flat = ct_bytes.reshape(*spatial, self.num_moduli * 4)
-
-    # 8-bit einsum on MXU: contract over M*4
-    # ct_flat:  (batch, elems, r, c, M*4)   [byte-decomposed ciphertext]
-    # pt_bat:   (r, c, M*4, 4)              [BAT-precomputed plaintext]
-    # result:   (batch, elems, r, c, 4)      [4 output bytes per position]
-    #
-    # But we need per-modulus output, not collapsed.
-    # The BAT matrix is block-diagonal over M:
-    #   for modulus m: ct_bytes[..., m*4:(m+1)*4] × pt_bat[..., m*4:(m+1)*4, :4]
-    #
-    # With the flat einsum, the cross-modulus products contribute noise.
-    # We need a GROUPED approach: process each modulus independently.
-    #
-    # Reshape to separate moduli:
-    # ct_bytes: (batch, elems, r, c, M, 4)  — already have this
-    # pt_bat:   (r, c, M, 4, 4)             — before flattening
+    ct_bytes = jax.lax.bitcast_convert_type(
+        ct_data.astype(jnp.uint32), jnp.uint8
+    )
 
     # Use the per-modulus BAT (unflatten pt_bat)
     pt_bat_per_m = self.pt_bat.reshape(
@@ -221,8 +277,6 @@ class HEPtCtMul:
     # einsum: contract over 4 input bytes, per spatial position and modulus
     # "bercmq, rcmqp -> bercmp"
     # b=batch, e=elements, r=r, c=c, m=moduli, q=4(in_bytes), p=4(out_bytes)
-    shift_factors = jnp.array([0, 8, 16, 24], dtype=jnp.uint32)
-
     partial = jnp.einsum(
         "bercmq, rcmqp -> bercmp",
         ct_bytes,
@@ -231,12 +285,13 @@ class HEPtCtMul:
     )
 
     # Reconstruct u64 from 4 output bytes
-    result_u64 = jnp.sum(partial.astype(jnp.uint64) << shift_factors, axis=-1)
+    result_u64 = util.reconstruct(partial)
 
-    # Barrett reduction (VPU)
-    reduced = self.barrett_ctx.modular_reduction(result_u64)
-    ct.polynomial = reduced.astype(jnp.uint32)
-    return ct
+    # Modular reduction (VPU)
+    reduced = self.ff_ctx.modular_reduction(result_u64)
+    # Keep the op-boundary contract strict (see mul_vpu). Identity for Barrett.
+    reduced = self.ff_ctx.strictify(reduced)
+    return ct._clone_with_payload(reduced.astype(jnp.uint32))
 
   def mul(self, ct: Polynomial, use_bat: bool = False) -> Polynomial:
     """Polynomial-plaintext multiply.
@@ -250,7 +305,7 @@ class HEPtCtMul:
           ``precompute_plaintext_bat`` to have been called. Default False.
 
     Returns:
-        Modified ciphertext (ct * pt mod q).
+        A new ciphertext containing ``ct * pt mod q``.
     """
     if use_bat:
       if self.pt_bat is None:
@@ -261,3 +316,6 @@ class HEPtCtMul:
         )
       return self.mul_bat(ct)
     return self.mul_vpu(ct)
+
+
+__all__ = []

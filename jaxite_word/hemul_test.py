@@ -9,7 +9,14 @@ import key_gen as kg
 from absl.testing import absltest
 from absl.testing import parameterized
 
-HEMul = hemul.HEMul
+try:
+  import pytest
+except ModuleNotFoundError:
+  pytestmark = []
+else:
+  pytestmark = [pytest.mark.correctness, pytest.mark.integration]
+
+_HEMulKernel = hemul._HEMulKernel
 Polynomial = polynomial.Polynomial
 
 testing_params = [{'testcase_name': '0'}]
@@ -98,7 +105,9 @@ class HEMulTest(parameterized.TestCase):
 
     # Class Initialization
     ctx = ckks_ctx.CKKSContext(params)
-    he_mul = HEMul(batch, r, c, dnum, num_eval_mult, self.q_towers, self.p_towers)
+    he_mul = _HEMulKernel(
+        batch, r, c, dnum, num_eval_mult, self.q_towers, self.p_towers
+    )
     he_mul.control_gen(degree_layout=(r,c))
     he_mul.setup_relinearization(eval_key_a, eval_key_b)
 
@@ -107,14 +116,22 @@ class HEMulTest(parameterized.TestCase):
     encoded_ct1 = ctx.encode(self.real_values_input_in1)
     encoded_ct2 = ctx.encode(self.real_values_input_in2)
     if debug:
-      np.testing.assert_array_equal(encoded_ct1.polynomial[0,0], ptxt0)
-      np.testing.assert_array_equal(encoded_ct2.polynomial[0,0], ptxt1)
+      np.testing.assert_array_equal(
+          encoded_ct1.polynomial[0, 0].reshape(self.degree, len(self.q_towers)),
+          ptxt0)
+      np.testing.assert_array_equal(
+          encoded_ct2.polynomial[0, 0].reshape(self.degree, len(self.q_towers)),
+          ptxt1)
     # Step 2: Encryption
     if debug:
       encrypted_ct1 = ctx.encrypt(encoded_ct1, v=v1, e=e1)
       encrypted_ct2 = ctx.encrypt(encoded_ct2, v=v2, e=e2)
-      np.testing.assert_array_equal(encrypted_ct1.polynomial[0], ct0)
-      np.testing.assert_array_equal(encrypted_ct2.polynomial[0], ct1)
+      np.testing.assert_array_equal(
+          encrypted_ct1.polynomial.reshape(2, self.degree, len(self.q_towers)),
+          ct0)
+      np.testing.assert_array_equal(
+          encrypted_ct2.polynomial.reshape(2, self.degree, len(self.q_towers)),
+          ct1)
     else:
       encrypted_ct1 = ctx.encrypt(encoded_ct1)
       encrypted_ct2 = ctx.encrypt(encoded_ct2)
@@ -125,26 +142,173 @@ class HEMulTest(parameterized.TestCase):
     ct_in_shapes = {'batch': batch, 'num_elements': 2*num_elements, 'degree': self.degree, 'precision': 32, 'num_moduli': len(self.q_towers), 'degree_layout': (r, c)}
     ct_in = Polynomial(ct_in_shapes, parameters={'moduli': self.q_towers})
     ct_in.polynomial = in_cts_array
+    no_relin_op = _HEMulKernel(
+        batch, r, c, dnum, num_eval_mult, self.q_towers, self.p_towers
+    )
+    no_relin_op.control_gen(degree_layout=(r, c), skip_rescale=True)
+    no_relin = no_relin_op.hemul_no_relin(ct_in)
+    self.assertEqual(no_relin.num_moduli, len(self.q_towers))
+    self.assertEqual(no_relin.num_elements, 3)
+    raw = np.asarray(in_cts_array, dtype=np.uint64)
+    moduli = np.asarray(self.q_towers, dtype=np.uint64)
+    tensor_ref = np.stack(
+        [
+            (raw[:, 0] * raw[:, 2]) % moduli,
+            (
+                (raw[:, 0] * raw[:, 3]) % moduli
+                + (raw[:, 1] * raw[:, 2]) % moduli
+            )
+            % moduli,
+            (raw[:, 1] * raw[:, 3]) % moduli,
+        ],
+        axis=1,
+    )
+    np.testing.assert_array_equal(no_relin.polynomial, tensor_ref)
+
+    # Bootstrap's private level-indexed split helpers must use the same full-Q
+    # tensor product and retain that level through relinearization.
+    ctx.program_initialization(
+        total_rotation_indices=[],
+        dnum=dnum,
+        r=r,
+        c=c,
+        batch=batch,
+    )
+    input_level = ctx.max_level
+    split_op = ctx.he_mul[input_level - 1]
+    self.assertTrue(callable(split_op._square_array))
+    self.assertEqual(split_op.input_num_moduli, len(self.q_towers))
+    explicit_no_relin = split_op.hemul_no_relin(
+        encrypted_ct1, encrypted_ct2
+    )
+    np.testing.assert_array_equal(explicit_no_relin.polynomial, tensor_ref)
+    explicit_relinearized = split_op.relinearize(explicit_no_relin)
+    self.assertEqual(explicit_relinearized.num_elements, 2)
+    self.assertEqual(explicit_relinearized.num_moduli, len(self.q_towers))
+
     encrypted_result = he_mul.mul(ct_in)
     if debug:
       np.testing.assert_array_equal(encrypted_result.polynomial.reshape(batch, num_elements, self.degree, len(self.q_towers)-1), encrypted_mult_result_ref)
     # Step 4: Decryption
-    encrypted_ct1.drop_last_modulus()
-    encrypted_ct1.set_batch_polynomial(encrypted_result.polynomial.reshape(batch, 2, self.degree, len(self.q_towers)-1))
-    decrypted_result = ctx.decrypt(encrypted_ct1)
+    # The private kernel cannot infer the two operands' logical scales from its
+    # combined four-element payload. Label its result explicitly instead of
+    # reusing an input wrapper, which would retain the stale input scale.
+    encrypted_result._ckks_scale = self.output_scale
+    decrypted_result = ctx.decrypt(encrypted_result)
     if debug:
-      np.testing.assert_array_equal(decrypted_result.polynomial[0,0], decrypted_result_ref)
+      np.testing.assert_array_equal(
+          decrypted_result.polynomial[0, 0].reshape(
+              self.degree, len(self.q_towers) - 1
+          ),
+          decrypted_result_ref,
+      )
     # Step 5: Decoding
     decoded_values = ctx.decode(decrypted_result, is_ntt=False)
     if debug:
       np.testing.assert_array_almost_equal(decoded_values, self.real_values_multiply_result, decimal=3)
 
+class HEMulMontgomeryTest(absltest.TestCase):
+  """Private multiplication-kernel equivalence and end-to-end correctness.
+
+  Runs the same encrypted input through a Barrett-configured and a
+  Montgomery-configured kernel; the canonical outputs must be bit-identical,
+  and the Montgomery result must decrypt/decode to the expected slot
+  products.
+  """
+
+  def setUp(self):
+    super().setUp()
+    self.degree = 16
+    self.num_slots = 8
+    self.r, self.c = 4, 4
+    self.dnum = 3
+    self.scaling_factor = 281510041637249
+    self.q_towers = [536872097, 536870657, 536872001, 536870849, 536871233, 524353]
+    self.p_towers = [1073741441, 1073740609]
+    self.output_scale = (self.scaling_factor / self.q_towers[-1]) ** 2
+    self.sigma = 3.190000057220458984375
+
+  def test_montgomery_matches_barrett_and_decodes(self):
+    import finite_field as ff_context
+
+    key_pair = kg.gen_pke_pair(self.q_towers, self.p_towers, self.degree)
+    ek = kg.gen_evaluation_key(
+        key_pair["secret_key"], q=self.q_towers, P=self.p_towers,
+        noise_std=self.sigma, noise_scale=1, dnum=self.dnum)
+    eval_a = jnp.array(ek["a"], dtype=jnp.uint32).transpose(0, 2, 1)
+    eval_b = jnp.array(ek["b"], dtype=jnp.uint32).transpose(0, 2, 1)
+
+    params = {
+        "degree": self.degree, "num_slots": self.num_slots,
+        "scaling_factor": self.scaling_factor,
+        "output_scale": self.output_scale,
+        "q_towers": self.q_towers, "p_towers": self.p_towers,
+        "p": 30, "CKKS_M_FACTOR": 1, "max_bits_in_word": 61,
+        "noise_scale_degree": 1,
+        "public_key": key_pair["public_key"],
+        "secret_key": key_pair["secret_key"],
+    }
+    ctx = ckks_ctx.CKKSContext(params)
+
+    in1 = [complex(v, 0) for v in (0.25, 0.5, 0.75, 1, 2, 3, 4, 5)]
+    in2 = [complex(v, 0) for v in (5, 4, 3, 2, 1, 0.75, 0.5, 0.25)]
+    expected = [a * b for a, b in zip(in1, in2)]
+
+    ct1 = ctx.encrypt(ctx.encode(in1))
+    ct2 = ctx.encrypt(ctx.encode(in2))
+    nq = len(self.q_towers)
+    in_cts = jnp.concatenate(
+        [ct1.polynomial, ct2.polynomial], axis=1
+    ).reshape(1, 4, self.r, self.c, nq).astype(jnp.uint64)
+
+    def run(ffcls, data):
+      he_mul = hemul._HEMulKernel(
+          1, self.r, self.c, self.dnum, 1, self.q_towers, self.p_towers,
+          finite_field_context=ffcls)
+      he_mul.control_gen(degree_layout=(self.r, self.c))
+      he_mul.setup_relinearization(eval_a, eval_b)
+      shapes = {'batch': 1, 'num_elements': 4, 'degree': self.degree,
+                'precision': 32, 'num_moduli': nq, 'degree_layout': (self.r, self.c)}
+      ct_in = Polynomial(shapes, parameters={
+          'moduli': self.q_towers, 'finite_field_context': ffcls})
+      ct_in.polynomial = data
+      return he_mul.mul(ct_in).polynomial
+
+    out_barrett = run(ff_context.BarrettContext, in_cts.astype(jnp.uint32))
+
+    mont_q = ff_context.MontgomeryContext(self.q_towers)
+    mont_out_ctx = ff_context.MontgomeryContext(self.q_towers[:-1])
+    out_mont_fmt = run(ff_context.MontgomeryContext,
+                       mont_q.to_computation_format(in_cts))
+    out_mont = mont_out_ctx.to_original_format(
+        jnp.asarray(out_mont_fmt, jnp.uint64))
+
+    q_out = jnp.array(self.q_towers[:-1], jnp.uint64)
+    np.testing.assert_array_equal(
+        jnp.asarray(out_barrett, jnp.uint64) % q_out, out_mont)
+
+    # End-to-end: decrypt/decode the Montgomery result
+    dec_ct = Polynomial(
+        {"batch": 1, "num_elements": 2, "degree": self.degree,
+         "precision": 32, "num_moduli": nq,
+         "degree_layout": (self.r, self.c)},
+        parameters={"moduli": self.q_towers})
+    dec_ct.polynomial = ct1.polynomial.reshape(1, 2, self.r, self.c, nq)
+    dec_ct = dec_ct.drop_last_modulus()
+    dec_ct.set_batch_polynomial(
+        jnp.asarray(out_mont, jnp.uint32).reshape(
+            1, 2, self.r, self.c, nq - 1
+        ))
+    decoded = ctx.decode(ctx.decrypt(dec_ct), is_ntt=False)
+    np.testing.assert_array_almost_equal(decoded, expected, decimal=3)
+
+
 class HEMulDegree2048Test(absltest.TestCase):
-  """End-to-end HEMul correctness test at production ring dimension.
+  """End-to-end multiplication-kernel test at production ring dimension.
 
   Verifies the Barrett `int(m)` fix (finite_field.py) and the per-product
   modular reduction in key_switch (hemul.py) work at degree=2048. Without
-  these fixes, HEMul produces garbage output at this scale.
+  these fixes, the multiplication kernel produces garbage at this scale.
 
   Uses 30-31 bit Q primes (verified NTT-friendly: q ≡ 1 mod 4096) and
   32-bit P primes (4 of them, giving P_product ≈ 2^124 for noise margin).
@@ -163,14 +327,14 @@ class HEMulDegree2048Test(absltest.TestCase):
         1073815553, 1073692673, 1073750017,
     ]
     # 32-bit P primes, P_product ≈ 2^128 gives large noise margin
-    self.p_towers = [2147565569, 2147573761, 2147577857, 2147721217]
+    self.p_towers = [2147389441, 2147377153, 2147352577, 2147295233]
     # Composite scaling: spans 2 Q towers (~61 bits), leaves rescale headroom
     self.scaling_factor = self.q_towers[0] * self.q_towers[1]
     self.output_scale = (self.scaling_factor / self.q_towers[-1]) ** 2
     self.sigma = 3.190000057220458984375
 
   def test_encrypt_multiply_decrypt_degree_2048(self):
-    """HEMul (ct * ct) at degree=2048 decrypts to within 1e-4 of x^2."""
+    """The private ct*ct kernel at degree 2048 decrypts within 1e-4."""
     key_pair = kg.gen_pke_pair(self.q_towers, self.p_towers, self.degree)
     ek = kg.gen_evaluation_key(
         key_pair["secret_key"],
@@ -203,8 +367,8 @@ class HEMulDegree2048Test(absltest.TestCase):
     pt = ctx.encode(slots)
     ct = ctx.encrypt(pt)
 
-    # Build raw HEMul (matches ckks_ctx_test pattern)
-    he_mul = HEMul(
+    # Build the private multiplication kernel.
+    he_mul = _HEMulKernel(
         1, self.r, self.c, self.dnum, 1,
         self.q_towers, self.p_towers, composite_degree=1,
     )
@@ -224,18 +388,19 @@ class HEMulDegree2048Test(absltest.TestCase):
 
     encrypted_result = he_mul.mul(ct_in)
     self.assertEqual(encrypted_result.num_moduli, M - 1,
-                     "HEMul should drop one tower via internal rescale")
+                     "multiplication should drop one tower via rescale")
 
     # Decrypt: drop last modulus and overwrite with the multiplication result
     dec_ct = polynomial.Polynomial(
         {"batch": 1, "num_elements": 2, "degree": self.degree,
-         "precision": 32, "num_moduli": M, "degree_layout": (self.degree,)},
+         "precision": 32, "num_moduli": M,
+         "degree_layout": (self.r, self.c)},
         parameters={"moduli": self.q_towers},
     )
-    dec_ct.polynomial = ct.polynomial.reshape(1, 2, self.degree, M)
-    dec_ct.drop_last_modulus()
+    dec_ct.polynomial = ct.polynomial.reshape(1, 2, self.r, self.c, M)
+    dec_ct = dec_ct.drop_last_modulus()
     dec_ct.set_batch_polynomial(
-        encrypted_result.polynomial.reshape(1, 2, self.degree, M - 1)
+        encrypted_result.polynomial.reshape(1, 2, self.r, self.c, M - 1)
     )
 
     decrypted = ctx.decrypt(dec_ct)
@@ -244,7 +409,105 @@ class HEMulDegree2048Test(absltest.TestCase):
     expected = [v * v for v in input_vals]
 
     np.testing.assert_array_almost_equal(got, expected, decimal=4,
-        err_msg=f"HEMul at degree=2048 decryption mismatch. "
+        err_msg=f"Multiplication at degree=2048 decryption mismatch. "
+                f"Got {got}, expected {expected}")
+
+  def test_encrypt_multiply_decrypt_degree_2048_montgomery(self):
+    """The Montgomery ct*ct kernel at degree 2048 decrypts to x^2.
+
+    Uses 30-bit P towers: the CRNS-based BConvMontgomery requires all moduli
+    below 2^31 (the Barrett test's 32-bit P towers are out of its wrap-safe
+    envelope), and P_product ~ 2^120 still dominates the alpha=2 tower-group
+    product (~2^61).
+    """
+    import finite_field as ff_context
+
+    import util
+    # 30-bit NTT-friendly P primes (p ≡ 1 mod 4096) disjoint from the Q
+    # towers; P_product ~ 2^120 still dominates the alpha=2 group product.
+    candidates = util.find_moduli_ntt(10, 30, 2 * self.degree)
+    p_towers = [m for m in candidates if m not in self.q_towers][:4]
+    key_pair = kg.gen_pke_pair(self.q_towers, p_towers, self.degree)
+    ek = kg.gen_evaluation_key(
+        key_pair["secret_key"],
+        q=self.q_towers, P=p_towers,
+        noise_std=self.sigma, noise_scale=1, dnum=self.dnum,
+    )
+    eval_a = jnp.array(ek["a"], dtype=jnp.uint32).transpose(0, 2, 1)
+    eval_b = jnp.array(ek["b"], dtype=jnp.uint32).transpose(0, 2, 1)
+
+    params = {
+        "degree": self.degree,
+        "num_slots": self.num_slots,
+        "scaling_factor": self.scaling_factor,
+        "output_scale": self.output_scale,
+        "q_towers": self.q_towers,
+        "p_towers": p_towers,
+        "p": 60,
+        "CKKS_M_FACTOR": 1,
+        "max_bits_in_word": 61,
+        "noise_scale_degree": 1,
+        "composite_degree": 1,
+        "public_key": key_pair["public_key"],
+        "secret_key": key_pair["secret_key"],
+        "evaluation_key": [eval_a, eval_b],
+    }
+    ctx = ckks_ctx.CKKSContext(params)
+
+    input_vals = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+    slots = [complex(v, 0) for v in input_vals] + [complex(0)] * (self.num_slots - len(input_vals))
+    pt = ctx.encode(slots)
+    ct = ctx.encrypt(pt)
+
+    he_mul = _HEMulKernel(
+        1, self.r, self.c, self.dnum, 1,
+        self.q_towers, p_towers, composite_degree=1,
+        finite_field_context=ff_context.MontgomeryContext,
+    )
+    he_mul.control_gen(degree_layout=(self.r, self.c))
+    he_mul.setup_relinearization(eval_a, eval_b)
+
+    M = len(self.q_towers)
+    mont_q = ff_context.MontgomeryContext(self.q_towers)
+    ct_5d = mont_q.to_computation_format(
+        ct.polynomial.reshape(1, 2, self.r, self.c, M).astype(jnp.uint64))
+    combined = jnp.concatenate([ct_5d, ct_5d], axis=1)
+    ct_in_shapes = {
+        "batch": 1, "num_elements": 4, "degree": self.degree,
+        "precision": 32, "num_moduli": M, "degree_layout": (self.r, self.c),
+    }
+    ct_in = Polynomial(ct_in_shapes, parameters={
+        "moduli": self.q_towers,
+        "finite_field_context": ff_context.MontgomeryContext,
+    })
+    ct_in.polynomial = combined
+
+    encrypted_result = he_mul.mul(ct_in)
+    self.assertEqual(encrypted_result.num_moduli, M - 1)
+    out_std = ff_context.MontgomeryContext(self.q_towers[:-1]).to_original_format(
+        jnp.asarray(encrypted_result.polynomial, jnp.uint64))
+
+    dec_ct = polynomial.Polynomial(
+        {"batch": 1, "num_elements": 2, "degree": self.degree,
+         "precision": 32, "num_moduli": M,
+         "degree_layout": (self.r, self.c)},
+        parameters={"moduli": self.q_towers},
+    )
+    dec_ct.polynomial = ct.polynomial.reshape(1, 2, self.r, self.c, M)
+    dec_ct = dec_ct.drop_last_modulus()
+    dec_ct.set_batch_polynomial(
+        jnp.asarray(out_std, jnp.uint32).reshape(
+            1, 2, self.r, self.c, M - 1
+        )
+    )
+
+    decrypted = ctx.decrypt(dec_ct)
+    decoded = ctx.decode(decrypted, is_ntt=False)
+    got = [v.real for v in decoded[:len(input_vals)]]
+    expected = [v * v for v in input_vals]
+
+    np.testing.assert_array_almost_equal(got, expected, decimal=4,
+        err_msg=f"Montgomery multiply at degree=2048 decryption mismatch. "
                 f"Got {got}, expected {expected}")
 
 

@@ -1,30 +1,40 @@
 """Performance tests for ptct_mul.py using profiler.py."""
 
-import os
-
 import jax
 import jax.numpy as jnp
 from absl.testing import absltest
 from absl.testing import parameterized
 
+import finite_field
 import ptct_mul
 import util
-from profiler import KernelWrapper, Profiler, collect_logs
+from polynomial import Polynomial
+from profiler import KernelWrapper, Profiler, collect_module_logs
+from profiler import kernel_perf_setup, require_tpu
 
 jax.config.update("jax_enable_x64", True)
 
 BarrettContext = ptct_mul.BarrettContext
-HEPtCtMul = ptct_mul.HEPtCtMul
+MontgomeryContext = finite_field.MontgomeryContext
+_HEPtCtMulKernel = ptct_mul._HEPtCtMulKernel
 
-BATCH_SIZE_LIST_LOW_DEGREE = [4, 16, 64]
-BATCH_SIZE_LIST_HIGH_DEGREE = [1, 2, 4]
+# Profile both modular-reduction backends so Barrett vs Montgomery cost is
+# directly comparable in the collected CSV (distinguished by the "reduction"
+# setting column). Montgomery requires all moduli < 2^31.
+REDUCTION_CONTEXTS = [
+    ("barrett", BarrettContext),
+    ("montgomery", MontgomeryContext),
+]
+
 TEST_PARAMS_PTCT_MUL = [
-    ("2_12_L4", 4096, 4, BATCH_SIZE_LIST_LOW_DEGREE),
-    ("2_14_L8", 16384, 8, BATCH_SIZE_LIST_HIGH_DEGREE),
+    # CL_256_256: degree 65536 tiled as r=c=256, 51 Q limbs -- matches the
+    # config profiled for hemul/herot/rescale/matvec so the pt*ct cost is
+    # directly comparable. batch=1 for the apples-to-apples single-op number.
+    ("CL_256_256", 65536, 51, [1]),
 ]
 
 DEGREE_TO_RC_MAPPING = {
-    65536: (128, 512),
+    65536: (256, 256),
     32768: (128, 256),
     16384: (128, 128),
     8192: (128, 64),
@@ -32,26 +42,14 @@ DEGREE_TO_RC_MAPPING = {
     2048: (128, 16),
 }
 
-def _ptct_mul_vpu_kernel(ct_data, parameters):
-    product = ct_data.astype(jnp.uint64) * parameters["pt_ntt"].astype(jnp.uint64)
-    reduced = parameters["barrett_ctx"].modular_reduction(product)
-    return reduced.astype(jnp.uint32)
-
-
-def _ptct_mul_bat_kernel(ct_data, parameters):
-    ct_bytes = jax.lax.bitcast_convert_type(ct_data, jnp.uint8)
-    partial = jnp.einsum(
-        "bercmq, rcmqp -> bercmp",
-        ct_bytes,
-        parameters["pt_bat_per_modulus"],
-        preferred_element_type=jnp.uint32,
-    )
-    result_u64 = jnp.sum(
-        partial.astype(jnp.uint64) << parameters["shift_factors"],
-        axis=-1,
-    )
-    reduced = parameters["barrett_ctx"].modular_reduction(result_u64)
-    return reduced.astype(jnp.uint32)
+def _ptct_mul_kernel(ct_data, parameters):
+    """Profile the private pt-ct kernel (VPU or BAT) under its configured
+    reduction backend, so the Montgomery strictify and plaintext encoding are
+    exactly what ship in ptct_mul.py."""
+    op = parameters["ptct_op"]
+    ct = parameters["ct_input"]
+    ct.polynomial = ct_data
+    return op.mul(ct, use_bat=parameters["use_bat"]).polynomial
 
 
 class PtCtMulPerformanceTest(parameterized.TestCase):
@@ -59,66 +57,36 @@ class PtCtMulPerformanceTest(parameterized.TestCase):
 
     def setUp(self):
         super().setUp()
-        self.assertEqual(
-            jax.devices()[0].platform,
-            "tpu",
-            msg=f"ptct_mul perf tests require TPU; found {jax.devices()}",
+        require_tpu(self, "ptct_mul")
+        self.output_trace_root, self.profiler_config = kernel_perf_setup(
+            __file__
         )
-        self.output_trace_root = os.path.join(os.path.dirname(__file__), "log")
-        self.profiler_config = {
-            "iterations": 1,
-            "save_to_file": True,
-        }
 
     @classmethod
     def tearDownClass(cls):
         super().tearDownClass()
-        if jax.devices()[0].platform != "tpu":
-            print("Skipping ptct_mul log collection: TPU backend is required.")
-            return
-        root_dir = os.path.dirname(os.path.abspath(__file__))
-        print(f"Collecting logs from: {root_dir}")
-        collect_logs(root_dir, output_csv_name="ptct_mul_profiling")
+        collect_module_logs(__file__, "ptct_mul_profiling", tpu_only=True)
 
-    def _create_kernel_wrapper(
-        self,
-        kernel_name,
-        kernel_fn,
-        kernel_parameters,
-        batch,
-        num_elements,
-        rows,
-        cols,
-        num_moduli,
-    ):
-        input_shape = (batch, num_elements, rows, cols, num_moduli)
-        return KernelWrapper(
-            kernel_name=kernel_name,
-            function_to_wrap=kernel_fn,
-            input_structs=[(input_shape, jnp.uint32)],
-            parameters=kernel_parameters,
-        )
-
-    def _create_vpu_parameters(self, moduli, pt_ntt):
-        return {
-            "barrett_ctx": BarrettContext(moduli=moduli),
-            "pt_ntt": pt_ntt.astype(jnp.uint32),
-        }
-
-    def _create_bat_parameters(self, moduli, rows, cols, pt_ntt):
-        helper = HEPtCtMul(
+    def _build_ptct_op(self, ff_ctx_cls, moduli, rows, cols, num_limbs, use_bat):
+        """Construct the private pt-ct kernel with the reduction backend and set
+        its plaintext (standard-form; set_plaintext/precompute_plaintext_bat
+        Montgomery-encode it internally when needed)."""
+        op = _HEPtCtMulKernel(
             batch=1,
             r=rows,
             c=cols,
             moduli=moduli,
             degree_layout=(rows, cols),
+            finite_field_context=ff_ctx_cls,
         )
-        helper.precompute_plaintext_bat(pt_ntt)
-        return {
-            "barrett_ctx": BarrettContext(moduli=moduli),
-            "pt_bat_per_modulus": helper.pt_bat.reshape(rows, cols, len(moduli), 4, 4),
-            "shift_factors": jnp.array([0, 8, 16, 24], dtype=jnp.uint32),
-        }
+        pt_ntt = util.random_parameters(
+            (rows, cols, num_limbs), moduli, dtype=jnp.uint32
+        )
+        if use_bat:
+            op.precompute_plaintext_bat(pt_ntt)
+        else:
+            op.set_plaintext(pt_ntt)
+        return op
 
     def _profile_context(self, profile_prefix, degree, num_limbs, batch_size_list, use_bat):
         rows, cols = DEGREE_TO_RC_MAPPING[degree]
@@ -131,42 +99,52 @@ class PtCtMulPerformanceTest(parameterized.TestCase):
             configuration=self.profiler_config,
         )
 
-        pt_ntt = util.random_parameters((rows, cols, num_limbs), moduli, dtype=jnp.uint32)
-        kernel_fn = _ptct_mul_bat_kernel if use_bat else _ptct_mul_vpu_kernel
-        kernel_parameters = (
-            self._create_bat_parameters(moduli, rows, cols, pt_ntt)
-            if use_bat
-            else self._create_vpu_parameters(moduli, pt_ntt)
-        )
-
-        for batch in batch_size_list:
-            kernel_name = f"{profile_prefix}_batch_{batch}"
-            kernel_wrapper = self._create_kernel_wrapper(
-                kernel_name=kernel_name,
-                kernel_fn=kernel_fn,
-                kernel_parameters=kernel_parameters,
-                batch=batch,
-                num_elements=num_elements,
-                rows=rows,
-                cols=cols,
-                num_moduli=num_limbs,
+        for red_name, ff_ctx_cls in REDUCTION_CONTEXTS:
+            op = self._build_ptct_op(
+                ff_ctx_cls, moduli, rows, cols, num_limbs, use_bat
             )
-            profiler_instance.add_profile(
-                name=kernel_name,
-                kernel_wrapper=kernel_wrapper,
-                kernel_setting_cols={
-                    "degree": degree,
-                    "num_limbs": num_limbs,
-                    "batch": batch,
-                    "rows": rows,
-                    "cols": cols,
-                    "num_elements": num_elements,
-                    "implementation": "bat" if use_bat else "vpu",
-                },
-            )
+            for batch in batch_size_list:
+                # Input must be encoded with the op's reduction context; the entry guard rejects a mismatch.
+                ct_input = Polynomial(
+                    {
+                        "batch": batch,
+                        "num_elements": num_elements,
+                        "degree": rows * cols,
+                        "precision": 32,
+                        "num_moduli": num_limbs,
+                        "degree_layout": (rows, cols),
+                    },
+                    parameters={"moduli": moduli, "finite_field_context": ff_ctx_cls},
+                )
+                kernel_name = f"{profile_prefix}_{red_name}_batch_{batch}"
+                kernel_wrapper = KernelWrapper(
+                    kernel_name=kernel_name,
+                    function_to_wrap=_ptct_mul_kernel,
+                    input_structs=[
+                        ((batch, num_elements, rows, cols, num_limbs), jnp.uint32)
+                    ],
+                    parameters={
+                        "ptct_op": op,
+                        "ct_input": ct_input,
+                        "use_bat": use_bat,
+                    },
+                )
+                profiler_instance.add_profile(
+                    name=kernel_name,
+                    kernel_wrapper=kernel_wrapper,
+                    kernel_setting_cols={
+                        "degree": degree,
+                        "num_limbs": num_limbs,
+                        "batch": batch,
+                        "rows": rows,
+                        "cols": cols,
+                        "num_elements": num_elements,
+                        "implementation": "bat" if use_bat else "vpu",
+                        "reduction": red_name,
+                    },
+                )
 
-        profiler_instance.profile_all_profilers()
-        profiler_instance.post_process_all_profilers()
+        profiler_instance.run()
 
     @parameterized.named_parameters(*TEST_PARAMS_PTCT_MUL)
     def test_ptct_mul_vpu_performance(self, degree, num_limbs, batch_size_list):

@@ -33,11 +33,10 @@ TEST_PARAMS_NTT_MULTI_MODULI=[('NTT_limb10', 65536, 10), ('NTT_limb11', 65536, 1
 
 TEST_PARAMS_NTT_SINGLE_MODULI=[('NTT_limb1', 65536, 1)]
 
-TEST_PARAMS_AUTOMORPHISM=TEST_PARAMS_AUTOMORPH=[('Automorph_limb19', 65536, 19), ('Automorph_limb20', 65536, 20), ('Automorph_limb21', 65536, 21), ('Automorph_limb22', 65536, 22), ('Automorph_limb23', 65536, 23), ('Automorph_limb24', 65536, 24), ('Automorph_limb27', 65536, 27), ('Automorph_limb28', 65536, 28), ('Automorph_limb29', 65536, 29), ('Automorph_limb31', 65536, 31), ('Automorph_limb32', 65536, 32), ('Automorph_limb33', 65536, 33), ('Automorph_limb34', 65536, 34), ('Automorph_limb35', 65536, 35), ('Automorph_limb36', 65536, 36), ('Automorph_limb37', 65536, 37), ('Automorph_limb38', 65536, 38), ('Automorph_limb39', 65536, 39), ('Automorph_limb47', 65536, 47), ('Automorph_limb48', 65536, 48), ('Automorph_limb49', 65536, 49), ('Automorph_limb51', 65536, 51), ('Automorph_limb52', 65536, 52), ('Automorph_limb53', 65536, 53)]
+TEST_PARAMS_AUTOMORPHISM=[('Automorph_limb19', 65536, 19), ('Automorph_limb20', 65536, 20), ('Automorph_limb21', 65536, 21), ('Automorph_limb22', 65536, 22), ('Automorph_limb23', 65536, 23), ('Automorph_limb24', 65536, 24), ('Automorph_limb27', 65536, 27), ('Automorph_limb28', 65536, 28), ('Automorph_limb29', 65536, 29), ('Automorph_limb31', 65536, 31), ('Automorph_limb32', 65536, 32), ('Automorph_limb33', 65536, 33), ('Automorph_limb34', 65536, 34), ('Automorph_limb35', 65536, 35), ('Automorph_limb36', 65536, 36), ('Automorph_limb37', 65536, 37), ('Automorph_limb38', 65536, 38), ('Automorph_limb39', 65536, 39), ('Automorph_limb47', 65536, 47), ('Automorph_limb48', 65536, 48), ('Automorph_limb49', 65536, 49), ('Automorph_limb51', 65536, 51), ('Automorph_limb52', 65536, 52), ('Automorph_limb53', 65536, 53)]
 
 DEGREE65536_PARAMS = util.NTT_PARAMETERS_BY_DEGREE[65536]
 DEGREE65536_MODULI = DEGREE65536_PARAMS["moduli"]
-DEGREE65536_ROOTS = DEGREE65536_PARAMS["root_of_unity"]
 
 mesh, partition_spec = util.create_sharding()
 axis_names = mesh.axis_names
