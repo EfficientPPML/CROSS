@@ -1,29 +1,128 @@
 import cmath
+import contextlib
+from contextlib import nullcontext
+from dataclasses import dataclass, fields, is_dataclass, replace
+import hashlib
+import json
 import math
 import os
 import random
-from typing import Dict, List, Optional, Tuple
+import sys
+from typing import Any, Dict, List, Optional, Tuple
 
 import jax.numpy as jnp
 import numpy as np
 
 import util
-from he_ops import HEMulAccessor
-from he_ops import HEBsgsMatVecAccessor
-from he_ops import HEPtCtMulAccessor
-from he_ops import HERescaleAccessor
-from he_ops import HERotAccessor
+from he_ops import _HEAddAccessor
+from he_ops import _HEBootstrapAccessor
+from he_ops import _HEMulAccessor
+from he_ops import _HEPtCtMulAccessor
+from he_ops import _HELevelReduceAccessor, _HERescaleAccessor
+from he_ops import _HERotAccessor
+from he_ops import _HESubAccessor
 from he_params import HEParameterCache
+from he_params import normalize_noise_scale_degree
 import key_gen as kg
 import polynomial as poly
 
+if __name__ == 'jaxite_word.ckks_ctx':
+  sys.modules.setdefault('ckks_ctx', sys.modules[__name__])
+elif __name__ == 'ckks_ctx':
+  # If the historical flat spelling is imported after the package but before
+  # the package submodule, reserve the canonical name for this same module.
+  sys.modules.setdefault('jaxite_word.ckks_ctx', sys.modules[__name__])
+
 
 sigma = 3.190000057220458984375
+
+# Private. Mutated only by ``bypass_decode_stddev_check``; callers must not poke
+# it directly. The reference decoder consults it in addition to its own
+# ``validate_approximation`` argument, so a caller that cannot thread the
+# argument through an intermediate layer still has a scoped, restoring escape
+# hatch instead of a process-global flag nothing puts back.
+_decode_stddev_check_enabled = True
+
+
+@contextlib.contextmanager
+def bypass_decode_stddev_check():
+  """Disable the reference decoder's approximation guard for this block.
+
+  Bootstrap intermediates legitimately carry approximation error above the
+  decode limit. Prefer ``validate_approximation=False`` on the decode call when
+  you can reach it; use this when the decode happens inside a helper you do not
+  control. The previous setting is restored on exit, including on exception.
+  """
+  global _decode_stddev_check_enabled
+  previous = _decode_stddev_check_enabled
+  _decode_stddev_check_enabled = False
+  try:
+    yield
+  finally:
+    _decode_stddev_check_enabled = previous
+
+# Decode fails closed above this conjugate-symmetry error, measured at unit
+# (message) scale. Roughly five bits of surviving fractional precision. Both
+# the reference and the vectorized decoder enforce it through
+# ``_check_decode_stddev``.
+_DECODE_STDDEV_LIMIT = 2.0 ** -5
+
+
+class ScalingFactorTooSmall(ValueError):
+  """Raised by the CKKS encode path when the scaling factor is too small.
+
+  Every scaled coefficient rounds to zero (``max|scale * coeff| <= 0.5``), so
+  the encoded plaintext would be identically zero. Subclasses ``ValueError`` so
+  existing ``except ValueError`` handlers keep working, while callers that need
+  to distinguish this specific condition (e.g. BSGS zero-encoding a
+  sub-resolution diagonal) can catch it by type instead of string-matching the
+  message.
+  """
+
+
+class ApproximationErrorTooHigh(ValueError):
+  """Raised when CKKS decode detects loss of conjugate-symmetry precision."""
+
+
+def _normalize_noise_std(value) -> float:
+  """Return one Gaussian standard deviation supported by key generation."""
+  return kg.normalize_noise_std(value)
+
+
+def _resolve_codec_scale(value, explicit_scale, fallback_scale) -> float:
+  """Resolve explicit, tracked, then fallback CKKS scale in that order."""
+  if explicit_scale is not None:
+    candidate = explicit_scale
+  else:
+    tracked = getattr(value, '_ckks_scale', None)
+    candidate = fallback_scale if tracked is None else tracked
+  try:
+    resolved = float(candidate)
+  except (TypeError, ValueError, OverflowError) as exc:
+    raise ValueError("scale must be finite and positive") from exc
+  if not math.isfinite(resolved) or resolved <= 0:
+    raise ValueError("scale must be finite and positive")
+  return resolved
 
 
 ########################
 # Common Functions
 ########################
+def _balanced_degree_layout(degree: int) -> tuple[int, int]:
+  """Return the closest factor pair for a two-dimensional NTT layout."""
+  if (
+      isinstance(degree, bool)
+      or not isinstance(degree, (int, np.integer))
+      or int(degree) < 1
+  ):
+    raise ValueError('degree must be a positive int.')
+  degree = int(degree)
+  rows = math.isqrt(degree)
+  while degree % rows:
+    rows -= 1
+  return rows, degree // rows
+
+
 def _roots(m: int) -> List[complex]:
   return [cmath.exp(1j * 2 * math.pi * k / m) for k in range(m)]
 
@@ -185,48 +284,19 @@ def fit_to_native_vector(
 # ===========================================================================
 # Vectorized CKKS encrypt + encode (CPU/NumPy uint64).
 #
-# Embedded from the former `encrypt_fast.py` module. Exposes:
-#   * `vectorized_ntt(coeffs, cache)`             - forward negacyclic NTT
-#   * `fast_encrypt_from_plaintext(pt, ctx, ...)` - asymmetric encrypt
-#   * `fast_encode(slots, ctx, ...)`              - slots → plaintext-eval
-#   * `fast_encode_encrypt(slots, ctx, scale)`    - combined entry point
+# Embedded from the former `encrypt_fast.py` module. These are private
+# kernels; callers use the corresponding CKKSContext codec methods.
 #
-# Noise sampling uses kernel CSPRNG via `os.urandom` + vectorized Box-Muller.
-# OpenFHE alignment:
+# Noise sampling uses the kernel CSPRNG and OpenFHE's discrete Gaussian.
+# OpenFHE parameter alignment:
 #   * `v` ~ TernaryUniform {-1, 0, +1} matches `OpenFHE::TernaryUniformGenerator`
 #     (`src/core/include/math/ternaryuniformgenerator-impl.h`).
-#   * `e0, e1` ~ continuous Gaussian (Box-Muller) rounded to nearest int.
-#     OpenFHE uses Peikert's CDF inversion or Karney's algorithm to draw from
-#     the *discrete* Gaussian directly. At σ ≈ 3.19 the two distributions
-#     agree to within parts per thousand and produce identical end-to-end
-#     correctness (decrypt ≈ plaintext within CKKS noise tolerance).
+#   * `e0, e1` use key_gen.sample_discrete_gaussian, a vectorized port of
+#     OpenFHE 1.5.1's Peikert inversion sampler.
 #
-# `_ENCRYPT_CACHE` is keyed by `(id(ctx), num_q)` so repeated encrypts pay
+# `_encrypt_cache` is keyed by `(id(ctx), num_q)` so repeated encrypts pay
 # the precomputation only once.
 # ===========================================================================
-_TWO_PI = 2.0 * math.pi
-_INV_2_53 = 1.0 / (1 << 53)
-
-
-def _csprng_uniform_open(n: int) -> np.ndarray:
-  """n float64 uniform on (0, 1] from kernel CSPRNG (one syscall)."""
-  raw = os.urandom(8 * n)
-  u64 = np.frombuffer(raw, dtype=np.uint64)
-  return (u64 >> 11).astype(np.float64) * _INV_2_53 + _INV_2_53
-
-
-def _csprng_gaussian(n: int, sigma: float) -> np.ndarray:
-  """n float64 ~ N(0, sigma²) via vectorized Box-Muller (one syscall)."""
-  n_pairs = (n + 1) // 2
-  u = _csprng_uniform_open(2 * n_pairs).reshape(n_pairs, 2)
-  radius = np.sqrt(-2.0 * np.log(u[:, 0]))
-  angle = _TWO_PI * u[:, 1]
-  z = np.empty(2 * n_pairs, dtype=np.float64)
-  z[0::2] = radius * np.cos(angle)
-  z[1::2] = radius * np.sin(angle)
-  return (z[:n] if 2 * n_pairs > n else z) * sigma
-
-
 def _csprng_ternary(n: int) -> np.ndarray:
   """n samples uniform on {-1, 0, 1} as int64 (matches OpenFHE TernaryUniform).
 
@@ -265,10 +335,14 @@ class _EncryptCache:
     self.q = np.asarray(q_towers, dtype=np.uint64)              # (M,)
     self.q_int = [int(q) for q in q_towers]
 
-    pk_full_0 = np.asarray(public_key[0], dtype=np.uint64)
-    pk_full_1 = np.asarray(public_key[1], dtype=np.uint64)
-    self.pk0 = pk_full_0[:M].T.copy()                            # (N, M)
-    self.pk1 = pk_full_1[:M].T.copy()                            # (N, M)
+    if public_key is None:
+      self.pk0 = None
+      self.pk1 = None
+    else:
+      pk_full_0 = np.asarray(public_key[0], dtype=np.uint64)
+      pk_full_1 = np.asarray(public_key[1], dtype=np.uint64)
+      self.pk0 = pk_full_0[:M].T.copy()                          # (N, M)
+      self.pk1 = pk_full_1[:M].T.copy()                          # (N, M)
 
     psi_pow = np.zeros((N, M), dtype=np.uint64)
     for m in range(M):
@@ -297,12 +371,22 @@ class _EncryptCache:
       L //= 2
 
 
-_ENCRYPT_CACHE: Dict[Tuple[int, int], _EncryptCache] = {}
+_encrypt_cache: Dict[Tuple[int, int], _EncryptCache] = {}
 
 
 def _get_encrypt_cache(ctx, num_q: int) -> _EncryptCache:
   key = (id(ctx), int(num_q))
-  c = _ENCRYPT_CACHE.get(key)
+  c = _encrypt_cache.get(key)
+  public_key = getattr(ctx, 'public_key', None)
+  # id() keys can be reused after a context is garbage-collected, handing a
+  # stale cache (wrong degree/towers/keys) to an unrelated new context.
+  # Validate the cheap invariants and the key-source identity before reuse.
+  if c is not None and not (
+      c.degree == int(ctx.degree)
+      and c.q_int == [int(q) for q in ctx.q_towers[:num_q]]
+      and getattr(c, '_pk_ref', None) is public_key
+  ):
+    c = None
   if c is None:
     psi_pairs = [
         util.root_of_unity(2 * ctx.degree, q) for q in ctx.q_towers[:num_q]
@@ -310,14 +394,15 @@ def _get_encrypt_cache(ctx, num_q: int) -> _EncryptCache:
     c = _EncryptCache(
         q_towers=list(ctx.q_towers[:num_q]),
         psi_pairs=psi_pairs,
-        public_key=ctx.public_key,
+        public_key=public_key,
         degree=ctx.degree,
     )
-    _ENCRYPT_CACHE[key] = c
+    c._pk_ref = public_key
+    _encrypt_cache[key] = c
   return c
 
 
-def vectorized_ntt(coeffs: np.ndarray, cache: _EncryptCache) -> np.ndarray:
+def _vectorized_ntt(coeffs: np.ndarray, cache: _EncryptCache) -> np.ndarray:
   """Forward negacyclic NTT, vectorized over towers.
 
   Input  : coeffs in coefficient form, shape (N, M) uint64.
@@ -343,9 +428,10 @@ def vectorized_ntt(coeffs: np.ndarray, cache: _EncryptCache) -> np.ndarray:
   return a
 
 
-def fast_encrypt_from_plaintext(plaintext_eval: np.ndarray, ctx,
-                                v=None, e=None, sigma: float = None,
-                                noise_scale_degree: int = None) -> np.ndarray:
+def _fast_encrypt_from_plaintext_array(
+    plaintext_eval: np.ndarray, ctx, v=None, e=None, sigma: float = None,
+    noise_scale_degree: int = None
+) -> np.ndarray:
   """Vectorized CKKS encrypt.
 
   Args:
@@ -362,24 +448,31 @@ def fast_encrypt_from_plaintext(plaintext_eval: np.ndarray, ctx,
   """
   N, M = plaintext_eval.shape
   cache = _get_encrypt_cache(ctx, M)
+  if cache.pk0 is None or cache.pk1 is None:
+    raise ValueError('Public key is required for encryption.')
   qb = cache.q.reshape(1, M)
   if sigma is None:
     sigma = float(ctx.parameters.get("sigma", 3.190000057220458984375))
   if noise_scale_degree is None:
-    noise_scale_degree = int(ctx.parameters.get("noise_scale_degree", 1))
-  ns = int(noise_scale_degree)
+    noise_scale_degree = ctx.parameters.get("noise_scale_degree", 1)
+  ns = normalize_noise_scale_degree(noise_scale_degree)
+  ns_mod_q = np.fromiter(
+      (ns % int(modulus) for modulus in cache.q),
+      dtype=np.uint64,
+      count=M,
+  ).reshape(1, M)
 
   if v is None:
     v_signed = _csprng_ternary(N)
     q_int64 = cache.q.astype(np.int64).reshape(1, M)
     v_rns = np.ascontiguousarray(
         np.mod(v_signed[:, None], q_int64).astype(np.uint64))
-    v_eval = vectorized_ntt(v_rns, cache)
+    v_eval = _vectorized_ntt(v_rns, cache)
   else:
     v_eval = np.asarray(v, dtype=np.uint64).T.copy()
 
   if e is None:
-    e_signed_all = np.round(_csprng_gaussian(2 * N, sigma)).astype(np.int64)
+    e_signed_all = kg.sample_discrete_gaussian(2 * N, sigma)
     e0_signed = e_signed_all[:N]
     e1_signed = e_signed_all[N:]
     q_int64 = cache.q.astype(np.int64).reshape(1, M)
@@ -387,28 +480,59 @@ def fast_encrypt_from_plaintext(plaintext_eval: np.ndarray, ctx,
         np.mod(e0_signed[:, None], q_int64).astype(np.uint64))
     e1_rns = np.ascontiguousarray(
         np.mod(e1_signed[:, None], q_int64).astype(np.uint64))
-    e0_eval = vectorized_ntt(e0_rns, cache)
-    e1_eval = vectorized_ntt(e1_rns, cache)
+    e0_eval = _vectorized_ntt(e0_rns, cache)
+    e1_eval = _vectorized_ntt(e1_rns, cache)
   else:
     e0_eval = np.asarray(e[0], dtype=np.uint64).T.copy()
     e1_eval = np.asarray(e[1], dtype=np.uint64).T.copy()
 
   # c0 = (v * pk0 + ns * e0 + plaintext) mod q
   c0 = (v_eval * cache.pk0) % qb
-  c0 = (c0 + (ns * e0_eval) % qb) % qb
+  c0 = (c0 + (ns_mod_q * e0_eval) % qb) % qb
   c0 = (c0 + plaintext_eval) % qb
   # c1 = (v * pk1 + ns * e1) mod q
   c1 = (v_eval * cache.pk1) % qb
-  c1 = (c1 + (ns * e1_eval) % qb) % qb
+  c1 = (c1 + (ns_mod_q * e1_eval) % qb) % qb
   return np.stack([c0, c1], axis=0)
 
 
-def fast_encode(slots, ctx, scale: float = None,
-                noise_scale_degree: int = 1) -> np.ndarray:
+def _validated_slots(
+    slots,
+    *,
+    name: str,
+    expected_size: int | None,
+    allow_complex: bool,
+) -> list[complex]:
+  """Normalize a finite numeric slot vector for one encoder boundary."""
+  array = np.asarray(slots)
+  if array.ndim != 1:
+    raise ValueError(f'{name} must be a one-dimensional slot vector.')
+  if expected_size is not None and array.size != expected_size:
+    raise ValueError(
+        f'{name} has length {array.size}, expected exactly {expected_size}.'
+    )
+  if array.dtype.kind == 'c':
+    if not allow_complex and np.any(np.imag(array) != 0):
+      raise TypeError(
+          f'{name} must be real because CROSS decoding is real-valued.'
+      )
+    if not allow_complex:
+      array = np.real(array)
+  elif array.dtype.kind not in 'biuf':
+    kind = 'numeric' if allow_complex else 'real numeric'
+    raise TypeError(f'{name} must contain {kind} values.')
+  if not np.all(np.isfinite(array)):
+    raise ValueError(f'{name} must contain only finite values.')
+  return [complex(value) for value in array]
+
+
+def _fast_encode(slots, ctx, scale: float = None,
+                 noise_scale_degree: int = 1, *,
+                 allow_complex: bool = False) -> np.ndarray:
   """Vectorized CKKS encode (slots → plaintext eval form).
 
   Output: (N, M) np.uint64 in NTT eval form (bit-reversed) — directly usable
-  as input to fast_encrypt_from_plaintext.
+  as input to the private vectorized encryption kernel.
   """
   if scale is None:
     scale = ctx.scaling_factor
@@ -418,7 +542,12 @@ def fast_encode(slots, ctx, scale: float = None,
   m = N * 2
 
   # 1) inverse special FFT on slot vector
-  y = list(slots)
+  y = _validated_slots(
+      slots,
+      name='slots',
+      expected_size=ctx.num_slots,
+      allow_complex=allow_complex,
+  )
   FFTSpecialInv(y, m)
 
   # 2) slot -> coefficients (length N, real)
@@ -436,7 +565,7 @@ def fast_encode(slots, ctx, scale: float = None,
   if logc == -(10**9):
     logc = 0
   if logc < 0:
-    raise ValueError("Scaling factor too small")
+    raise ScalingFactorTooSmall("Scaling factor too small")
   max_bits_in_word = ctx.parameters.get("max_bits_in_word", 61)
   max_bits_value = ctx.parameters.get(
       "max_bits_value", (1 << 63) - (1 << 9) - 1
@@ -471,30 +600,138 @@ def fast_encode(slots, ctx, scale: float = None,
   for m_id in range(M):
     coeffs_rns[:, m_id] = np.array(ints_per_tower[m_id], dtype=np.uint64)
 
-  return vectorized_ntt(coeffs_rns, cache)
+  return _vectorized_ntt(coeffs_rns, cache)
 
 
-def fast_encode_encrypt(slots, ctx, scale: float = None) -> np.ndarray:
-  """Encode + encrypt in one shot. Returns (2, N, M) uint64."""
-  pt_eval = fast_encode(slots, ctx, scale=scale)
-  return fast_encrypt_from_plaintext(pt_eval, ctx)
+def _ct_to_backend_format(ciphertext: poly.Polynomial, ctx) -> poly.Polynomial:
+  """Encode a standard-residue ciphertext payload into the parameter cache's
+  computation format (Montgomery: x*R mod q) exactly once at the encrypt
+  boundary. Identity passthrough for standard-format backends and for
+  contexts without a parameter cache."""
+  cache = getattr(ctx, '_param_cache', None)
+  if cache is None or cache.ff_q_max.computation_format_is_standard:
+    return ciphertext
+  ff = cache.ff_q_max.slice(ciphertext.num_moduli)
+  return ciphertext._clone_with_payload(
+      jnp.asarray(
+          ff.to_computation_format(
+              ciphertext.polynomial.astype(jnp.uint64)),
+          jnp.uint32))
+
+
+def _ct_to_standard_format(ciphertext: poly.Polynomial, ctx) -> poly.Polynomial:
+  """Decode a computation-format ciphertext payload back to standard residues
+  exactly once at the decrypt boundary (Montgomery: strip the R factor).
+  Identity passthrough for standard-format backends; the caller's ciphertext
+  is never mutated."""
+  cache = getattr(ctx, '_param_cache', None)
+  if cache is None or cache.ff_q_max.computation_format_is_standard:
+    return ciphertext
+  ff = cache.ff_q_max.slice(ciphertext.num_moduli)
+  return ciphertext._clone_with_payload(
+      jnp.asarray(
+          ff.to_original_format(
+              ciphertext.polynomial.astype(jnp.uint64)),
+          jnp.uint32))
+
+
+def _fast_encrypt_from_plaintext(
+    plaintext: poly.Polynomial, ctx, v=None, e=None, sigma: float = None,
+    noise_scale_degree: int = None
+) -> poly.Polynomial:
+  """Encrypts a canonical, single-batch plaintext Polynomial."""
+  _validate_polynomial_for_context(
+      plaintext, ctx, 'plaintext', num_elements=1
+  )
+  if plaintext.batch != 1:
+    raise NotImplementedError(
+        "Fast encryption currently supports exactly one plaintext batch."
+    )
+  plaintext_eval = np.asarray(
+      plaintext.polynomial[0, 0].reshape(plaintext.degree,
+                                         plaintext.num_moduli),
+      dtype=np.uint64,
+  )
+  ct_array = _fast_encrypt_from_plaintext_array(
+      plaintext_eval, ctx, v=v, e=e, sigma=sigma,
+      noise_scale_degree=noise_scale_degree
+  )
+  payload = jnp.asarray(ct_array, dtype=jnp.uint32).reshape(
+      1, 2, *plaintext.degree_layout, plaintext.num_moduli
+  )
+  return _ct_to_backend_format(
+      plaintext._clone_with_payload(payload, num_elements=2), ctx)
+
+
+def _fast_encode_encrypt(slots, ctx, scale: float = None) -> poly.Polynomial:
+  """Encode + encrypt in one shot, returning a canonical Polynomial."""
+  return _fast_encode_encrypt_batch([slots], ctx, scale=scale)
+
+
+def _fast_encode_encrypt_batch(
+    slots_batch, ctx, scale: float = None
+) -> poly.Polynomial:
+  """Encode and encrypt a host batch, transferring and wrapping it once."""
+  slots_batch = list(slots_batch)
+  if not slots_batch:
+    raise ValueError('slots_batch must contain at least one slot vector.')
+  ct_array = np.stack(
+      [
+          _fast_encode_encrypt_array(slots, ctx, scale=scale)
+          for slots in slots_batch
+      ],
+      axis=0,
+  )
+  degree_layout = getattr(ctx, 'degree_layout', None)
+  if degree_layout is None:
+    degree_layout = _balanced_degree_layout(ctx.degree)
+  ntt_ctx = getattr(ctx, '_polynomial_ntt_ctx', None)
+  cache = getattr(ctx, '_param_cache', None)
+  if cache is not None:
+    ntt_ctx = cache.get_sliced_ntt_q(cache.max_level)
+  result = _polynomial_from_flat_array(
+      ct_array, ctx.q_towers, degree_layout, ntt_ctx=ntt_ctx
+  )
+  # Keep the actual encoding scale on the canonical wrapper.  In particular,
+  # this must not be inferred from ``ctx.output_scale``: that value commonly
+  # describes a later evaluator result and may differ from the fresh
+  # ciphertext's scale.
+  actual_scale = ctx.scaling_factor if scale is None else scale
+  result._ckks_scale = float(actual_scale)
+  if getattr(ctx, '_polynomial_ntt_ctx', None) is None:
+    ctx._polynomial_ntt_ctx = result.ntt_ctx
+  # The fused host encryptor produces standard RNS residues.  Convert once at
+  # the public ciphertext boundary so backend-specific evaluators receive the
+  # representation they advertise through the injected NTT context
+  # (Montgomery: x -> x*R mod q; standard backends: identity).
+  return _ct_to_backend_format(result, ctx)
+
+
+def _fast_encode_encrypt_array(slots, ctx, scale: float = None) -> np.ndarray:
+  """Private array form for IPC and other non-HE fused regions."""
+  pt_eval = _fast_encode(slots, ctx, scale=scale)
+  return _fast_encrypt_from_plaintext_array(
+      pt_eval,
+      ctx,
+      sigma=ctx.parameters.get('sigma', 3.190000057220458984375),
+      noise_scale_degree=ctx.parameters.get('noise_scale_degree', 1),
+  )
 
 
 class _LiteCtxForFast:
-  """Minimal CKKSContext-shaped object accepted by `fast_encode` /
-  `fast_encrypt_from_plaintext`. Built on the fly inside `ckks_encrypt` /
-  `ckks_encode` so those free-function APIs can route to the vectorized
-  fast path without forcing callers to construct a full CKKSContext.
+  """Minimal CKKSContext-shaped object accepted by `_fast_encode` /
+  `_fast_encrypt_from_plaintext_array`. Encode-only callers use this without
+  constructing a full CKKSContext.
 
-  When used by encode-only paths, `public_key` may be a zero-shaped dummy —
-  `_get_encrypt_cache` stores it but `fast_encode` itself never reads
-  `cache.pk0/pk1`.
+  Encode-only paths may leave `public_key` unset because `_fast_encode` uses
+  only the cache's twiddles, roots, and moduli.
   """
 
   def __init__(self, q_towers, degree, public_key, scaling_factor=None,
                parameters=None):
     self.q_towers = list(q_towers)
     self.degree = int(degree)
+    self.num_slots = self.degree // 2
     self.public_key = public_key
     self.scaling_factor = float(scaling_factor) if scaling_factor is not None \
         else 1.0
@@ -504,27 +741,26 @@ class _LiteCtxForFast:
 # Reuse one lite ctx per (q_towers, degree) for encode-only callers so
 # `_get_encrypt_cache` (keyed by id(ctx)) doesn't rebuild twiddles
 # + psi tables on every call. Critical for BSGS-encoding which calls
-# ckks_encode hundreds–thousands of times during cache build.
-_LITE_ENCODE_CTX_CACHE: dict = {}
+# `_ckks_encode` hundreds–thousands of times during cache build.
+_lite_encode_context_cache: dict = {}
 
 
 def _get_or_make_encode_ctx(q_towers, degree, scale, max_bits_in_word,
                               max_bits_value):
   key = (tuple(int(q) for q in q_towers), int(degree))
-  lite = _LITE_ENCODE_CTX_CACHE.get(key)
+  lite = _lite_encode_context_cache.get(key)
   if lite is None:
-    dummy_pk = np.zeros((2, len(q_towers), int(degree)), dtype=np.uint64)
     lite = _LiteCtxForFast(
         q_towers=q_towers,
         degree=int(degree),
-        public_key=dummy_pk,
+        public_key=None,
         scaling_factor=scale,
         parameters={
             "max_bits_in_word": int(max_bits_in_word),
             "max_bits_value": int(max_bits_value),
         },
     )
-    _LITE_ENCODE_CTX_CACHE[key] = lite
+    _lite_encode_context_cache[key] = lite
   else:
     # Scale may vary call-to-call; max_bits constants almost never do.
     lite.scaling_factor = float(scale)
@@ -533,46 +769,7 @@ def _get_or_make_encode_ctx(q_towers, degree, scale, max_bits_in_word,
   return lite
 
 
-def ckks_encrypt(
-    plaintext: List[List[int]],
-    public_key,
-    q_towers: List[int],
-    noise_scale_degree: int = 1,
-    sigma=3.190000057220458984375,
-    v=None,
-    e=None,
-):
-  """Fast CKKS encrypt — wraps `encrypt_fast.fast_encrypt_from_plaintext`.
-
-  Same signature + output format as the historical pure-Python triple-loop
-  implementation, but routes to the vectorized NumPy path. When `(v, e)` are
-  None this samples noise via the kernel CSPRNG (`os.urandom` + Box-Muller).
-  When `(v, e)` are supplied, output is bit-exact equivalent to
-  `ckks_encrypt_fall_back` with the same inputs (the bit-exact test suite
-  in `ckks_ctx_test` pins this).
-  """
-  degree = len(plaintext)
-  num_q = len(q_towers)
-  pt_arr = np.asarray(plaintext, dtype=np.uint64)             # (N, M)
-  # Normalize public_key into a numpy array of shape (2, num_q_full, degree).
-  pk_arr = np.asarray(public_key, dtype=np.uint64)
-  if pk_arr.ndim == 3 and pk_arr.shape[1] > num_q:
-    # Caller passed full Q+P pk; the fast path slices the first M rows.
-    pass
-  lite = _LiteCtxForFast(
-      q_towers=q_towers,
-      degree=degree,
-      public_key=pk_arr,
-      parameters={"sigma": sigma, "noise_scale_degree": noise_scale_degree},
-  )
-  ct_arr = fast_encrypt_from_plaintext(
-      pt_arr, lite, v=v, e=e, sigma=sigma,
-      noise_scale_degree=noise_scale_degree)
-  # Convert (2, N, M) uint64 → [c0, c1] list-of-list of ints (legacy format).
-  return [ct_arr[0].tolist(), ct_arr[1].tolist()]
-
-
-def ckks_encrypt_fall_back(
+def _ckks_encrypt_list_reference(
     plaintext: List[List[int]],
     public_key: List[List[List[int]]],
     q_towers: List[int],
@@ -665,28 +862,44 @@ def ckks_encrypt_fall_back(
   return [c0, c1]
 
 
-def ckks_decrypt(
+def _ckks_decrypt_list_reference(
     ciphertext: List[List[List[int]]],
     private_key: List[List[int]],
     q_towers: List[int],
 ):
-  """Standard CKKS decrypt: M(X) = sum_i c_i * s^i (mod q per tower) + INTT.
-
-  Layout convention: ciphertext is (num_elements, degree, moduli);
-  private_key is (moduli, degree); returned coefficients are (degree, moduli).
-  """
+  # ciphertext is list of elements. element 0 is c0, etc.
+  # each element is (degree, moduli)
   num_elements = len(ciphertext)
   degree = len(ciphertext[0])
   num_towers = len(ciphertext[0][0])
 
   s = private_key  # (moduli, degree)
+
   if num_towers < len(s):
     diff_length = len(s) - num_towers
     s = s[:-diff_length]
 
-  # Accumulate M(X) in (degree, moduli).
+  # Pre-transpose s for easier access or just index carefully
+  # s is (moduli, degree)
+
+  # We want to compute: M(X) = c0 + c1*s + ...
+  # Result should be (degree, moduli) initially before NTT/CRT?
+  # Actually decrypt returns coefficients.
+
+  # Let's accumulate in (moduli, degree) for the final NTT part which expects that layout usually,
+  # OR we adapt the rest of the function.
+  # The original returned `first_element_coef` which was (moduli, degree).
+  # But we want "ciphertext/plaintext in the layout of (degree, moduli)".
+  # So we should probably return (degree, moduli).
+
+  # Let's accumulate in (degree, moduli).
+
   res_poly = [[0] * num_towers for _ in range(degree)]
-  cur_s_power = [list(row) for row in s]  # s^1 in (moduli, degree)
+
+  # s_power starts as s^1. s is (moduli, degree).
+  # We need s^k in (moduli, degree).
+
+  cur_s_power = [list(row) for row in s]  # Copy s
 
   # c0
   for d in range(degree):
@@ -694,12 +907,17 @@ def ckks_decrypt(
       res_poly[d][m] = ciphertext[0][d][m]
 
   for i in range(1, num_elements):
-    ci = ciphertext[i]
+    ci = ciphertext[i]  # (degree, moduli)
+
     for d in range(degree):
       for m in range(num_towers):
+        # + ci * s^i
         term = (ci[d][m] * cur_s_power[m][d]) % q_towers[m]
         res_poly[d][m] = (res_poly[d][m] + term) % q_towers[m]
+
     if i < num_elements - 1:
+      # Update s_power to s^(i+1)
+      # s^(i+1) = s^i * s
       new_s_power = [[0] * degree for _ in range(num_towers)]
       for m in range(num_towers):
         qi = q_towers[m]
@@ -707,20 +925,37 @@ def ckks_decrypt(
           new_s_power[m][d] = (cur_s_power[m][d] * s[m][d]) % qi
       cur_s_power = new_s_power
 
-  # INTT each tower (1D over the degree axis).
+  # Now res_poly is (degree, moduli)
+  # We need to do inverse NTT.
+  # Existing utils utilize (moduli, degree) usually?
+  # util.bit_reverse_array takes 1D list.
+  # util.intt_negacyclic_bit_reverse takes 1D list.
+
+  # So we can process row by row if we transpose or col by col.
+  # The original returned `first_element_coef` as list of lists (moduli, degree).
+  # We want to return (degree, moduli).
+
   final_res = [[0] * num_towers for _ in range(degree)]
+
   for m in range(num_towers):
+    # Extract column m
     col = [res_poly[d][m] for d in range(degree)]
+
+    # bit reverse
     col_rev = util.bit_reverse_array(col)
+
+    # intt
     coef = util.intt_negacyclic_bit_reverse(
         col_rev, q_towers[m], util.root_of_unity(2 * degree, q_towers[m])
     )
+
     for d in range(degree):
       final_res[d][m] = coef[d]
+
   return final_res
 
 
-def ckks_encode(
+def _ckks_encode(
     slots: List[complex],
     cycl_order: int,
     q_towers: List[int],
@@ -730,13 +965,13 @@ def ckks_encode(
     max_bits_in_word: int = 61,
     max_bits_value: int = (1 << 63) - (1 << 9) - 1,
 ) -> List[List[int]]:
-  """Fast CKKS encode — wraps `encrypt_fast.fast_encode`.
+  """Private fast CKKS encode kernel.
 
   Same signature + output format (list-of-list of ints, shape (degree,
   moduli)) as the historical pure-Python implementation, but routes to
   the vectorized NumPy path. `p_towers` is accepted for backward-compat
   but unused (encode emits Q-tower residues only — same as the legacy
-  reference). bit-exact vs `ckks_encode_fall_back` for the same inputs.
+  reference). Bit-exact versus `_ckks_encode_fall_back` for the same inputs.
   """
   degree = cycl_order // 2
   # Reuse one lite ctx per (q_towers, degree) so the per-ctx twiddle/psi
@@ -744,12 +979,17 @@ def ckks_encode(
   # pk0/pk1 from the cache — only twiddles + psi_pow + q.
   lite = _get_or_make_encode_ctx(
       q_towers, degree, scale, max_bits_in_word, max_bits_value)
-  arr = fast_encode(slots, lite, scale=scale,
-                      noise_scale_degree=noise_scale_degree)  # (N, M) uint64
+  arr = _fast_encode(
+      slots,
+      lite,
+      scale=scale,
+      noise_scale_degree=noise_scale_degree,
+      allow_complex=True,
+  )  # (N, M) uint64
   return arr.tolist()
 
 
-def ckks_encode_fall_back(
+def _ckks_encode_fall_back(
     slots: List[complex],
     cycl_order: int,
     q_towers: List[int],
@@ -767,7 +1007,8 @@ def ckks_encode_fall_back(
   nh = len(slots)
   N = 2 * nh
   m = cycl_order
-  assert m == 4 * nh, "cycl_order must be 4*Nh for CKKS special FFT size"
+  if m != 4 * nh:
+    raise ValueError("cycl_order must be 4*Nh for CKKS special FFT size")
 
   # 1) inverse special FFT
   y = list(slots)
@@ -790,7 +1031,7 @@ def ckks_encode_fall_back(
   if logc == -(10**9):
     logc = 0
   if logc < 0:
-    raise ValueError("Scaling factor too small")
+    raise ScalingFactorTooSmall("Scaling factor too small")
   # 4) approxFactor to keep values within 60-bit word, then quantize
   log_valid = logc if logc <= max_bits_in_word else max_bits_in_word
   log_approx = logc - log_valid
@@ -842,7 +1083,7 @@ def ckks_encode_fall_back(
   return Q_res_T
 
 
-def ckks_decode(
+def _ckks_decode(
     plaintext: List[int],
     scaling_factor: float,
     slots: int,
@@ -850,6 +1091,7 @@ def ckks_decode(
     p: int,
     CKKS_M_FACTOR: int = 1,
     ADD_NOISE: bool = False,
+    validate_approximation: bool = True,
 ):
   # Ported from notebook implementation
   degree = len(plaintext)
@@ -866,7 +1108,7 @@ def ckks_decode(
   imag_part_list = []
   for i in range(slots):
     # real part from first half
-    r_val = plaintext[i]
+    r_val = plaintext[i * gap]
     if r_val > q_half:
       real_part = -((q - r_val) * sf_pre)
     else:
@@ -874,7 +1116,7 @@ def ckks_decode(
     real_part_list.append(int(real_part))
 
     # imag part from second half
-    im_val = plaintext[i + Nh]
+    im_val = plaintext[i * gap + Nh]
     if im_val > q_half:
       imag_part = -((q - im_val) * sf_pre)
     else:
@@ -885,56 +1127,28 @@ def ckks_decode(
       complex(real_part_list[i], imag_part_list[i]) for i in range(slots)
   ]
 
-  # Step 2: compute conjugate vector and estimated stddev (per OpenFHE logic)
-  def _conjugate(vec: List[complex]) -> List[complex]:
-    n = len(vec)
-    result: List[complex] = [complex(0, 0)] * n
-    for idx in range(1, n):
-      z = vec[n - idx]
-      result[idx] = complex(-z.imag, -z.real)
-    z0 = vec[0]
-    result[0] = complex(z0.real, -z0.imag)
-    return result
+  # Step 2: conjugate vector and estimated error, through the shared decode
+  # math. ``_decode_conjugate`` / ``_decode_approximation_stddev`` are the
+  # vectorized form of the OpenFHE logic this path used to inline; both take
+  # whatever scale their input carries, so the ``2 ** p`` working scale here is
+  # normalized away at the guard below.
+  values = np.asarray(curValues, dtype=np.complex128)
+  conjugate = _decode_conjugate(values)
 
-  def _stddev(vec: List[complex], conjugate: List[complex]) -> float:
-    import math as math
-
-    s = len(vec)
-    if s == 1:
-      return vec[0].imag
-    dslots = s * 2
-    complex_values = [vec[i] - conjugate[i] for i in range(s // 2 + 1)]
-    mean = 2 * sum((cv.real + cv.imag) for cv in complex_values[1 : (s // 2)])
-    mean += complex_values[0].imag
-    mean += 2 * complex_values[s // 2].real
-    mean /= dslots - 1.0
-    variance = 2 * sum(
-        ((cv.real - mean) ** 2 + (cv.imag - mean) ** 2)
-        for cv in complex_values[1 : (s // 2)]
-    )
-    variance += (complex_values[0].imag - mean) ** 2
-    variance += 2 * (complex_values[s // 2].real - mean) ** 2
-    variance /= dslots - 2.0
-    return 0.5 * math.sqrt(variance)
-
-  conjugate = _conjugate(curValues)
-
-  stddev_dbl = _stddev(curValues, conjugate)
-  logstd = math.log2(stddev_dbl) if stddev_dbl > 0 else float("-inf")
+  stddev_dbl = _decode_approximation_stddev(values, conjugate)
+  # ``_stddev`` reports at the ``2 ** p`` working scale used above; the shared
+  # policy takes unit scale. ``stddev_dbl > 0`` reproduces the historical
+  # ``log2`` guard, which silently passed non-positive and NaN estimates.
+  if stddev_dbl > 0 and validate_approximation and _decode_stddev_check_enabled:
+    _check_decode_stddev(math.ldexp(stddev_dbl, -p))
   if stddev_dbl < 0.125 * math.sqrt(degree):
     stddev_dbl = 0.125 * math.sqrt(degree)
-  if logstd > p - 5.0:
-    import ckks_ctx as _self_mod
-    if not getattr(_self_mod, "BYPASS_DECODE_STDDEV_CHECK", False):
-      raise Exception(
-          "The decryption failed because the approximation error is too high."
-          " Check the parameters. "
-      )
 
   stddev = math.sqrt(CKKS_M_FACTOR + 1) * stddev_dbl
   scale = 0.5 * powP
 
-  # For security, add tiny Gaussian noise scaled by 2^{-p}; it doesn't affect ~1e-3 accuracy
+  # Optional approximation-error perturbation; this is not a circuit-privacy
+  # or noise-flooding security mechanism.
   rng = random.Random()
 
   def _gauss():
@@ -968,52 +1182,17 @@ def ckks_decode(
   return curValues
 
 
-def _crt_combine_rns_plaintext(
-    rns_plaintext: List[List[int]], moduli: List[int]
-) -> List[int]:
-  """Combine residues modulo pairwise-coprime moduli using the standard CRT formula.
-
-  rns_plaintext is (degree, moduli).
-  """
-  M = 1
-  for q in moduli:
-    M *= q
-  Mi_list = [M // qi for qi in moduli]
-  inv_list = [pow(Mi, -1, qi) for Mi, qi in zip(Mi_list, moduli)]
-
-  degree = len(rns_plaintext)
-  num_moduli = len(moduli)
-
-  result = []
-  for d in range(degree):
-    X = 0
-    # rns_plaintext[d] is [r0, r1, ...] for degree d
-    residues = rns_plaintext[d]
-
-    for i in range(num_moduli):
-      ri = residues[i]
-      qi = moduli[i]
-      Mi = Mi_list[i]
-      inv = inv_list[i]
-      X += (int(ri) % int(qi)) * int(Mi) * int(inv)
-
-    result.append(X % M)
-  return result
-
-
 # ===========================================================================
 # Vectorized CKKS decrypt + decode (CPU/NumPy uint64).
 #
 # Embedded from the former `decrypt_fast.py` module. Replaces the pure-Python
-# triple-loop SK multiply and per-tower INTT in `ckks_decrypt` with NumPy
+# triple-loop SK multiply and per-tower INTT in the list reference with NumPy
 # uint64 vectorized ops; decode (CRT + FFT) is also vectorized.
 #
 # Exposes:
-#   * `fast_decrypt_to_rns_coeffs(ct, ctx)` - vectorized SK·INTT → (N, M)
-#   * `fast_decode(coef_rns, ctx, scale)`   - CRT combine + special FFT
-#   * `fast_decrypt_decode(ct, ctx, scale)` - combined entry point
+# These private kernels implement the context-owned decrypt/decode methods.
 #
-# `_DECRYPT_CACHE` is keyed by `(id(ctx), num_moduli)` so repeated decrypts
+# `_decrypt_cache` is keyed by `(id(ctx), num_moduli)` so repeated decrypts
 # pay the precomputation only once.
 # ===========================================================================
 def _bit_reverse_indices_np(n: int) -> np.ndarray:
@@ -1045,7 +1224,10 @@ class _DecryptCache:
     )                                                            # (M,)
 
     # psi^(-i) mod q  per tower:  shape (N, M)
-    psi_inv = [pow(int(psi), -1, q) for psi, q in zip(psi_pairs, self.q_int)]
+    psi_inv = [
+        pow(int(psi), -1, q)
+        for psi, q in zip(psi_pairs, self.q_int, strict=True)
+    ]
     psi_inv_pow = np.zeros((N, M), dtype=np.uint64)
     for m in range(M):
       acc = 1
@@ -1083,12 +1265,37 @@ class _DecryptCache:
     self.bit_rev_idx = _bit_reverse_indices_np(N)
 
 
-_DECRYPT_CACHE: Dict[Tuple[int, int], _DecryptCache] = {}
+_decrypt_cache: Dict[Tuple[int, int], _DecryptCache] = {}
+
+
+def evict_context_caches(ctx) -> int:
+  """Drop the encrypt/decrypt cache entries built for ``ctx``.
+
+  Both caches are keyed by ``id(ctx)``, so entries outlive the context they
+  were built for and would keep its device tables alive (or, once the id is
+  reused, serve a stale table to a new context). ``Mapping.release`` calls
+  this; returns the number of entries removed.
+  """
+  key_id = id(ctx)
+  removed = 0
+  for cache in (_encrypt_cache, _decrypt_cache):
+    for key in [k for k in cache if k[0] == key_id]:
+      cache.pop(key, None)
+      removed += 1
+  return removed
 
 
 def _get_decrypt_cache(ctx, num_moduli: int) -> _DecryptCache:
   key = (id(ctx), int(num_moduli))
-  c = _DECRYPT_CACHE.get(key)
+  c = _decrypt_cache.get(key)
+  # Guard against id() reuse (see _get_encrypt_cache): a stale entry here
+  # would silently decrypt with the wrong secret key.
+  if c is not None and not (
+      c.degree == int(ctx.degree)
+      and c.q_int == [int(q) for q in ctx.q_towers[:num_moduli]]
+      and getattr(c, '_sk_ref', None) is ctx.secret_key
+  ):
+    c = None
   if c is None:
     psi_pairs = [
         util.root_of_unity(2 * ctx.degree, q) for q in ctx.q_towers[:num_moduli]
@@ -1099,7 +1306,8 @@ def _get_decrypt_cache(ctx, num_moduli: int) -> _DecryptCache:
         secret_key=[list(row) for row in ctx.secret_key[:num_moduli]],
         degree=ctx.degree,
     )
-    _DECRYPT_CACHE[key] = c
+    c._sk_ref = ctx.secret_key
+    _decrypt_cache[key] = c
   return c
 
 
@@ -1143,7 +1351,9 @@ def _vectorized_intt(eval_arr: np.ndarray, cache: _DecryptCache) -> np.ndarray:
   return a
 
 
-def fast_decrypt_to_rns_coeffs(ct_polynomial: np.ndarray, ctx) -> np.ndarray:
+def _fast_decrypt_to_rns_coeffs_array(
+    ct_polynomial: np.ndarray, ctx
+) -> np.ndarray:
   """Vectorized SK multiply + INTT.
 
   Args:
@@ -1174,37 +1384,117 @@ def fast_decrypt_to_rns_coeffs(ct_polynomial: np.ndarray, ctx) -> np.ndarray:
   return _vectorized_intt(m, cache)
 
 
-def _crt_combine_rns(rns_coeffs: np.ndarray, q_int: List[int]) -> List[int]:
-  """CRT combine from per-tower residues to big-int coefficients.
+def _crt_combine_rns(residues, moduli: List[int]) -> List[int]:
+  """CRT combine per-tower residues into big-int coefficients.
 
-  rns_coeffs : np.uint64 (N, M).
-  Returns Python list of length N (big ints).
+  Args:
+    residues: rows of per-tower residues, one row per polynomial coefficient.
+      Accepts a ``(degree, num_moduli)`` array -- the fast decrypt path, where
+      ``tolist()`` is the single host pull -- or an equivalent list of rows,
+      which is what the plaintext decode path holds.
+    moduli: the pairwise-coprime tower moduli, one per column.
+
+  Returns:
+    Python list of big ints, one per coefficient, reduced modulo the product.
   """
-  N, M = rns_coeffs.shape
-  Big = 1
-  for q in q_int:
-    Big *= q
-  Mi_list = [Big // qi for qi in q_int]
-  inv_list = [pow(Mi, -1, qi) for Mi, qi in zip(Mi_list, q_int)]
-  weights = [Mi * inv for Mi, inv in zip(Mi_list, inv_list)]   # big ints
+  # Coerce first: a numpy integer here would silently overflow the product.
+  moduli = [int(modulus) for modulus in moduli]
+  big = 1
+  for modulus in moduli:
+    big *= modulus
+  weights = []
+  for modulus in moduli:
+    cofactor = big // modulus
+    weights.append(cofactor * pow(cofactor, -1, modulus))
 
-  rns_py = rns_coeffs.tolist()                                 # one host pull
-  out = [0] * N
-  for d in range(N):
-    row = rns_py[d]
-    X = 0
-    for i in range(M):
-      X += int(row[i]) * weights[i]
-    out[d] = X % Big
+  rows = residues.tolist() if hasattr(residues, 'tolist') else residues
+  out = []
+  for row in rows:
+    combined = 0
+    for residue, modulus, weight in zip(
+        row, moduli, weights, strict=True
+    ):
+      combined += (int(residue) % modulus) * weight
+    out.append(combined % big)
   return out
 
 
-def fast_decode(coef_rns: np.ndarray, ctx, scale: float,
-                slots_to_decode: int = None) -> np.ndarray:
+def _decode_conjugate(values: np.ndarray) -> np.ndarray:
+  """Return the CKKS conjugate-symmetry counterpart of coefficient slots."""
+  conjugate = np.empty(values.size, dtype=np.complex128)
+  conjugate[0] = complex(values[0].real, -values[0].imag)
+  if values.size > 1:
+    reversed_values = values[
+        values.size - 1 - np.arange(0, values.size - 1)
+    ]
+    conjugate[1:] = (
+        -reversed_values.imag - 1j * reversed_values.real
+    )
+  return conjugate
+
+
+def _decode_approximation_stddev(
+    values: np.ndarray, conjugate: np.ndarray
+) -> float:
+  """Mirror OpenFHE's conjugate-symmetry error estimate at unit scale."""
+  slots = values.size
+  if slots == 1:
+    return abs(float(values[0].imag))
+  complex_values = values[: slots // 2 + 1] - conjugate[: slots // 2 + 1]
+  mean = 2.0 * float(np.sum(
+      complex_values[1 : slots // 2].real
+      + complex_values[1 : slots // 2].imag
+  ))
+  mean += float(complex_values[0].imag)
+  mean += 2.0 * float(complex_values[slots // 2].real)
+  mean /= 2 * slots - 1.0
+  variance = 2.0 * float(np.sum(
+      (complex_values[1 : slots // 2].real - mean) ** 2
+      + (complex_values[1 : slots // 2].imag - mean) ** 2
+  ))
+  variance += float((complex_values[0].imag - mean) ** 2)
+  variance += 2.0 * float(
+      (complex_values[slots // 2].real - mean) ** 2
+  )
+  variance /= 2 * slots - 2.0
+  return 0.5 * math.sqrt(variance)
+
+
+def _check_decode_stddev(stddev: float) -> None:
+  """Fail closed on a decode whose approximation error is too high.
+
+  ``stddev`` is the conjugate-symmetry error estimate at unit (message) scale.
+  This is the single decode-precision policy: the reference decoder rescales
+  its own ``2 ** p`` estimate before calling in, and the vectorized decoder
+  already works at unit scale.
+  """
+  if not math.isfinite(stddev) or stddev > _DECODE_STDDEV_LIMIT:
+    raise ApproximationErrorTooHigh(
+        'CKKS decryption failed because the approximation error is too high; '
+        f'estimated stddev={stddev:.3e}, '
+        f'limit={_DECODE_STDDEV_LIMIT:.3e}. Check the '
+        'ring parameters, scale, and circuit depth.'
+    )
+
+
+def _validate_decode_approximation(
+    values: np.ndarray, conjugate: np.ndarray
+) -> None:
+  _check_decode_stddev(_decode_approximation_stddev(values, conjugate))
+
+
+def _fast_decode(
+    coef_rns: np.ndarray,
+    ctx,
+    scale: float,
+    slots_to_decode: int = None,
+    *,
+    validate_approximation: bool = True,
+) -> np.ndarray:
   """CRT combine + CKKS FFT to slot values.
 
   Args:
-    coef_rns        : (N, M) uint64 from fast_decrypt_to_rns_coeffs.
+    coef_rns        : (N, M) uint64 from `_fast_decrypt_to_rns_coeffs`.
     ctx             : CKKSContext.
     scale           : output scaling factor (typically ctx.output_scale).
     slots_to_decode : how many slot values to return (default = ctx.num_slots).
@@ -1227,27 +1517,28 @@ def fast_decode(coef_rns: np.ndarray, ctx, scale: float,
   # Convert to signed reals (centered around 0), divide by scale.
   # Must process all num_slots positions (FFTSpecial needs full slot vector).
   Nh = N // 2
+  gap = Nh // num_slots
   scale_inv = 1.0 / float(scale)
   reals = np.empty(num_slots, dtype=np.float64)
   imags = np.empty(num_slots, dtype=np.float64)
   for i in range(num_slots):
-    r = combined[i]
+    r = combined[i * gap]
     if r > Big_half:
       r -= Big
     reals[i] = float(r) * scale_inv
-    im = combined[i + Nh]
+    im = combined[i * gap + Nh]
     if im > Big_half:
       im -= Big
     imags[i] = float(im) * scale_inv
 
   cur = reals + 1j * imags
 
-  # Mirror ckks_decode's _conjugate + average step.
-  conj = np.empty(num_slots, dtype=np.complex128)
-  conj[0] = complex(cur[0].real, -cur[0].imag)
-  if num_slots > 1:
-    z = cur[num_slots - 1 - np.arange(0, num_slots - 1)]
-    conj[1:num_slots] = -z.imag - 1j * z.real
+  if not isinstance(validate_approximation, bool):
+    raise TypeError('validate_approximation must be a bool.')
+  # Mirror `_ckks_decode`'s conjugate + average step.
+  conj = _decode_conjugate(cur)
+  if validate_approximation:
+    _validate_decode_approximation(cur, conj)
   cur = 0.5 * (cur + conj)
 
   # CKKS special FFT (forward).
@@ -1257,22 +1548,355 @@ def fast_decode(coef_rns: np.ndarray, ctx, scale: float,
   return arr
 
 
-def fast_decrypt_decode(ct_polynomial: np.ndarray, ctx, scale: float,
-                        slots_to_decode: int = None) -> np.ndarray:
-  """End-to-end vectorized decrypt + decode."""
-  rns = fast_decrypt_to_rns_coeffs(ct_polynomial, ctx)
-  return fast_decode(rns, ctx, scale, slots_to_decode=slots_to_decode)
+def _ct_batch_to_host_array(
+    ciphertext: poly.Polynomial, ctx, *, require_single_batch: bool = False
+) -> np.ndarray:
+  """Validate one ciphertext batch and pull it to the host in one transfer.
+
+  The single Polynomial-to-host boundary behind every fast decrypt entry point.
+  It validates the ciphertext against the context, strips the computation-format
+  (Montgomery) factor, and materializes the whole batch with one device read --
+  which is why the batched decoder is not a loop over the single-item one.
+
+  Args:
+    ciphertext: canonical two-element CKKS ciphertext Polynomial.
+    ctx: CKKSContext the ciphertext must match.
+    require_single_batch: reject a batched payload, for callers whose contract
+      returns exactly one slot vector.
+
+  Returns:
+    uint64 array of shape (batch, num_elements, degree, num_moduli).
+  """
+  _validate_polynomial_for_context(
+      ciphertext, ctx, 'ciphertext', num_elements=2
+  )
+  if require_single_batch and ciphertext.batch != 1:
+    raise NotImplementedError(
+        "Fast decryption currently supports exactly one ciphertext batch."
+    )
+  ciphertext = _ct_to_standard_format(ciphertext, ctx)
+  return np.asarray(
+      ciphertext.polynomial.reshape(
+          ciphertext.batch,
+          ciphertext.num_elements,
+          ciphertext.degree,
+          ciphertext.num_moduli,
+      ),
+      dtype=np.uint64,
+  )
 
 
-########################
-# CKKS Context Class
-########################
+def _fast_decrypt_to_rns_coeffs(
+    ciphertext: poly.Polynomial, ctx
+) -> np.ndarray:
+  """Decrypts a canonical, single-batch ciphertext to flat RNS coefficients."""
+  ct_batch = _ct_batch_to_host_array(
+      ciphertext, ctx, require_single_batch=True
+  )
+  return _fast_decrypt_to_rns_coeffs_array(ct_batch[0], ctx)
+
+
+def _fast_decrypt_decode(
+    ciphertext: poly.Polynomial,
+    ctx,
+    scale: float,
+    slots_to_decode: int = None,
+    *,
+    validate_approximation: bool = True,
+    require_single_batch: bool = False,
+) -> np.ndarray:
+  """End-to-end vectorized decrypt + decode for one ciphertext batch.
+
+  Always returns a ``(batch, slots)`` float64 matrix, whatever the batch size:
+  the batch dimension belongs in the shape, not in the return type. Callers
+  whose own contract is a single slot vector index ``[0]`` and pass
+  ``require_single_batch=True`` so a batched payload is rejected rather than
+  silently truncated.
+
+  The whole batch is pulled to the host in one transfer before any decoding
+  starts, which is why this is not a loop over a single-ciphertext entry point.
+  """
+  return np.stack([
+      _fast_decode(
+          _fast_decrypt_to_rns_coeffs_array(ct_array, ctx),
+          ctx,
+          scale,
+          slots_to_decode=slots_to_decode,
+          validate_approximation=validate_approximation,
+      )
+      for ct_array in _ct_batch_to_host_array(
+          ciphertext, ctx, require_single_batch=require_single_batch
+      )
+  ])
+
+
+def _polynomial_from_flat_array(
+    array: np.ndarray,
+    moduli: List[int],
+    degree_layout: tuple[int, int],
+    ntt_ctx=None,
+) -> poly.Polynomial:
+  """Wraps local flat arithmetic output in the canonical rank-5 layout."""
+  # All public CKKS Polynomial payloads use the 32-bit RNS representation.
+  # The host-side fast kernels compute in uint64, but every residue is below
+  # its 32-bit modulus at this boundary.
+  payload = jnp.asarray(array, dtype=jnp.uint32)
+  if payload.ndim != 4:
+    raise ValueError(
+        '_polynomial_from_flat_array expects shape '
+        '(batch, num_elements, degree, num_moduli); '
+        f'got rank {payload.ndim} shape {payload.shape}.'
+    )
+  batch, num_elements, degree, num_moduli = payload.shape
+  if degree_layout[0] * degree_layout[1] != degree:
+    raise ValueError(
+        f"degree_layout {degree_layout} does not match degree {degree}."
+    )
+  shapes = {
+      "batch": batch,
+      "num_elements": num_elements,
+      "num_moduli": num_moduli,
+      "degree": degree,
+      "precision": 32,
+      "degree_layout": degree_layout,
+  }
+  parameters = {"moduli": list(moduli)}
+  if ntt_ctx is not None:
+    parameters['ntt_ctx'] = ntt_ctx
+  return poly.Polynomial.from_array(
+      payload.reshape(batch, num_elements, *degree_layout, num_moduli),
+      shapes,
+      parameters=parameters,
+  )
+
+
+def _validate_polynomial_for_context(
+    value, ctx, name: str, num_elements: int | None = None
+) -> poly.Polynomial:
+  """Validate a Polynomial at an encrypt/decrypt context boundary."""
+  if not isinstance(value, poly.Polynomial):
+    raise TypeError(f'{name} must be a Polynomial.')
+  value.validate()
+  expected_dtype = jnp.dtype(value.modulus_dtype)
+  if value.precision != 32 or expected_dtype != jnp.dtype(jnp.uint32):
+    raise ValueError(
+        f'{name} must use the canonical precision=32/uint32 Polynomial '
+        f'representation; got precision={value.precision} and '
+        f'modulus dtype {expected_dtype}.'
+    )
+  if value.polynomial.dtype != expected_dtype:
+    raise ValueError(
+        f'{name} payload dtype {value.polynomial.dtype} does not match its '
+        f'{expected_dtype} ciphertext representation.'
+    )
+  if value.degree != ctx.degree:
+    raise ValueError(
+        f'{name} degree {value.degree} does not match context degree '
+        f'{ctx.degree}.'
+    )
+  if num_elements is not None and value.num_elements != num_elements:
+    raise ValueError(
+        f'{name} must contain {num_elements} element(s), got '
+        f'{value.num_elements}.'
+    )
+  expected_moduli = tuple(ctx.q_towers[:value.num_moduli])
+  if tuple(value.moduli) != expected_moduli:
+    raise ValueError(
+        f'{name} moduli {tuple(value.moduli)} do not match context prefix '
+        f'{expected_moduli}.'
+    )
+  ctx_layout = getattr(ctx, 'degree_layout', None)
+  if ctx_layout is not None and tuple(value.degree_layout) != tuple(ctx_layout):
+    raise ValueError(
+        f'{name} layout {value.degree_layout} does not match context layout '
+        f'{tuple(ctx_layout)}.'
+    )
+  return value
+
+
+class _BSGSMatVecAccessor:
+  """Provides the two supported ``ctx.bsgs_matvec[...]`` index forms.
+
+  Returns a fresh private implementation configured at the requested level,
+  dimension, and optional BSGS factors. A fresh instance is returned per
+  access because matrix encoding mutates per-instance offline state. ``bsgs``
+  is imported lazily to avoid the module cycle.
+  """
+
+  def __init__(self, ctx: "CKKSContext"):
+    self.ctx = ctx
+
+  def __getitem__(self, key):
+    import bsgs  # lazy: breaks the import cycle
+    if not isinstance(key, tuple):
+      raise TypeError(
+          'ctx.bsgs_matvec expects (level, n) or (level, n, n1, n2).'
+      )
+    if len(key) == 2:
+      level, n = key
+      n1, n2 = bsgs.compute_bsgs_params(n)
+    elif len(key) == 4:
+      level, n, n1, n2 = key
+    else:
+      raise ValueError(
+          'ctx.bsgs_matvec expects (level, n) or (level, n, n1, n2); '
+          f'got {len(key)} values.'
+      )
+    return bsgs._BSGSMatVecAtLevel(
+        self.ctx, level=level, n=n, n1=n1, n2=n2
+    )
+
+
+# =============================================================================
+# BEGIN: PRIVATE MAPPING BACKEND
+#
+# This block contains the low-level analysis and JAX materialization used by
+# the network-level Mapping class. CKKSContext is only the cryptographic
+# resource/evaluator facade; it owns no model or compilation lifecycle.
+# =============================================================================
+
+# -- Abstract planning -------------------------------------------------------
+
+
+# Packing deliberately stores operators as plain immutable tuples rather than
+# introducing another operation class. These accessors keep tuple layout local
+# to this backend.
+
+
+def _jsonable(value):
+  if is_dataclass(value):
+    return {
+        field.name: _jsonable(getattr(value, field.name))
+        for field in fields(value)
+    }
+  if isinstance(value, np.generic):
+    return value.item()
+  if isinstance(value, tuple):
+    return [_jsonable(item) for item in value]
+  if isinstance(value, list):
+    return [_jsonable(item) for item in value]
+  if isinstance(value, dict):
+    return {
+        str(key): _jsonable(item)
+        for key, item in sorted(value.items(), key=lambda pair: str(pair[0]))
+    }
+  if isinstance(value, (str, int, float, bool)) or value is None:
+    return value
+  return repr(value)
+
+
+def _json_digest(value) -> str:
+  data = json.dumps(_jsonable(value), sort_keys=True, separators=(',', ':'))
+  return hashlib.sha256(data.encode()).hexdigest()
+
+
+def _context_fingerprint(ctx, *, perf_test: bool = False) -> str:
+  parameters = ctx.parameters
+  return _json_digest({
+      'degree': int(ctx.degree),
+      'num_slots': int(ctx.num_slots),
+      'q_towers': tuple(int(q) for q in ctx.q_towers),
+      'p_towers': tuple(int(p) for p in ctx.p_towers),
+      'composite_degree': int(ctx.composite_degree),
+      'batch': int(ctx.batch),
+      'degree_layout': tuple(int(x) for x in ctx.degree_layout),
+      'dnum': None if ctx.dnum is None else int(ctx.dnum),
+      'scaling_factor': float(ctx.scaling_factor),
+      'output_scale': float(ctx.output_scale),
+      'noise_std': _normalize_noise_std(parameters.get('sigma', sigma)),
+      'noise_scale_degree': normalize_noise_scale_degree(
+          parameters.get('noise_scale_degree', 1)
+      ),
+      'key_generation_version': int(kg.KEY_GENERATION_VERSION),
+      'max_bits_in_word': int(parameters.get('max_bits_in_word', 61)),
+      'max_bits_value': int(
+          parameters.get('max_bits_value', (1 << 63) - (1 << 9) - 1)
+      ),
+      'ckks_m_factor': parameters.get('CKKS_M_FACTOR', 1),
+      'perf_test': bool(perf_test),
+  })
+
+
+def _max_level(ctx) -> int:
+  return (len(ctx.q_towers) - 1) // int(ctx.composite_degree)
+
+
+def _moduli_at_level(ctx, level: int) -> tuple[int, ...]:
+  max_level = _max_level(ctx)
+  if not 0 <= level <= max_level:
+    raise ValueError(f'level {level} outside [0, {max_level}].')
+  count = len(ctx.q_towers) - (max_level - level) * ctx.composite_degree
+  return tuple(int(q) for q in ctx.q_towers[:count])
+
+
+def _validate_context(ctx) -> None:
+  for name in ('degree', 'num_slots', 'composite_degree', 'batch'):
+    value = getattr(ctx, name)
+    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+      raise ValueError(f'context {name} must be a positive int.')
+  if ctx.dnum is None:
+    raise ValueError(
+        'dnum is required to map a network; pass Mapping(..., dnum=...).'
+    )
+  if isinstance(ctx.dnum, bool) or not isinstance(ctx.dnum, int) or ctx.dnum <= 0:
+    raise ValueError('context dnum must be a positive int.')
+  layout = tuple(ctx.degree_layout)
+  if len(layout) != 2 or math.prod(layout) != ctx.degree:
+    raise ValueError(
+        f'degree_layout {layout} must multiply to degree {ctx.degree}.'
+    )
+  if not ctx.q_towers:
+    raise ValueError('q_towers must be non-empty.')
+  if ctx.composite_degree >= len(ctx.q_towers):
+    raise ValueError('composite_degree must be smaller than the Q chain.')
+  if not math.isfinite(ctx.scaling_factor) or ctx.scaling_factor <= 0:
+    raise ValueError('scaling_factor must be finite and positive.')
+  if not math.isfinite(ctx.output_scale) or ctx.output_scale < 0:
+    raise ValueError('output_scale must be finite and non-negative.')
+
+
+# -- Binding and executable materialization ---------------------------------
+
+
+# =============================================================================
+# END: PRIVATE MAPPING BACKEND
+# =============================================================================
+
+
+# =============================================================================
+# CKKSContext PUBLIC CODEC AND LOW-LEVEL EVALUATOR FACADE
+# =============================================================================
 class CKKSContext:
 
-  def __init__(self, parameters: dict):
+  def __init__(
+      self,
+      parameters: dict,
+      *,
+      batch: int = 1,
+      dnum: Optional[int] = None,
+  ):
+    if isinstance(batch, bool) or not isinstance(batch, int) or batch <= 0:
+      raise ValueError('batch must be a positive int.')
+    if (
+        dnum is not None
+        and (isinstance(dnum, bool) or not isinstance(dnum, int) or dnum <= 0)
+    ):
+      raise ValueError('dnum must be None or a positive int.')
     self.parameters = parameters
+    self.batch = batch
+    self.dnum = dnum
     self.degree = parameters["degree"]
-    self.num_slots = parameters.get("num_slots", self.degree // 2)
+    num_slots = parameters.get("num_slots", self.degree // 2)
+    if (
+        isinstance(num_slots, bool)
+        or not isinstance(num_slots, (int, np.integer))
+        or not util.is_power_of_two(int(num_slots))
+        or (self.degree // 2) % int(num_slots)
+    ):
+      raise ValueError(
+          "num_slots must be a power-of-two divisor of degree // 2."
+      )
+    self.num_slots = int(num_slots)
     self.scaling_factor = parameters.get("scaling_factor", 0.0)
     self.output_scale = parameters.get("output_scale", 0.0)
     self.q_towers = parameters["q_towers"]
@@ -1280,6 +1904,21 @@ class CKKSContext:
     self.p = parameters.get("p", 0)
     self.CKKS_M_FACTOR = parameters.get("CKKS_M_FACTOR", 1)
     self.moduli = self.q_towers
+    degree_layout = parameters.get("degree_layout")
+    if degree_layout is None:
+      requested_rows = parameters.get("r")
+      if requested_rows is None:
+        degree_layout = _balanced_degree_layout(self.degree)
+      else:
+        requested_rows = int(requested_rows)
+        degree_layout = (requested_rows, self.degree // requested_rows)
+    self.degree_layout = tuple(degree_layout)
+    if (len(self.degree_layout) != 2
+        or self.degree_layout[0] * self.degree_layout[1] != self.degree):
+      raise ValueError(
+          f"degree_layout {self.degree_layout} must be a two-dimensional "
+          f"factorization of degree {self.degree}."
+      )
 
     self.public_key = parameters.get("public_key", None)
     self.secret_key = parameters.get("secret_key", None)
@@ -1289,6 +1928,9 @@ class CKKSContext:
     # Composite rescaling support
     self.composite_degree = parameters.get("composite_degree", 1)
     self._compute_composite_scale_factor()
+
+    # Static network ownership deliberately lives in Mapping. A standalone
+    # context remains a codec and direct low-level evaluator resource.
 
   def _compute_composite_scale_factor(self):
     """Compute the effective scale factor for composite rescaling.
@@ -1313,111 +1955,226 @@ class CKKSContext:
   ) -> poly.Polynomial:
     if self.public_key is None:
       raise ValueError("Public key is not set in the context.")
-
-    element = plaintext.get_element(0)[0]  # Shape: (degree, num_moduli)
-    # element is already (degree, moduli), no transpose needed
-    encoded_values = element.tolist()
-
-    c_poly = ckks_encrypt(
-        plaintext=encoded_values,
-        public_key=self.public_key,
-        q_towers=self.q_towers,
-        noise_scale_degree=self.parameters.get("noise_scale_degree", 1),
-        sigma=self.parameters.get("sigma", 3.190000057220458984375),
+    result = _fast_encrypt_from_plaintext(
+        plaintext,
+        self,
         v=v,
         e=e,
+        sigma=self.parameters.get("sigma", 3.190000057220458984375),
+        noise_scale_degree=self.parameters.get("noise_scale_degree", 1),
     )
+    if getattr(result, '_ckks_scale', None) is None:
+      result._ckks_scale = float(self.scaling_factor)
+    return result
 
-    shapes = {
-        "batch": 1,
-        "num_elements": 2,
-        "num_moduli": len(self.q_towers),
-        "degree": self.degree,
-        "precision": 32,
-    }
+  def encrypt_slots(
+      self, slots, scale: Optional[float] = None
+  ) -> poly.Polynomial:
+    """Encode and encrypt one slot vector through the context facade."""
+    if self.public_key is None:
+      raise ValueError('Public key is not set in the context.')
+    return _fast_encode_encrypt(slots, self, scale=scale)
 
-    res_ct = poly.Polynomial(shapes, parameters={"moduli": self.q_towers})
-
-    # c0, c1 are (degree, moduli) naturally now
-    c0 = jnp.expand_dims(
-        jnp.array(c_poly[0], dtype=jnp.uint64), axis=0
-    )  # (1, degree, moduli)
-    c1 = jnp.expand_dims(jnp.array(c_poly[1], dtype=jnp.uint64), axis=0)
-
-    res_ct.set_element(0, c0)
-    res_ct.set_element(1, c1)
-
-    return res_ct
+  def encrypt_slots_batch(
+      self, slots_batch, scale: Optional[float] = None
+  ) -> poly.Polynomial:
+    """Encode and encrypt a host batch with one device transfer."""
+    if self.public_key is None:
+      raise ValueError('Public key is not set in the context.')
+    return _fast_encode_encrypt_batch(slots_batch, self, scale=scale)
 
   def decrypt(self, ciphertext: poly.Polynomial) -> poly.Polynomial:
     if self.secret_key is None:
       raise ValueError("Secret key is not set in the context.")
-    c_list = [
-        ciphertext.polynomial[0, 0].tolist(),  # c0
-        ciphertext.polynomial[1, 0].tolist(),  # c1
-    ]
-    num_elems = ciphertext.num_elements
-    c_list = []
-    for i in range(num_elems):
-      c_list.append(ciphertext.polynomial[0, i].tolist())  # (degree, moduli)
-    num_moduli_ct = ciphertext.num_moduli
-    current_q_towers = self.q_towers[:num_moduli_ct]
-    decrypted_poly_rns = ckks_decrypt(
-        ciphertext=c_list,
-        private_key=self.secret_key,
-        q_towers=current_q_towers,
+    if not isinstance(ciphertext, poly.Polynomial):
+      raise TypeError("ciphertext must be a Polynomial.")
+    ciphertext.validate()
+    if ciphertext.batch != 1:
+      raise NotImplementedError(
+          "CKKSContext.decrypt currently supports exactly one ciphertext batch."
+      )
+    decrypted_poly_rns = _fast_decrypt_to_rns_coeffs(
+        ciphertext, self
     )
-    shapes = {
-        "batch": 1,
-        "num_elements": 1,
-        "num_moduli": len(current_q_towers),
-        "degree": self.degree,
-        "precision": 32,
-    }
-
-    res_ct = poly.Polynomial(shapes, parameters={"moduli": current_q_towers})
-    # decrypted_poly_rns is (degree, moduli)
-    elem = jnp.expand_dims(
-        jnp.array(decrypted_poly_rns, dtype=jnp.uint32), axis=0
+    payload = jnp.asarray(decrypted_poly_rns, dtype=jnp.uint32).reshape(
+        1, 1, *ciphertext.degree_layout, ciphertext.num_moduli
     )
-    res_ct.set_element(0, elem)
+    return ciphertext._clone_with_payload(payload, num_elements=1)
 
-    return res_ct
+  def decrypt_slots(
+      self,
+      ciphertext: poly.Polynomial,
+      scale: Optional[float] = None,
+      slots_to_decode: Optional[int] = None,
+      *,
+      validate_approximation: bool = True,
+  ) -> np.ndarray:
+    """Decrypt and decode one ciphertext through the context facade.
+
+    Returns a single slot vector; use :meth:`decrypt_slots_batch` for a batched
+    payload rather than relying on truncation.
+    """
+    if self.secret_key is None:
+      raise ValueError('Secret key is not set in the context.')
+    scale = _resolve_codec_scale(ciphertext, scale, self.output_scale)
+    return _fast_decrypt_decode(
+        ciphertext,
+        self,
+        scale,
+        slots_to_decode=slots_to_decode,
+        validate_approximation=validate_approximation,
+        require_single_batch=True,
+    )[0]
+
+  def decrypt_slots_batch(
+      self,
+      ciphertext: poly.Polynomial,
+      scale: Optional[float] = None,
+      slots_to_decode: Optional[int] = None,
+      *,
+      validate_approximation: bool = True,
+  ) -> list[np.ndarray]:
+    """Decrypt and decode a ciphertext batch after one host transfer.
+
+    Returns one slot vector per batch entry. The list is a facade over the
+    ``(batch, slots)`` matrix the decoder produces; the split exists because
+    demo callers outside this package expect a sequence.
+    """
+    if self.secret_key is None:
+      raise ValueError('Secret key is not set in the context.')
+    scale = _resolve_codec_scale(ciphertext, scale, self.output_scale)
+    return list(_fast_decrypt_decode(
+        ciphertext,
+        self,
+        scale,
+        slots_to_decode=slots_to_decode,
+        validate_approximation=validate_approximation,
+    ))
 
   def encode(self, slots: List[complex], shift: int = 0) -> poly.Polynomial:
-    m = self.degree * 2
-    encoded_rns = ckks_encode(
-        slots=slots,
-        cycl_order=m,
-        q_towers=self.q_towers,
-        p_towers=self.p_towers,
+    del shift  # Retained for API compatibility; encoding has no shift variant.
+    encoded_rns = _fast_encode(
+        slots,
+        self,
         scale=self.scaling_factor,
-        max_bits_in_word=self.parameters.get("max_bits_in_word", 61),
-        max_bits_value=self.parameters.get(
-            "max_bits_value", (1 << 63) - (1 << 9) - 1
-        ),
     )
 
-    shapes = {
-        "batch": 1,
-        "num_elements": 1,
-        "num_moduli": len(self.q_towers),
-        "degree": self.degree,
-        "precision": 32,
-    }
+    ntt_ctx = getattr(self, '_polynomial_ntt_ctx', None)
+    cache = getattr(self, '_param_cache', None)
+    if cache is not None:
+      ntt_ctx = cache.get_sliced_ntt_q(cache.max_level)
+    result = _polynomial_from_flat_array(
+        np.asarray(encoded_rns, dtype=np.uint64)[None, None, ...],
+        self.q_towers,
+        self.degree_layout,
+        ntt_ctx=ntt_ctx,
+    )
+    result._ckks_scale = float(self.scaling_factor)
+    if getattr(self, '_polynomial_ntt_ctx', None) is None:
+      self._polynomial_ntt_ctx = result.ntt_ctx
+    return result
 
-    res_ct = poly.Polynomial(shapes, parameters={"moduli": self.q_towers})
-    # encoded_rns is (degree, moduli)
-    elem = jnp.expand_dims(jnp.array(encoded_rns, dtype=jnp.uint64), axis=0)
-    res_ct.set_element(0, elem)
+  def encode_at_level(
+      self,
+      slots: List[complex],
+      level: int,
+      scale: Optional[float] = None,
+  ) -> poly.Polynomial:
+    """Encode one slot vector against an initialized logical level.
 
-    return res_ct
+    The result is a batch-one, one-element NTT plaintext using exactly the Q
+    prefix and tiled NTT context owned by ``level``. This is the canonical
+    constant-construction route for a bound static program.
+    """
+    cache = getattr(self, '_param_cache', None)
+    if cache is None:
+      raise RuntimeError(
+          'Call CKKSContext.program_initialization(...) before '
+          'encode_at_level(...).'
+      )
+    if not isinstance(level, int):
+      raise TypeError(f'level must be an int, got {type(level).__name__}.')
+    if not 0 <= level <= cache.max_level:
+      raise ValueError(
+          f'level {level} out of range [0, {cache.max_level}].'
+      )
+
+    actual_scale = self.scaling_factor if scale is None else scale
+    q_at_level = cache.q_moduli_at_level(level)
+    encode_ctx = _get_or_make_encode_ctx(
+        q_towers=q_at_level,
+        degree=self.degree,
+        scale=actual_scale,
+        max_bits_in_word=self.parameters.get('max_bits_in_word', 61),
+        max_bits_value=self.parameters.get(
+            'max_bits_value', (1 << 63) - (1 << 9) - 1
+        ),
+    )
+    encoded_rns = _fast_encode(slots, encode_ctx, scale=actual_scale)
+    result = _polynomial_from_flat_array(
+        np.asarray(encoded_rns, dtype=np.uint64)[None, None, ...],
+        q_at_level,
+        cache.degree_layout,
+        ntt_ctx=cache.get_sliced_ntt_q(level),
+    )
+    result._ckks_scale = float(actual_scale)
+    return result
 
   def decode(
-      self, encoded_plaintext: poly.Polynomial, is_ntt: bool = False
+      self,
+      encoded_plaintext: poly.Polynomial,
+      is_ntt: bool = False,
+      *,
+      scale: float | None = None,
+      level: int | None = None,
+      validate_approximation: bool = True,
   ) -> jnp.ndarray:
-    rns_poly = encoded_plaintext.polynomial[0, 0].tolist()  # (degree, moduli)
+    """Decode a CKKS plaintext with explicit, tracked, or canonical scale.
+
+    ``level`` validates the plaintext's CROSS logical level and supplies the
+    canonical fallback scale. A valid scale tracked on the plaintext takes
+    precedence over that fallback, and an explicit ``scale`` takes precedence
+    over both.
+    """
+    _validate_polynomial_for_context(
+        encoded_plaintext, self, 'encoded_plaintext', num_elements=1
+    )
+    if encoded_plaintext.batch != 1:
+      raise NotImplementedError(
+          "CKKSContext.decode currently supports exactly one plaintext batch."
+      )
+    rns_poly = encoded_plaintext.polynomial[0, 0].reshape(
+        encoded_plaintext.degree, encoded_plaintext.num_moduli
+    ).tolist()
     num_towers = len(encoded_plaintext.moduli)
+    fallback_scale = self.output_scale
+    if level is not None:
+      if (
+          isinstance(level, bool)
+          or not isinstance(level, (int, np.integer))
+      ):
+        raise TypeError('decode level must be an int.')
+      level = int(level)
+      if not hasattr(self, "_param_cache"):
+        raise ValueError(
+            "level-aware decode requires program_initialization"
+        )
+      if not 0 <= level <= self._param_cache.max_level:
+        raise ValueError(
+            f"decode level {level} out of range "
+            f"[0, {self._param_cache.max_level}]"
+        )
+      expected_towers = self._param_cache.num_q_at_level(level)
+      if expected_towers != num_towers:
+        raise ValueError(
+            f"level {level} has {expected_towers} Q limbs, but plaintext has "
+            f"{num_towers}"
+        )
+      if self._param_cache.composite_degree >= 2:
+        fallback_scale = self._param_cache.scaling_factor_recursive(level)
+    scale = _resolve_codec_scale(
+        encoded_plaintext, scale, fallback_scale
+    )
 
     if is_ntt:
       # rns_poly is (degree, moduli).
@@ -1437,7 +2194,7 @@ class CKKSContext:
           new_poly[d][t_id] = intt_vals[d]
       rns_poly = new_poly
 
-    plain_combined = _crt_combine_rns_plaintext(
+    plain_combined = _crt_combine_rns(
         rns_poly, self.q_towers[:num_towers]
     )
 
@@ -1445,20 +2202,20 @@ class CKKSContext:
     for qi in self.q_towers[:num_towers]:
       big_q *= qi
 
-    res = ckks_decode(
+    res = _ckks_decode(
         plaintext=plain_combined,
-        scaling_factor=self.output_scale,
+        scaling_factor=scale,
         slots=self.num_slots,
         q=big_q,
         p=self.p,
         CKKS_M_FACTOR=self.CKKS_M_FACTOR,
+        validate_approximation=validate_approximation,
     )
 
     return jnp.array(res)
 
   def program_initialization(
       self,
-      total_hemul_levels: int,
       total_rotation_indices: List[int],
       dnum: int,
       r: int,
@@ -1467,31 +2224,82 @@ class CKKSContext:
       batch: int = 1,
       perf_test: bool = False,
       pregenerated_rotation_keys: Optional[dict] = None,
+      cache_rotation_keys: bool = True,
+      finite_field_context=None,
   ):
     """Offline one-time setup.
 
-    Creates parameter cache and all operator wrappers.
+    Creates the shared parameter/key cache and level-indexed accessor
+    factories. Exact per-level operator controls are materialized when an
+    accessor is obtained; ``Mapping`` performs all required lookups before it
+    publishes its static executable. Advanced direct users must likewise
+    obtain their exact accessors during offline setup.
+
+    ``cache_rotation_keys=False`` defers rotation-key generation until an
+    accessor first needs each index and does not retain raw or formatted keys
+    in the parameter cache. The operator accessor holds only its active key
+    until that accessor is cleared.
 
     After calling this, use:
+      ctx.he_add[level].add(ct1, ct2)
+      ctx.he_sub[level].sub(ct1, ct2)
       ctx.he_mul[level].mul(ct1, ct2)
       ctx.he_mul[level].hemul_no_relin(ct1, ct2)
       ctx.he_mul[level].relinearize(ct_3elem)
       ctx.he_rot[level, rot_index].rotate(ct)
       ctx.he_rescale[src_level, dst_level].rescale(ct)
+      ctx.ptct_mul[level].mul(ct, plaintext)
+      matvec = ctx.bsgs_matvec[level, n]
+      matvec.preprocess(matrix)
+      matvec.matvec(ct)
+      ctx.he_bootstrap.configure(...).setup()
+
+    ``ctx.he_mul[output_level]`` expects normal multiplication operands at
+    ``output_level + 1``. Its explicit ``hemul_no_relin`` and ``relinearize``
+    controls both preserve that input level; callers may then invoke
+    ``ctx.he_rescale[output_level + 1, output_level]`` explicitly.
 
     Args:
-        total_hemul_levels: Maximum multiplication level (max_level).
         total_rotation_indices: List of rotation indices to support.
         dnum: Key-switch decomposition parameter. r, c: Matrix NTT dimensions
           (degree = r * c).
         degree_layout: Tuple (r, c). Defaults to (r, c).
         batch: Batch size for ciphertext operations.
         perf_test: Use random params for benchmarking.
+        pregenerated_rotation_keys: Optional dict of max-level rotation keys
+          keyed by rotation index. Missing keys are generated as usual when
+          ``cache_rotation_keys`` is true. The resolved mapping is then
+          retained on ``self._raw_rotation_keys`` for serialization; the
+          non-retaining mode intentionally ignores this input.
     """
-    degree_layout = degree_layout or (r, c)
+    if getattr(self, '_param_cache', None) is not None:
+      raise RuntimeError(
+          'this CKKSContext is already initialized and cannot be reinitialized.'
+      )
+    if not isinstance(cache_rotation_keys, bool):
+      raise TypeError('cache_rotation_keys must be a bool.')
+    degree_layout = tuple(degree_layout or (r, c))
     if r * c != self.degree:
       raise ValueError(f"r*c ({r}*{c}={r*c}) must equal degree ({self.degree})")
-    noise_scale = self.parameters.get("noise_scale_degree", 1)
+    if degree_layout != (r, c):
+      raise ValueError(
+          f'degree_layout must match program NTT layout {(r, c)}, got '
+          f'{degree_layout}.'
+      )
+    self.degree_layout = degree_layout
+    self.batch = batch
+    self.dnum = dnum
+
+    # Require exact P coverage and the uint31/uint64 arithmetic envelope used
+    # by the current Barrett, Montgomery, and BConv kernels.
+    util.validate_barrett_bconv_moduli(
+        self.q_towers, self.p_towers, dnum
+    )
+
+    noise_std = _normalize_noise_std(self.parameters.get("sigma", sigma))
+    noise_scale = normalize_noise_scale_degree(
+        self.parameters.get("noise_scale_degree", 1)
+    )
 
     # 1. Generate eval key if not provided
     if self.evaluation_key is None:
@@ -1501,7 +2309,7 @@ class CKKSContext:
           self.secret_key,
           q=self.q_towers,
           P=self.p_towers,
-          noise_std=sigma,
+          noise_std=noise_std,
           noise_scale=1,
           dnum=dnum,
       )
@@ -1510,31 +2318,46 @@ class CKKSContext:
     else:
       eval_key_a, eval_key_b = self.evaluation_key
 
-    # 2. Generate rotation keys (or use pre-generated ones from a cache).
-    rot_keys = {}
+    # 2. Generate rotation keys (or reuse pre-generated ones from a cache).
+    # coef_maps are cheap permutation arrays and are always recomputed.
+    # CROSS_SKIP_TOPLEVEL_ROTKEYS=1 skips max-level rotation-key allocation;
+    # runtime rotation operators regenerate an ephemeral per-level key from the
+    # secret key (per_level_rotation_keys mode on the cache). Large-N memory.
+    retain_toplevel_keys = (
+        cache_rotation_keys
+        and os.environ.get("CROSS_SKIP_TOPLEVEL_ROTKEYS") != "1"
+    )
+    rot_keys = (
+        dict(pregenerated_rotation_keys or {})
+        if retain_toplevel_keys
+        else {}
+    )
     coef_maps = {}
     for rot_idx in total_rotation_indices:
       coef_maps[rot_idx] = util.precompute_auto_map(
           self.degree,
           kg.find_automorphism_index_2n_complex(rot_idx, 2 * self.degree),
       )
+      if not retain_toplevel_keys:
+        continue  # regenerated per level at run time (get_rot_key); never read.
       if (pregenerated_rotation_keys is not None
           and rot_idx in pregenerated_rotation_keys):
         rot_keys[rot_idx] = pregenerated_rotation_keys[rot_idx]
-      else:
-        rot_ek = kg.gen_rotation_key(
-            self.secret_key,
-            self.q_towers,
-            self.p_towers,
-            rot_idx,
-            dnum=dnum,
-            noise_std=sigma,
-            noise_scale=noise_scale,
-        )
-        rot_keys[rot_idx] = rot_ek[rot_idx]
-    # Expose the raw rotation keys + secret-key-derived eval key for callers
-    # that want to persist them to disk (cache).
-    self._raw_rotation_keys = dict(rot_keys)
+        continue
+      rot_ek = kg.gen_rotation_key(
+          self.secret_key,
+          self.q_towers,
+          self.p_towers,
+          rot_idx,
+          dnum=dnum,
+          noise_std=noise_std,
+          noise_scale=noise_scale,
+      )
+      rot_keys[rot_idx] = rot_ek[rot_idx]
+
+    # Expose the resolved rotation keys so callers can serialize them
+    # (used by the demos' cache freeze path).
+    self._raw_rotation_keys = rot_keys
 
     # 3. Create parameter cache
     self._param_cache = HEParameterCache(
@@ -1546,34 +2369,79 @@ class CKKSContext:
         composite_degree=self.composite_degree,
         batch=batch,
         perf_test=perf_test,
+        rotation_key_noise_std=noise_std,
+        rotation_key_noise_scale=noise_scale,
+        finite_field_context=finite_field_context,
+        cache_rotation_keys=cache_rotation_keys,
     )
     self._param_cache.initialize(
         eval_key_a, eval_key_b, rot_keys, coef_maps, secret_key=self.secret_key
     )
 
     # 4. Create accessors (lazy — instances created on first access)
-    self.he_mul = HEMulAccessor(self._param_cache)
-    self.he_rot = HERotAccessor(self._param_cache)
-    self.he_rescale = HERescaleAccessor(self._param_cache)
+    self._he_add = _HEAddAccessor(self._param_cache)
+    self._he_sub = _HESubAccessor(self._param_cache)
+    self._he_mul = _HEMulAccessor(self._param_cache)
+    self._he_rot = _HERotAccessor(self._param_cache)
+    self._he_rescale = _HERescaleAccessor(self._param_cache)
+    self._he_level_reduce = _HELevelReduceAccessor(self._param_cache)
 
     # Polynomial-plaintext multiplication accessor
-    self.ptct_mul = HEPtCtMulAccessor(self._param_cache)
+    self._ptct_mul = _HEPtCtMulAccessor(self._param_cache)
 
-    # BSGS matvec accessor. Usage:
-    #   mv = ctx.bsgs_matvec[level, n]        # auto-split n1, n2
-    #   mv = ctx.bsgs_matvec[level, n, n1, n2]
-    #   mv.encode_matrix(W)
-    #   y_ct = mv.mul(ct_in)
-    # Rotation keys for the baby [1..n1-1] and giant [n1, 2n1, ..., (n2-1)n1]
-    # indices must be present in `total_rotation_indices` at init time.
-    self.bsgs_matvec = HEBsgsMatVecAccessor(self)
+    # BSGS matrix-vector accessor: ctx.bsgs_matvec[level, n, n1, n2]
+    self._bsgs_matvec = _BSGSMatVecAccessor(self)
 
-    # Convenience aliases matching the spec
-    self.he_mul_no_relin = self.he_mul
-    self.relin = self.he_mul
+    # One context-owned route to the repository's single bootstrap engine.
+    self._he_bootstrap = _HEBootstrapAccessor(self)
+
+  @property
+  def he_add(self):
+    return self._he_add
+
+  @property
+  def he_sub(self):
+    return self._he_sub
+
+  @property
+  def he_mul(self):
+    return self._he_mul
+
+  @property
+  def he_rot(self):
+    return self._he_rot
+
+  @property
+  def he_rescale(self):
+    return self._he_rescale
+
+  @property
+  def he_level_reduce(self):
+    """Drop modulus limbs without dividing the scale.
+
+    ``ctx.he_level_reduce[src_level, dst_level].level_reduce(ct)`` brings a
+    ciphertext down to meet another for addition. Use ``he_rescale`` instead
+    after a multiplication, where the scale must come down with the moduli.
+    """
+    return self._he_level_reduce
+
+  @property
+  def ptct_mul(self):
+    return self._ptct_mul
+
+  @property
+  def bsgs_matvec(self):
+    return self._bsgs_matvec
+
+  @property
+  def he_bootstrap(self):
+    return self._he_bootstrap
 
   @property
   def max_level(self) -> int:
     if hasattr(self, "_param_cache"):
       return self._param_cache.max_level
     return (len(self.q_towers) - 1) // self.composite_degree
+
+
+__all__ = ['CKKSContext', 'ScalingFactorTooSmall']

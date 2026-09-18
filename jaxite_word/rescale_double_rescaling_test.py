@@ -7,7 +7,7 @@ import rescale
 from absl.testing import absltest
 from absl.testing import parameterized
 
-HERescale = rescale.HERescale
+_HERescaleKernel = rescale._HERescaleKernel
 jax.config.update("jax_enable_x64", True)
 
 
@@ -26,11 +26,13 @@ class RescaleJaxTest(parameterized.TestCase):
     input_shape = in_ct_arr.shape
     degree_layout = (self.r, self.c)
 
-    he_rescale = HERescale(batch=1, num_elements=4, moduli=self.q_towers, r=self.r, c=self.c, degree_layout=degree_layout)
+    he_rescale = _HERescaleKernel(batch=1, num_elements=4, moduli=self.q_towers, r=self.r, c=self.c, degree_layout=degree_layout)
     he_rescale.control_gen(composite_degree=2)
 
     in_data = in_ct_arr.reshape(input_shape[0], input_shape[1], *degree_layout, input_shape[3])
-    result = he_rescale.rescale(in_data).reshape(input_shape[0], input_shape[1], input_shape[2], input_shape[3] - 2)
+    result = he_rescale._rescale_array(in_data).reshape(
+        input_shape[0], input_shape[1], input_shape[2], input_shape[3] - 2
+    )
 
     np.testing.assert_array_equal(result[0], self.expected_output)
 

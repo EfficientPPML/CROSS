@@ -6,8 +6,8 @@ import jax.numpy as jnp
 import jax
 import numpy as np
 import util
-import os
-from profiler import KernelWrapper, Profiler, collect_logs
+from profiler import KernelWrapper, Profiler, collect_module_logs
+from profiler import kernel_perf_setup
 
 
 def _montgomery_kernel(rhs, parameters):
@@ -44,18 +44,13 @@ BATCH_SIZES = [1, 2]#, 4, 8, 16, 32, 64]
 class FiniteFieldPerfTest(parameterized.TestCase):
 
   def setUp(self):
-      self.output_trace_root = os.path.join(os.path.dirname(__file__), "log")
-      self.profiler_config = {
-          "iterations": 1,
-          "save_to_file": True,
-      }
+      super().setUp()
+      self.output_trace_root, self.profiler_config = kernel_perf_setup(__file__)
 
   @classmethod
   def tearDownClass(cls):
       super().tearDownClass()
-      root_dir = os.path.dirname(os.path.abspath(__file__))
-      print(f"Collecting logs from: {root_dir}")
-      collect_logs(root_dir, output_csv_name="finite_field_profiling")
+      collect_module_logs(__file__, "finite_field_profiling")
 
   # @absltest.skip("skip this test for now")
   def test_perf_montgomery(self):
@@ -101,8 +96,7 @@ class FiniteFieldPerfTest(parameterized.TestCase):
             },
         )
     
-    profiler_instance.profile_all_profilers()
-    profiler_instance.post_process_all_profilers()
+    profiler_instance.run()
 
   # @absltest.skip("skip this test for now")
   def test_perf_barrett(self):
@@ -148,8 +142,7 @@ class FiniteFieldPerfTest(parameterized.TestCase):
             },
         )
     
-    profiler_instance.profile_all_profilers()
-    profiler_instance.post_process_all_profilers()
+    profiler_instance.run()
 
   # @absltest.skip("skip this test for now")
   def test_perf_shoup(self):
@@ -201,8 +194,7 @@ class FiniteFieldPerfTest(parameterized.TestCase):
             },
         )
     
-    profiler_instance.profile_all_profilers()
-    profiler_instance.post_process_all_profilers()
+    profiler_instance.run()
 
   # @absltest.skip("skip this test for now")
   def test_perf_bat_lazy(self):
@@ -248,8 +240,7 @@ class FiniteFieldPerfTest(parameterized.TestCase):
             },
         )
     
-    profiler_instance.profile_all_profilers()
-    profiler_instance.post_process_all_profilers()
+    profiler_instance.run()
 
 
 if __name__ == "__main__":

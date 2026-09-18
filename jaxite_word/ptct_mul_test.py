@@ -87,7 +87,6 @@ class PtCtMulTest(parameterized.TestCase):
         }
         ctx = ckks_ctx.CKKSContext(params)
         ctx.program_initialization(
-            total_hemul_levels=ctx.max_level,
             total_rotation_indices=[],
             dnum=self.dnum,
             r=self.r,
@@ -108,12 +107,19 @@ class PtCtMulTest(parameterized.TestCase):
 
         op = ctx.ptct_mul[level]
         pt_ntt = encoded_pt.polynomial[0, 0].reshape(self.r, self.c, num_q).astype(jnp.uint32)
-        op.set_plaintext(pt_ntt)
         if use_bat:
-            op.precompute_bat()
+            # BAT remains a private kernel experiment; the supported facade
+            # operation is the stateless two-Polynomial form below.
+            op._precompute_bat(pt_ntt)
 
-        result_ct = op.mul(encrypted_ct, use_bat=use_bat)
-        result_ct.polynomial = result_ct.polynomial.reshape(1, 2, self.degree, num_q)
+        input_payload = encrypted_ct.polynomial.copy()
+        result_ct = (
+            op._mul_prepared(encrypted_ct, use_bat=True)
+            if use_bat
+            else op.mul(encrypted_ct, encoded_pt)
+        )
+        self.assertIsNot(result_ct, encrypted_ct)
+        np.testing.assert_array_equal(encrypted_ct.polynomial, input_payload)
 
         decrypted = ctx.decrypt(result_ct)
         decoded = ctx.decode(decrypted, is_ntt=False)
@@ -128,6 +134,65 @@ class PtCtMulTest(parameterized.TestCase):
             self.expected_slot_product,
             decimal=3,
         )
+
+    @parameterized.named_parameters(*PTCT_MUL_TEST_CASES)
+    def test_montgomery_matches_barrett_and_decodes(self, use_bat: bool):
+        """Montgomery and Barrett private kernels agree bit-canonically, and the
+        Montgomery result decrypts/decodes to the expected slot products."""
+        import finite_field as ff_context
+        import ptct_mul as ptct_module
+        from polynomial import Polynomial
+
+        ctx = self._build_context()
+        num_q = len(self.q_towers)
+
+        encoded_ct = ctx.encode(self.real_values_input_in1)
+        encoded_pt = ctx.encode(self.real_values_input_in2)
+        encrypted_ct = ctx.encrypt(encoded_ct)
+        ct_data = encrypted_ct.polynomial.reshape(
+            1, 2, self.r, self.c, num_q).astype(jnp.uint64)
+        pt_ntt = encoded_pt.polynomial[0, 0].reshape(
+            self.r, self.c, num_q).astype(jnp.uint64)
+
+        def run(ffcls, data):
+            op = ptct_module._HEPtCtMulKernel(
+                1, self.r, self.c, self.q_towers,
+                finite_field_context=ffcls)
+            if use_bat:
+                op.precompute_plaintext_bat(pt_ntt)
+            else:
+                op.set_plaintext(pt_ntt)
+            ct = Polynomial(
+                {'batch': 1, 'num_elements': 2, 'degree': self.degree,
+                 'num_moduli': num_q, 'precision': 32,
+                 'degree_layout': (self.r, self.c)},
+                {'moduli': self.q_towers, 'finite_field_context': ffcls})
+            ct.polynomial = data
+            return op.mul(ct, use_bat=use_bat).polynomial
+
+        out_barrett = run(ff_context.BarrettContext, ct_data.astype(jnp.uint32))
+
+        mont = ff_context.MontgomeryContext(self.q_towers)
+        out_mont_fmt = run(
+            ff_context.MontgomeryContext,
+            mont.to_computation_format(ct_data).astype(jnp.uint32))
+        out_mont = mont.to_original_format(jnp.asarray(out_mont_fmt, jnp.uint64))
+
+        q_arr = jnp.array(self.q_towers, jnp.uint64)
+        np.testing.assert_array_equal(
+            jnp.asarray(out_barrett, jnp.uint64) % q_arr, out_mont)
+
+        # End-to-end decode of the Montgomery result
+        result_ct = Polynomial(
+            {'batch': 1, 'num_elements': 2, 'degree': self.degree,
+             'num_moduli': num_q, 'precision': 32,
+             'degree_layout': self.degree_layout},
+            {'moduli': self.q_towers})
+        result_ct.polynomial = jnp.asarray(out_mont, jnp.uint32).reshape(
+            1, 2, *self.degree_layout, num_q)
+        decoded = ctx.decode(ctx.decrypt(result_ct), is_ntt=False)
+        np.testing.assert_array_almost_equal(
+            decoded, self.expected_slot_product, decimal=3)
 
 
 if __name__ == "__main__":
