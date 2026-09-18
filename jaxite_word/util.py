@@ -4,9 +4,8 @@ The default input data type is 64 bit integer.
 """
 
 import math
-import operator
 import jax
-import numpy as np
+import jax.sharding as shd
 import re
 import os
 import json
@@ -38,56 +37,28 @@ def _square_like_mesh_shape(device_count: int) -> Tuple[int, int]:
   return 1, device_count
 
 
-def create_sharding(shard_dim=None):
-  """Create default batch and replicated shardings for the current device mesh.
-
-  Args:
-    shard_dim: length of the array axis that will carry the ``('x', 'y')``
-      partition, when known. The mesh is capped to the largest device count
-      that divides it, because a spec naming both mesh axes splits that axis
-      ``x * y`` ways and JAX rejects a partition that does not divide evenly.
-      Without this, an 8-chip host turns a length-4 axis into
-      ``... does not evenly divide the dimension size 4`` while the same code
-      works on a 4-chip host. ``None`` keeps the full device mesh.
-  """
+def create_sharding():
+  """Create default batch and replicated shardings for the current device mesh."""
   available_devices = jax.devices()
   if not available_devices:
     raise RuntimeError("No devices available for sharding test.")
-  device_count = len(available_devices)
-  if shard_dim is not None:
-    if (
-        isinstance(shard_dim, bool)
-        or not isinstance(shard_dim, int)
-        or shard_dim < 1
-    ):
-      raise ValueError(f"shard_dim must be a positive int, got {shard_dim!r}.")
-    device_count = max(
-        count for count in range(1, device_count + 1) if shard_dim % count == 0
-    )
-  if device_count == 8:
+  if len(available_devices) == 8:
     mesh_shape = (2, 4)
-  elif device_count == 4:
+  elif len(available_devices) == 4:
     mesh_shape = (2, 2)
-  elif device_count == 2:
+  elif len(available_devices) == 2:
     mesh_shape = (2, 1)
   else:
-    mesh_shape = _square_like_mesh_shape(len(available_devices))
+    mesh_shape = (1, 1)
 
-  # Auto axis types: XLA infers the sharding of intermediate reshapes.
-  # jax.make_mesh defaults to Explicit as of JAX 0.9, which rejects any
-  # reshape whose output sharding it cannot derive -- including the one
-  # conv_general_dilated's batching rule emits when vmapped over a
-  # sharded batch axis (ntt_mm.matmul_conv_flexible_kernel).
-  mesh = jax.make_mesh(
-      mesh_shape,
-      ('x', 'y'),
-      axis_types=(jax.sharding.AxisType.Auto,) * len(mesh_shape),
-      devices=available_devices[:mesh_shape[0] * mesh_shape[1]],
-  )
-  # Deliberately NOT jax.sharding.set_mesh(mesh): that sets a PROCESS-GLOBAL
-  # mesh that is never restored, and every later jax.pmap in the same
-  # process then fails with a context-mesh mismatch. Callers receive the
-  # mesh and pass it explicitly where they need it.
+  # Auto axes: let JAX propagate sharding through ops whose batching
+  # rules emit reshapes (e.g. vmapped conv_general_dilated, used by
+  # NTTCiphertextShoupContext.ntt — fails in JAX 0.9.x Explicit mode
+  # because _conv_general_dilated_batch_rule folds the vmap axis into
+  # the conv W dim via an unannotated reshape).
+  mesh = jax.make_mesh(mesh_shape, ('x', 'y'),
+                       axis_types=(jax.sharding.AxisType.Auto,) * 2)
+  shd.set_mesh(mesh)
 
   partition_spec = jax.sharding.PartitionSpec
   return mesh, partition_spec
@@ -103,141 +74,12 @@ def is_power_of_two(x: int) -> bool:
   return x > 0 and (x & (x - 1)) == 0
 
 
-def _valid_ntt_parameters(modulus, degree, psi):
-  """Return whether parameters define a radix-2 negacyclic NTT."""
-  return (
-      modulus > 2
-      and is_power_of_two(degree)
-      and math.gcd(degree, modulus) == 1
-      and pow(psi, degree, modulus) == modulus - 1
-  )
-
-
-def _correct_check(moduli=None, degree=None, psi=None):
-  """Return whether inputs fit the exact NumPy host-arithmetic envelope.
-
-  The vectorized NTT and key-generation arithmetic uses ``numpy.uint64``.
-  Keeping every modulus below 2**31 makes all products smaller than 2**62.
-  A supplied degree must be a positive power of two, and a supplied ``psi``
-  must be a primitive negacyclic root for that degree and modulus.
-
-  Unsupported values return ``False`` rather than leaking conversion or
-  modular-arithmetic exceptions to callers performing a dispatch check.
-  """
-
-  try:
-    if moduli is None:
-      checked_moduli = ()
-    else:
-      try:
-        checked_moduli = (operator.index(moduli),)
-      except TypeError:
-        checked_moduli = tuple(operator.index(value) for value in moduli)
-    checked_degree = None if degree is None else operator.index(degree)
-    checked_psi = None if psi is None else operator.index(psi)
-  except (TypeError, ValueError, OverflowError):
-    return False
-
-  if any(modulus <= 2 or modulus >= (1 << 31)
-         for modulus in checked_moduli):
-    return False
-  if checked_degree is not None and (
-      isinstance(degree, bool) or not is_power_of_two(checked_degree)
-  ):
-    return False
-  if checked_psi is None:
-    return True
-  if checked_degree is None or len(checked_moduli) != 1:
-    return False
-
-  return _valid_ntt_parameters(
-      checked_moduli[0], checked_degree, checked_psi
-  )
-
-
 def to_tuple(a):
   """Create to convert numpy array into tuple."""
   try:
     return tuple(to_tuple(i) for i in a)
   except TypeError:
     return a
-
-
-####################################
-# BAT (Basis Aligned Transformation)
-####################################
-
-NUM_BYTES = 4
-BYTE_SHIFTS = jnp.arange(NUM_BYTES, dtype=jnp.uint32) * 8
-
-
-def to_bytes(values):
-  """Bitcast uint32 values to a trailing little-endian byte dimension."""
-  return jax.lax.bitcast_convert_type(
-      jnp.asarray(values, dtype=jnp.uint32), jnp.uint8
-  )
-
-
-def reconstruct(byte_partials):
-  """Reconstruct integer values from trailing byte-position partials."""
-  shifts = BYTE_SHIFTS.reshape(
-      (1,) * (byte_partials.ndim - 1) + (NUM_BYTES,)
-  )
-  return jnp.sum(
-      byte_partials.astype(jnp.uint64) << shifts, axis=-1
-  )
-
-
-def matmul(lhs, rhs, subscripts, *, flatten_lhs_bytes=False):
-  """Run a uint8 BAT einsum and reconstruct uint64 outputs.
-
-  Set ``flatten_lhs_bytes`` when the logical contraction axis combines the
-  input's final modulus and byte axes, as in basis conversion.
-  """
-  lhs = jnp.asarray(lhs, dtype=jnp.uint32)
-  if flatten_lhs_bytes:
-    # Array.view expresses the combined modulus-byte contraction directly and
-    # avoids a separate reshape in StableHLO.
-    lhs_bytes = lhs.view(jnp.uint8)
-  else:
-    # NTT contracts the byte lane separately, so preserve it as a new axis.
-    lhs_bytes = jax.lax.bitcast_convert_type(lhs, jnp.uint8)
-  products = jnp.einsum(
-      subscripts,
-      lhs_bytes,
-      rhs,
-      preferred_element_type=jnp.uint32,
-  )
-  return jnp.sum(
-      products.astype(jnp.uint64) << BYTE_SHIFTS, axis=-1
-  )
-
-
-def shifted_mod_bytes(values, moduli):
-  """Return raw ``(input_byte, *values.shape, output_byte)`` BAT data."""
-  return to_bytes(_shifted_mod_words(values, moduli, jnp))
-
-
-def _shifted_mod_words(values, moduli, array_module):
-  """Shared BAT-control arithmetic for NumPy and JAX array namespaces."""
-  values = array_module.asarray(values, dtype=array_module.uint64)
-  moduli = array_module.asarray(moduli, dtype=array_module.uint64)
-  shifted = array_module.stack(
-      [values << (8 * byte_index) for byte_index in range(NUM_BYTES)],
-      axis=0,
-  )
-  return (shifted % moduli).astype(array_module.uint32)
-
-
-def shifted_mod_bytes_host(values, moduli):
-  """Build static BAT controls on the host without consuming device memory."""
-  words = _shifted_mod_words(values, moduli, np)
-  # Force a little-endian word view so the control format is host-independent
-  # and byte-identical to JAX's uint32 bitcast.
-  words = np.ascontiguousarray(words.astype('<u4', copy=False))
-  return words.view(np.uint8).reshape(
-      words.shape + (NUM_BYTES,)
-  )
 
 
 def slice_first_k_along_axis0(arrays, k):
@@ -380,9 +222,6 @@ def find_generator(q):
 ####################################
 # Parameters Generation
 ####################################
-_root_of_unity_cache = {}
-
-
 def root_of_unity(m: int, q: int) -> int:
     """Canonical primitive m-th root of unity modulo q that **works with NTT**.
 
@@ -396,16 +235,8 @@ def root_of_unity(m: int, q: int) -> int:
     Usage:
       root_of_unity(16, 134219681) # This works with NTT.
       computed_psi = [root_of_unity(m, q) for q in original_modulus]
-
-    The result is deterministic per (m, q) and the candidate scan is O(m)
-    modexps, so it is memoized -- key generation calls this once per tower
-    per sample per key (tens of thousands of identical calls at large N).
     """
-    cached = _root_of_unity_cache.get((m, q))
-    if cached is not None:
-      return cached
-    if m <= 0 or (q - 1) % m != 0:
-      raise ValueError("q-1 must be divisible by positive m")
+    assert (q - 1) % m == 0, "q-1 must be divisible by m"
     # Step 1: multiplicative generator of Z_q^*
     g = find_generator(q)
     # Step 2: raise to (q-1)/m to get an m-th root candidate
@@ -420,11 +251,8 @@ def root_of_unity(m: int, q: int) -> int:
         psi = pow(r, k, q)
         if pow(psi, half, q) == q - 1 and pow(psi, m, q) == 1:
             candidates.append(psi)
-    if not candidates:
-      raise ValueError("No primitive m-th root found")
-    result = min(candidates)
-    _root_of_unity_cache[(m, q)] = result
-    return result
+    assert candidates, "No primitive m-th root found"
+    return min(candidates)
 
 
 def any_primitive_root_of_unity(n, q):
@@ -636,64 +464,6 @@ def find_moduli_ntt(total_number, precision, ntt_length):
     return overall_moduli
 
 
-def _integer(name, value):
-  """Return an exact integer, rejecting booleans and lossy coercions."""
-  if isinstance(value, (bool, np.bool_)):
-    raise TypeError(f"{name} must be an integer")
-  try:
-    return int(operator.index(value))
-  except TypeError as error:
-    raise TypeError(f"{name} must be an integer") from error
-
-
-def _moduli(name, values):
-  try:
-    result = [_integer(f"{name} entries", value) for value in values]
-  except TypeError as error:
-    if isinstance(values, (str, bytes)) or not hasattr(values, "__iter__"):
-      raise TypeError(f"{name} must be an iterable of integers") from error
-    raise
-  if any(value <= 1 for value in result):
-    raise ValueError(f"{name} must contain integers greater than 1")
-  return result
-
-
-def q_partition_products(q_towers, dnum):
-  """Return exact products for consecutive HYBRID Q partitions."""
-  q_towers = _moduli("q_towers", q_towers)
-  dnum = _integer("dnum", dnum)
-  if dnum <= 0:
-    raise ValueError(f"dnum must be positive, got {dnum}")
-  if not q_towers:
-    return []
-  alpha = (len(q_towers) + dnum - 1) // dnum
-  return [
-      math.prod(q_towers[start:start + alpha])
-      for start in range(0, len(q_towers), alpha)
-  ]
-
-
-def validate_barrett_bconv_moduli(q_towers, p_towers, dnum):
-  """Validate static invariants shared by HYBRID BConv implementations."""
-  q_towers = _moduli("q_towers", q_towers)
-  p_towers = _moduli("p_towers", p_towers)
-  dnum = _integer("dnum", dnum)
-  if dnum <= 0:
-    raise ValueError(f"dnum must be positive, got {dnum}")
-  if not q_towers or not p_towers:
-    raise ValueError("q_towers and p_towers must be non-empty")
-  if len(set(q_towers + p_towers)) != len(q_towers) + len(p_towers):
-    raise ValueError("Q and P moduli must be pairwise distinct")
-  if any(modulus >= 1 << 31 for modulus in q_towers + p_towers):
-    raise ValueError("Barrett/BConv requires every modulus < 2^31")
-
-  partitions = q_partition_products(q_towers, dnum)
-  if math.prod(p_towers) < max(partitions):
-    raise ValueError(
-        "P-tower product does not cover the largest Q partition"
-    )
-
-
 def compute_num_p_towers(q_towers, dnum, aux_bits=None):
   """Compute the required number of P-tower primes for HYBRID key-switching.
 
@@ -702,35 +472,49 @@ def compute_num_p_towers(q_towers, dnum, aux_bits=None):
 
       P_product >= max_partition(product of Q-moduli in partition)
 
-  This function computes the number of P-tower primes (each of `aux_bits`
-  size) from the exact bit length of the largest Q partition.
+  This function computes the minimum number of P-tower primes (each of
+  `aux_bits` size) needed to satisfy this constraint.
 
   Matches OpenFHE's EstimateLogP logic (rns-cryptoparameters.cpp:407-466).
 
   Args:
     q_towers: List of Q-tower moduli (integers).
     dnum: Number of key-switch partitions (numLargeDigits / numPartQ).
-    aux_bits: Bit size of each P-tower prime. If None, uses one less than
-        the largest Q-limb storage width, matching OpenFHE's
-        ``registerWordSize - 1`` convention.
+    aux_bits: Bit size of each P-tower prime. If None, uses the bit size
+        of the first Q-tower modulus.
 
   Returns:
     sizeP: Number of P-tower primes required.
   """
-  q_towers = _moduli("q_towers", q_towers)
-  dnum = _integer("dnum", dnum)
-  partitions = q_partition_products(q_towers, dnum)
-  if not partitions:
+  size_q = len(q_towers)
+  if dnum <= 0:
+    raise ValueError(f"dnum must be positive, got {dnum}")
+  if size_q == 0:
     return 0
 
-  if aux_bits is None:
-    aux_bits = max(q.bit_length() for q in q_towers) - 1
-  else:
-    aux_bits = _integer("aux_bits", aux_bits)
-  if aux_bits <= 0:
-    raise ValueError(f"aux_bits must be positive, got {aux_bits}")
+  # Towers per partition (alpha)
+  alpha = (size_q + dnum - 1) // dnum
 
-  return math.ceil(max(partitions).bit_length() / aux_bits)
+  if aux_bits is None:
+    aux_bits = q_towers[0].bit_length()
+
+  # Compute bit sizes of each Q-tower
+  qi_bits = [int(q).bit_length() for q in q_towers]
+
+  # Find the maximum total bit-size across all partitions
+  max_bits = 0
+  num_parts = (size_q + alpha - 1) // alpha
+  for j in range(num_parts):
+    start = j * alpha
+    end = min(start + alpha, size_q)
+    part_bits = sum(qi_bits[start:end])
+    if part_bits > max_bits:
+      max_bits = part_bits
+
+  # Number of P-primes needed: ceil(maxBits / auxBits)
+  # Add 1 for margin (matches OpenFHE's addOne logic)
+  size_p = math.ceil(max_bits / aux_bits) + 1
+  return size_p
 
 
 def generate_p_towers(q_towers, dnum, degree, aux_bits=None):
@@ -746,57 +530,34 @@ def generate_p_towers(q_towers, dnum, degree, aux_bits=None):
     q_towers: List of Q-tower moduli (integers).
     dnum: Number of key-switch partitions.
     degree: Ring polynomial degree (N). Primes must satisfy p ≡ 1 (mod 2N).
-    aux_bits: Bit size of each P-tower prime. If None, uses one less than
-        the largest Q-limb storage width.
+    aux_bits: Bit size of each P-tower prime. If None, uses the bit size
+        of the first Q-tower modulus.
 
   Returns:
     p_towers: List of P-tower primes.
   """
-  q_towers = _moduli("q_towers", q_towers)
-  if not q_towers:
-    raise ValueError("q_towers must be non-empty")
-  if len(set(q_towers)) != len(q_towers):
-    raise ValueError("q_towers must contain pairwise distinct moduli")
-  if any(modulus >= 1 << 31 for modulus in q_towers):
-    raise ValueError("P-tower generation requires every Q modulus < 2^31")
-  dnum = _integer("dnum", dnum)
-  degree = _integer("degree", degree)
-  if degree <= 0 or not is_power_of_two(degree):
-    raise ValueError("degree must be a positive power of two")
   if aux_bits is None:
-    aux_bits = max(q.bit_length() for q in q_towers) - 1
-  else:
-    aux_bits = _integer("aux_bits", aux_bits)
-  if aux_bits <= 0:
-    raise ValueError(f"aux_bits must be positive, got {aux_bits}")
-  if aux_bits > 31:
-    raise ValueError("use at most 31-bit P primes")
+    aux_bits = q_towers[0].bit_length()
 
   size_p = compute_num_p_towers(q_towers, dnum, aux_bits)
-  target_product = max(q_partition_products(q_towers, dnum))
   ntt_length = 2 * degree  # Primes must satisfy p ≡ 1 (mod 2N)
-  q_set = set(q_towers)
+  q_set = set(int(q) for q in q_towers)
 
   # Generate primes: search downward from 2^aux_bits, skip Q-tower primes
   p_towers = []
-  p_product = 1
   limit = 2 ** aux_bits
   k = (limit - 1) // ntt_length
 
-  while (len(p_towers) < size_p or p_product < target_product) and k > 0:
+  while len(p_towers) < size_p and k > 0:
     candidate = k * ntt_length + 1
     if candidate not in q_set and is_prime_deterministic(candidate):
       p_towers.append(candidate)
-      p_product *= candidate
     k -= 1
 
-  if len(p_towers) < size_p or p_product < target_product:
+  if len(p_towers) < size_p:
     raise ValueError(
-        "Could not generate P towers covering the largest Q partition: "
-        f"initial lower-bound estimate {size_p}, found {len(p_towers)}, "
-        f"product(P)={p_product}, required>={target_product}. Try increasing "
-        f"aux_bits (currently {aux_bits})."
-    )
+        f"Could not find enough P-tower primes: need {size_p}, found "
+        f"{len(p_towers)}. Try increasing aux_bits (currently {aux_bits}).")
 
   return p_towers
 
@@ -821,10 +582,9 @@ def gamma_beta_calculation(moduli_list, perf_test=False):
       - betas: An array of beta_i values, one for each modulus in
         `moduli_list[:-1]`.
   """
-  if len(moduli_list) <= 1:
-    raise ValueError("moduli_list must have at least 2 moduli")
   if perf_test:
     # Shapes: gammas: (len(moduli_list)-1,), betas: (len(moduli_list)-1,)
+    assert len(moduli_list) > 1, "moduli_list must have at least 2 moduli"
     gamma_rand = random_parameters(
         (len(moduli_list) - 1,), moduli_list[:-1], dtype=jnp.uint64
     )
@@ -863,40 +623,25 @@ def gamma_beta_calculation(moduli_list, perf_test=False):
 # Random Functions
 ####################################
 def random_batched_ciphertext(shape, modulus_list, dtype=jnp.int32):
-  if not shape or len(modulus_list) != shape[-1]:
-    raise ValueError("modulus_list length must match the final shape dimension")
+  assert len(modulus_list) == shape[-1]
   random_key = jax.random.key(0)
-  if len(shape) == 5:
-    limb_shape = (shape[0], shape[1], shape[2], shape[3], 1)
-    concat_axis = 4
-  elif len(shape) == 4:
-    limb_shape = (shape[0], shape[1], shape[2], 1)
-    concat_axis = 3
-  else:
-    raise ValueError(
-        'random_batched_ciphertext expects rank-4 '
-        '(batch, elements, degree, moduli) or rank-5 '
-        '(batch, elements, r, c, moduli) shape; '
-        f'got {shape}.'
-    )
   return jnp.concatenate(
       [
           jax.random.randint(
               random_key,
-              shape=limb_shape,
+              shape=(shape[0], shape[1], shape[2], 1),
               minval=0,
               maxval=bound,
               dtype=dtype,
           )
           for bound in modulus_list
       ],
-      axis=concat_axis,
+      axis=3,
   )
 
 
 def random_ciphertext(shape, modulus_list, dtype=jnp.int32):
-  if not shape or len(modulus_list) != shape[-1]:
-    raise ValueError("modulus_list length must match the final shape dimension")
+  assert len(modulus_list) == shape[-1]
   random_key = jax.random.key(0)
   return jnp.concatenate(
       [
@@ -1020,7 +765,7 @@ def parse_ciphertext_string(input_str, transpose_last_two=True):
   if transpose_last_two:
     for i in range(len(data)):
       if data[i]:
-        data[i] = [list(x) for x in zip(*data[i], strict=True)]
+        data[i] = [list(x) for x in zip(*data[i])]
 
   return data, global_modulus
 
@@ -1037,36 +782,7 @@ def bit_reverse(x, bits):
   return result
 
 
-_bit_reverse_permutation_cache = {}
-
-
-def _bit_reverse_perm(n):
-  perm = _bit_reverse_permutation_cache.get(n)
-  if perm is None:
-    bits = n.bit_length() - 1
-    perm = [bit_reverse(i, bits) for i in range(n)]
-    _bit_reverse_permutation_cache[n] = perm
-  return perm
-
-
 def bit_reverse_array(in_tower):
-  """Bit-reverse a tower, vectorizing one-dimensional NumPy arrays."""
-  import numpy as _np
-
-  n = len(in_tower)
-  if is_power_of_two(n):
-    if isinstance(in_tower, _np.ndarray) and in_tower.ndim == 1:
-      perm = _np.asarray(_bit_reverse_perm(n), dtype=_np.intp)
-      return in_tower[perm]
-    if (
-        isinstance(in_tower, list)
-        and in_tower
-        and not isinstance(in_tower[0], (list, dict))
-    ):
-      return [in_tower[index] for index in _bit_reverse_perm(n)]
-
-  # Preserve the generic/non-power-of-two behavior for callers outside the
-  # optimized flat-array contract.
   x = copy.deepcopy(in_tower)
   bits = len(x).bit_length() - 1
   for i in range(len(x)):
@@ -1205,167 +921,6 @@ def intt_bit_reverse(a, q, omega):
   return a
 
 
-####################################
-# Vectorized exact NTT fast path (numpy uint64)
-#
-# The pure-Python NTTs below cost ~seconds per transform at degree >= 32768,
-# and key generation runs O(10^4) of them (hours at N=32768, ~day at 65536).
-# For RNS primes q < 2^31 every butterfly product fits uint64 exactly
-# (a*b < 2^62), so the numpy path is bit-identical to the Python path.
-# Tables (bit-reversal permutation, twiddle powers, psi powers) are cached
-# per (n, q, psi).
-####################################
-_numpy_ntt_table_cache = {}
-
-
-def uint64_residues_np(values, modulus):
-  """Return exact canonical residues without narrowing Python integers first.
-
-  NumPy cannot directly cast arbitrary-precision Python integers to uint64.
-  Object arrays therefore have to be reduced with Python's exact modulo before
-  entering the uint64 fast path. Native integer arrays retain a vectorized
-  conversion.
-  """
-  import numpy as _np
-  try:
-    modulus = operator.index(modulus)
-  except TypeError as error:
-    raise ValueError("modulus must be an integer") from error
-  if modulus <= 0 or modulus >= (1 << 64):
-    raise ValueError("modulus must satisfy 0 < modulus < 2**64")
-
-  values_np = _np.asarray(values)
-  if values_np.dtype.kind == "u":
-    return values_np.astype(_np.uint64, copy=False) % _np.uint64(modulus)
-  if (
-      values_np.dtype.kind in ("i", "b")
-      and modulus <= _np.iinfo(_np.int64).max
-  ):
-    return _np.remainder(values_np, modulus).astype(_np.uint64, copy=False)
-
-  values_obj = _np.asarray(values, dtype=object)
-  try:
-    residues = _np.fromiter(
-        (operator.index(value) % modulus for value in values_obj.flat),
-        dtype=_np.uint64,
-        count=values_obj.size,
-    )
-  except (TypeError, ValueError, OverflowError) as error:
-    raise ValueError("values must contain integers") from error
-  return residues.reshape(values_obj.shape)
-
-
-def _ntt_fast_tables(n, q, psi):
-  key = (n, q, psi)
-  t = _numpy_ntt_table_cache.get(key)
-  if t is not None:
-    return t
-  import numpy as _np
-  bits = n.bit_length() - 1
-  rev = _np.array([bit_reverse(i, bits) for i in range(n)], dtype=_np.int64)
-
-  def _powers(base, count):
-    out = _np.zeros(count, dtype=_np.uint64)
-    x = 1
-    for i in range(count):
-      out[i] = x
-      x = x * base % q
-    return out
-
-  psis = _powers(psi, n)
-  psis_inv = _powers(pow(psi, -1, q), n)
-  omega = pow(psi, 2, q)
-
-  fwd = []
-  length = 2
-  while length <= n:
-    w_m = pow(omega, n // length, q)
-    fwd.append(_powers(w_m, length // 2))
-    length *= 2
-
-  inv_root = pow(omega, -1, q)
-  inv = []
-  length = n
-  while length >= 2:
-    w_m = pow(inv_root, n // length, q)
-    inv.append(_powers(w_m, length // 2))
-    length //= 2
-
-  inv_n = pow(n, -1, q)
-  t = (rev, psis, psis_inv, fwd, inv, inv_n)
-  _numpy_ntt_table_cache[key] = t
-  return t
-
-
-def ntt_negacyclic_bit_reverse_np(a, q, psi):
-  """Numpy-container variant of ntt_negacyclic_bit_reverse (q < 2^31 only).
-
-  Identical values to the list-returning function; returns np.uint64 so
-  large-N key generation avoids materializing millions of Python ints per
-  call (the per-rotation-key churn OOMs N=65536 bootstrap otherwise).
-  """
-  import numpy as _np
-  values = _np.asarray(a)
-  if values.ndim != 1:
-    raise ValueError("a must be a one-dimensional integer array")
-  n = len(values)
-  if not _correct_check(moduli=q, degree=n, psi=psi):
-    raise ValueError(
-        "NumPy NTT correctness envelope requires 2 < q < 2**31, a "
-        "power-of-two degree, and a primitive negacyclic root"
-    )
-  q = operator.index(q)
-  psi = operator.index(psi)
-  rev, psis, _, fwd, _, _ = _ntt_fast_tables(n, q, psi)
-  qq = _np.uint64(q)
-  v = (uint64_residues_np(a, q) * psis) % qq  # pre-twist by psi^i
-  v = v[rev]                                           # bit-reversal permute
-  for s, ws in enumerate(fwd):
-    length = 2 << s
-    half = length >> 1
-    v = v.reshape(-1, length)
-    u = v[:, :half]
-    tt = (v[:, half:] * ws) % qq
-    v = _np.concatenate([(u + tt) % qq, (u + qq - tt) % qq], axis=1)
-  return v.reshape(-1)
-
-
-def intt_negacyclic_bit_reverse_np(a, q, psi):
-  """Numpy-container variant of intt_negacyclic_bit_reverse (q < 2^31 only).
-
-  Identical values to the list-returning function; returns np.uint64.
-  """
-  import numpy as _np
-  values = _np.asarray(a)
-  if values.ndim != 1:
-    raise ValueError("a must be a one-dimensional integer array")
-  n = len(values)
-  if not _correct_check(moduli=q, degree=n, psi=psi):
-    raise ValueError(
-        "NumPy inverse NTT correctness envelope requires 2 < q < 2**31, "
-        "a power-of-two degree, and a primitive negacyclic root"
-    )
-  q = operator.index(q)
-  psi = operator.index(psi)
-  rev, _, psis_inv, _, inv, inv_n = _ntt_fast_tables(n, q, psi)
-  qq = _np.uint64(q)
-  v = uint64_residues_np(a, q)
-  length = n
-  for ws in inv:
-    half = length >> 1
-    v = v.reshape(-1, length)
-    u = v[:, :half]
-    w = v[:, half:]
-    top = (u + w) % qq
-    bot = (((u + qq - w) % qq) * ws) % qq
-    v = _np.concatenate([top, bot], axis=1)
-    length >>= 1
-  v = v.reshape(-1)[rev]                       # undo bit-reversal
-  v = (v * _np.uint64(inv_n)) % qq             # divide by n
-  v = (v * psis_inv) % qq                      # post-twist by psi^-i
-  return v
-
-
 def ntt_negacyclic_bit_reverse(a, q, psi):
   """Compute the negacyclic NTT of array a (length n) modulo q.
 
@@ -1380,42 +935,28 @@ def ntt_negacyclic_bit_reverse(a, q, psi):
     cols: Number of columns in the matrix.
 
   Returns:
-    The negacyclic NTT of ``a``. List inputs return Python integers. NumPy
-    inputs return ``uint64`` on the fast path and Python-object arrays on the
-    arbitrary-precision fallback.
+    The negacyclic NTT of a.
 
   Process:
     1. Pre-twist: multiply each coefficient a[i] by psi^i.
     2. Compute the vanilla NTT (for example, using ntt_bit_reverse) with ω =
     psi^2.
   """
-  import numpy as _np
-
   n = len(a)
-  q = operator.index(q)
-  psi = operator.index(psi)
-  return_array = isinstance(a, _np.ndarray)
-  if not _valid_ntt_parameters(q, n, psi):
+  # Check that psi^n = -1 mod q.
+  if pow(psi, n, q) != q - 1:
     raise ValueError(
-        "negacyclic NTT requires q > 2, a power-of-two degree, and a "
-        "primitive 2N-th root psi"
+        "psi is not a valid 2n-th root of unity for negacyclic NTT (psi^n must"
+        " equal -1 mod q)."
     )
 
-  # Vectorized exact fast path; preserve the caller's container contract.
-  if _correct_check(moduli=q, degree=n, psi=psi):
-    result = ntt_negacyclic_bit_reverse_np(a, q, psi)
-    return result if return_array else [int(value) for value in result]
-
-  # Convert NumPy scalars before the arbitrary-precision fallback: otherwise
-  # their fixed-width multiplication can overflow before Python applies % q.
-  values = [operator.index(value) for value in a]
-  a_twisted = [(values[i] * pow(psi, i, q)) % q for i in range(n)]
+  # Pre-twisting: multiply a[i] by psi^i.
+  a_twisted = [(a[i] * pow(psi, i, q)) % q for i in range(n)]
 
   # Compute vanilla NTT using ω = psi².
   omega = pow(psi, 2, q)
 
-  result = ntt_bit_reverse(a_twisted, q, omega)
-  return _np.asarray(result, dtype=object) if return_array else result
+  return ntt_bit_reverse(a_twisted.copy(), q, omega)
 
 
 def intt_negacyclic_bit_reverse(a, q, psi):
@@ -1430,40 +971,21 @@ def intt_negacyclic_bit_reverse(a, q, psi):
           psi^2
           is a primitive n-th root of unity.)
   Returns:
-    The inverse transform. The output container and dtype follow the forward
-    transform contract above.
+    The original input vector (i.e. the inverse transform).
 
   Process:
     1. Compute the inverse vanilla NTT using ω = psi².
     2. Post-twist: multiply the result by psi^(–i) for coefficient index i.
   """
-  import numpy as _np
-
   n = len(a)
-  q = operator.index(q)
-  psi = operator.index(psi)
-  return_array = isinstance(a, _np.ndarray)
-  if not _valid_ntt_parameters(q, n, psi):
-    raise ValueError(
-        "inverse negacyclic NTT requires q > 2, a power-of-two degree, and a "
-        "primitive 2N-th root psi"
-    )
-
-  # Vectorized exact fast path; preserve the caller's container contract.
-  if _correct_check(moduli=q, degree=n, psi=psi):
-    result = intt_negacyclic_bit_reverse_np(a, q, psi)
-    return result if return_array else [int(value) for value in result]
-
   omega = pow(psi, 2, q)
 
   # Compute the inverse vanilla NTT.
-  values = [operator.index(value) for value in a]
-  a_inv = intt_bit_reverse(values, q, omega)
+  a_inv = intt_bit_reverse(a.copy(), q, omega)
 
   # Post-twisting: multiply a_inv[i] by psi^(–i).
   psi_inv = pow(psi, -1, q)
-  result = [(a_inv[i] * pow(psi_inv, i, q)) % q for i in range(n)]
-  return _np.asarray(result, dtype=object) if return_array else result
+  return [(a_inv[i] * pow(psi_inv, i, q)) % q for i in range(n)]
 
 
 ####################################
@@ -1819,33 +1341,3 @@ def compute_bootstrap_chebyshev_coefficients(K, R, degree):
     coeffs[i] *= multFactor
 
   return coeffs.tolist()
-
-
-# ============================================================================
-# D18 bootstrap primes (38 Q-towers, 39 P-towers, 0.024% SF drift)
-#
-# Generated from OpenFHE with firstModSize=61, scalingModSize=60,
-# compositeDegree=2, depth=18. All primes < 2^31 (fits CROSS uint32 NTT).
-# ============================================================================
-
-CROSS_Q_TOWERS = [
-    2147473409, 1073563649, 1073916929, 1073918977, 1073569793,
-    1073579009, 1073907713, 1073600513, 1073605633, 1073620993,
-    1073873921, 1073882113, 1073630209, 1073636353, 1073846273,
-    1073872897, 1073843201, 1073643521, 1073820673, 1073842177,
-    1073651713, 1073652737, 1073815553, 1073655809, 1073658881,
-    1073668097, 1073775617, 1073814529, 1073682433, 1073692673,
-    1073754113, 1073759233, 1073698817, 1073707009, 1073750017,
-    1073753089, 1073732609, 1073738753,
-]
-
-CROSS_P_TOWERS = [
-    1073499137, 1073497601, 1073493505, 1073480193, 1073475073,
-    1073474561, 1073448449, 1073443841, 1073443329, 1073442817,
-    1073440769, 1073435137, 1073431553, 1073430529, 1073412097,
-    1073406977, 1073394689, 1073391617, 1073387009, 1073385473,
-    1073379841, 1073372161, 1073370113, 1073358337, 1073356289,
-    1073354753, 1073350657, 1073344001, 1073330177, 1073525249,
-    1073527297, 1073530369, 1073539073, 1073545729, 1073551361,
-    1073559041, 1073560577, 1073561089, 1073568257,
-]

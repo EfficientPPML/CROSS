@@ -1,23 +1,22 @@
 """A module for operations on test CKKS evaluation kernels including.
 
-- Rescale
+- HEAdd
 """
+# Standard library imports
 import os
+
+# Third-party imports
 import jax
 import jax.numpy as jnp
-
-import profiler
-import rescale
-import util
 from absl.testing import absltest
 from absl.testing import parameterized
 
-HERescale = rescale.HERescale
-Profiler = profiler.Profiler
-KernelWrapper = profiler.KernelWrapper
-collect_logs = profiler.collect_logs
+# Local imports
+import add
+import util
+from profiler import KernelWrapper, Profiler, collect_logs
 
-  # JAX configuration
+# JAX configuration
 jax.config.update("jax_enable_x64", True)
 
 TEST_PARAMS=[
@@ -97,102 +96,16 @@ TEST_PARAMS=[
 
 scaling_factor, encoding_precision, encryption_precision = 2**16, 10, 8
 
-
-def _rescale_kernel(input_array, parameters):
+def _jax_add_kernel(c1, c2, parameters):
   """Kernel wrapper entry point used by KernelWrapper."""
-  he_rescale = parameters["he_rescale"]
-  return he_rescale.rescale(input_array)
+  return add.jax_add(c1, c2, parameters["moduli"])
 
-
-class RescalePerformanceTest(parameterized.TestCase):
-  """A base class for running rescale performance tests."""
+class PerformanceTest(parameterized.TestCase):
+  """A base class for running add tests."""
 
   def __init__(self, *args, **kwargs):
-    super(RescalePerformanceTest, self).__init__(*args, **kwargs)
+    super(PerformanceTest, self).__init__(*args, **kwargs)
     self.random_key = jax.random.key(0)
-
-  def setUp(self):
-    super().setUp()
-    self.output_trace_root = os.path.join(os.path.dirname(__file__), "log")
-    self.profiler_config = {
-        "iterations": 1,
-        "save_to_file": True,
-    }
-
-  @classmethod
-  def tearDownClass(cls):
-    super().tearDownClass()
-    root_dir = os.path.dirname(os.path.abspath(__file__))
-    print(f"Collecting logs from: {root_dir}")
-    collect_logs(root_dir, output_csv_name="rescale_profiling")
-
-  def _create_kernel_wrapper(
-      self, kernel_name, he_rescale, batch, elements, degree_layout, num_moduli
-  ):
-    input_shape = (batch, elements, *degree_layout, num_moduli)
-    return KernelWrapper(
-        kernel_name=kernel_name,
-        function_to_wrap=_rescale_kernel,
-        input_structs=[(input_shape, jnp.uint32)],
-        parameters={"he_rescale": he_rescale},
-    )
-
-  @absltest.skip("test single implementation")
-  @parameterized.named_parameters(*TEST_PARAMS)
-  def test_rescale(
-      self, degree, r, c, limbs, dnum, moduli, extend_moduli, perf_test
-  ):
-    profiler_instance = Profiler(
-        output_trace_path=self.output_trace_root,
-        profile_naming=f"rescale_N{degree}",
-        configuration=self.profiler_config,
-    )
-    elements = 2
-    batch_list = [1]
-    degree_layout = (r, c)
-    for batch in batch_list:
-      print(f"Running for batch size: {batch}")
-
-      he_rescale = HERescale(
-          batch=batch,
-          num_elements=elements,
-          moduli=moduli,
-          r=r,
-          c=c,
-          degree_layout=degree_layout,
-      )
-      he_rescale.control_gen(perf_test=perf_test)
-
-      test_case_name = self._testMethodName
-
-      kernel_wrapper = self._create_kernel_wrapper(
-          kernel_name=f"{test_case_name}_B{batch}",
-          he_rescale=he_rescale,
-          batch=batch,
-          elements=elements,
-          degree_layout=degree_layout,
-          num_moduli=len(moduli),
-      )
-
-      profiler_instance.add_profile(
-          name=f"{test_case_name}_B{batch}",
-          kernel_wrapper=kernel_wrapper,
-          kernel_setting_cols={
-              "degree": degree,
-              "num_limbs": len(moduli),
-              "r": r,
-              "c": c,
-              "batch": batch,
-              "num_elements": elements,
-          },
-      )
-
-    profiler_instance.profile_all_profilers()
-    profiler_instance.post_process_all_profilers()
-
-
-class RescaleShardedPerformanceTest(parameterized.TestCase):
-  """Profiles Rescale with sharding across the batch dimension."""
 
   def setUp(self):
     super().setUp()
@@ -208,48 +121,106 @@ class RescaleShardedPerformanceTest(parameterized.TestCase):
     # Call collect_logs at the end of the test class execution
     root_dir = os.path.dirname(os.path.abspath(__file__))
     print(f"Collecting logs from: {root_dir}")
-    collect_logs(root_dir, output_csv_name="rescale_profiling")
+    collect_logs(root_dir, output_csv_name="add_profiling")
 
-  def _create_sharded_kernel_wrapper(
-      self,
-      kernel_name,
-      he_rescale,
-      batch,
-      elements,
-      degree_layout,
-      num_moduli,
-      mesh,
-      batch_sharding_input,
-      batch_sharding_output,
-  ):
-    input_shape = (batch, elements, *degree_layout, num_moduli)
+  def _create_kernel_wrapper(self, kernel_name, batch, degree, moduli):
+    input_shape = (batch, len(moduli), degree)
     return KernelWrapper(
         kernel_name=kernel_name,
-        function_to_wrap=_rescale_kernel,
-        input_structs=[(input_shape, jnp.uint32)],
-        parameters={"he_rescale": he_rescale},
-        mesh=mesh,
-        input_shardings=(batch_sharding_input,),
-        output_sharding=batch_sharding_output,
-        enable_sharding=True,
+        function_to_wrap=_jax_add_kernel,
+        input_structs=[
+            (input_shape, jnp.uint32),
+            (input_shape, jnp.uint32)
+        ],
+        parameters={"moduli": jnp.array(moduli, dtype=jnp.uint32)},
     )
 
   # @absltest.skip("test single implementation")
   @parameterized.named_parameters(*TEST_PARAMS)
-  def test_rescale_sharded(
-      self, degree, r, c, limbs, dnum, moduli, extend_moduli, perf_test
-  ):
+  def test_jax_add(self, degree, r, c, limbs, dnum, moduli, extend_moduli, perf_test):
+      """Test adding two ciphertexts."""
+      print("generate data")
+
+      profiler_instance = Profiler(
+          output_trace_path=self.output_trace_root,
+          profile_naming=f"{self._testMethodName}_N{degree}",
+          configuration=self.profiler_config,
+      )
+
+      # Using original batch sizes
+      for batch in [1, 8, 16, 32]:
+        print(f"Running for batch size: {batch}")
+
+        kernel_name = f"{self._testMethodName}_b{batch}"
+
+        kernel_wrapper = self._create_kernel_wrapper(
+            kernel_name=kernel_name,
+            batch=batch,
+            degree=degree,
+            moduli=moduli
+        )
+
+        profiler_instance.add_profile(
+            name=kernel_name,
+            kernel_wrapper=kernel_wrapper,
+            kernel_setting_cols={
+                "degree": degree,
+                "num_limbs": limbs,
+                "r": r,
+                "c": c,
+                "batch": batch,
+            },
+        )
+
+      profiler_instance.profile_all_profilers()
+      profiler_instance.post_process_all_profilers()
+
+
+class BatchDimensionShardingTest(parameterized.TestCase):
+  """Profiles HEAdd contexts with sharding across the batch dimension."""
+
+  def setUp(self):
+    super().setUp()
+    self.output_trace_root = os.path.join(os.path.dirname(__file__), "log")
+    self.profiler_config = {
+        "iterations": 1,
+        "save_to_file": True,
+    }
+
+  @classmethod
+  def tearDownClass(cls):
+    super().tearDownClass()
+    # Call collect_logs at the end of the test class execution
+    root_dir = os.path.dirname(os.path.abspath(__file__))
+    print(f"Collecting logs from: {root_dir}")
+    collect_logs(root_dir, output_csv_name="add_profiling")
+
+  def _create_sharded_kernel_wrapper(self, kernel_name, batch, degree, moduli, mesh, batch_sharding):
+    input_shape = (batch, len(moduli), degree)
+    return KernelWrapper(
+        kernel_name=kernel_name,
+        function_to_wrap=_jax_add_kernel,
+        input_structs=[
+            (input_shape, jnp.uint32),
+            (input_shape, jnp.uint32)
+        ],
+        parameters={"moduli": jnp.array(moduli, dtype=jnp.uint32)},
+        mesh=mesh,
+        input_shardings=(batch_sharding, batch_sharding),
+        output_sharding=batch_sharding,
+        enable_sharding=True,
+    )
+
+  @parameterized.named_parameters(*TEST_PARAMS)
+  def test_jax_add_sharded(self, degree, r, c, limbs, dnum, moduli, extend_moduli, perf_test):
     try:
       mesh, partition_spec = util.create_sharding()
       axis_names = mesh.axis_names
       batch_partition = axis_names if len(axis_names) > 1 else axis_names[0]
-
-      # Input shape: (Batch, Elements, Degree, Moduli)
-      batch_sharding_input = jax.sharding.NamedSharding(
+      # Input shape is (batch, moduli, degree), so partition on axis 0
+      batch_sharding = jax.sharding.NamedSharding(
           mesh,
-          partition_spec(
-              batch_partition,
-          ),
+          partition_spec(batch_partition, None, None),
       )
     except RuntimeError as exc:
       self.skipTest(str(exc))
@@ -262,47 +233,32 @@ class RescaleShardedPerformanceTest(parameterized.TestCase):
         configuration=profiler_config,
     )
 
-    elements = 2
-    degree_layout = (r, c)
     num_devices = jax.device_count()
     batch_list = [num_devices]
+
     for batch in batch_list:
-      print(f"Running for batch size: {batch}")
+      print(f"Running sharded for batch size: {batch}")
 
-      he_rescale = HERescale(
-          batch=batch,
-          num_elements=elements,
-          moduli=moduli,
-          r=r,
-          c=c,
-          degree_layout=degree_layout,
-      )
-      he_rescale.control_gen(perf_test=perf_test)
-
-      test_case_name = self._testMethodName
+      kernel_name = f"{self._testMethodName}_b{batch}"
 
       kernel_wrapper = self._create_sharded_kernel_wrapper(
-          kernel_name=f"{test_case_name}_B{batch}",
-          he_rescale=he_rescale,
+          kernel_name=kernel_name,
           batch=batch,
-          elements=elements,
-          degree_layout=degree_layout,
-          num_moduli=len(moduli),
+          degree=degree,
+          moduli=moduli,
           mesh=mesh,
-          batch_sharding_input=batch_sharding_input,
-          batch_sharding_output=batch_sharding_input,
+          batch_sharding=batch_sharding
       )
 
       profiler_instance.add_profile(
-          name=f"{test_case_name}_B{batch}",
+          name=kernel_name,
           kernel_wrapper=kernel_wrapper,
           kernel_setting_cols={
               "degree": degree,
-              "num_limbs": len(moduli),
+              "num_limbs": limbs,
               "r": r,
               "c": c,
               "batch": batch,
-              "num_elements": elements,
               "sharding": "batch",
           },
       )

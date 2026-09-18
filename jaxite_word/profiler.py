@@ -10,24 +10,6 @@ import gzip
 import statistics
 
 
-def require_tpu(test_case, name):
-    """Skip a perf test unless the default JAX backend is a TPU."""
-    if jax.devices()[0].platform != "tpu":
-        test_case.skipTest(f"{name} perf tests target TPU; found {jax.devices()}")
-
-
-def kernel_perf_setup(module_file, *, iterations=1, enable_sharding=False):
-    """Return the standard trace directory and profiler configuration."""
-    return (
-        os.path.join(os.path.dirname(module_file), "log"),
-        {
-            "iterations": iterations,
-            "save_to_file": True,
-            "enable_sharding": enable_sharding,
-        },
-    )
-
-
 class DataFrameGenerator:
     """A utility class for building pandas DataFrames from column data."""
 
@@ -287,9 +269,8 @@ def list_add(list1: List[Any], list2: List[Any]) -> List[Any]:
     Returns:
         List of the sum of the two lists
     """
-    if len(list1) != len(list2):
-        raise ValueError("The two lists must have the same length")
-    return [e1 + e2 for e1, e2 in zip(list1, list2, strict=True)]
+    assert len(list1) == len(list2), "The two lists must have the same length"
+    return [e1 + e2 for e1, e2 in zip(list1, list2)]
 
 
 
@@ -301,12 +282,12 @@ class KernelWrapper:
                  mesh: Optional[jax.sharding.Mesh] = None,
                  input_shardings: Optional[Tuple[jax.sharding.Sharding, ...]] = None,
                  output_sharding: Optional[jax.sharding.Sharding] = None,
-                 parameters: Optional[Dict[str, Any]] = None,
+                 parameters: Optional[Dict[str, Any]] = {},
                  enable_sharding: bool = False):
         self.kernel_name = kernel_name
         self.callable_function = function_to_wrap
         self.input_structs = input_structs
-        self.parameters = {} if parameters is None else parameters
+        self.parameters = parameters
         self.mesh = mesh
         self.input_shardings = input_shardings
         self.output_sharding = output_sharding
@@ -321,9 +302,7 @@ class KernelWrapper:
     def _compile(self):
         jax_input_structs = []
         if self.enable_sharding and self.input_shardings:
-            for (shape, dtype), sharding in zip(
-                self.input_structs, self.input_shardings, strict=True
-            ):
+            for (shape, dtype), sharding in zip(self.input_structs, self.input_shardings):
                 jax_input_structs.append(jax.ShapeDtypeStruct(shape, dtype, sharding=sharding))
         else:
             for shape, dtype in self.input_structs:
@@ -350,8 +329,7 @@ class KernelWrapper:
         self.jit_compiled_function = self.jit_lower.compile()
 
     def get_compiled_function(self) -> Callable[..., jnp.ndarray]:
-        if self.jit_compiled_function is None:
-            raise RuntimeError("Kernel not compiled")
+        assert self.jit_compiled_function is not None, "Kernel not compiled"
         if self.enable_sharding and self.mesh:
             def compiled_with_mesh(*jax_array_inputs):
                 with self.mesh:
@@ -368,12 +346,7 @@ class KernelWrapper:
     def shard_inputs(self, input_arrays: List[jnp.ndarray]) -> List[jnp.ndarray]:
         """Place inputs on the provided sharding."""
         if self.enable_sharding and self.input_shardings:
-             return [
-                 jax.device_put(arr, sharding)
-                 for arr, sharding in zip(
-                     input_arrays, self.input_shardings, strict=True
-                 )
-             ]
+             return [jax.device_put(arr, sharding) for arr, sharding in zip(input_arrays, self.input_shardings)]
         return input_arrays
 
 
@@ -398,12 +371,7 @@ class Profiler:
         # Storage for results
         self.storage_file = os.path.join(self.profile_dir, f"{self.profiler_name}_results.csv")
 
-    def add_profile(
-        self,
-        name: str,
-        kernel_wrapper: KernelWrapper,
-        kernel_setting_cols: Optional[Dict[str, Any]] = None,
-    ):
+    def add_profile(self, name: str, kernel_wrapper: KernelWrapper, kernel_setting_cols: Dict[str, Any] = {}):
         if name in self.profile_name_list:
              raise ValueError(f"Profiler name {name} already exists")
 
@@ -416,9 +384,7 @@ class Profiler:
         self.profiles.append({
             "name": name,
             "wrapper": kernel_wrapper,
-            "settings": (
-                {} if kernel_setting_cols is None else kernel_setting_cols
-            ),
+            "settings": kernel_setting_cols,
             "folder": profile_folder,
             "failed": False,
             "trace_events": None,
@@ -471,11 +437,6 @@ class Profiler:
             except Exception as e:
                 print(f"Error profiling {profile['name']}:\n {e}")
                 profile['failed'] = True
-
-    def run(self):
-        """Profile and post-process every registered kernel."""
-        self.profile_all_profilers()
-        self.post_process_all_profilers()
 
     def _parse_json_trace(self, profile):
         trace_parser = TraceParser(profile['folder'])
@@ -550,13 +511,8 @@ class Profiler:
             profile['filtered_events'] = merge_filtered_events_by_name(filtered_events_list)
 
         elif "TPU" in device_kind:
-            # Hard-coded TPU PID = 3 — corresponds to "TPU:0" in the
-            # XSpace trace event stream produced by jax.profiler. Holds
-            # for current TPUv6e setups; on multi-host or alternate
-            # device topologies the right PID would need to be looked
-            # up dynamically from `metadata.devices` instead.
             for event in trace_events:
-                if "pid" not in event.keys() or event['pid'] != 3:
+                if "pid" not in event.keys() or event['pid'] != 3: # ToDo: change it into automatic PID detection based on "TPU:0".
                     continue
                 if "name" in event.keys() and "compiled_kernel_function" in event['name'] and "args" in event.keys():
                     filtered_events_list.append(event)
@@ -673,25 +629,11 @@ class Profiler:
 
     def write_results(self):
         storage_dataframe_generator = self.get_profiling_dataframe_generator_all_profilers()
-        frame = storage_dataframe_generator.to_dataframe()
-        if os.path.exists(self.storage_file):
-            # Profiles that share one results file can carry different setting
-            # columns (a sharded run adds "sharding", for example). Appending
-            # rows under the header written by the first profile misaligns
-            # every later row, so merge on the union of columns and rewrite.
-            try:
-                existing = pd.read_csv(self.storage_file)
-                frame = pd.concat([existing, frame], ignore_index=True, sort=False)
-            except (pd.errors.EmptyDataError, pd.errors.ParserError, OSError) as exc:
-                # Never discard measurements: keep the unparseable file under a
-                # side name and start a fresh, consistent one.
-                index = 1
-                while os.path.exists(f"{self.storage_file}.unmerged-{index}.csv"):
-                    index += 1
-                aside = f"{self.storage_file}.unmerged-{index}.csv"
-                os.replace(self.storage_file, aside)
-                print(f"Could not merge existing rows into {self.storage_file} ({exc}); moved them to {aside}")
-        frame.to_csv(self.storage_file, index=False)
+        # Check if file exists to determine if we need to write header
+        file_exists = os.path.exists(self.storage_file)
+        mode = 'a' if file_exists else 'w'
+        header = not file_exists
+        storage_dataframe_generator.to_dataframe().to_csv(self.storage_file, mode=mode, header=header, index=False)
         print(storage_dataframe_generator.to_dataframe().to_csv()) # Need to see the content of the file in terminal as Google does not have file system
         print(f"Results written to: {self.storage_file}")
 
@@ -765,13 +707,3 @@ def collect_logs(root_dir=".", output_csv_name="all_logs_collected"):
 
     except Exception as e:
         print(f"Error writing output file: {e}")
-
-
-def collect_module_logs(module_file, output_csv_name, *, tpu_only=False):
-    """Collect profiler CSVs rooted beside a perf-test module."""
-    if tpu_only and jax.devices()[0].platform != "tpu":
-        print(f"Skipping {output_csv_name} log collection: TPU is required.")
-        return
-    collect_logs(
-        os.path.dirname(module_file), output_csv_name=output_csv_name
-    )

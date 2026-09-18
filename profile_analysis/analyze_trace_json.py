@@ -162,7 +162,7 @@ def analyze_trace_json(filename):
                 print(f"  - {sub}: {sub_time:.4f} us ({sub_percent:.2f}%)")
 
 if __name__ == "__main__":
-    filename = "herot_trace_filter.json"
+    filename = "/home/jianming/work/FHE/CROSS/log/CROSS_v3/log_v6e8/herot_trace_filter.json"
     if len(sys.argv) > 1:
         filename = sys.argv[1]
     analyze_trace_json(filename)

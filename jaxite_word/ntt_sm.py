@@ -5,11 +5,32 @@ import finite_field as ff_context
 import jax
 import jax.numpy as jnp
 
+########################
+# Common Functions
+########################
+def matmul_bat_einsum(lhs: jax.Array, rhs: jax.Array, subscripts: str):
+    """Basis Aligned Transformation (BAT) based matrix multiplication
+
+    Args:
+        lhs (jax.Array): input
+        rhs (jax.Array): twiddle factor matrix
+        subscripts (str): einsum subscripts
+
+    Returns:
+        jax.Array: result
+    """
+    #preprocess
+    lhs = jax.lax.bitcast_convert_type(lhs, new_dtype=jnp.uint8)
+    shift_factors = jnp.array([0, 8, 16, 24], dtype=jnp.uint32)
+
+    #computation
+    i8_products = jnp.einsum(subscripts, lhs, rhs, preferred_element_type=jnp.uint32)
+    return jnp.sum(i8_products.astype(jnp.uint64) << shift_factors, axis=(-1,))
+
+
 def matmul_conv_flexible_kernel(x: jnp.ndarray, y: jnp.ndarray, subscripts: tuple[str, str, str]) -> jnp.ndarray:
-    if x.dtype != jnp.uint32 or y.dtype != jnp.uint32:
-        raise TypeError(
-            f'matmul operands must both be uint32, got {x.dtype} and {y.dtype}'
-        )
+    assert x.dtype == jnp.uint32
+    assert y.dtype == jnp.uint32
 
     lhs: jax.Array = jax.lax.bitcast_convert_type(x, new_dtype=jnp.uint8)  # bnmp
     rhs: jax.Array = jax.lax.bitcast_convert_type(y, new_dtype=jnp.uint8)  # nk1q
@@ -109,14 +130,11 @@ class NTTContextBase():
 
         self.moduli = moduli
         self.parameters = parameters
-        if self.moduli >= 2**31:
-            raise ValueError("moduli must be less than 2**31")
+        assert self.moduli < 2**31, "moduli must be less than 2**32"
         self.r = parameters.get("r", 0)
         self.c = parameters.get("c", 0)
-        if self.r <= 0 or self.c <= 0:
-            raise ValueError(
-                f'r and c must be positive, got r={self.r}, c={self.c}'
-            )
+        assert self.r != 0, "r must be non-zero"
+        assert self.c != 0, "c must be non-zero"
         self.transform_length = self.r * self.c
         self.psi = util.root_of_unity(2 * self.transform_length, self.moduli)
         self.omega = (self.psi ** 2) % self.moduli
@@ -194,9 +212,14 @@ class NTTContextBase():
         return self.ff_ctx.to_original_format(a.astype(jnp.uint64)).astype(jnp.uint32)
 
     def basis_aligned_transformation(self, matrix: np.ndarray):
-        return util.shifted_mod_bytes_host(
-            matrix, self.moduli
-        ).transpose(1, 0, 2, 3)
+        n_row, n_col = matrix.shape # might not be the same as self.r and self.c
+        matrix_u64 = matrix.astype(np.uint64)
+        matrix_u64_byteshifted = np.array([matrix_u64 << (8 * byte_idx) for byte_idx in range(self.num_bytes)], dtype=np.uint64)
+        # shape is (4, rows, cols)
+        matrix_u64_byteshifted_mod_modulus = (matrix_u64_byteshifted % self.moduli).astype(np.uint32)
+        # shape is (4, rows, cols, bytes=4)
+        matrix_u8 = jax.lax.bitcast_convert_type(matrix_u64_byteshifted_mod_modulus, jnp.uint8).transpose(1,0,2,3)
+        return matrix_u8
 
     def memory_aligned_transformation(self):
       """Memory Aligned Transformation (MAT)
@@ -235,8 +258,7 @@ class NTTContextBase():
         Returns:
             The NTT result.
         """
-        if len(x) != self.transform_length:
-            raise ValueError("x must have length transform_length")
+        assert len(x) == self.transform_length, "x must have length transform_length"
         twist_factor = self.twist_factor
         tf_step1 = self.ntt_tf_step1.astype(np.uint64)
         step2 = self.ntt_tf_step2.astype(np.uint64)
@@ -260,8 +282,7 @@ class NTTContextBase():
         Returns:
             The Inverse NTT result.
         """
-        if len(x) != self.transform_length:
-            raise ValueError("x must have length transform_length")
+        assert len(x) == self.transform_length, "x must have length transform_length"
         tf_step1 = self.intt_tf_step1.astype(np.uint64)
         step2 = self.intt_tf_step2.astype(np.uint64)
         tf_step3 = self.intt_tf_step3.astype(np.uint64)
@@ -299,11 +320,11 @@ class NTTContextBase():
             - is u32 array of shape (B, R, C)
             - output
         """
-        result_step1 = util.matmul(v, self.ntt_tf_bat_mat_comp_step1, "brcq,zqrp->bzcp")
+        result_step1 = matmul_bat_einsum(v, self.ntt_tf_bat_mat_comp_step1, "brcq,zqrp->bzcp")
         result_step1_reduced = self.ff_ctx.modular_reduction(result_step1)
         result_step2 = jnp.multiply(result_step1_reduced.astype(jnp.uint64), self.ntt_tf_mat_comp_step2)
         result_step2_reduced = self.ff_ctx.modular_reduction(result_step2)
-        result_step3 = util.matmul(result_step2_reduced, self.ntt_tf_bat_mat_comp_step3, "brcq,cqnp->brnp")
+        result_step3 = matmul_bat_einsum(result_step2_reduced, self.ntt_tf_bat_mat_comp_step3, "brcq,cqnp->brnp")
         result_step3_reduced = self.ff_ctx.modular_reduction(result_step3)
         return result_step3_reduced
 
@@ -326,11 +347,11 @@ class NTTContextBase():
             - is u32 array of shape (B, R, C)
             - output
         """
-        result_step1 = util.matmul(v, self.intt_tf_bat_mat_comp_step1, "brcq,cqlp->brlp")
+        result_step1 = matmul_bat_einsum(v, self.intt_tf_bat_mat_comp_step1, "brcq,cqlp->brlp")
         result_step1_reduced = self.ff_ctx.modular_reduction(result_step1)
         result_step2 = jnp.multiply(result_step1_reduced.astype(jnp.uint64), self.intt_tf_mat_comp_step2)
         result_step2_reduced = self.ff_ctx.modular_reduction(result_step2)
-        result_step3 = util.matmul(result_step2_reduced, self.intt_tf_bat_mat_comp_step3, "brcq,lqrp->blcp")
+        result_step3 = matmul_bat_einsum(result_step2_reduced, self.intt_tf_bat_mat_comp_step3, "brcq,lqrp->blcp")
         result_step3_reduced = self.ff_ctx.modular_reduction(result_step3)
         return result_step3_reduced
 
@@ -340,12 +361,8 @@ class NTTBarrettContext(NTTContextBase):
         super().__init__(moduli, parameters)
         if type(self.moduli) is int:
             self.moduli = [self.moduli]
-        if self.ff_ctx is None:
-            raise ValueError("finite_field_context must be provided")
-        if self.moduli != self.ff_ctx.moduli:
-            raise ValueError(
-                "moduli must be the same as the moduli of the finite_field_context"
-            )
+        assert self.ff_ctx is not None, "finite_field_context must be provided"
+        assert self.moduli == self.ff_ctx.moduli, "moduli must be the same as the moduli of the finite_field_context"
 
 
 class NTTMontgomeryContext(NTTContextBase):
@@ -353,12 +370,8 @@ class NTTMontgomeryContext(NTTContextBase):
         super().__init__(moduli, parameters)
         if type(self.moduli) is int:
             self.moduli = [self.moduli]
-        if self.ff_ctx is None:
-            raise ValueError("finite_field_context must be provided")
-        if self.moduli != self.ff_ctx.moduli:
-            raise ValueError(
-                "moduli must be the same as the moduli of the finite_field_context"
-            )
+        assert self.ff_ctx is not None, "finite_field_context must be provided"
+        assert self.moduli == self.ff_ctx.moduli, "moduli must be the same as the moduli of the finite_field_context"
 
 
 class NTTBATLazyContext(NTTContextBase):
@@ -366,12 +379,8 @@ class NTTBATLazyContext(NTTContextBase):
         super().__init__(moduli, parameters)
         if type(self.moduli) is int:
             self.moduli = [self.moduli]
-        if self.ff_ctx is None:
-            raise ValueError("finite_field_context must be provided")
-        if self.moduli != self.ff_ctx.moduli:
-            raise ValueError(
-                "moduli must be the same as the moduli of the finite_field_context"
-            )
+        assert self.ff_ctx is not None, "finite_field_context must be provided"
+        assert self.moduli == self.ff_ctx.moduli, "moduli must be the same as the moduli of the finite_field_context"
         self.ff_ctx_full = ff_context.BarrettContext(moduli)
 
     ########################
@@ -396,11 +405,11 @@ class NTTBATLazyContext(NTTContextBase):
             - is u32 array of shape (B, R, C)
             - output
         """
-        result_step1 = util.matmul(v, self.ntt_tf_bat_mat_comp_step1, "brcq,zqrp->bzcp")
+        result_step1 = matmul_bat_einsum(v, self.ntt_tf_bat_mat_comp_step1, "brcq,zqrp->bzcp")
         result_step1_reduced = self.ff_ctx.modular_reduction(result_step1)
         result_step2 = jnp.multiply(result_step1_reduced.astype(jnp.uint64), self.ntt_tf_mat_comp_step2)
         result_step2_reduced = self.ff_ctx_full.modular_reduction(result_step2)
-        result_step3 = util.matmul(result_step2_reduced, self.ntt_tf_bat_mat_comp_step3, "brcq,cqnp->brnp")
+        result_step3 = matmul_bat_einsum(result_step2_reduced, self.ntt_tf_bat_mat_comp_step3, "brcq,cqnp->brnp")
         result_step3_reduced = self.ff_ctx_full.modular_reduction(result_step3)
         return result_step3_reduced
 
@@ -423,11 +432,11 @@ class NTTBATLazyContext(NTTContextBase):
             - is u32 array of shape (B, R, C)
             - output
         """
-        result_step1 = util.matmul(v, self.intt_tf_bat_mat_comp_step1, "brcq,cqlp->brlp")
+        result_step1 = matmul_bat_einsum(v, self.intt_tf_bat_mat_comp_step1, "brcq,cqlp->brlp")
         result_step1_reduced = self.ff_ctx.modular_reduction(result_step1)
         result_step2 = jnp.multiply(result_step1_reduced.astype(jnp.uint64), self.intt_tf_mat_comp_step2)
         result_step2_reduced = self.ff_ctx_full.modular_reduction(result_step2)
-        result_step3 = util.matmul(result_step2_reduced, self.intt_tf_bat_mat_comp_step3, "brcq,lqrp->blcp")
+        result_step3 = matmul_bat_einsum(result_step2_reduced, self.intt_tf_bat_mat_comp_step3, "brcq,lqrp->blcp")
         result_step3_reduced = self.ff_ctx_full.modular_reduction(result_step3)
         return result_step3_reduced
 
@@ -441,12 +450,8 @@ class NTTShoupContext(NTTContextBase):
         super().__init__(moduli, parameters)
         if type(self.moduli) is int:
             self.moduli = [self.moduli]
-        if self.ff_ctx is None:
-            raise ValueError("finite_field_context must be provided")
-        if self.moduli != self.ff_ctx.moduli:
-            raise ValueError(
-                "moduli must be the same as the moduli of the finite_field_context"
-            )
+        assert self.ff_ctx is not None, "finite_field_context must be provided"
+        assert self.moduli == self.ff_ctx.moduli, "moduli must be the same as the moduli of the finite_field_context"
         self.ntt_tf_mat_step1 = self.to_computation_format(self.ntt_tf_mat_step1).astype(jnp.uint32)
         self.ntt_tf_mat_step2 = self.to_computation_format(self.ntt_tf_mat_step2).astype(jnp.uint64)
         self.ntt_tf_mat_step3 = self.to_computation_format(self.ntt_tf_mat_step3).astype(jnp.uint32)

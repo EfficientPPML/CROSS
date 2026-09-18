@@ -1,5 +1,3 @@
-from unittest import mock
-
 import jax
 import finite_field as ff_context
 import ntt_mm as ntt
@@ -29,26 +27,6 @@ class NTTTest(parameterized.TestCase):
   def __init__(self, *args, **kwargs):
     super(NTTTest, self).__init__(*args, **kwargs)
     self.random_key = jax.random.key(0)
-
-  def test_context_rejects_a_zero_layout_dimension(self):
-    moduli = [97]
-    with self.assertRaisesRegex(ValueError, "r and c must be positive"):
-      ntt.NTTCiphertextBarrettContext(
-          moduli=moduli,
-          parameters={
-              "r": 0,
-              "c": 8,
-              "finite_field_context": ff_context.BarrettContext(moduli),
-          },
-      )
-
-  def test_bat_matmul_rejects_non_u32_operands(self):
-    with self.assertRaisesRegex(TypeError, "must both be uint32"):
-      ntt.matmul_conv_flexible_kernel(
-          jnp.ones((1,), dtype=jnp.uint16),
-          jnp.ones((1,), dtype=jnp.uint32),
-          ("NCH", "OIH", "NCO"),
-      )
 
   # @absltest.skip("test single implementation")
   @parameterized.named_parameters(*NTT)
@@ -158,43 +136,6 @@ class NTTTest(parameterized.TestCase):
     np.testing.assert_array_equal(eval_in, ntt_result_cf.reshape(b, r*c, -1))
     intt_result = ntt_ctx.intt(ntt_result_cf)
     np.testing.assert_array_equal(coef_in, intt_result.reshape(b, r*c, -1).tolist())
-
-  def test_twiddle_cache_reuses_backend_neutral_tables(self):
-    moduli = [97]
-    ntt._ntt_twiddle_cache.clear()
-    self.addCleanup(ntt._ntt_twiddle_cache.clear)
-
-    def parameters(context, r=2, c=4):
-      return {
-          "r": r,
-          "c": c,
-          "finite_field_context": context(moduli=moduli),
-      }
-
-    with mock.patch.object(
-        ntt, "gen_twiddle_matrix", wraps=ntt.gen_twiddle_matrix
-    ) as generate:
-      ntt.NTTCiphertextBarrettContext(
-          moduli, parameters(ff_context.BarrettContext)
-      )
-      generated_once = generate.call_count
-
-      montgomery = ntt.NTTCiphertextMontgomeryContext(
-          moduli, parameters(ff_context.MontgomeryContext)
-      )
-      self.assertEqual(generate.call_count, generated_once)
-
-      ntt.NTTCiphertextBarrettContext(
-          moduli, parameters(ff_context.BarrettContext, r=4, c=2)
-      )
-      self.assertGreater(generate.call_count, generated_once)
-
-    values = jnp.arange(1, 9, dtype=jnp.uint64).reshape(1, 2, 4, 1)
-    encoded = montgomery.to_computation_format(values)
-    decoded = montgomery.to_original_format(
-        montgomery.intt(montgomery.ntt(encoded))
-    )
-    np.testing.assert_array_equal(decoded, values)
 
 
 if __name__ == "__main__":

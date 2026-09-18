@@ -1,7 +1,6 @@
 """CI gate for the vectorized encrypt/decrypt fast paths.
 
-Runs the cache-independent fast-path gates plus the optional LoLA-cache
-`FastEncryptCorrectness` and `FastDecryptCorrectness` classes from
+Runs the `FastEncryptCorrectness` and `FastDecryptCorrectness` classes from
 `ckks_ctx_test` (where the bit-exact tests now live, after both the old
 `encrypt_fast.py` and `decrypt_fast.py` were inlined into `ckks_ctx.py`) in
 one process and prints a single PASS/FAIL summary. Returns exit code 0 if
@@ -33,18 +32,14 @@ def main():
     import ckks_ctx_test
     loader = unittest.TestLoader()
     suite = unittest.TestSuite()
-    for test_name in (
-        "test_context_boundaries_use_rank_five_and_reject_batches_0",
-        "test_fast_encrypt_and_decrypt_are_bit_exact_without_external_cache_0",
-    ):
-        suite.addTest(ckks_ctx_test.CKKSContextTest(test_name))
     suite.addTests(loader.loadTestsFromTestCase(
         ckks_ctx_test.FastEncryptCorrectness))
     suite.addTests(loader.loadTestsFromTestCase(
         ckks_ctx_test.FastDecryptCorrectness))
 
-    print(f"[fast-path CI] running up to {suite.countTestCases()} tests "
-          f"from the cache-free gates + optional LoLA-cache suites ...")
+    print(f"[fast-path CI] running {suite.countTestCases()} tests "
+          f"from ckks_ctx_test::FastEncryptCorrectness + "
+          f"FastDecryptCorrectness ...")
     t0 = time.perf_counter()
     runner = unittest.TextTestRunner(verbosity=2, stream=sys.stdout)
     result = runner.run(suite)

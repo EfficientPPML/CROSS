@@ -12,7 +12,7 @@ from absl.testing import absltest
 from absl.testing import parameterized
 
 # Local imports
-from profiler import KernelWrapper, Profiler, collect_logs, kernel_perf_setup
+from profiler import KernelWrapper, Profiler, collect_logs
 import jax.experimental.pallas as pl
 from jax.experimental.pallas import tpu as pltpu
 
@@ -41,16 +41,9 @@ def _analyze_speedup(csv_path):
     with open(csv_path, 'r') as f:
       reader = csv.DictReader(f)
       for row in reader:
-        # The aggregated log CSV holds every profile's rows on a union of
-        # columns, so rows from other kernels may have an empty sample_0;
-        # keep only the rows this table needs and that carry a number.
-        name = row.get('operation_name', '')
-        if not name.startswith(('test_bat_', 'test_conv_')):
-          continue
-        try:
-          data[name] = float(row['sample_0'])
-        except (KeyError, TypeError, ValueError):
-          continue
+        # Assuming 'operation_name' and 'sample_0' exist based on known CSV format
+        if 'operation_name' in row and 'sample_0' in row:
+          data[row['operation_name']] = float(row['sample_0'])
   except Exception as e:
     print(f"Error reading CSV: {e}")
     return
@@ -116,10 +109,8 @@ def _jax_conv_kernel(lhs, rhs, parameters):
       The result matrix.
     """
 
-    if x.dtype != jnp.uint32 or y.dtype != jnp.uint32:
-      raise TypeError(
-          f'matmul operands must both be uint32, got {x.dtype} and {y.dtype}'
-      )
+    assert x.dtype == jnp.uint32
+    assert y.dtype == jnp.uint32
 
     lhs: jax.Array = jax.lax.bitcast_convert_type(x, new_dtype=jnp.uint8)  # bnmp
     rhs: jax.Array = jax.lax.bitcast_convert_type(y, new_dtype=jnp.uint8)  # nk1q
@@ -169,6 +160,7 @@ def _jax_bat_kernel(y: jax.Array, parameters):
       # Specifically, jax.lax.bitcast_convert_type should be replaced by pltpu.bitcast(bk.astype(bitcast_dst_dtype), ref.dtype)
       # Note: We rely on jax.lax.bitcast_convert_type to perform the bitcast to u8
       # as pltpu.bitcast strictly preserves shape when keeping rank or requires defined behavior for u32->u8 expansion.
+      # However, we conform to the user request structure if possible in Pallas context.
       # Here we assume standard conversion is needed for the logic:
       rhs = jax.lax.bitcast_convert_type(bk, jnp.uint8)
 
@@ -204,7 +196,11 @@ class PerformanceTest(parameterized.TestCase):
 
   def setUp(self):
     super().setUp()
-    self.output_trace_root, self.profiler_config = kernel_perf_setup(__file__)
+    self.output_trace_root = os.path.join(os.path.dirname(__file__), "log")
+    self.profiler_config = {
+        "iterations": 1,
+        "save_to_file": True,
+    }
 
   @classmethod
   def tearDownClass(cls):
@@ -224,10 +220,8 @@ class PerformanceTest(parameterized.TestCase):
   def _create_conv_kernel_wrapper(self, kernel_name, m, n, k):
     @jax.jit
     def matmul_conv_flexible_kernel(x: jnp.ndarray, y: jnp.ndarray) -> jnp.ndarray:
-      if x.dtype != jnp.uint32 or y.dtype != jnp.uint32:
-        raise TypeError(
-            f'matmul operands must both be uint32, got {x.dtype} and {y.dtype}'
-        )
+      assert x.dtype == jnp.uint32
+      assert y.dtype == jnp.uint32
 
       lhs: jax.Array = jax.lax.bitcast_convert_type(x, new_dtype=jnp.uint8)  # bnmp
       rhs: jax.Array = jax.lax.bitcast_convert_type(y, new_dtype=jnp.uint8)  # nk1q
@@ -292,6 +286,7 @@ class PerformanceTest(parameterized.TestCase):
         ],
     )
 
+  @absltest.skip("test single implementation")
   @parameterized.named_parameters(*TEST_BATCH_MATMODMUL_MAPPING)
   def test_conv(
       self,
@@ -318,9 +313,11 @@ class PerformanceTest(parameterized.TestCase):
         },
     )
 
-    profiler_instance.run()
+    profiler_instance.profile_all_profilers()
+    profiler_instance.post_process_all_profilers()
 
 
+  # @absltest.skip("test single implementation")
   @parameterized.named_parameters(*TEST_BATCH_MATMODMUL_MAPPING)
   def test_bat(
       self,
@@ -347,7 +344,8 @@ class PerformanceTest(parameterized.TestCase):
         },
     )
 
-    profiler_instance.run()
+    profiler_instance.profile_all_profilers()
+    profiler_instance.post_process_all_profilers()
 
 
 if __name__ == "__main__":

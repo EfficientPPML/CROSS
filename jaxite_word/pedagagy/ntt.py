@@ -1,5 +1,6 @@
 """JAX implementation of Gentalman Sande NTT."""
 
+from curses import tigetflag
 import functools
 import concurrent.futures
 
@@ -9,19 +10,6 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import util
-
-
-def _require_ntt_dtypes(data, tf_step1, coef_step2, tf_step3=None):
-  expected = (
-      ('data', data, jnp.uint32),
-      ('tf_step1', tf_step1, jnp.uint8),
-      ('coef_step2', coef_step2, jnp.uint32),
-  )
-  for name, value, dtype in expected:
-    if value.dtype != dtype:
-      raise TypeError(f'{name} must be {dtype}, got {value.dtype}')
-  if tf_step3 is not None and tf_step3.dtype != jnp.uint8:
-    raise TypeError(f'tf_step3 must be uint8, got {tf_step3.dtype}')
 
 ########################
 # Offline Compilation Functions
@@ -722,9 +710,8 @@ def ntt_negacyclic_three_step_control_generation(q_list_in, r, c):
   # psi_list = [psi_list_in] if not isinstance(psi_list_in, list) else psi_list_in
   psi_list = [util.root_of_unity(2*r*c, q) for q in q_list]
 
-  for q, psi in zip(q_list, psi_list, strict=True):
-    if pow(psi, r * c * 2, q) != 1:
-      raise ValueError(f'psi={psi} is not a 2N-th root modulo q={q}')
+  for (q, psi) in zip(q_list, psi_list):
+    assert pow(psi, r*c*2, q) == 1 # This version is defined for 32-bit input.
     if psi is not None:
       omega = (psi ** 2) % q
       psi = psi
@@ -761,9 +748,8 @@ def intt_negacyclic_three_step_control_generation(q_list_in, r, c):
   q_list = [q_list_in] if not isinstance(q_list_in, list) else q_list_in
   psi_list = [util.root_of_unity(2*r*c, q) for q in q_list]
   inv_tf_mat_step1_list, inv_coef_step2_list, inv_tf_mat_step3_list = [], [], []
-  for q, psi in zip(q_list, psi_list, strict=True):
-    if pow(psi, r * c * 2, q) != 1:
-      raise ValueError(f'psi={psi} is not a 2N-th root modulo q={q}')
+  for (q, psi) in zip(q_list, psi_list):
+    assert pow(psi, r*c*2, q) == 1 # This version is defined for 32-bit input.
 
     omega = (psi ** 2) % q
     omega_col = pow(omega, c, q)
@@ -816,9 +802,7 @@ def ntt_three_step_bat_control_generation(q_list_in, r, c, perf_test=False):
     return tf_mat_bat_step1, tf_mat_bat_step3
 
   with concurrent.futures.ThreadPoolExecutor() as executor:
-    args_iter = zip(
-        q_list, tf_mat_step1_list, tf_mat_step3_list, strict=True
-    )
+    args_iter = zip(q_list, tf_mat_step1_list, tf_mat_step3_list)
     results = list(executor.map(lambda args: _process_single(*args), args_iter))
   for tf_mat_bat_step1, tf_mat_bat_step3 in results:
     (bat_tf_mat_step1_list.append(tf_mat_bat_step1), bat_tf_mat_step3_list.append(tf_mat_bat_step3))
@@ -863,9 +847,7 @@ def intt_three_step_bat_control_generation(q_list_in, r, c, shuffle_pattern=None
   inv_coef_step2_list = [inv_coef_step2_list] if not isinstance(inv_coef_step2_list, list) else inv_coef_step2_list
   inv_tf_mat_step3_list = [inv_tf_mat_step3_list] if not isinstance(inv_tf_mat_step3_list, list) else inv_tf_mat_step3_list
 
-  inv_psi = [
-      pow(psi, -1, q) for q, psi in zip(q_list, psi_list, strict=True)
-  ]
+  inv_psi = [pow(psi, -1, q) for (q, psi) in zip(q_list, psi_list)]
   power_of_inv_psi_arr = [
       [pow(inv_psi[idx], i, q_list[idx]) for i in range(c*r)] for idx in range(len(psi_list))
   ]
@@ -884,13 +866,7 @@ def intt_three_step_bat_control_generation(q_list_in, r, c, shuffle_pattern=None
     return inv_tf_step1, inv_coef_step2_scaled, inv_tf_step3
 
   with concurrent.futures.ThreadPoolExecutor() as executor:
-    args_iter = zip(
-        q_list,
-        inv_tf_mat_step1_list,
-        inv_coef_step2_list,
-        inv_tf_mat_step3_list,
-        strict=True,
-    )
+    args_iter = zip(q_list, inv_tf_mat_step1_list, inv_coef_step2_list, inv_tf_mat_step3_list)
     results = list(executor.map(lambda args: _process_single(*args), args_iter))
   for inv_tf_step1, inv_coef_step2_scaled, inv_tf_step3 in results:
     (bat_inv_tf_mat_step1_list.append(inv_tf_step1), scaled_inv_coef_step2_list.append(inv_coef_step2_scaled), bat_inv_tf_mat_step3_list.append(inv_tf_step3))
@@ -945,24 +921,9 @@ def ntt_montgomery_three_step_bat_control_generation(q_list_in, r, c):
   tf_mat_step3_list = [tf_mat_step3_list] if not isinstance(tf_mat_step3_list, list) else tf_mat_step3_list
   q_list = [q_list_in] if not isinstance(q_list_in, list) else q_list_in
 
-  tf_mat_step1_montgomery_list = [
-      modred.original_format_to_montgomery_computation_format(
-          jnp.array(mat1, jnp.uint64), q
-      )
-      for mat1, q in zip(tf_mat_step1_list, q_list, strict=True)
-  ]
-  coef_step2_montgomery_list = [
-      modred.original_format_to_montgomery_computation_format(
-          jnp.array(coef_step2, jnp.uint64), q
-      )
-      for coef_step2, q in zip(coef_step2_list, q_list, strict=True)
-  ]
-  tf_mat_step3_montgomery_list = [
-      modred.original_format_to_montgomery_computation_format(
-          jnp.array(mat3, jnp.uint64), q
-      )
-      for mat3, q in zip(tf_mat_step3_list, q_list, strict=True)
-  ]
+  tf_mat_step1_montgomery_list = [modred.original_format_to_montgomery_computation_format(jnp.array(mat1, jnp.uint64), q) for (mat1, q) in zip(tf_mat_step1_list, q_list)]
+  coef_step2_montgomery_list = [modred.original_format_to_montgomery_computation_format(jnp.array(coef_step2, jnp.uint64), q) for (coef_step2, q) in zip(coef_step2_list, q_list)]
+  tf_mat_step3_montgomery_list = [modred.original_format_to_montgomery_computation_format(jnp.array(mat3, jnp.uint64), q) for (mat3, q) in zip(tf_mat_step3_list, q_list)]
   bat_tf_mat_step1_list, bat_tf_mat_step3_list = [], []
 
   def _process_single(q, tf_mat_step1, tf_mat_step3):
@@ -975,12 +936,7 @@ def ntt_montgomery_three_step_bat_control_generation(q_list_in, r, c):
     return tf_mat_bat_step1, tf_mat_bat_step3
 
   with concurrent.futures.ThreadPoolExecutor() as executor:
-    args_iter = zip(
-        q_list,
-        tf_mat_step1_montgomery_list,
-        tf_mat_step3_montgomery_list,
-        strict=True,
-    )
+    args_iter = zip(q_list, tf_mat_step1_montgomery_list, tf_mat_step3_montgomery_list)
     results = list(executor.map(lambda args: _process_single(*args), args_iter))
   for tf_mat_bat_step1, tf_mat_bat_step3 in results:
     (bat_tf_mat_step1_list.append(tf_mat_bat_step1), bat_tf_mat_step3_list.append(tf_mat_bat_step3))
@@ -999,24 +955,9 @@ def ntt_montgomery_three_step_bat_bmatmul_control_generation(q_list_in, r, c):
   tf_mat_step3_list = [tf_mat_step3_list] if not isinstance(tf_mat_step3_list, list) else tf_mat_step3_list
   q_list = [q_list_in] if not isinstance(q_list_in, list) else q_list_in
 
-  tf_mat_step1_montgomery_list = [
-      modred.original_format_to_montgomery_computation_format(
-          jnp.array(mat1, jnp.uint64), q
-      )
-      for mat1, q in zip(tf_mat_step1_list, q_list, strict=True)
-  ]
-  coef_step2_montgomery_list = [
-      modred.original_format_to_montgomery_computation_format(
-          jnp.array(coef_step2, jnp.uint64), q
-      )
-      for coef_step2, q in zip(coef_step2_list, q_list, strict=True)
-  ]
-  tf_mat_step3_montgomery_list = [
-      modred.original_format_to_montgomery_computation_format(
-          jnp.array(mat3, jnp.uint64), q
-      )
-      for mat3, q in zip(tf_mat_step3_list, q_list, strict=True)
-  ]
+  tf_mat_step1_montgomery_list = [modred.original_format_to_montgomery_computation_format(jnp.array(mat1, jnp.uint64), q) for (mat1, q) in zip(tf_mat_step1_list, q_list)]
+  coef_step2_montgomery_list = [modred.original_format_to_montgomery_computation_format(jnp.array(coef_step2, jnp.uint64), q) for (coef_step2, q) in zip(coef_step2_list, q_list)]
+  tf_mat_step3_montgomery_list = [modred.original_format_to_montgomery_computation_format(jnp.array(mat3, jnp.uint64), q) for (mat3, q) in zip(tf_mat_step3_list, q_list)]
   bat_tf_mat_step1_list, bat_tf_mat_step3_list = [], []
 
   def _process_single(q, tf_mat_step1, tf_mat_step3):
@@ -1029,12 +970,7 @@ def ntt_montgomery_three_step_bat_bmatmul_control_generation(q_list_in, r, c):
     return tf_mat_bat_step1, tf_mat_bat_step3
 
   with concurrent.futures.ThreadPoolExecutor() as executor:
-    args_iter = zip(
-        q_list,
-        tf_mat_step1_montgomery_list,
-        tf_mat_step3_montgomery_list,
-        strict=True,
-    )
+    args_iter = zip(q_list, tf_mat_step1_montgomery_list, tf_mat_step3_montgomery_list)
     results = list(executor.map(lambda args: _process_single(*args), args_iter))
   for tf_mat_bat_step1, tf_mat_bat_step3 in results:
     (bat_tf_mat_step1_list.append(tf_mat_bat_step1), bat_tf_mat_step3_list.append(tf_mat_bat_step3))
@@ -1098,7 +1034,10 @@ def ntt_three_step_bat_barrett_batch(
     m,
 ):
   """Jax implementation of Gentalman Sande NTT, vectorized implementation on VPU."""
-  _require_ntt_dtypes(poly_coef_2d, tf_step1, coef_step2, tf_step3)
+  assert poly_coef_2d.dtype == jnp.uint32
+  assert tf_step1.dtype == jnp.uint8
+  assert coef_step2.dtype == jnp.uint32
+  assert tf_step3.dtype == jnp.uint8
 
   result_step1 = hpmatmul_bat_coef_lhs_batch(tf_step1, poly_coef_2d)
   result_step1_mod_q = modred.barrett_reduction_u64(result_step1, q, s_w, w, m)
@@ -1120,7 +1059,9 @@ def ntt_three_step_bat_barrett_square_batch(
     m,
 ):
   """Jax implementation of Gentalman Sande NTT, vectorized implementation on VPU."""
-  _require_ntt_dtypes(poly_coef_2d, tf_step1, coef_step2)
+  assert poly_coef_2d.dtype == jnp.uint32
+  assert tf_step1.dtype == jnp.uint8
+  assert coef_step2.dtype == jnp.uint32
 
   result_step1 = hpmatmul_bat_coef_lhs_batch(tf_step1, poly_coef_2d)
   result_step1_mod_q = modred.barrett_reduction_u64(result_step1, q, s_w, w, m)
@@ -1146,7 +1087,10 @@ def intt_three_step_bat_barrett_batch(
     m,
 ):
   """Jax implementation of Gentalman Sande NTT, vectorized implementation on VPU."""
-  _require_ntt_dtypes(poly_coef_2d, tf_step1, coef_step2, tf_step3)
+  assert poly_coef_2d.dtype == jnp.uint32
+  assert tf_step1.dtype == jnp.uint8
+  assert coef_step2.dtype == jnp.uint32
+  assert tf_step3.dtype == jnp.uint8
 
   result_step1 = hpmatmul_bat_coef_rhs_batch(poly_coef_2d, tf_step1)
   result_step1_mod_q = modred.barrett_reduction_u64(result_step1, q, s_w, w, m)
@@ -1211,7 +1155,10 @@ def ntt_three_step_bat_barrett_multi_moduli(
     m,
 ):
   """Jax implementation of Gentalman Sande NTT, vectorized implementation on VPU."""
-  _require_ntt_dtypes(poly_coef_2d, tf_step1, coef_step2, tf_step3)
+  assert poly_coef_2d.dtype == jnp.uint32
+  assert tf_step1.dtype == jnp.uint8
+  assert coef_step2.dtype == jnp.uint32
+  assert tf_step3.dtype == jnp.uint8
 
   result_step1 = hpmatmul_bat_coef_lhs_multi_moduli(tf_step1, poly_coef_2d)
   result_step1_mod_q = modred.barrett_reduction_u64_multi_moduli(result_step1, q, s_w, w, m)
@@ -1238,7 +1185,9 @@ def ntt_three_step_bat_barrett_square_multi_moduli(
     m,
 ):
   """Jax implementation of Gentalman Sande NTT, vectorized implementation on VPU."""
-  _require_ntt_dtypes(poly_coef_2d, tf_step1, coef_step2)
+  assert poly_coef_2d.dtype == jnp.uint32
+  assert tf_step1.dtype == jnp.uint8
+  assert coef_step2.dtype == jnp.uint32
 
   result_step1 = hpmatmul_bat_coef_lhs_multi_moduli(tf_step1, poly_coef_2d)
   result_step1_mod_q = modred.barrett_reduction_u64_multi_moduli(result_step1, q, s_w, w, m)
@@ -1269,7 +1218,10 @@ def intt_three_step_bat_barrett_multi_moduli(
 ):
 
   """Jax implementation of Gentalman Sande NTT, vectorized implementation on VPU."""
-  _require_ntt_dtypes(poly_coef_2d, tf_step1, coef_step2, tf_step3)
+  assert poly_coef_2d.dtype == jnp.uint32
+  assert tf_step1.dtype == jnp.uint8
+  assert coef_step2.dtype == jnp.uint32
+  assert tf_step3.dtype == jnp.uint8
   result_step1 = hpmatmul_bat_coef_rhs_multi_moduli(poly_coef_2d, tf_step1)
   result_step1_mod_q = modred.barrett_reduction_u64_multi_moduli(result_step1, q, s_w, w, m)
   result_step2 = jax.numpy.multiply(result_step1_mod_q.astype(jnp.uint64), coef_step2.astype(jnp.uint64))
@@ -1354,7 +1306,10 @@ def ntt_three_step_bat_barrett_batch_multi_moduli(
     m,
 ):
   """Jax implementation of Gentalman Sande NTT, vectorized implementation on VPU."""
-  _require_ntt_dtypes(poly_coef_2d, tf_step1, coef_step2, tf_step3)
+  assert poly_coef_2d.dtype == jnp.uint32
+  assert tf_step1.dtype == jnp.uint8
+  assert coef_step2.dtype == jnp.uint32
+  assert tf_step3.dtype == jnp.uint8
 
   result_step1 = hpmatmul_bat_coef_lhs_batch_multi_moduli(tf_step1, poly_coef_2d)
   result_step1_mod_q = modred.barrett_reduction_u64_multi_element_multi_moduli(result_step1, q, s_w, w, m)
@@ -1384,7 +1339,10 @@ def intt_three_step_bat_barrett_batch_multi_moduli(
 ):
 
   """Jax implementation of Gentalman Sande NTT, vectorized implementation on VPU."""
-  _require_ntt_dtypes(poly_coef_2d, tf_step1, coef_step2, tf_step3)
+  assert poly_coef_2d.dtype == jnp.uint32
+  assert tf_step1.dtype == jnp.uint8
+  assert coef_step2.dtype == jnp.uint32
+  assert tf_step3.dtype == jnp.uint8
   result_step1 = hpmatmul_bat_coef_rhs_batch_multi_moduli(poly_coef_2d, tf_step1)
   result_step1_mod_q = modred.barrett_reduction_u64_multi_element_multi_moduli(result_step1, q, s_w, w, m)
   result_step2 = jax.numpy.multiply(result_step1_mod_q.astype(jnp.uint64), coef_step2.astype(jnp.uint64))
@@ -1448,7 +1406,10 @@ def ntt_three_step_bat_barrett_multi_moduli_batch(
     m,
 ):
   """Jax implementation of Gentalman Sande NTT, vectorized implementation on VPU."""
-  _require_ntt_dtypes(poly_coef_2d, tf_step1, coef_step2, tf_step3)
+  assert poly_coef_2d.dtype == jnp.uint32
+  assert tf_step1.dtype == jnp.uint8
+  assert coef_step2.dtype == jnp.uint32
+  assert tf_step3.dtype == jnp.uint8
 
   result_step1 = hpmatmul_bat_coef_lhs_multi_moduli_batch(tf_step1, poly_coef_2d)
   result_step1_mod_q = modred.barrett_reduction_u64_multi_moduli_multi_element(result_step1, q, s_w, w, m)
@@ -1477,7 +1438,10 @@ def intt_three_step_bat_barrett_multi_moduli_batch(
 ):
 
   """Jax implementation of Gentalman Sande NTT, vectorized implementation on VPU."""
-  _require_ntt_dtypes(poly_coef_2d, tf_step1, coef_step2, tf_step3)
+  assert poly_coef_2d.dtype == jnp.uint32
+  assert tf_step1.dtype == jnp.uint8
+  assert coef_step2.dtype == jnp.uint32
+  assert tf_step3.dtype == jnp.uint8
   result_step1 = hpmatmul_bat_coef_rhs_multi_moduli_batch(poly_coef_2d, tf_step1)
   result_step1_mod_q = modred.barrett_reduction_u64_multi_moduli_multi_element(result_step1, q, s_w, w, m)
   result_step2 = jax.numpy.multiply(result_step1_mod_q.astype(jnp.uint64), coef_step2.astype(jnp.uint64))
@@ -1502,7 +1466,10 @@ def ntt_three_step_bat_barrett_multi_moduli_batch_no_static(
     m,
 ):
   """Jax implementation of Gentalman Sande NTT, vectorized implementation on VPU."""
-  _require_ntt_dtypes(poly_coef_2d, tf_step1, coef_step2, tf_step3)
+  assert poly_coef_2d.dtype == jnp.uint32
+  assert tf_step1.dtype == jnp.uint8
+  assert coef_step2.dtype == jnp.uint32
+  assert tf_step3.dtype == jnp.uint8
 
   result_step1 = hpmatmul_bat_coef_lhs_multi_moduli_batch(tf_step1, poly_coef_2d)
   result_step1_mod_q = modred.barrett_reduction_u64_multi_moduli_multi_element_no_static(result_step1, q, s_w, w, m)
@@ -1523,7 +1490,10 @@ def ntt_three_step_bat_montgomery_batch(v: jax.Array, tf_step1, coef_step2, tf_s
   """
     NTT with modular u32 and Montgomery reduction
   """
-  _require_ntt_dtypes(v, tf_step1, coef_step2, tf_step3)
+  assert v.dtype == jnp.uint32
+  assert tf_step1.dtype == jnp.uint8
+  assert coef_step2.dtype == jnp.uint32
+  assert tf_step3.dtype == jnp.uint8
 
   #computation
   result_step1 = hpmatmul_bat_coef_lhs_batch(tf_step1, v)
@@ -1540,7 +1510,9 @@ def ntt_three_step_bat_montgomery_square_batch(v, tf_step1, coef_step2, q_low, q
   """
     NTT with modular u32 and Montgomery reduction
   """
-  _require_ntt_dtypes(v, tf_step1, coef_step2)
+  assert v.dtype == jnp.uint32
+  assert tf_step1.dtype == jnp.uint8
+  assert coef_step2.dtype == jnp.uint32
 
   #computation
   result_step1 = hpmatmul_bat_coef_lhs_batch(tf_step1, v)

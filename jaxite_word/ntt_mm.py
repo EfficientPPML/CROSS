@@ -5,9 +5,6 @@ Main difference to ntt_o.py is this script supports
 (2) multiple batch
 (3) distributed sharding
 """
-import collections
-import os
-
 import numpy as np
 import util
 import concurrent.futures
@@ -18,13 +15,36 @@ import jax.numpy as jnp
 _is_nvidia = "NVIDIA" in jax.devices()[0].device_kind
 
 
+########################
+# Common Functions
+########################
+def matmul_bat_einsum(lhs: jax.Array, rhs: jax.Array, subscripts: str):
+  """Basis Aligned Transformation (BAT) based matrix multiplication
+
+  Args:
+      lhs (jax.Array): input
+      rhs (jax.Array): twiddle factor matrix
+      subscripts (str): einsum subscripts
+
+  Returns:
+      jax.Array: result
+  """
+  # preprocess
+  lhs = jax.lax.bitcast_convert_type(lhs, new_dtype=jnp.uint8)
+  shift_factors = jnp.array([0, 8, 16, 24], dtype=jnp.uint32)
+
+  # computation
+  i8_products = jnp.einsum(
+      subscripts, lhs, rhs, preferred_element_type=jnp.uint32
+  )
+  return jnp.sum(i8_products.astype(jnp.uint64) << shift_factors, axis=(-1,))
+
+
 def matmul_conv_flexible_kernel(
     x: jnp.ndarray, y: jnp.ndarray, subscripts: tuple[str, str, str]
 ) -> jnp.ndarray:
-  if x.dtype != jnp.uint32 or y.dtype != jnp.uint32:
-    raise TypeError(
-        f'matmul operands must both be uint32, got {x.dtype} and {y.dtype}'
-    )
+  assert x.dtype == jnp.uint32
+  assert y.dtype == jnp.uint32
 
   lhs: jax.Array = jax.lax.bitcast_convert_type(x, new_dtype=jnp.uint8)  # bnmp
   rhs: jax.Array = jax.lax.bitcast_convert_type(y, new_dtype=jnp.uint8)  # nk1q
@@ -61,29 +81,6 @@ def matmul_conv_flexible_kernel(
 ########################
 # Parameter Generation Functions
 ########################
-def _pow_matrix_mod(base, q, exponents):
-  """Exact elementwise base**exponents mod q via square-and-multiply.
-
-  q < 2^31 so every intermediate product fits uint64 exactly. Replaces the
-  per-cell Python pow() (which, with a thread pool spun up per call, made
-  the twiddle precompute the dominant setup cost at large N).
-  """
-  q = int(q)
-  e = np.asarray(exponents, dtype=np.uint64)
-  result = np.ones(e.shape, dtype=np.uint64)
-  qq = np.uint64(q)
-  b = int(base) % q
-  emax = int(e.max()) if e.size else 0
-  bit = 0
-  while (1 << bit) <= emax:
-    mask = ((e >> np.uint64(bit)) & np.uint64(1)).astype(bool)
-    if mask.any():
-      result[mask] = (result[mask] * np.uint64(b)) % qq
-    b = (b * b) % q
-    bit += 1
-  return result.astype(np.int64)
-
-
 def gen_twiddle_matrix(rows, cols, q, omega):
   """Precompute the twiddle matrix T of shape (rows, cols), where T[r, c] = omega^(r*c) mod q.
 
@@ -96,11 +93,10 @@ def gen_twiddle_matrix(rows, cols, q, omega):
   Returns:
     The twiddle matrix.
   """
+  # Vectorized modular exponentiation via exponent bit-decomposition
   r_idx = np.arange(rows, dtype=np.int64)[:, None]
   c_idx = np.arange(cols, dtype=np.int64)[None, :]
   exponents = r_idx * c_idx  # shape (rows, cols)
-  if util._correct_check([q]):
-    return _pow_matrix_mod(omega, q, exponents)
   twiddle_matrix = np.zeros((rows, cols), dtype=int)
 
   def compute_row(r):
@@ -126,64 +122,11 @@ def gen_twiddle_matrix_inv(rows, cols, q, omega):
   Returns:
     The inverse twiddle matrix.
   """
-  inv_omega = pow(int(omega), -1, int(q))
-  return gen_twiddle_matrix(rows, cols, q, inv_omega)
-
-
-# Shared assembled-context cache: operator instances (key-switch part
-# Polynomials in hemul/herot/etc.) construct IDENTICAL NTT contexts for the
-# same (r, c, moduli) at a given level — at N=65536 each costs ~2 GB of BAT
-# arrays, and per-diagonal operator instances OOM the bootstrap holding
-# private copies.  Contexts are immutable on the runtime path (the only
-# mutator, Polynomial.drop_last_modulus, has no production callers), so
-# sharing is safe.  Bounded LRU; evicted entries free once holders drop.
-# Configure with CROSS_BARRETT_NTT_CONTEXT_CACHE_ENABLED and
-# CROSS_BARRETT_NTT_CONTEXT_CACHE_CAPACITY.
-_barrett_ntt_context_cache: "collections.OrderedDict" = (
-    collections.OrderedDict()
-)
-_barrett_ntt_context_cache_capacity = max(
-    1,
-    int(os.environ.get("CROSS_BARRETT_NTT_CONTEXT_CACHE_CAPACITY", "8")),
-)
-_barrett_ntt_context_cache_enabled = (
-    os.environ.get("CROSS_BARRETT_NTT_CONTEXT_CACHE_ENABLED", "1") != "0"
-)
-
-
-def get_shared_barrett_ntt_context(moduli, parameters):
-  """Return a shared NTTCiphertextBarrettContext for (r, c, tuple(moduli))."""
-  if not _barrett_ntt_context_cache_enabled:
-    return NTTCiphertextBarrettContext(moduli=moduli, parameters=parameters)
-  key = (
-      int(parameters["r"]),
-      int(parameters["c"]),
-      tuple(int(m) for m in moduli),
-  )
-  ctx = _barrett_ntt_context_cache.get(key)
-  if ctx is None:
-    ctx = NTTCiphertextBarrettContext(moduli=moduli, parameters=parameters)
-    _barrett_ntt_context_cache[key] = ctx
-    while (
-        len(_barrett_ntt_context_cache)
-        > _barrett_ntt_context_cache_capacity
-    ):
-      _barrett_ntt_context_cache.popitem(last=False)
-  else:
-    _barrett_ntt_context_cache.move_to_end(key)
-  return ctx
-
-
-# Per-modulus twiddle cache: the fused, MAT-permuted per-modulus twiddle
-# blocks depend only on (direction, r, c, modulus) — psi/omega and the MAT
-# bit-reversal permutations are deterministic functions of those — so they
-# are shared across every NTT context that includes the modulus (max-level
-# Q/P contexts, per-level key-switch partition contexts, operator-instance
-# rebuilds under BOOTSTRAP_LOW_MEM eviction). Reusing them avoids repeated
-# modular-exponentiation setup; a hit only copies the cached matrices.
-# Entries live for the process lifetime and grow with the distinct
-# (direction, r, c, modulus) combinations used.
-_ntt_twiddle_cache: dict = {}
+  twiddle_matrix_inv = np.zeros((rows, cols), dtype=int)
+  for r in range(rows):
+    for c in range(cols):
+      twiddle_matrix_inv[r, c] = pow(int(omega), int(-r * c), int(q))
+  return twiddle_matrix_inv
 
 
 ########################
@@ -209,27 +152,17 @@ class NTTCiphertextContextBase:
 
     self.moduli = moduli
     self.parameters = parameters
-    # Each backend's validate_moduli enforces its exact/wrap-safe modulus envelope (Montgomery lazy REDC: q < 2^31).
-    self.ff_ctx.validate_moduli(moduli)
+    assert (all(q < 2**31 for q in moduli), "moduli must be less than 2**32")
     self.r = parameters.get("r", 0)
     self.c = parameters.get("c", 0)
-    if self.r <= 0 or self.c <= 0:
-      raise ValueError(f'r and c must be positive, got r={self.r}, c={self.c}')
+    assert self.r != 0, "r must be non-zero"
+    assert self.c != 0, "c must be non-zero"
     self.transform_length = self.r * self.c
-
-    # u32 einsum accumulator sums 4*max(r,c) u8*u8 partials (< 2^16 each): need max(r,c) < 2^14 or the NTT silently wraps.
-    max_dim = max(self.r, self.c)
-    if 4 * max_dim * (1 << 16) >= (1 << 32):
-      raise ValueError(
-          f"NTT transform dim max(r, c)={max_dim} overflows the uint32 BAT "
-          "accumulator: need 4 * max(r, c) * 2^16 < 2^32 (max(r, c) < 2^14)"
-      )
     self.psi_list = [
         util.root_of_unity(2 * self.transform_length, q) for q in self.moduli
     ]
     self.omega_list = [
-        (psi**2) % q
-        for psi, q in zip(self.psi_list, self.moduli, strict=True)
+        (psi**2) % q for psi, q in zip(self.psi_list, self.moduli)
     ]
     if perf_test:
       # Use random data for performance testing to avoid expensive precomputation
@@ -327,45 +260,42 @@ class NTTCiphertextContextBase:
     """
     tf_step1_list, tf_step2_list, tf_step3_list = [], [], []
     for idx, modulus in enumerate(self.moduli):
-      cache_key = ("ntt", self.r, self.c, int(modulus))
-      twiddles = _ntt_twiddle_cache.get(cache_key)
-      if twiddles is None:
-        psi_m = self.psi_list[idx]
-        omega_col = pow(self.omega_list[idx], self.c, modulus)
-        omega_row = pow(self.omega_list[idx], self.r, modulus)
-        tf_step1_one_modulus = gen_twiddle_matrix(
-            self.r, self.r, modulus, omega_col
+      psi_m = self.psi_list[idx]
+      omega_col = pow(self.omega_list[idx], self.c, modulus)
+      omega_row = pow(self.omega_list[idx], self.r, modulus)
+      tf_step1_one_modulus = gen_twiddle_matrix(
+          self.r, self.r, modulus, omega_col
+      )
+      # Fuse psi^(c*i) into step1: multiply column i by psi^(c*i)
+      for i in range(self.r):
+        factor = pow(psi_m, self.c * i, modulus)
+        tf_step1_one_modulus[:, i] = (
+            (tf_step1_one_modulus[:, i] * factor) % modulus
         )
-        # Fuse psi^(c*i) into step1: multiply column i by psi^(c*i)
-        for i in range(self.r):
-          factor = pow(psi_m, self.c * i, modulus)
-          tf_step1_one_modulus[:, i] = (
-              (tf_step1_one_modulus[:, i] * factor) % modulus
-          )
-        tf_step2_one_modulus = gen_twiddle_matrix(
-            self.r, self.c, modulus, self.omega_list[idx]
+      tf_step2_one_modulus = gen_twiddle_matrix(
+          self.r, self.c, modulus, self.omega_list[idx]
+      )
+      # Fuse psi^j into step2: multiply column j by psi^j
+      for j in range(self.c):
+        factor = pow(psi_m, j, modulus)
+        tf_step2_one_modulus[:, j] = (
+            (tf_step2_one_modulus[:, j] * factor) % modulus
         )
-        # Fuse psi^j into step2: multiply column j by psi^j
-        for j in range(self.c):
-          factor = pow(psi_m, j, modulus)
-          tf_step2_one_modulus[:, j] = (
-              (tf_step2_one_modulus[:, j] * factor) % modulus
-          )
-        tf_step3_one_modulus = gen_twiddle_matrix(
-            self.c, self.c, modulus, omega_row
-        )
-        # Memory Aligned Transformation; values < modulus < 2^31 so uint32
-        # storage is exact. Cached arrays are never mutated afterwards
-        # (jnp.array below copies).
-        twiddles = (
-            tf_step1_one_modulus[self.perm_r, :].astype(np.uint32),
-            tf_step2_one_modulus[self.perm_r, :].astype(np.uint32),
-            tf_step3_one_modulus[:, self.perm_c].astype(np.uint32),
-        )
-        _ntt_twiddle_cache[cache_key] = twiddles
-      tf_step1_list.append(twiddles[0])
-      tf_step2_list.append(twiddles[1])
-      tf_step3_list.append(twiddles[2])
+      tf_step3_one_modulus = gen_twiddle_matrix(
+          self.c, self.c, modulus, omega_row
+      )
+      tf_step1_one_modulus = tf_step1_one_modulus[
+          self.perm_r, :
+      ]  # Memory Aligned Transformation
+      tf_step2_one_modulus = tf_step2_one_modulus[
+          self.perm_r, :
+      ]  # Memory Aligned Transformation
+      tf_step3_one_modulus = tf_step3_one_modulus[
+          :, self.perm_c
+      ]  # Memory Aligned Transformation
+      tf_step1_list.append(tf_step1_one_modulus)
+      tf_step2_list.append(tf_step2_one_modulus)
+      tf_step3_list.append(tf_step3_one_modulus)
     tf_step1 = jnp.array(tf_step1_list, dtype=jnp.uint32).transpose(
         1, 2, 0
     )  # Make moduli the last dimension
@@ -389,63 +319,52 @@ class NTTCiphertextContextBase:
     """
     intt_tf_step1_list, intt_tf_step2_list, intt_tf_step3_list = [], [], []
     for idx, modulus in enumerate(self.moduli):
-      cache_key = ("intt", self.r, self.c, int(modulus))
-      twiddles = _ntt_twiddle_cache.get(cache_key)
-      if twiddles is None:
-        inv_psi_m = pow(self.psi_list[idx], -1, modulus)
-        omega_col = pow(self.omega_list[idx], self.c, modulus)
-        omega_row = pow(self.omega_list[idx], self.r, modulus)
-        inv_omega_col = pow(omega_col, -1, modulus)
-        inv_omega_row = pow(omega_row, -1, modulus)
-        intt_tf_step1_one_modulus = gen_twiddle_matrix(
-            self.c, self.c, modulus, inv_omega_row
+      inv_psi_m = pow(self.psi_list[idx], -1, modulus)
+      omega_col = pow(self.omega_list[idx], self.c, modulus)
+      omega_row = pow(self.omega_list[idx], self.r, modulus)
+      inv_omega_col = pow(omega_col, -1, modulus)
+      inv_omega_row = pow(omega_row, -1, modulus)
+      intt_tf_step1_one_modulus = gen_twiddle_matrix(
+          self.c, self.c, modulus, inv_omega_row
+      )
+      intt_tf_step2_one_modulus = gen_twiddle_matrix_inv(
+          self.r, self.c, modulus, self.omega_list[idx]
+      )
+      intt_tf_step3_one_modulus = gen_twiddle_matrix(
+          self.r, self.r, modulus, inv_omega_col
+      )
+      # Fuse inv_psi^j into step2: multiply column j by inv_psi^j
+      for j in range(self.c):
+        factor = pow(inv_psi_m, j, modulus)
+        intt_tf_step2_one_modulus[:, j] = (
+            (intt_tf_step2_one_modulus[:, j] * factor) % modulus
         )
-        intt_tf_step2_one_modulus = gen_twiddle_matrix_inv(
-            self.r, self.c, modulus, self.omega_list[idx]
+      # Fuse inv_psi^(c*i) into step3: multiply row i by inv_psi^(c*i)
+      for i in range(self.r):
+        factor = pow(inv_psi_m, self.c * i, modulus)
+        intt_tf_step3_one_modulus[i, :] = (
+            (intt_tf_step3_one_modulus[i, :] * factor) % modulus
         )
-        intt_tf_step3_one_modulus = gen_twiddle_matrix(
-            self.r, self.r, modulus, inv_omega_col
-        )
-        # Fuse inv_psi^j into step2: multiply column j by inv_psi^j
-        for j in range(self.c):
-          factor = pow(inv_psi_m, j, modulus)
-          intt_tf_step2_one_modulus[:, j] = (
-              (intt_tf_step2_one_modulus[:, j] * factor) % modulus
-          )
-        # Fuse inv_psi^(c*i) into step3: multiply row i by inv_psi^(c*i)
-        for i in range(self.r):
-          factor = pow(inv_psi_m, self.c * i, modulus)
-          intt_tf_step3_one_modulus[i, :] = (
-              (intt_tf_step3_one_modulus[i, :] * factor) % modulus
-          )
-        intt_tf_step1_one_modulus = intt_tf_step1_one_modulus[
-            self.perm_c, :
-        ]  # Memory Aligned Transformation
-        intt_tf_step2_one_modulus = intt_tf_step2_one_modulus[
-            self.perm_r, :
-        ]  # Memory Aligned Transformation
-        intt_tf_step3_one_modulus = intt_tf_step3_one_modulus[
-            :, self.perm_r
-        ]  # Memory Aligned Transformation
-        col_inv = pow(self.c, -1, modulus)
-        row_inv = pow(self.r, -1, modulus)
-        intt_tf_step2_one_modulus = (
-            intt_tf_step2_one_modulus * col_inv
-        ) % modulus
-        intt_tf_step3_one_modulus = (
-            intt_tf_step3_one_modulus * row_inv
-        ) % modulus
-        # Values < modulus < 2^31: uint32 storage is exact. Cached arrays
-        # are never mutated afterwards (jnp.array below copies).
-        twiddles = (
-            intt_tf_step1_one_modulus.astype(np.uint32),
-            intt_tf_step2_one_modulus.astype(np.uint32),
-            intt_tf_step3_one_modulus.astype(np.uint32),
-        )
-        _ntt_twiddle_cache[cache_key] = twiddles
-      intt_tf_step1_list.append(twiddles[0])
-      intt_tf_step2_list.append(twiddles[1])
-      intt_tf_step3_list.append(twiddles[2])
+      intt_tf_step1_one_modulus = intt_tf_step1_one_modulus[
+          self.perm_c, :
+      ]  # Memory Aligned Transformation
+      intt_tf_step2_one_modulus = intt_tf_step2_one_modulus[
+          self.perm_r, :
+      ]  # Memory Aligned Transformation
+      intt_tf_step3_one_modulus = intt_tf_step3_one_modulus[
+          :, self.perm_r
+      ]  # Memory Aligned Transformation
+      col_inv = pow(self.c, -1, modulus)
+      row_inv = pow(self.r, -1, modulus)
+      intt_tf_step2_one_modulus = (
+          intt_tf_step2_one_modulus * col_inv
+      ) % modulus
+      intt_tf_step3_one_modulus = (
+          intt_tf_step3_one_modulus * row_inv
+      ) % modulus
+      intt_tf_step1_list.append(intt_tf_step1_one_modulus)
+      intt_tf_step2_list.append(intt_tf_step2_one_modulus)
+      intt_tf_step3_list.append(intt_tf_step3_one_modulus)
     intt_tf_step1 = jnp.array(intt_tf_step1_list, dtype=jnp.uint32).transpose(
         1, 2, 0
     )  # Make moduli the last dimension
@@ -468,9 +387,20 @@ class NTTCiphertextContextBase:
     )
 
   def basis_aligned_transformation(self, matrix):
-    return util.shifted_mod_bytes_host(
-        matrix, self.moduli
+    matrix_u64 = matrix.astype(np.uint64)
+    matrix_u64_byteshifted = np.array(
+        [matrix_u64 << (8 * byte_idx) for byte_idx in range(self.num_bytes)],
+        dtype=np.uint64,
+    )
+    # shape is (4, rows, cols, moduli)
+    matrix_u64_byteshifted_mod_modulus = (
+        matrix_u64_byteshifted % jnp.array(self.moduli, dtype=np.uint64)
+    ).astype(np.uint32)
+    # shape is (4, rows, cols, moduli, bytes=4)
+    matrix_u8 = jax.lax.bitcast_convert_type(
+        matrix_u64_byteshifted_mod_modulus, jnp.uint8
     ).transpose(1, 0, 2, 4, 3)
+    return matrix_u8
 
   def memory_aligned_transformation(self):
     """Memory Aligned Transformation (MAT)
@@ -528,7 +458,7 @@ class NTTCiphertextContextBase:
     Returns:
         u32 array of shape (B, R, C)
     """
-    result_step1 = util.matmul(
+    result_step1 = matmul_bat_einsum(
         v, self.ntt_bat_tf_step1[..., limb_index], "brcq,zqrp->bzcp"
     )
     result_step1_reduced = self.ff_ctx.modular_reduction_single_modulus(
@@ -541,7 +471,7 @@ class NTTCiphertextContextBase:
     result_step2_reduced = self.ff_ctx.modular_reduction_single_modulus(
         result_step2, limb_index
     )
-    result_step3 = util.matmul(
+    result_step3 = matmul_bat_einsum(
         result_step2_reduced,
         self.ntt_bat_tf_step3[..., limb_index],
         "brcq,cqnp->brnp",
@@ -566,7 +496,7 @@ class NTTCiphertextContextBase:
     Returns:
         u32 array of shape (B, R, C)
     """
-    result_step1 = util.matmul(
+    result_step1 = matmul_bat_einsum(
         v, self.intt_bat_tf_step1[..., limb_index], "brcq,cqlp->brlp"
     )
     result_step1_reduced = self.ff_ctx.modular_reduction_single_modulus(
@@ -579,7 +509,7 @@ class NTTCiphertextContextBase:
     result_step2_reduced = self.ff_ctx.modular_reduction_single_modulus(
         result_step2, limb_index
     )
-    result_step3 = util.matmul(
+    result_step3 = matmul_bat_einsum(
         result_step2_reduced,
         self.intt_bat_tf_step3[..., limb_index],
         "brcq,lqrp->blcp",
@@ -609,7 +539,7 @@ class NTTCiphertextContextBase:
     Returns:
         u32 array of shape (B, R, C, M) — negacyclic NTT of v
     """
-    result_step1 = util.matmul(
+    result_step1 = matmul_bat_einsum(
         v, self.ntt_bat_tf_step1, "brcmq,zqrpm->bzcmp"
     )
     result_step1_reduced = self.ff_ctx.modular_reduction(result_step1)
@@ -617,7 +547,7 @@ class NTTCiphertextContextBase:
         result_step1_reduced.astype(jnp.uint64), self.ntt_tf_step2
     )
     result_step2_reduced = self.ff_ctx.modular_reduction(result_step2)
-    result_step3 = util.matmul(
+    result_step3 = matmul_bat_einsum(
         result_step2_reduced, self.ntt_bat_tf_step3, "brcmq,cqnpm->brnmp"
     )
     result_step3_reduced = self.ff_ctx.modular_reduction(result_step3)
@@ -643,7 +573,7 @@ class NTTCiphertextContextBase:
     Returns:
         u32 array of shape (B, R, C, M) — negacyclic INTT of v
     """
-    result_step1 = util.matmul(
+    result_step1 = matmul_bat_einsum(
         v, self.intt_bat_tf_step1, "brcmq,cqlpm->brlmp"
     )
     result_step1_reduced = self.ff_ctx.modular_reduction(result_step1)
@@ -651,7 +581,7 @@ class NTTCiphertextContextBase:
         result_step1_reduced.astype(jnp.uint64), self.intt_tf_step2
     )
     result_step2_reduced = self.ff_ctx.modular_reduction(result_step2)
-    result_step3 = util.matmul(
+    result_step3 = matmul_bat_einsum(
         result_step2_reduced, self.intt_bat_tf_step3, "brcmq,lqrpm->blcmp"
     )
     result_step3_reduced = self.ff_ctx.modular_reduction(result_step3)
@@ -713,12 +643,10 @@ class NTTCiphertextBarrettContext(NTTCiphertextContextBase):
       self.moduli = [self.moduli]
     if self.ff_ctx is None:
       self.ff_ctx = ff_context.BarrettContext(moduli)
-    if self.ff_ctx is None:
-      raise ValueError("finite_field_context must be provided")
-    if self.moduli != self.ff_ctx.moduli:
-      raise ValueError(
-          "moduli must be the same as the moduli of the finite_field_context"
-      )
+    assert self.ff_ctx is not None, "finite_field_context must be provided"
+    assert (
+        self.moduli == self.ff_ctx.moduli
+    ), "moduli must be the same as the moduli of the finite_field_context"
 
 
 class NTTCiphertextMontgomeryContext(NTTCiphertextContextBase):
@@ -729,12 +657,10 @@ class NTTCiphertextMontgomeryContext(NTTCiphertextContextBase):
       self.moduli = [self.moduli]
     if self.ff_ctx is None:
       self.ff_ctx = ff_context.MontgomeryContext(moduli)
-    if self.ff_ctx is None:
-      raise ValueError("finite_field_context must be provided")
-    if self.moduli != self.ff_ctx.moduli:
-      raise ValueError(
-          "moduli must be the same as the moduli of the finite_field_context"
-      )
+    assert self.ff_ctx is not None, "finite_field_context must be provided"
+    assert (
+        self.moduli == self.ff_ctx.moduli
+    ), "moduli must be the same as the moduli of the finite_field_context"
 
 
 class NTTCiphertextShoupContext(NTTCiphertextContextBase):
@@ -751,12 +677,10 @@ class NTTCiphertextShoupContext(NTTCiphertextContextBase):
       self.moduli = [self.moduli]
     if self.ff_ctx is None:
       self.ff_ctx = ff_context.ShoupContext(moduli)
-    if self.ff_ctx is None:
-      raise ValueError("finite_field_context must be provided")
-    if self.moduli != self.ff_ctx.moduli:
-      raise ValueError(
-          "moduli must be the same as the moduli of the finite_field_context"
-      )
+    assert self.ff_ctx is not None, "finite_field_context must be provided"
+    assert (
+        self.moduli == self.ff_ctx.moduli
+    ), "moduli must be the same as the moduli of the finite_field_context"
 
     if not perf_test:
       self.ntt_bat_tf_step1 = self.to_computation_format(
@@ -942,10 +866,13 @@ class NTTCiphertextBATLazyContext(NTTCiphertextContextBase):
     super().__init__(moduli, parameters, perf_test=perf_test)
     if type(self.moduli) is int:
       self.moduli = [self.moduli]
-    # Steps 2/3 need STRICT reduction: always Barrett, even when BATLazyContext was injected (its lazy reduce drives step 1 only).
-    # Swap is safe: Barrett and BATLazy share identity to_computation_format, so the twiddle precompute in super().__init__ is unaffected.
-    self.ff_ctx = ff_context.BarrettContext(self.moduli)
-    self.ff_ctx_bat_lazy = ff_context.BATLazyContext(self.moduli)
+    if self.ff_ctx is None:
+      self.ff_ctx = ff_context.BarrettContext(moduli)
+    assert self.ff_ctx is not None, "finite_field_context must be provided"
+    assert (
+        self.moduli == self.ff_ctx.moduli
+    ), "moduli must be the same as the moduli of the finite_field_context"
+    self.ff_ctx_bat_lazy = ff_context.BATLazyContext(moduli)
 
   def ntt(self, v: jax.Array):
     """Negacyclic NTT with BAT lazy reduction.
@@ -962,7 +889,7 @@ class NTTCiphertextBATLazyContext(NTTCiphertextContextBase):
     Returns:
         u32 array of shape (B, R, C, M) — negacyclic NTT output
     """
-    result_step1 = util.matmul(
+    result_step1 = matmul_bat_einsum(
         v, self.ntt_bat_tf_step1, "brcmq,zqrpm->bzcmp"
     )
     result_step1_reduced = self.ff_ctx_bat_lazy.modular_reduction(result_step1)
@@ -970,7 +897,7 @@ class NTTCiphertextBATLazyContext(NTTCiphertextContextBase):
         result_step1_reduced.astype(jnp.uint64), self.ntt_tf_step2
     )
     result_step2_reduced = self.ff_ctx.modular_reduction(result_step2)
-    result_step3 = util.matmul(
+    result_step3 = matmul_bat_einsum(
         result_step2_reduced.astype(jnp.uint32),
         self.ntt_bat_tf_step3,
         "brcmq,cqnpm->brnmp",
@@ -993,7 +920,7 @@ class NTTCiphertextBATLazyContext(NTTCiphertextContextBase):
     Returns:
         u32 array of shape (B, R, C, M) — negacyclic INTT output
     """
-    result_step1 = util.matmul(
+    result_step1 = matmul_bat_einsum(
         v, self.intt_bat_tf_step1, "brcmq,cqlpm->brlmp"
     )
     result_step1_reduced = self.ff_ctx_bat_lazy.modular_reduction(result_step1)
@@ -1001,20 +928,8 @@ class NTTCiphertextBATLazyContext(NTTCiphertextContextBase):
         result_step1_reduced.astype(jnp.uint64), self.intt_tf_step2
     )
     result_step2_reduced = self.ff_ctx.modular_reduction(result_step2)
-    result_step3 = util.matmul(
+    result_step3 = matmul_bat_einsum(
         result_step2_reduced, self.intt_bat_tf_step3, "brcmq,lqrpm->blcmp"
     )
     result_step3_reduced = self.ff_ctx.modular_reduction(result_step3)
     return result_step3_reduced
-
-
-def ntt_ciphertext_context_for(finite_field_context):
-  """Return the NTT ciphertext context class named by the ff ctx's ntt_ciphertext_context_cls hook; raise if the hook is None (e.g. Shoup)."""
-  name = getattr(finite_field_context, "ntt_ciphertext_context_cls", None)
-  if name is None:
-    raise ValueError(
-        f"{type(finite_field_context).__name__} declares no "
-        "ntt_ciphertext_context_cls hook; construct its NTT context directly "
-        "and inject it as 'ntt_ctx'"
-    )
-  return globals()[name]

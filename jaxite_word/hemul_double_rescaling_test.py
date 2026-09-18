@@ -2,11 +2,12 @@
 
 from absl.testing import absltest
 from absl.testing import parameterized
-from hemul import _HEMulKernel
+from hemul import HEMul
 import jax.numpy as jnp
 import numpy as np
 import util
 import ckks_ctx
+import finite_field as ff_context
 from polynomial import Polynomial
 
 
@@ -49,6 +50,10 @@ class HEMulTest(parameterized.TestCase):
         complex(1.5625, 0), complex(4, 0), complex(5.0625, 0), complex(4, 0),
         complex(4, 0), complex(5.0625, 0), complex(4, 0), complex(1.5625, 0),
     ]
+    ct_result_shapes = {'batch': self.batch, 'num_elements': self.num_elements, 'degree': self.degree,
+                      'precision': 32, 'num_moduli': len(self.q_towers)-self.composite_degree, 'degree_layout': self.degree_layout}
+    ct_result_params_base = {'finite_field_context': ff_context.BarrettContext, 'r': self.r, 'c': self.c}
+    self.ct_result = Polynomial(ct_result_shapes, {**ct_result_params_base, 'moduli': self.q_towers[:-self.composite_degree]})
 
   # @absltest.skip("test a single experiment")
   def test_double_rescaling_multiply_decrypt_debug(self):
@@ -83,7 +88,7 @@ class HEMulTest(parameterized.TestCase):
 
     # Class Initialization
     ctx = ckks_ctx.CKKSContext(params)
-    he_mul = _HEMulKernel(batch, r, c, dnum, num_eval_mult, self.q_towers, self.p_towers, composite_degree=self.composite_degree)
+    he_mul = HEMul(batch, r, c, dnum, num_eval_mult, self.q_towers, self.p_towers, composite_degree=self.composite_degree)
     he_mul.control_gen(degree_layout=(r,c), composite_degree=self.composite_degree)
     he_mul.setup_relinearization(eval_key_a, eval_key_b)
 
@@ -93,16 +98,12 @@ class HEMulTest(parameterized.TestCase):
     ct_in = Polynomial(ct_in_shapes, parameters={'moduli': self.q_towers})
     ct_in.polynomial = in_cts_array
     encrypted_result = he_mul.mul(ct_in)
+    encrypted_result = encrypted_result.polynomial.reshape(batch, num_elements, self.degree, len(self.q_towers)-self.composite_degree)
     if debug:
-      np.testing.assert_array_equal(
-          encrypted_result.polynomial.reshape(
-              batch, num_elements, self.degree,
-              len(self.q_towers) - self.composite_degree,
-          ),
-          encrypted_mult_result_ref,
-      )
+      np.testing.assert_array_equal(encrypted_result, encrypted_mult_result_ref)
     # Step 4: Decryption
-    decrypted_result = ctx.decrypt(encrypted_result)
+    self.ct_result.set_batch_polynomial(encrypted_result)
+    decrypted_result = ctx.decrypt(self.ct_result)
     # Step 5: Decoding
     decoded_values = ctx.decode(decrypted_result, is_ntt=False)
     if debug:

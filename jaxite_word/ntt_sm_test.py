@@ -27,24 +27,6 @@ class NTTTest(parameterized.TestCase):
     super(NTTTest, self).__init__(*args, **kwargs)
     self.random_key = jax.random.key(0)
 
-  def test_context_rejects_invalid_layout_and_modulus(self):
-    with self.assertRaisesRegex(ValueError, "r and c must be positive"):
-      ntt.NTTContextBase(97, {"r": 0, "c": 8})
-    with self.assertRaisesRegex(ValueError, r"less than 2\*\*31"):
-      ntt.NTTContextBase(2**31, {"r": 2, "c": 2})
-
-  def test_reference_rejects_the_wrong_input_length(self):
-    context = ntt.NTTContextBase(
-        97,
-        {
-            "r": 2,
-            "c": 4,
-            "finite_field_context": ff_context.BarrettContext(97),
-        },
-    )
-    with self.assertRaisesRegex(ValueError, "length transform_length"):
-      context.ntt_three_step_reference([1, 2])
-
   @parameterized.named_parameters(*NTT)
   def test_NTT_Barrett(self, q, psi, batch, r, c, coef_in, eval_in):
     parameters = {

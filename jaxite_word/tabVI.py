@@ -8,7 +8,7 @@ from absl.testing import absltest
 from absl.testing import parameterized
 import bconv
 import util
-from profiler import KernelWrapper, Profiler, collect_logs, kernel_perf_setup
+from profiler import KernelWrapper, Profiler, collect_logs
 
 # Use 64-bit precision as in bconv.py
 jax.config.update("jax_enable_x64", True)
@@ -104,16 +104,17 @@ def _jax_bconv_bat_kernel(data_in, parameters):
   return parameters["bconv"].basis_change_bat(data_in)
 
 def _jax_bconv_kernel(data_in, parameters):
-  # Fixed-path timing intentionally bypasses public safety routing. This table
-  # measures the dense kernel only and is not a correctness qualification for
-  # the synthetic accumulator envelope.
-  return parameters["bconv"]._basis_change_dense(data_in)
+  return parameters["bconv"].basis_change(data_in)
 
 class BConvPerformanceTest(parameterized.TestCase):
 
   def setUp(self):
     super().setUp()
-    self.output_trace_root, self.profiler_config = kernel_perf_setup(__file__)
+    self.output_trace_root = os.path.join(os.path.dirname(__file__), "log")
+    self.profiler_config = {
+        "iterations": 1,
+        "save_to_file": True,
+    }
 
   @classmethod
   def tearDownClass(cls):
@@ -161,6 +162,7 @@ class BConvPerformanceTest(parameterized.TestCase):
     # Using perf_test=True for potentially faster setup/mock constants if supported,
     # though here we are providing real moduli so it might handle it or we stick to False if we want real math verification.
     # However, for pure performance profiling of the kernel execution, perf_test=True is often preferred to skip expensive precomputes.
+    # The prompt implies alignment with add_perf_test which has perf_test params.
     _bconv.control_gen([(in_indices, out_indices)], perf_test=True)
 
     for batch in batch_list:
@@ -189,7 +191,8 @@ class BConvPerformanceTest(parameterized.TestCase):
           },
       )
 
-    profiler_instance.run()
+    profiler_instance.profile_all_profilers()
+    profiler_instance.post_process_all_profilers()
 
   @parameterized.named_parameters(*PERF_TEST_PARAMS)
   def test_basis_change(self, limb_in, limb_out, degree):
@@ -236,7 +239,8 @@ class BConvPerformanceTest(parameterized.TestCase):
           },
       )
 
-    profiler_instance.run()
+    profiler_instance.profile_all_profilers()
+    profiler_instance.post_process_all_profilers()
 
 
 if __name__ == "__main__":
