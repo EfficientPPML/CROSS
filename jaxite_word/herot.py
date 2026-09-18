@@ -1,74 +1,48 @@
+import math
+
 import jax
 import jax.numpy as jnp
 import util
 import bconv
+import finite_field
 from polynomial import Polynomial
-import numpy as np
+
+BarrettContext = finite_field.BarrettContext
 
 # enable 64-bit computation in jax
 jax.config.update("jax_enable_x64", True)
 
 
-def is_power_of_two(x: int) -> bool:
-  """Returns True if x is a power of two."""
-  return x > 0 and (x & (x - 1)) == 0
+class _HERotKernel:
+  """Private homomorphic-rotation kernel.
 
+  Lifecycle:
 
-def mat_1d_shuffle_to_2d(coef_map: jnp.ndarray, r: int, c: int):
-  """Memory Aligned Transformation.
+  * Offline: ``__init__`` -> ``control_gen`` -> ``setup_rotation``.
+  * Runtime: ``rotate`` or a validated ``_<step>_array`` boundary.
+  * Runtime methods never create or replace cached control/key state.
 
-  Perform 1D data shuffing of O(N) in matrix fashion with O(sqrt(N)) memory
-  cost.
-  Precomputes the 2D indices.
+  Naming follows the other HE kernels:
 
-  Factor coef_map (length r*c) into row_perm (len r) and col_perm (len c) such
-  that:
-    coef_map.reshape(r,c)[i,j] == row_perm[i]*c + col_perm[j]
+  * ``rotate`` is the complete ``Polynomial`` operation.
+  * ``_<step>_array`` is a validated raw/JAX composition boundary.
+  * ``_<verb>_<object>`` is an implementation-only helper. Such a helper may
+    manipulate arrays, but it is not a supported composition boundary.
+  * lifecycle methods such as ``control_gen`` and ``setup_rotation`` do not
+    transform ciphertext payloads and therefore omit ``_array``.
 
-  Args:
-    coef_map: The 1D permuted indices of shape (r*c,).
-    r: The number of rows for the 2D matrix.
-    c: The number of columns for the 2D matrix.
-
-  Returns:
-    row_perm: int32[r]
-    col_perm: int32[c]
+  The ordinary runtime path is ``rotate`` -> ``_rotate_array`` -> key switch
+  -> ModDown -> add c0 -> automorphism. The hoisted path decomposes c1 once
+  with ``_decompose_array``, applies ``_hoisted_rotate_array`` per key, keeps
+  accumulation in QP, and invokes ``_mod_down_array`` at group boundaries.
   """
-  if coef_map.ndim != 1 or coef_map.shape[0] != r * c:
-    raise ValueError(
-        f'coef_map must be 1D of length r*c. Got shape {coef_map.shape},'
-        f' r*c={r*c}.'
-    )
-  if r <= 0 or c <= 0:
-    raise ValueError('r and c must be positive.')
-  # (Recommended, since your degree is power-of-2)
-  if not (is_power_of_two(r) and is_power_of_two(c)):
-    raise ValueError('For your setting, r and c should be powers of two.')
-  coef2d = coef_map.reshape(r, c)
 
-  # If coef2d[i,j] = row_perm[i]*c + col_perm[j], then:
-  row_perm = (coef2d[:, 0] // c).astype(jnp.int32)
-  col_perm = (coef2d[0, :] % c).astype(jnp.int32)
+  # ---------------------------------------------------------------------------
+  # Offline construction and configuration.
+  # ---------------------------------------------------------------------------
 
-  coef2d_h = np.asarray(jax.device_get(coef2d))
-  row_h = np.asarray(jax.device_get(row_perm))
-  col_h = np.asarray(jax.device_get(col_perm))
-  expected_h = row_h[:, None] * c + col_h[None, :]
-  if not np.array_equal(coef2d_h, expected_h):
-    raise ValueError(
-        'coef_map is NOT decomposable into a single global row permutation +'
-        f' column permutation for r={r}, c={c}. (i.e., not P_row ⊗ P_col). Pick'
-        ' a different (r,c) factorization, or keep using jnp.take(a, coef_map,'
-        ' axis=2).'
-    )
-
-  return row_perm, col_perm
-
-
-class HERot:
-  """HERot class."""
-
-  def __init__(self, r, c, dnum, rotate_in_ciphertext_moduli, extend_moduli):
+  def __init__(self, r, c, dnum, rotate_in_ciphertext_moduli, extend_moduli,
+               finite_field_context=BarrettContext):
     self.r = r
     self.c = c
     self.dnum = dnum
@@ -77,12 +51,24 @@ class HERot:
     self.overall_moduli_init = (
         self.rotate_in_ciphertext_moduli + self.extend_moduli
     )
-    self.bconv = bconv.BConvBarrett(self.overall_moduli_init)
+    self.ff_context_cls = finite_field_context
+    # BConv backend selected from the injected reduction algorithm (see bconv.make_bconv).
+    self.bconv = bconv.make_bconv(
+        self.ff_context_cls, self.overall_moduli_init
+    )
     self.evalkey_a_vector = jnp.zeros((dnum, 0), dtype=jnp.uint64)
     self.evalkey_b_vector = jnp.zeros((dnum, 0), dtype=jnp.uint64)
     self.coef_map = jnp.zeros((0,), dtype=jnp.int32)
+    self._controls_ready = False
+    self._rotation_ready = False
 
-  def control_gen(self, batch=1, degree_layout=None, perf_test=False):
+  def control_gen(
+      self,
+      batch=1,
+      degree_layout=None,
+      perf_test=False,
+      keygen_sizeQ=None,
+  ):
     """Generates control parameters and precomputes values for rotations.
 
     This method sets up various parameters and precomputations required for
@@ -92,16 +78,27 @@ class HERot:
 
     Args:
       batch: The batch size of the ciphertexts.
-      degree_layout: The layout of the polynomial degrees. Defaults to (r * c,).
+      degree_layout: The tiled polynomial layout. Defaults to ``(r, c)``.
       perf_test: If True, uses random parameters instead of computing actual
         roots of unity, useful for performance testing.
+      keygen_sizeQ: Q-tower count used to generate the rotation key. When set,
+        preserves the key's decomposition partition boundaries at lower levels.
     """
-    if degree_layout is None:
-      degree_layout = (self.r * self.c,)
+    # Invalidating first makes repeated setup safe: runtime methods cannot
+    # observe controls or default rotation state from an earlier layout.
+    self._controls_ready = False
+    self._rotation_ready = False
+    self.evalkey_a_vector = jnp.zeros((self.dnum, 0), dtype=jnp.uint64)
+    self.evalkey_b_vector = jnp.zeros((self.dnum, 0), dtype=jnp.uint64)
+    self.coef_map = jnp.zeros((0,), dtype=jnp.int32)
+    degree_layout = finite_field.canonical_degree_layout(
+        self.r, self.c, degree_layout, '_HERotKernel.control_gen'
+    )
     self.degree_layout = degree_layout
     sizeQl_in = len(self.rotate_in_ciphertext_moduli)
     sizeQlP_in = len(self.extend_moduli) + sizeQl_in
-    alpha = (sizeQl_in + self.dnum - 1) // self.dnum
+    partition_size_q = keygen_sizeQ if keygen_sizeQ is not None else sizeQl_in
+    alpha = (partition_size_q + self.dnum - 1) // self.dnum
     ring_dim = self.r * self.c
     overall_moduli = self.rotate_in_ciphertext_moduli + self.extend_moduli
     self.perf_test = perf_test
@@ -122,6 +119,13 @@ class HERot:
     self.PInvModq = jnp.asarray(PInvModq_approx_down, dtype=jnp.uint32).reshape(
         sizeQl_in
     )
+    # Encode into computation format so modmul(PInvModq) keeps ciphertexts in
+    # the op's representation (identity for Barrett; Montgomery: PInv * R).
+    self.PInvModq = (
+        self.ff_context_cls(moduli=target_moduli)
+        .to_computation_format(self.PInvModq.astype(jnp.uint64))
+        .astype(jnp.uint32)
+    )
     self.sizeQlP, self.sizeQl = sizeQlP_in, sizeQl_in
     self.batch = batch
 
@@ -133,6 +137,7 @@ class HERot:
       else:
         original_moduli_extract_index[-1].append(i)
     numPartQl = (sizeQl_in + alpha - 1) // alpha
+    self.numPartQl = numPartQl
 
     control_indices_list = []
 
@@ -180,7 +185,19 @@ class HERot:
     }
     self.ct_in = Polynomial(
         ct_in_shapes,
-        parameters={'moduli': overall_moduli[:sizeQl_in], 'BAT_lazy': False},
+        parameters={
+            'moduli': overall_moduli[:sizeQl_in],
+            'finite_field_context': self.ff_context_cls,
+        },
+    )
+    ct_single_shapes = dict(ct_in_shapes)
+    ct_single_shapes['num_elements'] = 1
+    self.ct_single = Polynomial(
+        ct_single_shapes,
+        parameters={
+            'moduli': overall_moduli[:sizeQl_in],
+            'finite_field_context': self.ff_context_cls,
+        },
     )
 
     self.ct_parts = []
@@ -190,7 +207,7 @@ class HERot:
       _num_moduli_part = len(_target_moduli_list)
       ct_part_shapes = {
           'batch': batch,
-          'num_elements': 2,
+          'num_elements': 1,
           'degree': ring_dim,
           'precision': 32,
           'num_moduli': _num_moduli_part,
@@ -199,7 +216,10 @@ class HERot:
       self.ct_parts.append(
           Polynomial(
               ct_part_shapes,
-              parameters={'moduli': _target_moduli_list, 'BAT_lazy': False},
+              parameters={
+                  'moduli': _target_moduli_list,
+                  'finite_field_context': self.ff_context_cls,
+              },
           )
       )
 
@@ -213,12 +233,15 @@ class HERot:
     }
     self.ct_full = Polynomial(
         ct_full_shapes,
-        parameters={'moduli': self.overall_moduli, 'BAT_lazy': False},
+        parameters={
+            'moduli': self.overall_moduli,
+            'finite_field_context': self.ff_context_cls,
+        },
     )
 
     ct_approx_shapes = {
         'batch': batch,
-        'num_elements': 2,
+        'num_elements': 1,
         'degree': ring_dim,
         'precision': 32,
         'num_moduli': sizeQlP_in - sizeQl_in,
@@ -226,317 +249,585 @@ class HERot:
     }
     self.ct_approx = Polynomial(
         ct_approx_shapes,
-        parameters={'moduli': self.extend_moduli, 'BAT_lazy': False},
+        parameters={
+            'moduli': self.extend_moduli,
+            'finite_field_context': self.ff_context_cls,
+        },
     )
+    # Materialize the control arrays here, outside every JIT/runtime path.
+    self._restore_indices_jax = [
+        jnp.asarray(idx, dtype=jnp.uint16) for idx in self.restore_indices
+    ]
+    self._select_tower_index_jax = [
+        jnp.asarray(idx, dtype=jnp.uint16) for idx in self.select_tower_index
+    ]
+    self._controls_ready = True
 
-  def setup_rotate(self, evalkey_a_vector, evalkey_b_vector, coef_map):
-    self.evalkey_a_vector = evalkey_a_vector.astype(jnp.uint64)
-    self.evalkey_b_vector = evalkey_b_vector.astype(jnp.uint64)
-    self.coef_map = jnp.asarray(coef_map, dtype=jnp.int32)
+  def setup_rotation(self, evalkey_a_vector, evalkey_b_vector, coef_map):
+    """Bind one rotation's default key and automorphism map offline.
+
+    Explicit evaluation-key operands supplied later to runtime array methods
+    must already use this kernel's computation representation. State returned
+    by ``_HERotAtLevel._rotation_state`` satisfies that contract.
+    """
+    if not self._controls_ready:
+      raise RuntimeError(
+          'HERot.setup_rotation requires control_gen to run first.'
+      )
+    self._rotation_ready = False
+    evalkey_a_vector = jnp.asarray(evalkey_a_vector, dtype=jnp.uint64)
+    evalkey_b_vector = jnp.asarray(evalkey_b_vector, dtype=jnp.uint64)
+    # Keys arrive standard-form; encode to computation format so the key-switch product stays in the op's representation (Montgomery: evk*R).
+    evk_ctx = self.ff_context_cls(moduli=self.overall_moduli_init)
+    self.evalkey_a_vector = evk_ctx.to_computation_format(
+        evalkey_a_vector
+    ).astype(jnp.uint32)
+    self.evalkey_b_vector = evk_ctx.to_computation_format(
+        evalkey_b_vector
+    ).astype(jnp.uint32)
+    self.coef_map = self._resolve_automorphism_map(coef_map)
+    # Validate and retain the fully materialized computation-format defaults
+    # now, so runtime/JIT methods remain read-only with respect to this object.
+    self.evalkey_a_vector, self.evalkey_b_vector = (
+        self._resolve_evaluation_keys(
+            self.evalkey_a_vector, self.evalkey_b_vector
+        )
+    )
+    self._rotation_ready = True
+
+  # ---------------------------------------------------------------------------
+  # Complete runtime operations.
+  # ---------------------------------------------------------------------------
 
   def rotate(
       self,
-      in_ciphertexts,
+      in_ciphertexts: Polynomial,
+  ) -> Polynomial:
+    """Rotate a ciphertext through the canonical HYBRID algorithm steps."""
+    self._require_controls()
+    finite_field.check_ct_operand(
+        self.ff_context_cls,
+        self.sizeQl,
+        in_ciphertexts,
+        '_HERotKernel.rotate',
+        batch=self.batch,
+        num_elements=2,
+        degree_layout=(self.r, self.c),
+        moduli=self.overall_moduli[:self.sizeQl],
+    )
+    return self.ct_in._clone_with_payload(
+        self._rotate_array(in_ciphertexts.polynomial)
+    )
+
+  def _rotate_array(
+      self, ct_data, eval_a=None, eval_b=None, coef_map=None
   ):
-    """Rotates the input ciphertext."""
-    batch, r, c, dnum = self.batch, self.r, self.c, self.dnum
+    """Rotate a canonical rank-5 payload through the HYBRID steps.
 
-    sizeQlP, sizeQl = self.sizeQlP, self.sizeQl
-    select_tower_index = self.select_tower_index
-    if (
-        not hasattr(self, '_jax_arrays_precomputed')
-        or not self._jax_arrays_precomputed
-    ):
-      # Convert lists of lists/tuples to lists of JAX arrays once
-      self._restore_indices_jax = [
-          jnp.array(idx, jnp.uint16) for idx in self.restore_indices
-      ]
-      self._select_tower_index_jax = [
-          jnp.array(idx, jnp.uint16) for idx in select_tower_index
-      ]
-      self._evalkey_b_vector_jax = jnp.stack(self.evalkey_b_vector, axis=0)
-      self._evalkey_a_vector_jax = jnp.stack(self.evalkey_a_vector, axis=0)
-      self._jax_arrays_precomputed = True
-
-    ring_dim = r * c
-
-    overall_moduli_jax = jnp.asarray(self.overall_moduli, dtype=jnp.uint32)
-    original_moduli = jnp.expand_dims(
-        overall_moduli_jax[:sizeQl], axis=(0, 1, 2, 3)
-    )
-    PInvModq_jax = jnp.expand_dims(
-        jnp.array(self.PInvModq, jnp.uint64), axis=(0, 1, 2, 3)
-    )
-    in_tower = in_ciphertexts.polynomial[:, -1:, ..., :sizeQl]
-
-    # ---------- Step 1: Keyswitch (Accumulation) ----------
-    # Use the precomputed JAX arrays
-    restore_indices_jax = self._restore_indices_jax
-    select_tower_index_jax = self._select_tower_index_jax
-
-    self.ct_in.polynomial = in_tower
-    self.ct_in.to_coeffs_form()
-    parts_ct_clone_coef = self.ct_in.polynomial
-
-    res0 = jnp.zeros((batch, 1, r, c, sizeQlP), dtype=jnp.uint64)
-    res1 = jnp.zeros((batch, 1, r, c, sizeQlP), dtype=jnp.uint64)
-
-    def compute_parts_ct_ext(p):
-      input_for_bconv = parts_ct_clone_coef[..., select_tower_index_jax[p]]
-      parts_ct_clone_eval = self.bconv.basis_change_bat(
-          input_for_bconv, control_index=p
-      ).astype(jnp.uint64)
-
-      ct_part = self.ct_parts[p]
-      ct_part.polynomial = parts_ct_clone_eval.astype(jnp.uint32)
-      ct_part.to_ntt_form()
-
-      # Need to pad zeros.
-      # The padding zeros should be sharded.
-      # Hence borrow the shape from in_tower, which is already sharded.
-      ct_part_aligned = ct_part.polynomial + (in_tower[..., :1] * 0)
-      parts_ct_ext = jnp.concatenate(
-          [in_tower[..., select_tower_index_jax[p]], ct_part_aligned],
-          axis=-1,
-      )
-      return parts_ct_ext[..., restore_indices_jax[p]]
-
-    if dnum > 0:
-      # Reduce each product immediately to prevent Barrett overflow when
-      # the accumulated sum across dnum partitions exceeds 2^(2*modulus_bits).
-      rot_ff = self.ct_full.ntt_ctx.ff_ctx
-      next_parts_ct_ext = compute_parts_ct_ext(0)
-
-      for part in range(dnum - 1):
-        cur_parts_ct_ext = next_parts_ct_ext
-
-        next_parts_ct_ext = compute_parts_ct_ext(part + 1)
-
-        prod_b = rot_ff.modular_reduction(
-            cur_parts_ct_ext * self._evalkey_b_vector_jax[part]
-        ).astype(jnp.uint64)
-        prod_a = rot_ff.modular_reduction(
-            cur_parts_ct_ext * self._evalkey_a_vector_jax[part]
-        ).astype(jnp.uint64)
-        res0 = res0 + prod_b
-        res1 = res1 + prod_a
-
-      prod_b = rot_ff.modular_reduction(
-          next_parts_ct_ext * self._evalkey_b_vector_jax[dnum - 1]
-      ).astype(jnp.uint64)
-      prod_a = rot_ff.modular_reduction(
-          next_parts_ct_ext * self._evalkey_a_vector_jax[dnum - 1]
-      ).astype(jnp.uint64)
-      res0 = res0 + prod_b
-      res1 = res1 + prod_a
-
-    # ---------- Steps 2-5: Sequential Component Processing ----------
-    base0 = in_ciphertexts.polynomial[:, 0:1, ..., :sizeQl]
-    final_components = []
-
-    for i, comp in enumerate([res0, res1]):
-      # Step 2: Modulus reduction (component-wise)
-      self.ct_full.polynomial = comp
-      self.ct_full.mod_reduce()
-      reduced = self.ct_full.polynomial.astype(jnp.uint32)
-
-      # Step 3: Approximation modulus switch
-      self.ct_approx.polynomial = reduced[..., sizeQl:]
-      self.ct_approx.to_coeffs_form()
-      ql_from_p = self.bconv.basis_change_bat(
-          self.ct_approx.polynomial, control_index=dnum
-      )
-
-      self.ct_in.polynomial = ql_from_p.astype(jnp.uint32)
-      self.ct_in.to_ntt_form()
-
-      ql_part = reduced[..., :sizeQl]
-      diff = ql_part - self.ct_in.polynomial
-      sub = jnp.where(
-          ql_part < self.ct_in.polynomial,
-          diff + original_moduli,
-          diff,
-      )
-
-      self.ct_in.polynomial = sub
-      self.ct_in.modmul(PInvModq_jax)
-      res_i = self.ct_in.polynomial
-
-      # Step 4: Add base component for the first ciphertext component
-      if i == 0:
-        res_i = res_i + base0
-        res_i = jnp.where(
-            res_i >= original_moduli, res_i - original_moduli, res_i
-        )
-
-      # Step 5: Automorphism (permutation)
-      res_i_flat = res_i.reshape(batch, ring_dim, sizeQl)
-      final_components.append(jnp.take(res_i_flat, self.coef_map, axis=1))
-
-    ks_results = jnp.stack(final_components, axis=1)
-    self.ct_in.polynomial = ks_results
-    self.ct_in.element_count = ks_results.shape[1]
-    return self.ct_in
-
-  @staticmethod
-  def make_rotate_fn(herot_instance):
-    """Build a pure rotation function from a configured HERot instance.
-
-    Returns a closure (ct_data, eval_a, eval_b, coef_map) -> rotated_data
-    that performs the same computation as rotate() but takes per-rotation
-    state as arguments (suitable for jax.lax.scan).
-
-    The returned function captures all level-shared constants (NTT contexts,
-    BConv matrices, twiddle factors, etc.) from herot_instance.
-
-    Args:
-        herot_instance: A fully configured HERot (control_gen + setup_rotate
-            already called). Only the shared state is captured; eval keys
-            and coef_map are NOT captured (they become function arguments).
-
-    Returns:
-        A pure function: (ct_data, eval_a, eval_b, coef_map) -> jnp.ndarray
-        where ct_data is (batch, 2, *degree_layout, sizeQl) and the output
-        is (batch, 2, ring_dim, sizeQl).
+    Evaluation keys and the automorphism map are explicit runtime operands
+    for fused scans. Explicit keys must already use the kernel's computation
+    representation. Any omitted state comes from ``setup_rotation``.
     """
-    inst = herot_instance
-    # Force lazy precomputation so JAX arrays exist
-    if not hasattr(inst, '_jax_arrays_precomputed') or not inst._jax_arrays_precomputed:
-      inst._restore_indices_jax = [
-          jnp.array(idx, jnp.uint16) for idx in inst.restore_indices]
-      inst._select_tower_index_jax = [
-          jnp.array(idx, jnp.uint16) for idx in inst.select_tower_index]
-      inst._jax_arrays_precomputed = True
+    self._require_controls()
+    finite_field.check_rank5_array(
+        ct_data,
+        '_HERotKernel._rotate_array',
+        batch=self.batch,
+        num_elements=2,
+        degree_layout=(self.r, self.c),
+        num_moduli=self.sizeQl,
+    )
+    coef_map = self._resolve_automorphism_map(coef_map)
+    # Preserve the generalized path for Montgomery and full-width Barrett
+    # moduli. The common CKKS/HERot Barrett envelope (all q < 2^31) can use a
+    # fused streaming implementation: uint32 add/sub is wrap-safe there and
+    # keeping the two key-switch components separate avoids materializing a
+    # full two-component QP temporary before ModDown.
+    if self.ff_context_cls is BarrettContext and all(
+        modulus < 1 << 31 for modulus in self.overall_moduli
+    ):
+      return self._rotate_barrett_fused(ct_data, eval_a, eval_b, coef_map)
+    switched_qp = self._key_switch_array(ct_data, eval_a, eval_b)
+    switched_q = self._mod_down_array(switched_qp)
+    with_first = self._add_first_component_array(switched_q, ct_data)
+    return self._automorphism_array(with_first, coef_map)
 
-    # ---- Capture shared constants ----
-    batch = inst.batch
-    r, c, dnum = inst.r, inst.c, inst.dnum
-    sizeQl, sizeQlP = inst.sizeQl, inst.sizeQlP
-    ring_dim = r * c
+  def _rotate_barrett_fused(self, ct_data, eval_a, eval_b, coef_map):
+    """Run the low-memory Barrett rotation kernel for sub-31-bit moduli."""
+    eval_a, eval_b = self._resolve_evaluation_keys(eval_a, eval_b)
+    in_tower, coeffs = self._prepare_decomposition_inputs(ct_data)
+    ff_full = self.ct_full.ntt_ctx.ff_ctx
 
-    restore_indices = inst._restore_indices_jax
-    select_tower_index = inst._select_tower_index_jax
+    res0 = jnp.zeros(
+        (self.batch, 1, self.r, self.c, self.sizeQlP), dtype=jnp.uint64
+    )
+    res1 = jnp.zeros_like(res0)
 
-    original_moduli = jnp.expand_dims(
-        jnp.asarray(inst.overall_moduli[:sizeQl], dtype=jnp.uint32),
-        axis=(0, 1, 2, 3))
-    PInvModq = jnp.expand_dims(
-        jnp.array(inst.PInvModq, jnp.uint64), axis=(0, 1, 2, 3))
+    # Stream one digit at a time. Keeping the next digit explicit lets the TPU
+    # compiler overlap its NTT with the current digit's key products, matching
+    # the original fast HERot schedule without storing all QP digits.
+    if self.numPartQl:
+      next_digit = self._decompose_part(in_tower, coeffs, 0)
+      for part in range(self.numPartQl - 1):
+        digit = next_digit
+        next_digit = self._decompose_part(in_tower, coeffs, part + 1)
+        digit = digit.astype(jnp.uint64)
+        res0 = res0 + ff_full.modular_reduction(
+            digit * eval_b[part].astype(jnp.uint64)
+        ).astype(jnp.uint64)
+        res1 = res1 + ff_full.modular_reduction(
+            digit * eval_a[part].astype(jnp.uint64)
+        ).astype(jnp.uint64)
 
-    # NTT/FF contexts from pre-allocated Polynomial objects
-    ntt_ctx_in = inst.ct_in.ntt_ctx
-    ff_ctx_in = ntt_ctx_in.ff_ctx
-    ntt_ctx_parts = [p.ntt_ctx for p in inst.ct_parts]
-    ntt_ctx_full = inst.ct_full.ntt_ctx
-    ff_ctx_full = ntt_ctx_full.ff_ctx
-    ntt_ctx_approx = inst.ct_approx.ntt_ctx
+      next_digit = next_digit.astype(jnp.uint64)
+      res0 = res0 + ff_full.modular_reduction(
+          next_digit * eval_b[self.numPartQl - 1].astype(jnp.uint64)
+      ).astype(jnp.uint64)
+      res1 = res1 + ff_full.modular_reduction(
+          next_digit * eval_a[self.numPartQl - 1].astype(jnp.uint64)
+      ).astype(jnp.uint64)
 
-    # BConv: pre-extract per-partition constants to avoid list indexing
-    bconv_inst = inst.bconv
-    # Also capture the approx-mod-down BConv control (index = dnum)
-    # bconv.basis_change_bat is already a pure function on arrays
+    q_moduli = jnp.asarray(
+        self.overall_moduli[:self.sizeQl], dtype=jnp.uint32
+    ).reshape(1, 1, 1, 1, self.sizeQl)
+    p_inv = jnp.asarray(self.PInvModq, dtype=jnp.uint64).reshape(
+        1, 1, 1, 1, self.sizeQl
+    )
+    base0 = ct_data[:, 0:1, ..., :self.sizeQl]
+    components = []
 
-    # ---- Define pure inline helpers ----
-    def _ntt(data, ntt_ctx):
-      shape = data.shape
-      return ntt_ctx.ntt(data.reshape(-1, r, c, shape[-1])).reshape(shape)
+    # Process each component completely before starting the next one. This
+    # bounds live QP data and avoids a bandwidth-heavy QP concatenate/slice.
+    for component_index, accumulated in enumerate((res0, res1)):
+      reduced = ff_full.modular_reduction(accumulated).astype(jnp.uint32)
+      p_part = reduced[..., self.sizeQl:]
+      p_shape = p_part.shape
+      p_coeffs = self.ct_approx.ntt_ctx.intt(
+          p_part.reshape(-1, self.r, self.c, p_shape[-1])
+      ).reshape(p_shape)
+      q_from_p = self.bconv.basis_change_bat(
+          p_coeffs, control_index=self.numPartQl
+      ).astype(jnp.uint32)
+      q_shape = q_from_p.shape
+      q_from_p_ntt = self.ct_in.ntt_ctx.ntt(
+          q_from_p.reshape(-1, self.r, self.c, self.sizeQl)
+      ).reshape(q_shape)
 
-    def _intt(data, ntt_ctx):
-      shape = data.shape
-      return ntt_ctx.intt(data.reshape(-1, r, c, shape[-1])).reshape(shape)
-
-    def _modmul(data, other, ff_ctx):
-      return ff_ctx.modular_reduction(
-          data.astype(jnp.uint64) * other.astype(jnp.uint64)
+      q_part = reduced[..., :self.sizeQl]
+      diff = q_part - q_from_p_ntt
+      diff = jnp.where(
+          q_part < q_from_p_ntt, diff + q_moduli, diff
+      )
+      result = self.ct_in.ntt_ctx.ff_ctx.modular_reduction(
+          diff.astype(jnp.uint64) * p_inv
       ).astype(jnp.uint32)
 
-    def _mod_reduce(data, ff_ctx):
-      return ff_ctx.modular_reduction(data.astype(jnp.uint64)).astype(jnp.uint32)
+      if component_index == 0:
+        result = result + base0
+        result = jnp.where(result >= q_moduli, result - q_moduli, result)
 
-    # ---- The pure rotation function ----
-    def rotate_fn(ct_data, eval_a, eval_b, coef_map):
-      """Pure HERot rotation.
+      flat = result.reshape(
+          self.batch, self.r * self.c, self.sizeQl
+      )
+      permuted = jnp.take(flat, coef_map, axis=1)
+      components.append(
+          permuted.reshape(
+              self.batch, 1, self.r, self.c, self.sizeQl
+          )
+      )
 
-      Args:
-          ct_data: (batch, 2, *degree_layout, sizeQl) uint32 input ciphertext
-          eval_a: (dnum, *degree_layout, sizeQlP) uint64 rotation eval key A
-          eval_b: (dnum, *degree_layout, sizeQlP) uint64 rotation eval key B
-          coef_map: (ring_dim,) int32 coefficient permutation
+    return jnp.concatenate(components, axis=1)
 
-      Returns:
-          (batch, 2, ring_dim, sizeQl) uint32 rotated ciphertext
-      """
-      in_tower = ct_data[:, -1:, ..., :sizeQl]
+  # ---------------------------------------------------------------------------
+  # Runtime state helpers. These intentionally omit the ``_array`` suffix.
+  # ---------------------------------------------------------------------------
 
-      # Step 1: INTT on last element (negacyclic NTT handles psi internally)
-      partCtCloneCoef = _intt(in_tower, ntt_ctx_in)
+  def _require_controls(self):
+    """Reject runtime use before the offline control phase is complete."""
+    if not self._controls_ready:
+      raise RuntimeError(
+          'HERot runtime operations require control_gen to run first.'
+      )
 
-      res0 = jnp.zeros((batch, 1, r, c, sizeQlP), dtype=jnp.uint64)
-      res1 = jnp.zeros((batch, 1, r, c, sizeQlP), dtype=jnp.uint64)
+  def _rotation_state(self):
+    """Return bound computation-format keys and the automorphism map."""
+    if not self._rotation_ready:
+      raise RuntimeError(
+          'HERot rotation state requires setup_rotation to run first.'
+      )
+    return self.evalkey_a_vector, self.evalkey_b_vector, self.coef_map
 
-      # Keyswitch accumulation (dnum loop — small, stays unrolled)
-      def _compute_parts_ct_ext(p):
-        input_for_bconv = partCtCloneCoef[..., select_tower_index[p]]
-        # BConv output fed into NTT must be u32 (NTT's BAT einsum bitcasts
-        # u32 -> 4-byte lanes). The eager path casts back to u32 via
-        # Polynomial.to_ntt_form; the pure path must do so explicitly.
-        partCtCloneEval = bconv_inst.basis_change_bat(
-            input_for_bconv, control_index=p).astype(jnp.uint32)
-        ntted = _ntt(partCtCloneEval, ntt_ctx_parts[p])
-        partsCtExt = jnp.concatenate(
-            [in_tower[..., select_tower_index[p]], ntted], axis=-1)
-        return partsCtExt[..., restore_indices[p]]
+  def _resolve_automorphism_map(self, coef_map):
+    """Return an explicit map or the default bound by setup_rotation."""
+    if coef_map is None:
+      if not self._rotation_ready:
+        raise RuntimeError(
+            'HERot default automorphism requires setup_rotation to run first.'
+        )
+      coef_map = self.coef_map
+    coef_map = jnp.asarray(coef_map, dtype=jnp.int32)
+    expected = (self.r * self.c,)
+    if coef_map.shape != expected:
+      raise ValueError(
+          f'HERot automorphism map must have shape {expected}; got '
+          f'{coef_map.shape}.'
+      )
+    return coef_map
 
-      if dnum > 0:
-        next_ext = _compute_parts_ct_ext(0)
-        for part in range(dnum - 1):
-          cur_ext = next_ext
-          next_ext = _compute_parts_ct_ext(part + 1)
-          prod_b = ff_ctx_full.modular_reduction(
-              cur_ext * eval_b[part]).astype(jnp.uint64)
-          prod_a = ff_ctx_full.modular_reduction(
-              cur_ext * eval_a[part]).astype(jnp.uint64)
-          res0 = res0 + prod_b
-          res1 = res1 + prod_a
-        prod_b = ff_ctx_full.modular_reduction(
-            next_ext * eval_b[dnum - 1]).astype(jnp.uint64)
-        prod_a = ff_ctx_full.modular_reduction(
-            next_ext * eval_a[dnum - 1]).astype(jnp.uint64)
-        res0 = res0 + prod_b
-        res1 = res1 + prod_a
+  # ---------------------------------------------------------------------------
+  # Runtime key-switch and hoisting boundaries, with local implementation
+  # helpers kept beside the stage that owns them.
+  # ---------------------------------------------------------------------------
 
-      # Steps 2-5: Sequential component processing
-      base0 = ct_data[:, 0:1, ..., :sizeQl]
-      final_components = []
+  def _decompose_array(self, ct_data):
+    """Hoist the HYBRID digit decomposition of a ciphertext's c1 element.
 
-      for i, comp in enumerate([res0, res1]):
-        # Step 2: Modulus reduction
-        reduced = _mod_reduce(comp, ff_ctx_full).astype(jnp.uint32)
+    The returned digits remain in the extended QlP evaluation basis.  They
+    can be reused with every automorphism key at this level, matching
+    OpenFHE's ``EvalFastRotationPrecompute``.
+    """
+    self._require_controls()
+    finite_field.check_rank5_array(
+        ct_data,
+        'HERot._decompose_array',
+        batch=self.batch,
+        num_elements=2,
+        degree_layout=(self.r, self.c),
+        num_moduli=self.sizeQl,
+    )
 
-        # Step 3: Approximation modulus switch
-        p_part = reduced[..., sizeQl:]
-        p_coeffs = _intt(p_part, ntt_ctx_approx)
-        ql_from_p = bconv_inst.basis_change_bat(
-            p_coeffs, control_index=dnum)
+    in_tower, coeffs = self._prepare_decomposition_inputs(ct_data)
+    digits = [
+        self._decompose_part(in_tower, coeffs, part)
+        for part in range(self.numPartQl)
+    ]
+    return jnp.stack(digits, axis=0).astype(jnp.uint32)
 
-        ql_ntt = _ntt(ql_from_p.astype(jnp.uint32), ntt_ctx_in)
+  def _prepare_decomposition_inputs(self, ct_data):
+    """Prepare internal evaluation- and coefficient-form c1 inputs."""
+    in_tower = ct_data[:, -1:, ..., :self.sizeQl]
+    shape = in_tower.shape
+    coeffs = self.ct_in.ntt_ctx.intt(
+        in_tower.reshape(-1, self.r, self.c, self.sizeQl)
+    ).reshape(shape)
+    return in_tower, coeffs
 
-        ql_part = reduced[..., :sizeQl]
-        diff = ql_part - ql_ntt
-        sub = jnp.where(ql_part < ql_ntt, diff + original_moduli, diff)
+  def _decompose_part(self, in_tower, coeffs, part):
+    """Extend one internal HYBRID part; not a raw composition boundary."""
+    selected = self._select_tower_index_jax[part]
+    switched = self.bconv.basis_change_bat(
+        coeffs[..., selected], control_index=part
+    ).astype(jnp.uint32)
+    part_ctx = self.ct_parts[part].ntt_ctx
+    switched_shape = switched.shape
+    switched_ntt = part_ctx.ntt(
+        switched.reshape(
+            -1, self.r, self.c, switched_shape[-1]
+        )
+    ).reshape(switched_shape)
+    extended = jnp.concatenate(
+        [in_tower[..., selected], switched_ntt], axis=-1
+    )
+    return extended[..., self._restore_indices_jax[part]]
 
-        # Step 4: modmul(PInvModq)
-        res_i = _modmul(sub, PInvModq, ff_ctx_in)
+  def _key_switch_core_array(self, digits, eval_a=None, eval_b=None):
+    """Apply an automorphism key to hoisted digits without QP->Q ModDown."""
+    self._require_controls()
+    digits = jnp.asarray(digits, dtype=jnp.uint64)
+    expected = (
+        self.numPartQl, self.batch, 1, self.r, self.c, self.sizeQlP
+    )
+    if digits.shape != expected:
+      raise ValueError(
+          f'HERot._key_switch_core_array digits must have shape '
+          f'{expected}; got {digits.shape}.'
+      )
+    eval_a, eval_b = self._resolve_evaluation_keys(eval_a, eval_b)
+    return self._accumulate_key_switch_parts(
+        (digits[part] for part in range(self.numPartQl)),
+        eval_a,
+        eval_b,
+    )
 
-        if i == 0:
-          res_i = res_i + base0
-          res_i = jnp.where(res_i >= original_moduli,
-                            res_i - original_moduli, res_i)
+  def _key_switch_array(self, ct_data, eval_a=None, eval_b=None):
+    """Apply HYBRID key switching directly to ciphertext data, retaining QP.
 
-        # Step 5: Coefficient permutation
-        res_i_flat = res_i.reshape(batch, ring_dim, sizeQl)
-        final_components.append(jnp.take(res_i_flat, coef_map, axis=1))
+    This is the streaming equivalent of
+    ``_key_switch_core_array(_decompose_array(ct_data), eval_a, eval_b)``.
+    It avoids materializing all hoisted digits when they will be used once.
+    """
+    self._require_controls()
+    finite_field.check_rank5_array(
+        ct_data,
+        'HERot._key_switch_array',
+        batch=self.batch,
+        num_elements=2,
+        degree_layout=(self.r, self.c),
+        num_moduli=self.sizeQl,
+    )
+    eval_a, eval_b = self._resolve_evaluation_keys(eval_a, eval_b)
+    in_tower, coeffs = self._prepare_decomposition_inputs(ct_data)
+    parts = (
+        self._decompose_part(in_tower, coeffs, part)
+        for part in range(self.numPartQl)
+    )
+    return self._accumulate_key_switch_parts(parts, eval_a, eval_b)
 
-      return jnp.stack(final_components, axis=1)
+  def _resolve_evaluation_keys(self, eval_a, eval_b):
+    """Validate paired computation-format keys or return bound defaults."""
+    if (eval_a is None) != (eval_b is None):
+      raise ValueError(
+          'HERot key switching requires eval_a and eval_b together.'
+      )
+    if eval_a is None:
+      if not self._rotation_ready:
+        raise RuntimeError(
+            'HERot default key switching requires setup_rotation to run first.'
+        )
+      eval_a = self.evalkey_a_vector
+      eval_b = self.evalkey_b_vector
+    eval_a = jnp.asarray(eval_a)
+    eval_b = jnp.asarray(eval_b)
+    expected_key_tail = (self.r, self.c, self.sizeQlP)
+    if eval_a.shape != eval_b.shape or \
+       eval_a.ndim != 4 or eval_b.ndim != 4 or \
+       tuple(eval_a.shape[1:]) != expected_key_tail or \
+       tuple(eval_b.shape[1:]) != expected_key_tail:
+      raise ValueError(
+          'HERot key switching evaluation keys must have shape '
+          f'(partitions, {self.r}, {self.c}, {self.sizeQlP}); got '
+          f'{eval_a.shape} and {eval_b.shape}.'
+      )
+    if eval_a.shape[0] < self.numPartQl or eval_b.shape[0] < self.numPartQl:
+      raise ValueError(
+          'HERot key switching received fewer evaluation-key '
+          f'partitions than the active {self.numPartQl} digits.'
+      )
+    return eval_a, eval_b
 
-    return rotate_fn
+  def _accumulate_key_switch_parts(self, parts, eval_a, eval_b):
+    """Reduce an internal digit iterable against one evaluation key."""
+    ff_full = self.ct_full.ntt_ctx.ff_ctx
+    res0 = jnp.zeros(
+        (self.batch, 1, self.r, self.c, self.sizeQlP), dtype=jnp.uint64
+    )
+    res1 = jnp.zeros_like(res0)
+    for part, digit in enumerate(parts):
+      digit = jnp.asarray(digit, dtype=jnp.uint64)
+      res0 = res0 + ff_full.modular_reduction(
+          digit * eval_b[part].astype(jnp.uint64)
+      ).astype(jnp.uint64)
+      res1 = res1 + ff_full.modular_reduction(
+          digit * eval_a[part].astype(jnp.uint64)
+      ).astype(jnp.uint64)
+    terms = max(self.numPartQl, 1)
+    res0 = ff_full.strictify_after_accumulation(res0, terms)
+    res1 = ff_full.strictify_after_accumulation(res1, terms)
+    return jnp.concatenate([res0, res1], axis=1).astype(jnp.uint32)
+
+  # ---------------------------------------------------------------------------
+  # Runtime hoisted-rotation construction in the QP basis.
+  # ---------------------------------------------------------------------------
+
+  def _key_switch_extend_array(self, ct_data, include_first=True):
+    """Embed a Q ciphertext into QP using OpenFHE's P-scaled convention.
+
+    Q limbs contain ``P * c`` while P limbs are zero. With ``include_first``
+    false, c0 is zeroed but all later components are still embedded.  This
+    is OpenFHE ``KeySwitchExt`` (despite that routine not applying a key).
+    """
+    self._require_controls()
+    finite_field.check_rank5_array(
+        ct_data,
+        'HERot._key_switch_extend_array',
+        batch=self.batch,
+        degree_layout=(self.r, self.c),
+        num_moduli=self.sizeQl,
+    )
+    num_elements = ct_data.shape[1]
+    p_product = math.prod(int(p) for p in self.extend_moduli)
+    p_mod_q = jnp.asarray(
+        [p_product % int(q) for q in self.overall_moduli[:self.sizeQl]],
+        dtype=jnp.uint64,
+    ).reshape(1, 1, 1, 1, self.sizeQl)
+    p_mod_q = self.ct_in.ntt_ctx.ff_ctx.to_computation_format(p_mod_q)
+    q_scaled = self.ct_in.ntt_ctx.ff_ctx.modular_reduction(
+        ct_data.astype(jnp.uint64) * p_mod_q.astype(jnp.uint64)
+    )
+    q_scaled = self.ct_in.ntt_ctx.ff_ctx.strictify(q_scaled).astype(jnp.uint32)
+    if not include_first:
+      keep = (jnp.arange(num_elements) > 0).reshape(1, num_elements, 1, 1, 1)
+      q_scaled = jnp.where(keep, q_scaled, jnp.zeros_like(q_scaled))
+    result = jnp.zeros(
+        (self.batch, num_elements, self.r, self.c, self.sizeQlP),
+        dtype=jnp.uint32,
+    )
+    return result.at[..., :self.sizeQl].set(q_scaled)
+
+  def _automorphism_array(self, data, coef_map=None):
+    """Apply one NTT-domain automorphism to Q or QP ciphertext data."""
+    self._require_controls()
+    coef_map = self._resolve_automorphism_map(coef_map)
+    data = jnp.asarray(data)
+    if data.ndim != 5 or data.shape[0] != self.batch or \
+       tuple(data.shape[-3:-1]) != (self.r, self.c):
+      raise ValueError(
+          'HERot._automorphism_array expects shape '
+          f'({self.batch}, elements, {self.r}, {self.c}, moduli); got '
+          f'{data.shape}.'
+      )
+    num_elements = data.shape[1]
+    num_moduli = data.shape[-1]
+    flat = data.reshape(
+        self.batch, num_elements, self.r * self.c, num_moduli
+    )
+    return jnp.take(flat, jnp.asarray(coef_map, dtype=jnp.int32), axis=2) \
+        .reshape(data.shape)
+
+  def _add_first_component_array(self, target, source):
+    """Add the first source component to a Q- or QP-basis target."""
+    self._require_controls()
+    finite_field.check_rank5_array(
+        target,
+        'HERot._add_first_component_array(target)',
+        batch=self.batch,
+        degree_layout=(self.r, self.c),
+    )
+    finite_field.check_rank5_array(
+        source,
+        'HERot._add_first_component_array(source)',
+        batch=self.batch,
+        degree_layout=(self.r, self.c),
+    )
+    if target.shape[1] < 1 or source.shape[1] < 1 or \
+       target.shape[2:] != source.shape[2:]:
+      raise ValueError(
+          'HERot._add_first_component_array requires compatible rank-5 '
+          'ciphertexts; got '
+          f'{target.shape} and {source.shape}.'
+      )
+    num_moduli = target.shape[-1]
+    if num_moduli not in (self.sizeQl, self.sizeQlP):
+      raise ValueError(
+          'HERot._add_first_component_array expects Q or QP data; got '
+          f'{num_moduli} moduli.'
+      )
+    moduli = jnp.asarray(
+        self.overall_moduli[:num_moduli], dtype=jnp.uint64
+    ).reshape(1, 1, 1, 1, num_moduli)
+    first = (
+        target[:, 0:1].astype(jnp.uint64)
+        + source[:, 0:1].astype(jnp.uint64)
+    )
+    # Raw ciphertext boundaries carry canonical residues, so one subtraction
+    # is sufficient and avoids a uint64 remainder operation in accelerator
+    # kernels.
+    first = jnp.where(first >= moduli, first - moduli, first)
+    return target.at[:, 0:1].set(first.astype(jnp.uint32))
+
+  def _hoisted_rotate_array(
+      self, ct_data, digits, eval_a=None, eval_b=None, coef_map=None,
+      include_first=True,
+  ):
+    """Rotate with hoisted digits and retain the result in the QP basis."""
+    self._require_controls()
+    coef_map = self._resolve_automorphism_map(coef_map)
+    switched = self._key_switch_core_array(digits, eval_a, eval_b)
+    if include_first:
+      embedded_first = self._key_switch_extend_array(
+          ct_data, include_first=True
+      )
+      switched = self._add_first_component_array(switched, embedded_first)
+    return self._automorphism_array(switched, coef_map)
+
+  # ---------------------------------------------------------------------------
+  # Runtime QP accumulation and final down-conversion.
+  # ---------------------------------------------------------------------------
+
+  def _mul_plain_array(self, qp_data, plaintext):
+    """Multiply QP ciphertext data by a standard-form QP NTT plaintext.
+
+    ``plaintext`` must end in ``(r, c, sizeQlP)`` and contain standard
+    residues. It is converted to this kernel's computation representation
+    exactly once before multiplication. The result remains in QP.
+    """
+    self._require_controls()
+    qp_data = jnp.asarray(qp_data, dtype=jnp.uint32)
+    plaintext = jnp.asarray(plaintext, dtype=jnp.uint64)
+    if qp_data.ndim != 5 or qp_data.shape[0] != self.batch or \
+       tuple(qp_data.shape[-3:]) != (self.r, self.c, self.sizeQlP):
+      raise ValueError(
+          'HERot._mul_plain_array ciphertext has incompatible shape '
+          f'{qp_data.shape}.'
+      )
+    if tuple(plaintext.shape[-3:]) != (self.r, self.c, self.sizeQlP):
+      raise ValueError(
+          'HERot._mul_plain_array plaintext must end in '
+          f'{(self.r, self.c, self.sizeQlP)}; got {plaintext.shape}.'
+      )
+    ff_full = self.ct_full.ntt_ctx.ff_ctx
+    plaintext = ff_full.to_computation_format(plaintext)
+    result = ff_full.modular_reduction(
+        qp_data.astype(jnp.uint64) * plaintext.astype(jnp.uint64)
+    )
+    return ff_full.strictify(result).astype(jnp.uint32)
+
+  def _mod_down_array(self, qp_data):
+    """ApproxModDown one or more QP components into the active Ql basis."""
+    self._require_controls()
+    qp_data = jnp.asarray(qp_data, dtype=jnp.uint32)
+    if qp_data.ndim != 5 or qp_data.shape[0] != self.batch or \
+       tuple(qp_data.shape[-3:]) != (self.r, self.c, self.sizeQlP):
+      raise ValueError(
+          'HERot._mod_down_array expects shape '
+          f'({self.batch}, elements, {self.r}, {self.c}, {self.sizeQlP}); '
+          f'got {qp_data.shape}.'
+      )
+    num_elements = qp_data.shape[1]
+    if num_elements < 1:
+      raise ValueError(
+          'HERot._mod_down_array requires at least one ciphertext component.'
+      )
+
+    ff_full = self.ct_full.ntt_ctx.ff_ctx
+    q_moduli = jnp.asarray(
+        self.overall_moduli[:self.sizeQl], dtype=jnp.uint64
+    ).reshape(1, 1, 1, 1, self.sizeQl)
+    p_inv = jnp.asarray(self.PInvModq, dtype=jnp.uint64).reshape(
+        1, 1, 1, 1, self.sizeQl
+    )
+    components = []
+    for i in range(num_elements):
+      # Keep the per-component loop to bound live QP intermediates without a
+      # separate single-call helper.
+      reduced = ff_full.strictify(
+          qp_data[:, i:i + 1]
+      ).astype(jnp.uint32)
+      p_part = reduced[..., self.sizeQl:]
+      p_shape = p_part.shape
+      p_coeffs = self.ct_approx.ntt_ctx.intt(
+          p_part.reshape(-1, self.r, self.c, p_shape[-1])
+      ).reshape(p_shape)
+      q_from_p = self.bconv.basis_change_bat(
+          p_coeffs, control_index=self.numPartQl
+      ).astype(jnp.uint32)
+      q_shape = q_from_p.shape
+      q_from_p_ntt = self.ct_in.ntt_ctx.ntt(
+          q_from_p.reshape(-1, self.r, self.c, self.sizeQl)
+      ).reshape(q_shape)
+      q_from_p_ntt = self.ct_in.ntt_ctx.ff_ctx.strictify(q_from_p_ntt)
+
+      q_part = reduced[..., :self.sizeQl]
+      diff = q_part.astype(jnp.uint64) - q_from_p_ntt.astype(jnp.uint64)
+      diff = jnp.where(
+          q_part < q_from_p_ntt, diff + q_moduli, diff
+      ).astype(jnp.uint32)
+      result = self.ct_in.ntt_ctx.ff_ctx.modular_reduction(
+          diff.astype(jnp.uint64) * p_inv
+      )
+      components.append(
+          self.ct_in.ntt_ctx.ff_ctx.strictify(result).astype(jnp.uint32)
+      )
+    return jnp.concatenate(components, axis=1)
+
+__all__ = []

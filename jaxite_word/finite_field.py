@@ -31,10 +31,152 @@ import jax
 jax.config.update("jax_enable_x64", True)
 
 
+def check_reduction_match(op_ff_cls, data_ff, op_name):
+  """Trace-time check that data's ff_ctx matches the op's configured reduction class; mixed Montgomery/Barrett data is silent garbage (residues off by R)."""
+  if not isinstance(data_ff, op_ff_cls):
+    raise ValueError(
+        f"{op_name} configured for {op_ff_cls.__name__} but received "
+        f"{type(data_ff).__name__} data (mixing reductions is silent garbage); "
+        "re-encode with the op's reduction context"
+    )
+
+
+def check_rank5_array(
+    value, op_name, *, batch=None, num_elements=None, degree_layout=None,
+    num_moduli=None, dtype=jnp.uint32
+):
+  """Validates a canonical raw ciphertext array at an explicit array boundary."""
+  if not hasattr(value, 'ndim') or not hasattr(value, 'shape'):
+    raise TypeError(f'{op_name} requires an array, got {type(value).__name__}.')
+  if dtype is not None:
+    actual_dtype = getattr(value, 'dtype', None)
+    expected_dtype = jnp.dtype(dtype)
+    if actual_dtype is None or jnp.dtype(actual_dtype) != expected_dtype:
+      raise ValueError(
+          f'{op_name} requires ciphertext dtype {expected_dtype}, got '
+          f'{actual_dtype}.'
+      )
+  if value.ndim != 5:
+    raise ValueError(
+        f'{op_name} requires rank-5 shape '
+        '(batch, num_elements, r, c, num_moduli); '
+        f'got rank {value.ndim} shape {value.shape}.'
+    )
+  expected = (batch, num_elements, *(degree_layout or (None, None)), num_moduli)
+  labels = ('batch', 'num_elements', 'r', 'c', 'num_moduli')
+  for axis, (actual, wanted) in enumerate(
+      zip(value.shape, expected, strict=True)
+  ):
+    if wanted is not None and actual != wanted:
+      raise ValueError(
+          f'{op_name} expected {labels[axis]}={wanted}, got shape {value.shape}.'
+      )
+  return value
+
+
+def canonical_degree_layout(r, c, degree_layout, op_name):
+  """Returns the only layout accepted by an operator implemented for r x c."""
+  expected = (r, c)
+  actual = expected if degree_layout is None else tuple(degree_layout)
+  if actual != expected:
+    raise ValueError(
+        f'{op_name} degree_layout must match its tiled kernel layout '
+        f'{expected}, got {actual}.'
+    )
+  return actual
+
+
+def check_ct_operand(
+    op_ff_cls, num_moduli, ct, op_name, *, batch=None, num_elements=None,
+    degree_layout=None, moduli=None
+):
+  """Validates a canonical Polynomial and its operator-specific metadata."""
+  # Lazy import avoids the finite_field <-> polynomial module import cycle.
+  import polynomial
+  if not isinstance(ct, polynomial.Polynomial):
+    raise TypeError(
+        f'{op_name} requires Polynomial, got {type(ct).__name__}; '
+        'raw arrays are accepted only by private fused-region kernels.'
+    )
+  ct.validate()
+  expected_dtype = jnp.dtype(ct.modulus_dtype)
+  if ct.precision != 32 or expected_dtype != jnp.dtype(jnp.uint32):
+    raise ValueError(
+        f'{op_name}: Polynomial must use the canonical '
+        'precision=32/uint32 ciphertext representation.'
+    )
+  if ct.polynomial.dtype != expected_dtype:
+    raise ValueError(
+        f'{op_name}: Polynomial payload dtype {ct.polynomial.dtype} does not '
+        f'match its {expected_dtype} ciphertext representation.'
+    )
+  check_reduction_match(op_ff_cls, ct.ntt_ctx.ff_ctx, op_name)
+  check_rank5_array(
+      ct.polynomial,
+      op_name,
+      batch=batch,
+      num_elements=num_elements,
+      degree_layout=degree_layout,
+      num_moduli=num_moduli,
+      dtype=expected_dtype,
+  )
+  if ct.num_moduli != num_moduli:
+    raise ValueError(
+        f'{op_name}: ciphertext has {ct.num_moduli} towers, op configured '
+        f'for {num_moduli}.'
+    )
+  if degree_layout is not None and tuple(ct.degree_layout) != tuple(degree_layout):
+    raise ValueError(
+        f'{op_name}: ciphertext layout {ct.degree_layout} does not match '
+        f'operator layout {tuple(degree_layout)}.'
+    )
+  if moduli is not None and tuple(ct.moduli) != tuple(moduli):
+    raise ValueError(
+        f'{op_name}: ciphertext moduli {tuple(ct.moduli)} do not match '
+        f'operator moduli {tuple(moduli)}.'
+    )
+  return ct
+
+
+def check_binary_ct_operands(
+    op_ff_cls, num_moduli, ct1, ct2, op_name, *, batch=None,
+    num_elements=None, degree_layout=None, moduli=None
+):
+  """Validates two Polynomial operands at a public binary-op boundary."""
+  check_ct_operand(
+      op_ff_cls, num_moduli, ct1, op_name, batch=batch,
+      num_elements=num_elements, degree_layout=degree_layout, moduli=moduli
+  )
+  check_ct_operand(
+      op_ff_cls, num_moduli, ct2, op_name, batch=batch,
+      num_elements=num_elements, degree_layout=degree_layout, moduli=moduli
+  )
+  if ct1.polynomial.shape != ct2.polynomial.shape:
+    raise ValueError(
+        f"{op_name}: operand shapes differ "
+        f"({ct1.polynomial.shape} vs {ct2.polynomial.shape})"
+    )
+  if tuple(ct1.moduli) != tuple(ct2.moduli):
+    raise ValueError(
+        f'{op_name}: operand moduli differ '
+        f'({tuple(ct1.moduli)} vs {tuple(ct2.moduli)}).'
+    )
+
+
 ########################
 # Base Context Class
 ########################
 class FiniteFieldContextBase:
+
+  # Hooks name the paired NTT-ciphertext/BConv classes as STRINGS to avoid an import cycle (ntt_mm/bconv import this module).
+  # None = not injectable via the generic pipeline (ShoupContext: two-operand modular_reduction); its NTT ctx can still be passed as ntt_ctx.
+  ntt_ciphertext_context_cls = None
+  bconv_cls = None
+
+  # True when the computation format equals standard residues (Barrett & co.);
+  # Montgomery overrides to False (data carries an R factor). Representation
+  # boundaries (encrypt/decrypt, ModRaise) use this to skip no-op conversions.
+  computation_format_is_standard = True
 
   def __init__(self, moduli: int):
     self.moduli = moduli
@@ -43,7 +185,8 @@ class FiniteFieldContextBase:
   def ff_ctx(self):
     """Self-reference allowing this context to serve as ntt_ctx for mod_reduce-only Polynomials.
 
-    Polynomial.mod_reduce() calls self.ntt_ctx.ff_ctx.modular_reduction().
+    Private Polynomial kernel diagnostics call modular_reduction through the
+    wrapper's NTT context.
     By returning self, any finite field context can be injected directly as
     ntt_ctx for ciphertexts that only need modular reduction (no NTT/INTT).
     """
@@ -55,8 +198,56 @@ class FiniteFieldContextBase:
   def to_original_format(self, a):
     return a
 
+  # Plug-and-play reduction primitives. Three rules:
+  #  1. Eval ops never branch on isinstance; the reduction algorithm is selected purely by the injected ff_ctx.
+  #  2. Defaults are correct for strict standard-format reductions (Barrett/Shoup): modular_reduction returns canonical [0, q) residues, format hooks are identity.
+  #  3. Lazy/non-standard contexts (Montgomery) override only what differs.
+
+  def strictify(self, x):
+    """Canonicalize a single modular_reduction output into [0, q); identity for strict backends.
+
+    Ops call it unconditionally after an NTT/modmul so the op-boundary contract
+    (strict residues) holds for every backend.
+    """
+    return x
+
+  def strictify_after_accumulation(self, x, num_terms):
+    """Canonicalize a SUM of num_terms modular_reduction outputs into [0, q).
+
+    Lazy Montgomery data must be normalized with conditional subtracts instead
+    (a second reduction would strip an R factor); MontgomeryContext overrides.
+    """
+    return self.modular_reduction(x)
+
+  def reduce_scaled_sum(self, main, scale, addend):
+    """Return canonicalize(main*scale + addend) in computation format.
+
+    addend sits one modular_reduction away from main*scale. Strict backends fuse
+    into a single reduction; MontgomeryContext overrides (reduce the product
+    first, conditional-subtract the lazy sum).
+    """
+    prod = main.astype(jnp.uint64) * scale.astype(jnp.uint64)
+    return self.modular_reduction(prod + addend.astype(jnp.uint64))
+
+  def encode_prescale_constant(self, c):
+    """Encode a constant multiplying STANDARD-format data so one modular_reduction of the product lands in computation format.
+
+    Identity for strict backends; Montgomery scales by R^2 so
+    MontRed(standard * c*R^2) = standard*c*R.
+    """
+    once = self.to_computation_format(jnp.asarray(c).astype(jnp.uint64))
+    return self.to_computation_format(jnp.asarray(once).astype(jnp.uint64))
+
   def get_jax_parameters(self):
     return {}
+
+  def validate_moduli(self, moduli):
+    """Raise if moduli fall outside this backend's supported envelope.
+
+    Default: no constraint (Barrett/Shoup tolerate the full 32-bit range);
+    Montgomery overrides (lazy REDC wrap-safe only for q < 2^31).
+    """
+    return
 
   def modular_reduction(self, a: jnp.ndarray) -> jnp.ndarray:
     raise NotImplementedError("Subclasses must implement this method")
@@ -79,6 +270,10 @@ class FiniteFieldContextBase:
 ########################
 class MontgomeryContext(FiniteFieldContextBase):
 
+  ntt_ciphertext_context_cls = "NTTCiphertextMontgomeryContext"
+  bconv_cls = "BConvMontgomery"
+  computation_format_is_standard = False
+
   def __init__(self, moduli: Union[List[int], int]):
     super().__init__(moduli)
     self.moduli = moduli
@@ -99,8 +294,13 @@ class MontgomeryContext(FiniteFieldContextBase):
     self.q_high = jnp.array(self.moduli_high16, dtype=jnp.uint32)
     self.q_inv_32 = jnp.array(self.moduli_inv_32, dtype=jnp.uint32)
 
+    # Validate at construction: a directly built context (no NTT ctx) otherwise silently accepts q >= 2^31.
+    self.validate_moduli(self.moduli)
+
   def to_computation_format(self, a: int):
     # return [(a * (1 << self.w)) % m for m in self.moduli] # The algorithm being performed
+    # uint64 before the << 32 shift: a uint32 input would wrap to zero.
+    a = jnp.asarray(a, jnp.uint64)
     return ((a << self.w) % self.moduli_reduction).astype(jnp.uint32)
 
   def to_original_format(self, a: jnp.ndarray):
@@ -113,6 +313,19 @@ class MontgomeryContext(FiniteFieldContextBase):
         "moduli_low": util.to_tuple(self.moduli_low16),
         "moduli_high": util.to_tuple(self.moduli_high16),
     }
+
+  def validate_moduli(self, moduli):
+    # Lazy REDC is wrap-safe only for q < 2^31: its step-2 product 2q^2 must
+    # stay under 2^32*(2^32-q); an out-of-envelope q ~ 2^31 silently zeros the
+    # result. Raise (not assert) so the guard survives `python -O`.
+    bad = [
+        q for q in ([moduli] if isinstance(moduli, int) else moduli)
+        if q >= 2**31
+    ]
+    if bad:
+      raise ValueError(
+          f"Montgomery reduction requires moduli < 2**31; got {bad}"
+      )
 
   def modular_reduction(self, z: jnp.ndarray) -> jnp.ndarray:
     """Montgomery reduction from u64 to u32 optimized version using only 32-bit operations
@@ -183,6 +396,40 @@ class MontgomeryContext(FiniteFieldContextBase):
     # b = jnp.where(b >= q, b - q, b).astype(jnp.uint32)
     return b.astype(jnp.uint32)
 
+  # Montgomery overrides: modular_reduction is LAZY (returns [0, 2q)) and data lives in computation
+  # format x*R mod q, so these canonicalize/combine with conditional subtracts instead of extra
+  # reductions — an extra reduction would strip an R factor.
+
+  def _strictify_from_multiple(self, x, bound_multiple):
+    """Reduce x from [0, bound_multiple*q) to [0, q) via a compare-select chain (a Montgomery reduction here would strip an R factor)."""
+    q = jnp.asarray(self.moduli_reduction, dtype=x.dtype)
+    m = 1
+    while m * 2 < bound_multiple:
+      m *= 2
+    while m >= 1:
+      mq = m * q
+      x = jnp.where(x >= mq, x - mq, x)
+      m //= 2
+    return x
+
+  def strictify(self, x):
+    q = jnp.asarray(self.moduli_reduction, dtype=x.dtype)
+    return jnp.where(x >= q, x - q, x)
+
+  def strictify_after_accumulation(self, x, num_terms):
+    # Each summed product is a lazy Montgomery reduction in [0, 2q); a sum of
+    # `num_terms` of them is in [0, 2*num_terms*q).
+    return self._strictify_from_multiple(x, 2 * num_terms)
+
+  def reduce_scaled_sum(self, main, scale, addend):
+    # main*scale reduces once (MontRed) to the R^1 product, lazy in [0, 2q);
+    # adding the R^1 `addend` (also lazy) yields [0, 4q).  A second MontRed
+    # would strip an R factor, so normalize with conditional subtracts.
+    prod = main.astype(jnp.uint64) * scale.astype(jnp.uint64)
+    reduced = self.modular_reduction(prod).astype(jnp.uint64)
+    combined = reduced + addend.astype(jnp.uint64)
+    return self._strictify_from_multiple(combined, 4)
+
   def drop_last_modulus(self):
     # self.moduli_reduction, self.moduli_inv_32, self.moduli_low16, self.moduli_high16 are not updated here.
     # Because they are not used in the reduction.
@@ -193,11 +440,102 @@ class MontgomeryContext(FiniteFieldContextBase):
     self.q_high = self.q_high[:-1]
     self.q_inv_32 = self.q_inv_32[:-1]
 
+  def slice(self, num_moduli: int) -> "MontgomeryContext":
+    """Return a view over the first `num_moduli` entries.
+
+    Montgomery reduction is element-wise per modulus, so slicing the
+    parameter arrays produces a valid context for a moduli prefix (the
+    mirror of BarrettContext.slice). JAX array slicing shares memory —
+    no data is copied. The moduli were validated (< 2^31) at the parent's
+    construction, so no re-validation is needed.
+    """
+    if num_moduli > len(self.moduli):
+      raise ValueError(
+          f"num_moduli ({num_moduli}) exceeds moduli count ({len(self.moduli)})"
+      )
+    if num_moduli < 1:
+      raise ValueError(f"num_moduli must be >= 1, got {num_moduli}")
+    ctx = object.__new__(MontgomeryContext)
+    ctx.moduli = self.moduli[:num_moduli]
+    ctx.w = self.w
+    ctx.w_inv = self.w_inv[:num_moduli]
+    ctx.w_inv_reduction = self.w_inv_reduction[:num_moduli]
+    ctx.moduli_reduction = self.moduli_reduction[:num_moduli]
+    ctx.moduli_inv_32 = self.moduli_inv_32[:num_moduli]
+    ctx.moduli_low16 = self.moduli_low16[:num_moduli]
+    ctx.moduli_high16 = self.moduli_high16[:num_moduli]
+    ctx.q = self.q[:num_moduli]
+    ctx.q_low = self.q_low[:num_moduli]
+    ctx.q_high = self.q_high[:num_moduli]
+    ctx.q_inv_32 = self.q_inv_32[:num_moduli]
+    return ctx
+
+  def concat(self, other: "MontgomeryContext") -> "MontgomeryContext":
+    """Concatenate this context with another to form a combined context.
+
+    Used to build Q+P contexts from separate Q and P contexts. Montgomery
+    reduction is element-wise, so concatenation is valid; both operands
+    were validated (< 2^31) at their own construction.
+    """
+    if not isinstance(other, MontgomeryContext):
+      raise TypeError(
+          "MontgomeryContext.concat requires another MontgomeryContext, got "
+          f"{type(other).__name__} (mixing reductions is silent garbage)"
+      )
+    ctx = object.__new__(MontgomeryContext)
+    ctx.moduli = list(self.moduli) + list(other.moduli)
+    ctx.w = self.w
+    ctx.w_inv = list(self.w_inv) + list(other.w_inv)
+    ctx.w_inv_reduction = jnp.concatenate(
+        [self.w_inv_reduction, other.w_inv_reduction]
+    )
+    ctx.moduli_reduction = jnp.concatenate(
+        [self.moduli_reduction, other.moduli_reduction]
+    )
+    ctx.moduli_inv_32 = list(self.moduli_inv_32) + list(other.moduli_inv_32)
+    ctx.moduli_low16 = list(self.moduli_low16) + list(other.moduli_low16)
+    ctx.moduli_high16 = list(self.moduli_high16) + list(other.moduli_high16)
+    ctx.q = jnp.concatenate([self.q, other.q])
+    ctx.q_low = jnp.concatenate([self.q_low, other.q_low])
+    ctx.q_high = jnp.concatenate([self.q_high, other.q_high])
+    ctx.q_inv_32 = jnp.concatenate([self.q_inv_32, other.q_inv_32])
+    return ctx
+
 
 ########################
 # Barrett Modulus Reduction Context
 ########################
+def _mul_high_u64_from_u32_limbs(lhs, rhs):
+  """Return floor(lhs * rhs / 2**64) without overflowing uint64.
+
+  Both operands are split into 32-bit limbs. The carry ordering keeps every
+  partial product and addition below 2**64, including the s=64 Barrett case
+  where directly evaluating the high-limb product can require 65 bits.
+  """
+  mask32 = jnp.uint64(0xFFFFFFFF)
+  lhs = jnp.asarray(lhs, dtype=jnp.uint64)
+  rhs = jnp.asarray(rhs, dtype=jnp.uint64)
+  lhs_low = lhs & mask32
+  lhs_high = lhs >> jnp.uint64(32)
+  rhs_low = rhs & mask32
+  rhs_high = rhs >> jnp.uint64(32)
+
+  low_product = lhs_low * rhs_low
+  cross = lhs_high * rhs_low + (low_product >> jnp.uint64(32))
+  cross_low = cross & mask32
+  cross_high = cross >> jnp.uint64(32)
+  other_cross = lhs_low * rhs_high + cross_low
+  return (
+      lhs_high * rhs_high
+      + cross_high
+      + (other_cross >> jnp.uint64(32))
+  )
+
+
 class BarrettContext(FiniteFieldContextBase):
+
+  ntt_ciphertext_context_cls = "NTTCiphertextBarrettContext"
+  bconv_cls = "BConvBarrett"
 
   def __init__(self, moduli: Union[List[int], int]):
     super().__init__(moduli)
@@ -210,9 +548,12 @@ class BarrettContext(FiniteFieldContextBase):
     # (23-bit mantissa), corrupting Barrett constants for moduli > 2^24.
     self.barrett_s = [2 * math.ceil(math.log2(int(m))) for m in self.moduli]
     self.barrett_w = [min(s, 32) for s in self.barrett_s]
-    self.barrett_s_w = [s - w for s, w in zip(self.barrett_s, self.barrett_w)]
+    self.barrett_s_w = [
+        s - w for s, w in zip(self.barrett_s, self.barrett_w, strict=True)
+    ]
     self.barrett_m = [
-        math.floor(2**s / int(m)) for s, m in zip(self.barrett_s, self.moduli)
+        math.floor(2**s / int(m))
+        for s, m in zip(self.barrett_s, self.moduli, strict=True)
     ]
     # used for run-time reduction
     self.m = jnp.array(self.barrett_m, dtype=jnp.uint64)
@@ -237,7 +578,10 @@ class BarrettContext(FiniteFieldContextBase):
   def modular_reduction(self, z: jnp.ndarray) -> jnp.ndarray:
     """Vectorized implementation of the Barrett reduction.
 
-    Works for modulus `q` less than 31 bits.
+    Supports every uint32 modulus. Inputs must satisfy
+    ``z < 2**(2*ceil(log2(q)))``. For full-width moduli ``q > 2**31`` that
+    exponent is 64, so the quotient estimate uses an overflow-free 32-bit-limb
+    multiply-high.
 
     This implementation sets the internal shift width `w` to `min(s, 32)` so it
     works with small modulus `moduli < 2^16`.
@@ -257,10 +601,25 @@ class BarrettContext(FiniteFieldContextBase):
     w = self.w
     s_w = self.s_w
 
-    z1 = z & 0xFFFFFFFF
+    # HERot/CKKS moduli use w=32. Keep that common case static so TPU HLO does
+    # not rebuild (1 << w) - 1 at every reduction site. The dynamic mask is
+    # still required for mixed/small-modulus contexts where w < 32.
+    if all(s >= 32 for s in self.barrett_s):
+      z1 = z & jnp.uint64(0xFFFFFFFF)
+    else:
+      mask = (jnp.uint64(1) << w.astype(jnp.uint64)) - jnp.uint64(1)
+      z1 = z & mask
     z2 = z >> w
-    t = ((z1 * m) >> w) + (z2 * m)
-    t = t >> s_w
+    fast_quotient = (((z1 * m) >> w) + (z2 * m)) >> s_w
+    if any(s == 64 for s in self.barrett_s):
+      full_width_quotient = _mul_high_u64_from_u32_limbs(z, m)
+      if all(s == 64 for s in self.barrett_s):
+        t = full_width_quotient
+      else:
+        t = jnp.where(s_w == 32, full_width_quotient, fast_quotient)
+    else:
+      # Preserve the original low-cost kernel for common q < 2**31 contexts.
+      t = fast_quotient
     z = z - t * moduli
     pred = z >= moduli
     return jnp.where(pred, z - moduli, z).astype(jnp.uint32)
@@ -271,7 +630,10 @@ class BarrettContext(FiniteFieldContextBase):
   ) -> jnp.ndarray:
     """Vectorized implementation of the Barrett reduction.
 
-    Works for modulus `q` less than 31 bits.
+    Supports every uint32 modulus. Inputs must satisfy
+    ``z < 2**(2*ceil(log2(q)))``. For full-width moduli ``q > 2**31``, the
+    s=64 case uses the same overflow-free multiply-high quotient as the
+    multi-modulus path.
 
     This implementation sets the internal shift width `w` to `min(s, 32)` so it
     works with small modulus `moduli < 2^16`.
@@ -291,19 +653,29 @@ class BarrettContext(FiniteFieldContextBase):
     w = self.w[modulus_index]
     s_w = self.s_w[modulus_index]
 
-    z1 = z.astype(jnp.uint32)
+    # Avoid materializing a dynamic mask for the common static w=32 case.
+    if all(s >= 32 for s in self.barrett_s):
+      z1 = z.astype(jnp.uint32)
+    else:
+      mask = (jnp.uint64(1) << w.astype(jnp.uint64)) - jnp.uint64(1)
+      z1 = (z & mask).astype(jnp.uint32)
     z2 = (z >> w).astype(jnp.uint32)
-    t = ((z1 * m) >> w) + (z2 * m)
-    t = t >> s_w
+    fast_quotient = (((z1 * m) >> w) + (z2 * m)) >> s_w
+    if any(s == 64 for s in self.barrett_s):
+      full_width_quotient = _mul_high_u64_from_u32_limbs(z, m)
+      t = jnp.where(s_w == 32, full_width_quotient, fast_quotient)
+    else:
+      t = fast_quotient
     z = z - t * moduli
     pred = z >= moduli
     return jnp.where(pred, z - moduli, z).astype(jnp.uint32)
     # return (z - moduli * pred).astype(jnp.uint32)
 
   def drop_last_modulus(self):
-    # self.barrett_s, self.barrett_w, self.barrett_s_w, self.barrett_m are not updated here.
-    # Because they are not used in the reduction.
+    # barrett_s drives the static s=64 kernel selection and must stay aligned
+    # with the runtime arrays. The other Python lists are precomputation-only.
     # self.moduli = self.moduli[:-1]
+    self.barrett_s = self.barrett_s[:-1]
     self.m = self.m[:-1]
     self.moduli_reduction = self.moduli_reduction[:-1]
     self.w = self.w[:-1]
@@ -330,6 +702,7 @@ class BarrettContext(FiniteFieldContextBase):
       raise ValueError(f"num_moduli must be >= 1, got {num_moduli}")
     ctx = object.__new__(BarrettContext)
     ctx.moduli = self.moduli[:num_moduli]
+    ctx.barrett_s = self.barrett_s[:num_moduli]
     ctx.m = self.m[:num_moduli]
     ctx.moduli_reduction = self.moduli_reduction[:num_moduli]
     ctx.w = self.w[:num_moduli]
@@ -350,6 +723,7 @@ class BarrettContext(FiniteFieldContextBase):
     """
     ctx = object.__new__(BarrettContext)
     ctx.moduli = list(self.moduli) + list(other.moduli)
+    ctx.barrett_s = list(self.barrett_s) + list(other.barrett_s)
     ctx.m = jnp.concatenate([self.m, other.m])
     ctx.moduli_reduction = jnp.concatenate(
         [self.moduli_reduction, other.moduli_reduction]
@@ -426,6 +800,9 @@ class ShoupContext(FiniteFieldContextBase):
 # BAT Lazy Reduction Context
 ########################
 class BATLazyContext(FiniteFieldContextBase):
+
+  ntt_ciphertext_context_cls = "NTTCiphertextBATLazyContext"
+  bconv_cls = "BConvBATLazy"
 
   def __init__(self, moduli: Union[List[int], int]):
     super().__init__(moduli)
@@ -510,12 +887,7 @@ class BATLazyContext(FiniteFieldContextBase):
     result_bytes = matmul_res + A_bytes
 
     # 5. Reconstruct integer
-    shift_factors = jnp.array([0, 8, 16, 24], dtype=jnp.uint32)
-    result = jnp.sum(
-        result_bytes.astype(jnp.uint64) << shift_factors, axis=(-1,)
-    )
-
-    return result
+    return util.reconstruct(result_bytes)
 
   def drop_last_modulus(self):
     self.moduli = self.moduli[:-1]
