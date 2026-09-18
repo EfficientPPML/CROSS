@@ -1,9 +1,12 @@
 import functools
+import os
+from unittest import mock
 
 import jax
 import jax.numpy as jnp
 import util
 import herot
+import he_ops
 from typing import List
 import math
 from absl.testing import absltest
@@ -11,6 +14,13 @@ from absl.testing import parameterized
 from polynomial import Polynomial
 
 import numpy as np
+
+try:
+  import pytest
+except ModuleNotFoundError:
+  pytestmark = []
+else:
+  pytestmark = [pytest.mark.correctness, pytest.mark.integration]
 
 
 jax.config.update("jax_enable_x64", True)
@@ -225,6 +235,86 @@ Element 1: 0: EVAL: [57836071 153702706 229297322 80758737 203662737 160080880 2
         self.rotate_in_ciphertext_str
     )
 
+  def test_control_gen_defaults_to_canonical_tiled_layout(self):
+    extend_moduli = self.evalkey_b_vector_moduli[
+        len(self.rotate_in_ciphertext_moduli):
+    ]
+    op = herot._HERotKernel(
+        4, 4, 3, self.rotate_in_ciphertext_moduli, extend_moduli
+    )
+
+    op.control_gen(perf_test=True)
+
+    self.assertEqual(op.degree_layout, (4, 4))
+    self.assertEqual(op.ct_in.shape[2:4], (4, 4))
+
+  def test_setup_rotation_requires_offline_controls(self):
+    extend_moduli = self.evalkey_b_vector_moduli[
+        len(self.rotate_in_ciphertext_moduli):
+    ]
+    op = herot._HERotKernel(
+        4, 4, 3, self.rotate_in_ciphertext_moduli, extend_moduli
+    )
+
+    with self.assertRaisesRegex(RuntimeError, 'control_gen'):
+      op.setup_rotation(
+          jnp.zeros((0,), dtype=jnp.uint64),
+          jnp.zeros((0,), dtype=jnp.uint64),
+          jnp.zeros((0,), dtype=jnp.int32),
+      )
+
+  def test_method_names_follow_operator_template(self):
+    self.assertTrue(hasattr(herot._HERotKernel, 'rotate'))
+    self.assertTrue(hasattr(herot._HERotKernel, 'setup_rotation'))
+    self.assertFalse(hasattr(herot._HERotKernel, 'setup_rotate'))
+    raw_steps = (
+        'rotate',
+        'decompose',
+        'key_switch',
+        'key_switch_core',
+        'key_switch_extend',
+        'automorphism',
+        'add_first_component',
+        'hoisted_rotate',
+        'mod_down',
+        'mul_plain',
+    )
+    for step in raw_steps:
+      with self.subTest(step=step):
+        self.assertTrue(hasattr(herot._HERotKernel, f'_{step}_array'))
+        self.assertFalse(hasattr(herot._HERotKernel, f'{step}_array'))
+    facade_steps = (
+        'rotate',
+        'decompose',
+        'key_switch_extend',
+        'automorphism',
+        'hoisted_rotate',
+        'mod_down',
+        'mul_plain',
+    )
+    for step in facade_steps:
+      with self.subTest(facade_step=step):
+        self.assertTrue(hasattr(he_ops._HERotAtLevel, f'_{step}_array'))
+        self.assertFalse(hasattr(he_ops._HERotAtLevel, f'{step}_array'))
+    for dead_forwarder in (
+        '_key_switch_array',
+        '_key_switch_core_array',
+        '_add_first_component_array',
+    ):
+      self.assertFalse(hasattr(he_ops._HERotAtLevel, dead_forwarder))
+    self.assertFalse(hasattr(herot._HERotKernel, '_mod_down_component'))
+    implementation_helpers = (
+        '_rotation_state',
+        '_prepare_decomposition_inputs',
+        '_decompose_part',
+        '_resolve_evaluation_keys',
+        '_accumulate_key_switch_parts',
+    )
+    for helper in implementation_helpers:
+      with self.subTest(helper=helper):
+        self.assertTrue(hasattr(herot._HERotKernel, helper))
+        self.assertFalse(hasattr(herot._HERotKernel, f'{helper}_array'))
+
 
   # @absltest.skip("Skipping HERot test for now")
   def test_herot_rotation_28bit(self):
@@ -236,35 +326,169 @@ Element 1: 0: EVAL: [57836071 153702706 229297322 80758737 203662737 160080880 2
     np.testing.assert_array_equal(coef_map, [4,5,6,7,3,2,0,1,14,15,13,12,8,9,10,11])
 
     rotate_in_ciphertext = jnp.array(self.rotate_in_ciphertext, dtype=jnp.uint32).reshape(batch, -1, *degree_layout, len(self.rotate_in_ciphertext_moduli))
-    self.final_result_ref = jnp.array(self.final_result_ref, dtype=jnp.uint32).reshape(batch, -1, degree, len(self.rotate_in_ciphertext_moduli))
+    self.final_result_ref = jnp.array(
+        self.final_result_ref, dtype=jnp.uint32
+    ).reshape(
+        batch, -1, *degree_layout, len(self.rotate_in_ciphertext_moduli)
+    )
     rotate_in_ciphertext_moduli = self.rotate_in_ciphertext_moduli
     evalkey_b_vector = jnp.array(self.evalkey_b_vector_ref, dtype=jnp.uint64).reshape(dnum, *degree_layout, len(self.evalkey_b_vector_moduli))
     extend_moduli = self.evalkey_b_vector_moduli[len(rotate_in_ciphertext_moduli):]
     evalkey_a_vector = jnp.array(self.evalkey_a_vector_ref, dtype=jnp.uint64).reshape(dnum, *degree_layout, len(self.evalkey_a_vector_moduli))
-    ct_in_shapes = {'batch': batch, 'num_elements': 1, 'degree': degree, 'precision': 32, 'num_moduli': len(rotate_in_ciphertext_moduli), 'degree_layout': degree_layout}
-    ct_in = Polynomial(ct_in_shapes, parameters={'moduli': rotate_in_ciphertext_moduli, "BAT_lazy": False})
+    ct_in_shapes = {'batch': batch, 'num_elements': 2, 'degree': degree, 'precision': 32, 'num_moduli': len(rotate_in_ciphertext_moduli), 'degree_layout': degree_layout}
+    ct_in = Polynomial(ct_in_shapes, parameters={'moduli': rotate_in_ciphertext_moduli})
     ct_in.polynomial = rotate_in_ciphertext
 
-    # Instantiate HERot
-    herot_obj = herot.HERot(r, c, dnum, rotate_in_ciphertext_moduli, extend_moduli)
+    # Instantiate the private rotation kernel.
+    herot_obj = herot._HERotKernel(
+        r, c, dnum, rotate_in_ciphertext_moduli, extend_moduli
+    )
 
     # Run control_gen
     herot_obj.control_gen(batch=batch, degree_layout=degree_layout)
-    herot_obj.setup_rotate(evalkey_a_vector, evalkey_b_vector, coef_map)
+    herot_obj.setup_rotation(evalkey_a_vector, evalkey_b_vector, coef_map)
+
+    # JIT may be the first operation after setup. It must not leave tracers in
+    # cached key-switch state that break a later eager operation.
+    final_result_jit_first = jax.jit(herot_obj.rotate)(ct_in)
+    np.testing.assert_array_equal(
+        final_result_jit_first.polynomial, self.final_result_ref
+    )
+    raw_default = herot_obj._rotate_array(rotate_in_ciphertext)
+    raw_explicit = jax.jit(herot_obj._rotate_array)(
+        rotate_in_ciphertext,
+        herot_obj.evalkey_a_vector,
+        herot_obj.evalkey_b_vector,
+        coef_map,
+    )
+    np.testing.assert_array_equal(raw_default, self.final_result_ref)
+    np.testing.assert_array_equal(raw_explicit, raw_default)
+
+    # The split QP-domain API must reproduce OpenFHE's recorded HYBRID
+    # intermediates before it is used to hoist bootstrapping rotations.
+    digits = herot_obj._decompose_array(rotate_in_ciphertext)
+    expected_digits = jnp.array(
+        self.ks_precompute_ref, dtype=jnp.uint32
+    ).reshape(dnum, batch, 1, *degree_layout, len(self.evalkey_b_vector_moduli))
+    np.testing.assert_array_equal(digits, expected_digits)
+
+    switched_qp = herot_obj._key_switch_core_array(digits)
+    with self.assertRaisesRegex(ValueError, 'eval_a and eval_b together'):
+      herot_obj._key_switch_core_array(digits, eval_a=evalkey_a_vector)
+    with self.assertRaisesRegex(ValueError, 'must have shape'):
+      herot_obj._key_switch_core_array(
+          digits,
+          eval_a=evalkey_a_vector,
+          eval_b=evalkey_b_vector[:-1],
+      )
+    expected_switched_qp = jnp.array(
+        self.ks_core_ext_result_ref, dtype=jnp.uint32
+    ).reshape(batch, 2, *degree_layout, len(self.evalkey_b_vector_moduli))
+    np.testing.assert_array_equal(switched_qp, expected_switched_qp)
+    np.testing.assert_array_equal(
+        herot_obj._key_switch_array(rotate_in_ciphertext), switched_qp
+    )
+
+    down = herot_obj._mod_down_array(switched_qp)
+    expected_down = jnp.array(
+        self.approx_mod_down_result_ref, dtype=jnp.uint32
+    ).reshape(batch, 2, *degree_layout, len(rotate_in_ciphertext_moduli))
+    np.testing.assert_array_equal(down, expected_down)
+
+    embedded = herot_obj._key_switch_extend_array(
+        rotate_in_ciphertext, include_first=True
+    )
+    combined = herot_obj._add_first_component_array(switched_qp, embedded)
+    with self.assertRaisesRegex(ValueError, 'ciphertext dtype uint32'):
+      herot_obj._add_first_component_array(
+          switched_qp.astype(jnp.uint64), embedded
+      )
+    combined_down = herot_obj._mod_down_array(combined)
+    expected_combined_down = jnp.array(
+        self.ks_results_ref, dtype=jnp.uint32
+    ).reshape(batch, 2, *degree_layout, len(rotate_in_ciphertext_moduli))
+    np.testing.assert_array_equal(combined_down, expected_combined_down)
+    three_components = jnp.concatenate(
+        [switched_qp, combined[:, 0:1]], axis=1
+    )
+    np.testing.assert_array_equal(
+        herot_obj._mod_down_array(three_components),
+        jnp.concatenate([expected_down, expected_combined_down[:, 0:1]], axis=1),
+    )
+
     final_result_test = herot_obj.rotate(ct_in)
     np.testing.assert_array_equal(final_result_test.polynomial, self.final_result_ref)
 
-    # Run rotate
-    # Use JIT compilation for rotate as typically done in tests
-    jit_rotate = jax.jit(
-        herot_obj.rotate,
+    hoisted_qp = herot_obj._hoisted_rotate_array(
+        rotate_in_ciphertext, digits, include_first=True
+    )
+    np.testing.assert_array_equal(
+        hoisted_qp, herot_obj._automorphism_array(combined, coef_map)
     )
 
-    final_result_custom = jit_rotate(
-        ct_in,
-    )
+    # Regenerating shared controls invalidates the previously bound default
+    # key/map rather than leaving runtime state from the old layout reachable.
+    herot_obj.control_gen(batch=batch, degree_layout=degree_layout)
+    with self.assertRaisesRegex(RuntimeError, 'setup_rotation'):
+      herot_obj._rotate_array(rotate_in_ciphertext)
+    with self.assertRaisesRegex(RuntimeError, 'setup_rotation'):
+      herot_obj._rotation_state()
 
-    np.testing.assert_array_equal(final_result_custom.polynomial, self.final_result_ref)
+  def test_herot_rotation_28bit_montgomery(self):
+    """The Montgomery rotation kernel matches the Barrett-verified golden.
+
+    The ciphertext crosses the boundary in Montgomery computation format;
+    eval keys are passed in standard form (setup_rotation Montgomery-encodes
+    them); all internal modular reductions are Montgomery/CRNS based.
+    """
+    import finite_field as ff_context
+
+    batch, r, c, dnum = 1, 4, 4, 3
+    degree = r * c
+    degree_layout = (r, c)
+    coef_map = precompute_auto_map(
+        degree, find_automorphism_index_2n_complex(1, 2 * degree))
+
+    rotate_in_ciphertext = jnp.array(
+        self.rotate_in_ciphertext, dtype=jnp.uint64
+    ).reshape(batch, -1, *degree_layout, len(self.rotate_in_ciphertext_moduli))
+    final_result_ref = jnp.array(self.final_result_ref, dtype=jnp.uint32).reshape(
+        batch, -1, *degree_layout, len(self.rotate_in_ciphertext_moduli))
+    rotate_in_ciphertext_moduli = self.rotate_in_ciphertext_moduli
+    evalkey_b_vector = jnp.array(
+        self.evalkey_b_vector_ref, dtype=jnp.uint64
+    ).reshape(dnum, *degree_layout, len(self.evalkey_b_vector_moduli))
+    extend_moduli = self.evalkey_b_vector_moduli[len(rotate_in_ciphertext_moduli):]
+    evalkey_a_vector = jnp.array(
+        self.evalkey_a_vector_ref, dtype=jnp.uint64
+    ).reshape(dnum, *degree_layout, len(self.evalkey_a_vector_moduli))
+
+    mont_in = ff_context.MontgomeryContext(rotate_in_ciphertext_moduli)
+    ct_in_shapes = {
+        'batch': batch, 'num_elements': 2, 'degree': degree, 'precision': 32,
+        'num_moduli': len(rotate_in_ciphertext_moduli),
+        'degree_layout': degree_layout,
+    }
+    ct_in = Polynomial(ct_in_shapes, parameters={
+        'moduli': rotate_in_ciphertext_moduli,
+        'finite_field_context': ff_context.MontgomeryContext,
+    })
+    ct_in.polynomial = mont_in.to_computation_format(rotate_in_ciphertext)
+
+    herot_obj = herot._HERotKernel(
+        r, c, dnum, rotate_in_ciphertext_moduli, extend_moduli,
+        finite_field_context=ff_context.MontgomeryContext)
+    herot_obj.control_gen(batch=batch, degree_layout=degree_layout)
+    herot_obj.setup_rotation(evalkey_a_vector, evalkey_b_vector, coef_map)
+    digits = herot_obj._decompose_array(ct_in.polynomial)
+    np.testing.assert_array_equal(
+        herot_obj._key_switch_array(ct_in.polynomial),
+        herot_obj._key_switch_core_array(digits),
+    )
+    final_result_test = herot_obj.rotate(ct_in)
+    out = mont_in.to_original_format(
+        jnp.asarray(final_result_test.polynomial, jnp.uint64))
+    np.testing.assert_array_equal(out, final_result_ref)
 
 
 class HERotDegree2048Test(absltest.TestCase):
@@ -287,7 +511,7 @@ class HERotDegree2048Test(absltest.TestCase):
         1073971201, 1073872897, 1073668097,
         1073815553, 1073692673, 1073750017,
     ]
-    self.p_towers = [2147565569, 2147573761, 2147577857, 2147721217]
+    self.p_towers = [2147389441, 2147377153, 2147352577, 2147295233]
     self.scaling_factor = self.q_towers[0] * self.q_towers[1]
     self.sigma = 3.190000057220458984375
 
@@ -318,7 +542,6 @@ class HERotDegree2048Test(absltest.TestCase):
     }
     ctx = ckks_ctx.CKKSContext(params)
     ctx.program_initialization(
-        total_hemul_levels=1,
         total_rotation_indices=[rot_idx],
         dnum=self.dnum, r=self.r, c=self.c, batch=1,
     )
@@ -344,14 +567,7 @@ class HERotDegree2048Test(absltest.TestCase):
     rotated = ctx.he_rot[level, rot_idx].rotate(ct_5d)
 
     # Decrypt
-    dec_ct = Polynomial(
-        {"batch": 1, "num_elements": 2, "degree": self.degree,
-         "precision": 32, "num_moduli": rotated.num_moduli,
-         "degree_layout": (self.degree,)},
-        {"moduli": self.q_towers[:rotated.num_moduli]},
-    )
-    dec_ct.polynomial = rotated.polynomial.reshape(1, 2, self.degree, rotated.num_moduli)
-    decrypted = ctx.decrypt(dec_ct)
+    decrypted = ctx.decrypt(rotated)
     decoded = ctx.decode(decrypted, is_ntt=False)
     got = [v.real for v in decoded[:len(input_vals) + 1]]
 
@@ -360,6 +576,209 @@ class HERotDegree2048Test(absltest.TestCase):
     np.testing.assert_array_almost_equal(got[:len(expected)], expected, decimal=3,
         err_msg=f"HE rotation by {rot_idx} at degree=2048 mismatch. "
                 f"Got {got}, expected {expected}")
+
+    # Split/hoisted form used by bootstrapping: retain the rotation in QP,
+    # then apply one grouped ApproxModDown.  Check both OpenFHE addFirst modes.
+    op = ctx.he_rot[level, rot_idx]
+    eval_a, eval_b, coef_map = op._rotation_state()
+    with self.assertRaisesRegex(ValueError, 'eval_a and eval_b together'):
+      op._rotate_array(ct_5d.polynomial, eval_a=eval_a)
+    np.testing.assert_array_equal(
+        op._rotate_array(ct_5d.polynomial, eval_a, eval_b),
+        rotated.polynomial,
+    )
+    digits = op._decompose_array(ct_5d.polynomial)
+    hoisted_qp = op._hoisted_rotate_array(
+        ct_5d.polynomial, digits, eval_a, eval_b, coef_map,
+        include_first=True,
+    )
+    split_payload = op._mod_down_array(hoisted_qp)
+    split_ct = ct_5d._clone_with_payload(split_payload)
+    split_got = ctx.decode(ctx.decrypt(split_ct), is_ntt=False)
+    np.testing.assert_array_almost_equal(
+        [v.real for v in split_got[:len(expected)]], expected, decimal=3
+    )
+
+    hoisted_qp_no_first = op._hoisted_rotate_array(
+        ct_5d.polynomial, digits, eval_a, eval_b, coef_map,
+        include_first=False,
+    )
+    no_first_payload = op._mod_down_array(hoisted_qp_no_first)
+    rotated_c0 = op._automorphism_array(ct_5d.polynomial[:, 0:1])
+    np.testing.assert_array_equal(
+        rotated_c0,
+        op._automorphism_array(ct_5d.polynomial[:, 0:1], coef_map),
+    )
+    moduli = jnp.asarray(self.q_towers, dtype=jnp.uint64).reshape(
+        1, 1, 1, 1, -1
+    )
+    restored_c0 = (
+        no_first_payload[:, 0:1].astype(jnp.uint64)
+        + rotated_c0.astype(jnp.uint64)
+    ) % moduli
+    no_first_payload = no_first_payload.at[:, 0:1].set(
+        restored_c0.astype(jnp.uint32)
+    )
+    no_first_ct = ct_5d._clone_with_payload(no_first_payload)
+    no_first_got = ctx.decode(ctx.decrypt(no_first_ct), is_ntt=False)
+    np.testing.assert_array_almost_equal(
+        [v.real for v in no_first_got[:len(expected)]], expected, decimal=3
+    )
+
+
+class HERotRotationKeyPolicyTest(absltest.TestCase):
+  """Integration tests for the two rotation-key provisioning policies."""
+
+  def setUp(self):
+    super().setUp()
+    self.q_towers = [
+        1073971201,
+        1073872897,
+        1073668097,
+    ]
+    self.p_towers = [
+        2147389441,
+        2147377153,
+    ]
+
+  def test_lower_level_rotation_reuses_sliced_max_level_key(self):
+    """Default mode slices one reusable key without regenerating it."""
+    import ckks_ctx
+    import he_params
+    import key_gen as kg
+
+    degree = 16
+    q_towers = self.q_towers[:3]
+    p_towers = self.p_towers[:2]
+    key_pair = kg.gen_pke_pair(q_towers, p_towers, degree)
+    params = {
+        "degree": degree,
+        "num_slots": degree // 2,
+        "scaling_factor": q_towers[0],
+        "output_scale": q_towers[0],
+        "q_towers": q_towers,
+        "p_towers": p_towers,
+        "p": 30,
+        "CKKS_M_FACTOR": 1,
+        "max_bits_in_word": 61,
+        "noise_scale_degree": 1,
+        "composite_degree": 1,
+        "public_key": key_pair["public_key"],
+        "secret_key": key_pair["secret_key"],
+    }
+    ctx = ckks_ctx.CKKSContext(params)
+    ctx.program_initialization(
+        total_rotation_indices=[1], dnum=2, r=4, c=4, batch=1
+    )
+
+    cache = ctx._param_cache
+    lower_level = ctx.max_level - 1
+    with mock.patch.object(
+        he_params.kg, "gen_rotation_key", wraps=he_params.kg.gen_rotation_key
+    ) as generate:
+      max_a, max_b, _ = cache.get_rot_key(1, ctx.max_level)
+      self.assertEqual(generate.call_count, 0)
+      lower_a, lower_b, _ = cache.get_rot_key(1, lower_level)
+      self.assertEqual(generate.call_count, 0)
+      self.assertEqual(max_a.shape[0], 2)
+      self.assertEqual(max_b.shape[0], 2)
+      self.assertEqual(lower_a.shape[0], 2)
+      self.assertEqual(lower_b.shape[0], 2)
+      self.assertEqual(
+          lower_a.shape[-1], cache.num_q_at_level(lower_level) + len(p_towers)
+      )
+      for lower, maximum in ((lower_a, max_a), (lower_b, max_b)):
+        expected_lower = jnp.concatenate(
+            [
+                maximum[..., : cache.num_q_at_level(lower_level)],
+                maximum[..., -len(p_towers) :],
+            ],
+            axis=-1,
+        )
+        np.testing.assert_array_equal(lower, expected_lower)
+
+    lower_op = ctx.he_rot[lower_level, 1]
+    self.assertEqual(lower_op.num_partitions, 1)
+    self.assertEqual(lower_op._rotation_state()[0].shape[0], 1)
+
+    restored = ckks_ctx.CKKSContext(params)
+    with mock.patch.object(
+        he_params.kg, "gen_rotation_key", wraps=he_params.kg.gen_rotation_key
+    ) as generate:
+      restored.program_initialization(
+          total_rotation_indices=[1],
+          dnum=2,
+          r=4,
+          c=4,
+          batch=1,
+          pregenerated_rotation_keys=dict(ctx._raw_rotation_keys),
+      )
+      restored._param_cache.get_rot_key(1, lower_level)
+      self.assertEqual(generate.call_count, 0)
+
+  def test_lower_level_rotation_generates_operator_owned_key_on_demand(self):
+    """Low-memory mode binds one level key without populating global caches."""
+    import ckks_ctx
+    import he_params
+    import key_gen as kg
+
+    degree = 16
+    q_towers = self.q_towers[:3]
+    p_towers = self.p_towers[:2]
+    key_pair = kg.gen_pke_pair(q_towers, p_towers, degree)
+    params = {
+        "degree": degree,
+        "num_slots": degree // 2,
+        "scaling_factor": q_towers[0],
+        "output_scale": q_towers[0],
+        "q_towers": q_towers,
+        "p_towers": p_towers,
+        "p": 30,
+        "CKKS_M_FACTOR": 1,
+        "max_bits_in_word": 61,
+        "noise_scale_degree": 2,
+        "composite_degree": 1,
+        "public_key": key_pair["public_key"],
+        "secret_key": key_pair["secret_key"],
+    }
+    values = [complex(i / 8, 0) for i in range(8)]
+
+    with mock.patch.dict(os.environ, {"CROSS_SKIP_TOPLEVEL_ROTKEYS": "1"}):
+      ctx = ckks_ctx.CKKSContext(params)
+      with mock.patch.object(
+          he_params.kg, "gen_rotation_key", wraps=he_params.kg.gen_rotation_key
+      ) as generate:
+        ctx.program_initialization(
+            total_rotation_indices=[1], dnum=2, r=4, c=4, batch=1
+        )
+        self.assertEqual(generate.call_count, 0)
+        self.assertEmpty(ctx._raw_rotation_keys)
+
+        level = ctx.max_level - 1
+        ciphertext = ctx.encrypt(ctx.encode(values)).drop_last_modulus()
+        rotation = ctx.he_rot[level, 1]
+
+        self.assertEqual(generate.call_count, 1)
+        self.assertEqual(generate.call_args.kwargs["noise_scale"], 2)
+        eval_a, eval_b, _ = rotation._rotation_state()
+        self.assertEqual(eval_a.shape[0], rotation.num_partitions)
+        self.assertEqual(eval_b.shape, eval_a.shape)
+        self.assertEqual(
+            eval_a.shape[-1],
+            ctx._param_cache.num_q_at_level(level) + len(p_towers),
+        )
+        self.assertEmpty(ctx._param_cache.raw_rotation_keys)
+        self.assertEmpty(ctx._param_cache._formatted_rotation_keys)
+
+        rotated = rotation.rotate(ciphertext)
+        decoded = ctx.decode(ctx.decrypt(rotated), is_ntt=False)
+
+        self.assertEqual(generate.call_count, 1)
+        self.assertEmpty(ctx._param_cache.raw_rotation_keys)
+        self.assertEmpty(ctx._param_cache._formatted_rotation_keys)
+        np.testing.assert_array_almost_equal(
+            decoded, values[1:] + values[:1], decimal=3
+        )
 
 
 if __name__ == "__main__":

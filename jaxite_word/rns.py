@@ -283,14 +283,3 @@ def gen_rns_polynomial(
   for q in moduli:
     coeffs_q.append([coeff % q for coeff in coeffs])
   return RnsPolynomial(degree, moduli, coeffs_q, is_ntt=False)
-
-
-def gen_rns_polynomial_from_jnp_array(
-    degree: int,
-    rns_coeffs: jnp.ndarray,
-    moduli: list[int],
-    is_ntt: bool = False,
-) -> RnsPolynomial:
-  """Generate a RNS polynomial from the given RNS coefficients."""
-  coeffs_q = rns_coeffs.tolist()
-  return RnsPolynomial(degree, moduli, coeffs_q, is_ntt=is_ntt)

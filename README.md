@@ -26,6 +26,8 @@ For questions, please drop an email to our community [email](cpacommunity@google
 # CROSS: Enable AI Accelerator for Homomorphic Encryption
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
+Current release: **3.0.0** (`jaxite_word.__version__`).
+
 # What is CROSS?
 CROSS is the first project to enable AI Accelerator, such as Google TPUs, to accelerate Homomorphic Encryption and achieves the State-of-the-art (SotA) throughput and energy efficiency (performance per watt) in HE operators (e.g., HE-Multiplication, HE-Rotation) and HE kernerls (e.g., Number Theory Transformation throughput) among commodity devices (CPUs, GPUs, FPGAs). The detailed flow is shown in the figure below.
 
@@ -58,17 +60,20 @@ chmod +x ./Miniconda3-latest-Linux-x86_64.sh
 ```bash
 conda create --name jaxite python=3.13 && conda activate jaxite
 pip install -U "jax[tpu]" xprof absl-py pandas gmpy2
+# The demos trace and train ordinary PyTorch models; CPU-only torch is enough.
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 ```
 
-A ciphertext is a 3-D `jax.Array` of `(num_elements, num_towers, degree)`.
-Fresh ciphertexts live at `max_level = (num_q - 1) // composite_degree`; each
-rescale consumes one level.
+Every public ciphertext boundary is a rank-5 `Polynomial` whose payload is
+`(batch, num_elements, r, c, num_moduli)` with `r * c == degree`; see
+`jaxite_word/API_REFERENCE.md`. Fresh ciphertexts live at
+`max_level = (num_q - 1) // composite_degree`; each rescale consumes one level.
 
 ## 1.1 Context-level HE operator API
 
 `jaxite_word/he_ops.py`, `jaxite_word/he_params.py`, `jaxite_word/ptct_mul.py`,
 plus extensions to `ckks_ctx.py`, `hemul.py`, `finite_field.py`, `ntt_mm.py`,
-`ciphertext.py`. Documented in `jaxite_word/API_REFERENCE.md`.
+`polynomial.py`. Documented in `jaxite_word/API_REFERENCE.md`.
 
 `CKKSContext.program_initialization(...)` is an offline step that builds a
 shared `HEParameterCache` (NTT / Barrett / per-level BConv / pre-allocated
@@ -77,7 +82,6 @@ ciphertext helpers) and exposes level-indexed accessors.
 ```python
 ctx = CKKSContext(params)
 ctx.program_initialization(
-    total_hemul_levels=3,
     total_rotation_indices=[1, 2],
     dnum=3, r=4, c=4, batch=1)
 
@@ -85,13 +89,15 @@ result = ctx.he_mul[level].mul(ct1, ct2)              # ct × ct (rescale + reli
 ct3   = ctx.he_mul[level].hemul_no_relin(ct1, ct2)    # 3-element output
 ct2   = ctx.he_mul[level].relinearize(ct3)            # back to 2-element
 rot   = ctx.he_rot[level, k].rotate(ct)
-op    = ctx.ptct_mul[level]; op.set_plaintext(pt_ntt); ct_out = op.mul(ct_in)
-ct_lo = ctx.he_rescale[src, dst](ct)
+ct_out = ctx.ptct_mul[level].mul(ct_in, pt)           # plaintext × ciphertext
+ct_lo = ctx.he_rescale[src, dst].rescale(ct)
 ```
 
-Underlying classes added: `HEMulAtLevel`, `HERotAtLevel`, `HERescaleOp`,
-`HEPtCtMulAtLevel`, `HEBsgsMatVecAtLevel`, plus `SlicedNTTContext` and
-`SlicedBarrettContext` that share parent twiddle/Barrett tables.
+This direct route requires the caller to know the complete rotation set up
+front; `Mapping` computes it for a packed program. The level-indexed accessors
+return private operator objects (`_HEMulAtLevel`, `_HERotAtLevel`,
+`_HERescaleAtLevels`, `_HEPtCtMulAtLevel`, `_BSGSMatVecAtLevel`) that share
+the context's NTT and Barrett tables.
 
 Tests: `ckks_ctx_test.py`, `hemul_test.py`, `herot_test.py`, `ptct_mul_test.py`.
 
@@ -185,6 +191,8 @@ pip install xprof
 pip install absl-py
 pip install pandas
 pip install gmpy2
+# demos only (model tracing and training); CPU-only torch is enough
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 ```
 
 # 3. Ready to run?
@@ -196,6 +204,45 @@ CROSS library is designed to execute the data encoded by [OpenFHE](https://githu
 
 In OpenFHE, a ciphertext consists of multiple high-precision polynomials, each termed as one **Element**. Each **Element** is always represented in its RNS form, i.e. a list of low-precision polynomials termed as **tower** (we call it **limb** in CROSS). All such these **limbs**s of the same ciphertext share the same **degree**. Therefore, each ciphertext is represented as 3 dimensional jax.array, with (number of elements, number of towers, degree) in CROSS.
 
+### Cache naming and lifetime
+
+CROSS uses caches for reusable parameter-derived tables, contexts, and
+formatted key data. Module-level memoization caches follow one template:
+
+| Purpose | Naming template |
+|---|---|
+| Mutable module cache | `_<subject>_cache` |
+| Enable control | `_<subject>_cache_enabled` |
+| Maximum entry count | `_<subject>_cache_capacity` |
+| Cache record class | `<Subject>Cache` |
+| Lookup helper | `_get_<subject>_cache` |
+| Environment control | `CROSS_<SUBJECT>_CACHE_ENABLED` or `CROSS_<SUBJECT>_CACHE_CAPACITY` |
+
+Uppercase Python names are reserved for immutable constants such as serialized
+cache paths and format versions. Mutable dictionaries use lowercase private
+names. A `pool` is a collection of candidate resources, not another name for a
+cache, and new code should not use `memo` as an alternative cache suffix.
+Context-owned domain collections may retain domain-specific names.
+
+The runtime caches currently have these scopes:
+
+| Cache | Contents | Lifetime and bound |
+|---|---|---|
+| `CKKSContext._param_cache` (`HEParameterCache`) | Finite-field, NTT, BConv, level, and formatted-key parameters | Owned by one `CKKSContext` |
+| `util.py` utility caches (`_root_of_unity_cache`, `_bit_reverse_permutation_cache`, `_numpy_ntt_table_cache`) | Roots of unity, bit-reversal permutations, and NumPy NTT tables | Process-local; unbounded across distinct parameter tuples |
+| `ntt_mm.py::_barrett_ntt_context_cache` | Complete Barrett NTT contexts | Process-local LRU; capacity 8 by default |
+| `ntt_mm.py::_ntt_twiddle_cache` | Backend-neutral NTT/iNTT tables keyed by `(direction, r, c, modulus)` | Process-local; unbounded |
+| `ckks_ctx.py` codec caches (`_lite_encode_context_cache`, `_encrypt_cache`, `_decrypt_cache`) | Encode, encrypt, and decrypt precomputation keyed by context identity or tower set | Process-local; unbounded |
+
+Set `CROSS_BARRETT_NTT_CONTEXT_CACHE_ENABLED=0` to bypass the Barrett context
+cache, or set `CROSS_BARRETT_NTT_CONTEXT_CACHE_CAPACITY` to a positive maximum
+entry count. These settings are read when `ntt_mm.py` is imported.
+
+Underscore-prefixed caches are private implementation details. They are not
+lock-protected APIs, may retain derived tables or key references until process
+exit, and must not be mutated or serialized by callers. They are separate from
+the JAX/XLA compilation cache.
+
 
 ## 3.2 Functional Testing
 ```
@@ -203,20 +250,24 @@ cd CROSS/jaxite_word
 python3 <item>_test.py
 ```
 where `<item>` could take following keys to launch corresponding tests.
-- `ntt_sm`: test the performance of Number Theory Transformation for a single limb (tower, meaning the polynomial with a single moduli).
-- `ntt_mm`: test the performance of Number Theory Transformation for a multi-limb (tower, each limb with one unique moduli).
-- `hemul`: homomorphic encryption multiplication, including relinearization.
-- `rescale`: homomorphic encryption rescaling.
-- `rotate`: homomorphic encryption rotation.
-- `bat`: proposed Basis Aligned Transformation
-- `bconv`: The basis conversion.
-- `ckks_ctx`: Encoding, Encryption, Decoding, Decryption and end-to-end multiplication, rotation and rescaling.
-- `add`: homomorphic encryption addition.
-- `sub`: homomorphic encryption subtraction.
-- `bsgs`: homomorphic encryption baby-step-giant-step implementation for matrix multiplication.
-- `matvec`: homomorphic encryption matrix vector multiplication implementation.
+- `ntt_sm`: Number Theoretic Transform for a single limb (tower, meaning the polynomial with a single modulus).
+- `ntt_mm`: Number Theoretic Transform for multiple limbs (each limb with one unique modulus).
+- `hemul`: homomorphic multiplication, including relinearization.
+- `rescale`: homomorphic rescaling.
+- `herot`: homomorphic rotation (automorphism plus key switching).
+- `bconv`: basis conversion, including the proposed Basis Aligned Transformation (BAT).
+- `ckks_ctx`: encoding, encryption, decoding, decryption and end-to-end multiplication, rotation and rescaling.
+- `headd`: homomorphic addition.
+- `hesub`: homomorphic subtraction.
+- `ptct_mul`: plaintext-ciphertext multiplication.
+- `bsgs`: baby-step-giant-step encrypted matrix-vector multiplication.
+- `bootstrapping`: CKKS bootstrapping (N=256 gates by default; larger rings are opt-in, see below).
+- `key_gen`, `polynomial`, `rns`, `finite_field`, `util`: key generation, the ciphertext container, RNS arithmetic, modular reduction backends and shared utilities.
+- `nn`, `packing`, `mapping_compile`: the vectorize, pack and Mapping phases of the deployment path.
+- `pedagagy/ntt` and `pedagagy/bat`: the teaching implementations of NTT and BAT.
 
-For each kernel, we offer `<item>_test.py` for functional correctness testing, and `<item>_performance_test.py` for performance testing.
+For each kernel, we offer `<item>_test.py` for functional correctness testing, and `<item>_perf_test.py` for performance testing.
+`nn_test.py` and `mapping_compile_test.py` import the package as `jaxite_word` and put the repository root on `sys.path` themselves; every other file uses the flat sibling imports.
 
 In each functional correctness testing, the provided value come from the OpenFHE as CROSS implements the algorithm used in OpenFHE.
 
@@ -226,8 +277,52 @@ HE kernels (NTT, Basis Conversion, scalar multiplication) have various different
 
 We offer
 - various implementations algorithms of NTT in the `jaxite_word/pedagagy/ntt.py` with its corresponding functional correctness testing sitting in the `jaxite_word/pedagagy/ntt_test.py`.
-- the SoTA GPU library implementation of 32-bit integer modular multiplication and our proposed Basis Aligned Transformation (BAT) optimized 32-bit integer multiplication in the `jaxite_word/bat.py` with its corresponding functional correctness testing in the `jaxite_word/bat_test.py`.
-- the SoTA GPU library implementation of basis conversion and our BAT-optimized version in the `jaxite_word/pedagagy/bconv.py` with its corresponding functional correctness testing in the `jaxite_word/pedagagy/bconv_test.py`.
+- the SoTA GPU library implementation of 32-bit integer modular multiplication and our proposed Basis Aligned Transformation (BAT) optimized 32-bit integer multiplication in the `jaxite_word/pedagagy/bat.py` with its corresponding functional correctness testing in the `jaxite_word/pedagagy/bat_test.py`.
+- the SoTA GPU library implementation of basis conversion and our BAT-optimized version in the `jaxite_word/bconv.py` with its corresponding functional correctness testing in the `jaxite_word/bconv_test.py`.
+
+### CKKS bootstrapping invariants
+
+CROSS represents a logical 60-bit CKKS scale as two approximately 30-bit RNS
+primes; it does not use a native 60-bit modulus. Every native modulus must
+remain below `2^31` for the 32-bit Montgomery backend. For the production
+Q58/P21, `dnum=3` chain, BAT basis conversion satisfies its accumulator and
+Montgomery-reduction bounds while dense one-shot conversion does not. The
+implementation therefore validates BAT and dense paths independently and uses
+BAT normally; chunked dense conversion is only a diagnostic fallback.
+
+Ciphertexts stay in the selected backend's computation representation during
+evaluation. Encryption, ModRaise, plaintext/evaluation-key setup, and
+decryption perform explicit, exactly-once representation conversions;
+Montgomery REDC is not a canonicalization operation. Serialized evaluator
+caches are backend-specific and must be regenerated after changing backends.
+
+The OpenFHE-matched bootstrap shares the hoisted `c1` decomposition, retains
+baby-step products and outer-group sums in QP, and applies `ApproxModDown` only
+at the algorithm's group boundaries and after final accumulation. Approximate
+ModDown is not additive, so per-diagonal down-conversion or merging distinct
+cyclic-wrap groups changes rounding error and precision. Parity also depends
+on signed unreduced ModRaise interpolation, exact q44/p15 and q58/p19 HYBRID P
+bases, recursive per-level plaintext scales, independent unbiased
+evaluation-key sampling, complex diagonal encoding, and the matched
+normalization, rescaling, and Chebyshev-depth schedule. Preserve the
+ciphertext's tracked scale through C2S, ApproxModDown, S2C, and final
+correction; do not reset it to a nominal per-level scale.
+
+Barrett and Montgomery/BAT produce bit-canonical bootstrap parity at N=256,
+N=4096, and N=8192. With the matched `scalingMod=56` configuration, full-packed
+CROSS results recover plaintexts and meet the OpenFHE-relative two-bit gate
+through N=32768. N=65536 meets that relative comparison but fails plaintext
+recovery and is not a usable result. Fixed-ring comparisons validate
+arithmetic, not production security; review the final modulus chain before
+deployment.
+
+For constrained large-ring runs, `BOOTSTRAP_LOW_MEM=1` evicts operator caches
+at stage boundaries and trades recomputation for bounded cache growth.
+`CROSS_LAZY_TOPLEVEL_ROTKEYS=1` preserves the matched key partitioning while
+materializing keys lazily; `CROSS_SKIP_TOPLEVEL_ROTKEYS=1` changes partition
+boundaries and is diagnostic only. Use
+`jaxite_word/bootstrapping_openfhe_crosscheck.py` for live matched-parameter
+cross-validation.
 
 ## 3.4 Performance Debugging
 
@@ -290,7 +385,8 @@ For reproducing our results in the HPCA'26 paper, please navigate into the jaxit
 ```bash
 python3 <script>.py
 ```
-where `<script>` could take from  `tabV`, `tabVI`, `tabVII`, `tabVIII`, `tabIX`.
+where `<script>` could take from `tabV`, `tabVI`, `tabVII`, `tabIX`; the operator
+suite of Table VIII is a shell script, run with `source tabVIII.sh`.
 
 
 # Call for Actions

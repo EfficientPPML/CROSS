@@ -1,5 +1,3 @@
-import os
-
 import jax
 import jax.numpy as jnp
 from absl.testing import absltest
@@ -8,7 +6,8 @@ from absl.testing import parameterized
 import finite_field as ff_context
 import ntt_mm as ntt
 import util
-from profiler import KernelWrapper, Profiler, collect_logs
+from profiler import KernelWrapper, Profiler, collect_module_logs
+from profiler import kernel_perf_setup
 
 # JAX configuration
 jax.config.update("jax_enable_x64", True)
@@ -34,20 +33,12 @@ def _ntt_kernel(input_array, parameters):
 class NTTMMPerformanceTest(parameterized.TestCase):
   def setUp(self):
     super().setUp()
-    self.output_trace_root = os.path.join(os.path.dirname(__file__), "log")
-    self.profiler_config = {
-        "iterations": 1,
-        "save_to_file": True,
-    }
+    self.output_trace_root, self.profiler_config = kernel_perf_setup(__file__)
 
   @classmethod
   def tearDownClass(cls):
     super().tearDownClass()
-    # Call collect_logs at the end of the test class execution
-    # Determine the root directory relative to this script
-    root_dir = os.path.dirname(os.path.abspath(__file__))
-    print(f"Collecting logs from: {root_dir}")
-    collect_logs(root_dir)
+    collect_module_logs(__file__, "all_logs_collected")
 
   def _create_kernel_wrapper(self, kernel_name, ctx, batch, rows, cols, num_moduli):
     input_shape = (batch, rows, cols, num_moduli)
@@ -96,8 +87,7 @@ class NTTMMPerformanceTest(parameterized.TestCase):
           },
       )
 
-    profiler_instance.profile_all_profilers()
-    profiler_instance.post_process_all_profilers()
+    profiler_instance.run()
 
   # @absltest.skip("test single implementation")
   @parameterized.named_parameters(*TEST_PARAMS_NTT)
@@ -153,19 +143,12 @@ class NTTMMShardedPerformanceTest(parameterized.TestCase):
 
   def setUp(self):
     super().setUp()
-    self.output_trace_root = os.path.join(os.path.dirname(__file__), "log")
-    self.profiler_config = {
-        "iterations": 1,
-        "save_to_file": True,
-    }
+    self.output_trace_root, self.profiler_config = kernel_perf_setup(__file__)
 
   @classmethod
   def tearDownClass(cls):
     super().tearDownClass()
-    # Call collect_logs at the end of the test class execution
-    root_dir = os.path.dirname(os.path.abspath(__file__))
-    print(f"Collecting logs from: {root_dir}")
-    collect_logs(root_dir)
+    collect_module_logs(__file__, "all_logs_collected")
 
   def _create_sharded_kernel_wrapper(self, kernel_name, ctx, batch, rows, cols, num_moduli, mesh, batch_sharding):
     input_shape = (batch, rows, cols, num_moduli)
@@ -235,8 +218,7 @@ class NTTMMShardedPerformanceTest(parameterized.TestCase):
           },
       )
 
-    profiler_instance.profile_all_profilers()
-    profiler_instance.post_process_all_profilers()
+    profiler_instance.run()
 
   # @absltest.skip("test single implementation")
   @parameterized.named_parameters(*TEST_PARAMS_NTT)

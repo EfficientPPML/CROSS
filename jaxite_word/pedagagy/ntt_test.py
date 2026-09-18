@@ -928,7 +928,7 @@ class CKKSEvalNTTTest(parameterized.TestCase):
         return
     batch, rows, cols = 1, r, c
     try:
-      mesh, partition_spec = util.create_sharding()
+      mesh, partition_spec = util.create_sharding(shard_dim=num_moduli)
       axis_names = mesh.axis_names
       batch_partition = axis_names if len(axis_names) > 1 else axis_names[0]
       batch_sharding = jax.sharding.NamedSharding(
@@ -1016,7 +1016,7 @@ class CKKSEvalNTTTest(parameterized.TestCase):
         return
     batch, rows, cols = 4, r, c
     try:
-      mesh, partition_spec = util.create_sharding()
+      mesh, partition_spec = util.create_sharding(shard_dim=batch)
       axis_names = mesh.axis_names
       batch_partition = axis_names if len(axis_names) > 1 else axis_names[0]
       batch_sharding = jax.sharding.NamedSharding(
@@ -1093,7 +1093,7 @@ class CKKSEvalNTTTest(parameterized.TestCase):
         return
     batch, rows, cols = 4, r, c
     try:
-      mesh, partition_spec = util.create_sharding()
+      mesh, partition_spec = util.create_sharding(shard_dim=num_moduli)
       axis_names = mesh.axis_names
       batch_partition = axis_names if len(axis_names) > 1 else axis_names[0]
       batch_sharding = jax.sharding.NamedSharding(
@@ -1198,7 +1198,7 @@ class CKKSEvalNTTTest(parameterized.TestCase):
         return
     batch, rows, cols = 4, r, c
     try:
-      mesh, partition_spec = util.create_sharding()
+      mesh, partition_spec = util.create_sharding(shard_dim=batch)
       axis_names = mesh.axis_names
       batch_partition = axis_names if len(axis_names) > 1 else axis_names[0]
       batch_sharding = jax.sharding.NamedSharding(
@@ -1262,7 +1262,7 @@ class CKKSEvalNTTTest(parameterized.TestCase):
         return
     batch, rows, cols = 4, r, c
     try:
-      mesh, partition_spec = util.create_sharding()
+      mesh, partition_spec = util.create_sharding(shard_dim=num_moduli)
       axis_names = mesh.axis_names
       batch_partition = axis_names if len(axis_names) > 1 else axis_names[0]
       batch_sharding = jax.sharding.NamedSharding(
