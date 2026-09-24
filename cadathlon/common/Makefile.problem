@@ -1,0 +1,16 @@
+PYTHON ?= python3
+CROSS_ROOT ?= $(abspath ../../../..)
+export CROSS_ROOT
+export PYTHONPATH := $(CROSS_ROOT):$(CROSS_ROOT)/demos:$(PYTHONPATH)
+
+.PHONY: all clean test reference-test submit
+all:
+	$(PYTHON) -m compileall -q . ../../../common
+test: all
+	@failed=0; for case in ../test/test*.in; do $(PYTHON) runner.py --case "$$case" || failed=1; done; exit $$failed
+reference-test: all
+	@failed=0; for case in ../test/test*.in; do $(PYTHON) runner.py --reference --case "$$case" || failed=1; done; exit $$failed
+clean:
+	$(PYTHON) ../../../common/package.py clean ..
+submit: all
+	$(PYTHON) ../../../common/package.py submit ..

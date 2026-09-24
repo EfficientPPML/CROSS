@@ -1,0 +1,35 @@
+"""PLAINTEXT numerical oracle only. Never accepts or emits HE ciphertexts.
+
+This provides template-style reference outputs, not a completed HE solution.
+The runner's ciphertext gate rejects this object's plaintext values.
+"""
+from reference import forward, decoder_block, operator_forward
+
+
+class PlaintextOracle:
+    def __init__(self, evaluator):
+        self.evaluator = evaluator
+
+    def encrypt(self, operands):
+        return operands
+
+    def evaluate(self, value):
+        return self.evaluator(value)
+
+    def decrypt(self, value):
+        return value
+
+    def close(self):
+        pass
+
+
+def create_session(config, weights, *, batch, sequence_length, devices):
+    return PlaintextOracle(lambda x: forward(config, weights, x))
+
+
+def create_operator_session(operation, config, weights, *, batch, sequence_length, devices):
+    return PlaintextOracle(lambda x: operator_forward(operation, config, weights, x))
+
+
+def create_block_session(config, weights, *, layer_index, batch, sequence_length, devices):
+    return PlaintextOracle(lambda x: decoder_block(config, weights, x, layer_index))
