@@ -1,0 +1,120 @@
+# Adapted from Google Jaxite PR147 for CROSS, 2026-10-27. See README.md and LICENSE.
+"""Encryption utilities for CKKS."""
+
+import abc
+
+import jax.numpy as jnp
+import numpy as np
+
+from . import _host_types as types
+from . import ntt_cpu, random
+
+Plaintext = types.Plaintext
+PublicKey = types.PublicKey
+SecretKey = types.SecretKey
+Ciphertext = types.Ciphertext
+
+
+ABC = abc.ABC
+abstractmethod = abc.abstractmethod
+
+
+class EncryptBase(ABC):
+  """Abstract base class for encryption kernels."""
+
+  @abstractmethod
+  def encrypt(
+    self,
+    plaintext: Plaintext,
+    random_source: random.RandomSource | None = None,
+  ) -> Ciphertext:
+    """Encrypts a CKKS plaintext."""
+
+
+class DecryptBase(ABC):
+  """Abstract base class for decryption kernels."""
+
+  @abstractmethod
+  def decrypt(self, ciphertext: Ciphertext) -> Plaintext:
+    """Decrypts a CKKS plaintext."""
+
+
+class Encrypt(EncryptBase):
+  """Kernel for CKKS encryption."""
+
+  def __init__(self, public_key: PublicKey):
+    self.public_key = public_key
+
+  def encrypt(
+    self,
+    plaintext: Plaintext,
+    random_source: random.RandomSource | None = None,
+  ) -> Ciphertext:
+
+    random_source = random_source or random.SecureRandomSource()
+
+    degree = plaintext.data.shape[0]
+    moduli = plaintext.moduli.tolist()
+
+    if not np.array_equal(
+      plaintext.moduli, self.public_key.moduli[: len(plaintext.moduli)]
+    ):
+      raise ValueError("Plaintext moduli must match the prefix of public key moduli")
+
+    v = random_source.gen_ternary_poly(degree, moduli)
+    e0 = random_source.gen_gaussian_poly(degree, moduli)
+    e1 = random_source.gen_gaussian_poly(degree, moduli)
+
+    v_ntt = ntt_cpu.ntt_negacyclic_poly(np.array(v), moduli)
+    e0_ntt = ntt_cpu.ntt_negacyclic_poly(np.array(e0), moduli)
+    e1_ntt = ntt_cpu.ntt_negacyclic_poly(np.array(e1), moduli)
+
+    q_u64 = np.array(moduli, dtype=np.uint64).reshape(1, -1)
+    pk0 = np.array(self.public_key.data[0])[..., : len(moduli)]
+    pk1 = np.array(self.public_key.data[1])[..., : len(moduli)]
+
+    # c0 = v*pk0 + e0 + m
+    prod0 = (v_ntt * pk0) % q_u64
+    c0 = (prod0 + e0_ntt + np.array(plaintext.data)) % q_u64
+
+    # c1 = v*pk1 + e1
+    prod1 = (v_ntt * pk1) % q_u64
+    c1 = (prod1 + e1_ntt) % q_u64
+
+    c_data = np.stack([c0, c1])
+
+    return Ciphertext(
+      jnp.array(c_data, dtype=jnp.uint32),
+      jnp.array(plaintext.moduli, dtype=jnp.uint32),
+    )
+
+
+class Decrypt(DecryptBase):
+  """Kernel for CKKS decryption."""
+
+  def __init__(self, secret_key: SecretKey):
+    self.secret_key = secret_key
+
+  def decrypt(self, ciphertext: Ciphertext) -> Plaintext:
+
+    moduli = ciphertext.moduli.tolist()
+    if not np.array_equal(
+      ciphertext.moduli, self.secret_key.moduli[: len(ciphertext.moduli)]
+    ):
+      raise ValueError("Ciphertext moduli must match the prefix of secret key moduli")
+    c0 = np.array(ciphertext.data[0])
+    c1 = np.array(ciphertext.data[1])
+    s = np.array(self.secret_key.data)[..., : len(moduli)]
+
+    q_u64 = np.array(moduli, dtype=np.uint64).reshape(1, -1)
+
+    # m = c0 + c1*s
+    res = (c0 + (c1.astype(np.uint64) * s.astype(np.uint64)) % q_u64) % q_u64
+
+    # Apply INTT to convert from NTT domain to coefficient domain.
+    res_coeffs = ntt_cpu.intt_negacyclic_poly(res, moduli)
+
+    return Plaintext(
+      jnp.array(res_coeffs, dtype=jnp.uint32),
+      jnp.array(ciphertext.moduli, dtype=jnp.uint32),
+    )

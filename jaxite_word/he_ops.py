@@ -916,7 +916,7 @@ class _HESubAccessor:
 
 
 class _HEBootstrapAccessor:
-  """Context-owned facade around the repository's single bootstrap engine."""
+  """Context-owned planning, setup and execution for CKKS or SHIP bootstrap."""
 
   def __init__(self, ctx):
     self._ctx = ctx
@@ -928,6 +928,7 @@ class _HEBootstrapAccessor:
     self._input_scale = None
     self._input_nsd = 1
     self._configuration = None
+    self._scheme = 'ckks'
 
   def configure(
       self,
@@ -937,6 +938,9 @@ class _HEBootstrapAccessor:
       input_level: Optional[int] = None,
       input_scale: Optional[float] = None,
       input_nsd: int = 1,
+      *,
+      scheme: str = 'ckks',
+      ship_config=None,
   ) -> '_HEBootstrapAccessor':
     """Configure the repository's Bootstrap engine and offline constants.
 
@@ -949,6 +953,41 @@ class _HEBootstrapAccessor:
       raise RuntimeError(
           'this CKKSContext already owns a configured bootstrap plan.'
       )
+    if scheme not in ('ckks', 'ship'):
+      raise ValueError("bootstrap scheme must be 'ckks' or 'ship'")
+    if scheme == 'ship':
+      from ship.api import _SHIPBootstrap
+      from ship.plan import SHIPConfig
+      if level_budget is not None or secret_key_dist != 'uniform_ternary':
+        raise ValueError(
+            'SHIP uses ship_config, not CKKS level budgets or secret distributions'
+        )
+      config = SHIPConfig() if ship_config is None else ship_config
+      if not isinstance(config, SHIPConfig):
+        raise TypeError('ship_config must be SHIPConfig')
+      engine = _SHIPBootstrap(self._ctx)
+      engine.control_gen(config)
+      if input_specs is None:
+        specs = ((
+            1 if input_level is None else input_level,
+            engine.input_scale if input_scale is None else input_scale,
+            input_nsd,
+        ),)
+      else:
+        specs = tuple(tuple(spec) for spec in input_specs)
+      for level, scale, nsd in specs:
+        engine.plan.validate_input(level, scale, nsd)
+      if not specs:
+        raise ValueError('SHIP requires at least one input specification')
+      self._engine = engine
+      self._scheme = scheme
+      self._configuration = ('ship', config)
+      self._input_specs = specs
+      self._configured = True
+      self._is_setup = False
+      return self
+    if ship_config is not None:
+      raise ValueError('ship_config requires scheme="ship"')
     import bootstrapping
     self._engine = bootstrapping.Bootstrap(self._ctx)
     self._engine.control_gen(
@@ -974,6 +1013,8 @@ class _HEBootstrapAccessor:
   def required_rotation_indices(self) -> tuple[int, ...]:
     """Rotation indices required by the configured bootstrap plan."""
     self._require_configured()
+    if self._scheme == 'ship':
+      return self._engine.plan.required_rotation_indices
     # CoeffToSlot's conjugate path uses the Galois index M-1 in addition to
     # the rotations discovered by control generation.  It must be advertised
     # during the planning phase so a keyless deployment can supply every key.
@@ -983,9 +1024,17 @@ class _HEBootstrapAccessor:
         conjugation_index,
     }))
 
-  def setup(self) -> '_HEBootstrapAccessor':
+  def setup(self, *, random_source=None) -> '_HEBootstrapAccessor':
     """Bind configured bootstrap constants and keys to this context."""
     self._require_configured()
+    if self._is_setup:
+      return self
+    if self._scheme == 'ship':
+      self._engine.setup_key(random_source=random_source)
+      self._is_setup = True
+      return self
+    if random_source is not None:
+      raise ValueError('random_source is supported only by SHIP trusted setup')
     self._engine.setup_key()
     cache = self._ctx._param_cache
     # Materialize every advertised max-level key now. This both warms the
@@ -1006,6 +1055,8 @@ class _HEBootstrapAccessor:
   ) -> Polynomial:
     """Run the engine's two-pass precision-refinement mode."""
     self._require_setup()
+    if self._scheme == 'ship':
+      raise ValueError('Meta-BTS is a CKKS mode and is not supported by SHIP')
     return self._engine.meta_bootstrap(ciphertext, precision)
 
   def _require_configured(self) -> None:

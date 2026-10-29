@@ -494,6 +494,10 @@ def _plan_bsgs(constant, options, dimension, default_pt_scale):
 
 def _plan_bootstrap(ctx, argument):
   import bootstrapping
+  from ship.plan import SHIPConfig
+
+  if isinstance(argument, SHIPConfig):
+    return argument.plan(ctx)
 
   level_budget, secret_key_dist, _, _ = argument
   level_budget = tuple(level_budget)
@@ -522,6 +526,14 @@ def _plan_bootstrap(ctx, argument):
           )
       ),
   )
+
+
+def _bootstrap_configuration(argument):
+  """Stable configuration key for either context-owned bootstrap engine."""
+  from ship.plan import SHIPConfig
+  if isinstance(argument, SHIPConfig):
+    return ('ship', argument)
+  return (tuple(argument[0]), argument[1])
 
 
 def _plan_step(step, inputs, ctx):
@@ -711,7 +723,12 @@ def _plan_step(step, inputs, ctx):
         nsd=source.nsd,
     ), operation_plan, rotations
   if kind == 'bootstrap':
-    level_budget, _, mode, precision = argument
+    from ship.plan import SHIPConfig
+    ship = isinstance(argument, SHIPConfig)
+    if ship:
+      mode, precision = 'single', None
+    else:
+      _, _, mode, precision = argument
     if source.scale is None:
       raise ValueError(
           f'operator {step_id!r} bootstrap requires a known input scale.'
@@ -723,6 +740,10 @@ def _plan_step(step, inputs, ctx):
           'operations.'
       )
     operation_plan = _plan_bootstrap(ctx, argument)
+    if ship:
+      if source.batch != 1:
+        raise ValueError('SHIP requires one ciphertext per request')
+      operation_plan.validate_input(source.level, source.scale, source.nsd)
     output_level = operation_plan.expected_output_level
     if output_level < 0:
       raise ValueError(
@@ -975,7 +996,7 @@ def _analyze_mapping(mapping, *, perf_test: bool = False) -> None:
     # modulo the slot count.
     rotations.extend(int(index) for index in operation_rotations)
   bootstrap_configurations = {
-      (_operation_argument(operation)[0], _operation_argument(operation)[1])
+      _bootstrap_configuration(_operation_argument(operation))
       for operation in packing.operations
       if _operation_kind(operation) == 'bootstrap'
   }
@@ -1126,6 +1147,9 @@ def _bind_operation(ctx, mapping, operation, bootstrap_target):
         else evaluator._matvec_array
     )
   if kind == 'bootstrap':
+    from ship.plan import SHIPConfig
+    if isinstance(argument, SHIPConfig):
+      return bootstrap_target.bootstrap
     _, _, mode, precision = argument
     if mode == 'single':
       return bootstrap_target.bootstrap
@@ -1144,13 +1168,13 @@ def _prepare_bindings(ctx, mapping):
     if _operation_kind(operation) != 'bootstrap':
       continue
     operation_id = _operation_id(operation)
-    level_budget, secret_key_dist, _, _ = _operation_argument(operation)
+    argument = _operation_argument(operation)
     spec = mapping.value_specs[_operation_inputs(operation)[0]]
     if spec.scale is None or spec.nsd is None:
       raise ValueError(
           f'bootstrap operator {operation_id!r} requires known scale and nsd.'
       )
-    configuration = (level_budget, secret_key_dist)
+    configuration = _bootstrap_configuration(argument)
     bootstrap_groups.setdefault(configuration, []).append(operation)
   if len(bootstrap_groups) > 1:
     raise ValueError(
@@ -1160,7 +1184,7 @@ def _prepare_bindings(ctx, mapping):
   bootstrap_target = None
   if bootstrap_groups:
     configuration, operations = next(iter(bootstrap_groups.items()))
-    level_budget, secret_key_dist = configuration
+    ship = configuration[0] == 'ship'
     bootstrap_plan = mapping.operation_plans[_operation_id(operations[0])]
     if any(
         mapping.operation_plans[_operation_id(operation)] != bootstrap_plan
@@ -1178,9 +1202,7 @@ def _prepare_bindings(ctx, mapping):
     facade = ctx.he_bootstrap
     if getattr(facade, '_configured', False):
       if (
-          facade._configuration != (
-              tuple(level_budget), secret_key_dist
-          )
+          facade._configuration != configuration
           or facade._input_specs != input_specs
       ):
         raise RuntimeError(
@@ -1189,11 +1211,17 @@ def _prepare_bindings(ctx, mapping):
       if not facade._is_setup:
         facade.setup()
     else:
-      facade.configure(
-          level_budget=list(level_budget),
-          secret_key_dist=secret_key_dist,
-          input_specs=input_specs,
-      ).setup()
+      if ship:
+        facade.configure(
+            scheme='ship', ship_config=configuration[1], input_specs=input_specs,
+        ).setup()
+      else:
+        level_budget, secret_key_dist = configuration
+        facade.configure(
+            level_budget=list(level_budget),
+            secret_key_dist=secret_key_dist,
+            input_specs=input_specs,
+        ).setup()
     bootstrap_target = getattr(facade, '_engine', facade)
 
   for operation in mapping.packing.operations:

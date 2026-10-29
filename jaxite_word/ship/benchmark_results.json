@@ -1,0 +1,90 @@
+{
+  "scope": "Full encrypted slot-to-slot SHIP bootstrap; no post-bootstrap multiplication",
+  "metric": "Union of TPU XLA Modules intervals; excludes compilation, setup, host work and idle gaps",
+  "degree": 16384,
+  "slots": 8192,
+  "weight": 31,
+  "theta": 9,
+  "gamma": 8.0,
+  "input_range": [
+    -0.125,
+    0.125
+  ],
+  "absolute_error_gate": 0.0009765625,
+  "q": [
+    2147352577,
+    1073643521,
+    1073479681,
+    1073184769,
+    1073053697,
+    1072857089,
+    1072496641,
+    1071513601
+  ],
+  "p": [
+    1071415297,
+    1071087617,
+    1070727169,
+    1070432257,
+    1069219841,
+    1068564481,
+    1068466177,
+    1068433409,
+    1068236801
+  ],
+  "input_scale": 4294705154.0,
+  "output_scale": 1071513601.0,
+  "output_level": 1,
+  "ciphertext_dtype": "uint32",
+  "device_kind": "TPU v6 lite",
+  "jax_version": "0.9.1",
+  "security_qualified": false,
+  "jaxite_ship": {
+    "device_samples_ms": [
+      1723.71512333,
+      1724.29141616,
+      1724.473456326
+    ],
+    "median_device_ms": 1724.29141616,
+    "max_error_to_input": 0.0005255257166730959
+  },
+  "first_cross_port": {
+    "device_samples_ms": [
+      1575.936643812,
+      1576.215340194,
+      1576.169903088
+    ],
+    "median_device_ms": 1576.169903088
+  },
+  "native_cross_ship": {
+    "device_samples_ms": [
+      1356.6131027,
+      1356.891159614,
+      1356.80653442
+    ],
+    "median_device_ms": 1356.80653442,
+    "max_error": {
+      "ramp": 0.0004862703804595636,
+      "random": 0.0004215525472297532
+    },
+    "module_events_per_capture": [
+      66291,
+      66291,
+      66291
+    ],
+    "profiler_warnings": [
+      [],
+      [],
+      []
+    ],
+    "source_archive_sha256": "c120a8381343f19518b6ade19c3dd7bfa8eb73cbf68baf9e98c61f339c7a22df",
+    "artifact_archive_sha256": "30a38137d75e32dce331bfe7f11accdbdc77eb6b4266c0ac2d380351b2ddfe24"
+  },
+  "speedup_over_jaxite": 1.2708454539519818,
+  "device_time_reduction_percent_vs_jaxite": 21.312225897313198,
+  "comparison_limits": [
+    "Historical runs on different v6e chips/VMs with independently randomized keys and ciphertexts.",
+    "Not an identical-ciphertext controlled A/B, exact HT14, or security qualification.",
+    "Full-bootstrap timings are not directly comparable to LL13 half-bootstrap."
+  ]
+}

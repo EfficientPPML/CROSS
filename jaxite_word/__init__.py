@@ -30,6 +30,7 @@ _DUAL_SPELLED = {
     'polynomial': ('Polynomial',),
     'ckks_ctx': ('CKKSContext',),
     'mapping': ('Mapping',),
+    'ship': ('SHIPBootstrap', 'SHIPConfig'),
 }
 
 # If a flat spelling was imported before this package, alias it now. This costs
@@ -83,6 +84,7 @@ __version__ = '3.0.0'
 
 __all__ = [
     'CKKSContext', 'Mapping', 'Packing', 'Polynomial', 'VectorizedProgram',
+    'SHIPBootstrap', 'SHIPConfig',
     '__version__',
     'mapping', 'nn', 'pack', 'packing', 'vectorize',
 ]

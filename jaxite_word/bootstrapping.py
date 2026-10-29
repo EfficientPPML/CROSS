@@ -1216,6 +1216,7 @@ class Bootstrap:
     self._all_rot_indices = None
     self._c2s_start_level = None
     self._hoisted_lt_plaintexts = {}
+    self._hoisted_lt_kernels = {}
 
   def _stage_checkpoint(self, tag: str, ct=None) -> None:
     """Optional per-stage memory hygiene/tracing (see __init__).
@@ -1266,6 +1267,7 @@ class Bootstrap:
       # can lazily re-encode them on a later bootstrap; retaining every level
       # through the ApproxMod stage only raises the large-N memory peak.
       self._hoisted_lt_plaintexts.clear()
+      self._hoisted_lt_kernels.clear()
       jax.clear_caches()
       gc.collect()
     if self._mem_trace:
@@ -1495,6 +1497,7 @@ class Bootstrap:
     # Re-running control generation on the same object must not reuse arrays
     # retained under identities from the preceding configuration.
     self._hoisted_lt_plaintexts.clear()
+    self._hoisted_lt_kernels.clear()
     self._level_budget = list(level_budget)
     c2s_levels, s2c_levels = level_budget
 
@@ -2562,27 +2565,38 @@ class Bootstrap:
 
     # JIT the shape-stable split primitives.  Rotation keys and maps remain
     # runtime operands, so one executable serves all baby/giant indices.
-    decompose = jax.jit(sample_op._decompose_array)
-    extend = jax.jit(
-        lambda data: sample_op._key_switch_extend_array(
-            data, include_first=True
-        )
-    )
-    hoisted_with_first = jax.jit(
-        lambda data, ds, ea, eb, cm: sample_op._hoisted_rotate_array(
-            data, ds, ea, eb, cm, include_first=True
-        )
-    )
-    hoisted_without_first = jax.jit(
-        lambda data, ds, ea, eb, cm: sample_op._hoisted_rotate_array(
-            data, ds, ea, eb, cm, include_first=False
-        )
-    )
-    mod_down = jax.jit(sample_op._mod_down_array)
-    mul_plain = jax.jit(sample_op._mul_plain_array)
-    automorphism = jax.jit(
-        lambda data, cm: sample_op._automorphism_array(data, cm)
-    )
+    kernel_cache = self._hoisted_lt_kernels
+    kernel_key = (int(level), id(sample_op))
+    if kernel_key not in kernel_cache:
+      decompose = jax.jit(sample_op._decompose_array)
+      extend = jax.jit(
+          lambda data: sample_op._key_switch_extend_array(
+              data, include_first=True
+          )
+      )
+      hoisted_with_first = jax.jit(
+          lambda data, ds, ea, eb, cm: sample_op._hoisted_rotate_array(
+              data, ds, ea, eb, cm, include_first=True
+          )
+      )
+      hoisted_without_first = jax.jit(
+          lambda data, ds, ea, eb, cm: sample_op._hoisted_rotate_array(
+              data, ds, ea, eb, cm, include_first=False
+          )
+      )
+      mod_down = jax.jit(sample_op._mod_down_array)
+      mul_plain = jax.jit(sample_op._mul_plain_array)
+      automorphism = jax.jit(
+          lambda data, cm: sample_op._automorphism_array(data, cm)
+      )
+      kernel_cache[kernel_key] = (
+          decompose, extend, hoisted_with_first, hoisted_without_first,
+          mod_down, mul_plain, automorphism,
+      )
+    (
+        decompose, extend, hoisted_with_first, hoisted_without_first,
+        mod_down, mul_plain, automorphism,
+    ) = kernel_cache[kernel_key]
 
     qp_moduli_arr = jnp.asarray(qp_moduli, dtype=jnp.uint64).reshape(
         1, 1, 1, 1, m_qp

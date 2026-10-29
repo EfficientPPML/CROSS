@@ -502,8 +502,15 @@ class Polynomial:
         self.modulus_dtype
     )
 
-    t1_t = a0 * b1 + a1 * b0
-    mul1 = self.ntt_ctx.ff_ctx.modular_reduction(t1_t)
+    # Each product is inside the reduction's input envelope. Their raw sum
+    # need not be: at 31 bits it can exceed Barrett's 2**62 bound, and at
+    # 32 bits it can overflow uint64. Sum reduced products instead.
+    ff = self.ntt_ctx.ff_ctx
+    cross0 = ff.modular_reduction(a0 * b1).astype(jnp.uint64)
+    cross1 = ff.modular_reduction(a1 * b0).astype(jnp.uint64)
+    mul1 = ff.strictify_after_accumulation(cross0 + cross1, 2).astype(
+        self.modulus_dtype
+    )
     return (
         jnp.concatenate([mul0[:, None], mul1[:, None]], axis=1),
         mul2[:, None],
@@ -513,11 +520,11 @@ class Polynomial:
     """Internal square kernel using the (a*a, 2*a0*a1, a1*a1) shortcut.
 
     Equivalent to `_polynomial_mult_array` when the input shell is built by
-    duplicating ct (so a0==b0 and a1==b1), but uses 2 modmuls + 1 doubling
-    instead of 3 modmuls + 1 add.
+    duplicating ct (so a0==b0 and a1==b1), but uses three scalar products
+    and a modular doubling instead of four scalar products and an addition.
 
       mul0 = a0 * a0
-      mul1 = 2 * a0 * a1   (1 modmul + 1 << 1, then mod-reduce)
+      mul1 = 2 * (a0 * a1 mod q) mod q
       mul2 = a1 * a1
 
     Layout matches `_polynomial_mult_array` exactly: returns (3-elem packed as
@@ -532,10 +539,11 @@ class Polynomial:
     mul2 = self.ntt_ctx.ff_ctx.modular_reduction(a1 * a1).astype(
         self.modulus_dtype
     )
-    # 2*a0*a1: a0*a1 fits in uint64 (each operand < 2^32); shifting left by 1
-    # at most doubles, still fits. Then a single modular reduction.
-    cross = (a0 * a1) << jnp.uint64(1)
-    mul1 = self.ntt_ctx.ff_ctx.modular_reduction(cross)
+    ff = self.ntt_ctx.ff_ctx
+    cross = ff.modular_reduction(a0 * a1).astype(jnp.uint64)
+    mul1 = ff.strictify_after_accumulation(cross + cross, 2).astype(
+        self.modulus_dtype
+    )
 
     return (
         jnp.concatenate([mul0[:, None], mul1[:, None]], axis=1),

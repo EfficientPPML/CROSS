@@ -28,6 +28,8 @@ For questions, please drop an email to our community [email](cpacommunity@google
 
 Current release: **3.0.0** (`jaxite_word.__version__`).
 
+SHIP bootstrapping integration: [native context API, arithmetic, and validation](jaxite_word/ship/README.md).
+
 # What is CROSS?
 CROSS is the first project to enable AI Accelerator, such as Google TPUs, to accelerate Homomorphic Encryption and achieves the State-of-the-art (SotA) throughput and energy efficiency (performance per watt) in HE operators (e.g., HE-Multiplication, HE-Rotation) and HE kernerls (e.g., Number Theory Transformation throughput) among commodity devices (CPUs, GPUs, FPGAs). The detailed flow is shown in the figure below.
 
