@@ -28,7 +28,8 @@ def baseline(monkeypatch):
     monkeypatch.setitem(sys.modules, "mapping", SimpleNamespace(
         ring_runtime_parameters=runtime))
     monkeypatch.setitem(sys.modules, "ckks_ctx", SimpleNamespace(
-        CKKSContext=lambda params: SimpleNamespace(**params)))
+        CKKSContext=lambda params: SimpleNamespace(**params),
+        evict_context_caches=Mock()))
     monkeypatch.setitem(sys.modules, "jaxite_word", SimpleNamespace(
         Mapping=mapping_factory))
 
@@ -70,6 +71,44 @@ def test_release_rebuild_keeps_the_same_identity(baseline):
     evaluator = service._compiled()
     service.release()
     evaluator.release.assert_called_once()
+    sys.modules["ckks_ctx"].evict_context_caches.assert_called_once_with(first)
     assert service._context().secret_key is first.secret_key
     assert service._compiled().keys["secret_key"] is first.secret_key
     assert len(generated) == 1
+
+
+@pytest.mark.parametrize("release_fails", [False, True])
+def test_release_evicts_client_caches_even_if_mapping_release_fails(monkeypatch, release_fails):
+    from jaxite_word import ckks_ctx
+
+    path = (Path(__file__).resolve().parents[1] / "non_agent_pset" /
+            "p1_benchmark" / "src" / "baseline.py")
+    spec = importlib.util.spec_from_file_location("p1_baseline_release", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    monkeypatch.setitem(sys.modules, "ckks_ctx", ckks_ctx)
+    client_ctx, other_ctx = object(), object()
+    other_encrypt, other_decrypt = object(), object()
+    encrypt_cache = {(id(client_ctx), 4): object(), (id(other_ctx), 4): other_encrypt}
+    decrypt_cache = {(id(client_ctx), 1): object(), (id(other_ctx), 1): other_decrypt}
+    monkeypatch.setattr(ckks_ctx, "_encrypt_cache", encrypt_cache)
+    monkeypatch.setattr(ckks_ctx, "_decrypt_cache", decrypt_cache)
+    service = module.BaselineService.__new__(module.BaselineService)
+    service._ctx = client_ctx
+    release = Mock(side_effect=RuntimeError("release failed") if release_fails else None)
+    service._mapping = SimpleNamespace(release=release)
+    keys = {"public_key": object(), "secret_key": object()}
+    service.keys = keys
+
+    if release_fails:
+        with pytest.raises(RuntimeError, match="release failed"):
+            service.release()
+    else:
+        service.release()
+    assert service._ctx is None
+    assert service._mapping is None
+    assert encrypt_cache == {(id(other_ctx), 4): other_encrypt}
+    assert decrypt_cache == {(id(other_ctx), 1): other_decrypt}
+    assert service.keys is keys
+    service.release()  # Cleanup is idempotent even after a failed Mapping release.
+    release.assert_called_once()

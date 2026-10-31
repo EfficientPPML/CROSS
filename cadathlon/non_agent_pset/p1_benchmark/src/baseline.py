@@ -133,10 +133,18 @@ class BaselineService:
         return np.asarray(rows)
 
     def release(self):
-        if self._mapping is not None:
-            self._mapping.release()
-            self._mapping = None
-        self._ctx = None
+        mapping, ctx = self._mapping, self._ctx
+        self._mapping = self._ctx = None
+        try:
+            if mapping is not None:
+                mapping.release()
+        finally:
+            # The client codec has a distinct context from Mapping's. Its
+            # global encrypt/decrypt caches otherwise retain key tables even
+            # after both service references have been dropped.
+            if ctx is not None:
+                from ckks_ctx import evict_context_caches
+                evict_context_caches(ctx)
 
 
 def build_service(model, input_shape, *, batch, devices, keys=None):
