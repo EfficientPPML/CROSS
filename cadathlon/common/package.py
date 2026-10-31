@@ -25,9 +25,15 @@ def main():
         for required in ("REPORT.md", "cross.patch"):
             if not (directory / required).is_file():
                 raise FileNotFoundError(f"Create {directory / required} before submission")
-        root = directory.parent
+        # Preserve the non_agent_pset/agent_pset level: runners resolve common
+        # three parents above src, just as they do in the source checkout.
+        root = directory.parents[1]
         candidates = [directory / "REPORT.md", directory / "cross.patch"]
-        candidates += list((directory / "src").rglob("*.py")) + [directory / "src" / "Makefile"]
+        candidates += [path for path in (directory / "src").rglob("*.py")
+                       if not {"run", "results"}.intersection(
+                           path.relative_to(directory / "src").parts)]
+        candidates += [directory / "src" / "Makefile"]
+        candidates += [directory / "src" / "suite" / "suite_config.json"]
         candidates += list(directory.glob("results*.json"))
         candidates += [root / "common" / "support.py", root / "common" / "Makefile.problem",
                        root / "common" / "package.py"]

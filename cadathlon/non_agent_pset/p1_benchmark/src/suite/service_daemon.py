@@ -77,38 +77,33 @@ class Server:
         # a production isolation boundary; the judge audits the evaluator
         # path separately), so calling encrypt here reveals nothing.
         import numpy as np
+        from support import require_secure_execution
         warm_started = time.perf_counter()
         warm_in = self.service.encrypt(np.zeros((batch, 784), dtype=np.float64))
+        require_secure_execution(self.service, warm_in)
         jax.block_until_ready(warm_in)
         warm_out = self.service.execute(warm_in)
         jax.block_until_ready(warm_out)
+        actual_rings = require_secure_execution(self.service, (warm_in, warm_out))
         del warm_in, warm_out
         warmed = time.perf_counter()
-        packed = lib.pack_program()
-        ring = packed.ring_config
-        import math
-        Q = math.prod(ring.q_towers)
-        P = math.prod(ring.p_towers)
         self.setup = {"key_load_s": keys_at - started,
                       "service_build_s": built - keys_at,
                       "warmup_s": warmed - warm_started,
                       "total_s": warmed - started}
         self.paths.pubkeydir.mkdir(parents=True, exist_ok=True)
         self.paths.manifest.write_text(json.dumps({
-            "degree": int(ring.degree), "num_slots": int(ring.num_slots),
-            "num_q": len(ring.q_towers), "num_p": len(ring.p_towers),
-            "dnum": int(ring.dnum), "depth": int(packed.depth),
-            "log2_Q": math.log2(Q), "log2_QP": math.log2(Q * P),
-            "security_bits": int(ring.target.bits),
-            "security_model": str(ring.target.cost_model.value),
+            **actual_rings[0], "execution_rings": actual_rings,
             "devices": [str(d) for d in chips], "batch": batch,
             "setup": self.setup}, indent=2))
         self.ready = True
 
     def infer(self, indir, outdir):
         import jax
+        from support import require_secure_execution
         load_started = time.perf_counter()
         bundle = bundle_io.load_bundle(indir)
+        require_secure_execution(self.service, bundle)
         jax.block_until_ready(bundle)
         load_s = time.perf_counter() - load_started
 
@@ -116,6 +111,7 @@ class Server:
         result = self.service.execute(bundle)
         jax.block_until_ready(result)
         execute_s = time.perf_counter() - execute_started
+        require_secure_execution(self.service, result)
 
         store_started = time.perf_counter()
         count = bundle_io.save_bundle(result, outdir)

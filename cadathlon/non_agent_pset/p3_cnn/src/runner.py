@@ -1,4 +1,11 @@
-"""Local fixture runner. The organizer performs independent ranked reruns."""
+"""Local fixture runner. The organizer performs independent ranked reruns.
+
+``setup_s`` measures only the mapping constructor. Any first-request work is
+recorded in ``warmup_s`` when warmups are enabled. With zero warmups,
+``cold_start_included`` marks that the first measured sample may include lazy
+initialization or compilation. ``total_s`` covers this invocation of run(),
+including fixture loading, initialization, warmups and release.
+"""
 import argparse
 import contextlib
 import json
@@ -9,11 +16,12 @@ import time
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "common"))
-from support import cross_root, load_module, metrics, read_json, require_ciphertexts, synchronize
+from support import cross_root, load_module, metrics, read_json, require_ciphertexts, require_secure_execution, synchronize
 from reference import make_case
 
 
 def run(args):
+    run_started = time.perf_counter()
     case = read_json(args.case)
     model, shape, x, oracle = make_case(case)
     expected = np.asarray(read_json(args.case.with_suffix(".out"))["logits"])
@@ -31,16 +39,19 @@ def run(args):
     setup = time.perf_counter() - started
     try:
         samples, server_samples, outputs = [], [], []
+        warmup_samples, warmup_server_samples = [], []
         for iteration in range(args.warmups + args.repeats):
             started = time.perf_counter()
             encrypted = mapping.encrypt_input(x)
             require_ciphertexts(encrypted)
+            require_secure_execution(mapping, encrypted)
             synchronize(encrypted)
             server_start = time.perf_counter()
             result = mapping.execute(encrypted)
             synchronize(result)
             server_time = time.perf_counter() - server_start
             require_ciphertexts(result)
+            require_secure_execution(mapping, result)
             output = np.asarray(mapping.decrypt_output(result))
             if case["batch"] == 1 and output.shape == expected.shape[1:]:
                 output = output[None, :]
@@ -49,17 +60,24 @@ def run(args):
                 samples.append(elapsed)
                 server_samples.append(server_time)
                 outputs.append(output)
+            else:
+                warmup_samples.append(elapsed)
+                warmup_server_samples.append(server_time)
             errors = metrics(output, expected)
             if not np.all(np.abs(output - expected) <= 0.02 + 0.01 * np.abs(expected)):
                 raise ValueError(f"Logit gate failed: {errors}")
             if errors["top1_agreement"] < 0.99:
                 raise ValueError(f"Argmax gate failed: {errors}")
-        return {"case": args.case.name, "mode": "HE-synthetic-smoke", "device": str(devices[0]),
+        report = {"case": args.case.name, "mode": "HE-synthetic-smoke", "device": str(devices[0]),
                 "setup_s": setup, "end_to_end_s": samples, "server_s": server_samples,
+                "warmup_s": warmup_samples, "warmup_server_s": warmup_server_samples,
+                "cold_start_included": args.warmups == 0,
                 "median_s": float(np.median(samples)), "batch": case["batch"],
                 "trained_accuracy_evaluated": False, **metrics(outputs[-1], expected)}
     finally:
         mapping.release()
+    report["total_s"] = time.perf_counter() - run_started
+    return report
 
 
 def main():

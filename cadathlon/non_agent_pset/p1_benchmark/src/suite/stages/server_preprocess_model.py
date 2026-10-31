@@ -106,7 +106,7 @@ def main():
     print(f"         [p3] service resident on {devices} chip(s), batch={batch}; "
           f"warm-up {manifest['setup']['warmup_s']:.1f}s")
     print(f"         [p3] ring degree={manifest['degree']} slots={manifest['num_slots']} "
-          f"depth={manifest['depth']} log2(QP)={manifest['log2_QP']:.1f} "
+          f"max_level={manifest['max_level']} log2(QP)={manifest['log2_QP']:.1f} "
           f"security={manifest['security_bits']}-bit")
     lib.report_steps(paths, {
         "server_setup_s": elapsed,

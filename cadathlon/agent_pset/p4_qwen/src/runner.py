@@ -9,7 +9,7 @@ import time
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "common"))
-from support import cross_root, load_module, metrics, read_json, require_ciphertexts, synchronize
+from support import cross_root, load_module, metrics, read_json, require_ciphertexts, require_secure_execution, synchronize
 from reference import make_case
 
 
@@ -38,6 +38,7 @@ def run(args):
         encrypted = session.encrypt(embeddings)
         if not args.reference:
             require_ciphertexts(encrypted)
+            require_secure_execution(session, encrypted)
             synchronize(encrypted)
         server_started = time.perf_counter()
         result = session.evaluate(encrypted)
@@ -45,6 +46,7 @@ def run(args):
             require_ciphertexts(result)
             synchronize(result)
         server = time.perf_counter() - server_started
+        require_secure_execution(session, result)
         output = session.decrypt(result)
         elapsed = time.perf_counter() - started
         errors = metrics(output, expected)

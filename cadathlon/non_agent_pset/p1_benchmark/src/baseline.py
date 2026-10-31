@@ -28,13 +28,28 @@ class BaselineService:
         self._ctx = None
         self._mapping = None
 
+    def _shared_keys(self):
+        """Resolve one key pair for both lazy halves of this service.
+
+        ``ring_runtime_parameters(keys=None)`` deliberately generates fresh
+        keys on each call. Passing None separately to the codec and Mapping
+        therefore creates incompatible client and evaluator identities.
+        Keep supplied suite keys unchanged, and retain generated keys across
+        release/rebuild just as we retain supplied ones.
+        """
+        if self.keys is None:
+            import mapping as mapping_mod
+            runtime = mapping_mod.ring_runtime_parameters(self.packed.ring_config)
+            self.keys = {name: runtime[name] for name in ("public_key", "secret_key")}
+        return self.keys
+
     # -- client side: the codec only, no compiled program ------------------
     def _context(self):
         if self._ctx is None:
             import mapping as mapping_mod
             from ckks_ctx import CKKSContext
             self._ctx = CKKSContext(mapping_mod.ring_runtime_parameters(
-                self.packed.ring_config, keys=self.keys))
+                self.packed.ring_config, keys=self._shared_keys()))
         return self._ctx
 
     # -- server side: the compiled Mapping ---------------------------------
@@ -42,7 +57,7 @@ class BaselineService:
         if self._mapping is None:
             from jaxite_word import Mapping
             self._mapping = Mapping(self.packed, global_batch=self.lanes,
-                                    devices=self.devices, keys=self.keys)
+                                    devices=self.devices, keys=self._shared_keys())
         return self._mapping
 
     def encrypt(self, images):

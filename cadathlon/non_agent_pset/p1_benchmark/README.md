@@ -13,3 +13,11 @@ Set `CROSS_ROOT` if this package is extracted outside the repository.
 `make submit` makes a local archive. Public synthetic cases verify arithmetic;
 official accuracy runs use organizer-supplied trained weights and images, as
 specified in the handout.
+
+The local runner's `setup_s` times only the service constructor. The baseline
+initializes keys and compiles lazily on its first request. `warmup_s` and
+`warmup_server_s` retain the excluded warmup samples; with `--warmups 0`,
+`cold_start_included` is true and the first measured request includes any
+lazy setup. `total_s` includes fixture loading, setup, all requests and service
+release, so use it when planning an evaluation slot. These smoke timings do
+not replace the ranked suite's timing boundaries.

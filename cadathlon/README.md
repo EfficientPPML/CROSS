@@ -85,6 +85,17 @@ generation. `make baseline-test` runs actual encrypted inference and can take
 minutes and substantial memory. No public smoke check certifies security,
 full-model correctness, or measured contest performance.
 
+Encrypted smoke runners enforce the 128-bit classical Q*P ceiling on every
+live `CKKSContext` exposed by the submission, then check that input and output
+ciphertexts use those rings. P1 suite stage 3 applies the same gate after warm-up
+and records the observed execution rings. Standard `ctx`, `_ctx`, `mapping`,
+and `_mapping` wrappers work directly; custom service/session wrappers must
+provide `security_contexts()` returning all live client and server contexts,
+including contexts created lazily during evaluation. A declared profile alone
+does not satisfy the gate. These checks catch accidental insecure parameters;
+they do not make contestant Python trusted, and organizer evaluator audits
+remain necessary.
+
 The problem set is authored against CROSS commit
 `e652a56f897d8ed814978359e5a2b0c78f46641d`. Source precedence is current checked-out
 code/API reference, then tutorial guidance, then historical paper measurements.
