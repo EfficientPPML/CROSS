@@ -385,6 +385,11 @@ class Polynomial:
   def to_coeffs_form(self):
     current_shape = self.polynomial.shape
     reshaped_in = self.polynomial.reshape(self.shape_in_ntt_all_limbs)
+    # Keep the batch/component reshape out of the INTT byte-convolution
+    # fusion. Otherwise libtpu can abort while compiling its layout copy:
+    # "Scaled dimension stride is not equal to window bound" (1 vs. 4).
+    # This barrier preserves every coefficient bit and the public layout.
+    reshaped_in = jax.lax.optimization_barrier(reshaped_in)
     intt_result = self.ntt_ctx.intt(reshaped_in)
     self.polynomial = intt_result.reshape(current_shape)
 

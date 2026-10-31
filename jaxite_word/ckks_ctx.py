@@ -1272,9 +1272,8 @@ def evict_context_caches(ctx) -> int:
   """Drop the encrypt/decrypt cache entries built for ``ctx``.
 
   Both caches are keyed by ``id(ctx)``, so entries outlive the context they
-  were built for and would keep its device tables alive (or, once the id is
-  reused, serve a stale table to a new context). ``Mapping.release`` calls
-  this; returns the number of entries removed.
+  were built for and keep its device tables alive. ``Mapping.release`` calls
+  this; returns the number of entries removed. Other contexts are unaffected.
   """
   key_id = id(ctx)
   removed = 0

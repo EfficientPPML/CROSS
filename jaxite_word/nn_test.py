@@ -603,6 +603,57 @@ class MappingLifecycleTest(absltest.TestCase):
         **mapping_options,
     )
 
+  def test_failed_build_releases_prepared_bsgs_buffers(self):
+    model = _packed(
+        _linear(_matrix(), n1=2, n2=4, pt_scale=self.scaling_factor,
+                name='matrix'),
+        _rotate(0, name='copy'),
+        input_shape=(8,),
+    )
+    original_bind = mapping_mod._bind_operation
+    original_preprocess = bsgs._BSGSMatVecAtLevel.preprocess
+
+    for failure in ('compile', 'later_binding', 'preprocess'):
+      with self.subTest(failure=failure):
+        owners, mappings = [], []
+
+        def preprocess(owner, *args, **kwargs):
+          owners.append(owner)
+          original_preprocess(owner, *args, **kwargs)
+          self.assertIsNotNone(owner._groups)
+          if failure == 'preprocess':
+            raise RuntimeError('injected preprocessing failure')
+
+        def bind(ctx, mapping, operation, bootstrap_target):
+          if not mappings:
+            mappings.append(mapping)
+          if failure == 'later_binding' and operation[0] == 'copy':
+            raise RuntimeError('injected binding failure')
+          return original_bind(ctx, mapping, operation, bootstrap_target)
+
+        staged = mock.Mock()
+        staged.lower.return_value.compile.side_effect = RuntimeError(
+            'injected compilation failure'
+        )
+        with (
+            mock.patch.object(mapping_mod, '_bind_operation', side_effect=bind),
+            mock.patch.object(bsgs._BSGSMatVecAtLevel, 'preprocess',
+                              autospec=True, side_effect=preprocess),
+            mock.patch.object(jax, 'pmap', return_value=staged),
+        ):
+          # Exercise real context initialization, binding preparation and
+          # _materialize_mapping. Retain the failed objects as a traceback
+          # would, so clearing only global JAX caches cannot satisfy this.
+          with self.assertRaisesRegex(RuntimeError, 'injected'):
+            self._mapping(model)
+
+        self.assertLen(owners, 1)
+        self.assertIsNone(owners[0]._groups)
+        self.assertIsNone(owners[0]._matvec_fn)
+        self.assertEmpty(mappings[0].bindings)
+        self.assertIsNone(mappings[0]._compiled)
+        self.assertIsNone(mappings[0]._compiled_regions)
+
   def _ciphertext(self, ctx):
     cache = ctx._param_cache
     moduli = cache.q_moduli_at_level(ctx.max_level)
