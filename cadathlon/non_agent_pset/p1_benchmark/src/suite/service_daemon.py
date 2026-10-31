@@ -71,15 +71,20 @@ class Server:
         # the XLA compile -- to happen here, inside the stage the harness
         # attributes to model preprocessing. Without this the first measured
         # batch pays for compilation and stage 7 stops meaning "inference".
-        # The warm-up runs on zeros through the contestant's own service, so
-        # an optimized service is warmed exactly the same way. This daemon
+        # The warm-up runs on zeros through the contestant's own service. A
+        # service may provide warmup_input() when a smaller dummy bundle covers
+        # every physical execution shape; the fixed-lane baseline needs only
+        # one lane group. Services without the hook retain full-batch warmup.
+        # This daemon
         # already holds the key pair (the local package is a test harness, not
         # a production isolation boundary; the judge audits the evaluator
         # path separately), so calling encrypt here reveals nothing.
         import numpy as np
         from support import require_secure_execution
         warm_started = time.perf_counter()
-        warm_in = self.service.encrypt(np.zeros((batch, 784), dtype=np.float64))
+        warmup_input = getattr(self.service, "warmup_input", None)
+        warm_in = (warmup_input() if warmup_input is not None else
+                   self.service.encrypt(np.zeros((batch, 784), dtype=np.float64)))
         require_secure_execution(self.service, warm_in)
         jax.block_until_ready(warm_in)
         warm_out = self.service.execute(warm_in)

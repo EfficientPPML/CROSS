@@ -6,6 +6,7 @@ context and compare decoded output with cleartext matrix-vector multiplication.
 """
 
 from typing import List
+from types import SimpleNamespace
 from unittest import mock
 
 import jax
@@ -154,6 +155,56 @@ class BSGSMatVecTest(parameterized.TestCase):
     op = _BSGSMatVecAtLevel(ctx, ctx.max_level, n, n1, n2)
     with self.assertRaisesRegex(TypeError, 'values must be real'):
       op.preprocess({0: np.ones(n, dtype=np.complex128)})
+
+  def test_release_evicts_only_owned_encoder_caches(self):
+    n = 8
+    n1, n2 = bsgs.compute_bsgs_params(n)
+    ctx = self._build_context(bsgs.required_rotation_indices(n, n1, n2))
+    ctx.encode([1.0] * n)
+    unrelated_keys = {key for key in ckks_ctx._encrypt_cache if key[0] == id(ctx)}
+    self.assertNotEmpty(unrelated_keys)
+    op = _BSGSMatVecAtLevel(ctx, ctx.max_level, n)
+    op.preprocess(np.eye(n))
+    encoder_id = id(op._encoder)
+    self.assertTrue(any(key[0] == encoder_id for key in ckks_ctx._encrypt_cache))
+    # Both caches must be evicted even if a caller used the encoder to decode.
+    with mock.patch.dict(ckks_ctx._decrypt_cache, {(encoder_id, 1): object()}):
+      op._release()
+      op._release()
+      self.assertFalse(any(key[0] == encoder_id for key in ckks_ctx._encrypt_cache))
+      self.assertFalse(any(key[0] == encoder_id for key in ckks_ctx._decrypt_cache))
+    self.assertTrue(unrelated_keys <= ckks_ctx._encrypt_cache.keys())
+
+  def test_mapping_preprocess_failure_evicts_partial_encoder_cache(self):
+    import mapping as mapping_mod
+
+    n = 8
+    ctx = self._build_context([])
+    ctx.encode([1.0] * n)
+    unrelated_keys = {key for key in ckks_ctx._encrypt_cache if key[0] == id(ctx)}
+    plan = mapping_mod._MatVecPlan(n=n, n1=2, active_diagonal_indices=(0,),
+                                   pt_scale=float(self.q_towers[-1]))
+    state = SimpleNamespace(
+        value_specs={'input': SimpleNamespace(level=ctx.max_level),
+                     'linear': SimpleNamespace(level=ctx.max_level - 1)},
+        operation_plans={'linear': plan}, bsgs_n_jobs=1, bsgs_streaming=False)
+    constant = SimpleNamespace(_constant_kind='dense', values=np.eye(n))
+    operation = ('linear', 'matvec', ('input',), (constant, None, None, None, None))
+    original_encode = ckks_ctx.CKKSContext.encode
+    failed_encoder_ids = []
+
+    def fail_after_encode(encoder, values):
+      original_encode(encoder, values)
+      failed_encoder_ids.append(id(encoder))
+      raise RuntimeError('failed after allocating encoder tables')
+
+    with mock.patch.object(ckks_ctx.CKKSContext, 'encode', fail_after_encode):
+      with self.assertRaisesRegex(RuntimeError, 'allocating encoder tables'):
+        mapping_mod._bind_operation(ctx, state, operation, None)
+    self.assertLen(failed_encoder_ids, 1)
+    self.assertFalse(any(key[0] in failed_encoder_ids
+                         for key in ckks_ctx._encrypt_cache))
+    self.assertTrue(unrelated_keys <= ckks_ctx._encrypt_cache.keys())
 
   def test_private_matvec_operands_support_outer_fused_jit(self):
     n = 8

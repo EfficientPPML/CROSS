@@ -68,6 +68,22 @@ class BaselineService:
             raise ValueError(f"expected {self.batch} images, got {len(rows)}")
         return [ctx.encrypt_slots(self.packed.pack(row), scale=scale) for row in rows]
 
+    def warmup_input(self):
+        """Compile one complete physical lane group, independent of batch size.
+
+        Every execute window uses the same Mapping with ``global_batch=lanes``.
+        Encrypting and evaluating all 1000 public dummy images adds no compiled
+        shapes. A single encrypted zero can populate every lane for this
+        untimed warmup; real input encryption still uses fresh randomness for
+        each image in ``encrypt``.
+        """
+        import numpy as np
+        ctx = self._context()
+        zeros = np.zeros(self.packed.logical_input_shape, dtype=np.float64)
+        ciphertext = ctx.encrypt_slots(
+            self.packed.pack(zeros), scale=float(self.packed.ring_config.scaling_factor))
+        return [ciphertext] * self.lanes
+
     @staticmethod
     def _stack(window):
         """Concatenate batch-1 ciphertexts into one batch-N ciphertext.

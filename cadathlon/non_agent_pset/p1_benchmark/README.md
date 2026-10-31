@@ -21,3 +21,13 @@ initializes keys and compiles lazily on its first request. `warmup_s` and
 lazy setup. `total_s` includes fixture loading, setup, all requests and service
 release, so use it when planning an evaluation slot. These smoke timings do
 not replace the ranked suite's timing boundaries.
+
+Suite stage 3 accepts an optional `service.warmup_input()` hook returning a
+dummy ciphertext bundle that covers every physical execution shape used by
+that service. The baseline encrypts one zero image and repeats its ciphertext
+across one complete device lane group: every later group runs the same
+Mapping. This avoids encrypting and evaluating the entire 1000-image batch
+just to warm that Mapping. Both input and output security checks still run.
+Services without the hook retain full-batch warmup, and ranked input counts
+and timing boundaries are unchanged. This reduces warmup work; it does not
+establish that the full six-case evaluation meets a five-minute budget.
