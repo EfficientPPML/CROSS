@@ -314,7 +314,7 @@ class PolynomialBatchedCompilationTest(parameterized.TestCase):
     devices = jax.local_devices()
     if len(devices) < 8 or devices[0].platform != "tpu":
       self.skipTest("requires eight TPU devices")
-    self._round_trip(4, 32768, devices=devices[:8])
+    self._round_trip(4, 32768, num_moduli=20, devices=devices[:8])
 
 
 class PolynomialPrivateArithmeticTest(parameterized.TestCase):
