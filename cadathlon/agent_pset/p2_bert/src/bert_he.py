@@ -13,6 +13,10 @@ def create_session(config, weights, *, batch, sequence_length, devices):
     attention_mask=mask), decrypt(ciphertexts), close(). encrypt/evaluate must
     return a CROSS Polynomial or nonempty nested lists/tuples of Polynomials.
     decrypt returns (batch, 2) logits. The attention mask is public.
+    For actual-ring checks, expose live CKKSContext objects as ctx/_ctx or
+    through security_contexts(). Custom wrappers must return every client and
+    evaluator context; a declared ring/profile alone is not sufficient.
+
     Reuse your real benchmark circuit; this interface is only a smoke driver.
     """
     raise NotImplementedError("TODO: implement the CROSS BERT session")

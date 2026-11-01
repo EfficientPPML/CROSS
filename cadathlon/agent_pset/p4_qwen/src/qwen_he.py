@@ -9,6 +9,10 @@ def create_session(config, weights, *, batch, sequence_length, devices):
     evaluate returns encrypted last-position logits for the full vocabulary.
     decrypt returns (batch, vocab_size) float64 logits.
 
+    For actual-ring checks, expose live CKKSContext objects as ctx/_ctx or
+    through security_contexts(). Custom wrappers must return every client and
+    evaluator context; a declared ring/profile alone is not sufficient.
+
     TODO: implement operators, packing, depth/refresh planning and the decoder.
     Keep the server evaluator free of secret keys and plaintext activations.
     reference.py explains semantics, but is not an encrypted implementation.

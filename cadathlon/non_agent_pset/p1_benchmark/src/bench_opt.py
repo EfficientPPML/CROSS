@@ -11,6 +11,10 @@ def build_service(model, input_shape, *, batch, devices, keys=None):
         decrypt(bundle)  -> array of shape (batch, 10)    (client side)
         release()        -> free device memory
 
+    For actual-ring checks, expose live CKKSContext objects as ctx/_ctx or
+    through security_contexts(). Custom wrappers must return every client and
+    evaluator context; a declared ring/profile alone is not sufficient.
+
     Optional: warmup_input() returns a dummy encrypted-zero bundle covering
     every physical execution shape the service uses. Stage 3 evaluates it
     before ranked requests and validates input/output security. Omit this

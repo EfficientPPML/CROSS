@@ -1,5 +1,125 @@
 # Author validation
 
+## Issue repair validation — 2026-10-31 / 2026-11-01
+
+This repair addresses the standalone P1 key mismatch, actual-ring security
+gates, and the TPU inverse-NTT fusion failure. It also reduces redundant
+key-generation work and releases Mapping resources between runs. It does
+**not** establish encrypted BERT/Qwen references or a five-minute complete
+C1–C6 evaluation.
+
+### Causes and changes
+
+- P1 constructed its client codec and server Mapping lazily with `keys=None`
+  twice. Each call generated a different key pair. `BaselineService` now owns
+  one lazily generated pair and passes it to both; externally supplied suite
+  keys are preserved.
+- P2 and P4 `.golden` files are plaintext numerical oracles, not incomplete
+  adapters around an existing encrypted implementation. Their six numerical
+  reference cases each pass exactly. Encrypted attention, nonlinear
+  approximations, normalization, and depth/refresh planning are still missing.
+  Removing the ciphertext check would conceal this gap. P2's measured CROSS
+  baseline is absent; P4's 60-second scoring target is a constant, not a
+  measurement. No encrypted transformer baseline is claimed by this repair.
+- All four local runners now call `he_params.qp_is_secure` on live contexts'
+  complete Q and P chains and bind every ciphertext to a checked context.
+  P1 stage 3 checks both its client and lazily built evaluator, before marking
+  the service ready, and records those actual rings in its manifest. Declared
+  profiles and reduced output moduli cannot substitute for a full-ring check.
+  These checks do not sandbox hostile contestant Python; independent judging
+  and evaluator audit remain necessary.
+- TPU fusion combined the batch/component reshape feeding the inverse
+  NTT with its bitcast/convolution, producing an invalid scaled-dimension
+  window stride. An `optimization_barrier` keeps that boundary explicit.
+- `Mapping.release()` now drops executables, bindings, owned context caches,
+  and failed-construction state. JAX's process-wide tracing caches are cleared
+  as documented in the API; unrelated JIT functions may retrace.
+- P1 stage 3 now accepts an optional `warmup_input()` hook. The baseline
+  encrypts one zero image and repeats it across one full physical lane group;
+  this warms its exact fixed Mapping shape once instead of encrypting and
+  executing 1000 dummy images. Other services retain full-batch warmup unless
+  they implement the hook. Input/output security gates still run and ranked
+  requests still use every image with fresh encryption.
+- Encoder-owned BSGS codec caches are evicted on release and preprocessing
+  failure. Immutable public FFT root and rotation tables are cached with
+  bounded capacity instead of being rebuilt for each diagonal; their numeric
+  construction is unchanged.
+- Native key switching unnecessarily inverted and retransformed every Q
+  secret limb, although its input was already in evaluation form. It now
+  reuses Q directly and only inverts q0 to center-lift into P. The scalar
+  arbitrary-precision path remains as an independent exact oracle. Randomness,
+  distributions, modulus chains and key-generation version are unchanged.
+- Submission archives now preserve the problem/common directory hierarchy
+  and include shared validation and the P1 suite configuration, without
+  including runtime keys or daemon artifacts.
+
+### Measurements and limits
+
+Initial validation uses Python 3.13.17 and JAX/jaxlib 0.12.0 on the available
+eight-device TPU host. Additional isolated checks use the report's compiler
+packages (JAX/jaxlib 0.11.2, libtpu 0.0.48), but Python, NumPy and PyTorch
+versions still differ from the full author environment. See the exact metadata
+and results in `validation/issue_repair.json`.
+
+- P1 `runner.py --case ../test/test1.in --baseline --warmups 0 --repeats 1`:
+  passed, max absolute error `1.2703726959273354e-13`, top-1 agreement 1.0.
+  Cold end-to-end time was 116.294 s; first server call was 114.670 s and
+  included lazy Mapping construction. Constructor-only `setup_s` was 0.527 s
+  and must not be interpreted as total setup time.
+- Latest-code P1 eight-device warmup: a service configured for batch 1000
+  produced eight warmup ciphertexts, passed input and output security checks,
+  and decrypted all eight outputs correctly (max absolute error `1.2671e-13`,
+  top-1 agreement 1.0). Construction/encryption/execution/decryption took
+  120.423 s; whole process including teardown took 130.01 s. This validates
+  the warmup hook; it does not measure a ranked 1000-image request.
+- P3 `runner.py --case ../test/test2.in --baseline --warmups 0 --repeats 1`
+  passed end to end at batch 2: max absolute error `2.7606e-13`, top-1
+  agreement 1.0. Setup was 906.866 s, cold request 2.244 s (server 1.045 s),
+  process elapsed 928.40 s, and peak host RSS 134,190,156 KiB. This run started
+  before the later FFT-table and encoder-cache refinements. It proves the
+  repaired batch-2 path, and also demonstrates the five-minute target is not
+  met. It is not a calibrated scoring baseline or a same-environment speedup.
+- P3 test3 passed end to end at batch 4 on the reported compiler packages
+  using the latest code: max absolute error `6.3052e-13`, top-1 agreement 1.0.
+  Setup was 1019.792 s, request 3.907 s (server 1.765 s), runner total including
+  cleanup 1034.328 s, process elapsed 1043.25 s, and peak host RSS
+  134,091,316 KiB. Full CNN reruns in this repair cover test2/test3; the other
+  four P3 public cases were not rerun.
+- A sensitive compiler reproducer on JAX/jaxlib 0.11.2 and libtpu 0.0.48:
+  original `Polynomial.to_coeffs_form` aborts with exit 134 at N=32768,
+  20 towers, batch 2 with exactly `(1 vs. 4) Scaled dimension stride is not
+  equal to window bound`; batch 4 fails with `(1 vs. 8)`. The patched version
+  returns bit-exact coefficients. The committed five-test class now includes
+  the full 20-tower production shapes at batches 2/4 and passes in 32.34 s,
+  together with the initial eight-device case. The eight-device case was then
+  strengthened to 20 towers too and passed separately in 23.32 s (global
+  batch 32, four samples per device). Earlier two-tower checks passed with
+  both versions and missed the layout-sensitive bug; the production tests
+  were upgraded rather than relying on that inadequate smoke shape.
+- A CPU rotation-key microbenchmark at the P1 ring (N=16384, eight Q towers,
+  four P towers, dnum=2), with identical fixed samples and one excluded warm-up,
+  matched every output bit. Median of three runs: 0.09510 s before and
+  0.06895 s after. This measures one component, not full-suite runtime.
+- CPU regression checks under the reported compiler packages: 157 passed,
+  three TPU-only cases skipped, 41 subtests passed (31.30 s), covering
+  baseline lifecycle/warmup/timing, actual-ring gates, packaging, key
+  generation, polynomial/Mapping compilation, BSGS and demo API contracts.
+  The separate codec suites passed 43 tests and 31 subtests.
+- All 24 public plaintext reference checks passed. This is fixture validation,
+  not evidence of encrypted BERT/Qwen completion.
+
+The five-minute target remains open: the ranked suite starts new stages and
+server processes for C1–C6; model-dependent constants, evaluation keys, and
+XLA compilation are repeatedly prepared. The setup optimization and lifecycle
+repair here do not justify extrapolating a complete-suite time. Preserve the
+ranked workload, security parameters, and timing boundaries when measuring a
+future solution; a smaller smoke case is not a replacement benchmark. The
+shipped historical P1 manifest totals 1183.23 seconds of setup across C1–C6
+before requests. Setup is outside the harness repeat loop, so reducing repeats
+alone cannot remove this cost. P1/P3 runner reports now include warmup times,
+a cold-start flag, and total time through cleanup while retaining the existing
+measurement fields.
+
 ## Problem 4 description clarification — 2026-09-21
 
 The title, introduction, milestones, scoring explanation, README, oneliner

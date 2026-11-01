@@ -1,0 +1,234 @@
+{
+  "environment": {
+    "python": "3.13.17",
+    "packages": {
+      "jax": "0.12.0",
+      "jaxlib": "0.12.0",
+      "libtpu": "0.0.50",
+      "numpy": "2.5.4",
+      "torch": "2.9.1+cpu"
+    }
+  },
+  "reported_environment_reproduced": false,
+  "p1_cold_test1": {
+    "command": "python runner.py --case ../test/test1.in --baseline --warmups 0 --repeats 1",
+    "result": {
+      "case": "test1.in",
+      "mode": "HE-synthetic-smoke",
+      "devices": [
+        "TPU_0(process=0,(0,0,0,0))"
+      ],
+      "batch": 1,
+      "setup_s": 0.527109874994494,
+      "end_to_end_s": [
+        116.29369916697033
+      ],
+      "server_s": [
+        114.67019687104039
+      ],
+      "median_s": 116.29369916697033,
+      "images_per_s": 0.008598918145722029,
+      "ms_per_image": 116293.69916697033,
+      "trained_accuracy_evaluated": false,
+      "max_abs_error": 1.2703726959273354e-13,
+      "nrmse": 3.4552547792929525e-13,
+      "top1_agreement": 1.0
+    },
+    "scope": "Shared-key and inverse-NTT changes; before later setup refinements."
+  },
+  "tpu_inverse_ntt": {
+    "passed": 5,
+    "seconds": 24.04,
+    "coverage": [
+      "batch 2 and 4",
+      "N=32768",
+      "global batch 32 on eight TPU devices"
+    ]
+  },
+  "key_switch_component": {
+    "degree": 16384,
+    "num_q": 8,
+    "num_p": 4,
+    "dnum": 2,
+    "exact_match": true,
+    "timings": {
+      "before": {
+        "samples_s": [
+          0.0951016879407689,
+          0.09537540702149272,
+          0.09479859692510217
+        ],
+        "median_s": 0.0951016879407689
+      },
+      "after": {
+        "samples_s": [
+          0.06846756394952536,
+          0.06894630298484117,
+          0.06914337398484349
+        ],
+        "median_s": 0.06894630298484117
+      }
+    }
+  },
+  "fft_table_cache": {
+    "exact_diagonals_compared": 72,
+    "fixed_samples": true,
+    "trials": 3,
+    "diagonals_per_model": 12,
+    "cold_model_medians_s": [
+      {
+        "degree": 16384,
+        "num_q": 10,
+        "before": 0.81035,
+        "after": 0.75713
+      },
+      {
+        "degree": 32768,
+        "num_q": 20,
+        "before": 2.58933,
+        "after": 2.50318
+      }
+    ],
+    "scope": "Fresh context and caches per model; excludes model key generation and XLA compilation."
+  },
+  "plaintext_reference_cases_passed": 24,
+  "remaining": [
+    "Encrypted P2/P4 references and measured transformer baseline calibration.",
+    "Complete ranked C1-C6 evaluation within 300 seconds.",
+    "P3 test1/test4/test5/test6 were not rerun; the exact full author environment was not reproduced."
+  ],
+  "p3_batch2": {
+    "command": "python runner.py --case ../test/test2.in --baseline --warmups 0 --repeats 1",
+    "result": {
+      "case": "test2.in",
+      "mode": "HE-synthetic-smoke",
+      "device": "TPU_0(process=0,(0,0,0,0))",
+      "setup_s": 906.8657250079559,
+      "end_to_end_s": [
+        2.2436868679942563
+      ],
+      "server_s": [
+        1.0449118830729276
+      ],
+      "median_s": 2.2436868679942563,
+      "batch": 2,
+      "trained_accuracy_evaluated": false,
+      "max_abs_error": 2.7605999083912813e-13,
+      "nrmse": 1.223747300669654e-11,
+      "top1_agreement": 1.0
+    },
+    "process_elapsed_s": 928.4,
+    "peak_rss_kib": 134190156,
+    "scope": "Shared-key/security/NTT/kernel optimization tree before later setup refinements; JAX0.12.0."
+  },
+  "reported_compiler_primitive_check": {
+    "packages": {
+      "jax": "0.11.2",
+      "jaxlib": "0.11.2",
+      "libtpu": "0.0.48"
+    },
+    "python": "3.13.17",
+    "original_passed": 5,
+    "patched_passed": 5,
+    "original_seconds": 17.28,
+    "patched_seconds": 17.22,
+    "limitation": "The isolated inverse-NTT checks validate numerical compatibility but do not reproduce the original whole-model fusion abort."
+  },
+  "p1_eight_lane_warmup": {
+    "source_commit": "775d4be",
+    "result": {
+      "case": "P1-1000-batch-eight-lane-warmup",
+      "encryption_s": 10.246921343030408,
+      "total_s": 120.42258755594958,
+      "ciphertexts": 8,
+      "output_shape": [
+        8,
+        10
+      ],
+      "max_abs_error": 1.2671200894098789e-13,
+      "nrmse": 5.63722451311683e-12,
+      "top1_agreement": 1.0
+    },
+    "process_elapsed_s": 130.01,
+    "peak_rss_kib": 18303408,
+    "scope": "Batch1000 service warmed with eight physical lanes; does not measure a ranked1000-image request."
+  },
+  "reported_compiler_cpu_tests": {
+    "passed": 157,
+    "skipped": 3,
+    "subtests_passed": 41,
+    "seconds": 31.3,
+    "command": "JAX_PLATFORMS=cpu PYTHONPATH=.:jaxite_word:demos python -m pytest cadathlon/tests jaxite_word/key_gen_test.py jaxite_word/polynomial_test.py jaxite_word/mapping_compile_test.py jaxite_word/bsgs_test.py demos/demo_api_contract_test.py -q"
+  },
+  "reported_compiler_full_qp_regression": {
+    "packages": {
+      "jax": "0.11.2",
+      "jaxlib": "0.11.2",
+      "libtpu": "0.0.48"
+    },
+    "degree": 32768,
+    "num_moduli": 20,
+    "original_source_sha256": "872f26dc46b0c40cf5e1e2074023e1d74808f0a240660b485b3e92a749665982",
+    "patched_source_sha256": "043e1dcdf9aca02f2df9435ac610c1561859b7d29a7dee1b7254bf9bc3c89a5b",
+    "original": {
+      "batch2_exit": 134,
+      "batch4_exit": 134,
+      "error": "fusion_emitter.cc:2988: Scaled dimension stride is not equal to window bound (1 vs. 4 at batch2; 1 vs. 8 at batch4)."
+    },
+    "patched": {
+      "passed": 5,
+      "seconds": 32.34,
+      "exact_coefficients": true
+    },
+    "command": "python -m pytest jaxite_word/polynomial_test.py::PolynomialBatchedCompilationTest -q"
+  },
+  "p3_batch4_reported_compiler": {
+    "source_commit": "3e39a69",
+    "command": "python runner.py --case ../test/test3.in --baseline --warmups 0 --repeats 1",
+    "result": {
+      "case": "test3.in",
+      "mode": "HE-synthetic-smoke",
+      "device": "TPU_0(process=0,(0,0,0,0))",
+      "setup_s": 1019.7921798879979,
+      "end_to_end_s": [
+        3.907299574930221
+      ],
+      "server_s": [
+        1.7648365820059553
+      ],
+      "warmup_s": [],
+      "warmup_server_s": [],
+      "cold_start_included": true,
+      "median_s": 3.907299574930221,
+      "batch": 4,
+      "trained_accuracy_evaluated": false,
+      "max_abs_error": 6.30523411260242e-13,
+      "nrmse": 2.110417653314167e-11,
+      "top1_agreement": 1.0,
+      "total_s": 1034.3278558650054
+    },
+    "process_elapsed_s": 1043.25,
+    "peak_rss_kib": 134091316,
+    "packages": {
+      "jax": "0.11.2",
+      "jaxlib": "0.11.2",
+      "libtpu": "0.0.48"
+    },
+    "scope": "Latest production code, full encrypted batch4; other packages as listed in environment."
+  },
+  "reported_compiler_eight_device_full_qp": {
+    "degree": 32768,
+    "num_moduli": 20,
+    "global_batch": 32,
+    "local_batch": 4,
+    "devices": 8,
+    "passed": 1,
+    "seconds": 23.32,
+    "command": "python -m pytest jaxite_word/polynomial_test.py::PolynomialBatchedCompilationTest::test_tpu_eight_device_inverse_with_four_samples_per_device -q",
+    "packages": {
+      "jax": "0.11.2",
+      "jaxlib": "0.11.2",
+      "libtpu": "0.0.48"
+    }
+  }
+}
