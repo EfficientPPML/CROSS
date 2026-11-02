@@ -255,6 +255,68 @@ class PolynomialDomainConversionTest(absltest.TestCase):
     np.testing.assert_array_equal(original, p.get_batch_polynomial())
 
 
+class PolynomialBatchedCompilationTest(parameterized.TestCase):
+  """Exercise the reshape/byte-convolution boundary used in encrypted batches."""
+
+  def _round_trip(self, batch, degree, *, devices=None, num_moduli=2):
+    shapes = {
+        "batch": batch,
+        "num_elements": 2,
+        "num_moduli": num_moduli,
+        "degree": degree,
+        "precision": 29,
+    }
+    template = poly.Polynomial(shapes)
+    rng = np.random.default_rng(2026)
+    payload = rng.integers(
+        0, min(template.moduli), size=template.shape, dtype=np.uint32
+    )
+    # Compute the forward transform separately: the compiled regression path
+    # must consume an actual NTT-domain ciphertext, as rescale/key switching do.
+    template.replace_payload(jnp.asarray(payload))
+    template.to_ntt_form()
+    transformed = np.asarray(template.to_array())
+
+    def inverse(value):
+      result = copy.copy(template)
+      result.replace_payload(value)
+      result.to_coeffs_form()
+      return result.to_array()
+
+    if devices is None:
+      executable = jax.jit(inverse).lower(
+          jax.ShapeDtypeStruct(template.shape, jnp.uint32)
+      ).compile()
+      actual = executable(jnp.asarray(transformed))
+      expected = payload
+    else:
+      transformed = np.stack([transformed] * len(devices))
+      executable = jax.pmap(inverse, devices=devices).lower(
+          jax.ShapeDtypeStruct(transformed.shape, jnp.uint32)
+      ).compile()
+      actual = executable(transformed)
+      expected = np.stack([payload] * len(devices))
+    np.testing.assert_array_equal(actual, expected)
+
+  @parameterized.parameters(2, 4)
+  def test_compiled_batched_inverse_preserves_exact_coefficients(self, batch):
+    self._round_trip(batch, 256)
+
+  @parameterized.parameters(2, 4)
+  def test_tpu_production_layout_batched_inverse(self, batch):
+    if jax.local_devices()[0].platform != "tpu":
+      self.skipTest("requires TPU compiler")
+    # A full QP chain changes the TPU layout: the two-modulus smoke shape
+    # does not trigger the scaled-dimension fusion failure on libtpu 0.0.48.
+    self._round_trip(batch, 32768, num_moduli=20)
+
+  def test_tpu_eight_device_inverse_with_four_samples_per_device(self):
+    devices = jax.local_devices()
+    if len(devices) < 8 or devices[0].platform != "tpu":
+      self.skipTest("requires eight TPU devices")
+    self._round_trip(4, 32768, num_moduli=20, devices=devices[:8])
+
+
 class PolynomialPrivateArithmeticTest(parameterized.TestCase):
   """Test private mutable arithmetic helpers used by kernel diagnostics."""
 

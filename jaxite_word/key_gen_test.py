@@ -1391,6 +1391,30 @@ class NumpyKeyGenExactnessTest(absltest.TestCase):
           np.asarray(reference_part, dtype=object).tolist(),
       )
 
+  def test_key_switch_only_transforms_the_extension_basis(self):
+    # All Q limbs are already in evaluation form. Fixed samples let the
+    # independently retained scalar implementation check every output bit.
+    degree = 16
+    q_list, p_list = [97, 193, 257], [353, 449]
+    rng = np.random.default_rng(42)
+    args = dict(
+        sOld=rng.integers(-1000, 1000, (3, degree)).tolist(),
+        sNew=rng.integers(-1000, 1000, (3, degree)).tolist(),
+        q_list=q_list, p_list=p_list, dnum=2,
+        a=rng.integers(0, 1000, (2, 5, degree)).tolist(),
+        e=rng.integers(-20, 20, (2, 5, degree)).tolist(),
+    )
+    with mock.patch.object(util, "ntt_negacyclic_bit_reverse",
+                           wraps=util.ntt_negacyclic_bit_reverse) as forward, \
+         mock.patch.object(util, "intt_negacyclic_bit_reverse",
+                           wraps=util.intt_negacyclic_bit_reverse) as inverse:
+      result = key_gen.key_switch_gen(**args)
+    self.assertEqual(inverse.call_count, 1)
+    self.assertEqual(forward.call_count, len(p_list))
+    reference = _scalar_key_switch(**args)
+    np.testing.assert_array_equal(result["a"], reference["a"])
+    np.testing.assert_array_equal(result["b"], reference["b"])
+
   def test_small_p_centered_lift_matches_scalar_python(self):
     args = dict(
         sOld=[[0]],

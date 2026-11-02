@@ -1,0 +1,19 @@
+{
+  "purpose": "organizer weight asset for the ranked suite-backed evaluation",
+  "architecture": "Linear(784,50) -> x^2 -> Linear(50,10)",
+  "state_dict_keys": [
+    "fc1.weight",
+    "fc1.bias",
+    "fc2.weight",
+    "fc2.bias"
+  ],
+  "mnist_test_accuracy": 0.9739,
+  "provenance": "trained with BatchNorm before the square, folded into fc1 at export",
+  "files": {
+    "mlp_784_50_10.pth": {
+      "sha256": "2d3409cccba1622b4c49a4ade76deec2a7ba9de37d80c9fd3ab883c05a85047e",
+      "bytes": 161651
+    }
+  },
+  "note": "Freeze and re-hash before a scored event; replace to change the ranked model."
+}

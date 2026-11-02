@@ -309,11 +309,11 @@ def key_switch_gen(
     e: List[List[List[int]]] | None = None,
     dnum: int = 3,
 ) -> Dict[str, Any]:
-  """Construct evaluation key parts given secret forms sOld (Q) and sNew (time domain).
+  """Construct evaluation key parts given secret forms sOld and sNew in the Q evaluation domain.
 
   Args:
       sOld: Secret squared residues modulo each q in Q, shape [|Q|][N].
-      sNew: Secret in time domain for Q basis, shape [|Q|][N].
+      sNew: Secret in evaluation form for Q basis, shape [|Q|][N].
       q_list: List of moduli forming Q.
       p_list: List of moduli forming P.
       noise_std: Standard deviation for error sampling.
@@ -335,46 +335,54 @@ def key_switch_gen(
       and pack_uint32
   )
 
-  # Convert the new secret to coefficient form. Public transform helpers
-  # preserve the input container and select their own exact backend.
-  s_out = []
-  for limb, q in zip(sNew, q_list, strict=True):
-    modulus = int(q)
-    values = (
-        util.uint64_residues_np(limb, modulus)
-        if use_numpy
-        else [int(value) for value in limb]
-    )
-    psi = util.root_of_unity(2 * degree, modulus)
-    reversed_values = util.bit_reverse_array(values)
-    s_out.append(
-        util.intt_negacyclic_bit_reverse(reversed_values, modulus, psi)
-    )
-
-  # Extend the centered q0 representatives to P. The NumPy path reduces
-  # before narrowing so negative lifts cannot wrap through 2**64.
-  q0 = int(q_list[0])
-  threshold = (q0 + 1) // 2
+  if len(sNew) != size_q:
+    raise ValueError("sNew must have one row per Q modulus")
   if use_numpy:
-    base0 = np.asarray(s_out[0], dtype=np.int64)
-    s_qp = list(s_out)
+    # The Q limbs already have the required evaluation representation. An
+    # inverse/forward round trip of every Q limb adds avoidable work to
+    # rotation-key setup. Only q0 needs inversion, to center-lift into P.
+    s_qp_eva = [
+        util.uint64_residues_np(limb, int(q))
+        for limb, q in zip(sNew, q_list, strict=True)
+    ]
+    if p_list:
+      q0 = int(q_list[0])
+      psi = util.root_of_unity(2 * degree, q0)
+      base0 = np.asarray(util.intt_negacyclic_bit_reverse(
+          util.bit_reverse_array(s_qp_eva[0]), q0, psi), dtype=np.int64)
+      centered = np.where(base0 < (q0 + 1) // 2, base0, base0 - q0)
+      for q_p in p_list:
+        modulus = int(q_p)
+        lifted = util.uint64_residues_np(centered, modulus)
+        transformed = util.ntt_negacyclic_bit_reverse(
+            lifted, modulus, util.root_of_unity(2 * degree, modulus))
+        s_qp_eva.append(util.bit_reverse_array(transformed))
   else:
+    # Convert the new secret to coefficient form. Public transform helpers
+    # preserve the input container and select their own exact backend.
+    s_out = []
+    for limb, q in zip(sNew, q_list, strict=True):
+      modulus = int(q)
+      values = [int(value) for value in limb]
+      psi = util.root_of_unity(2 * degree, modulus)
+      reversed_values = util.bit_reverse_array(values)
+      s_out.append(
+          util.intt_negacyclic_bit_reverse(reversed_values, modulus, psi)
+      )
+
+    # Keep arbitrary-precision arithmetic for unsupported wider moduli.
+    q0 = int(q_list[0])
     base0 = [int(value) for value in s_out[0]]
     s_qp = [[int(value) for value in row] for row in s_out]
-  for q_p in p_list:
-    modulus = int(q_p)
-    if use_numpy:
-      lifted = np.where(base0 < threshold, base0, base0 - q0 + modulus)
-      s_qp.append(util.uint64_residues_np(lifted, modulus))
-    else:
-      s_qp.append(list(modulus_switch(base0, q0, modulus)))
+    for q_p in p_list:
+      s_qp.append(list(modulus_switch(base0, q0, int(q_p))))
 
-  s_qp_eva = []
-  for limb, q in zip(s_qp, moduli_list, strict=True):
-    modulus = int(q)
-    psi = util.root_of_unity(2 * degree, modulus)
-    transformed = util.ntt_negacyclic_bit_reverse(limb, modulus, psi)
-    s_qp_eva.append(util.bit_reverse_array(transformed))
+    s_qp_eva = []
+    for limb, q in zip(s_qp, moduli_list, strict=True):
+      modulus = int(q)
+      psi = util.root_of_unity(2 * degree, modulus)
+      transformed = util.ntt_negacyclic_bit_reverse(limb, modulus, psi)
+      s_qp_eva.append(util.bit_reverse_array(transformed))
 
   p_product = math.prod(int(p) for p in p_list)
   p_mod_q = [p_product % int(q) for q in q_list]

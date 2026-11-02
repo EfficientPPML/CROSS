@@ -1,0 +1,88 @@
+{
+  "note": "authored baseline measured on the author's 8-chip TPU v6e host; indicative only. ORGANIZER.md requires the judge to measure its own on contest hardware before scoring.",
+  "suite_commit": "739378698fc1f668aff7246724b45cff76f04a98",
+  "seed": 3,
+  "runs_per_case": 3,
+  "statistic": "median",
+  "metric": "throughput_images_per_s = images / median Timing['Encrypted computation'], the harness's own stage 7",
+  "cases": {
+    "C1": {
+      "runs": 3,
+      "one_time_setup_s": 150.99550000000002,
+      "median_encrypted_compute_s": 0.1271,
+      "median_server_execute_s": 0.032452,
+      "images": 1,
+      "throughput_images_per_s": 7.867820613690008,
+      "ms_per_image": 127.1,
+      "encrypted_accuracy": null,
+      "own_cleartext_agreement": 1.0,
+      "verified": "PASS",
+      "correct": 1
+    },
+    "C2": {
+      "runs": 3,
+      "one_time_setup_s": 168.88109999999998,
+      "median_encrypted_compute_s": 0.1329,
+      "median_server_execute_s": 0.037767,
+      "images": 1,
+      "throughput_images_per_s": 7.524454477050415,
+      "ms_per_image": 132.89999999999998,
+      "encrypted_accuracy": null,
+      "own_cleartext_agreement": 1.0,
+      "verified": "PASS",
+      "correct": 1
+    },
+    "C3": {
+      "runs": 3,
+      "one_time_setup_s": 165.56570000000002,
+      "median_encrypted_compute_s": 3.4374,
+      "median_server_execute_s": 3.046253,
+      "images": 100,
+      "throughput_images_per_s": 29.09175539652063,
+      "ms_per_image": 34.373999999999995,
+      "encrypted_accuracy": 0.96,
+      "own_cleartext_agreement": 1.0,
+      "verified": "PASS",
+      "correct": 96
+    },
+    "C4": {
+      "runs": 3,
+      "one_time_setup_s": 169.8964,
+      "median_encrypted_compute_s": 1.0276,
+      "median_server_execute_s": 0.600633,
+      "images": 100,
+      "throughput_images_per_s": 97.31413001167769,
+      "ms_per_image": 10.276000000000002,
+      "encrypted_accuracy": 0.96,
+      "own_cleartext_agreement": 1.0,
+      "verified": "PASS",
+      "correct": 96
+    },
+    "C5": {
+      "runs": 3,
+      "one_time_setup_s": 272.17650000000003,
+      "median_encrypted_compute_s": 32.9975,
+      "median_server_execute_s": 30.452933,
+      "images": 1000,
+      "throughput_images_per_s": 30.305326161072806,
+      "ms_per_image": 32.9975,
+      "encrypted_accuracy": 0.976,
+      "own_cleartext_agreement": 1.0,
+      "verified": "PASS",
+      "correct": 976
+    },
+    "C6": {
+      "runs": 3,
+      "one_time_setup_s": 255.71599999999998,
+      "median_encrypted_compute_s": 8.9178,
+      "median_server_execute_s": 5.582851,
+      "images": 1000,
+      "throughput_images_per_s": 112.13528000179417,
+      "ms_per_image": 8.9178,
+      "encrypted_accuracy": 0.976,
+      "own_cleartext_agreement": 1.0,
+      "verified": "PASS",
+      "correct": 976
+    }
+  }
+}

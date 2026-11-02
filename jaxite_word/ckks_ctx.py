@@ -2,6 +2,7 @@ import cmath
 import contextlib
 from contextlib import nullcontext
 from dataclasses import dataclass, fields, is_dataclass, replace
+from functools import lru_cache
 import hashlib
 import json
 import math
@@ -123,16 +124,20 @@ def _balanced_degree_layout(degree: int) -> tuple[int, int]:
   return rows, degree // rows
 
 
-def _roots(m: int) -> List[complex]:
-  return [cmath.exp(1j * 2 * math.pi * k / m) for k in range(m)]
+@lru_cache(maxsize=8)
+def _roots(m: int) -> tuple[complex, ...]:
+  # Public, immutable transform tables are shared across all model diagonals.
+  # Bound the cache so exploring different ring sizes cannot grow it forever.
+  return tuple(cmath.exp(1j * 2 * math.pi * k / m) for k in range(m))
 
 
-def _rot_group(m: int, nh: int, g: int = 5) -> List[int]:
+@lru_cache(maxsize=8)
+def _rot_group(m: int, nh: int, g: int = 5) -> tuple[int, ...]:
   # CKKS rotation subgroup (powers of 5 mod m)
   r = [1]
   for _ in range(1, nh):
     r.append((r[-1] * g) % m)
-  return r
+  return tuple(r)
 
 
 def _bitrev_inplace(a: List[complex]) -> None:
@@ -1272,9 +1277,8 @@ def evict_context_caches(ctx) -> int:
   """Drop the encrypt/decrypt cache entries built for ``ctx``.
 
   Both caches are keyed by ``id(ctx)``, so entries outlive the context they
-  were built for and would keep its device tables alive (or, once the id is
-  reused, serve a stale table to a new context). ``Mapping.release`` calls
-  this; returns the number of entries removed.
+  were built for and keep its device tables alive. ``Mapping.release`` calls
+  this; returns the number of entries removed. Other contexts are unaffected.
   """
   key_id = id(ctx)
   removed = 0

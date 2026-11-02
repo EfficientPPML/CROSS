@@ -1107,13 +1107,19 @@ def _bind_operation(ctx, mapping, operation, bootstrap_target):
       matrix = constant
     else:
       matrix = constant.as_dict()
-    evaluator.preprocess(
-        matrix,
-        pt_scale=bsgs_plan.pt_scale,
-        n_jobs=mapping.bsgs_n_jobs,
-        memory_bounded=mapping.bsgs_streaming,
-        active_diagonal_indices=bsgs_plan.active_diagonal_indices,
-    )
+    try:
+      evaluator.preprocess(
+          matrix,
+          pt_scale=bsgs_plan.pt_scale,
+          n_jobs=mapping.bsgs_n_jobs,
+          memory_bounded=mapping.bsgs_streaming,
+          active_diagonal_indices=bsgs_plan.active_diagonal_indices,
+      )
+    except BaseException:
+      # This evaluator is not a completed binding yet. An exception traceback
+      # can retain it after preprocessing has allocated device buffers.
+      evaluator._release()
+      raise
     return (
         evaluator.matvec
         if mapping.bsgs_streaming
@@ -1130,6 +1136,9 @@ def _bind_operation(ctx, mapping, operation, bootstrap_target):
 
 
 def _prepare_bindings(ctx, mapping):
+  # Publish each completed binding as it is built so constructor cleanup also
+  # owns earlier evaluators when preparation of a later operation fails.
+  bindings = mapping.bindings = {}
   bootstrap_groups = {}
   for operation in mapping.packing.operations:
     if _operation_kind(operation) != 'bootstrap':
@@ -1187,12 +1196,11 @@ def _prepare_bindings(ctx, mapping):
       ).setup()
     bootstrap_target = getattr(facade, '_engine', facade)
 
-  return {
-      _operation_id(operation): _bind_operation(
-          ctx, mapping, operation, bootstrap_target
-      )
-      for operation in mapping.packing.operations
-  }
+  for operation in mapping.packing.operations:
+    bindings[_operation_id(operation)] = _bind_operation(
+        ctx, mapping, operation, bootstrap_target
+    )
+  return bindings
 
 
 class Mapping:
@@ -1434,6 +1442,9 @@ class Mapping:
       # bindings' device constants, to JAX's caches. The caller never gets a
       # Mapping to release, so discard that state here or the next build in
       # this process starts with less HBM than the one that just failed.
+      self._compiled = None
+      self._compiled_regions = None
+      self._templates = {}
       _discard_program_state(self.ctx, getattr(self, 'bindings', None))
       self.ctx.__dict__.clear()
       self.ctx.__dict__.update(state_before_initialization)
@@ -1684,16 +1695,19 @@ class Mapping:
       )
 
   def release(self) -> None:
-    """Return this Mapping's device memory to the runtime.
+    """Release owned runtime state and invalidate this Mapping. Idempotent.
 
     A materialized Mapping pins gigabytes of HBM: the compiled executable with
     the evaluation keys and encoded constants it captured, the context's
     parameter caches, and the codec caches keyed by its context. Dropping the
-    Python reference alone frees none of it, because JAX's tracing caches keep
+    Python reference alone may not free it, because JAX's tracing caches keep
     the compiled program's closure, and through it this object, alive.
     ``release`` drops the executable and bindings, evicts the codec caches
-    built for this context, clears the JAX caches, and marks the Mapping
-    unusable. Build a new Mapping for the next placement. Idempotent.
+    built for this context, and clears JAX's process-wide tracing caches.
+    Other compiled Mapping handles stay usable, but unrelated JIT functions
+    may retrace. References callers retain to this Mapping's context or
+    buffers can still keep their memory alive. Build a new Mapping to resume
+    encryption, execution or decryption.
     """
     if getattr(self, '_released', False):
       return
@@ -1879,58 +1893,65 @@ def _compile_segmented(mapping, bindings) -> None:
   }
   compiled_regions = []
   template_ids = set()
-  for fusible, node_ids in mapping.regions:
-    region_operations = tuple(
-        operation_by_id[node_id] for node_id in node_ids
-    )
-    if not fusible:
+  compiled = None
+  try:
+    for fusible, node_ids in mapping.regions:
+      region_operations = tuple(
+          operation_by_id[node_id] for node_id in node_ids
+      )
+      if not fusible:
+        compiled_regions.append((
+            node_ids,
+            _operation_inputs(region_operations[0]),
+            node_ids,
+            None,
+        ))
+        continue
+
+      region_operations, input_ids, output_ids = _region_io(mapping, node_ids)
+      if not output_ids:
+        raise RuntimeError(f'fusible region {node_ids} has no live output.')
+
+      def raw_region(
+          *payloads,
+          input_ids=input_ids,
+          output_ids=output_ids,
+          region_operations=region_operations,
+      ):
+        environment = dict(zip(input_ids, payloads, strict=True))
+        for operation in region_operations:
+          operation_id = _operation_id(operation)
+          fused = bindings[operation_id]
+          arguments = [
+              environment[source] for source in _operation_inputs(operation)
+          ]
+          environment[operation_id] = fused(*arguments)
+        return tuple(environment[value_id] for value_id in output_ids)
+
+      structs = tuple(
+          jax.ShapeDtypeStruct(
+              mapping.value_specs[value_id].payload_shape, jnp.uint32
+          )
+          for value_id in input_ids
+      )
+      compiled = jax.jit(raw_region).lower(*structs).compile()
       compiled_regions.append((
           node_ids,
-          _operation_inputs(region_operations[0]),
-          node_ids,
-          None,
+          input_ids,
+          output_ids,
+          compiled,
       ))
-      continue
+      template_ids.update(output_ids)
 
-    region_operations, input_ids, output_ids = _region_io(mapping, node_ids)
-    if not output_ids:
-      raise RuntimeError(f'fusible region {node_ids} has no live output.')
-
-    def raw_region(
-        *payloads,
-        input_ids=input_ids,
-        output_ids=output_ids,
-        region_operations=region_operations,
-    ):
-      environment = dict(zip(input_ids, payloads, strict=True))
-      for operation in region_operations:
-        operation_id = _operation_id(operation)
-        fused = bindings[operation_id]
-        arguments = [
-            environment[source] for source in _operation_inputs(operation)
-        ]
-        environment[operation_id] = fused(*arguments)
-      return tuple(environment[value_id] for value_id in output_ids)
-
-    structs = tuple(
-        jax.ShapeDtypeStruct(
-            mapping.value_specs[value_id].payload_shape, jnp.uint32
-        )
-        for value_id in input_ids
-    )
-    compiled = jax.jit(raw_region).lower(*structs).compile()
-    compiled_regions.append((
-        node_ids,
-        input_ids,
-        output_ids,
-        compiled,
-    ))
-    template_ids.update(output_ids)
-
-  mapping.bindings = bindings
-  mapping._compiled = None
-  mapping._compiled_regions = tuple(compiled_regions)
-  mapping._prebuild_templates(template_ids)
+    mapping.bindings = bindings
+    mapping._compiled = None
+    mapping._compiled_regions = tuple(compiled_regions)
+    mapping._prebuild_templates(template_ids)
+  finally:
+    # Tracebacks can retain this frame after a later region fails to compile.
+    # Only the Mapping owns successfully published executables.
+    compiled_regions.clear()
+    compiled = None
 
 
 def _prepare_lazy_operation_regions(mapping) -> None:
@@ -2060,9 +2081,9 @@ def _discard_program_state(ctx, bindings) -> None:
 
   Releases the bindings' evaluator state and formatted keys, evicts the codec
   caches keyed by ``ctx``, and clears the JAX caches that hold the traced
-  program's closure (there is no per-program handle to drop, so every cached
-  program recompiles on its next call; this is why release belongs outside
-  the request path). Safe to call more than once and with ``ctx`` None.
+  program's closure. This is process-wide cache invalidation: independent
+  compiled handles remain usable, while JIT functions may retrace. Call it
+  outside the request path. Safe to call repeatedly and with ``ctx`` None.
   """
   import gc
 
@@ -2176,6 +2197,7 @@ def _materialize_mapping(mapping) -> None:
     return
 
   bindings = _prepare_bindings(ctx, mapping)
+  mapping.bindings = bindings
   if mapping.has_bootstrap or mapping.compile_mode == 'operations':
     _compile_segmented(mapping, bindings)
     return
@@ -2188,10 +2210,9 @@ def _materialize_mapping(mapping) -> None:
       (mapping.device_count,) + mapping.value_specs['input'].payload_shape,
       jnp.uint32,
   )
-  compiled = jax.pmap(
+  mapping._compiled = jax.pmap(
       raw_program, devices=mapping.devices
   ).lower(input_struct).compile()
-  mapping._compiled = compiled
   mapping._compiled_regions = None
   mapping._prebuild_templates((mapping.packing.output,))
   _release_aot_source_state(ctx, bindings)

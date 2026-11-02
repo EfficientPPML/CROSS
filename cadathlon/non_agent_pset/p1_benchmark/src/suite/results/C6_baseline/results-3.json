@@ -1,0 +1,55 @@
+{
+  "model_name": "mlp",
+  "dataset_name": "mnist",
+  "Timing": {
+    "Test dataset generation": "4.311s",
+    "Key Generation": "3.1118s",
+    "Encrypted model preprocessing": "252.6042s",
+    "Input generation": "2.3145s",
+    "Input preprocessing": "0.1829s",
+    "Input encryption": "103.8812s",
+    "Encrypted computation": "9.3745s",
+    "Result decryption": "47.2881s",
+    "Result postprocessing": "0.0807s",
+    "Harness: Run inference for harness plaintext model": "2.1334s",
+    "Harness: Run quality check": "0.0005s",
+    "Total": "425.2827s"
+  },
+  "Bandwidth": {
+    "Public and evaluation keys": "3.0M",
+    "Encrypted input": "1001.6M",
+    "Encrypted results": "251.6M"
+  },
+  "Quality": {
+    "Encrypted model quality": {
+      "correct_predictions": 976,
+      "total_samples": 1000,
+      "accuracy": 0.976
+    },
+    "Harness model quality": {
+      "correct_predictions": 982,
+      "total_samples": 1000,
+      "accuracy": 0.982
+    }
+  },
+  "Server Reported": {
+    "client_key_generation_s": "2.510614s",
+    "server_setup_s": "239.38059s",
+    "server_service_build_s": "1.417714s",
+    "server_warmup_s": "229.413026s",
+    "client_preprocess_s": "0.099949s",
+    "client_encrypt_s": "101.608807s",
+    "client_encrypt_setup_s": "1.521778s",
+    "client_input_ciphertexts": "1000.0s",
+    "server_encrypted_compute_s": "9.281992s",
+    "server_execute_s": "5.996172s",
+    "server_per_inference_s": "0.005996s",
+    "server_images_per_s": "166.773072s",
+    "server_bundle_load_s": "2.245685s",
+    "server_bundle_store_s": "1.010793s",
+    "server_result_ciphertexts": "1000.0s",
+    "client_decrypt_s": "45.137872s",
+    "client_decrypt_setup_s": "1.530961s",
+    "client_postprocess_s": "0.000607s"
+  }
+}

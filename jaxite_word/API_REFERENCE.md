@@ -118,15 +118,16 @@ for demos; it is not an allocator measurement and may differ from JAX's
 physical HBM use. Demos must not inspect `Mapping.operation_plans`,
 `Mapping.value_specs`, or CKKSContext parameter caches to reconstruct it.
 
-`mapping.release()` returns a materialized Mapping's device memory. The
-compiled executable, with the evaluation keys and encoded constants it
-captured, stays resident as long as JAX's tracing caches reference the
-compiled program, so dropping the Python object alone does not free HBM.
-`release` cuts those references, evicts the codec caches keyed by the
-Mapping's context, clears the JAX caches, and leaves the Mapping unusable;
-build a new one for the next placement. Call it before materializing another
-Mapping in the same process. `CanonicalDemo.release()` and the demo adapters'
-`release()` delegate to it.
+`mapping.release()` drops the Mapping's executable, bindings and context,
+evicts the encrypt/decrypt caches for that context, and clears JAX's
+process-wide tracing caches. This lets benchmark services release their owned
+device resources before preparing another configuration. Calling it repeatedly
+is safe; encryption, execution, decryption, context access and memory estimates
+on the released Mapping raise `RuntimeError`. Construct a new Mapping to use
+those operations again. Other compiled Mapping handles remain usable, while
+unrelated JIT functions may retrace. Contexts or buffers retained separately by
+the caller can keep their memory alive. Call `release()` outside the timed
+request path.
 
 The Mapping analyzer and executable materializer live in `mapping.py`, which
 imports no frontend module. `ckks_ctx.py` owns the codec, primitives and

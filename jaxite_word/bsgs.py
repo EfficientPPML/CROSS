@@ -148,7 +148,7 @@ class _BSGSMatVecAtLevel:
       raise ValueError('n_jobs must be a positive int.')
     if not isinstance(memory_bounded, bool):
       raise TypeError('memory_bounded must be a bool.')
-    if self._groups is not None:
+    if self._groups is not None or self._encoder is not None:
       self._release()
     n_jobs = int(n_jobs)
 
@@ -312,6 +312,9 @@ class _BSGSMatVecAtLevel:
     encode_parameters['q_towers'] = self.q_towers_in
     encode_parameters['scaling_factor'] = pt_scale
     encoder = ckks_ctx_mod.CKKSContext(encode_parameters)
+    # Own the codec before encoding starts: Mapping's failure cleanup must
+    # also evict tables allocated by a partially prepared diagonal set.
+    self._encoder = encoder
     scaling_error = ckks_ctx_mod.ScalingFactorTooSmall
     encoded = {}
     if not memory_bounded:
@@ -520,7 +523,6 @@ class _BSGSMatVecAtLevel:
     self._diagonal_map = diagonal_map
     self._diagonal_loader = loader
     self._active_i_per_j = active_i_per_j
-    self._encoder = encoder
     self._scaling_error = scaling_error
     self._n_jobs = n_jobs
     self._pt_scale = pt_scale
@@ -741,6 +743,9 @@ class _BSGSMatVecAtLevel:
 
   def _release(self) -> None:
     """Release encoded matrices, staged keys, and compiled kernels."""
+    if self._encoder is not None:
+      import ckks_ctx as ckks_ctx_mod
+      ckks_ctx_mod.evict_context_caches(self._encoder)
     for name in ('_jit_matvec_fn', '_baby_fn', '_giant_step_fn', '_add_out_fn'):
       compiled = getattr(self, name, None)
       clear_cache = getattr(compiled, 'clear_cache', None)

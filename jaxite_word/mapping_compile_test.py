@@ -1140,6 +1140,112 @@ class MappingPublicSurfaceTest(absltest.TestCase):
 
 class MappingCompilationLifecycleTest(absltest.TestCase):
 
+  def test_release_evicts_owned_runtime_state_without_other_context_caches(self):
+    import jax
+
+    mapping = _analyzed_packing(_model(), _context())
+    ctx = mapping.ctx
+    other_ctx = _context()
+    encrypt_entries = {
+        (id(ctx), 2): object(), (id(ctx), 3): object(),
+        (id(other_ctx), 2): object(),
+    }
+    decrypt_entries = {
+        (id(ctx), 1): object(), (id(other_ctx), 1): object(),
+    }
+    owner = mock.Mock()
+    # Two bindings may share one evaluator; its device state is released once.
+    mapping.bindings = {
+        'first': SimpleNamespace(__self__=owner),
+        'second': SimpleNamespace(__self__=owner),
+    }
+    old_bindings = mapping.bindings
+    mapping._compiled = object()
+    mapping._compiled_regions = (object(),)
+    mapping._templates = {'input': object()}
+    independent = jax.jit(lambda x: x + 1).lower(jnp.int32(2)).compile()
+
+    with (
+        mock.patch.dict(cc._encrypt_cache, encrypt_entries, clear=True),
+        mock.patch.dict(cc._decrypt_cache, decrypt_entries, clear=True),
+        mock.patch.object(jax, 'clear_caches', wraps=jax.clear_caches) as clear,
+    ):
+      mapping.release()
+      mapping.release()
+
+      self.assertEqual(set(cc._encrypt_cache), {(id(other_ctx), 2)})
+      self.assertEqual(set(cc._decrypt_cache), {(id(other_ctx), 1)})
+      clear.assert_called_once()
+      self.assertEqual(int(independent(jnp.int32(3))), 4)
+
+    owner._release.assert_called_once_with()
+    self.assertEmpty(old_bindings)
+    self.assertEmpty(mapping.bindings)
+    self.assertEmpty(mapping._templates)
+    self.assertIsNone(mapping._compiled)
+    self.assertIsNone(mapping._compiled_regions)
+    self.assertIsNone(mapping.ctx)
+
+  def test_released_mapping_rejects_runtime_operations_before_using_inputs(self):
+    mapping = _analyzed_packing(_model(), _context())
+    mapping.release()
+
+    for operation in (
+        lambda: mapping.context,
+        mapping.estimate_live_memory,
+        lambda: mapping.encrypt_input(None),
+        lambda: mapping.execute(None),
+        lambda: mapping.decrypt_output(None),
+        lambda: mapping.infer(None),
+    ):
+      with self.subTest(operation=operation):
+        with self.assertRaisesRegex(RuntimeError, 'Mapping was released'):
+          operation()
+
+  def test_codec_cache_eviction_is_idempotent(self):
+    ctx = _context()
+    with (
+        mock.patch.dict(cc._encrypt_cache, {(id(ctx), 2): object()}, clear=True),
+        mock.patch.dict(cc._decrypt_cache, {(id(ctx), 1): object()}, clear=True),
+    ):
+      self.assertEqual(cc.evict_context_caches(ctx), 2)
+      self.assertEqual(cc.evict_context_caches(ctx), 0)
+      self.assertEmpty(cc._encrypt_cache)
+      self.assertEmpty(cc._decrypt_cache)
+
+  def test_segmented_compile_failure_drops_earlier_executables_from_traceback(self):
+    import jax
+    import weakref
+
+    mapping = _analyzed_packing(
+        _model(_rotate(0, name='first'), _rotate(0, name='second')),
+        _context(), compile_mode='operations',
+    )
+    handles = []
+
+    class Executable:
+      pass
+
+    def compile_region():
+      if handles:
+        raise RuntimeError('second region failed')
+      handle = Executable()
+      handles.append(weakref.ref(handle))
+      return handle
+
+    staged = mock.Mock()
+    staged.lower.return_value.compile.side_effect = compile_region
+    retained_traceback = None
+    with mock.patch.object(jax, 'jit', return_value=staged):
+      try:
+        mapping_mod._compile_segmented(mapping, {})
+      except RuntimeError as error:
+        retained_traceback = error.__traceback__
+    self.assertIsNotNone(retained_traceback)
+    self.assertLen(handles, 1)
+    self.assertIsNone(handles[0]())
+    self.assertIsNone(mapping._compiled_regions)
+
   @staticmethod
   def _fake_cache(ctx, **overrides):
     values = {
@@ -1224,14 +1330,26 @@ class MappingCompilationLifecycleTest(absltest.TestCase):
   def test_failed_materialization_restores_mapping_owned_context(self):
     model = _model(_rotate(1, name='rotate'))
     initialized_contexts = []
+    failed_mappings = []
 
     def partially_initialize(context, **kwargs):
       del kwargs
       initialized_contexts.append(context)
       context._param_cache = object()
       context._he_add = object()
+      cc._encrypt_cache[(id(context), 2)] = object()
+      cc._decrypt_cache[(id(context), 1)] = object()
+
+    def fail_materialization(mapping):
+      failed_mappings.append(mapping)
+      mapping._compiled = object()
+      mapping._compiled_regions = (object(),)
+      mapping._templates = {'input': object()}
+      raise RuntimeError('compile failed')
 
     with (
+        mock.patch.dict(cc._encrypt_cache, {}, clear=True),
+        mock.patch.dict(cc._decrypt_cache, {}, clear=True),
         mock.patch.object(
             CKKSContext,
             'program_initialization',
@@ -1241,16 +1359,21 @@ class MappingCompilationLifecycleTest(absltest.TestCase):
         mock.patch.object(
             mapping_mod,
             '_materialize_mapping',
-            side_effect=RuntimeError('compile failed'),
+            side_effect=fail_materialization,
         ),
     ):
       with self.assertRaisesRegex(RuntimeError, 'compile failed'):
         Mapping(model, packing_ir.test_only_parameters(_parameters()),
           global_batch=2, dnum=3)
+      self.assertEmpty(cc._encrypt_cache)
+      self.assertEmpty(cc._decrypt_cache)
     self.assertLen(initialized_contexts, 1)
     ctx = initialized_contexts[0]
     self.assertNotIn('_param_cache', ctx.__dict__)
     self.assertNotIn('_he_add', ctx.__dict__)
+    self.assertIsNone(failed_mappings[0]._compiled)
+    self.assertIsNone(failed_mappings[0]._compiled_regions)
+    self.assertEmpty(failed_mappings[0]._templates)
 
   def test_multi_device_bootstrap_fails_before_context_initialization(self):
     model = _model(_bootstrap(
