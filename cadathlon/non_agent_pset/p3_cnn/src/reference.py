@@ -19,6 +19,12 @@ def make_case(case):
     elif case["model"] == "alexnet_tiny":
         model = QuadAlexNetTinyInfer(client_downsample=False).double().eval()
         shape = (3, 16, 16)
+    elif case["model"] == "compact_gray_cnn":
+        from compact_models import CompactGrayCNN
+        model, shape = CompactGrayCNN().double().eval(), (1, 28, 28)
+    elif case["model"] == "compact_rgb_cnn":
+        from compact_models import CompactRGBCNN
+        model, shape = CompactRGBCNN().double().eval(), (3, 16, 16)
     else:
         raise ValueError("Unknown model")
     rng = np.random.default_rng(case["weight_seed"])
