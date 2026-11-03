@@ -1,0 +1,75 @@
+{
+  "scope": "Optional nested HEMul rescale control constructors only; no full refresh/model/TPU or calibration claim.",
+  "passed": true,
+  "junit_suite": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "3",
+    "tests": "116",
+    "time": "201.708",
+    "timestamp": "2026-11-03T03:07:05.407693+00:00",
+    "hostname": "t1v-n-a4e6c486-w-0"
+  },
+  "skips": [
+    {
+      "name": "test_guards_fall_back[other_device]",
+      "reason": "requires two logical CPU devices; run with --xla_force_host_platform_device_count=2"
+    },
+    {
+      "name": "test_actual_secure_keyless_refresh_and_continuation",
+      "reason": "opt-in large secure bootstrap"
+    },
+    {
+      "name": "test_actual_deep_profile_bounded_refresh_and_continuation",
+      "reason": "opt-in deep-profile bounded bootstrap"
+    }
+  ],
+  "source_count_union": 175,
+  "source_files_unchanged": true,
+  "source_archive_sha256": "ed17fda80435ba094c713104ff1a246ec98d60a6c5011ac9227a4ee06c6c9ce7",
+  "patch_sha256": "01095e41df3da068e0e8836cf8bd26041140db03bc9ffb79da68f90c83c6056f",
+  "patch_after": "Facade rescale patch290c6330af2af9b27ae138fa48a19df0b5136f046d3686d2160f01ff2b8e22fe after combined91ccdbb67c457fd4f3a2636e92316d2385a88e3036f5e5963fafa5b465ab1c61",
+  "changed_files": {
+    "cadathlon/common/encrypted_ntt.py": {
+      "before_sha256": "3836626216fc145a854fc31d87722883cf92e837e3cf7fa54e2b7b23baa39ba2",
+      "after_sha256": "5825e90fc778988528f2a7e1d5cc6033426b55f912c5c94ef41ef9b45fe324bb"
+    },
+    "cadathlon/tests/test_scoped_mul_ntt.py": {
+      "before_sha256": "01fa218438b2d3a38dbd6f94a7985030a9ec73872eac04f7bd6e09917c5ae65e",
+      "after_sha256": "8e37454de04aa4034f751e0779abb6472e1a440e8f9d4ecc2318864a82d2bede"
+    },
+    "cadathlon/tests/test_scoped_nested_rescale.py": {
+      "before_sha256": null,
+      "after_sha256": "2d6e989ce5efa1ea79e53694fa7e4577762a0c9eef2dbe414603c3529c25ac5d"
+    },
+    "jaxite_word/he_ops.py": {
+      "before_sha256": "be3d8fbab96782e454c49f50b544ff9c4b8b185abfbdffe20b005e8e37d22b98",
+      "after_sha256": "c3b068d04099569cfd1cb5650c4132113bf487a08d1ad837fd623a9668343aa1"
+    },
+    "jaxite_word/hemul.py": {
+      "before_sha256": "cdcb70c30063c13e2f8fc01ac181efe59f8a51e36fa66731a6fd03dacdf1d8ec",
+      "after_sha256": "2286a6baa5d1832f617307aaaee6c0f156b2c05b2cd4320caf50312cae37268c"
+    }
+  },
+  "core_arithmetic_ast_unchanged_after_removing_four_constructor_keywords": true,
+  "bootstrap_and_he_params_unchanged": true,
+  "split_cd2_path_executed": false,
+  "split_cd2_literal_disabled_unchanged": true,
+  "precision_diagnostic": [
+    {
+      "input_scale_bits": 48,
+      "max_abs_error": 8.429792093332666e-06,
+      "gate_passed": false,
+      "baseline_payload_metadata_exact": true
+    },
+    {
+      "input_scale_bits": 56,
+      "max_abs_error": 4.310029714377217e-08,
+      "gate_passed": true,
+      "baseline_payload_metadata_exact": true
+    }
+  ],
+  "production_scoped_adapter_cd2_only": true,
+  "review": "Security agent independent read-only review found no blocker; root authorized the isolated four-constructor scope."
+}

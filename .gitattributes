@@ -1,0 +1,18 @@
+# Preserve the required space prefix on empty context lines in archived diffs.
+# Whitespace checks remain enabled for the applied source files.
+cadathlon/validation/*.patch whitespace=-blank-at-eol
+cadathlon/validation/**/*.patch whitespace=-blank-at-eol
+# Exact historical source copies retain upstream whitespace for hash verification.
+cadathlon/validation/**/sources/** -whitespace
+# Keep raw test diagnostics byte-for-byte, including traceback whitespace.
+cadathlon/validation/**/*.log -whitespace
+cadathlon/validation/**/*.xml -whitespace
+# Preserve this measured raw patch's trailing blank line as part of its hash.
+cadathlon/validation/bert_qk_component_prelaunch_cpu_20261103/routing_helper.patch -whitespace
+cadathlon/validation/integer_newton_promotion_cpu_20261103/candidate.patch -whitespace
+cadathlon/validation/qwen_native_calibration_cpu_20261103/observed_reference.py -whitespace
+cadathlon/validation/qwen_calibration_candidate1_cpu_20261103/arithmetic.py -whitespace
+cadathlon/validation/qwen_approximate_calibration_smoke_cpu_20261103/arithmetic.py -whitespace
+cadathlon/validation/qwen_approximate_calibration_cpu_20261103/arithmetic.py -whitespace
+cadathlon/validation/qwen_heldout_candidate1_cpu_20261103/arithmetic.py -whitespace
+cadathlon/validation/qwen_calibration_candidate2_cpu_20261103/arithmetic.py -whitespace

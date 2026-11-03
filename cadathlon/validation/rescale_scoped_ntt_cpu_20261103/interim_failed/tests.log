@@ -1,0 +1,209 @@
+........F.................s............................................. [ 72%]
+............ss..............                                          [100%]
+=================================== FAILURES ===================================
+_________ test_secure_facade_compiled_bootstrap_dispatch_and_lifetime __________
+
+ring = (<jaxite_word.ckks_ctx.CKKSContext object at 0x7a76c5450ad0>, {'degree': 8192, 'num_slots': 4096, 'scaling_factor': 10...1, 4079617, 1097729, 1130497, 786433, 1032193], 'P': [1073692673, 1073643521]}, 'P': [1073692673, 1073643521], ...}, 3)
+
+    def test_secure_facade_compiled_bootstrap_dispatch_and_lifetime(ring):
+     client=ring[0]
+     def execute():
+      ordinary=server_for(ring,2);server=server_for(ring,2)
+      assert server.secret_key is None and server._param_cache.secret_key is None and server.parameters.get('secret_key') is None
+      def forbidden(*a,**kw):raise AssertionError('no server encryption/decryption')
+      for name in ('encrypt','decrypt','encrypt_slots','decrypt_slots','encrypt_slots_batch','decrypt_slots_batch'):setattr(server,name,forbidden)
+      provider=enable_scoped_ntt_subsets(server)
+      helper=CompiledRescale(server);evaluator=EncryptedPolynomialEvaluator(server)
+      values=np.stack([np.linspace(-.3,.3,client.num_slots),.2*np.sin(np.arange(client.num_slots)/17)])
+      fresh=client.encrypt_slots_batch(values,scale=float(1<<40))
+      pt=server.encode_at_level(np.full(client.num_slots,.5),2,scale=float(1<<40))
+      twice=server.ptct_mul[2].mul(fresh,pt)
+      thrice=server.ptct_mul[2].mul(twice,pt)
+      snapshots=[(v,v.polynomial,v._ckks_scale,v._ckks_nsd,v.moduli[:]) for v in (fresh,twice,thrice)]
+      eager=bootstrap_shell(ordinary);compiled=bootstrap_shell(server);helpers=_install_compiled_primitives(compiled,server)
+      for source,target,value,truth in [(2,1,twice,.5*values),(1,0,server.he_level_reduce[2,1].level_reduce(twice),.5*values),(2,0,thrice,.25*values)]:
+       expected_op=ordinary.he_rescale[source,target];actual_op=server.he_rescale[source,target]
+       assert expected_op._he_rescale._polynomial_factory is rescale.Polynomial
+       assert actual_op._he_rescale._polynomial_factory.__self__ is provider
+       checks=controls_equal(actual_op._he_rescale,expected_op._he_rescale)
+       expected=expected_op.rescale(value);actual=actual_op.rescale(value);assert_same(actual,expected)
+       error=float(np.max(np.abs(client.decrypt_slots_batch(actual)-truth)));assert error<5e-6,error
+       assert_same(helper.rescale(value,source,target),expected)
+       count=helper.compiler.compile_count
+       helper.clear();server.he_rescale._instances.clear();provider.clear();jax.clear_caches()
+       assert_same(helper.rescale(value,source,target),expected);assert helper.compiler.compile_count==count
+       for decrement in (False,True):
+        assert_same(compiled._he_op_rescale(source,target,value,decrement_nsd=decrement),
+                    eager._he_op_rescale(source,target,value,decrement_nsd=decrement))
+       RECORDS.append(dict(kind='secure_rescale_paths',source=source,target=target,input_nsd=value._ckks_nsd,six_field_checks=checks,max_abs_error=error,raw_payload_and_metadata_exact=True,executable_reused=True))
+      for v,payload,scale,nsd,moduli in snapshots:
+       assert v.polynomial is payload and v._ckks_scale==scale and v._ckks_nsd==nsd and v.moduli==moduli
+      compiler=helper.compiler;control_refs=[weakref.ref(x) for x in helper.binding[1].controls]
+      owner_refs=[weakref.ref(server),weakref.ref(server._param_cache)]
+      for h in helpers:h.clear()
+      helper.clear();provider.close();server.he_rescale._instances.clear()
+      assert server._param_cache.rescale_polynomial_factory is None
+      assert server.he_rescale[1,0]._he_rescale._polynomial_factory is rescale.Polynomial
+      ckks_ctx.evict_context_caches(server);ckks_ctx.evict_context_caches(ordinary)
+      return compiler,control_refs,owner_refs,provider
+>    compiler,controls,owners,provider=execute()
+                                       ^^^^^^^^^
+
+cadathlon/tests/test_scoped_rescale_ntt.py:115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def execute():
+     ordinary=server_for(ring,2);server=server_for(ring,2)
+     assert server.secret_key is None and server._param_cache.secret_key is None and server.parameters.get('secret_key') is None
+     def forbidden(*a,**kw):raise AssertionError('no server encryption/decryption')
+     for name in ('encrypt','decrypt','encrypt_slots','decrypt_slots','encrypt_slots_batch','decrypt_slots_batch'):setattr(server,name,forbidden)
+     provider=enable_scoped_ntt_subsets(server)
+     helper=CompiledRescale(server);evaluator=EncryptedPolynomialEvaluator(server)
+     values=np.stack([np.linspace(-.3,.3,client.num_slots),.2*np.sin(np.arange(client.num_slots)/17)])
+     fresh=client.encrypt_slots_batch(values,scale=float(1<<40))
+     pt=server.encode_at_level(np.full(client.num_slots,.5),2,scale=float(1<<40))
+     twice=server.ptct_mul[2].mul(fresh,pt)
+     thrice=server.ptct_mul[2].mul(twice,pt)
+>    snapshots=[(v,v.polynomial,v._ckks_scale,v._ckks_nsd,v.moduli[:]) for v in (fresh,twice,thrice)]
+                                              ^^^^^^^^^^^
+E    AttributeError: 'Polynomial' object has no attribute '_ckks_nsd'
+
+cadathlon/tests/test_scoped_rescale_ntt.py:88: AttributeError
+=============================== warnings summary ===============================
+cadathlon/tests/test_encrypted_refresh.py:124
+  /tmp/rescale-scoped-ntt-20261103/checkout/cadathlon/tests/test_encrypted_refresh.py:124: PytestUnknownMarkWarning: Unknown pytest.mark.slow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.slow
+
+cadathlon/tests/test_encrypted_refresh.py:125
+  /tmp/rescale-scoped-ntt-20261103/checkout/cadathlon/tests/test_encrypted_refresh.py:125: PytestUnknownMarkWarning: Unknown pytest.mark.secure_profile - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.secure_profile
+
+cadathlon/tests/test_encrypted_refresh.py:126
+  /tmp/rescale-scoped-ntt-20261103/checkout/cadathlon/tests/test_encrypted_refresh.py:126: PytestUnknownMarkWarning: Unknown pytest.mark.integration - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.integration
+
+cadathlon/tests/test_encrypted_refresh.py:138
+  /tmp/rescale-scoped-ntt-20261103/checkout/cadathlon/tests/test_encrypted_refresh.py:138: PytestUnknownMarkWarning: Unknown pytest.mark.slow - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.slow
+
+cadathlon/tests/test_encrypted_refresh.py:139
+  /tmp/rescale-scoped-ntt-20261103/checkout/cadathlon/tests/test_encrypted_refresh.py:139: PytestUnknownMarkWarning: Unknown pytest.mark.secure_profile - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.secure_profile
+
+cadathlon/tests/test_encrypted_refresh.py:140
+  /tmp/rescale-scoped-ntt-20261103/checkout/cadathlon/tests/test_encrypted_refresh.py:140: PytestUnknownMarkWarning: Unknown pytest.mark.integration - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.integration
+
+jaxite_word/hemul_test.py:17
+  /tmp/rescale-scoped-ntt-20261103/checkout/jaxite_word/hemul_test.py:17: PytestUnknownMarkWarning: Unknown pytest.mark.correctness - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytestmark = [pytest.mark.correctness, pytest.mark.integration]
+
+jaxite_word/hemul_test.py:17
+  /tmp/rescale-scoped-ntt-20261103/checkout/jaxite_word/hemul_test.py:17: PytestUnknownMarkWarning: Unknown pytest.mark.integration - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytestmark = [pytest.mark.correctness, pytest.mark.integration]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED cadathlon/tests/test_scoped_rescale_ntt.py::test_secure_facade_compiled_bootstrap_dispatch_and_lifetime
+1 failed, 96 passed, 3 skipped, 8 warnings, 3 subtests passed in 84.74s (0:01:24)
+{
+  "passed": false,
+  "elapsed_s": 85.14223915200273,
+  "sources": 172,
+  "records": {
+    "test_scoped_rescale_ntt": [
+      {
+        "kind": "public_controls_and_raw_arithmetic",
+        "drop": 1,
+        "elements": 2,
+        "six_field_checks": 12,
+        "stats": {
+          "builds": 2
+        }
+      },
+      {
+        "kind": "public_controls_and_raw_arithmetic",
+        "drop": 2,
+        "elements": 2,
+        "six_field_checks": 24,
+        "stats": {
+          "builds": 4
+        }
+      },
+      {
+        "kind": "public_controls_and_raw_arithmetic",
+        "drop": 3,
+        "elements": 2,
+        "six_field_checks": 36,
+        "stats": {
+          "builds": 6
+        }
+      },
+      {
+        "kind": "public_controls_and_raw_arithmetic",
+        "drop": 1,
+        "elements": 3,
+        "six_field_checks": 12,
+        "stats": {
+          "builds": 2
+        }
+      },
+      {
+        "kind": "public_controls_and_raw_arithmetic",
+        "drop": 2,
+        "elements": 3,
+        "six_field_checks": 24,
+        "stats": {
+          "builds": 4
+        }
+      },
+      {
+        "kind": "public_controls_and_raw_arithmetic",
+        "drop": 3,
+        "elements": 3,
+        "six_field_checks": 36,
+        "stats": {
+          "builds": 6
+        }
+      }
+    ],
+    "test_encrypted_tensor_only": [
+      {
+        "ring_degree": 8192,
+        "depth": 2,
+        "dnum": 3,
+        "q_towers": [
+          8273921,
+          4079617,
+          1097729,
+          1130497,
+          786433,
+          1032193
+        ],
+        "p_towers": [
+          1073692673,
+          1073643521
+        ],
+        "actual_log2_qp": 184.67680580287663
+      },
+      {
+        "ring_degree": 8192,
+        "depth": 2,
+        "dnum": 3,
+        "q_towers": [
+          8273921,
+          4079617,
+          1097729,
+          1130497,
+          786433,
+          1032193
+        ],
+        "p_towers": [
+          1073692673,
+          1073643521
+        ],
+        "actual_log2_qp": 184.67680580287663
+      }
+    ]
+  }
+}

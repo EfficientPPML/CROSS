@@ -1,0 +1,658 @@
+--- a/cadathlon/validation/check_transformer_suite.py
++++ b/cadathlon/validation/check_transformer_suite.py
+@@ -17,10 +17,13 @@
+ from pathlib import Path
+ import platform
+ import runpy
++import shutil
+ import signal
+ import statistics
++import stat
+ import subprocess
+ import sys
++import tempfile
+ import time
+ 
+ ROOT = Path(__file__).resolve().parents[2]
+@@ -151,6 +154,50 @@
+     return True
+ 
+ 
++def open_owned_directory(path):
++    """Pin the just-created directory inode until cleanup completes.
++
++    This detects path replacement and prevents inode reuse. It is not an OS
++    sandbox against a same-user child moving other entries into its own tree.
++    """
++    descriptor = os.open(path, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
++    try:
++        status = os.fstat(descriptor)
++        return descriptor, {'device': status.st_dev, 'inode': status.st_ino}
++    except BaseException as error:
++        try:
++            os.close(descriptor)
++        except BaseException as cleanup_error:
++            error.add_note(f'Directory handle cleanup also failed: {cleanup_error}')
++        raise
++
++
++def remove_owned_directory(path, descriptor, identity):
++    """Remove only the still-identical directory; retain moved/replaced paths.
++
++    The identity check is a concurrency guard, not an atomic defense against
++    arbitrary same-user directory manipulation during recursive deletion.
++    """
++    if descriptor is None or identity is None:
++        raise RuntimeError('owned directory identity was not acquired; retained')
++    held = os.fstat(descriptor)
++    if {'device': held.st_dev, 'inode': held.st_ino} != identity:
++        raise RuntimeError('owned directory descriptor identity changed; retained')
++    try:
++        current = path.lstat()
++    except FileNotFoundError:
++        if held.st_nlink == 0:
++            return True  # The actual original directory was already removed.
++        raise RuntimeError('owned directory was moved; original files retained')
++    if stat.S_ISLNK(current.st_mode):
++        raise RuntimeError('owned directory was replaced by a symlink; retained')
++    if (not stat.S_ISDIR(current.st_mode)
++            or {'device': current.st_dev, 'inode': current.st_ino} != identity):
++        raise RuntimeError('owned directory identity was replaced; retained')
++    shutil.rmtree(path)
++    return not path.exists() and not path.is_symlink()
++
++
+ def child_environment_overrides():
+     # support.cross_root() honors this variable. Bind it to the checkout whose
+     # sources we hash rather than inheriting an unrelated developer checkout.
+@@ -199,21 +246,32 @@
+     record = {"passed": False, "command": command, "timeout_s": timeout,
+               "cleanup_grace_s": cleanup_grace_s}
+     process = None
++    owned_keys = None
++    owned_keys_fd = None
++    owned_keys_identity = None
++    caught = None
+     try:
++        # Override only the child's environment. The configured parent can be
++        # shared with other jobs and must never itself be removed here.
++        owned_keys = Path(tempfile.mkdtemp(prefix='cross-transformer-case-',
++            dir=os.environ.get('CROSS_PUBLIC_KEY_DIRECTORY')))
++        record['owned_public_key_directory'] = str(owned_keys)
++        owned_keys_fd, owned_keys_identity = open_owned_directory(owned_keys)
++        record['owned_public_key_directory_identity'] = owned_keys_identity
++        write_json(directory / 'process.json', record)
++        child_environment = dict(os.environ, **child_environment_overrides())
++        child_environment['CROSS_PUBLIC_KEY_DIRECTORY'] = str(owned_keys)
+         with (directory / "stdout.json").open("w") as output, (directory / "stderr.log").open("w") as log:
+             process = subprocess.Popen(command, cwd=ROOT, stdout=output, stderr=log,
+                                        start_new_session=True,
+-                                       env=dict(os.environ, **child_environment_overrides()))
++                                       env=child_environment)
+             record["pid"] = process.pid
++            write_json(directory / 'process.json', record)
+             try:
+                 record["returncode"] = process.wait(timeout=timeout)
+             except subprocess.TimeoutExpired:
+                 record["error"] = "explicit per-case deadline exceeded"
+-                stop_process_group(process, grace_s=cleanup_grace_s)
+-                record["returncode"] = process.returncode
+             except BaseException:
+-                stop_process_group(process, grace_s=cleanup_grace_s)
+-                record["returncode"] = process.returncode
+                 record["error"] = "case interrupted; owned process group stopped"
+                 raise
+         if record.get("error") is None:
+@@ -223,15 +281,60 @@
+                 record["error"] = f"invalid runner output: {error}"
+         if record.get("returncode") != 0:
+             record.setdefault("error", f"runner exited {record.get('returncode')}; see stderr.log")
++    except BaseException as error:
++        caught = error
++        record.setdefault('error', f'{type(error).__name__}: {error}')
++        raise
+     finally:
+-        if process is not None and (process.poll() is None or process_group_alive(process.pid)):
+-            leader_completed = process.poll() is not None
+-            stop_process_group(process, grace_s=cleanup_grace_s)
+-            record["returncode"] = process.returncode
+-            record.setdefault("error", "runner left descendant processes; owned group stopped" if leader_completed
+-                              else "case interrupted; owned process group stopped")
++        cleanup_cancellation = None
++        try:
++            if process is not None and (process.poll() is None or process_group_alive(process.pid)):
++                leader_completed = process.poll() is not None
++                stop_process_group(process, grace_s=cleanup_grace_s)
++                record["returncode"] = process.returncode
++                record.setdefault("error", "runner left descendant processes; owned group stopped" if leader_completed
++                                  else "case interrupted; owned process group stopped")
++        except BaseException as error:
++            record['process_cleanup_error'] = f'{type(error).__name__}: {error}'
++            record.setdefault('error', 'owned process group cleanup failed')
++            if not isinstance(error, Exception):
++                cleanup_cancellation = error
++        record['process_reaped'] = (process is None or
++            (process.poll() is not None and not process_group_alive(process.pid)))
++        record['public_key_store_removed'] = owned_keys is None
++        if owned_keys is not None:
++            try:
++                if not record['process_reaped']:
++                    raise RuntimeError('owned process group is still present; key files retained')
++                record['public_key_store_removed'] = remove_owned_directory(
++                    owned_keys, owned_keys_fd, owned_keys_identity)
++            except BaseException as error:
++                record['key_cleanup_error'] = f'{type(error).__name__}: {error}'
++                record.setdefault('error', 'owned public key directory cleanup failed')
++                if not isinstance(error, Exception) and cleanup_cancellation is None:
++                    cleanup_cancellation = error
++        record['owned_directory_handle_closed'] = owned_keys_fd is None
++        if owned_keys_fd is not None:
++            try:
++                os.close(owned_keys_fd)
++                record['owned_directory_handle_closed'] = True
++            except BaseException as error:
++                record['directory_handle_cleanup_error'] = f'{type(error).__name__}: {error}'
++                record.setdefault('error', 'owned directory handle cleanup failed')
++                if not isinstance(error, Exception) and cleanup_cancellation is None:
++                    cleanup_cancellation = error
+         record["process_elapsed_s"] = time.monotonic() - started
+-        write_json(directory / "process.json", record)
++        try:
++            write_json(directory / "process.json", record)
++        except BaseException as error:
++            primary = caught if caught is not None else cleanup_cancellation
++            if primary is None:
++                raise
++            primary.add_note(f'Final process evidence write failed: {type(error).__name__}: {error}')
++        # Preserve an existing failure. A cancellation first received during
++        # cleanup must still leave the sweep after its evidence is written.
++        if caught is None and cleanup_cancellation is not None:
++            raise cleanup_cancellation
+     return record
+ 
+ 
+@@ -280,6 +383,12 @@
+             record["source_files_unchanged"] = current == initial
+             if not record["source_files_unchanged"]:
+                 record["error"] = "source or fixture changed during sweep"
++            cleanup_incomplete = (record.get('process_reaped') is not True
++                or record.get('public_key_store_removed') is not True
++                or record.get('owned_directory_handle_closed') is False)
++            if cleanup_incomplete:
++                record.setdefault('error', 'case cleanup incomplete; sweep stopped')
++                report['stopped_for_incomplete_cleanup'] = True
+             if "error" not in record:
+                 try:
+                     validate_result(record.get("result"), model=args.model, case=case,
+@@ -289,7 +398,7 @@
+                     record["error"] = str(error)
+             report["cases"][case] = record
+             write_json(directory / "process.json", record)
+-            if not record["source_files_unchanged"]:
++            if not record["source_files_unchanged"] or cleanup_incomplete:
+                 break
+     except BaseException as error:
+         report["error"] = f"{type(error).__name__}: {error}"
+--- a/cadathlon/validation/run_bounded_qwen2_proof.py
++++ b/cadathlon/validation/run_bounded_qwen2_proof.py
+@@ -115,7 +115,10 @@
+               'public_key_filesystem_before':filesystem(args.key_directory)}
+     caught = None
+     owned_keys = None
++    owned_keys_fd = None
++    owned_keys_identity = None
+     child = None
++    case_entered = False
+     case_directory = args.output/'test2'
+     case_directory.mkdir()
+     problem, implementation, runner = paths()
+@@ -126,6 +129,8 @@
+         record['source_archive_sha256'] = suite.sha256(source_archive)
+         owned_keys = Path(tempfile.mkdtemp(prefix='cross-bounded-qwen2-',dir=args.key_directory))
+         record['owned_public_key_directory'] = str(owned_keys)
++        owned_keys_fd, owned_keys_identity = suite.open_owned_directory(owned_keys)
++        record['owned_public_key_directory_identity'] = owned_keys_identity
+         command = suite.runner_command(runner, ['--case',str(problem/'test/test2.in'),
+             '--implementation',str(implementation),'--require-tpu','--warmups','0','--repeats','1'])
+         record['command'] = command
+@@ -134,6 +139,8 @@
+             record['child_environment_overrides'] = suite.child_environment_overrides()
+             suite.write_json(args.output/'report.json',record)
+             print(f'Starting bounded Qwen2; wrapper PID {os.getpid()}; raw output {case_directory}',flush=True)
++            case_entered = True
++            record['case_collector_entered'] = True
+             child = suite.run_case(command,case_directory,timeout=None,
+                                    cleanup_grace_s=args.cleanup_grace_s)
+         record['case'] = child
+@@ -157,11 +164,23 @@
+             try:
+                 if pid is not None and not record['process_reaped']:
+                     raise RuntimeError('owned process group is still present; key files retained')
+-                shutil.rmtree(owned_keys)
+-                record['public_key_store_removed'] = not owned_keys.exists()
++                if case_entered and (not isinstance(child, dict) or any(
++                        child.get(field) is not True for field in ('process_reaped',
++                            'public_key_store_removed', 'owned_directory_handle_closed'))):
++                    raise RuntimeError('child cleanup incomplete or unknown; wrapper key parent retained')
++                record['public_key_store_removed'] = suite.remove_owned_directory(
++                    owned_keys, owned_keys_fd, owned_keys_identity)
+             except BaseException as error:
+                 record['cleanup_error'] = f'{type(error).__name__}: {error}'
+                 if caught is None:caught=error
++        record['owned_directory_handle_closed'] = owned_keys_fd is None
++        if owned_keys_fd is not None:
++            try:
++                os.close(owned_keys_fd)
++                record['owned_directory_handle_closed'] = True
++            except BaseException as error:
++                record['directory_handle_cleanup_error'] = f'{type(error).__name__}: {error}'
++                if caught is None:caught=error
+         try:
+             record['source_hashes_end'] = manifest()
+             record['source_files_unchanged'] = record.get('source_hashes_start')==record['source_hashes_end']
+@@ -179,8 +198,14 @@
+         record['elapsed_s'] = time.monotonic()-started
+         record['passed'] = (caught is None and record.get('case_gate_passed') is True
+             and record['process_reaped'] and record['public_key_store_removed']
+-            and record['source_files_unchanged'])
+-        suite.write_json(args.output/'report.json',record)
++            and record['source_files_unchanged'] and record['owned_directory_handle_closed'])
++        record['case_collector_entered'] = case_entered
++        try:
++            suite.write_json(args.output/'report.json',record)
++        except BaseException as error:
++            if caught is None:
++                raise
++            caught.add_note(f'Final proof evidence write failed: {type(error).__name__}: {error}')
+     print(json.dumps({key:record[key] for key in ('passed','elapsed_s','process_reaped','public_key_store_removed')}
+                      | {'error':record.get('error'),'report':str(args.output/'report.json')}),flush=True)
+     if caught is not None and not isinstance(caught,Exception):raise caught
+--- a/cadathlon/tests/test_transformer_suite.py
++++ b/cadathlon/tests/test_transformer_suite.py
+@@ -105,7 +105,8 @@
+     monkeypatch.setattr(suite, "source_manifest", sources or (lambda *args: {"source.py": "unchanged"}))
+     def child(command, directory, *, timeout, cleanup_grace_s=30.):
+         case = Path(command[command.index("--case") + 1]).name
+-        return dict(passed=False, returncode=0, result=result(case=case, implementation=implementation))
++        return dict(passed=False, returncode=0, process_reaped=True, public_key_store_removed=True,
++                    result=result(case=case, implementation=implementation))
+     monkeypatch.setattr(suite, "run_case", child)
+     return args
+ 
+@@ -121,6 +122,24 @@
+         suite.evaluate(args)
+ 
+ 
++@pytest.mark.parametrize('process_reaped,keys_removed', [(False, True), (True, False), (False, False)])
++def test_incomplete_cleanup_prevents_later_case_launch(monkeypatch, tmp_path, process_reaped, keys_removed):
++    args = prepare_evaluation(monkeypatch, tmp_path)
++    run = suite.run_case
++    launched = []
++    def child(*arguments, **kwargs):
++        launched.append(arguments[0])
++        record = run(*arguments, **kwargs)
++        record.update(process_reaped=process_reaped, public_key_store_removed=keys_removed)
++        return record
++    monkeypatch.setattr(suite, 'run_case', child)
++    assert suite.evaluate(args) == 1
++    report = json.loads((args.output / 'report.json').read_text())
++    assert len(launched) == 1 and list(report['cases']) == ['test1.in']
++    assert report['stopped_for_incomplete_cleanup'] and not report['passed']
++    assert report['cases']['test1.in']['passed'] is False
++
++
+ @pytest.mark.parametrize("missing", [False, True])
+ def test_changed_or_deleted_source_stops_and_preserves_failed_evidence(monkeypatch, tmp_path, missing):
+     calls = 0
+--- /dev/null
++++ b/cadathlon/tests/test_transformer_owned_keys.py
+@@ -0,0 +1,230 @@
++"""Owned directory lifetime across real child success, termination and failures."""
++import importlib.util
++import json
++import os
++from pathlib import Path
++import shutil
++import sys
++
++import pytest
++
++SCRIPT = Path(__file__).resolve().parents[1] / 'validation/check_transformer_suite.py'
++spec = importlib.util.spec_from_file_location('owned_keys_suite', SCRIPT)
++suite = importlib.util.module_from_spec(spec)
++spec.loader.exec_module(suite)
++
++
++def parent(monkeypatch, tmp_path):
++    shared = tmp_path / 'shared'
++    shared.mkdir()
++    (shared / 'unrelated.key').write_bytes(b'leave alone')
++    monkeypatch.setenv('CROSS_PUBLIC_KEY_DIRECTORY', str(shared))
++    return shared
++
++
++def assert_parent(shared):
++    assert (shared / 'unrelated.key').read_bytes() == b'leave alone'
++    assert os.environ['CROSS_PUBLIC_KEY_DIRECTORY'] == str(shared)
++
++
++KEY_CODE = ("import json,os; from pathlib import Path; "
++    "p=Path(os.environ['CROSS_PUBLIC_KEY_DIRECTORY']); "
++    "(p/'nested').mkdir(); (p/'nested'/'public-key.bin').write_bytes(b'public'); ")
++
++
++def test_normal_exit_removes_only_owned_child_keys(monkeypatch, tmp_path):
++    shared = parent(monkeypatch, tmp_path)
++    code = KEY_CODE + "print(json.dumps({'directory':str(p)}))"
++    record = suite.run_case([sys.executable, '-c', code], tmp_path, timeout=None)
++    assert not record.get('error') and record['returncode'] == 0
++    assert record['process_reaped'] and record['public_key_store_removed']
++    owned = Path(record['result']['directory'])
++    assert owned.parent == shared and owned != shared and not owned.exists()
++    assert_parent(shared)
++
++
++def test_forced_kill_removes_orphaned_key_files(monkeypatch, tmp_path):
++    shared = parent(monkeypatch, tmp_path)
++    code = KEY_CODE + 'import signal,time; signal.signal(signal.SIGTERM,signal.SIG_IGN); time.sleep(60)'
++    record = suite.run_case([sys.executable, '-c', code], tmp_path, timeout=.5, cleanup_grace_s=.1)
++    assert record['returncode'] == -9
++    assert record['process_reaped'] and record['public_key_store_removed']
++    assert not Path(record['owned_public_key_directory']).exists()
++    assert 'deadline' in record['error']
++    assert_parent(shared)
++
++
++def test_launch_failure_still_records_and_removes_owned_directory(monkeypatch, tmp_path):
++    shared = parent(monkeypatch, tmp_path)
++    with pytest.raises(FileNotFoundError):
++        suite.run_case(['/definitely-missing-owned-key-test'], tmp_path, timeout=None)
++    record = json.loads((tmp_path / 'process.json').read_text())
++    assert record['process_reaped'] and record['public_key_store_removed']
++    assert not Path(record['owned_public_key_directory']).exists()
++    assert 'FileNotFoundError' in record['error']
++    assert_parent(shared)
++
++
++@pytest.mark.parametrize('primary_failure', [False, True])
++@pytest.mark.parametrize('cancel_cleanup', [False, True])
++def test_cleanup_failure_prevents_pass_and_preserves_primary(monkeypatch, tmp_path, primary_failure, cancel_cleanup):
++    shared = parent(monkeypatch, tmp_path)
++    original = shutil.rmtree
++    def fail_cleanup(path):
++        raise (KeyboardInterrupt if cancel_cleanup else RuntimeError)('simulated cleanup failure')
++    monkeypatch.setattr(suite.shutil, 'rmtree', fail_cleanup)
++    if primary_failure:
++        with pytest.raises(FileNotFoundError):
++            suite.run_case(['/definitely-missing-owned-key-test'], tmp_path, timeout=None)
++        record = json.loads((tmp_path / 'process.json').read_text())
++        assert 'FileNotFoundError' in record['error']
++    elif cancel_cleanup:
++        with pytest.raises(KeyboardInterrupt, match='simulated cleanup failure'):
++            suite.run_case([sys.executable, '-c', 'print("{}")'], tmp_path, timeout=None)
++        record = json.loads((tmp_path / 'process.json').read_text())
++    else:
++        record = suite.run_case([sys.executable, '-c', 'print("{}")'], tmp_path, timeout=None)
++        assert record['error'] == 'owned public key directory cleanup failed'
++    assert not record['passed'] and not record['public_key_store_removed']
++    assert ('KeyboardInterrupt' if cancel_cleanup else 'RuntimeError') in record['key_cleanup_error']
++    original(record['owned_public_key_directory'])
++    assert_parent(shared)
++
++
++def test_process_stop_failure_does_not_replace_primary_cancellation(monkeypatch, tmp_path):
++    shared = parent(monkeypatch, tmp_path)
++    class FakeProcess:
++        pid = 99999999
++        returncode = None
++        def wait(self, **kwargs):
++            raise KeyboardInterrupt('primary cancellation')
++        def poll(self):
++            return None
++    monkeypatch.setattr(suite.subprocess, 'Popen', lambda *a, **kw: FakeProcess())
++    def failed_stop(*a, **kw):
++        raise RuntimeError('secondary stop failure')
++    monkeypatch.setattr(suite, 'stop_process_group', failed_stop)
++    with pytest.raises(KeyboardInterrupt, match='primary cancellation'):
++        suite.run_case(['fake-never-launched'], tmp_path, timeout=None)
++    record = json.loads((tmp_path / 'process.json').read_text())
++    assert not record['process_reaped'] and not record['public_key_store_removed']
++    assert 'secondary stop failure' in record['process_cleanup_error']
++    shutil.rmtree(record['owned_public_key_directory'])
++    assert_parent(shared)
++
++
++def test_live_group_retains_key_files(monkeypatch, tmp_path):
++    shared = parent(monkeypatch, tmp_path)
++    monkeypatch.setattr(suite, 'process_group_alive', lambda pid: True)
++    monkeypatch.setattr(suite, 'stop_process_group', lambda *a, **kw: None)
++    record = suite.run_case([sys.executable, '-c', KEY_CODE + 'print("{}")'], tmp_path, timeout=None)
++    assert not record['process_reaped'] and not record['public_key_store_removed']
++    owned = Path(record['owned_public_key_directory'])
++    assert (owned / 'nested/public-key.bin').read_bytes() == b'public'
++    assert 'still present' in record['key_cleanup_error']
++    shutil.rmtree(owned)
++    assert_parent(shared)
++
++
++def test_replaced_directory_cannot_redirect_cleanup(monkeypatch, tmp_path):
++    shared = parent(monkeypatch, tmp_path)
++    code = ("import json,os; from pathlib import Path; "
++            "p=Path(os.environ['CROSS_PUBLIC_KEY_DIRECTORY']); "
++            "p.rmdir(); p.symlink_to(p.parent, target_is_directory=True); print('{}')")
++    record = suite.run_case([sys.executable, '-c', code], tmp_path, timeout=None)
++    assert record['process_reaped'] and not record['public_key_store_removed']
++    assert 'symlink' in record['key_cleanup_error']
++    Path(record['owned_public_key_directory']).unlink()
++    assert_parent(shared)
++
++
++@pytest.mark.parametrize('mode', ['primary', 'cleanup', 'none'])
++def test_final_artifact_failure_preserves_existing_cancellation(monkeypatch, tmp_path, mode):
++    shared = parent(monkeypatch, tmp_path)
++    original_write, original_remove = suite.write_json, shutil.rmtree
++    writes = 0
++    def write(path, record):
++        nonlocal writes
++        writes += 1
++        if writes == 3:
++            raise OSError('final evidence unavailable')
++        original_write(path, record)
++    monkeypatch.setattr(suite, 'write_json', write)
++    if mode == 'primary':
++        class FakeProcess:
++            pid = 99999999
++            returncode = 0
++            def wait(self, **kwargs):
++                raise KeyboardInterrupt('primary cancellation')
++            def poll(self):
++                return 0
++        monkeypatch.setattr(suite.subprocess, 'Popen', lambda *a, **kw: FakeProcess())
++        monkeypatch.setattr(suite, 'process_group_alive', lambda pid: False)
++    elif mode == 'cleanup':
++        def cancel_cleanup(path):
++            raise KeyboardInterrupt('cleanup cancellation')
++        monkeypatch.setattr(suite.shutil, 'rmtree', cancel_cleanup)
++    expected = OSError if mode == 'none' else KeyboardInterrupt
++    with pytest.raises(expected) as error:
++        suite.run_case([sys.executable, '-c', 'print("{}")'], tmp_path, timeout=None)
++    assert writes == 3
++    if mode != 'none':
++        assert any('final evidence unavailable' in note for note in error.value.__notes__)
++    record = json.loads((tmp_path / 'process.json').read_text())
++    owned = Path(record['owned_public_key_directory'])
++    if owned.exists():
++        original_remove(owned)
++    assert_parent(shared)
++
++
++def test_replaced_real_directory_is_retained_by_inode(monkeypatch,tmp_path):
++    shared=parent(monkeypatch,tmp_path)
++    foreign=shared/'unrelated-directory';foreign.mkdir();(foreign/'sentinel').write_text('keep')
++    expected_inode=foreign.stat().st_ino
++    code=("import os; from pathlib import Path; p=Path(os.environ['CROSS_PUBLIC_KEY_DIRECTORY']); "
++          "p.rmdir(); (p.parent/'unrelated-directory').rename(p); print('{}')")
++    record=suite.run_case([sys.executable,'-c',code],tmp_path,timeout=None)
++    replacement=Path(record['owned_public_key_directory'])
++    assert record['process_reaped'] and not record['public_key_store_removed']
++    assert record['owned_directory_handle_closed']
++    assert record['owned_public_key_directory_identity']['inode']!=expected_inode
++    assert replacement.stat().st_ino==expected_inode and (replacement/'sentinel').read_text()=='keep'
++    assert 'identity was replaced' in record['key_cleanup_error']
++    shutil.rmtree(replacement);assert_parent(shared)
++
++
++def test_moved_original_directory_is_not_reported_removed(monkeypatch,tmp_path):
++    shared=parent(monkeypatch,tmp_path)
++    code=KEY_CODE+"p.rename(p.with_name(p.name+'.moved')); print('{}')"
++    record=suite.run_case([sys.executable,'-c',code],tmp_path,timeout=None)
++    original=Path(record['owned_public_key_directory']);moved=original.with_name(original.name+'.moved')
++    assert record['process_reaped'] and not record['public_key_store_removed']
++    assert record['owned_directory_handle_closed'] and not original.exists()
++    assert moved.stat().st_ino==record['owned_public_key_directory_identity']['inode']
++    assert (moved/'nested/public-key.bin').read_bytes()==b'public'
++    assert 'was moved' in record['key_cleanup_error']
++    shutil.rmtree(moved);assert_parent(shared)
++
++
++def test_child_removing_original_empty_directory_is_complete(monkeypatch,tmp_path):
++    shared=parent(monkeypatch,tmp_path)
++    code="import os; from pathlib import Path; Path(os.environ['CROSS_PUBLIC_KEY_DIRECTORY']).rmdir(); print('{}')"
++    record=suite.run_case([sys.executable,'-c',code],tmp_path,timeout=None)
++    assert not record.get('error') and record['process_reaped'] and record['public_key_store_removed']
++    assert record['owned_directory_handle_closed'];assert_parent(shared)
++
++
++@pytest.mark.parametrize('error_type',[OSError,KeyboardInterrupt])
++def test_directory_identity_acquisition_failure_closes_descriptor(monkeypatch,tmp_path,error_type):
++    directory=tmp_path/'owned';directory.mkdir()
++    original_open,original_fstat=os.open,os.fstat
++    captured=[]
++    def opened(*args,**kwargs):
++        descriptor=original_open(*args,**kwargs);captured.append(descriptor);return descriptor
++    def failed(*args,**kwargs):raise error_type('identity interrupted')
++    with monkeypatch.context() as patch:
++        patch.setattr(suite.os,'open',opened);patch.setattr(suite.os,'fstat',failed)
++        with pytest.raises(error_type,match='identity interrupted'):suite.open_owned_directory(directory)
++    assert len(captured)==1
++    with pytest.raises(OSError):original_fstat(captured[0])
++    assert directory.is_dir()
+--- a/cadathlon/tests/test_bounded_qwen2_proof.py
++++ b/cadathlon/tests/test_bounded_qwen2_proof.py
+@@ -138,3 +138,116 @@
+     result=subprocess.run([sys.executable,str(wrapper.with_name('check_transformer_suite.py')),
+                            '--child-runner',str(unknown)],capture_output=True,text=True,timeout=10)
+     assert result.returncode!=0 and not marker.exists()
++
++
++def test_nested_wrapper_retains_replaced_child_directory(tree):
++    root,wrapper,runner,keys,output=tree
++    foreign=root/'unrelated-directory';foreign.mkdir();(foreign/'sentinel').write_text('must survive')
++    code=runner_source(root,'success')
++    needle="(keydir/'public-dummy-key').write_text('dummy public bytes')"
++    code=code.replace(needle,"keydir.rmdir()\n(ROOT/'unrelated-directory').rename(keydir)\n"+needle)
++    runner.write_text(code)
++    process=subprocess.run(command(tree),capture_output=True,text=True,timeout=15)
++    report=json.loads((output/'report.json').read_text())
++    assert process.returncode==1 and not report['passed']
++    assert report['process_reaped'] and not report['public_key_store_removed']
++    assert report['owned_directory_handle_closed']
++    assert not report['case']['public_key_store_removed']
++    retained=Path(report['case']['owned_public_key_directory'])
++    assert (retained/'sentinel').read_text()=='must survive'
++    assert 'child cleanup incomplete' in report['cleanup_error']
++    assert Path(report['owned_public_key_directory']).is_dir()
++
++
++def test_wrapper_launch_failure_without_child_can_remove_outer_parent(tree,monkeypatch):
++    import importlib.util
++    from types import SimpleNamespace
++    root,wrapper,runner,keys,output=tree
++    runner.write_text(runner_source(root,'success'))
++    monkeypatch.syspath_prepend(str(wrapper.parent))
++    suite_spec=importlib.util.spec_from_file_location('check_transformer_suite',wrapper.with_name('check_transformer_suite.py'))
++    owned_suite=importlib.util.module_from_spec(suite_spec);suite_spec.loader.exec_module(owned_suite)
++    monkeypatch.setitem(sys.modules,'check_transformer_suite',owned_suite)
++    spec=importlib.util.spec_from_file_location('launch_failure_wrapper',wrapper)
++    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
++    def missing(*args,**kwargs):raise FileNotFoundError('simulated launch failure')
++    monkeypatch.setattr(module.suite.subprocess,'Popen',missing)
++    assert module.run(SimpleNamespace(output=output,key_directory=keys,cleanup_grace_s=.1))==1
++    report=json.loads((output/'report.json').read_text())
++    assert not report['passed'] and not report['process_reaped']
++    assert report['case']['process_reaped'] and report['case']['public_key_store_removed']
++    assert 'pid' not in report['case']
++    assert report['public_key_store_removed'] and report['owned_directory_handle_closed']
++    assert not list(keys.iterdir())
++
++
++def load_wrapper_for_faults(tree,monkeypatch):
++    import importlib.util
++    root,wrapper,runner,keys,output=tree
++    runner.write_text(runner_source(root,'success'))
++    monkeypatch.syspath_prepend(str(wrapper.parent))
++    suite_spec=importlib.util.spec_from_file_location('check_transformer_suite',wrapper.with_name('check_transformer_suite.py'))
++    owned_suite=importlib.util.module_from_spec(suite_spec);suite_spec.loader.exec_module(owned_suite)
++    monkeypatch.setitem(sys.modules,'check_transformer_suite',owned_suite)
++    spec=importlib.util.spec_from_file_location('fault_wrapper',wrapper)
++    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
++    return module
++
++
++@pytest.mark.parametrize('mode',['missing','corrupt','incomplete'])
++def test_unknown_child_cleanup_retains_wrapper_parent(tree,monkeypatch,mode):
++    from types import SimpleNamespace
++    root,wrapper,runner,keys,output=tree
++    module=load_wrapper_for_faults(tree,monkeypatch)
++    def incomplete(*args,**kwargs):
++        owned=Path(os.environ['CROSS_PUBLIC_KEY_DIRECTORY'])
++        (owned/'sentinel').write_text('unknown child state; keep')
++        if mode=='corrupt':(output/'test2/process.json').write_text('{')
++        if mode=='incomplete':return {'returncode':1,'process_reaped':True,'public_key_store_removed':True}
++        raise RuntimeError('collector did not return durable cleanup metadata')
++    monkeypatch.setattr(module.suite,'run_case',incomplete)
++    assert module.run(SimpleNamespace(output=output,key_directory=keys,cleanup_grace_s=.1))==1
++    report=json.loads((output/'report.json').read_text())
++    assert not report['passed'] and report['case_collector_entered']
++    assert not report['public_key_store_removed'] and report['owned_directory_handle_closed']
++    assert (Path(report['owned_public_key_directory'])/'sentinel').read_text()=='unknown child state; keep'
++    assert 'incomplete or unknown' in report['cleanup_error']
++
++
++def test_failure_before_case_collector_can_remove_owned_parent(tree,monkeypatch):
++    from types import SimpleNamespace
++    root,wrapper,runner,keys,output=tree
++    module=load_wrapper_for_faults(tree,monkeypatch)
++    def fail(*args,**kwargs):raise RuntimeError('command construction failed')
++    monkeypatch.setattr(module.suite,'runner_command',fail)
++    assert module.run(SimpleNamespace(output=output,key_directory=keys,cleanup_grace_s=.1))==1
++    report=json.loads((output/'report.json').read_text())
++    assert not report['passed'] and not report['case_collector_entered']
++    assert report['public_key_store_removed'] and report['owned_directory_handle_closed']
++    assert not list(keys.iterdir())
++
++
++@pytest.mark.parametrize('error_type',[KeyboardInterrupt,SystemExit])
++def test_final_wrapper_evidence_failure_preserves_primary_cancellation(tree,monkeypatch,error_type):
++    from types import SimpleNamespace
++    root,wrapper,runner,keys,output=tree
++    module=load_wrapper_for_faults(tree,monkeypatch)
++    original_write=module.suite.write_json;primary=error_type('primary cancellation')
++    def cancelled(*args,**kwargs):
++        original_write(output/'test2/process.json',{'passed':False,'process_reaped':True,
++            'public_key_store_removed':True,'owned_directory_handle_closed':True})
++        raise primary
++    report_writes=0
++    def write(path,record):
++        nonlocal report_writes
++        if path==output/'report.json':
++            report_writes+=1
++            if report_writes==2:raise OSError('final evidence unavailable')
++        original_write(path,record)
++    monkeypatch.setattr(module.suite,'run_case',cancelled);monkeypatch.setattr(module.suite,'write_json',write)
++    with pytest.raises(error_type) as caught:
++        module.run(SimpleNamespace(output=output,key_directory=keys,cleanup_grace_s=.1))
++    assert caught.value is primary and report_writes==2
++    assert any('final evidence unavailable' in note for note in primary.__notes__)
++    assert not list(keys.iterdir())
++    assert json.loads((output/'report.json').read_text())['passed'] is False

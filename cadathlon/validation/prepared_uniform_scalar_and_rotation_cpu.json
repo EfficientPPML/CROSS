@@ -1,0 +1,52 @@
+{
+  "passed": true,
+  "scope": "Prepared, unapplied optimization patches and CPU regressions only; no TPU or complete encrypted-model performance claim",
+  "applied_to_production": false,
+  "runtime_source_freeze_preserved": true,
+  "changes": [
+    "Shared guarded uniform-real encoder used only by _ckks_encode_array and encode_at_level; all generic _fast_encode callers remain unchanged.",
+    "Initialized encoder retains exact slot count, level checks, context-normalized codec parameters, original fallback validation, Polynomial construction and metadata.",
+    "CompiledRotation binding hits fetch only public keys/maps with exact representation and partition slicing; no HERot control construction, keyed-facade retirement occurs after synchronization."
+  ],
+  "tests": [
+    {
+      "command": "JAX_PLATFORMS=cpu ... /tmp/uniform-scalar-integration/run_tests.py",
+      "passed": 171,
+      "seconds": 1.27,
+      "exit_code": 0
+    },
+    {
+      "command": "JAX_PLATFORMS=cpu ... /tmp/rotation-binding-hit-lab/run_focused_tests.py",
+      "passed": 2,
+      "seconds": 23.1,
+      "exit_code": 0
+    }
+  ],
+  "earlier_exact_evidence": [
+    "scalar_uniform_codec_cpu_validation.json",
+    "uniform_encoder_boundary_cpu.json",
+    "rotation_binding_hits_cpu.json"
+  ],
+  "candidate_source_hashes": {
+    "/tmp/uniform-scalar-integration/jaxite_word/ckks_ctx.py": "bc978cb7412b55416f7ed634a689ae616a263b0f47fd9eef996ba244f2505db6",
+    "/tmp/uniform-scalar-integration/test_uniform_encoding.py": "7a892f3e0a8f4799b683b3a520479a035dd2290825b3215f2f504624219b41c4",
+    "/tmp/rotation-binding-hit-lab/encrypted_rotation.py": "e83c7314a99b761efcde360283ce98ca4a2c1bf28cbbdc0cc26ffcfecf56c9f3",
+    "/tmp/rotation-binding-hit-lab/test_encrypted_rotation.py": "3f5395ec0ef922cc24bd3d1dc8328a1229d547741f104e70bb19b3d5ee7209ec"
+  },
+  "base_source_hashes": {
+    "jaxite_word/ckks_ctx.py": "1c457c3be4ce53215636141c65b5042ff7cb570d8627cd42053ad595c9ba43fa",
+    "cadathlon/common/encrypted_rotation.py": "6992fe6652eadf6d4957d5016456dcd031fac9e7f506dfeebc13b28f35765cee",
+    "cadathlon/tests/test_encrypted_rotation.py": "fec1ec66bda02c37358de7a25790730b582c56e60be6b0fc8eb25992bf089452"
+  },
+  "artifacts": {
+    "prepared_uniform_scalar_and_rotation.patch": "e6e678d78b444df100f7d49c980fcb1e918932aa708b44e9994b82b9d4860223",
+    "prepared_uniform_scalar_tests.log": "7a423e29ccc0e8b3646e547823c6bc43b83b25e691a0131cadb7b52a9727637a",
+    "prepared_rotation_hit_tests.log": "fd9545485514b9e149b6c5a7c02823301d91c763fcf7888d7e6f0acd748b3dc6",
+    "prepared_uniform_scalar_and_rotation_sources.tar.gz": "60c6c66920328c928b8ab43f02db1470f3018b3c80d8ba2bdd136811b96ce79f"
+  },
+  "integration_constraints": [
+    "Do not apply during active BERT source freeze.",
+    "Transformer agent owns the independent lazy-bootstrap/tensor patch; there are no overlapping runtime files.",
+    "Full bootstrap/model timing must be measured after the combined batch is applied; codec-only and CPU state retrieval timings do not establish that result."
+  ]
+}

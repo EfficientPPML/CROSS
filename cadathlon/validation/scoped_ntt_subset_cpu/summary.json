@@ -1,0 +1,61 @@
+{
+  "candidate_status": "isolated, unpromoted; explicit HERot Polynomial factory injection only",
+  "unit_tests": {
+    "passed": 19,
+    "seconds": 1.68,
+    "source_at_archive_sha256": "20a6fa22b775037d8a57c2a82c2a4cb2acd6d29aa2e52c15fd07b45c8cf71596",
+    "environment": {
+      "JAX_PLATFORMS": "cpu",
+      "XLA_FLAGS": "--xla_force_host_platform_device_count=2",
+      "OMP_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "affinity": "152-155"
+    }
+  },
+  "secure_component": {
+    "passed": true,
+    "degree": 8192,
+    "q_count": 8,
+    "p_count": 2,
+    "dnum": 4,
+    "log2_qp": 212.45574163467,
+    "security_ceiling": 218,
+    "batch": 2,
+    "levels": [
+      3,
+      1
+    ],
+    "rotation_indices": [
+      3,
+      4091
+    ],
+    "cases": 4,
+    "max_client_abs_error": 1.1948836259323414e-07,
+    "seconds": 17.48238179799955,
+    "meaning": "Exact six-field control tables and exact ciphertext/metadata parity vs ordinary facade with cache clears; secure timing is not a controlled speed comparison."
+  },
+  "production_shape_public_tables": {
+    "passed": true,
+    "degree": 131072,
+    "q_count": 100,
+    "p_count": 24,
+    "dnum": 4,
+    "cases": 6,
+    "seconds": 60.062782033000985,
+    "process_maxrss_bytes": 9647382528,
+    "meaning": "Public tables only on CPU; baseline warm per-modulus twiddle cache and fresh assembled contexts after JAX clears."
+  },
+  "shared_runtime_sources_equal": true,
+  "shared_source_count": 92,
+  "source_archive_members": 96,
+  "limitations": [
+    "No live runtime edits, full transformer graph, TPU result or promotion.",
+    "Provider holds weak owner/master/context references and bounded metadata entries, without secret or key references.",
+    "Existing public NTT tables must remain immutable. Identity guards detect array replacement and metadata mutation, not in-place NumPy BAT content mutation.",
+    "Contiguous NumPy views can retain entire master backing buffers while a derived context is held, even after master wrapper collection; wrapper collection does not prove buffer release.",
+    "Logical host/JAX byte counts exclude existing twiddle caches, controls, ciphertexts, keys, compiler workspaces and allocator overhead. CPU JAX arrays are host RAM; no total-HBM claim.",
+    "The initial unit.log records3 failed guard tests because the first prototype rejected NumPy BAT fields; unit_v2.log and both numerical proofs use the corrected archived source.",
+    "Unsupported requests delegate to existing ordinary construction; its own global cache behavior is not changed or audited by this candidate."
+  ]
+}

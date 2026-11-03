@@ -1,0 +1,386 @@
+.......................................s................................ [ 63%]
+.........................ss..............                             [100%]
+110 passed, 3 skipped, 3 subtests passed in 201.80s (0:03:21)
+{
+  "passed": true,
+  "elapsed_s": 202.19846427399898,
+  "sources": 174,
+  "records": {
+    "test_scoped_nested_rescale": [
+      {
+        "kind": "public_control_parity",
+        "composite_degree": 1,
+        "skip_rescale": false,
+        "backend": "BarrettContext",
+        "parent_fields": 36,
+        "nested_fields": 12,
+        "split_path_executed": false
+      },
+      {
+        "kind": "public_control_parity",
+        "composite_degree": 2,
+        "skip_rescale": false,
+        "backend": "BarrettContext",
+        "parent_fields": 30,
+        "nested_fields": 24,
+        "split_path_executed": false
+      },
+      {
+        "kind": "public_control_parity",
+        "composite_degree": 1,
+        "skip_rescale": true,
+        "backend": "BarrettContext",
+        "parent_fields": 36,
+        "nested_fields": 0,
+        "split_path_executed": false
+      },
+      {
+        "kind": "public_control_parity",
+        "composite_degree": 2,
+        "skip_rescale": true,
+        "backend": "BarrettContext",
+        "parent_fields": 36,
+        "nested_fields": 0,
+        "split_path_executed": false
+      },
+      {
+        "kind": "public_control_parity",
+        "composite_degree": 1,
+        "skip_rescale": false,
+        "backend": "MontgomeryContext",
+        "parent_fields": 36,
+        "nested_fields": 12,
+        "split_path_executed": false
+      },
+      {
+        "kind": "public_control_parity",
+        "composite_degree": 2,
+        "skip_rescale": false,
+        "backend": "MontgomeryContext",
+        "parent_fields": 30,
+        "nested_fields": 24,
+        "split_path_executed": false
+      },
+      {
+        "kind": "public_control_parity",
+        "composite_degree": 1,
+        "skip_rescale": true,
+        "backend": "MontgomeryContext",
+        "parent_fields": 36,
+        "nested_fields": 0,
+        "split_path_executed": false
+      },
+      {
+        "kind": "public_control_parity",
+        "composite_degree": 2,
+        "skip_rescale": true,
+        "backend": "MontgomeryContext",
+        "parent_fields": 36,
+        "nested_fields": 0,
+        "split_path_executed": false
+      },
+      {
+        "kind": "secure_public_facade",
+        "composite_degree": 1,
+        "input_level": 5,
+        "nested_fields": 12,
+        "max_abs_error": 3.001497178925505e-08,
+        "payload_metadata_exact": true,
+        "no_rescale_payload_metadata_exact": true,
+        "input_scale": 7.205759403792794e+16,
+        "compiled_effective_nsd_and_payload_exact": null,
+        "production_opt_in_supported": false
+      },
+      {
+        "kind": "secure_public_facade",
+        "composite_degree": 2,
+        "input_level": 2,
+        "nested_fields": 24,
+        "max_abs_error": 3.4148084762652964e-08,
+        "payload_metadata_exact": true,
+        "no_rescale_payload_metadata_exact": true,
+        "input_scale": 1099511627776.0,
+        "compiled_effective_nsd_and_payload_exact": true,
+        "production_opt_in_supported": true
+      },
+      {
+        "kind": "secure_legacy_private_cd2",
+        "nested_fields": 24,
+        "derived_decode_scale": 2.2179616335834868e+24,
+        "max_abs_error": 8.448742153804867e-09,
+        "payload_metadata_exact": true,
+        "split_path_executed": false
+      },
+      {
+        "kind": "input_immutability",
+        "payload_identity_scale_nsd_presence_and_moduli_unchanged": true
+      },
+      {
+        "kind": "retirement",
+        "owners_and_nested_contexts_collected": true
+      }
+    ],
+    "test_scoped_rescale_ntt": [
+      {
+        "kind": "public_controls_and_raw_arithmetic",
+        "drop": 1,
+        "elements": 2,
+        "six_field_checks": 12,
+        "stats": {
+          "builds": 2
+        }
+      },
+      {
+        "kind": "public_controls_and_raw_arithmetic",
+        "drop": 2,
+        "elements": 2,
+        "six_field_checks": 24,
+        "stats": {
+          "builds": 4
+        }
+      },
+      {
+        "kind": "public_controls_and_raw_arithmetic",
+        "drop": 3,
+        "elements": 2,
+        "six_field_checks": 36,
+        "stats": {
+          "builds": 6
+        }
+      },
+      {
+        "kind": "public_controls_and_raw_arithmetic",
+        "drop": 1,
+        "elements": 3,
+        "six_field_checks": 12,
+        "stats": {
+          "builds": 2
+        }
+      },
+      {
+        "kind": "public_controls_and_raw_arithmetic",
+        "drop": 2,
+        "elements": 3,
+        "six_field_checks": 24,
+        "stats": {
+          "builds": 4
+        }
+      },
+      {
+        "kind": "public_controls_and_raw_arithmetic",
+        "drop": 3,
+        "elements": 3,
+        "six_field_checks": 36,
+        "stats": {
+          "builds": 6
+        }
+      },
+      {
+        "kind": "secure_rescale_paths",
+        "source": 2,
+        "target": 1,
+        "input_nsd": 2,
+        "six_field_checks": 24,
+        "max_abs_error": 5.598430472333882e-08,
+        "raw_payload_and_metadata_exact": true,
+        "executable_reused": true
+      },
+      {
+        "kind": "secure_rescale_paths",
+        "source": 1,
+        "target": 0,
+        "input_nsd": 2,
+        "six_field_checks": 24,
+        "max_abs_error": 5.616498505167655e-08,
+        "raw_payload_and_metadata_exact": true,
+        "executable_reused": true
+      },
+      {
+        "kind": "secure_rescale_paths",
+        "source": 2,
+        "target": 0,
+        "input_nsd": 3,
+        "six_field_checks": 48,
+        "max_abs_error": 2.7244024203287864e-08,
+        "raw_payload_and_metadata_exact": true,
+        "executable_reused": true
+      },
+      {
+        "kind": "lifetime",
+        "retired_controls_collected": true,
+        "retired_owners_collected": true,
+        "executable_cache_retained": true
+      }
+    ],
+    "test_encrypted_tensor_only": [
+      {
+        "ring_degree": 8192,
+        "depth": 2,
+        "dnum": 3,
+        "q_towers": [
+          8273921,
+          4079617,
+          1097729,
+          1130497,
+          786433,
+          1032193
+        ],
+        "p_towers": [
+          1073692673,
+          1073643521
+        ],
+        "actual_log2_qp": 184.67680580287663
+      },
+      {
+        "ring_degree": 8192,
+        "depth": 2,
+        "dnum": 3,
+        "q_towers": [
+          8273921,
+          4079617,
+          1097729,
+          1130497,
+          786433,
+          1032193
+        ],
+        "p_towers": [
+          1073692673,
+          1073643521
+        ],
+        "actual_log2_qp": 184.67680580287663
+      },
+      {
+        "batch": 1,
+        "level": 2,
+        "input_nsds": [
+          1,
+          1
+        ],
+        "raw_payload_exact": true,
+        "bootstrap_payload_exact": true,
+        "metadata_exact": true,
+        "max_abs_error": 7.78827990294273e-08
+      },
+      {
+        "batch": 1,
+        "level": 1,
+        "input_nsds": [
+          2,
+          1
+        ],
+        "raw_payload_exact": true,
+        "bootstrap_payload_exact": true,
+        "metadata_exact": true,
+        "max_abs_error": 3.917084333282528e-08
+      },
+      {
+        "batch": 1,
+        "level": 1,
+        "input_nsds": [
+          2,
+          2
+        ],
+        "raw_payload_exact": true,
+        "bootstrap_payload_exact": true,
+        "metadata_exact": true,
+        "max_abs_error": 1.9546732631797736e-08
+      },
+      {
+        "batch": 1,
+        "level": 1,
+        "input_nsds": [
+          1,
+          1
+        ],
+        "raw_payload_exact": true,
+        "bootstrap_payload_exact": true,
+        "metadata_exact": true,
+        "max_abs_error": 7.78827990294273e-08
+      },
+      {
+        "batch": 2,
+        "level": 2,
+        "input_nsds": [
+          1,
+          1
+        ],
+        "raw_payload_exact": true,
+        "bootstrap_payload_exact": true,
+        "metadata_exact": true,
+        "max_abs_error": 7.606195412401817e-08
+      },
+      {
+        "batch": 2,
+        "level": 1,
+        "input_nsds": [
+          2,
+          1
+        ],
+        "raw_payload_exact": true,
+        "bootstrap_payload_exact": true,
+        "metadata_exact": true,
+        "max_abs_error": 3.659706013237063e-08
+      },
+      {
+        "batch": 2,
+        "level": 1,
+        "input_nsds": [
+          2,
+          2
+        ],
+        "raw_payload_exact": true,
+        "bootstrap_payload_exact": true,
+        "metadata_exact": true,
+        "max_abs_error": 1.920827269463743e-08
+      },
+      {
+        "batch": 2,
+        "level": 1,
+        "input_nsds": [
+          1,
+          1
+        ],
+        "raw_payload_exact": true,
+        "bootstrap_payload_exact": true,
+        "metadata_exact": true,
+        "max_abs_error": 7.606195412401817e-08
+      },
+      {
+        "ring_degree": 8192,
+        "depth": 2,
+        "dnum": 3,
+        "q_towers": [
+          8273921,
+          4079617,
+          1097729,
+          1130497,
+          786433,
+          1032193
+        ],
+        "p_towers": [
+          1073692673,
+          1073643521
+        ],
+        "actual_log2_qp": 184.67680580287663
+      },
+      {
+        "ring_degree": 8192,
+        "depth": 2,
+        "dnum": 3,
+        "q_towers": [
+          8273921,
+          4079617,
+          1097729,
+          1130497,
+          786433,
+          1032193
+        ],
+        "p_towers": [
+          1073692673,
+          1073643521
+        ],
+        "actual_log2_qp": 184.67680580287663
+      }
+    ]
+  }
+}

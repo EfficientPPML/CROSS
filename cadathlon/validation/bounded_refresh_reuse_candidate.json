@@ -1,0 +1,98 @@
+{
+  "scope": "Isolated follow-up to bounded_refresh_candidate: ideal-value scheduling plus fresh-wrapper branch ownership; no genuine refresh, CKKS noise, or encrypted complete-case claim.",
+  "change": "Prepare the shared centered-normalization input and shared attention scores once before their mean and subtraction branches.",
+  "original_candidate_preserved": true,
+  "runtime_integrated": false,
+  "source_files_unchanged_during_plan": true,
+  "contract_and_branch_tests": {
+    "passed": 48,
+    "seconds": 0.42
+  },
+  "cases": {
+    "bert/1": {
+      "refresh_calls": 0,
+      "maximum_public_refresh_bound": 0,
+      "final_level": 0,
+      "ideal_value_fixture_gate": true
+    },
+    "bert/2": {
+      "refresh_calls": 0,
+      "maximum_public_refresh_bound": 0,
+      "final_level": 0,
+      "ideal_value_fixture_gate": true
+    },
+    "bert/3": {
+      "refresh_calls": 5,
+      "maximum_public_refresh_bound": 8.0,
+      "final_level": 11,
+      "ideal_value_fixture_gate": true
+    },
+    "bert/4": {
+      "refresh_calls": 5,
+      "maximum_public_refresh_bound": 16.0,
+      "final_level": 11,
+      "ideal_value_fixture_gate": true
+    },
+    "bert/5": {
+      "refresh_calls": 8,
+      "maximum_public_refresh_bound": 16.0,
+      "final_level": 19,
+      "ideal_value_fixture_gate": true
+    },
+    "bert/6": {
+      "refresh_calls": 8,
+      "maximum_public_refresh_bound": 16.0,
+      "final_level": 19,
+      "ideal_value_fixture_gate": true
+    },
+    "qwen/1": {
+      "refresh_calls": 0,
+      "maximum_public_refresh_bound": 0,
+      "final_level": 0,
+      "ideal_value_fixture_gate": true
+    },
+    "qwen/2": {
+      "refresh_calls": 3,
+      "maximum_public_refresh_bound": 4.0,
+      "final_level": 5,
+      "ideal_value_fixture_gate": true
+    },
+    "qwen/3": {
+      "refresh_calls": 11,
+      "maximum_public_refresh_bound": 4.0,
+      "final_level": 5,
+      "ideal_value_fixture_gate": true
+    },
+    "qwen/4": {
+      "refresh_calls": 11,
+      "maximum_public_refresh_bound": 4.0,
+      "final_level": 5,
+      "ideal_value_fixture_gate": true
+    },
+    "qwen/5": {
+      "refresh_calls": 19,
+      "maximum_public_refresh_bound": 4.0,
+      "final_level": 5,
+      "ideal_value_fixture_gate": true
+    },
+    "qwen/6": {
+      "refresh_calls": 19,
+      "maximum_public_refresh_bound": 8.0,
+      "final_level": 5,
+      "ideal_value_fixture_gate": true
+    }
+  },
+  "limits": [
+    "Bounds describe ideal arithmetic under declared polynomial-domain conditions.",
+    "Fresh-wrapper tests exercise branch identity, not actual bootstrap numerical error.",
+    "All complete encrypted cases and larger packed-period refresh behavior remain unvalidated."
+  ],
+  "source_sha256": {
+    "encrypted_bounded_arithmetic.py": "c3ca2b9e5846a1f50def3ee83574fbc42be09f928efc57db5788e5e136d9f428",
+    "encrypted_bounded_transformer.py": "ae6652c918248f802f0537577570342fbe2bb1868d7e9ff320317055767b21c5",
+    "encrypted_packed_transformer.py": "f0467c3fdfdee9be2d51978c07e93b8fb3e9025f46af0c32388c2d1484d0804c",
+    "plan_bounded_packed.py": "38ddf8c974462ce7f9d34ae8118d683978715b8691b40461a25f2e0c579d99d9",
+    "test_bounded_contracts.py": "e57b1c72dc8548aea59b65ac1e5b7c2f5e6bae161ae193e175fff8a2a277c53d",
+    "test_shared_preparation.py": "bd108a4b9c6b0b84187971e178ee1150fb3edba3c607863f1afba58dffc215e7"
+  }
+}
