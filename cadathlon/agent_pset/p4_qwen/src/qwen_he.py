@@ -1,5 +1,9 @@
 """Contestant implementation: Qwen inference using real CROSS ciphertexts."""
 
+# Remove the unimplemented marker when replacing the starter with real HE code.
+IMPLEMENTATION_STATUS = 'unimplemented'
+
+
 
 def create_session(config, weights, *, batch, sequence_length, devices):
     """Return an object with encrypt/evaluate/decrypt/close methods.

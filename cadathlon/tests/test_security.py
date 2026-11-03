@@ -31,6 +31,28 @@ def ciphertext(ctx, moduli=None, degree=None, components=2):
         dict(moduli=moduli, ntt_ctx=ntt))
 
 
+def test_synchronization_waits_on_payloads_without_retaining_ntt_contexts(monkeypatch):
+    import jax
+    from jaxite_word import polynomial
+
+    first, second = ciphertext(context()), ciphertext(context())
+    registry_keys = set(polynomial._POLYNOMIAL_REGISTRY)
+    waited = []
+    original_wait = jax.block_until_ready
+
+    def wait(payloads):
+        leaves = jax.tree_util.tree_leaves(payloads)
+        assert not any(isinstance(leaf, Polynomial) for leaf in leaves)
+        waited.extend(leaf for leaf in leaves if hasattr(leaf, "block_until_ready"))
+        return original_wait(payloads)
+
+    monkeypatch.setattr(jax, "block_until_ready", wait)
+    assert support.synchronize({"ciphertexts": [first, (second, 1)]}) is None
+    assert any(value is first.polynomial for value in waited)
+    assert any(value is second.polynomial for value in waited)
+    assert set(polynomial._POLYNOMIAL_REGISTRY) == registry_keys
+
+
 def test_accepts_live_context_and_reduced_q_output():
     ctx = context()
     manifests = support.require_secure_execution(

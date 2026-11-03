@@ -5,12 +5,24 @@ read-only; an existing destination is always rejected.
 """
 import argparse
 import hashlib
+import importlib.util
 import json
 from pathlib import Path
 import shutil
 import subprocess
 
 from benchmark import HARNESS_SHA256, UPSTREAM_COMMIT, UPSTREAM_URL
+from p2_runtime import common_directory
+
+
+def shared_runtime_files():
+    """Use the release's declared helper closure, including lazy imports."""
+    common = common_directory(__file__)
+    spec = importlib.util.spec_from_file_location('p2_shared_package_manifest', common / 'package.py')
+    package = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(package)
+    return package.required_files(common, [name for name in package.COMMON_RUNTIME_FILES
+                                           if name.endswith('.py')])
 
 
 def check_upstream(root):
@@ -35,6 +47,7 @@ def stage(root, destination):
         raise FileNotFoundError(f"Missing upstream license: {license_path}")
     if destination.exists():
         raise FileExistsError(f"Use a new destination; refusing to replace {destination}")
+    helpers = shared_runtime_files()
     destination.mkdir(parents=True)
     for name in HARNESS_SHA256:
         target = destination / name
@@ -44,7 +57,7 @@ def stage(root, destination):
     submissions = destination / "submissions"
     submissions.mkdir()
     for path in source.rglob("*.py"):
-        if "__pycache__" not in path.parts:
+        if not {"__pycache__", "_cross_common"}.intersection(path.relative_to(source).parts):
             target = submissions / path.relative_to(source)
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(path, target)
@@ -52,6 +65,14 @@ def stage(root, destination):
     manifest["starter_sha256"] = {
         p.relative_to(submissions).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
         for p in sorted(submissions.rglob("*.py"))}
+    helper_directory = submissions / '_cross_common'
+    helper_directory.mkdir()
+    for path in helpers:
+        shutil.copy2(path, helper_directory / path.name)
+    manifest['common_directory'] = 'submissions/_cross_common'
+    manifest['common_sha256'] = {
+        p.name: hashlib.sha256(p.read_bytes()).hexdigest()
+        for p in sorted(helper_directory.glob('*.py'))}
     (destination / "cross_staging_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     return dict(manifest, destination=str(destination))
 

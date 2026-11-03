@@ -12,6 +12,7 @@ import sys
 import numpy as np
 
 from benchmark import BATCH_SIZES, INSTANCE_NAMES, MODEL_ID, MODEL_REVISION, STAGES
+from p2_runtime import install_common_path
 
 
 def read_jsonl(path):
@@ -97,9 +98,18 @@ def main(stage):
     if not cross or not (Path(cross) / "jaxite_word" / "API_REFERENCE.md").is_file():
         parser.error("Set CROSS_ROOT to the CROSS checkout containing your patch")
     sys.path.insert(0, str(Path(cross).resolve()))
+    install_common_path(__file__)
     import bert_he
     if stage.startswith("server_"):
         permitted = {"size", "batch_size", "model_id", "model_revision", "public_keys",
                      "server_data", "upload", "download", "server_report"}
         paths = {k: v for k, v in paths.items() if k in permitted}
-    return getattr(bert_he, stage)(paths)
+    status = getattr(bert_he, "IMPLEMENTATION_STATUS", None)
+    if status == "plaintext-oracle":
+        raise NotImplementedError(
+            f"BERT implementation is {status}; stage {stage} requires an encrypted implementation. "
+            "The .golden generates plaintext fixture answers only.")
+    handler = getattr(bert_he, stage, None)
+    if not callable(handler):
+        raise TypeError(f"Encrypted BERT implementation is missing callable stage {stage}")
+    return handler(paths)
