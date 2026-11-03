@@ -1,0 +1,45 @@
+{
+  "scope": "Local release packaging and plaintext checks; no encrypted model validation or publication.",
+  "archive_sha256": "6c7a99c45402d277c08aa81485da998e765a2c32ce0725cf5595d3e921589cee",
+  "checks": [
+    {
+      "problem": "non_agent_pset/p1_benchmark",
+      "returncode": 0,
+      "stdout": "make: Entering directory '/tmp/cross-release-check-vyg960pw/non_agent_pset/p1_benchmark/src'\n/home/jianming_gatech/miniconda3/envs/jaxite/bin/python suite/test_gates.py\nok   healthy case scores                passed=1 []\nok   short prediction file              passed=0 ['submission wrote 87 predictions for 100 images']\nok   missing frozen verdict             passed=0 ['no frozen harness verdict; re-run through `make suite-baseline`/`suite-test` so archive.py records one']\nok   harness verdict FAIL               passed=0 ['harness verdict FAIL']\nok   verdict unavailable                passed=0 ['frozen verdict is incomplete', 'harness verdict unavailable (file missing)', 'no cleartext agreement check: not computed']\nok   own-cleartext agreement below gate passed=0 ['top-1 agreement with its own cleartext model 0.9500 below 0.99 over 100 images']\nok   harness-model disagreement is ignored passed=1 []\nok   cleartext check unavailable        passed=0 ['no cleartext agreement check: weights missing']\nok   drop of exactly 1pp against own cleartext passes passed=1 []\nok   accuracy drop beyond 1pp vs own cleartext passed=0 ['encrypted accuracy 0.9600 is more than 1.0pp below the same model in cleartext 0.9800']\nok   harness model 1pp better is not a drop passed=1 []\nok   setup over budget                  passed=0 ['setup 2000.0s exceeded 1800s']\nok   batch over budget                  passed=0 ['batch exceeded 300s']\nok   single instance, no Quality        passed=1 []\nok   NaN timing                         passed=0 ['invalid median_encrypted_compute_s']\nok   zero timing                        passed=0 ['invalid median_encrypted_compute_s']\nok   negative setup                     passed=0 ['invalid one_time_setup_s']\nok   infinite throughput                passed=0 ['invalid throughput_images_per_s']\nok   NaN accuracy                       passed=0 ['invalid encrypted accuracy']\nok   NaN agreement                      passed=0 ['invalid own cleartext model agreement']\nok   partial agreement                  passed=0 ['incomplete own cleartext comparison']\nok   missing batch Quality              passed=0 ['missing Quality for a multi-image case']\nok   single still requires own reference passed=0 ['frozen verdict is incomplete', 'no cleartext agreement check: not computed']\n\n23/23 gate behaviors correct\n/home/jianming_gatech/miniconda3/envs/jaxite/bin/python -m compileall -q . ../../../common\n{\"case\": \"test1.in\", \"mode\": \"plaintext-reference\", \"max_abs_error\": 0.0, \"nrmse\": 0.0, \"top1_agreement\": 1.0}\n{\"case\": \"test2.in\", \"mode\": \"plaintext-reference\", \"max_abs_error\": 0.0, \"nrmse\": 0.0, \"top1_agreement\": 1.0}\n{\"case\": \"test3.in\", \"mode\": \"plaintext-reference\", \"max_abs_error\": 0.0, \"nrmse\": 0.0, \"top1_agreement\": 1.0}\n{\"case\": \"test4.in\", \"mode\": \"plaintext-reference\", \"max_abs_error\": 0.0, \"nrmse\": 0.0, \"top1_agreement\": 1.0}\n{\"case\": \"test5.in\", \"mode\": \"plaintext-reference\", \"max_abs_error\": 0.0, \"nrmse\": 0.0, \"top1_agreement\": 1.0}\n{\"case\": \"test6.in\", \"mode\": \"plaintext-reference\", \"max_abs_error\": 0.0, \"nrmse\": 0.0, \"top1_agreement\": 1.0}\nmake: Leaving directory '/tmp/cross-release-check-vyg960pw/non_agent_pset/p1_benchmark/src'\n",
+      "stderr": ""
+    },
+    {
+      "problem": "agent_pset/p2_bert",
+      "returncode": 0,
+      "stdout": "make: Entering directory '/tmp/cross-release-check-vyg960pw/agent_pset/p2_bert/src'\n/home/jianming_gatech/miniconda3/envs/jaxite/bin/python -m compileall -q . ../../../common\n{\"case\": \"test1.in\", \"full_bert_evaluated\": false, \"mrpc_accuracy_evaluated\": false, \"mode\": \"plaintext-reference\", \"passed\": true, \"max_abs_error\": 0.0, \"nrmse\": 0.0, \"top1_agreement\": 1.0}\n{\"case\": \"test2.in\", \"full_bert_evaluated\": false, \"mrpc_accuracy_evaluated\": false, \"mode\": \"plaintext-reference\", \"passed\": true, \"max_abs_error\": 0.0, \"nrmse\": 0.0, \"top1_agreement\": 1.0}\n{\"case\": \"test3.in\", \"full_bert_evaluated\": false, \"mrpc_accuracy_evaluated\": false, \"mode\": \"plaintext-reference\", \"passed\": true, \"max_abs_error\": 0.0, \"nrmse\": 0.0, \"top1_agreement\": 1.0}\n{\"case\": \"test4.in\", \"full_bert_evaluated\": false, \"mrpc_accuracy_evaluated\": false, \"mode\": \"plaintext-reference\", \"passed\": true, \"max_abs_error\": 0.0, \"nrmse\": 0.0, \"top1_agreement\": 1.0}\n{\"case\": \"test5.in\", \"full_bert_evaluated\": false, \"mrpc_accuracy_evaluated\": false, \"mode\": \"plaintext-reference\", \"passed\": true, \"max_abs_error\": 0.0, \"nrmse\": 0.0, \"top1_agreement\": 1.0}\n{\"case\": \"test6.in\", \"full_bert_evaluated\": false, \"mrpc_accuracy_evaluated\": false, \"mode\": \"plaintext-reference\", \"passed\": true, \"max_abs_error\": 0.0, \"nrmse\": 0.0, \"top1_agreement\": 1.0}\nmake: Leaving directory '/tmp/cross-release-check-vyg960pw/agent_pset/p2_bert/src'\n",
+      "stderr": ""
+    },
+    {
+      "problem": "non_agent_pset/p3_cnn",
+      "returncode": 0,
+      "stdout": "make: Entering directory '/tmp/cross-release-check-vyg960pw/non_agent_pset/p3_cnn/src'\n/home/jianming_gatech/miniconda3/envs/jaxite/bin/python -m compileall -q . ../../../common\n{\"case\": \"test1.in\", \"mode\": \"plaintext-reference\", \"max_abs_error\": 0.0, \"nrmse\": 0.0, \"top1_agreement\": 1.0}\n{\"case\": \"test2.in\", \"mode\": \"plaintext-reference\", \"max_abs_error\": 0.0, \"nrmse\": 0.0, \"top1_agreement\": 1.0}\n{\"case\": \"test3.in\", \"mode\": \"plaintext-reference\", \"max_abs_error\": 0.0, \"nrmse\": 0.0, \"top1_agreement\": 1.0}\n{\"case\": \"test4.in\", \"mode\": \"plaintext-reference\", \"max_abs_error\": 0.0, \"nrmse\": 0.0, \"top1_agreement\": 1.0}\n{\"case\": \"test5.in\", \"mode\": \"plaintext-reference\", \"max_abs_error\": 0.0, \"nrmse\": 0.0, \"top1_agreement\": 1.0}\n{\"case\": \"test6.in\", \"mode\": \"plaintext-reference\", \"max_abs_error\": 0.0, \"nrmse\": 0.0, \"top1_agreement\": 1.0}\nmake: Leaving directory '/tmp/cross-release-check-vyg960pw/non_agent_pset/p3_cnn/src'\n",
+      "stderr": ""
+    },
+    {
+      "problem": "agent_pset/p4_qwen",
+      "returncode": 0,
+      "stdout": "make: Entering directory '/tmp/cross-release-check-vyg960pw/agent_pset/p4_qwen/src'\n/home/jianming_gatech/miniconda3/envs/jaxite/bin/python -m compileall -q . ../../../common\n{\"case\": \"test1.in\", \"full_qwen_evaluated\": false, \"mode\": \"plaintext-reference\", \"passed\": true, \"max_abs_error\": 0.0, \"nrmse\": 0.0, \"top1_agreement\": 1.0}\n{\"case\": \"test2.in\", \"full_qwen_evaluated\": false, \"mode\": \"plaintext-reference\", \"passed\": true, \"max_abs_error\": 0.0, \"nrmse\": 0.0, \"top1_agreement\": 1.0}\n{\"case\": \"test3.in\", \"full_qwen_evaluated\": false, \"mode\": \"plaintext-reference\", \"passed\": true, \"max_abs_error\": 0.0, \"nrmse\": 0.0, \"top1_agreement\": 1.0}\n{\"case\": \"test4.in\", \"full_qwen_evaluated\": false, \"mode\": \"plaintext-reference\", \"passed\": true, \"max_abs_error\": 0.0, \"nrmse\": 0.0, \"top1_agreement\": 1.0}\n{\"case\": \"test5.in\", \"full_qwen_evaluated\": false, \"mode\": \"plaintext-reference\", \"passed\": true, \"max_abs_error\": 0.0, \"nrmse\": 0.0, \"top1_agreement\": 1.0}\n{\"case\": \"test6.in\", \"full_qwen_evaluated\": false, \"mode\": \"plaintext-reference\", \"passed\": true, \"max_abs_error\": 0.0, \"nrmse\": 0.0, \"top1_agreement\": 1.0}\nmake: Leaving directory '/tmp/cross-release-check-vyg960pw/agent_pset/p4_qwen/src'\n",
+      "stderr": ""
+    }
+  ],
+  "files": 235,
+  "streaming_linear_sha256": "83e12b9cf00f1393a47aadddffaaa1ff6b4d0745cb68d9393d2dd38a2a165ecb",
+  "p1_p3_measured_sources_unchanged": true,
+  "p1_external_elapsed_s": 257.56176227200194,
+  "p1_student_v2_evaluation_id": "9250e83535a84d98a3918c629d64380c",
+  "p1_published_proof_sha256": "7724ab968ff1ec011e8059b7f62d2b5ba610dcb7e0662d4e5977b6f363640c17",
+  "p1_immutable_proof_files": 9,
+  "p3_external_elapsed_s": 145.0018724170004,
+  "p3_compact_internal_elapsed_s": 144.90620259800198,
+  "source_snapshot_matches_checkout": true,
+  "resolved_local_html_links": 24,
+  "passed": true,
+  "elapsed_s": 14.62209363799775,
+  "checker": "cadathlon/validation/release_streaming_linear_20261103_check.py",
+  "checker_sha256": "8bcb9bf6148507b314ee3d016336ce8cb4eed3dcac5e25a007370e1bcb24f0fc"
+}

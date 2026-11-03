@@ -1,0 +1,137 @@
+{
+  "scope": "Extracted release dependency/staging/preflight check; no encrypted model execution.",
+  "passed": true,
+  "release_sha256": "467a612e720c22a8ab42e334de786d4c194cde4d1e93fba80c6a4a05550edc04",
+  "checker_sha256": "77db85fdb586974f857c7821cfa620306ba11a3cfdb2338d8d5847706adb48c5",
+  "commands": [
+    {
+      "command": [
+        "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+        "/tmp/cross-released-bert-stage-t4efco5i/release/agent_pset/p2_bert/src/stage_benchmark.py",
+        "--upstream",
+        "/home/jianming_gatech/BERT_validation",
+        "--destination",
+        "/tmp/cross-released-bert-stage-t4efco5i/staged"
+      ],
+      "returncode": 0,
+      "stdout": "{\n  \"upstream\": \"https://github.com/fhe-benchmarking/BERT\",\n  \"commit\": \"170bfe567545d74d0fad785a052518351d37bc93\",\n  \"harness_files\": 11,\n  \"common_directory\": \"submissions/_cross_common\",\n  \"destination\": \"/tmp/cross-released-bert-stage-t4efco5i/staged\"\n}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+        "/tmp/cross-released-bert-stage-t4efco5i/staged/submissions/runner.py",
+        "--preflight",
+        "--implementation",
+        "/tmp/cross-released-bert-stage-t4efco5i/staged/submissions/bert_reference.py"
+      ],
+      "returncode": 1,
+      "stdout": "{\"implementation\": \"/tmp/cross-released-bert-stage-t4efco5i/staged/submissions/bert_reference.py\", \"implementation_status\": \"experimental-unvalidated\", \"missing_interfaces\": [\"client_key_generation\", \"server_preprocess_model\", \"client_encode_encrypt_input\", \"server_encrypted_compute\", \"client_decrypt_decode\"], \"ready_for_execution\": false, \"encryption_validated\": false, \"note\": \"Interface inspection only; encrypted correctness and TPU timings require actual execution.\", \"passed\": false}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+        "/tmp/cross-released-bert-stage-t4efco5i/staged/submissions/runner.py",
+        "--preflight",
+        "--implementation",
+        "/tmp/cross-released-bert-stage-t4efco5i/staged/submissions/bert_packed_reference.py"
+      ],
+      "returncode": 1,
+      "stdout": "{\"implementation\": \"/tmp/cross-released-bert-stage-t4efco5i/staged/submissions/bert_packed_reference.py\", \"implementation_status\": \"experimental-unvalidated\", \"missing_interfaces\": [\"client_key_generation\", \"server_preprocess_model\", \"client_encode_encrypt_input\", \"server_encrypted_compute\", \"client_decrypt_decode\"], \"ready_for_execution\": false, \"encryption_validated\": false, \"note\": \"Interface inspection only; encrypted correctness and TPU timings require actual execution.\", \"passed\": false}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+        "/tmp/cross-released-bert-stage-t4efco5i/staged/submissions/runner.py",
+        "--preflight",
+        "--implementation",
+        "/tmp/cross-released-bert-stage-t4efco5i/staged/submissions/bert_bounded_reference.py"
+      ],
+      "returncode": 1,
+      "stdout": "{\"implementation\": \"/tmp/cross-released-bert-stage-t4efco5i/staged/submissions/bert_bounded_reference.py\", \"implementation_status\": \"experimental-unvalidated\", \"missing_interfaces\": [\"client_key_generation\", \"server_preprocess_model\", \"client_encode_encrypt_input\", \"server_encrypted_compute\", \"client_decrypt_decode\"], \"ready_for_execution\": false, \"encryption_validated\": false, \"note\": \"Interface inspection only; encrypted correctness and TPU timings require actual execution.\", \"passed\": false}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+        "/tmp/cross-released-bert-stage-t4efco5i/staged/submissions/runner.py",
+        "--preflight",
+        "--implementation",
+        "/tmp/cross-released-bert-stage-t4efco5i/staged/submissions/bert_optimized_reference.py"
+      ],
+      "returncode": 1,
+      "stdout": "{\"implementation\": \"/tmp/cross-released-bert-stage-t4efco5i/staged/submissions/bert_optimized_reference.py\", \"implementation_status\": \"experimental-unvalidated\", \"missing_interfaces\": [\"client_key_generation\", \"server_preprocess_model\", \"client_encode_encrypt_input\", \"server_encrypted_compute\", \"client_decrypt_decode\"], \"ready_for_execution\": false, \"encryption_validated\": false, \"note\": \"Interface inspection only; encrypted correctness and TPU timings require actual execution.\", \"passed\": false}\n",
+      "stderr": ""
+    }
+  ],
+  "environment": {
+    "CROSS_ROOT": "/home/jianming_gatech/CROSS",
+    "JAX_PLATFORMS": "preflight_must_not_initialize_jax",
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1"
+  },
+  "staging_manifest": {
+    "upstream": "https://github.com/fhe-benchmarking/BERT",
+    "commit": "170bfe567545d74d0fad785a052518351d37bc93",
+    "harness_files": 11,
+    "harness_sha256": {
+      "harness/cleartext_impl.py": "595c8128e4f44d16d10c358d63e3503cb3d13175ffcd49379457d12333672247",
+      "harness/generate_dataset.py": "4dc6d35336f8d609b9676752fd0a041a40b19c1dcde822b989e44e5e20a30d6d",
+      "harness/generate_input.py": "634804f0235ca611de32e535d4e55139eda109d7620c20129586b68efc73cfe1",
+      "harness/mrpc/__init__.py": "f53192db12fbcbb8760d16fc7bbdbd6a7744c94713f4594cd6674bbfb3068f65",
+      "harness/mrpc/model.py": "784685ccd7f09e5267c604ede7cbe21eb5e1d7a4df8eef6bfb77a6bce74b2fb4",
+      "harness/mrpc/mrpc.py": "60115e739e420b006c0baf433be0c61ee88fb26fa5c1e3edc038e2ff2d3e4321",
+      "harness/mrpc/test.py": "13ed5c720cada62aaf73d88b5b7afb9de4e6fcd22ed96b0f43324ec8d0e33a24",
+      "harness/params.py": "e1e12436a385e1ca6f59f3c7b4ec0f4a4d3dc38c6ab9669125a66b4df6b9cd3b",
+      "harness/run_submission.py": "997fcf575999c6c0a35fa0561dd1a90d3f5565303bd1b6800c078511139f4590",
+      "harness/utils.py": "e73b7ba164e18da00b57a53f8245a1df29cbfc3fc5424a7e734c0a4c7e2dabae",
+      "harness/verify_result.py": "878296a9a91d7f011b8f5303c16feef5988ff390c9431e50b05c6e5f1aa3d3f7"
+    },
+    "starter_sha256": {
+      "benchmark.py": "acb6c5679106e00dd1c482dd750ca4620423f13c9b37e7c7bbce1781b8e76aec",
+      "bert_bounded_reference.py": "c7b9d70aeab77cb0a6d69c61242105d950ba41a795e5982215cc2b3823add8c4",
+      "bert_he.py": "416318023bdd7bd39fab5cc454c1f6fefa813f943f74940c2a5820b9838f561b",
+      "bert_optimized_reference.py": "9de11db08941090c22b5f654f973ac526126a84c88df3080bdd08071e4ce5507",
+      "bert_packed_reference.py": "68b968ee799f57aefdd0c231293c22d6fd77459811ac5da1b80afecc6202fda2",
+      "bert_reference.py": "324d31703051ab33f1d7936fc809429f2eeb1a2a20cab59bbdcda4798059be06",
+      "check_result.py": "45f71e0e78f24f1d92374d3daf428d3dbde4a0f8723632f0ac85565bb32c41ff",
+      "client_decrypt_decode.py": "0900228eee669692bf423ef731dab548f6cfc1693242a0640c0cf67984202655",
+      "client_encode_encrypt_input.py": "58d797a2a5fb4e8b71a2645d330d19ebce2ffcfa9e7224731e0c601864132cf5",
+      "client_key_generation.py": "a4024a1943f322cf66036de4be945152d7dbfeba2d86a7fba1c6577d04598ef4",
+      "client_postprocess.py": "fb9edd5136b8edf73a3dd88ef9dc371966e35a23b8a3f97cfc68d0959ecbc67c",
+      "client_preprocess_input.py": "0d40434a92a3f1dc01fc35ce150b2bbfefe5d52433bf6edb6d21790175b85f93",
+      "p2_runtime.py": "169004ed7bbd97cf0e4167d5bd35c932cc4e2bcb7f009910d94b08128dde53e5",
+      "reference.py": "6d254c92b70257e773d1701a6f85fb592365e67d037b231b9e5a1589e64e7a04",
+      "runner.py": "3561ae1920119b352a0a804bab58659ab6d4bed34a7ab2ef46ea537279eaa9f4",
+      "server_encrypted_compute.py": "e6ab46683c73bd74b0c91bb1938af94b83bf6ab5b3b59c76e0d052f37814c191",
+      "server_preprocess_model.py": "ba76ffe9c67f3fea7777fa33d27d8348a72222df9fae2f5c303d19a27e1730af",
+      "stage_benchmark.py": "15b6bf889444c3c0071b42127d028354ede37f6cee6f6fc788476bb672041fb1",
+      "stages.py": "957a65289589caa24b139dfef9ae0cc8b91c986890d0a9dfad12c9103bbd62e8"
+    },
+    "common_directory": "submissions/_cross_common",
+    "common_sha256": {
+      "encrypted_bounded_arithmetic.py": "94f535c40983e18a06864aa09d8216b8127187a209cdd0d7117a8eea2c393206",
+      "encrypted_bounded_transformer.py": "d951a84e5536700defe0bbea08f8e0d64b03c8e4d1136763af231255db1249ae",
+      "encrypted_chained_streaming_linear.py": "8ec6bd4bd30dfd18ebd052dae88776fb63a81d7f0a4d21daa71d8ab42a53062b",
+      "encrypted_compilation.py": "4518d5f1cebba64fd1f5e1fb162da95fa7dde10936b01f274b0cdc6a31486fb2",
+      "encrypted_integer_affine.py": "762126358a66f81856aef3ec570205c541d54b9dd9becebed6bf7e8006fd6231",
+      "encrypted_ntt.py": "5825e90fc778988528f2a7e1d5cc6033426b55f912c5c94ef41ef9b45fe324bb",
+      "encrypted_packed_qwen.py": "e2739e2e7ff36d208095fd52b3e393157bc251549fe550495f6e8d6197edd58f",
+      "encrypted_packed_transformer.py": "5745ffdd852314887fa29fabd4edeb87d3d6e99560c451d6a19617515a2ed5be",
+      "encrypted_polynomial.py": "912283bab82fff445671fc97fb4e49be16204d75c3132203092bc7eca7fb059a",
+      "encrypted_primitives.py": "2f094239cfa07c935b919c18a0cd97ccad7a9ccb487e0ccd85e17b808d231f89",
+      "encrypted_reference.py": "f487dd1c04203594d9ca696109d4506e4bba66b76294b17393615a178e34d759",
+      "encrypted_refresh.py": "147f9b23615f778966765420dcfd679421831d5c88f2059c94e307bf7859e5b2",
+      "encrypted_rotation.py": "e83c7314a99b761efcde360283ce98ca4a2c1bf28cbbdc0cc26ffcfecf56c9f3",
+      "encrypted_scaled_newton.py": "701bde1132049a36c6db2e9712dd97c364ceacac568fb706d2a8c627ce0a34ca",
+      "encrypted_streaming_linear.py": "83e12b9cf00f1393a47aadddffaaa1ff6b4d0745cb68d9393d2dd38a2a165ecb",
+      "encrypted_transformer.py": "18846a05ad6076997eea70454c775a9a038c46f95b5c97687a08ac682e5501de",
+      "package.py": "baac3b15e98ca287d61dda9657204ccb7c3dfdc35c259cf0b859389a865c9774",
+      "support.py": "458111de25dbae4418c474670cf45a2d39e8e6ba40b75c2d17ad8f96cbaaa40f",
+      "transformer_runner.py": "9d4c6c8c53544d05046651b55224ce5b254d34a3bea445f65484e26e0f49ac55"
+    }
+  },
+  "elapsed_s": 0.4893136729951948
+}

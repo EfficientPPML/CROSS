@@ -28,7 +28,7 @@ preflight shows that full-model scoring is infeasible, extend the event or
 publish an explicitly revised challenge before registration. The objective in
 the authored handout remains the complete Qwen3-0.6B model.
 
-Judging P3 differs from every other problem here, and needs preparation the
+Judging the legacy P3 challenge differs from every other problem here, and needs preparation the
 others do not. It is **open-ended and all or nothing**: 20 points when a team
 demonstrates both end-to-end HE-on-TPU correctness and performance no more than
 50% slower than the state of the art (`T <= 1.5 * T_sota`), nothing otherwise.
@@ -95,9 +95,15 @@ repeats one measurement of key generation and model preprocessing, and every
 `Total` includes that one-time setup. `Total` is not per-run latency; stage 7,
 `Encrypted computation`, is the only ranked quantity measured per run.
 The upstream checkout also ships the reference implementation's own
-`measurements/<instance>/results-N.json`. `score.py` prefers the per-case
-archive and labels any fallback read, but confirm `read_from` in its output
-points at `src/suite/results/` before accepting a score.
+`measurements/<instance>/results-N.json`. When `--label` is supplied, `score.py` requires that exact per-case archive;
+it never substitutes an unlabeled or live run. Unlabeled inspection can still
+read live measurements, but these cannot pass without a frozen verdict. Check
+`read_from` before accepting a score. The scorer validates every repetition's
+finite, nonnegative timing and full prediction count before aggregation, and
+refuses to overwrite a baseline manifest with failed or incomplete results.
+Archive commit/seed/device metadata and calibration metadata must match the
+configured evaluation. A single-image case also requires its own model's
+cleartext comparison.
 
 Most importantly, the suite's `Quality` block does **not** contain the
 cleartext reference this problem's accuracy gate is written against.
@@ -116,6 +122,41 @@ agreement gate (it read 0.98) and, through a binary floating-point artifact in
 `(0.97 - 0.96) * 100`, the 1 pp accuracy gate. Re-validate both gates against
 your own weights before release, and keep `archive.py` organizer-owned: a
 contestant who could edit it could write their own correctness verdict.
+
+## Short schedules and calibration
+
+For 1.5-hour topic slots, use P1's default `student` schedule and P3's
+`compact-v1` competition targets. Distribute the corresponding handouts and
+state the selected profiles before the event.
+P1 ranks C3/C4 and preserves its 100-point total. P3 uses two **different**
+compact CNNs and a 20-point correctness/speed rubric against a measured
+reference; it does not claim to meet the original LeNet/AlexNetTiny SOTA gate.
+Never mix a legacy calibration with a compact/student score.
+
+Run the complete evaluation commands on exclusive contest hardware, with all
+assets staged beforehand. Require every reference to pass its encryption,
+accuracy, actual-ring and whole-evaluation timing gates. P1's full measured
+student-v2 run took 257.56 seconds on this host. P3's complete compact baseline took 145.00 seconds. Both timings
+include cold setup, all repetitions and cleanup. Preserve each successful baseline report; rerun
+candidate implementations in organizer-owned harnesses, verify fixture/model
+hashes and inspect raw samples. The scorer must reject failed, incomplete,
+nonfinite or mismatched reports rather than guessing a baseline.
+
+P1's `suite-evaluate-baseline`, `suite-evaluate`, and `suite-score` targets all
+default to `student`. Its `student-v2` scorer requires a fresh complete report
+with the same evaluation ID and exact archive hashes. It binds model bytes to
+`weights/MANIFEST.json`, compares input, software and TPU identities, and checks
+source stability and cleanup. The 257.56-second run satisfies this evidence
+contract; the separately preserved historical 262.14-second run predates it.
+Successful baseline proofs and aggregate case snapshots live under
+`src/suite/calibration/student-baseline/` and survive `make clean`. Keep those
+files organizer-owned. The latest candidate report is runtime scratch and
+must be regenerated after cleaning. A failed recalibration must preserve the
+previous published calibration without making the failed attempt scoreable.
+
+Neither short schedule solves the missing encrypted BERT/Qwen references.
+Do not advertise those transformer tracks as ready on the basis of their
+plaintext fixture oracles or experimental operator tests.
 
 ## Assets to freeze before distribution
 
