@@ -3,6 +3,10 @@
 This provides template-style reference outputs, not a completed HE solution.
 The runner's ciphertext gate rejects this object's plaintext values.
 """
+
+# This module must never be selected as an encrypted performance baseline.
+IMPLEMENTATION_STATUS = 'plaintext-oracle'
+
 from reference import forward, decoder_block, operator_forward
 
 

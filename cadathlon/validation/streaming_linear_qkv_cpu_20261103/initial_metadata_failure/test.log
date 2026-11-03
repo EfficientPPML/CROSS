@@ -1,0 +1,26 @@
+...................................F.................                    [100%]
+=================================== FAILURES ===================================
+________________ test_declared_package_closure_includes_module _________________
+
+    def test_declared_package_closure_includes_module():
+     import package
+     assert 'encrypted_streaming_linear.py' in package.COMMON_RUNTIME_FILES
+>    package.required_files(ROOT/'cadathlon/common',package.COMMON_RUNTIME_FILES)
+
+/tmp/bert-streaming-linear-candidate-20261103/test_streaming_linear_contracts.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+root = PosixPath('/tmp/bert-streaming-linear-candidate-20261103/checkout/cadathlon/common')
+names = ('support.py', 'Makefile.problem', 'package.py', 'transformer_runner.py', 'encrypted_polynomial.py', 'encrypted_transformer.py', ...)
+
+    def required_files(root, names):
+        files = [root / name for name in names]
+        missing = [str(path) for path in files if not path.is_file() or path.is_symlink()]
+        if missing:
+>           raise FileNotFoundError("Missing declared archive dependency: " + ", ".join(missing))
+E           FileNotFoundError: Missing declared archive dependency: /tmp/bert-streaming-linear-candidate-20261103/checkout/cadathlon/common/Makefile.problem
+
+/tmp/bert-streaming-linear-candidate-20261103/checkout/cadathlon/common/package.py:26: FileNotFoundError
+=========================== short test summary info ============================
+FAILED ../../tmp/bert-streaming-linear-candidate-20261103/test_streaming_linear_contracts.py::test_declared_package_closure_includes_module
+1 failed, 52 passed in 2.80s

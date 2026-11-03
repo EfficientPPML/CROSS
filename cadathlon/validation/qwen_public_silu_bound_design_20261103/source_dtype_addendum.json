@@ -1,0 +1,19 @@
+{
+  "scope": "Read-only public source-dtype addendum; original7-source design/test snapshot unchanged.",
+  "public_source_report": "/home/jianming_gatech/CROSS/cadathlon/validation/learned_normalization_bounds_cpu_20261103/result-v2/report.json",
+  "public_source_report_sha256": "b4c6ff1b48404dc264fc88b3707b788a456eeda9679f3bc904eefc669ee8f27d",
+  "observed_qwen_norm_source_dtypes": [
+    "torch.bfloat16"
+  ],
+  "native_evaluation_dtype": "torch.float32",
+  "required_extraction_contract": [
+    "Verify pinned checkpoint/config and exact gamma/gate shapes, positive epsilon and absent gate bias.",
+    "Record actual source dtype and raw tensor digest for each gamma/gate. Permit only BF16 or binary32 finite sources unless separately reviewed.",
+    "Promote public values to binary32 exactly; BF16 is a subset of binary32. Verify a source-dtype roundtrip before using the promoted array.",
+    "Bind both original public tensor bytes and promoted little-endian binary32 bytes.",
+    "Pass those native-evaluation binary32 arrays to the exact Fraction bound helper. Do not reinterpret the original bytes as binary32."
+  ],
+  "checkpoint_weights_read_in_this_addendum": false,
+  "model_evaluated": false,
+  "bounds_computed_for_checkpoint": false
+}

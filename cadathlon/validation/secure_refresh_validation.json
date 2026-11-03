@@ -1,0 +1,70 @@
+{
+  "scope": "Experimental primitive correctness only; not a full transformer reference or competition timing result.",
+  "tpu": {
+    "passed": true,
+    "exit_code": 0,
+    "process_reaped": true,
+    "raw_result": "secure_refresh_tpu_smoke_raw.json",
+    "raw_log": "secure_refresh_tpu_smoke.log",
+    "input_pattern": [
+      -0.75,
+      -0.25,
+      0.25,
+      0.75
+    ],
+    "full_slots_checked": 32768,
+    "public_input_range": [
+      -0.75,
+      0.75
+    ],
+    "degree": 65536,
+    "logical_depth": 22,
+    "num_q": 46,
+    "num_p": 6,
+    "dnum": 8,
+    "log2_QP": 1472.0154343692986,
+    "security_ceiling_log2_QP": 1747,
+    "actual_output_level": 2,
+    "refresh_max_abs_error": 0.000564558247376945,
+    "square_max_abs_error": 0.0008225997140877128,
+    "component_seconds": 2387.1417097739995,
+    "timing_scope": "Through client validation; excludes final context cleanup and process startup."
+  },
+  "source_provenance": {
+    "hashes": "Original source_hashes_at_start retained unchanged in raw result.",
+    "limitation": "EncryptedPolynomialEvaluator imports lazily during setup; concurrent experimental-source edits may have occurred after startup hashing and before that import. Startup hashes are not asserted to identify every final loaded source. Experimental sources were frozen for the remainder of evaluation."
+  },
+  "not_established": [
+    "The larger N131072 depth49/dnum4 refresh profile.",
+    "Secure large-ring homomorphic refresh near magnitude14, beyond the tested small signed TPU pattern.",
+    "Complete BERT/Qwen encrypted graphs or accumulated approximation/refresh error.",
+    "Repeated-refresh throughput or a five-minute budget."
+  ],
+  "cpu_exploratory_run": {
+    "status": "stopped",
+    "passed": null,
+    "backend": "cpu",
+    "pid": 175363,
+    "elapsed_seconds_at_stop": 1569,
+    "rss_kib_at_stop": 52788836,
+    "reason": "Slow exploratory run stopped after the corrected TPU smoke reached homomorphic evaluation; no numerical result was produced.",
+    "last_confirmed_stage": "sparse partial-sum rotations",
+    "source_scope": "Earlier adapter and validation snapshot; continuation-only numerical gate; no startup source hashes.",
+    "log": "/tmp/secure-refresh-cpu-smoke-v2.log"
+  },
+  "cpu_compiler_tests": {
+    "backend": "cpu",
+    "security_ring_degree": 4096,
+    "status": "passed",
+    "command": "JAX_PLATFORMS=cpu python -m pytest cadathlon/tests/test_encrypted_rotation.py -q",
+    "result": "2 passed in 24.20 s",
+    "scope": [
+      "Exact ciphertext parity for rotations and tensor product plus relinearization without rescale.",
+      "Batches of 1 and 2, scales 2^20 and 2^24, nsd metadata 1 and 2, and rotations at 4 Q and 2 Q limbs.",
+      "Executable reuse after global JAX cache clearing.",
+      "Retired real rotation, NTT and relinearization array wrappers collected while compiled executables remain live."
+    ],
+    "not_measured": "TPU memory release or accelerated bootstrap runtime."
+  },
+  "cpu_followup_evidence": "secure_refresh_cpu_followup.json"
+}

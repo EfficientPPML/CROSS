@@ -1,0 +1,110 @@
+{
+  "passed": true,
+  "scope": "Independent readback/algebra audit; no model, fitting, JAX or HE.",
+  "certificate_source_archive_sha256": "2545fb88ed41d2e3b592cba68dc7a9f267ddfe9a7b39a8fbc240d7a414cd4f41",
+  "certificate_report_sha256": "8874b8886bce559b12b41517592b5db910ad10cb7323bd7fe6215008038f4980",
+  "results": {
+    "0.post.inverse_sqrt": {
+      "verified": true,
+      "actual_rounded_affine_and_coefficient_binding": true,
+      "independent_exact_midpoint_positive": true,
+      "relative_error_upper": 4.316540023558197e-07,
+      "directed_multiplier_interval": [
+        0.9999995683459976,
+        1.0000004316540025
+      ]
+    },
+    "1.post.inverse_sqrt": {
+      "verified": true,
+      "actual_rounded_affine_and_coefficient_binding": true,
+      "independent_exact_midpoint_positive": true,
+      "relative_error_upper": 1.332571428584205e-07,
+      "directed_multiplier_interval": [
+        0.9999998667428571,
+        1.0000001332571429
+      ]
+    },
+    "2.post.inverse_sqrt": {
+      "verified": true,
+      "actual_rounded_affine_and_coefficient_binding": true,
+      "independent_exact_midpoint_positive": true,
+      "relative_error_upper": 4.6011545818263656e-07,
+      "directed_multiplier_interval": [
+        0.9999995398845417,
+        1.0000004601154584
+      ]
+    },
+    "23.post.inverse_sqrt": {
+      "verified": true,
+      "actual_rounded_affine_and_coefficient_binding": true,
+      "independent_exact_midpoint_positive": true,
+      "relative_error_upper": 1.9252669901466855e-07,
+      "directed_multiplier_interval": [
+        0.999999807473301,
+        1.000000192526699
+      ]
+    },
+    "24.post.inverse_sqrt": {
+      "verified": true,
+      "actual_rounded_affine_and_coefficient_binding": true,
+      "independent_exact_midpoint_positive": true,
+      "relative_error_upper": 1.6074761979792087e-08,
+      "directed_multiplier_interval": [
+        0.9999999839252379,
+        1.0000000160747622
+      ]
+    },
+    "25.post.inverse_sqrt": {
+      "verified": true,
+      "actual_rounded_affine_and_coefficient_binding": true,
+      "independent_exact_midpoint_positive": true,
+      "relative_error_upper": 1.3567847975205599e-07,
+      "directed_multiplier_interval": [
+        0.9999998643215202,
+        1.0000001356784798
+      ]
+    },
+    "26.post.inverse_sqrt": {
+      "verified": true,
+      "actual_rounded_affine_and_coefficient_binding": true,
+      "independent_exact_midpoint_positive": true,
+      "relative_error_upper": 2.290647122200271e-08,
+      "directed_multiplier_interval": [
+        0.9999999770935287,
+        1.0000000229064714
+      ]
+    },
+    "27.post.inverse_sqrt": {
+      "verified": true,
+      "actual_rounded_affine_and_coefficient_binding": true,
+      "independent_exact_midpoint_positive": true,
+      "relative_error_upper": 5.029028745383948e-07,
+      "directed_multiplier_interval": [
+        0.9999994970971254,
+        1.0000005029028747
+      ]
+    }
+  },
+  "source_hashes": {
+    "/tmp/qwen-rms-polynomial-certificate-20261103/certify.py": "18446d7ca40b6daae41bcc465466ae3a4ececf8a3297231c36baa27010886f55",
+    "/tmp/qwen-rms-polynomial-certificate-20261103/test_certify.py": "774ec66ffab8b994223109141ace890c1fe9e52b19beb0258fcf57fcd3b198c2",
+    "/tmp/qwen-calibration-candidate1-20261103/candidate-v1/manifest.json": "d16cfe0eaf4079b1e782790dcff277ed6901aa7ea1376ee7877b40b54dde93a2",
+    "/tmp/qwen-calibration-candidate1-20261103/arithmetic.py": "9689b843b4ec2d0a0ef724dbdca7a516e9a4f23da83f83af5571da13380e9a6f",
+    "/tmp/qwen-rms-polynomial-certificate-20261103/report.json": "8874b8886bce559b12b41517592b5db910ad10cb7323bd7fe6215008038f4980",
+    "/tmp/qwen-rms-polynomial-certificate-20261103/sources.tar.gz": "2545fb88ed41d2e3b592cba68dc7a9f267ddfe9a7b39a8fbc240d7a414cd4f41",
+    "/tmp/qwen-uniform-certificate-independent-review-20261103/review.py": "168f2f902faa18f15c1926eee32be9acbe3a4b18776ffa7c5bd47dcd57a25625"
+  },
+  "elapsed_s": 0.40371009400405455,
+  "reviewed_exact_identities": [
+    "T_i*T_j=(T_(i+j)+T_abs(i-j))/2; diagonal/cross factors in integer convolution are correct.",
+    "Affine pullback uses rounded binary64 A=2/(hi-lo), B=-(hi+lo)/(hi-lo), composed exactly with v=mid+half*u.",
+    "|v*p(v)^2-1|<=delta<1 excludes zeros; independently positive midpoint fixes p positive over the entire connected interval.",
+    "|sqrt(v)*p(v)-1|<=delta/(sqrt(1-delta)+1)<=delta/(2-delta); v2 avoids numerical square-root lower bounds.",
+    "Lower and upper binary64 multiplier endpoints are directed with exact Fraction comparisons."
+  ],
+  "limits": [
+    "Does not recompute the full high-degree Chebyshev L1 convolution; its exact implementation and source-bound results were reviewed.",
+    "Later floating operation, CKKS, refresh and variance-domain coverage remain excluded.",
+    "No coefficient changes or model/validation evaluation."
+  ]
+}

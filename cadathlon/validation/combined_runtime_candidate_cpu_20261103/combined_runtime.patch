@@ -1,0 +1,837 @@
+--- a/jaxite_word/key_gen.py
++++ b/jaxite_word/key_gen.py
+@@ -426,7 +426,9 @@
+           else e[part]
+       )
+     else:
+-      base_e = sample_discrete_gaussian(degree, noise_std).tolist()
++      base_e = sample_discrete_gaussian(degree, noise_std)
++      if not use_numpy:
++        base_e = base_e.tolist()
+       if use_numpy:
+         e_rows = np.empty((size_qp, degree), dtype=np.uint64)
+         for i, modulus in enumerate(moduli_list):
+@@ -496,7 +498,13 @@
+   # Python integers so unsupported wider moduli cannot be truncated to uint32.
+   result_a = a_parts if a is None else a
+   result_b = b_parts
+-  if pack_uint32:
++  if use_numpy and a is None:
++    # The native sampler already returns canonical residues below 2**32.
++    # Assemble directly in the public storage dtype instead of rebuilding
++    # every limb and two complete uint64 intermediate stacks.
++    result_a = np.asarray(a_parts, dtype=np.uint32)
++    result_b = np.asarray(b_parts, dtype=np.uint32)
++  elif pack_uint32:
+     result_a = np.stack([
+         np.stack([
+             util.uint64_residues_np(part[i], modulus)
+--- a/jaxite_word/he_params.py
++++ b/jaxite_word/he_params.py
+@@ -155,6 +155,8 @@
+     self.rotation_key_noise_scale = self.noise_scale_degree
+     self.key_generation_version: int = int(kg.KEY_GENERATION_VERSION)
+     self.cache_rotation_keys: bool = bool(cache_rotation_keys)
++    # Explicit owner-scoped experimental control construction; default unchanged.
++    self.rotation_polynomial_factory = None
+     self.level_params: Dict[int, LevelParams] = {}
+ 
+     # Reduction backend (a FiniteFieldContextBase subclass). The paired NTT
+--- a/jaxite_word/he_ops.py
++++ b/jaxite_word/he_ops.py
+@@ -325,6 +325,7 @@
+     self._herot = herot._HERotKernel(
+         cache.r, cache.c, cache.dnum, q_at_level, cache.p_towers,
+         finite_field_context=cache.ff_context_cls,
++        polynomial_factory=cache.rotation_polynomial_factory,
+     )
+ 
+     self._herot.control_gen(
+--- a/jaxite_word/herot.py
++++ b/jaxite_word/herot.py
+@@ -42,7 +42,8 @@
+   # ---------------------------------------------------------------------------
+ 
+   def __init__(self, r, c, dnum, rotate_in_ciphertext_moduli, extend_moduli,
+-               finite_field_context=BarrettContext):
++               finite_field_context=BarrettContext, polynomial_factory=None):
++    self._polynomial_factory = polynomial_factory or Polynomial
+     self.r = r
+     self.c = c
+     self.dnum = dnum
+@@ -183,7 +184,7 @@
+         'num_moduli': sizeQl_in,
+         'degree_layout': degree_layout,
+     }
+-    self.ct_in = Polynomial(
++    self.ct_in = self._polynomial_factory(
+         ct_in_shapes,
+         parameters={
+             'moduli': overall_moduli[:sizeQl_in],
+@@ -192,7 +193,7 @@
+     )
+     ct_single_shapes = dict(ct_in_shapes)
+     ct_single_shapes['num_elements'] = 1
+-    self.ct_single = Polynomial(
++    self.ct_single = self._polynomial_factory(
+         ct_single_shapes,
+         parameters={
+             'moduli': overall_moduli[:sizeQl_in],
+@@ -214,7 +215,7 @@
+           'degree_layout': degree_layout,
+       }
+       self.ct_parts.append(
+-          Polynomial(
++          self._polynomial_factory(
+               ct_part_shapes,
+               parameters={
+                   'moduli': _target_moduli_list,
+@@ -231,7 +232,7 @@
+         'num_moduli': sizeQlP_in,
+         'degree_layout': degree_layout,
+     }
+-    self.ct_full = Polynomial(
++    self.ct_full = self._polynomial_factory(
+         ct_full_shapes,
+         parameters={
+             'moduli': self.overall_moduli,
+@@ -247,7 +248,7 @@
+         'num_moduli': sizeQlP_in - sizeQl_in,
+         'degree_layout': degree_layout,
+     }
+-    self.ct_approx = Polynomial(
++    self.ct_approx = self._polynomial_factory(
+         ct_approx_shapes,
+         parameters={
+             'moduli': self.extend_moduli,
+--- a/cadathlon/common/encrypted_reference.py
++++ b/cadathlon/common/encrypted_reference.py
+@@ -49,7 +49,7 @@
+ 
+ 
+ class ToyReferenceSession:
+-    def __init__(self, model, config, weights, *, batch, sequence_length, devices, packed=False, packed_pairs=False, bounded_refresh=False):
++    def __init__(self, model, config, weights, *, batch, sequence_length, devices, packed=False, packed_pairs=False, bounded_refresh=False, ntt_subsets=False):
+         from jaxite_word import CKKSContext, he_params, key_gen, util
+         from jaxite_word.composite_prime_gen import composite_prime_gen
+         import jax
+@@ -62,6 +62,9 @@
+         if bounded_refresh and not packed_pairs:
+             raise ValueError('bounded refresh is supported only by the experimental packed-pair layout')
+         self.bounded_refresh = bounded_refresh
++        if type(ntt_subsets) is not bool:
++            raise TypeError('ntt_subsets must be an explicit boolean')
++        self.ntt_subsets = None
+         self.closed = False
+         if packed and packed_pairs:
+             raise ValueError('select one experimental packed layout')
+@@ -142,6 +145,9 @@
+             self.ctx = CKKSContext(evaluator_params)
+             self.ctx.program_initialization(list(rotations), dnum=dnum, r=256, c=512,
+                                             batch=1, pregenerated_rotation_keys=self.key_store.keys)
++            if ntt_subsets:
++                from encrypted_ntt import enable_scoped_ntt_subsets
++                self.ntt_subsets = enable_scoped_ntt_subsets(self.ctx)
+         # Ciphertext wrappers need public NTT tables, not a second copy of the
+         # full large-ring table in the client's codec. Sharing this immutable
+         # public object does not expose the client's secret to the evaluator.
+@@ -220,6 +226,8 @@
+                     (getattr(self, 'client', None), getattr(self, 'ctx', None))
+                     if context is not None}
+         key_store = getattr(self, 'key_store', None)
++        ntt_subsets = getattr(self, 'ntt_subsets', None)
++        self.ntt_subsets = None
+         self.client = self.ctx = self.evaluator = self.ops = self.refresher = None
+         self.key_store = None
+         self.closed = True
+@@ -232,6 +240,8 @@
+                 error.add_note(f'While closing experimental transformer {label}')
+                 errors.append(error)
+ 
++        if ntt_subsets is not None:
++            attempt('public NTT subsets', ntt_subsets.close)
+         for context in contexts.values():
+             attempt('context', ckks_ctx.evict_context_caches, context)
+         if contexts:
+@@ -249,13 +259,13 @@
+             raise errors[0]
+ 
+ 
+-def create_toy_session(model, config, weights, *, batch, sequence_length, devices, packed=False, packed_pairs=False, bounded_refresh=False):
++def create_toy_session(model, config, weights, *, batch, sequence_length, devices, packed=False, packed_pairs=False, bounded_refresh=False, ntt_subsets=False):
+     # Preserve a partially initialized owner so setup failures can release any
+     # already-created device contexts as well as normal close() paths.
+     session = object.__new__(ToyReferenceSession)
+     try:
+         session.__init__(model, config, weights, batch=batch, sequence_length=sequence_length, devices=devices,
+-                         packed=packed, packed_pairs=packed_pairs, bounded_refresh=bounded_refresh)
++                         packed=packed, packed_pairs=packed_pairs, bounded_refresh=bounded_refresh, ntt_subsets=ntt_subsets)
+         return session
+     except BaseException as error:
+         try:
+--- /dev/null
++++ b/cadathlon/common/encrypted_ntt.py
+@@ -0,0 +1,260 @@
++"""Isolated public-only NTT subset provider; no global dispatch/cache mutation.
++
++Owner and derived contexts are weakly referenced. This is a candidate injection
++seam, not a live runtime feature. Only canonical standard Barrett, uint32
++polynomial layouts, and one physical device are supported. Unsupported inputs
++return None so the ordinary constructor retains its existing behavior.
++"""
++from collections import Counter, OrderedDict
++import importlib
++from numbers import Integral
++import weakref
++
++import jax
++import jax.numpy as jnp
++import numpy as np
++
++FIELDS = ('ntt_bat_tf_step1', 'ntt_tf_step2', 'ntt_bat_tf_step3',
++          'intt_bat_tf_step1', 'intt_tf_step2', 'intt_bat_tf_step3')
++
++
++def _ints(values):
++    if not isinstance(values, (list, tuple)) or not values:
++        return None
++    if any(isinstance(x, bool) or not isinstance(x, Integral) for x in values):
++        return None
++    return tuple(int(x) for x in values)
++
++
++def _devices(array):
++    if not isinstance(array, jax.Array):
++        return None
++    devices = array.devices()
++    return next(iter(devices)) if len(devices) == 1 else None
++
++
++def _field_signature(field, moduli, device):
++    # These are small public arrays; checking them prevents an altered field
++    # object from borrowing tables under a stale type/moduli-only identity.
++    import math
++    s = tuple(2 * math.ceil(math.log2(q)) for q in moduli)
++    w = tuple(min(x, 32) for x in s)
++    sw = tuple(a - b for a, b in zip(s, w))
++    m = tuple(math.floor(2 ** bits / q) for bits, q in zip(s, moduli))
++    specs = [('barrett_s', s), ('barrett_w', w), ('barrett_s_w', sw), ('barrett_m', m)]
++    if any(tuple(getattr(field, name, ())) != expected for name, expected in specs):
++        return None
++    for name, expected, dtype in [('m', m, 'uint64'), ('moduli_reduction', moduli, 'uint64'),
++                                  ('w', w, 'uint16'), ('s_w', sw, 'uint16')]:
++        array = getattr(field, name, None)
++        if _devices(array) != device or str(array.dtype) != dtype or array.shape != (len(moduli),):
++            return None
++        if not np.array_equal(np.asarray(array), np.asarray(expected, dtype=dtype)):
++            return None
++    return (type(field), moduli, s, w, sw, m, device)
++
++
++class ScopedNTTSubsets:
++    """One owner, bounded weak bindings, and no secret/key references."""
++    def __init__(self, owner, *, max_entries=16):
++        if type(max_entries) is not int or max_entries < 1:
++            raise ValueError('max_entries must be a positive integer')
++        self._owner = weakref.ref(owner)
++        self.max_entries = max_entries
++        self._entries = OrderedDict()
++        self.stats = Counter()
++        self._closed = False
++        q, p = owner.ntt_q_max, owner.ntt_p
++        self._source_refs = (weakref.ref(q), weakref.ref(p))
++        self._source_type = type(q)
++        module = importlib.import_module(type(q).__module__)
++        self._supported_type = module.NTTCiphertextBarrettContext
++        self._field_type = module.ff_context.BarrettContext
++        self._layout = (owner.r, owner.c)
++        self._degree = owner.degree
++        self._moduli = (_ints(owner.q_towers), _ints(owner.p_towers))
++        self._source_identity = tuple(self._identity(x) for x in (q, p))
++        self._device = _devices(q.ntt_tf_step2)
++
++    @staticmethod
++    def _identity(source):
++        return (id(source), tuple(source.moduli), source.r, source.c,
++                source.transform_length, tuple(id(getattr(source, name)) for name in FIELDS))
++
++    def _fallback(self, reason):
++        self.stats['fallback'] += 1
++        self.stats['fallback_' + reason] += 1
++        return None
++
++    def close(self):
++        """Drop provider bookkeeping. Existing caller-owned contexts stay valid."""
++        owner = self._owner()
++        factory = getattr(owner, 'rotation_polynomial_factory', None)
++        if getattr(factory, '__self__', None) is self:
++            owner.rotation_polynomial_factory = None
++        self._entries.clear()
++        self._source_refs = ()
++        self._owner = lambda: None
++        self._closed = True
++
++    def clear(self):
++        """Release weak lookup entries; neither masters nor caller arrays owned."""
++        self._entries.clear()
++
++    @property
++    def live_entries(self):
++        return sum(ref() is not None for ref, _ in self._entries.values())
++
++    def _sources(self, device):
++        owner = self._owner()
++        if owner is None or self._closed or bool(getattr(owner, 'perf_test', False)):
++            return None
++        if ((owner.r, owner.c) != self._layout or owner.degree != self._degree
++                or (_ints(owner.q_towers), _ints(owner.p_towers)) != self._moduli
++                or owner.ff_context_cls is not self._field_type):
++            return None
++        sources = tuple(ref() for ref in self._source_refs)
++        if len(sources) != 2 or any(source is None for source in sources):
++            return None
++        if sources != (owner.ntt_q_max, owner.ntt_p):
++            return None
++        r, c = self._layout
++        shapes = ((r, 4, r, 4), (r, c), (c, 4, c, 4),
++                  (c, 4, c, 4), (r, c), (r, 4, r, 4))
++        for source, moduli, identity in zip(sources, self._moduli, self._source_identity):
++            if (type(source) is not self._supported_type or self._identity(source) != identity
++                    or _ints(source.moduli) != moduli or len(set(moduli)) != len(moduli)
++                    or type(source.ff_ctx) is not self._field_type
++                    or not source.ff_ctx.computation_format_is_standard
++                    or _ints(source.ff_ctx.moduli) != moduli
++                    or _field_signature(source.ff_ctx, moduli, device) is None):
++                return None
++            for name, leading in zip(FIELDS, shapes):
++                array = getattr(source, name)
++                dtype = 'uint64' if 'tf_step2' in name else 'uint8'
++                if (array.shape != (*leading, len(moduli)) or str(array.dtype) != dtype
++                        or (isinstance(array, jax.Array) and _devices(array) != device)
++                        or not isinstance(array, (jax.Array, np.ndarray))):
++                    return None
++        return sources
++
++    def get(self, moduli, parameters, *, precision=32, device=None):
++        """Return a borrowed-table context, or None to use ordinary dispatch."""
++        if self._closed:
++            return self._fallback('closed')
++        requested = _ints(moduli)
++        if requested is None or len(set(requested)) != len(requested):
++            return self._fallback('moduli')
++        if (type(precision) is not int or precision != 32 or not isinstance(parameters, dict)
++                or set(parameters) != {'r', 'c', 'finite_field_context'}
++                or any(type(parameters[k]) is not int for k in ('r', 'c'))
++                or (parameters['r'], parameters['c']) != self._layout
++                or self._layout[0] * self._layout[1] != self._degree):
++            return self._fallback('layout_precision_parameters')
++        if device is None or device != self._device:
++            return self._fallback('device')
++        field = parameters['finite_field_context']
++        if (type(field) is not self._field_type or not field.computation_format_is_standard
++                or _ints(field.moduli) != requested
++                or _field_signature(field, requested, device) is None):
++            return self._fallback('field')
++        sources = self._sources(device)
++        if sources is None:
++            return self._fallback('owner_or_sources')
++        lookup = {q: (source, i) for source in sources for i, q in enumerate(source.moduli)}
++        if len(lookup) != sum(len(source.moduli) for source in sources) or any(q not in lookup for q in requested):
++            return self._fallback('unknown_modulus')
++        key = (requested, self._layout, self._degree, precision, self._field_type, device)
++        entry = self._entries.get(key)
++        if entry is not None:
++            previous, identity = entry[0](), entry[1]
++            if previous is not None and self._identity(previous) == identity:
++                # A context retains its own field; verify that a caller did not
++                # mutate it between weak-cache hits.
++                if (type(previous.ff_ctx) is self._field_type
++                        and previous.ff_ctx.computation_format_is_standard
++                        and _ints(previous.ff_ctx.moduli) == requested
++                        and _field_signature(previous.ff_ctx, requested, device) is not None):
++                    self._entries.move_to_end(key); self.stats['hits'] += 1
++                    return previous
++            self._entries.pop(key, None)
++        spans = []
++        for q in requested:
++            source, index = lookup[q]
++            if spans and spans[-1][0] is source and spans[-1][2] == index:
++                spans[-1][2] += 1
++            else:
++                spans.append([source, index, index + 1])
++        result = object.__new__(self._supported_type)
++        result.ff_ctx = field
++        result.r, result.c = self._layout
++        result.transform_length = self._degree
++        result.moduli = list(requested)
++        result.num_bytes = 4
++        result.parameters = dict(parameters)
++        result.psi_list = [lookup[q][0].psi_list[lookup[q][1]] for q in requested]
++        result.omega_list = [lookup[q][0].omega_list[lookup[q][1]] for q in requested]
++        with jax.default_device(device):
++            for name in FIELDS:
++                arrays = [getattr(source, name)[..., lo:hi] for source, lo, hi in spans]
++                join = np.concatenate if all(isinstance(array, np.ndarray) for array in arrays) else jnp.concatenate
++                setattr(result, name, arrays[0] if len(arrays) == 1 else join(arrays, axis=-1))
++        # A barrier gives a clear lifetime boundary before an owning kernel is
++        # permitted to release prior controls. The array payloads can still be
++        # copied/materialized; this provider makes no zero-copy/HBM claim.
++        jax.block_until_ready([getattr(result, name) for name in FIELDS])
++        self._entries[key] = (weakref.ref(result), self._identity(result))
++        while len(self._entries) > self.max_entries:
++            self._entries.popitem(last=False)
++        self.stats['builds'] += 1
++        return result
++
++    def polynomial_factory(self, shapes, parameters=None, *, payload=None):
++        """Explicit isolated-kernel injection; fallback preserves constructor."""
++        module = importlib.import_module('polynomial')
++        original = module.Polynomial
++        if parameters is None or 'ntt_ctx' in parameters or 'moduli' not in parameters:
++            return original(shapes, parameters, payload=payload)
++        factory = parameters.get('finite_field_context', self._field_type)
++        if factory is not self._field_type:
++            return original(shapes, parameters, payload=payload)
++        # Device choice matches ordinary uncommitted construction. If caller
++        # enters another default-device scope, get() refuses master reuse.
++        field = factory(moduli=parameters['moduli'])
++        device = _devices(field.m)
++        layout = tuple(shapes.get('degree_layout', ()))
++        if len(layout) != 2 or shapes.get('degree') != self._degree:
++            return original(shapes, parameters, payload=payload)
++        selected = self.get(parameters['moduli'],
++            {'r': layout[0], 'c': layout[1], 'finite_field_context': field},
++            precision=shapes.get('precision'), device=device)
++        if selected is None:
++            return original(shapes, parameters, payload=payload)
++        return original(shapes, dict(parameters, ntt_ctx=selected), payload=payload)
++
++
++def enable_scoped_ntt_subsets(context, *, max_entries=16):
++    """Opt in one initialized keyless evaluator; returns its closeable owner.
++
++    This affects only future HERot control construction for this context.
++    Existing controls remain valid, and unrelated contexts retain ordinary
++    construction. Disable before context teardown by calling close().
++    """
++    from encrypted_polynomial import EncryptedPolynomialEvaluator
++    EncryptedPolynomialEvaluator(context)
++    # No ciphertext exists at opt-in time. Match the execution gate's public
++    # noise/distribution assumptions here; each actual operation still checks
++    # its real ciphertext with require_secure_execution.
++    import math
++    from jaxite_word import he_params
++    noise = float(context.parameters.get('sigma', he_params.DEFAULT_SIGMA))
++    if not math.isfinite(noise) or noise < he_params.DEFAULT_SIGMA:
++        raise ValueError('context noise sigma is below the security table assumption')
++    if context.parameters.get('secret_distribution', he_params.SECRET_DISTRIBUTION) != he_params.SECRET_DISTRIBUTION:
++        raise ValueError('security table requires uniform_ternary secrets')
++    cache = context._param_cache
++    if cache.rotation_polynomial_factory is not None:
++        raise ValueError('this context already owns a rotation Polynomial factory')
++    provider = ScopedNTTSubsets(cache, max_entries=max_entries)
++    cache.rotation_polynomial_factory = provider.polynomial_factory
++    return provider
+--- a/cadathlon/common/encrypted_packed_transformer.py
++++ b/cadathlon/common/encrypted_packed_transformer.py
+@@ -6,10 +6,79 @@
+ Full encrypted graph validation is required before any reference claim.
+ """
+ from dataclasses import dataclass
++from collections import deque
++from contextlib import closing
+ import math
+ import numpy as np
+ 
+ from encrypted_packed_qwen import CompiledArithmetic, MatrixDiagonals
++
++
++DEFAULT_EXTRA_PAYLOAD_BYTES = 256 * 1024**2
++DEFAULT_MAX_PENDING = 8
++
++
++def pending_limit(output_payload_bytes, groups, *, extra_payload_bytes=DEFAULT_EXTRA_PAYLOAD_BYTES,
++                  max_pending=DEFAULT_MAX_PENDING):
++    """Count one existing singleton payload plus a bounded extra live queue."""
++    for name, value in [('groups', groups), ('max_pending', max_pending)]:
++        if type(value) is not int or value < 1:
++            raise ValueError(name + ' must be a positive integer')
++    if type(extra_payload_bytes) is not int or extra_payload_bytes < 0:
++        raise ValueError('extra payload budget must be a nonnegative integer')
++    if output_payload_bytes is None:
++        # Symbolic plaintext/depth planners have no physical ciphertext shape.
++        return 1
++    if type(output_payload_bytes) is not int or output_payload_bytes < 1:
++        raise ValueError('output payload size must be a positive integer')
++    return min(groups, max_pending, 1 + extra_payload_bytes // output_payload_bytes)
++
++
++def output_payload_bytes(graph, value):
++    """Exact public shape/dtype size after the weighted sum's one rescale."""
++    payload = getattr(value, 'polynomial', None)
++    cache = getattr(graph.ctx, '_param_cache', None)
++    if payload is None or cache is None:
++        return None
++    level = graph.arithmetic._level(value)
++    if level < 1:
++        raise ValueError('insufficient packed-linear level')
++    shape = tuple(payload.shape)
++    if len(shape) < 2 or any(type(n) is not int or n < 1 for n in shape):
++        raise ValueError('invalid public ciphertext payload shape')
++    output_limbs = cache.num_q_at_level(level - 1)
++    if type(output_limbs) is not int or output_limbs < 1:
++        raise ValueError('invalid output modulus count')
++    return math.prod(shape[:-1]) * output_limbs * np.dtype(payload.dtype).itemsize
++
++
++def giant_chunks(groups, make_inner, limit):
++    """Yield in original order, releasing consumed queued wrappers promptly."""
++    if type(limit) is not int or limit < 1:
++        raise ValueError('positive pending limit required')
++    iterator = iter(groups)
++    while True:
++        pending = deque()
++        item = None
++        try:
++            for _ in range(limit):
++                try:
++                    giant, indices = next(iterator)
++                except StopIteration:
++                    break
++                pending.append((giant, make_inner(giant, indices)))
++            if not pending:
++                return
++            while pending:
++                item = pending.popleft()
++                yield item
++                # The consumer also releases its inner/contribution locals.
++                # Neither side may pin the preceding chunk during a new fill.
++                item = None
++        finally:
++            item = None
++            pending.clear()
++
+ 
+ 
+ def _power_two(n):
+@@ -121,6 +190,7 @@
+         if not source.active:
+             return self.arithmetic.weighted_sum([value], [0.], bias=bias_slots)
+         (value,) = self.arithmetic._ensure_capacity((value,), 1)
++        count_bytes = output_payload_bytes(self, value)
+         babies = {0: value}
+         for index in sorted({d % source.n1 for d in source.active} - {0}):
+             babies[index] = self.arithmetic.rotate(value, index)
+@@ -128,8 +198,11 @@
+         for diagonal in source.active:
+             giant = diagonal // source.n1 * source.n1
+             groups.setdefault(giant, []).append(diagonal)
+-        result = None
+-        for giant, indices in groups.items():
++        limit = pending_limit(count_bytes, len(groups),
++            extra_payload_bytes=getattr(self, 'linear_extra_payload_bytes', DEFAULT_EXTRA_PAYLOAD_BYTES),
++            max_pending=getattr(self, 'linear_max_pending', DEFAULT_MAX_PENDING))
++
++        def make_inner(giant, indices):
+             diagonals = source.materialize_diagonals(indices)
+             values, weights = [], []
+             for index in indices:
+@@ -140,15 +213,22 @@
+                     diagonal = diagonal * np.roll(input_mask, -index)
+                 values.append(babies[index % source.n1])
+                 weights.append(np.roll(diagonal, giant))
+-            inner = self.arithmetic.weighted_sum(values, weights)
+-            contribution = self.arithmetic.rotate(inner, giant)
+-            result = contribution if result is None else self.arithmetic.add(result, contribution)
++            return self.arithmetic.weighted_sum(values, weights)
++
++        result = None
++        with closing(giant_chunks(groups.items(), make_inner, limit)) as chunks:
++            for giant, inner in chunks:
++                contribution = self.arithmetic.rotate(inner, giant)
++                del inner
++                result = contribution if result is None else self.arithmetic.add(result, contribution)
++                del contribution
+         if bias is not None:
+             level = self.arithmetic._level(result)
+             self.arithmetic._prepare(level)
+             constant = self.arithmetic._encode_public(bias_slots, level, result._ckks_scale)
+             result = self.ctx.he_add[level].add_plain(result, constant)
+         return self.arithmetic._finish(result)
++
+ 
+     def segmented_sum(self, value, length, stride, *, factor=1., bias=0.):
+         if _power_two(length) != length or type(stride) is not int or stride < 1 or self.layout.slots % (length*stride):
+--- a/cadathlon/common/package.py
++++ b/cadathlon/common/package.py
+@@ -10,7 +10,7 @@
+     "support.py", "Makefile.problem", "package.py", "transformer_runner.py",
+     "encrypted_polynomial.py", "encrypted_transformer.py", "encrypted_reference.py",
+     "encrypted_refresh.py", "encrypted_rotation.py", "encrypted_compilation.py",
+-    "encrypted_primitives.py", "encrypted_packed_qwen.py", "encrypted_packed_transformer.py",
++    "encrypted_primitives.py", "encrypted_ntt.py", "encrypted_packed_qwen.py", "encrypted_packed_transformer.py",
+     "encrypted_bounded_arithmetic.py", "encrypted_bounded_transformer.py",
+ )
+ PUBLIC_RELEASE_EVIDENCE = (
+--- a/cadathlon/tests/test_package.py
++++ b/cadathlon/tests/test_package.py
+@@ -29,7 +29,7 @@
+     (suite / "private.npy").write_bytes(b"private")
+     for name in ("support.py", "Makefile.problem", "package.py", "transformer_runner.py",
+                  "encrypted_polynomial.py", "encrypted_transformer.py", "encrypted_reference.py", "encrypted_refresh.py",
+-                 "encrypted_rotation.py", "encrypted_compilation.py", "encrypted_primitives.py",
++                 "encrypted_rotation.py", "encrypted_compilation.py", "encrypted_primitives.py", "encrypted_ntt.py",
+                  "encrypted_packed_qwen.py", "encrypted_packed_transformer.py",
+                  "encrypted_bounded_arithmetic.py", "encrypted_bounded_transformer.py"):
+         (common / name).write_text("")
+@@ -44,6 +44,7 @@
+     assert "common/encrypted_rotation.py" in names
+     assert "common/encrypted_compilation.py" in names
+     assert "common/encrypted_primitives.py" in names
++    assert "common/encrypted_ntt.py" in names
+     assert "common/encrypted_packed_qwen.py" in names
+     assert "common/encrypted_packed_transformer.py" in names
+     assert "common/encrypted_bounded_arithmetic.py" in names
+@@ -122,6 +123,7 @@
+         assert "common/encrypted_rotation.py" in names
+         assert "common/encrypted_compilation.py" in names
+         assert "common/encrypted_primitives.py" in names
++        assert "common/encrypted_ntt.py" in names
+         assert "common/encrypted_packed_qwen.py" in names
+         assert "common/encrypted_packed_transformer.py" in names
+         assert "common/encrypted_bounded_arithmetic.py" in names
+--- /dev/null
++++ b/cadathlon/tests/test_scoped_ntt.py
+@@ -0,0 +1,142 @@
++"""Owner-scoped NTT subset contracts; second-device guard is explicitly opt-in."""
++from pathlib import Path
++import gc, importlib, sys, weakref
++import numpy as np
++import pytest
++ROOT=Path(__file__).resolve().parents[2]
++sys.path[:0]=[str(ROOT),str(ROOT/'cadathlon/common')]
++import jax
++from jaxite_word import he_params
++from encrypted_ntt import FIELDS,ScopedNTTSubsets
++jax.config.update('jax_enable_x64',True)
++ntt=he_params.ntt_mm
++class Owner:pass
++
++def make_owner():
++    owner=Owner();owner.q_towers=[12289,40961,65537,114689];owner.p_towers=[147457,163841]
++    owner.r=16;owner.c=16;owner.degree=256;owner.ff_context_cls=he_params.BarrettContext;owner.perf_test=False
++    for attr,moduli in [('ntt_q_max',owner.q_towers),('ntt_p',owner.p_towers)]:
++        field=owner.ff_context_cls(moduli)
++        setattr(owner,attr,ntt.NTTCiphertextBarrettContext(moduli,{'r':16,'c':16,'finite_field_context':field}))
++    return owner
++
++def params(owner,moduli):
++    return {'r':owner.r,'c':owner.c,'finite_field_context':owner.ff_context_cls(moduli)}
++
++def test_ordered_subsets_exact_and_lifecycle():
++    owner=make_owner();provider=ScopedNTTSubsets(owner,max_entries=2);device=jax.devices()[0]
++    choices=[owner.q_towers[:-1],owner.q_towers[1:]+owner.p_towers,
++             [owner.p_towers[1],owner.q_towers[2],owner.q_towers[0],owner.p_towers[0]]]
++    retained=[]
++    for moduli in choices:
++        p=params(owner,moduli);actual=provider.get(moduli,p,device=device)
++        assert actual is not None
++        expected=ntt.NTTCiphertextBarrettContext(moduli,p)
++        for name in FIELDS:np.testing.assert_array_equal(getattr(actual,name),getattr(expected,name))
++        assert provider.get(moduli,params(owner,moduli),device=device) is actual
++        retained.append(actual)
++        jax.clear_caches();ntt._barrett_ntt_context_cache.clear();gc.collect()
++    assert provider.live_entries==2 and len(provider._entries)==2
++    refs=[weakref.ref(x) for x in retained]
++    del actual,expected,retained
++    jax.clear_caches();gc.collect()
++    assert all(ref() is None for ref in refs)
++    assert provider.live_entries==0
++    moduli=choices[-1];actual=provider.get(moduli,params(owner,moduli),device=device)
++    baseline=np.asarray(actual.ntt_tf_step2).copy()
++    provider.close();np.testing.assert_array_equal(actual.ntt_tf_step2,baseline)
++    assert provider.get(moduli,params(owner,moduli),device=device) is None
++
++def test_owner_not_retained_and_replacement_falls_back():
++    owner=make_owner();provider=ScopedNTTSubsets(owner);device=jax.devices()[0]
++    moduli=owner.q_towers[:2]
++    actual=provider.get(moduli,params(owner,moduli),device=device)
++    owner_ref=weakref.ref(owner);master_ref=weakref.ref(owner.ntt_q_max)
++    del owner
++    jax.clear_caches();ntt._barrett_ntt_context_cache.clear();gc.collect()
++    assert owner_ref() is None and master_ref() is None
++    assert provider.get(moduli,{'r':16,'c':16,'finite_field_context':he_params.BarrettContext(moduli)},device=device) is None
++    assert actual.ntt_tf_step2.shape[-1]==2
++
++@pytest.mark.parametrize('case',['duplicate','unknown','floatmodulus','layout','precision','extra_parameter','wrong_ff_moduli','changed_field_array','changed_field_metadata','changed_source_array','changed_source_moduli','changed_owner_degree','changed_owner_field','perf_test','nonstandard_field','other_device'])
++def test_guards_fall_back(case):
++    owner=make_owner();provider=ScopedNTTSubsets(owner);device=jax.devices()[0];moduli=owner.q_towers[:2];p=params(owner,moduli);precision=32
++    if case=='duplicate':moduli=[moduli[0]]*2
++    elif case=='unknown':moduli=[12289,786433];p=params(owner,moduli)
++    elif case=='floatmodulus':moduli=[float(x) for x in moduli]
++    elif case=='layout':p['r'],p['c']=8,32
++    elif case=='precision':precision=64
++    elif case=='extra_parameter':p['perf_test']=False
++    elif case=='wrong_ff_moduli':p['finite_field_context']=owner.ff_context_cls(owner.q_towers[1:3])
++    elif case=='changed_field_array':p['finite_field_context'].m=jax.numpy.zeros_like(p['finite_field_context'].m)
++    elif case=='changed_field_metadata':p['finite_field_context'].barrett_m=[0,0]
++    elif case=='changed_source_array':owner.ntt_q_max.ntt_tf_step2=jax.numpy.zeros_like(owner.ntt_q_max.ntt_tf_step2)
++    elif case=='changed_source_moduli':owner.ntt_q_max.moduli=list(reversed(owner.q_towers))
++    elif case=='changed_owner_degree':owner.degree=512
++    elif case=='changed_owner_field':owner.ff_context_cls=type('OtherBarrett',(owner.ff_context_cls,),{})
++    elif case=='perf_test':owner.perf_test=True
++    elif case=='nonstandard_field':p['finite_field_context'].computation_format_is_standard=False
++    elif case=='other_device':
++        if len(jax.devices()) < 2:
++            pytest.skip('requires two logical CPU devices; run with --xla_force_host_platform_device_count=2')
++        device=jax.devices()[1]
++        with jax.default_device(device):p=params(owner,moduli)
++    assert provider.get(moduli,p,precision=precision,device=device) is None
++
++def test_mutated_cached_field_is_not_reused():
++    owner=make_owner();provider=ScopedNTTSubsets(owner);device=jax.devices()[0];moduli=owner.q_towers[:2]
++    actual=provider.get(moduli,params(owner,moduli),device=device)
++    actual.ff_ctx.m=jax.numpy.zeros_like(actual.ff_ctx.m)
++    rebuilt=provider.get(moduli,params(owner,moduli),device=device)
++    assert rebuilt is not actual
++    np.testing.assert_array_equal(rebuilt.ff_ctx.m,he_params.BarrettContext(moduli).m)
++
++
++def test_contiguous_view_keeps_backing_until_last_holder_drops():
++    owner=make_owner();provider=ScopedNTTSubsets(owner);device=jax.devices()[0]
++    moduli=owner.q_towers[:2]
++    actual=provider.get(moduli,params(owner,moduli),device=device)
++    master=owner.ntt_q_max.ntt_bat_tf_step1
++    view=actual.ntt_bat_tf_step1
++    assert isinstance(master,np.ndarray) and isinstance(view,np.ndarray)
++    assert np.shares_memory(master,view)
++    assert view.nbytes < master.nbytes
++    backing=master
++    while isinstance(backing.base,np.ndarray):backing=backing.base
++    backing_ref=weakref.ref(backing);wrapper_ref=weakref.ref(owner.ntt_q_max)
++    del owner,master,backing,view
++    jax.clear_caches();gc.collect()
++    assert wrapper_ref() is None and backing_ref() is not None
++    del actual
++    provider.clear();jax.clear_caches();gc.collect()
++    assert backing_ref() is None
++
++@pytest.mark.parametrize('failure',[None,RuntimeError,KeyboardInterrupt,SystemExit])
++def test_reference_session_releases_provider_even_if_cleanup_fails(monkeypatch,failure):
++    import encrypted_reference as reference
++    from types import SimpleNamespace
++    from jaxite_word import ckks_ctx
++    events=[]
++    def release():
++        events.append('ntt')
++        if failure:raise failure('ntt cleanup')
++    monkeypatch.setattr(ckks_ctx,'evict_context_caches',lambda value:events.append(value))
++    monkeypatch.setattr(jax,'clear_caches',lambda:events.append('jax'))
++    monkeypatch.setattr(reference.gc,'collect',lambda:events.append('gc'))
++    session=object.__new__(reference.ToyReferenceSession)
++    session.client='client';session.ctx='server';session.ntt_subsets=SimpleNamespace(close=release)
++    session.key_store=SimpleNamespace(close=lambda:events.append('keys'))
++    if failure:
++        with pytest.raises(failure,match='ntt cleanup'):session.close()
++    else:session.close()
++    assert events==['ntt','client','server','jax','gc','keys']
++    assert session.ntt_subsets is None and session.closed
++    session.close();assert len(events)==6
++
++def test_reference_option_is_explicit_before_keygen(monkeypatch):
++    import encrypted_reference as reference
++    from jaxite_word import key_gen
++    def forbidden(*args,**kwargs):raise AssertionError('keygen happened before opt-in validation')
++    monkeypatch.setattr(key_gen,'gen_pke_pair',forbidden)
++    with pytest.raises(TypeError,match='ntt_subsets must be an explicit boolean'):
++        reference.create_toy_session('bert',{}, {},batch=1,sequence_length=1,devices=[],ntt_subsets='yes')
+--- /dev/null
++++ b/cadathlon/tests/test_linear_queue.py
+@@ -0,0 +1,87 @@
++"""Isolated scheduling contracts; execute only after CPU calibration release."""
++from pathlib import Path
++from types import SimpleNamespace
++import gc
++import sys
++import weakref
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT), str(ROOT/'cadathlon/common')]
++import numpy as np
++import pytest
++from encrypted_packed_transformer import (pending_limit, output_payload_bytes, giant_chunks,
++    PackedTransformer as ChunkedPackedTransformer, PackedPairLayout)
++
++
++@pytest.mark.parametrize('size,groups,budget,maximum,expected', [
++    (512*1024**2, 16, 256*1024**2, 8, 1),
++    (256*1024**2, 16, 256*1024**2, 8, 2),
++    (85*1024**2, 16, 256*1024**2, 8, 4),
++    (16*1024**2, 16, 256*1024**2, 8, 8),
++    (16*1024**2, 3, 256*1024**2, 8, 3),
++    (16, 3, 0, 8, 1), (16, 3, 500, 1, 1), (None, 3, 500, 8, 1),
++])
++def test_payload_cap(size, groups, budget, maximum, expected):
++    count = pending_limit(size, groups, extra_payload_bytes=budget, max_pending=maximum)
++    assert count == expected
++    if size is not None:
++        assert (count-1)*size <= budget
++
++
++@pytest.mark.parametrize('size,groups,budget,maximum', [
++    (0, 3, 5, 2), (True, 3, 5, 2), (1, 0, 5, 2), (1, True, 5, 2),
++    (1, 3, -1, 2), (1, 3, True, 2), (1, 3, 5, 0), (1, 3, 5, True),
++])
++def test_invalid_payload_caps(size, groups, budget, maximum):
++    with pytest.raises(ValueError):
++        pending_limit(size, groups, extra_payload_bytes=budget, max_pending=maximum)
++
++
++@pytest.mark.parametrize('batch,level', [(1, 1), (2, 25), (1, 49)])
++def test_output_bytes_include_batch_components_degree_remaining_limbs_and_dtype(batch, level):
++    value = SimpleNamespace(polynomial=SimpleNamespace(shape=(batch, 2, 256, 512, 2*(level+1)), dtype='uint32'))
++    graph = SimpleNamespace(ctx=SimpleNamespace(_param_cache=SimpleNamespace(num_q_at_level=lambda n: 2*(n+1))),
++                            arithmetic=SimpleNamespace(_level=lambda _: level))
++    assert output_payload_bytes(graph, value) == batch*2*131072*(2*level)*4
++
++
++@pytest.mark.parametrize('limit', [1, 2, 3, 8])
++def test_queue_peak_and_consumed_reference_retirement(limit):
++    alive = weakref.WeakSet()
++    made, consumed, peak = [], [], 0
++    class Token: pass
++    def make(giant, indices):
++        nonlocal peak
++        token = Token()
++        token._public_absolute_bound = giant + 1
++        alive.add(token)
++        peak = max(peak, len(alive))
++        made.append(giant)
++        return token
++    for giant, token in giant_chunks([(n, [n]) for n in range(19)], make, limit):
++        assert token._public_absolute_bound == giant + 1
++        consumed.append(giant)
++        del token
++    assert made == consumed == list(range(19))
++    assert peak <= limit
++    assert not alive
++
++
++def test_queue_releases_unconsumed_items_on_failure_and_generator_close():
++    alive = weakref.WeakSet()
++    class Token: pass
++    def make(giant, indices):
++        if giant == 2:
++            raise RuntimeError('inner failure')
++        item = Token(); alive.add(item); return item
++    with pytest.raises(RuntimeError, match='inner failure'):
++        next(giant_chunks([(n, [n]) for n in range(4)], make, 4))
++    gc.collect()
++    assert not alive
++    iterator = giant_chunks([(0, []), (1, [])], make, 2)
++    giant, token = next(iterator)
++    del token
++    iterator.close()
++    gc.collect()
++    assert not alive
++

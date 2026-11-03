@@ -3,4 +3,8 @@
 This template golden generates public expected values with reference.py.
 It intentionally does not implement the contestant's HE or stage interfaces.
 """
+
+# This module must never be selected as an encrypted performance baseline.
+IMPLEMENTATION_STATUS = 'plaintext-oracle'
+
 from reference import embed, encoder_block, forward, make_case, toy_weights

@@ -1,0 +1,80 @@
+"""Exact-real learned normalization bounds from pinned public weights only."""
+from pathlib import Path
+from fractions import Fraction
+import hashlib, io, json, math, sys, tarfile
+import numpy as np
+from safetensors import safe_open
+
+HERE=Path(__file__).resolve().parent
+ASSETS={
+ 'bert':(Path('/home/jianming_gatech/cross_validation_assets/bert/f150c1d609d1e50dd5e2e5408661cfac8339277c'), 'e1f8085ef673c9eb8a1a93a84270742e8aa0ccbceadef01eef15e26c44b46034'),
+ 'qwen':(Path('/home/jianming_gatech/cross_validation_assets/qwen/c1899de289a04d12100db370d81485cdf75e47ca'), 'f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b')}
+
+def digest(path):
+ with Path(path).open('rb') as f:return hashlib.file_digest(f,'sha256').hexdigest()
+
+def ceil_float(value):
+ result=float(value)
+ while Fraction.from_float(result)<value:result=math.nextafter(result,math.inf)
+ return result
+
+def sqrt_upper(n):
+ result=math.sqrt(n)
+ while Fraction.from_float(result)**2<n:result=math.nextafter(result,math.inf)
+ return Fraction.from_float(result)
+
+def output_bound(gamma,beta,*,centered):
+ gamma=np.asarray(gamma);beta=np.asarray(beta)
+ if gamma.ndim!=1 or gamma.shape!=beta.shape or len(gamma)<2 or not np.isfinite(gamma).all() or not np.isfinite(beta).all():raise ValueError('invalid public affine vectors')
+ factor=sqrt_upper(len(gamma)-int(centered))
+ terms=[factor*abs(Fraction.from_float(float(g)))+abs(Fraction.from_float(float(b))) for g,b in zip(gamma,beta)]
+ peak=max(terms);floating=ceil_float(peak);power=1
+ while Fraction(power)<peak:power*=2
+ return dict(width=len(gamma),centered=centered,exact_real_abs_output_upper=floating,
+             power_of_two_cover=power,maximum_coordinate=int(terms.index(peak)),
+             sqrt_upper=float(factor),gamma_max_abs=float(np.abs(gamma).max()),beta_max_abs=float(np.abs(beta).max()),
+             upper_fraction=[str(peak.numerator),str(peak.denominator)])
+
+def main():
+ out=HERE/'result-v1';out.mkdir(exist_ok=False)
+ rows={};model_assets={};sources={str(Path(__file__).resolve()):digest(__file__)}
+ for kind,(directory,expected) in ASSETS.items():
+  checkpoint=directory/'model.safetensors';actual=digest(checkpoint)
+  if actual!=expected:raise ValueError('pinned model bytes differ')
+  config=json.loads((directory/'config.json').read_text());sources[str(directory/'config.json')]=digest(directory/'config.json')
+  eps=config['layer_norm_eps' if kind=='bert' else 'rms_norm_eps']
+  if not math.isfinite(eps) or eps<=0:raise ValueError('positive native epsilon required')
+  model_assets[kind]=dict(revision=directory.name,checkpoint_sha256=actual,config_sha256=digest(directory/'config.json'),epsilon=eps)
+  with safe_open(checkpoint,framework='np') as tensors:
+   names=sorted(n for n in tensors.keys() if n.endswith('.weight') and ('.LayerNorm.' in n if kind=='bert' else ('.layernorm.' in n or 'layernorm.weight' in n or n.endswith('.q_norm.weight') or n.endswith('.k_norm.weight') or n=='model.norm.weight')))
+   if len(names)!=(25 if kind=='bert' else 113):raise ValueError(f'unexpected normalization inventory {kind} {len(names)}')
+   for name in names:
+    gamma=tensors.get_tensor(name).astype(np.float64)
+    bias_name=name[:-len('weight')]+'bias'
+    beta=tensors.get_tensor(bias_name).astype(np.float64) if kind=='bert' else np.zeros_like(gamma)
+    result=output_bound(gamma,beta,centered=kind=='bert')
+    rows[kind+':'+name]=dict(result,weight_tensor=name,bias_tensor=bias_name if kind=='bert' else None,
+      gamma_f64le_sha256=hashlib.sha256(gamma.astype('<f8').tobytes()).hexdigest(),beta_f64le_sha256=hashlib.sha256(beta.astype('<f8').tobytes()).hexdigest())
+ with tarfile.open(out/'sources.tar.gz','w:gz') as archive:
+  for name in sources:
+   raw=Path(name).read_bytes();info=tarfile.TarInfo(name.lstrip('/'));info.size=len(raw);archive.addfile(info,io.BytesIO(raw))
+ after={name:digest(name) for name in sources};assert sources==after
+ with tarfile.open(out/'sources.tar.gz') as archive:
+  assert len(archive.getmembers())==len(sources)
+  for member in archive.getmembers():assert hashlib.sha256(archive.extractfile(member).read()).hexdigest()==sources['/'+member.name]
+ report=dict(passed=True,scope=__doc__,model_assets=model_assets,normalizations=rows,
+   counts={kind:sum(n.startswith(kind+':') for n in rows) for kind in ASSETS},
+   peak_bounds={kind:max(r['exact_real_abs_output_upper'] for n,r in rows.items() if n.startswith(kind+':')) for kind in ASSETS},
+   derivation=['RMS: sum(x_j^2)/D+epsilon >= x_i^2/D, hence abs(x_i)/sqrt(v)<=sqrt(D).',
+     'LayerNorm: centered coordinates sum to zero; Cauchy gives sum(c_j^2)>=D*c_i^2/(D-1), hence abs(c_i)/sqrt(v)<=sqrt(D-1).',
+     'Apply the public learned gamma and beta using the triangle inequality. Square-root upper endpoints are checked with exact rational squares; every final binary64 bound is rounded outward using exact rational comparison.'],
+   approximation_extension='Conditional: a uniform relative inverse-sqrt error delta yields (1+delta)*sqrt(D-centered)*abs(gamma_i)+abs(beta_i). No such polynomial or CKKS error certificate is supplied here.',
+   limitations=['Exact-real native-operator output bound, not an encrypted bound, finite-precision execution test, or inverse-sqrt input-domain certificate.',
+     'CKKS errors can perturb centered inputs and variances separately; their relation and propagation require a separate error analysis.',
+     'Power-of-two covers are public planning candidates only, not validated bootstrap profiles.'],
+   source_hashes_before=sources,source_hashes_after=after,source_archive_sha256=digest(out/'sources.tar.gz'),
+   no_jax_imported=not any(k=='jax' or k.startswith('jax.') for k in sys.modules),encrypted_execution=False)
+ assert report['no_jax_imported']
+ (out/'report.json').write_text(json.dumps(report,indent=2,allow_nan=False)+'\n')
+ print(json.dumps(dict(passed=True,counts=report['counts'],peak_bounds=report['peak_bounds'])))
+if __name__=='__main__':main()

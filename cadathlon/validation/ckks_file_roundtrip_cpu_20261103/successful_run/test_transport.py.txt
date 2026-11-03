@@ -1,0 +1,199 @@
+"""Transport boundary tests; synthetic payloads never claim encryption."""
+import builtins
+import copy
+import hashlib
+import io
+import json
+import os
+from pathlib import Path
+import sys
+from types import SimpleNamespace
+
+import numpy as np
+import pytest
+import transport
+
+Q=[4079617,1196033,1589249,1376257,2277377,1720321,1769473,1785857]
+PUBLIC=dict(context_id='a'*64,parameters=dict(degree=8192,num_slots=4096,q_towers=Q,
+    p_towers=[8273921,8257537],composite_degree=2,degree_layout=[64,128],precision=32,
+    max_level=3,scaling_factor=float(Q[-2])*Q[-1],output_scale=float(Q[-2])*Q[-1],
+    dnum=4,batch=2,sigma=3.190000057220458984375,secret_distribution='uniform_ternary'))
+
+
+def arrays(role='request'):
+    q=Q if role=='request' else Q[:2]
+    return dict(payload=np.zeros((2,2,64,128,len(q)),dtype=np.uint32),
+        moduli=np.asarray(q,dtype=np.int64),degree_layout=np.asarray([64,128],dtype=np.int64),
+        precision=np.asarray(32,dtype=np.int64),scale=np.asarray(PUBLIC['parameters']['scaling_factor'],dtype=np.float64),
+        nsd=np.asarray(1,dtype=np.int64))
+
+
+def publish(directory, *, fields=None, shape=None, role='request'):
+    directory.mkdir()
+    np.savez(directory/'ct_0.npz',**(arrays(role) if fields is None else fields))
+    (directory/'bundle.json').write_text(json.dumps(dict(shape={'__ct__':0} if shape is None else shape,count=1)))
+    manifest=dict(format=transport.FORMAT,context_id=PUBLIC['context_id'],request_id='request-opaque-123',
+        role=role,input_digest=None if role=='request' else 'b'*64,level=3 if role=='request' else 0,
+        files={name:hashlib.sha256((directory/name).read_bytes()).hexdigest() for name in ('ct_0.npz','bundle.json')})
+    (directory/'transport.json').write_bytes(transport._canonical(manifest))
+    return manifest
+
+
+def validate(path, *, role='request', **kwargs):
+    return transport.validate_ciphertext(path,public=PUBLIC,request_id='request-opaque-123',role=role,
+        input_digest=None if role=='request' else 'b'*64,**kwargs)
+
+
+def rehash(path):
+    manifest=json.loads((path/'transport.json').read_text())
+    for name in manifest['files']:
+        manifest['files'][name]=hashlib.sha256((path/name).read_bytes()).hexdigest()
+    (path/'transport.json').write_bytes(transport._canonical(manifest))
+
+
+@pytest.mark.parametrize('role',['request','response'])
+def test_fixed_schema_and_canonical_digest(role,tmp_path):
+    folder=tmp_path/'bundle';expected=publish(folder,role=role)
+    payload,scale,contract,manifest=validate(folder,role=role)
+    assert manifest==expected and payload.dtype==np.uint32 and scale==PUBLIC['parameters']['scaling_factor']
+    assert transport.manifest_digest(manifest)==hashlib.sha256((folder/'transport.json').read_bytes()).hexdigest()
+    assert contract['level']==(3 if role=='request' else 0)
+
+
+@pytest.mark.parametrize('field,value',[
+    ('context_id','c'*64),('request_id','request-other'),('role','response'),('level',2),
+    ('level',3.),('input_digest','b'*64),('format','legacy')])
+def test_context_request_and_role_binding(field,value,tmp_path):
+    folder=tmp_path/'bundle';manifest=publish(folder);manifest[field]=value
+    (folder/'transport.json').write_bytes(transport._canonical(manifest))
+    with pytest.raises(ValueError):validate(folder)
+
+
+def test_response_binds_input_digest_and_rejects_bool_level(tmp_path):
+    folder=tmp_path/'bundle';manifest=publish(folder,role='response');manifest['input_digest']='c'*64
+    (folder/'transport.json').write_bytes(transport._canonical(manifest))
+    with pytest.raises(ValueError):validate(folder,role='response')
+    manifest['input_digest']='b'*64;manifest['level']=False
+    (folder/'transport.json').write_bytes(transport._canonical(manifest))
+    with pytest.raises(ValueError):validate(folder,role='response')
+
+
+@pytest.mark.parametrize('kind',['extra','missing','symlink','directory','fifo','bad_hash','noncanonical','duplicate_json'])
+def test_artifact_inventory_and_digest_fail_closed(kind,tmp_path):
+    folder=tmp_path/'bundle';publish(folder)
+    if kind=='extra':(folder/'private.npy').write_bytes(b'no private files here')
+    elif kind=='missing':(folder/'ct_0.npz').unlink()
+    elif kind in ('symlink','directory','fifo'):
+        original=folder/'bundle.json';copy=tmp_path/'outside.json';copy.write_bytes(original.read_bytes());original.unlink()
+        if kind=='symlink':original.symlink_to(copy)
+        elif kind=='directory':original.mkdir()
+        else:os.mkfifo(original)
+    elif kind=='bad_hash':(folder/'bundle.json').write_bytes(b'{}')
+    elif kind=='noncanonical':
+        path=folder/'transport.json';path.write_text(json.dumps(json.loads(path.read_text()),indent=2))
+    else:
+        path=folder/'transport.json';raw=path.read_text();path.write_text(raw[:-2]+',"level":3}\n')
+    with pytest.raises((ValueError,OSError)):validate(folder)
+
+
+@pytest.mark.parametrize('kind',['dtype','shape','layout','moduli','moduli_type','precision','precision_type',
+    'nsd','nsd_type','scale','scale_nan','scale_zero','scale_type','residue','object','extra_field','compressed'])
+def test_npz_contract_rejects_even_when_file_hash_is_updated(kind,tmp_path,monkeypatch):
+    fields=arrays()
+    if kind=='dtype':fields['payload']=fields['payload'].astype(np.uint64)
+    elif kind=='shape':fields['payload']=fields['payload'][:1]
+    elif kind=='layout':fields['degree_layout']=np.asarray([128,64],dtype=np.int64)
+    elif kind=='moduli':fields['moduli']=fields['moduli'][::-1]
+    elif kind=='moduli_type':fields['moduli']=fields['moduli'].astype(np.uint32)
+    elif kind=='precision':fields['precision']=np.asarray(64,dtype=np.int64)
+    elif kind=='precision_type':fields['precision']=np.asarray(32.,dtype=np.float64)
+    elif kind=='nsd':fields['nsd']=np.asarray(2,dtype=np.int64)
+    elif kind=='nsd_type':fields['nsd']=np.asarray(True)
+    elif kind=='scale':fields['scale']=np.asarray(PUBLIC['parameters']['scaling_factor']*1.01,dtype=np.float64)
+    elif kind=='scale_nan':fields['scale']=np.asarray(float('nan'))
+    elif kind=='scale_zero':fields['scale']=np.asarray(0.)
+    elif kind=='scale_type':fields['scale']=np.asarray(1,dtype=np.int64)
+    elif kind=='residue':fields['payload'][0,0,0,0,0]=Q[0]
+    elif kind=='object':fields['payload']=np.array([object()],dtype=object)
+    elif kind=='extra_field':fields['secret_key']=np.zeros(3,dtype=np.uint32)
+    folder=tmp_path/'bundle';publish(folder,fields=fields)
+    if kind=='compressed':np.savez_compressed(folder/'ct_0.npz',**fields);rehash(folder)
+    # All rejection must happen before loading JAX or constructing Polynomial.
+    real_import=builtins.__import__
+    def guarded_import(name,*args,**kwargs):
+        if name=='jax' or name.startswith('jax.') or name=='jaxite_word':raise AssertionError('backend reached before rejection')
+        return real_import(name,*args,**kwargs)
+    monkeypatch.setattr(builtins,'__import__',guarded_import)
+    with pytest.raises(ValueError):
+        transport.load_ciphertext(folder,public=PUBLIC,request_id='request-opaque-123',role='request')
+
+
+@pytest.mark.parametrize('shape',[{'__ct__':-1},{'__ct__':True},{'__ct__':0,'target_id':17},{'__float__':1.25},{'__map__':{'embedding':3}}])
+def test_plaintext_bookkeeping_and_invalid_ciphertext_indices_rejected(shape,tmp_path):
+    folder=tmp_path/'bundle';publish(folder,shape=shape)
+    with pytest.raises(ValueError):validate(folder)
+
+
+class FakeCiphertext:
+    """Writer mechanics only; this test double is not encrypted evidence."""
+    def __init__(self):
+        self.data=arrays();self.shape=self.data['payload'].shape
+        self.degree_layout=(64,128);self.precision=32;self._ckks_nsd=1
+        self._ckks_scale=PUBLIC['parameters']['scaling_factor']
+    def validate(self):return self
+    def to_array(self):return self.data['payload']
+    def get_moduli(self):return Q
+
+
+def writer(monkeypatch):
+    monkeypatch.setitem(sys.modules,'jaxite_word',SimpleNamespace(Polynomial=FakeCiphertext))
+    return FakeCiphertext()
+
+
+def test_writer_never_reuses_an_existing_directory(tmp_path,monkeypatch):
+    value=writer(monkeypatch);folder=tmp_path/'owned';folder.mkdir();(folder/'keep').write_text('existing')
+    with pytest.raises(FileExistsError):transport.save_ciphertext(value,folder,public=PUBLIC,request_id='request-opaque-123',role='request')
+    assert (folder/'keep').read_text()=='existing'
+
+
+def test_writer_commits_manifest_last_and_preserves_only_expected_files(tmp_path,monkeypatch):
+    value=writer(monkeypatch);folder=tmp_path/'owned';real_replace=transport.os.replace;observed=[]
+    def replace(source,target):
+        assert not (folder/'transport.json').exists()
+        assert (folder/'ct_0.npz').is_file() and (folder/'bundle.json').is_file()
+        observed.append(True);return real_replace(source,target)
+    monkeypatch.setattr(transport.os,'replace',replace)
+    manifest=transport.save_ciphertext(value,folder,public=PUBLIC,request_id='request-opaque-123',role='request')
+    assert observed==[True] and set(p.name for p in folder.iterdir())==transport.FILES
+    assert validate(folder)[3]==manifest
+
+
+@pytest.mark.parametrize('interrupt',[RuntimeError,KeyboardInterrupt,SystemExit])
+def test_writer_cleans_its_fresh_directory_on_failure(interrupt,tmp_path,monkeypatch):
+    value=writer(monkeypatch);folder=tmp_path/'owned'
+    def fail(*args):raise interrupt('publication failed')
+    monkeypatch.setattr(transport.os,'replace',fail)
+    with pytest.raises(interrupt,match='publication failed'):
+        transport.save_ciphertext(value,folder,public=PUBLIC,request_id='request-opaque-123',role='request')
+    assert not folder.exists()
+
+
+def test_writer_does_not_delete_replacement_directory_or_mask_primary(tmp_path,monkeypatch):
+    value=writer(monkeypatch);folder=tmp_path/'owned';moved=tmp_path/'moved'
+    def fail(*args):
+        folder.rename(moved);folder.mkdir();(folder/'keep').write_text('replacement')
+        raise RuntimeError('publication failed')
+    monkeypatch.setattr(transport.os,'replace',fail)
+    with pytest.raises(RuntimeError,match='publication failed'):
+        transport.save_ciphertext(value,folder,public=PUBLIC,request_id='request-opaque-123',role='request')
+    assert (folder/'keep').read_text()=='replacement'
+
+
+def test_cleanup_failure_keeps_the_primary_error(tmp_path,monkeypatch):
+    value=writer(monkeypatch);folder=tmp_path/'owned'
+    def fail(*args):raise RuntimeError('primary publication')
+    def cleanup(*args):raise KeyboardInterrupt('cleanup interrupt')
+    monkeypatch.setattr(transport.os,'replace',fail);monkeypatch.setattr(transport.shutil,'rmtree',cleanup)
+    with pytest.raises(RuntimeError,match='primary publication') as error:
+        transport.save_ciphertext(value,folder,public=PUBLIC,request_id='request-opaque-123',role='request')
+    assert 'cleanup interrupt' in error.value.__notes__[0]

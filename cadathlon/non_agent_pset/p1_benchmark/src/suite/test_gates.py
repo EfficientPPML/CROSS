@@ -82,7 +82,17 @@ CHECKS = [
     # the strength of the frozen verdict alone.
     ("single instance, no Quality",
      lambda s: s.update(samples_scored=None, encrypted_accuracy=None,
-                        harness_model_accuracy=None, images=1), True, ""),
+                        harness_model_accuracy=None, images=1) or
+         s["harness_verdict"]["own_cleartext"].update(compared=1, cleartext_correct=1), True, ""),
+    ("NaN timing", lambda s: s.update(median_encrypted_compute_s=float("nan")), False, "invalid"),
+    ("zero timing", lambda s: s.update(median_encrypted_compute_s=0), False, "invalid"),
+    ("negative setup", lambda s: s.update(one_time_setup_s=-1), False, "invalid"),
+    ("infinite throughput", lambda s: s.update(throughput_images_per_s=float("inf")), False, "invalid"),
+    ("NaN accuracy", lambda s: s.update(encrypted_accuracy=float("nan")), False, "invalid"),
+    ("NaN agreement", lambda s: s["harness_verdict"]["own_cleartext"].update(top1_agreement=float("nan")), False, "invalid"),
+    ("partial agreement", lambda s: s["harness_verdict"]["own_cleartext"].update(compared=1), False, "incomplete"),
+    ("missing batch Quality", lambda s: s.update(samples_scored=None, encrypted_accuracy=None), False, "missing Quality"),
+    ("single still requires own reference", lambda s: s.update(images=1, samples_scored=None, encrypted_accuracy=None, harness_verdict={"status": "PASS"}), False, "no cleartext"),
 ]
 
 

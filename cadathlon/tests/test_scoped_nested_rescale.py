@@ -1,0 +1,144 @@
+"""HEMul rescale factory routing; disabled split arithmetic stays disabled."""
+from pathlib import Path
+import ast,gc,math,sys,weakref
+import numpy as np
+import pytest
+ROOT=Path(__file__).resolve().parents[2]
+sys.path[:0]=[str(ROOT),str(ROOT/'cadathlon/common')]
+import jax
+from jaxite_word import CKKSContext,ckks_ctx,he_params
+import hemul,rescale,polynomial,finite_field
+from encrypted_ntt import ScopedNTTSubsets,enable_scoped_ntt_subsets
+from encrypted_polynomial import EncryptedPolynomialEvaluator
+from test_scoped_ntt import make_owner
+from test_scoped_mul_ntt import tables_equal
+from test_scoped_rescale_ntt import controls_equal
+from test_encrypted_tensor_only import ring,server_for
+jax.config.update('jax_enable_x64',True)
+RECORDS=[]
+
+def nested(kernel):
+ return [getattr(kernel,n) for n in ('_he_rescale','_he_rescale_pre','_he_rescale_post') if hasattr(kernel,n)]
+
+def same(a,b,*,effective_nsd=False):
+ np.testing.assert_array_equal(a.polynomial,b.polynomial)
+ assert a.moduli==b.moduli and a.shape==b.shape and a.degree_layout==b.degree_layout
+ assert getattr(a,'_ckks_scale',None)==getattr(b,'_ckks_scale',None)
+ default=1 if effective_nsd else None
+ assert getattr(a,'_ckks_nsd',default)==getattr(b,'_ckks_nsd',default)
+
+@pytest.mark.parametrize('cd',[1,2])
+@pytest.mark.parametrize('skip',[False,True])
+@pytest.mark.parametrize('backend',[he_params.BarrettContext,finite_field.MontgomeryContext])
+def test_active_nested_controls_and_unchanged_no_rescale(cd,skip,backend):
+ owner=make_owner();provider=ScopedNTTSubsets(owner)
+ args=dict(batch=2,r=16,c=16,dnum=2,num_eval_mult=1,original_moduli=owner.q_towers,extend_moduli=owner.p_towers,composite_degree=cd,finite_field_context=backend)
+ expected=hemul._HEMulKernel(**args);actual=hemul._HEMulKernel(**args,polynomial_factory=provider.polynomial_factory)
+ for value in (expected,actual):value.control_gen(degree_layout=(16,16),keygen_sizeQ=4,skip_rescale=skip)
+ assert actual._use_split_rescale is expected._use_split_rescale is False
+ assert len(nested(actual))==(0 if skip else 1)
+ parent_fields=tables_equal(actual,expected);fields=0
+ for selected,ordinary in zip(nested(actual),nested(expected)):
+  assert selected._polynomial_factory.__self__ is provider
+  assert ordinary._polynomial_factory is hemul.Polynomial
+  fields+=controls_equal(selected,ordinary)
+ assert fields==(0 if skip else 12*cd)
+ if backend is finite_field.MontgomeryContext:assert provider.stats['builds']==0
+ provider.close()
+ assert tables_equal(actual,expected)==parent_fields
+ RECORDS.append(dict(kind='public_control_parity',composite_degree=cd,skip_rescale=skip,backend=backend.__name__,parent_fields=parent_fields,nested_fields=fields,split_path_executed=False))
+
+
+def test_all_three_private_constructors_forward_without_enabling_split():
+ tree=ast.parse(Path(hemul.__file__).read_text())
+ calls=[n for n in ast.walk(tree) if isinstance(n,ast.Call) and isinstance(n.func,ast.Name) and n.func.id=='_HERescaleKernel']
+ assert len(calls)==3
+ for call in calls:
+  value=next(k.value for k in call.keywords if k.arg=='polynomial_factory')
+  assert ast.dump(value)==ast.dump(ast.parse('self._polynomial_factory',mode='eval').body)
+ assignments=[n for n in ast.walk(tree) if isinstance(n,ast.Assign) and any(isinstance(t,ast.Attribute) and t.attr=='_use_split_rescale' for t in n.targets)]
+ assert len(assignments)==1 and isinstance(assignments[0].value,ast.Constant) and assignments[0].value.value is False
+
+
+def test_secure_cd1_cd2_facades_legacy_cd2_and_retirement(ring):
+ client,params,evaluation,dnum=ring
+ def execute():
+  tracked=[]
+  values=np.stack([np.linspace(-.3,.3,client.num_slots),.2*np.sin(np.arange(client.num_slots)/17)])
+  left=client.encrypt_slots_batch(values,scale=float(1<<40));right=client.encrypt_slots_batch(-.7*values,scale=float(1<<40))
+  high_left=client.encrypt_slots_batch(values,scale=float(1<<56));high_right=client.encrypt_slots_batch(-.7*values,scale=float(1<<56))
+  sources=(left,right,high_left,high_right)
+  snapshots=[(v.polynomial,v._ckks_scale,getattr(v,"_ckks_nsd",None),tuple(v.moduli)) for v in sources]
+  for cd in (1,2):
+   def server():
+    value=CKKSContext(dict(params,composite_degree=cd,evaluation_key=[jax.numpy.asarray(evaluation[k],dtype='uint32').transpose(0,2,1) for k in ('a','b')]))
+    value.program_initialization([],dnum=dnum,r=64,c=128,batch=2,pregenerated_rotation_keys={})
+    assert value.secret_key is None and value._param_cache.secret_key is None
+    return value
+   ordinary,selected=server(),server()
+   assert he_params.qp_is_secure(selected.q_towers,selected.p_towers,selected.degree,he_params.SecurityTarget(128,'classical'))
+   if cd==1:
+    with pytest.raises(ValueError,match='composite_degree=2'):enable_scoped_ntt_subsets(selected)
+    # The production adapter remains CD2-only. This independently secure
+    # core-hook test directly owns the public factory without weakening it.
+    provider=ScopedNTTSubsets(selected._param_cache)
+    for name in ('rotation_polynomial_factory','multiplication_polynomial_factory','rescale_polynomial_factory'):
+     assert getattr(selected._param_cache,name) is None
+     setattr(selected._param_cache,name,provider.polynomial_factory)
+   else:provider=enable_scoped_ntt_subsets(selected)
+   a_in,b_in=(high_left,high_right) if cd==1 else (left,right)
+   level=selected.max_level-1
+   expected_op=ordinary.he_mul[level];actual_op=selected.he_mul[level]
+   assert actual_op._hemul._use_split_rescale is False
+   if cd==1:
+    assert actual_op._hemul._he_rescale._polynomial_factory.__self__ is provider
+    assert nested(actual_op._no_relin_operator)==[]
+    count=controls_equal(actual_op._hemul._he_rescale,expected_op._hemul._he_rescale)
+   else:
+    assert nested(actual_op._hemul)==[]
+    assert actual_op._post_rescale._polynomial_factory.__self__ is provider
+    count=controls_equal(actual_op._post_rescale,expected_op._post_rescale)
+   raw_expected=expected_op.hemul_no_relin(a_in,b_in);raw_actual=actual_op.hemul_no_relin(a_in,b_in)
+   same(raw_actual,raw_expected)
+   assert raw_actual.num_elements==3 and raw_actual.num_moduli==a_in.num_moduli
+   del raw_actual,raw_expected
+   expected=expected_op.mul(a_in,b_in);actual=actual_op.mul(a_in,b_in);same(actual,expected)
+   error=float(np.max(np.abs(client.decrypt_slots_batch(actual)-values*(-.7*values))))
+   print({'public_facade_cd':cd,'input_scale':a_in._ckks_scale,'max_abs_error':error,'baseline_payload_exact':True},flush=True)
+   assert error<2e-6,error
+   # The compiled evaluator calls the same facade's raw multiply/rescale path.
+   arithmetic=None
+   if cd==2:
+    arithmetic=EncryptedPolynomialEvaluator(selected,compiled_multiply=True,low_memory=True)
+    same(arithmetic.multiply(a_in,b_in),expected,effective_nsd=True)
+   RECORDS.append(dict(kind='secure_public_facade',composite_degree=cd,input_level=level+1,nested_fields=count,max_abs_error=error,payload_metadata_exact=True,no_rescale_payload_metadata_exact=True,input_scale=a_in._ckks_scale,compiled_effective_nsd_and_payload_exact=True if cd==2 else None,production_opt_in_supported=cd==2))
+   tracked.extend([weakref.ref(selected),weakref.ref(selected._param_cache)])
+   if arithmetic is not None:arithmetic._clear_working_caches()
+   provider.close();ckks_ctx.evict_context_caches(ordinary);ckks_ctx.evict_context_caches(selected)
+   del arithmetic,provider,actual_op,expected_op,selected,ordinary,actual,expected
+  # Legacy private CD2 pre-rescales BOTH operands. Use genuine PTCT products
+  # so their real scale supports that path; decode with its derived scale.
+  ordinary,selected=server_for(ring,2),server_for(ring,2);provider=enable_scoped_ntt_subsets(selected)
+  pt=selected.encode_at_level(np.full(client.num_slots,.5),2,scale=float(1<<40))
+  a=selected.ptct_mul[2].mul(left,pt);b=selected.ptct_mul[2].mul(right,pt)
+  combined=a._clone_with_payload(jax.numpy.concatenate((a.polynomial,b.polynomial),axis=1),num_elements=4)
+  args=dict(batch=2,r=64,c=128,dnum=dnum,num_eval_mult=1,original_moduli=params['q_towers'],extend_moduli=params['p_towers'],composite_degree=2)
+  baseline=hemul._HEMulKernel(**args);candidate=hemul._HEMulKernel(**args,polynomial_factory=provider.polynomial_factory)
+  for kernel in (baseline,candidate):
+   kernel.control_gen(degree_layout=(64,128),keygen_sizeQ=len(params['q_towers']),skip_rescale=False)
+   kernel.setup_relinearization(*selected._param_cache.get_eval_key(1))
+  count=controls_equal(candidate._he_rescale,baseline._he_rescale)
+  expected=baseline.mul(combined);actual=candidate.mul(combined);same(actual,expected)
+  divisor=math.prod(params['q_towers'][-2:]);scale=(a._ckks_scale/divisor)*(b._ckks_scale/divisor)
+  error=float(np.max(np.abs(client.decrypt_slots_batch(actual,scale=scale)-.25*values*(-.7*values))));assert error<2e-6,error
+  RECORDS.append(dict(kind='secure_legacy_private_cd2',nested_fields=count,derived_decode_scale=scale,max_abs_error=error,payload_metadata_exact=True,split_path_executed=False))
+  tracked.extend([weakref.ref(selected),weakref.ref(selected._param_cache),*[weakref.ref(v.ntt_ctx) for v in candidate._he_rescale.ct_last_list+candidate._he_rescale.ct_work_list]])
+  provider.close();ckks_ctx.evict_context_caches(ordinary);ckks_ctx.evict_context_caches(selected)
+  for source,snapshot in zip(sources,snapshots):
+   assert source.polynomial is snapshot[0]
+   assert (source._ckks_scale,getattr(source,"_ckks_nsd",None),tuple(source.moduli))==snapshot[1:]
+  RECORDS.append(dict(kind="input_immutability",payload_identity_scale_nsd_presence_and_moduli_unchanged=True))
+  return tracked
+ refs=execute();jax.clear_caches();polynomial._POLYNOMIAL_REGISTRY.clear();he_params.ntt_mm._barrett_ntt_context_cache.clear();gc.collect()
+ assert all(ref() is None for ref in refs)
+ RECORDS.append(dict(kind='retirement',owners_and_nested_contexts_collected=True))

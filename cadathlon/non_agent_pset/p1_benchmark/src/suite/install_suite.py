@@ -73,7 +73,7 @@ def install(root: Path) -> list[str]:
         # pair and the slot layout and never touches the accelerator. Pinning
         # the platform here, before anything imports jax, also keeps a client
         # stage from colliding with the resident server for the one TPU.
-        pin = ('os.environ.setdefault("JAX_PLATFORMS", "cpu")\n'
+        pin = ('os.environ["JAX_PLATFORMS"] = "cpu"\n'
                if stage.startswith("client_") else "")
         shim.write_text(
             '#!/usr/bin/env python3\n'

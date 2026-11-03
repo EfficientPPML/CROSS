@@ -1,0 +1,37 @@
+{
+  "scope": "CPU-only source-bound collector/lifecycle validation, no HE or TPU.",
+  "passed": true,
+  "command": [
+    "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "cadathlon/tests/test_transformer_suite.py",
+    "cadathlon/tests/test_transformer_owned_keys.py",
+    "cadathlon/tests/test_bounded_qwen2_proof.py",
+    "--junitxml=/tmp/transformer-collector-outer-failure-20261103/result/junit.xml"
+  ],
+  "returncode": 0,
+  "elapsed_s": 5.734717822997482,
+  "affinity": [
+    152,
+    153,
+    154,
+    155
+  ],
+  "python": "3.13.18",
+  "environment": {
+    "JAX_PLATFORMS": "cpu",
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "source_files_unchanged": true,
+  "source_archive_sha256": "2387b898c57801285cadc7741ecc9e4c2584b85527daa1de5435d1bf5ce2ca5e",
+  "base": "/tmp/runtime-followup-integration-20261103/checkout; archived 32-file composed candidate",
+  "changes": [
+    "cadathlon/validation/check_transformer_suite.py",
+    "cadathlon/tests/test_transformer_suite.py"
+  ]
+}

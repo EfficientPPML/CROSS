@@ -13,6 +13,7 @@ import json
 import os
 import shutil
 import sys
+from p1_evidence import case_identity
 from pathlib import Path
 
 SUITE_DIR = Path(__file__).resolve().parent
@@ -112,7 +113,8 @@ def freeze_verdict(root: Path, case: dict) -> dict:
         "scope": "final run",
         "expected_images": expected,
         "predictions_written": len(encrypted),
-        "complete": len(encrypted) == expected,
+        "labels_written": len(truth),
+        "complete": len(encrypted) == expected and len(truth) == expected,
         "correct": sum(1 for a, b in zip(truth, encrypted) if a == b),
     }
     verdict["accuracy_over_expected"] = verdict["correct"] / expected if expected else 0.0
@@ -129,6 +131,9 @@ def freeze_verdict(root: Path, case: dict) -> dict:
     own, error = own_cleartext_predictions(root, case)
     if own is None:
         verdict["own_cleartext"] = {"status": "unavailable", "detail": error}
+    elif len(own) != expected:
+        verdict["own_cleartext"] = {"status": "unavailable",
+                                    "detail": f"expected {expected} cleartext predictions, got {len(own)}"}
     else:
         n = min(len(own), len(encrypted))
         agree = sum(1 for a, b in zip(own[:n], encrypted[:n]) if a == b)
@@ -197,10 +202,17 @@ def main():
         shutil.copy2(path, target / path.name)
     verdict = freeze_verdict(root, case)
     kept = copy_evidence(root, case, target)
+    execution = json.loads((root / 'io' / INSTANCE_NAMES[case['instance']] /
+                            'public_keys' / 'ring_manifest.json').read_text())
+    execution = {name: execution[name] for name in ('devices', 'device_kinds', 'execution_rings', 'batch')}
     (target / "case.json").write_text(json.dumps(
         {**case, "verify": verdict, "evidence_files": kept,
          "suite_commit": CONFIG["suite"]["commit"],
          "seed": CONFIG["determinism"]["seed"],
+         "baseline_profile": os.environ.get("P1_BASELINE_PROFILE", "legacy"),
+         "evaluation_id": os.environ.get("P1_EVALUATION_ID"),
+         "identity": case_identity(SUITE_DIR.parent.parent, root, INSTANCE_NAMES[case['instance']]),
+         "execution": execution,
          "devices_env": os.environ.get("P3_DEVICES"),
          "archived_from": str(source),
          "label": args.label or None}, indent=2) + "\n")

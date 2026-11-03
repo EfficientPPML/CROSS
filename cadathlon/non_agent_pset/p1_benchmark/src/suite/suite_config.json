@@ -61,5 +61,25 @@
     "max_batch_s": 300,
     "security_bits": 128,
     "_note": "logit_abs/logit_rel apply to the local runner, which sees cleartext logits; the suite publishes labels only, so the suite path gates on min_top1_agreement and the accuracy drop."
+  },
+  "evaluation_profiles": {
+    "legacy": {
+      "case_ids": [
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+        "C6"
+      ],
+      "note": "Original six ranked workloads."
+    },
+    "student": {
+      "case_ids": [
+        "C3",
+        "C4"
+      ],
+      "note": "100 images on one and eight chips. Explicit shorter competition schedule; requires separate student-ring calibration."
+    }
   }
 }

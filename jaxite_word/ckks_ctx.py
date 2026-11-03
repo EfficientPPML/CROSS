@@ -188,6 +188,50 @@ def FFTSpecialInv(vals: List[complex], cycl_order: int) -> None:
   _bitrev_inplace(vals)
 
 
+@lru_cache(maxsize=8)
+def _inverse_fft_plan(nh: int, cycl_order: int):
+  """Immutable public twiddles for the native special-FFT encoder path."""
+  roots = np.asarray(_roots(cycl_order), dtype=np.complex128)
+  rg = np.asarray(_rot_group(cycl_order, nh), dtype=np.int64)
+  stages = []
+  length = nh
+  while length >= 2:
+    lenq = length << 2
+    indices = ((lenq - rg[:length // 2] % lenq) % lenq) * (cycl_order // lenq)
+    twiddles = roots[indices]
+    twiddles.setflags(write=False)
+    stages.append((length, twiddles))
+    length >>= 1
+  permutation = np.asarray(util._bit_reverse_perm(nh), dtype=np.intp)
+  permutation.setflags(write=False)
+  return tuple(stages), permutation
+
+
+def _native_special_inverse_fft(values, cycl_order: int):
+  """The scalar inverse FFT's operations and rounding, vectorized by stage."""
+  array = np.array(values, dtype=np.complex128, copy=True)
+  stages, permutation = _inverse_fft_plan(len(array), cycl_order)
+  for length, twiddles in stages:
+    half = length // 2
+    blocks = array.reshape(-1, length)
+    upper = blocks[:, :half].copy()
+    lower = blocks[:, half:].copy()
+    blocks[:, :half] = upper + lower
+    difference = upper - lower
+    # Explicit real operations match Python complex multiplication's rounding.
+    # NumPy's complex multiply may use a different fused operation sequence.
+    blocks[:, half:].real = (
+        difference.real * twiddles.real - difference.imag * twiddles.imag
+    )
+    blocks[:, half:].imag = (
+        difference.real * twiddles.imag + difference.imag * twiddles.real
+    )
+  inverse = 1.0 / len(array)
+  array.real *= inverse
+  array.imag *= inverse
+  return array[permutation].tolist()
+
+
 def FFTSpecial(vals: List[complex], cycl_order: int) -> None:
   """CKKS 'special' forward FFT (DIT-style), in-place:
 
@@ -533,7 +577,8 @@ def _validated_slots(
 
 def _fast_encode(slots, ctx, scale: float = None,
                  noise_scale_degree: int = 1, *,
-                 allow_complex: bool = False) -> np.ndarray:
+                 allow_complex: bool = False,
+                 slot_count: int | None = None) -> np.ndarray:
   """Vectorized CKKS encode (slots → plaintext eval form).
 
   Output: (N, M) np.uint64 in NTT eval form (bit-reversed) — directly usable
@@ -542,6 +587,12 @@ def _fast_encode(slots, ctx, scale: float = None,
   if scale is None:
     scale = ctx.scaling_factor
   N = ctx.degree
+  if slot_count is None:
+    slot_count = ctx.num_slots
+  elif (type(slot_count) is not int or slot_count < 1
+        or slot_count & (slot_count - 1) or slot_count > N // 2
+        or (N // 2) % slot_count):
+    raise ValueError('slot_count must be a power-of-two divisor of N/2.')
   M = len(ctx.q_towers)
   cache = _get_encrypt_cache(ctx, M)
   m = N * 2
@@ -550,10 +601,10 @@ def _fast_encode(slots, ctx, scale: float = None,
   y = _validated_slots(
       slots,
       name='slots',
-      expected_size=ctx.num_slots,
+      expected_size=slot_count,
       allow_complex=allow_complex,
   )
-  FFTSpecialInv(y, m)
+  y = _native_special_inverse_fft(y, m)
 
   # 2) slot -> coefficients (length N, real)
   coeffs = slot_to_coeffs(y)
@@ -582,6 +633,17 @@ def _fast_encode(slots, ctx, scale: float = None,
   ints_base = [x + max_bits_value if x < 0 else x for x in ints_base]
 
   q_int = cache.q_int
+  # All production CROSS towers fit in 31 bits. Fit all coefficient/tower
+  # pairs with native integer arithmetic instead of a Python loop for each
+  # tower (hundreds of millions of iterations while encoding CNN diagonals).
+  # Retain the scalar path for wider/custom codec parameters.
+  coeffs_rns = _native_encode_residues(
+      ints_base, max_bits_value, q_int, log_approx, scale,
+      noise_scale_degree, ring_dim=N,
+  )
+  if coeffs_rns is not None:
+    return _vectorized_ntt(coeffs_rns, cache)
+
   ints_per_tower = [
       fit_to_native_vector(ints_base, max_bits_value, q_int[m_id], N)
       for m_id in range(M)
@@ -606,6 +668,45 @@ def _fast_encode(slots, ctx, scale: float = None,
     coeffs_rns[:, m_id] = np.array(ints_per_tower[m_id], dtype=np.uint64)
 
   return _vectorized_ntt(coeffs_rns, cache)
+
+
+def _native_encode_residues(
+    coefficients, bound, moduli, log_approx, scale, noise_scale_degree,
+    *, ring_dim=None,
+):
+  """Exact native counterpart of FitToNativeVector and scale restoration.
+
+  Return None outside the signed-int64/uint31 envelope. The caller then
+  retains arbitrary-precision Python arithmetic. Every multiplication here
+  is between residues below 2**31, so it cannot overflow uint64.
+  """
+  if (
+      not 0 < bound <= np.iinfo(np.int64).max
+      or not all(0 < q < (1 << 31) for q in moduli)
+      or min(coefficients, default=0) < 0
+      or max(coefficients, default=0) > np.iinfo(np.int64).max
+  ):
+    return None
+  values = np.asarray(coefficients, dtype=np.int64)
+  # This is exactly (n - (bound - q)) % q for the upper half, including
+  # nonstandard bounds. Do not simply reinterpret the input as signed.
+  centered = np.where(values > (bound >> 1), values - bound, values)
+  residues = np.remainder(
+      centered[:, None], np.asarray(moduli, dtype=np.int64)[None, :]
+  ).astype(np.uint64)
+  multiplier = 1 << max(0, log_approx)
+  if noise_scale_degree > 1:
+    multiplier *= pow(int(round(scale)), noise_scale_degree - 1)
+  if multiplier != 1:
+    factors = np.asarray([multiplier % q for q in moduli], dtype=np.uint64)
+    residues = (residues * factors) % np.asarray(moduli, dtype=np.uint64)
+  if ring_dim is not None and ring_dim != len(coefficients):
+    # Sparse CKKS slot encodings spread coefficients with a stride, exactly
+    # as FitToNativeVector does, rather than changing the ring degree.
+    expanded = np.zeros((ring_dim, len(moduli)), dtype=np.uint64)
+    expanded[np.arange(len(coefficients)) * (ring_dim // len(coefficients))] = residues
+    residues = expanded
+  return residues
 
 
 def _ct_to_backend_format(ciphertext: poly.Polynomial, ctx) -> poly.Polynomial:
@@ -960,6 +1061,124 @@ def _ckks_decrypt_list_reference(
   return final_res
 
 
+_UNIFORM_ENCODE_BOUND = (1 << 63) - (1 << 9) - 1
+
+
+@lru_cache(maxsize=256)
+def _uniform_encode_roots(degree, moduli):
+  # Do not accept a ring that the ordinary encoder would reject while
+  # constructing its public NTT tables. No full tables are needed here.
+  for modulus in moduli:
+    util.root_of_unity(2*degree, modulus)
+  return True
+
+
+def _try_uniform_real_encode(slots, cycl_order, q_towers, p_towers, scale,
+            noise_scale_degree=1, max_bits_in_word=61,
+            max_bits_value=_UNIFORM_ENCODE_BOUND, *, expected_slot_count=None):
+  del p_towers  # The existing encoder also ignores this compatibility arg.
+  # Preserve caller-selected floating-point warning/error semantics exactly.
+  # The original FFT contains many array operations; only its default mode
+  # is covered by the finite-intermediate argument used here.
+  if np.geterr() != dict(divide="warn", over="warn", under="ignore", invalid="warn"):
+    return None
+  if (type(slots) not in (list, tuple, np.ndarray)
+      or type(q_towers) not in (list, tuple)
+      or type(cycl_order) is not int or cycl_order < 4
+      or cycl_order & (cycl_order-1)
+      or type(noise_scale_degree) is not int or noise_scale_degree not in (1, 2)
+      or type(max_bits_in_word) is not int or not 1 <= max_bits_in_word <= 61
+      or type(max_bits_value) is not int or max_bits_value != _UNIFORM_ENCODE_BOUND
+      or type(scale) not in (float, np.float64) or not math.isfinite(scale) or scale <= 0):
+    return None
+  degree = cycl_order//2
+  try:
+    values = np.asarray(slots)
+    if (values.ndim != 1 or values.dtype.kind not in 'biufc'
+        or (expected_slot_count is not None and values.size != expected_slot_count)
+        or values.size < 1 or values.size & (values.size-1)
+        or values.size > degree//2 or degree//2 % values.size
+        or not np.isfinite(values).all()):
+      return None
+    if np.any(np.imag(values) != 0) or not np.all(values == values[0]):
+      return None
+    scalar = float(np.real(values[0]))
+    # Constant FFT butterfly intermediates can overflow even when the
+    # later scaled constant would be finite. Preserve ordinary fallback.
+    if abs(scalar) > sys.float_info.max/len(values):
+      return None
+    moduli = tuple(q_towers)
+    if not moduli or any(type(q) is not int or not 0 < q < (1 << 31) for q in moduli):
+      return None
+    with np.errstate(all='ignore'):
+      scaled = scalar*scale
+    if not math.isfinite(scaled):
+      return None
+    # A nonzero sub-half coefficient raises ScalingFactorTooSmall in
+    # the original codec. Let it retain that exact error behavior.
+    logc = int(math.ceil(math.log2(abs(scaled)))) if scaled else 0
+    if logc < 0:
+      return None
+    _uniform_encode_roots(degree, moduli)
+  except (TypeError, ValueError, OverflowError):
+    return None
+  # Preserve the original context-cache parameter updates as well as its
+  # exact log_approx quantization; no NTT tables or private keys are needed.
+  _get_or_make_encode_ctx(moduli, degree, scale, max_bits_in_word, max_bits_value)
+  shift = max(0, logc-max_bits_in_word)
+  coefficient = nearest_int(scaled/(2.**shift))
+  # The guarded bound/word pair keeps signed coefficients inside the
+  # unambiguous centered interval used by FitToNativeVector.
+  if abs(coefficient) > max_bits_value//2:
+    return None
+  multiplier = 1 << shift
+  if noise_scale_degree > 1:
+    multiplier *= pow(int(round(scale)), noise_scale_degree-1)
+  integer = coefficient*multiplier
+  residues = np.asarray([integer % q for q in moduli], dtype=np.uint64)
+  return np.broadcast_to(residues, (degree,len(moduli))).copy(order='C')
+
+
+def _ckks_encode_array(
+    slots: List[complex],
+    cycl_order: int,
+    q_towers: List[int],
+    p_towers: List[int],
+    scale: float,
+    noise_scale_degree: int = 1,
+    max_bits_in_word: int = 61,
+    max_bits_value: int = (1 << 63) - (1 << 9) - 1,
+) -> np.ndarray:
+  """Private CKKS encoder returning a uint64 array of shape (degree, Q).
+
+  Sparse complex bootstrap constants use the same validated vectorized
+  arithmetic as the historical list interface, without its Python-object
+  conversion. ``p_towers`` remains accepted and unused for compatibility.
+  """
+  degree = cycl_order // 2
+  # Reuse one lite ctx per (q_towers, degree) so the per-ctx twiddle/psi
+  # cache doesn't rebuild on every call. Encode path does NOT read
+  # pk0/pk1 from the cache — only twiddles + psi_pow + q.
+  lite = _get_or_make_encode_ctx(
+      q_towers, degree, scale, max_bits_in_word, max_bits_value)
+  arr = _try_uniform_real_encode(
+      slots, cycl_order, q_towers, p_towers, scale, noise_scale_degree,
+      max_bits_in_word, max_bits_value,
+  )
+  if arr is None:
+    arr = _fast_encode(
+        slots,
+        lite,
+        scale=scale,
+        noise_scale_degree=noise_scale_degree,
+        allow_complex=True,
+        # Bootstrap's sparse transforms encode a periodic slot pattern in the
+        # same full ring. Public codecs retain their own exact slot count.
+        slot_count=len(slots),
+    )  # (N, M) uint64
+  return arr
+
+
 def _ckks_encode(
     slots: List[complex],
     cycl_order: int,
@@ -970,28 +1189,11 @@ def _ckks_encode(
     max_bits_in_word: int = 61,
     max_bits_value: int = (1 << 63) - (1 << 9) - 1,
 ) -> List[List[int]]:
-  """Private fast CKKS encode kernel.
-
-  Same signature + output format (list-of-list of ints, shape (degree,
-  moduli)) as the historical pure-Python implementation, but routes to
-  the vectorized NumPy path. `p_towers` is accepted for backward-compat
-  but unused (encode emits Q-tower residues only — same as the legacy
-  reference). Bit-exact versus `_ckks_encode_fall_back` for the same inputs.
-  """
-  degree = cycl_order // 2
-  # Reuse one lite ctx per (q_towers, degree) so the per-ctx twiddle/psi
-  # cache doesn't rebuild on every call. Encode path does NOT read
-  # pk0/pk1 from the cache — only twiddles + psi_pow + q.
-  lite = _get_or_make_encode_ctx(
-      q_towers, degree, scale, max_bits_in_word, max_bits_value)
-  arr = _fast_encode(
-      slots,
-      lite,
-      scale=scale,
-      noise_scale_degree=noise_scale_degree,
-      allow_complex=True,
-  )  # (N, M) uint64
-  return arr.tolist()
+  """Compatibility interface returning nested lists of encoded residues."""
+  return _ckks_encode_array(
+      slots, cycl_order, q_towers, p_towers, scale,
+      noise_scale_degree, max_bits_in_word, max_bits_value,
+  ).tolist()
 
 
 def _ckks_encode_fall_back(
@@ -2078,6 +2280,18 @@ class CKKSContext:
       self._polynomial_ntt_ctx = result.ntt_ctx
     return result
 
+  def _encode_host_array(self, slots) -> np.ndarray:
+    """Encode a model constant without a host/device round trip per diagonal.
+
+    BSGS assembles many plaintexts into one staged array. Keeping individual
+    encodings on the host avoids transferring each one to a Polynomial on
+    the accelerator only to copy it immediately back before stacking.
+    """
+    encoded = _fast_encode(slots, self, scale=self.scaling_factor)
+    return np.asarray(encoded, dtype=np.uint32).reshape(
+        *self.degree_layout, len(self.q_towers)
+    )
+
   def encode_at_level(
       self,
       slots: List[complex],
@@ -2114,7 +2328,14 @@ class CKKSContext:
             'max_bits_value', (1 << 63) - (1 << 9) - 1
         ),
     )
-    encoded_rns = _fast_encode(slots, encode_ctx, scale=actual_scale)
+    encoded_rns = _try_uniform_real_encode(
+        slots, 2 * encode_ctx.degree, encode_ctx.q_towers, [], actual_scale,
+        max_bits_in_word=encode_ctx.parameters['max_bits_in_word'],
+        max_bits_value=encode_ctx.parameters['max_bits_value'],
+        expected_slot_count=encode_ctx.num_slots,
+    )
+    if encoded_rns is None:
+      encoded_rns = _fast_encode(slots, encode_ctx, scale=actual_scale)
     result = _polynomial_from_flat_array(
         np.asarray(encoded_rns, dtype=np.uint64)[None, None, ...],
         q_at_level,

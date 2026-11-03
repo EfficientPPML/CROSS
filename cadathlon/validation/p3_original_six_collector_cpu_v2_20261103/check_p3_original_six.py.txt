@@ -1,0 +1,209 @@
+"""Validation-only original six-case P3 TPU sweep; no compact timing claim.
+
+Fresh process per original fixture, cold baseline, no healthy-work deadline.
+The normal runner enforces actual ciphertext/security/numerical gates. A small
+child shim additionally rejects a non-TPU backend before invoking that runner.
+Reviewed generic process/key-directory ownership helpers handle cancellation.
+"""
+from __future__ import annotations
+import argparse
+from contextlib import contextmanager
+import hashlib
+import importlib.util
+import io
+import json
+import math
+import os
+from pathlib import Path
+import resource
+import runpy
+import signal
+import sys
+import tarfile
+import time
+
+HERE=Path(__file__).resolve().parent
+CASES=tuple(f'test{i}.in' for i in range(1,7))
+DEFAULT_REPO=Path('/home/jianming_gatech/CROSS')
+
+
+def load_helpers(repo):
+    path=HERE/'process_helpers.py'
+    spec=importlib.util.spec_from_file_location('p3_owned_process_helpers',path)
+    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+    module.ROOT=repo
+    return module
+
+
+@contextmanager
+def termination_signals(helpers):
+    # Reuse the reviewed TERM/HUP shield; extend it to repeated Ctrl-C.
+    previous=signal.getsignal(signal.SIGINT)
+    def interrupt(signum,frame):
+        signal.signal(signal.SIGINT,signal.SIG_IGN)
+        raise KeyboardInterrupt('interrupted by SIGINT')
+    signal.signal(signal.SIGINT,interrupt)
+    try:
+        with helpers.termination_signals():yield
+    finally:signal.signal(signal.SIGINT,previous)
+
+
+def source_bytes(repo):
+    paths={repo/'cadathlon/common/support.py'}
+    src=repo/'cadathlon/non_agent_pset/p3_cnn/src'
+    for folder in (repo/'jaxite_word',repo/'demos',src):paths.update(folder.rglob('*.py'))
+    paths.update(src.parent/'test'/name for case in CASES for name in (case,case.replace('.in','.out')))
+    output={}
+    for path in sorted(paths):
+        if path.is_symlink() or not path.is_file():raise ValueError(f'nonregular measured source: {path}')
+        output['repo/'+str(path.relative_to(repo))]=path.read_bytes()
+    for path in (Path(__file__).resolve(),HERE/'process_helpers.py'):
+        output['collector/'+path.name]=path.read_bytes()
+    return output
+
+
+def hashes(raw):return {name:hashlib.sha256(value).hexdigest() for name,value in raw.items()}
+
+
+def snapshot(output,raw):
+    with tarfile.open(output/'sources.tar.gz','w:gz') as archive:
+        for name,data in sorted(raw.items()):
+            info=tarfile.TarInfo(name);info.size=len(data);archive.addfile(info,io.BytesIO(data))
+    return hashlib.sha256((output/'sources.tar.gz').read_bytes()).hexdigest()
+
+
+def runner_arguments(repo,case):
+    return ['--case',str(repo/'cadathlon/non_agent_pset/p3_cnn/test'/case),
+            '--baseline','--warmups','0','--repeats','1']
+
+
+def command(repo,case,folder):
+    runner=repo/'cadathlon/non_agent_pset/p3_cnn/src/runner.py'
+    return ['/usr/bin/time','-v','-o',str(folder/'time.txt'),sys.executable,str(Path(__file__).resolve()),
+            '--repo',str(repo),'--child-runner',str(runner),'--',*runner_arguments(repo,case)]
+
+
+def child_runner(repo,runner,arguments,helpers):
+    expected=repo/'cadathlon/non_agent_pset/p3_cnn/src/runner.py'
+    if runner.resolve(strict=True)!=expected.resolve(strict=True):raise ValueError('unapproved original P3 runner')
+    if arguments not in [runner_arguments(repo,case) for case in CASES]:raise ValueError('child requires an exact original baseline case command')
+    if os.environ.get('JAX_PLATFORMS')!='tpu':raise ValueError('explicit TPU backend required')
+    with termination_signals(helpers):
+        import jax
+        if jax.default_backend()!='tpu' or not jax.devices() or any(d.platform!='tpu' for d in jax.devices()):
+            raise ValueError('actual TPU devices are required')
+        sys.path.insert(0,str(expected.parent));sys.argv=[str(expected),*arguments]
+        runpy.run_path(str(expected),run_name='__main__')
+
+
+def validate_result(result,case,helpers):
+    if not isinstance(result,dict) or result.get('passed') is not True:raise ValueError('runner did not pass')
+    for field,expected in (('case',case),('mode','HE-synthetic-smoke'),('implementation','baseline.py'),
+        ('cold_start_included',True),('mapping_release_included',True),('trained_accuracy_evaluated',False)):
+        if result.get(field)!=expected or (isinstance(expected,bool) and result.get(field) is not expected):
+            raise ValueError(f'wrong {field}')
+    if not isinstance(result.get('device'),str) or 'TPU' not in result['device'].upper():raise ValueError('runner did not use TPU')
+    for field,count in (('server_s',1),('end_to_end_s',1),('warmup_s',0),('warmup_server_s',0)):
+        values=result.get(field)
+        if not isinstance(values,list) or len(values)!=count:raise ValueError('wrong cold sample count')
+        for value in values:helpers.number(value,field,positive=True)
+    if result['end_to_end_s'][0]<result['server_s'][0]:raise ValueError('request time shorter than server time')
+    if result.get('median_s')!=result['end_to_end_s'][0]:raise ValueError('median differs from sole cold sample')
+    setup=helpers.number(result.get('setup_s'),'setup_s');total=helpers.number(result.get('total_s'),'total_s',positive=True)
+    if total+1e-5<setup+result['end_to_end_s'][0]:raise ValueError('total omits setup or request')
+    for field in ('max_abs_error','nrmse','top1_agreement'):helpers.number(result.get(field),field)
+    if not .99<=result['top1_agreement']<=1:raise ValueError('argmax gate failed')
+    rings=result.get('execution_rings')
+    if not isinstance(rings,list) or not rings:raise ValueError('missing actual execution rings')
+    for ring in rings:
+        if type(ring.get('security_bits')) is not int or ring['security_bits']<128 or ring.get('security_model')!='classical':
+            raise ValueError('actual-ring security metadata missing')
+        q,p=ring.get('q_towers'),ring.get('p_towers')
+        if (not isinstance(q,list) or not q or not isinstance(p,list) or not p
+                or any(type(x) is not int or x<3 for x in q+p)
+                or ring.get('num_q')!=len(q) or ring.get('num_p')!=len(p)):
+            raise ValueError('invalid actual modulus inventory')
+        actual=sum(math.log2(x) for x in q+p)
+        if not math.isclose(actual,ring.get('log2_QP',0),rel_tol=1e-12):raise ValueError('actual QP does not match report')
+
+
+def evaluate(repo,output,helpers):
+    output.mkdir(parents=True,exist_ok=False)
+    started=time.monotonic();before=None;caught=None;active=None
+    report=dict(passed=False,scope=__doc__,cases={},schedule=list(CASES),profile='original',
+        warmups=0,repeats=1,healthy_case_timeout_s=None,cleanup_grace_s=30.,
+        collector_pid=os.getpid(),cpu_affinity=sorted(os.sched_getaffinity(0)),
+        started_utc=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()))
+    try:
+        helpers.write_json(output/'report.json',report)
+        raw=source_bytes(repo);before=hashes(raw)
+        report['source_hashes_start']=before;report['source_archive_sha256']=snapshot(output,raw)
+        if hashes(source_bytes(repo))!=before:raise RuntimeError('source changed during startup archive')
+        helpers.write_json(output/'source-start.json',before)
+        report['software']=helpers.software_versions()
+        report['environment']={name:os.environ.get(name) for name in helpers.ENVIRONMENT}
+        report['child_environment_overrides']=helpers.child_environment_overrides()
+        for case in CASES:
+            active=case;folder=output/Path(case).stem;folder.mkdir()
+            report['active_case']=case;helpers.write_json(output/'report.json',report)
+            print(json.dumps({'starting':case,'output':str(folder)}),flush=True)
+            record=helpers.run_case(command(repo,case,folder),folder,timeout=None,cleanup_grace_s=30.)
+            after=hashes(source_bytes(repo));record['source_files_unchanged']=after==before
+            helpers.write_json(folder/'source-after.json',after)
+            if not record['source_files_unchanged']:record.setdefault('error','source/fixture changed; sweep stopped')
+            clean=all(record.get(name) is True for name in ('process_reaped','public_key_store_removed','owned_directory_handle_closed'))
+            if not clean:record.setdefault('error','cleanup incomplete; sweep stopped')
+            if 'error' not in record:
+                try:validate_result(record.get('result'),case,helpers);record['passed']=True
+                except (ValueError,TypeError) as error:record['error']=str(error)
+            if (folder/'time.txt').exists():
+                for line in (folder/'time.txt').read_text().splitlines():
+                    if 'Maximum resident set size (kbytes):' in line:record['peak_child_rss_kib']=int(line.rsplit(':',1)[1])
+            report['cases'][case]=record;helpers.write_json(folder/'process.json',record)
+            helpers.write_json(output/'report.json',report)
+            if not clean or not record['source_files_unchanged']:break
+    except BaseException as error:
+        caught=error;report['error']=f'{type(error).__name__}: {error}'
+        if active is not None:
+            path=output/Path(active).stem/'process.json'
+            try:report['cases'][active]=json.loads(path.read_text())
+            except (ValueError,OSError) as evidence_error:report['active_case_evidence_error']=str(evidence_error)
+        raise
+    finally:
+        final_cancellation=None;report.pop('active_case',None)
+        try:after=hashes(source_bytes(repo));helpers.write_json(output/'source-end.json',after)
+        except BaseException as error:
+            after=None;report['source_read_error']=f'{type(error).__name__}: {error}'
+            if caught is not None:caught.add_note('Final source inspection also failed: '+str(error))
+            if not isinstance(error,Exception):final_cancellation=error
+        report.update(source_hashes_end=after,source_files_unchanged=before is not None and before==after,
+            elapsed_s=time.monotonic()-started,parent_peak_rss_kib=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+        report['complete']=set(report['cases'])==set(CASES)
+        report['passed']=bool(report['complete'] and report['source_files_unchanged'] and 'error' not in report
+            and all(r.get('passed') is True for r in report['cases'].values()))
+        try:helpers.write_json(output/'report.json',report)
+        except BaseException as error:
+            primary=caught if caught is not None else final_cancellation
+            if primary is None:raise
+            primary.add_note(f'Final sweep evidence write failed: {type(error).__name__}: {error}')
+        if caught is None and final_cancellation is not None:raise final_cancellation
+    return 0 if report['passed'] else 1
+
+
+def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--repo',type=Path,default=DEFAULT_REPO)
+    parser.add_argument('--output',type=Path);parser.add_argument('--plan',action='store_true')
+    parser.add_argument('--child-runner',type=Path);parser.add_argument('runner_arguments',nargs=argparse.REMAINDER)
+    args=parser.parse_args();repo=args.repo.resolve();helpers=load_helpers(repo)
+    if args.child_runner:
+        arguments=args.runner_arguments[1:] if args.runner_arguments[:1]==['--'] else args.runner_arguments
+        return child_runner(repo,args.child_runner,arguments,helpers)
+    if args.plan:
+        print(json.dumps(dict(cases=CASES,arguments=[runner_arguments(repo,c) for c in CASES],
+            fresh_process_per_case=True,backend='tpu',healthy_case_timeout_s=None,cleanup_grace_s=30.),indent=2));return 0
+    if args.output is None:parser.error('--output required unless --plan')
+    if not Path('/usr/bin/time').is_file():parser.error('GNU time is required')
+    with termination_signals(helpers):return evaluate(repo,args.output.resolve(),helpers)
+
+if __name__=='__main__':raise SystemExit(main())

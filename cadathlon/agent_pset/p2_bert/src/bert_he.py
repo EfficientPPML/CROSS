@@ -5,6 +5,10 @@ The benchmark invokes the five file-based functions in separate processes.
 See stages.py for each function's path dictionary and doc/problem.md for gates.
 """
 
+# Remove the unimplemented marker when replacing the starter with real HE code.
+IMPLEMENTATION_STATUS = 'unimplemented'
+
+
 
 def create_session(config, weights, *, batch, sequence_length, devices):
     """Local synthetic fixtures, with public NumPy weights and client embeddings.

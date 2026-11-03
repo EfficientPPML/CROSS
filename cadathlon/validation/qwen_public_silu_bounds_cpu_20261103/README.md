@@ -1,0 +1,13 @@
+# Public-weight Qwen gate bounds and fresh input freeze
+
+All28×3072=86,016 gate rows were bounded using pinned public weights only. For each row, B=sqrt(1024 sum_i(W_i gamma_i)^2) bounds the exact-real gate after post-attention RMSNorm with positive epsilon. Layer maximum bounds range from41.803742 (layer0) to3200.237701 (layer27); layer26 reaches677.691389. These are native algebra bounds before polynomial multiplier or floating/CKKS error terms. No candidate coefficient was selected and no model forward ran.
+
+Each BF16/F32 source tensor was compared directly with its safetensors byte range, promoted exactly to binary32, and checked by source-dtype roundtrip. Both raw and promoted tensor digests are retained. Products of two finite binary32 numbers are exact normal binary64 values (apart from zero); their bit decompositions are squared and summed with Python integers. Every final square-root bound is checked outward by exact Fraction arithmetic. All row squared bounds and endpoints are stored in the report. Thirteen synthetic tests independently compare the bulk sum with direct Fractions, including signed zeros, subnormals and maximum magnitudes.
+
+The56 proposed fresh public texts tokenize naturally to54–61 tokens. Their selected S8/S16/S32 sequences are all distinct, with zero equality overlap against344 earlier calibration/original-validation records. This freezes48prefill inputs and8four-step decode seeds before any revised selection or model measurement. It does not measure or predict their accuracy. The original candidate1 calibration pass and original validation failure remain unchanged.
+
+Session64792 exited0 and was reaped; its shell/time/Python PIDs1163784/1163788/1163789 were absent. Internal duration17.576s. All11 archived source/input dependencies and seven public checkpoint/tokenizer assets were unchanged. No JAX/HE/TPU ran. The source/package records are not a full binary environment image.
+
+Using these bounds for approximate SiLU requires a uniform relative inverse-sqrt error certificate and the same input/variance relation. Twenty post-normalization sites have existing ideal Newton certificates; the three power and five balanced polynomial sites need uniform certificates instead of sampled grid errors. Actual variance-domain coverage, floating execution, CKKS errors and refresh remain separate obligations. The larger domains may make target degree/depth expensive or unsupported.
+
+`python verify_archive.py` checks archived bytes, all86,016 outward rational square-root enclosures, tensor metadata and frozen-input disjointness. It does not recompute the original weighted sums from a newly opened checkpoint; the exact source/script and pinned tensor hashes make that public extraction reproducible.

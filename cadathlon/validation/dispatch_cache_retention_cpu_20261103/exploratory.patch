@@ -1,0 +1,12 @@
+--- a/cadathlon/common/encrypted_polynomial.py
++++ b/cadathlon/common/encrypted_polynomial.py
+@@ -181,7 +181,8 @@
+         self._constant_cache.clear()
+         self.ctx._param_cache._formatted_rotation_keys.clear()
+         self.ctx._param_cache.level_params.clear()
+-        jax.clear_caches()
++        # ISOLATED PROBE ONLY: preserve ordinary JAX dispatch caches.
++        # All explicit bindings, controls and registries are still cleared.
+         # Compiled pytrees have been discarded. Live ciphertexts retain their
+         # own context, and register again when passed to a new JAX transform.
+         polynomial._POLYNOMIAL_REGISTRY.clear()

@@ -1,0 +1,82 @@
+{
+  "case": "test2.in",
+  "command": [
+    "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+    "/home/jianming_gatech/CROSS/cadathlon/non_agent_pset/p3_cnn/src/runner.py",
+    "--case",
+    "/home/jianming_gatech/CROSS/cadathlon/non_agent_pset/p3_cnn/test/test2.in",
+    "--baseline",
+    "--warmups",
+    "0",
+    "--repeats",
+    "1"
+  ],
+  "passed": true,
+  "started_utc": "2026-11-02T20:19:09.651609+00:00",
+  "returncode": 0,
+  "parent_elapsed_s": 603.6852687629998,
+  "source_unchanged": true,
+  "runner": {
+    "case": "test2.in",
+    "mode": "HE-synthetic-smoke",
+    "device": "TPU_0(process=0,(0,0,0,0))",
+    "passed": true,
+    "implementation": "baseline.py",
+    "execution_rings": [
+      {
+        "degree": 32768,
+        "num_slots": 16384,
+        "num_q": 16,
+        "num_p": 4,
+        "dnum": 4,
+        "max_level": 7,
+        "q_towers": [
+          2147352577,
+          1065484289,
+          1065811969,
+          1068236801,
+          1079443457,
+          1080360961,
+          1068433409,
+          1068564481,
+          1077477377,
+          1069219841,
+          1070727169,
+          1071513601,
+          1073872897,
+          1074266113,
+          1072496641,
+          1073479681
+        ],
+        "p_towers": [
+          2146959361,
+          2146041857,
+          2145976321,
+          2144796673
+        ],
+        "log2_Q": 480.96377040094364,
+        "log2_QP": 604.9596299590162,
+        "security_bits": 128,
+        "security_model": "classical"
+      }
+    ],
+    "setup_s": 583.0891035469995,
+    "end_to_end_s": [
+      2.0108148439994693
+    ],
+    "server_s": [
+      1.041430245999436
+    ],
+    "warmup_s": [],
+    "warmup_server_s": [],
+    "cold_start_included": true,
+    "median_s": 2.0108148439994693,
+    "batch": 2,
+    "trained_accuracy_evaluated": false,
+    "max_abs_error": 3.767090805961715e-13,
+    "nrmse": 1.5275279445423072e-11,
+    "top1_agreement": 1.0,
+    "total_s": 595.3497787520009
+  },
+  "peak_child_rss_kib": 134220380
+}

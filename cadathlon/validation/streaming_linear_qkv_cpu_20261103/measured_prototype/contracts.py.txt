@@ -1,0 +1,78 @@
+"""Fixed QKV public model/key manifest and row-tile codec, without secret reads."""
+from pathlib import Path
+import hashlib,json,math
+import numpy as np
+from spec import ASSETS,REVISION,KINDS,ROTATIONS,parameters
+from transport import _json,_canonical,_read_regular
+
+def sha(path):
+ with Path(path).open('rb') as f:return hashlib.file_digest(f,'sha256').hexdigest()
+def digest(value):return hashlib.sha256(_canonical(value)).hexdigest()
+def write(path,value):Path(path).write_bytes(_canonical(value))
+def linear_source_sha256():
+ import encrypted_streaming_linear
+ return sha(encrypted_streaming_linear.__file__)
+def packing_contract():
+ from encrypted_streaming_linear import RowTileLayout
+ return {'rows':2,'width':768,'pitch':4096,'input_level':1,'output_level':0,'outputs':list(KINDS),'row_tile_contract':RowTileLayout(8192).linear_contract(rows=2,input_width=768,output_width=768)}
+def pack_rows(rows):
+ from encrypted_streaming_linear import RowTileLayout
+ rows=np.asarray(rows)
+ if rows.dtype!=np.float64 or rows.shape!=(2,768) or not np.isfinite(rows).all():raise ValueError('two finite float64 full-width rows required')
+ return next(RowTileLayout(8192).pack_client_rows(rows))
+def unpack_rows(slots):
+ from encrypted_streaming_linear import RowTileLayout
+ return RowTileLayout(8192).unpack_client_rows([slots],rows=2,width=768)
+def check_parameters(value):
+ if value!=parameters() or set(value)!=set(parameters()):raise ValueError('unsupported public component parameters')
+ for name in ('degree','num_slots','composite_degree','precision','max_level','dnum','batch'):
+  if type(value[name]) is not int:raise ValueError('noninteger public parameter')
+ from jaxite_word import he_params
+ if value['sigma']!=he_params.DEFAULT_SIGMA or value['secret_distribution']!=he_params.SECRET_DISTRIBUTION:raise ValueError('security distributions differ')
+ if not he_params.qp_is_secure(value['q_towers'],value['p_towers'],value['degree'],he_params.SecurityTarget(128,'classical')):raise ValueError('insecure actual ring')
+ he_params.assert_p_coverage(value['q_towers'],value['p_towers'],value['dnum'])
+ return sum(math.log2(q) for q in value['q_towers']+value['p_towers'])
+def load_model(directory):
+ directory=Path(directory);manifest=_json(_read_regular(directory/'model_manifest.json',65536))
+ names={f'{kind}_{suffix}.npy' for kind in KINDS for suffix in ('weight','bias')}
+ if set(manifest)!={'schema','model_id','revision','asset_sha256','tensors'} or manifest['schema']!='pinned-bert-layer0-qkv-v1' or manifest['model_id']!='google-bert/bert-base-cased-finetuned-mrpc' or manifest['revision']!=REVISION or manifest['asset_sha256']!=ASSETS or set(manifest['tensors'])!=names:raise ValueError('public pinned model identity differs')
+ if directory.is_symlink() or {p.name for p in directory.iterdir()}!=names|{'model_manifest.json'}:raise ValueError('public model inventory differs')
+ arrays={}
+ for kind in KINDS:
+  pair=[]
+  for suffix,shape in (('weight',(768,768)),('bias',(768,))):
+   name=f'{kind}_{suffix}.npy';desc=manifest['tensors'][name];p=directory/name
+   if set(desc)!={'name','shape','dtype','file_sha256','tensor_sha256'} or desc['name']!=f'bert.encoder.layer.0.attention.self.{kind}.{suffix}' or desc['shape']!=list(shape) or desc['dtype']!='<f4' or p.is_symlink() or sha(p)!=desc['file_sha256']:raise ValueError('public tensor identity differs')
+   a=np.load(p,allow_pickle=False,mmap_mode='r')
+   if a.dtype.str!='<f4' or a.shape!=shape or not np.isfinite(a).all() or hashlib.sha256(a.tobytes()).hexdigest()!=desc['tensor_sha256']:raise ValueError('public tensor data differs')
+   pair.append(a.astype(np.float64))
+  arrays[kind]=tuple(pair)
+ return manifest,arrays
+
+def key_names():return {'public_key.npy','relin_a.npy','relin_b.npy'}|{f'rot_{i}_{part}.npy' for i in ROTATIONS for part in ('a','b')}
+def store_array(directory,name,array):
+ a=np.asarray(array,dtype=np.uint32);np.save(directory/name,a,allow_pickle=False)
+ return {'sha256':sha(directory/name),'shape':list(a.shape),'dtype':'uint32'}
+def load_public(directory,model_directory):
+ directory=Path(directory);raw=_read_regular(directory/'public_manifest.json',131072);m=_json(raw)
+ expected={'schema','parameters','rotations','arrays','representation','keygen_source_sha256','model_manifest_sha256','packing','streaming_linear_source_sha256','context_id'}
+ if not isinstance(m,dict) or set(m)!=expected:raise ValueError('unexpected public manifest fields')
+ body={k:v for k,v in m.items() if k!='context_id'}
+ if m['context_id']!=digest(body) or m['schema']!='bert-qkv-public-ckks-v2' or raw!=_canonical(m):raise ValueError('public context identity differs')
+ if m['streaming_linear_source_sha256']!=linear_source_sha256():raise ValueError('streaming linear source differs')
+ check_parameters(m['parameters'])
+ if m['rotations']!=ROTATIONS or m['representation']!='standard-ntt-residues/digit-modulus-degree' or m['packing']!=packing_contract():raise ValueError('unsupported circuit layout')
+ from jaxite_word import key_gen
+ if m['keygen_source_sha256']!=sha(key_gen.__file__):raise ValueError('public key source differs')
+ model,matrices=load_model(model_directory)
+ if sha(Path(model_directory)/'model_manifest.json')!=m['model_manifest_sha256']:raise ValueError('public model binding differs')
+ names=key_names()
+ if set(m['arrays'])!=names or directory.is_symlink() or {p.name for p in directory.iterdir()}!=names|{'public_manifest.json'}:raise ValueError('unexpected public key inventory')
+ arrays={};p=m['parameters'];q=p['q_towers'];qp=q+p['p_towers']
+ for name in sorted(names):
+  path=directory/name;desc=m['arrays'][name];shape=(2,4,16384) if name=='public_key.npy' else (2,7,16384);moduli=q if name=='public_key.npy' else qp
+  if set(desc)!={'sha256','shape','dtype'} or desc['shape']!=list(shape) or desc['dtype']!='uint32' or path.is_symlink() or sha(path)!=desc['sha256']:raise ValueError('public key descriptor differs')
+  a=np.load(path,allow_pickle=False,mmap_mode='r')
+  if a.dtype!=np.uint32 or a.shape!=shape or np.any(a>=np.asarray(moduli,dtype=np.uint32)[None,:,None]):raise ValueError('public key residues differ')
+  arrays[name]=a
+ return m,arrays,matrices

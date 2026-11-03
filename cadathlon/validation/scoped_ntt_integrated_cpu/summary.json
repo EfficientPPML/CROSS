@@ -1,0 +1,22 @@
+{
+  "status": "isolated, unpromoted full-runtime opt-in; live files untouched",
+  "component_passed": true,
+  "component_seconds": 20.464074170999083,
+  "component_scope": "N8192 Q8/P2 dnum4 batch2, two levels, positive/negative rotations; normal accessor and compiled rotation exact ciphertext/scale/NSD/moduli; executable reused after cache clears; default restored after disable.",
+  "component_max_client_error": 2.10606388828527e-07,
+  "tests_passed": 45,
+  "test_seconds": 24.578278804998263,
+  "shared_sources_equal": true,
+  "shared_source_count": 92,
+  "source_archive_members": 97,
+  "patch_applies_to_current_live_source": true,
+  "opt_in": "create_toy_session(..., ntt_subsets=True), or enable_scoped_ntt_subsets(initialized_public_context); defaultFalse.",
+  "lifecycle": "Provider attached only to its parameter-cache owner, holds weak references, detaches on close; session all-attempt cleanup tested across RuntimeError/KeyboardInterrupt/SystemExit.",
+  "backing_lifetime_test": "A NumPy prefix view retains full master backing after master wrapper collection. Backing is released only after final view drops; this behavior is explicitly tested.",
+  "limitations": [
+    "No live integration, package manifest change, transformer accuracy or TPU performance result. The new encrypted_ntt helper must be added to release common-file allowlist if promoted.",
+    "Current production-shape public-table proof is the separate initial scoped_ntt_subset_cpu artifact. This integrated component uses N8192 and shares the same subset arithmetic but adds owner/session wiring.",
+    "No total-HBM or zero-copy claim; caller-held contexts/controls and master backing arrays remain live as required.",
+    "Failure snapshot records first opt-in setup rejecting an empty ciphertext bundle before candidate HE; preserved separately and not labelled passing."
+  ]
+}

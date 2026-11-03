@@ -1,0 +1,150 @@
+{
+  "scope": "Completed optimized BERT public test1 only; parent12-case sweep remains live/incomplete.",
+  "verified_utc": "2026-11-03T04:54:52.753813+00:00",
+  "case_passed": true,
+  "case_returncode": 0,
+  "case_pid": 959719,
+  "case_pid_absent": true,
+  "parent_pid": 944985,
+  "parent_still_present": true,
+  "overall_sweep_passed": false,
+  "completed_case_count_at_checkpoint": 2,
+  "required_total_cases": 12,
+  "parent_tool_session": 12657,
+  "parent_tool_exit_code": null,
+  "parent_tool_reaping_owner": "root",
+  "source_count": 199,
+  "source_archive_and_current_snapshot_verified": true,
+  "source_archive_sha256": "bc0ad1b2a3796fe4ecb5944d68f3ca65561ad5740357470a1e634cc243ec387b",
+  "numeric": {
+    "max_abs_error": 0.004302472196941964,
+    "nrmse": 0.011767177989092036,
+    "top1_agreement": 1.0
+  },
+  "timing": {
+    "setup_s": 592.8390801989954,
+    "server_s": 1704.1855845089958,
+    "end_to_end_s": 1714.3393077709989,
+    "total_s": 2322.0219199229978
+  },
+  "external_case_seconds": 2329.452328567,
+  "sampled_resource_summary": {
+    "samples": 2216,
+    "sample_interval_s": 1.0,
+    "sampled_peak_process_tree_rss_bytes": 40368857088,
+    "scope": "Sampled sum of RSS for observed owned process-group/descendant tree; shared pages can be counted twice, transient peaks/escaped descendants can be missed. Not an OS sandbox or a continuous peak guarantee."
+  },
+  "device_checkpoints": [
+    {
+      "boundary": "input",
+      "ciphertexts": [
+        {
+          "shape": [
+            1,
+            2,
+            256,
+            512,
+            102
+          ],
+          "degree": 131072,
+          "moduli_count": 102,
+          "payload_bytes": 106954752,
+          "scale": 6.89940115708969e+16,
+          "nsd": null,
+          "devices": [
+            {
+              "platform": "tpu",
+              "id": 0,
+              "device_kind": "TPU v6 lite",
+              "process_index": 0,
+              "local_hardware_id": 0,
+              "coords": [
+                0,
+                0,
+                0
+              ],
+              "slice_index": null,
+              "platform_version": "TFRT TPU v6 lite\nBuilt on Oct 22 2026 00:45:19 (1792655119) cl/1004524046",
+              "memory_stats": {
+                "num_allocs": 103,
+                "bytes_in_use": 1627024384,
+                "peak_bytes_in_use": 1773988352,
+                "largest_alloc_size": 335544320,
+                "bytes_limit": 33546039296,
+                "bytes_reserved": 201326592,
+                "peak_bytes_reserved": 201326592,
+                "bytes_reservable_limit": 31774770176,
+                "largest_free_block_bytes": 31317591040
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "boundary": "output",
+      "ciphertexts": [
+        {
+          "shape": [
+            1,
+            2,
+            256,
+            512,
+            2
+          ],
+          "degree": 131072,
+          "moduli_count": 2,
+          "payload_bytes": 2097152,
+          "scale": 6.89940115708969e+16,
+          "nsd": 1,
+          "devices": [
+            {
+              "platform": "tpu",
+              "id": 0,
+              "device_kind": "TPU v6 lite",
+              "process_index": 0,
+              "local_hardware_id": 0,
+              "coords": [
+                0,
+                0,
+                0
+              ],
+              "slice_index": null,
+              "platform_version": "TFRT TPU v6 lite\nBuilt on Oct 22 2026 00:45:19 (1792655119) cl/1004524046",
+              "memory_stats": {
+                "num_allocs": 2182,
+                "bytes_in_use": 4507050496,
+                "peak_bytes_in_use": 16094474240,
+                "largest_alloc_size": 639631360,
+                "bytes_limit": 33546039296,
+                "bytes_reserved": 1576550400,
+                "peak_bytes_reserved": 1576550400,
+                "bytes_reservable_limit": 20239385600,
+                "largest_free_block_bytes": 17587031552
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "cleanup": {
+    "process_reaped": true,
+    "public_key_store_removed": true,
+    "owned_directory_handle_closed": true
+  },
+  "case_file_sha256": {
+    "stderr.log": "86137a62e9f1a2617d5a1f52a66b84bf97262281fb68c94d243d6d4fd213bd0f",
+    "resources.json": "7267f40ea74181ba8b84e3ca0ce54b16d03bb5427855661ae9c1d5ddae7c4f1a",
+    "parent_report_at_checkpoint.json": "5b8055c194fc3fa4f3bdfc61f5b8938770809cbe0eb2539767d5631ca260be96",
+    "stdout.json": "3190efecde9f9c399e061a97ee83effb5fcb70a99447ad765dab221ea84dc699",
+    "process.json": "5d09a5a140a117feef738b1ec172323ca3ab1bff19c898e7d6ba745551beca81",
+    "resource_samples.jsonl": "69d342d1cc51e8f3111d0c23cbed65942dc7fa7d1bf4a5dbfc2e721c4b5f49b9",
+    "security_device.json": "80064e46dd209e14644de5082b59bba33ab3698d8d7c95ab302c3bc9c9dc0dbb"
+  },
+  "limitations": [
+    "One toy fixture only; no full pretrained model, all-six completion, calibration or controlled speedup claim.",
+    "Process RSS is sampled aggregate, not unique physical memory or a continuous peak guarantee.",
+    "Device statistics are input/output checkpoints; instrumentation overhead remains in end-to-end timing."
+  ]
+}

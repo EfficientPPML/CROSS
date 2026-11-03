@@ -1,0 +1,4484 @@
+{
+  "scope": "Explicit balanced-inverse v2 candidate and prelaunch tests/smokes; full approximate training run pending and not copied here.",
+  "candidate_v2_manifest_sha256": "4e2277beea7189aa1d77b168c500c8a175f6c630afa520fcc6b38cb5a179cff9",
+  "candidate_v1_preserved": true,
+  "changed_norm_methods": [
+    "1.mlp",
+    "2.mlp",
+    "5.mlp",
+    "7.mlp",
+    "8.mlp",
+    "9.mlp",
+    "10.mlp"
+  ],
+  "max_row_norm_critical_depth": 21,
+  "tests_passed": 5,
+  "failed_smokes": [
+    {
+      "path": "approximate-train-smoke-v2",
+      "cause": "Reciprocal observation labels omitted publicK; aggregation incorrectly required domains to match across distinctK."
+    },
+    {
+      "path": "approximate-train-smoke-v2b",
+      "cause": "Broad metadata-label replacement accidentally referenced undefinedK in the pooler; no coefficient/domain/gate change."
+    }
+  ],
+  "passing_smoke": {
+    "scope": "Strict fixed-v2 approximate training trajectories; labels are never loaded.",
+    "passed": true,
+    "completed_examples": 3,
+    "training_labels_loaded": false,
+    "approximate_trajectory_coverage": true,
+    "candidate_manifest_sha256": "4e2277beea7189aa1d77b168c500c8a175f6c630afa520fcc6b38cb5a179cff9",
+    "dataset": {
+      "dataset": "nyu-mll/glue",
+      "configuration": "mrpc",
+      "split": "train",
+      "revision": "bcdcba79d07bc864c1c254ccfcedcce55bcc9a8c",
+      "url": "https://huggingface.co/datasets/nyu-mll/glue/resolve/bcdcba79d07bc864c1c254ccfcedcce55bcc9a8c/mrpc/train-00000-of-00001.parquet",
+      "file": "train.parquet",
+      "bytes": 649281,
+      "sha256": "61fd41301e0e244b0420c4350a170c8e7cf64740335fc875a4af2d79af0df0af",
+      "api_entry": {
+        "type": "file",
+        "oid": "d9536e81cb28e8f3a431cbb43d2a0ef0e31de7ca",
+        "size": 649281,
+        "lfs": {
+          "oid": "61fd41301e0e244b0420c4350a170c8e7cf64740335fc875a4af2d79af0df0af",
+          "size": 649281,
+          "pointerSize": 131
+        },
+        "xetHash": "f3bd68beff2db7dc08d20b5869955e6775b9d5b8fcbefe7c229267d80266e71b",
+        "path": "mrpc/train-00000-of-00001.parquet",
+        "lastCommit": {
+          "id": "a3f3ab759b9d7018046ce361f115ef38276d2e1e",
+          "title": "Convert dataset to Parquet (#16)",
+          "date": "2024-01-04T11:54:16.000Z"
+        },
+        "securityFileStatus": {
+          "status": "safe",
+          "protectAiScan": {
+            "status": "unscanned"
+          },
+          "avScan": {
+            "status": "safe",
+            "message": "No security issues detected",
+            "reportLink": "https://fdtn.ai/ai-supply-chain/hugging-face?utm_source=huggingface"
+          },
+          "pickleImportScan": {
+            "status": "unscanned",
+            "pickleImports": [],
+            "version": "0.0.0"
+          },
+          "virusTotalScan": {
+            "status": "unscanned",
+            "message": "File not scanned in VirusTotal",
+            "reportLink": "https://www.virustotal.com/gui/file/61fd41301e0e244b0420c4350a170c8e7cf64740335fc875a4af2d79af0df0af?utm_source=huggingface"
+          }
+        }
+      }
+    },
+    "model_assets": {
+      "config.json": "ec2b6cd6ce741dda6c972aea96f9d1a449cbb4b5349e688c5370a9b2f6872d30",
+      "model.safetensors": "e1f8085ef673c9eb8a1a93a84270742e8aa0ccbceadef01eef15e26c44b46034",
+      "tokenizer.json": "5b3360be30cdf39081153cf9d30bfb0503c011462fc9f77f097127c83ef0f4d9",
+      "tokenizer_config.json": "0f6d13e6f4da6f9e24f22ada6bc3be571123d858d7c0c05a8a7cd55a9c23c2e8",
+      "vocab.txt": "eeaa9875b23b04b4c54ef759d03db9d1ba1554838f8fb26c5d96fa551df93d02"
+    },
+    "source_hashes_before": {
+      "/tmp/bert-mrpc-train-calibration-20261103/approximate_train.py": "7329ab4b8d9b780c18728c3cae10969fcf1d4d40a6bf6052bfaff842223cbf78",
+      "/tmp/bert-mrpc-train-calibration-20261103/approximate.py": "81fdb3b4539a91c65adec107643a36f048fb4822327dd55c86f9055be28e95c5",
+      "/tmp/bert-mrpc-train-calibration-20261103/test_approximate.py": "bf4bf2086877351219c2b88b734c4cb6a142d21899f7ea5dc2128287e4bb7e27",
+      "/tmp/bert-mrpc-train-calibration-20261103/calibrate.py": "27ba1c3dc671bdf31286bd174474608288c814dab1ac464b8f58952cf2144530",
+      "/tmp/bert-mrpc-train-calibration-20261103/audit.py": "e3bb08cbf1ec0b0c77d9086ed8cbc8da896ffe3f8e98c26e85ce88267c522bfe",
+      "/tmp/bert-mrpc-train-calibration-20261103/dataset_manifest.json": "0600cd315621ae30b7efa08857f9814b44e8d20e11667b43a7d3529e73c7d8ce",
+      "/tmp/bert-mrpc-train-calibration-20261103/select_v2.py": "03eed206f0d6c2457f7c3e92c853b2c1d4654bbe690dea963dae1f4a00f35cb6",
+      "/tmp/bert-mrpc-train-calibration-20261103/candidate-v2/selection_protocol.json": "2dcc9e55a7f4ad42e9a988c61c1d3bc24a9631e67370fb0c16d44048fc7f793a",
+      "/tmp/bert-mrpc-train-calibration-20261103/candidate-v2/report.json": "113551472373bc111bd54a8ae5b80f0e7599b3df2e2e8d4209ee8f4b36a39fcd",
+      "/tmp/bert-mrpc-train-calibration-20261103/candidate-v2/candidate_manifest.json": "4e2277beea7189aa1d77b168c500c8a175f6c630afa520fcc6b38cb5a179cff9",
+      "/tmp/bert-mrpc-train-calibration-20261103/train3668-v1/report.json": "6752eb35051d8a2078e6a2aa361462735a5b5564f10b4d43defd2548b044cb25",
+      "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/src/reference.py": "6d254c92b70257e773d1701a6f85fb592365e67d037b231b9e5a1589e64e7a04",
+      "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/models/bert/modeling_bert.py": "ef3407eae97090a4c0bfb635b3aafd4435248148e553e4ae307aa2b4aa1efcbc",
+      "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/models/bert/tokenization_bert.py": "2175151678441fe952744a55d309bdade829dcae496bf1ffda90e93e9f8d088f",
+      "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/models/bert/tokenization_bert_fast.py": "b3197237baa874ac770682b1926ae12a7c9236d95cd3815033539c1e9ed2e2c0",
+      "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/tokenization_utils_base.py": "32acd70cda55191fc1e1e659af62b9afce2411ddf21c5b8e2ffaa8ac0463da66",
+      "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/activations.py": "5e45852b518ed3fdfbff4d8a44dc934b74f6606670fd90f2fb6c486172f9792c"
+    },
+    "source_archive_sha256": "cc3f82e9b795677aff750a548856e7c88b1786650eafe48ca4f391603acb3712",
+    "source_archive_verified": true,
+    "cpu_affinity": [
+      172,
+      173,
+      174,
+      175,
+      176,
+      177,
+      178,
+      179
+    ],
+    "threads": 8,
+    "native_reference_dtype": "float32",
+    "approximate_dtype": "float64",
+    "original_logit_gate": "abs(approx-native)<=0.02+0.01*abs(native)",
+    "original_tie_rule": "class1 iff logit1>=logit0",
+    "versions": {
+      "numpy": "2.5.4",
+      "torch": "2.15.0+cpu",
+      "transformers": "4.51.3",
+      "tokenizers": "0.21.4",
+      "safetensors": "0.8.0",
+      "pyarrow": "23.0.1"
+    },
+    "domain_observations": {
+      "0.softmax.centered_scores": {
+        "domain": [
+          -16,
+          16
+        ],
+        "count": 100728,
+        "minimum": -8.667931004599776,
+        "maximum": 11.060953065660462,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "0.softmax.base_exp": {
+        "domain": [
+          -0.5,
+          0.5
+        ],
+        "count": 100728,
+        "minimum": -0.270872843893743,
+        "maximum": 0.3456547833018894,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "0.softmax.initial_mean_inverse": {
+        "domain": [
+          0.5,
+          2.0
+        ],
+        "count": 1896,
+        "minimum": 1.0000550542442759,
+        "maximum": 1.0078616838851828,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "0.softmax.round0.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019233193189862496,
+        "maximum": 0.019519805534174876,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "0.softmax.round1.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019240463074855357,
+        "maximum": 0.020402752739505012,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "0.softmax.round2.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019269531464944503,
+        "maximum": 0.025043378553669803,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "0.softmax.round3.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019385757717077238,
+        "maximum": 0.06780725829518783,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "0.softmax.round4.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019850944208190478,
+        "maximum": 0.4020054207908737,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "0.attention.inverse_sqrt": {
+        "domain": [
+          0.2669251572966357,
+          1.4255030943618103
+        ],
+        "count": 158,
+        "minimum": 0.3449869093285097,
+        "maximum": 1.076684099315515,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "0.gelu": {
+        "domain": [
+          -21.0,
+          14.0
+        ],
+        "count": 485376,
+        "minimum": -15.831901317455625,
+        "maximum": 9.506909892362025,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "0.mlp.inverse_sqrt": {
+        "domain": [
+          0.810397552622156,
+          8.007873399726344
+        ],
+        "count": 158,
+        "minimum": 1.2113641795699193,
+        "maximum": 6.477836484196521,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "1.softmax.centered_scores": {
+        "domain": [
+          -37,
+          36
+        ],
+        "count": 100728,
+        "minimum": -22.814440223773556,
+        "maximum": 24.513740338191155,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "1.softmax.base_exp": {
+        "domain": [
+          -0.5,
+          0.5
+        ],
+        "count": 100728,
+        "minimum": -0.1782378142482309,
+        "maximum": 0.1915135963921184,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "1.softmax.initial_mean_inverse": {
+        "domain": [
+          0.5,
+          2.0
+        ],
+        "count": 1896,
+        "minimum": 1.0000053688984767,
+        "maximum": 1.0025120726860304,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "1.softmax.round0.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.01923103762536201,
+        "maximum": 0.019324605928143865,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "1.softmax.round1.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019231849404303357,
+        "maximum": 0.019607485411314664,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "1.softmax.round2.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.01923514410415648,
+        "maximum": 0.02078940926791763,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "1.softmax.round3.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.01924872585845984,
+        "maximum": 0.02613750875257087,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "1.softmax.round4.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.01930646818667504,
+        "maximum": 0.06434408272278506,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "1.softmax.round5.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.01954820895055259,
+        "maximum": 0.44922025560230017,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "1.softmax.round6.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.020632889386956593,
+        "maximum": 0.9645423661799999,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "1.attention.inverse_sqrt": {
+        "domain": [
+          0.22240564652256922,
+          1.4580714217747548
+        ],
+        "count": 158,
+        "minimum": 0.29486840953056476,
+        "maximum": 1.1163306179528332,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "1.gelu": {
+        "domain": [
+          -19.0,
+          36.0
+        ],
+        "count": 485376,
+        "minimum": -12.327770558786902,
+        "maximum": 27.88765983481825,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "1.mlp.inverse_sqrt": {
+        "domain": [
+          0.8010793192659889,
+          39.77292603370953
+        ],
+        "count": 158,
+        "minimum": 1.127938661703656,
+        "maximum": 28.321510346941555,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "2.softmax.centered_scores": {
+        "domain": [
+          -51,
+          53
+        ],
+        "count": 100728,
+        "minimum": -30.541438291646696,
+        "maximum": 35.63968288821178,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "2.softmax.base_exp": {
+        "domain": [
+          -0.5,
+          0.5
+        ],
+        "count": 100728,
+        "minimum": -0.2386049866534898,
+        "maximum": 0.27843502256415453,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "2.softmax.initial_mean_inverse": {
+        "domain": [
+          0.5,
+          2.0
+        ],
+        "count": 1896,
+        "minimum": 1.0000080311352495,
+        "maximum": 1.0044161933351123,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "2.softmax.round0.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.01923111096209325,
+        "maximum": 0.019400696553031938,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "2.softmax.round1.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019232139735191695,
+        "maximum": 0.019916665943351872,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "2.softmax.round2.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.01923628049102259,
+        "maximum": 0.022090183841378546,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "2.softmax.round3.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019253058076371832,
+        "maximum": 0.03356763769150941,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "2.softmax.round4.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019322036495147677,
+        "maximum": 0.1675424057574905,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "2.softmax.round5.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019615435398080347,
+        "maximum": 0.8408163743599725,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "2.softmax.round6.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.020973319463689206,
+        "maximum": 0.9988950870226566,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "2.attention.inverse_sqrt": {
+        "domain": [
+          0.24251846339506314,
+          1.519152220320107
+        ],
+        "count": 158,
+        "minimum": 0.3080307349779876,
+        "maximum": 1.0844281700070362,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "2.gelu": {
+        "domain": [
+          -19.0,
+          26.0
+        ],
+        "count": 485376,
+        "minimum": -12.624697972923844,
+        "maximum": 21.161132312186965,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "2.mlp.inverse_sqrt": {
+        "domain": [
+          0.8112528444783701,
+          37.07074731307296
+        ],
+        "count": 158,
+        "minimum": 1.2417064068018584,
+        "maximum": 28.84471063839654,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "3.softmax.centered_scores": {
+        "domain": [
+          -36,
+          38
+        ],
+        "count": 100728,
+        "minimum": -20.04147191035222,
+        "maximum": 23.528772508016743,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "3.softmax.base_exp": {
+        "domain": [
+          -0.5,
+          0.5
+        ],
+        "count": 100728,
+        "minimum": -0.15657399929962673,
+        "maximum": 0.1838185352188808,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "3.softmax.initial_mean_inverse": {
+        "domain": [
+          0.5,
+          2.0
+        ],
+        "count": 1896,
+        "minimum": 1.0000124437825741,
+        "maximum": 1.0021286550050006,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "3.softmax.round0.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019231694671400026,
+        "maximum": 0.019306819981115737,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "3.softmax.round1.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019234497439502042,
+        "maximum": 0.01954434471492499,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "3.softmax.round2.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.01924589921623106,
+        "maximum": 0.020582344751644367,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "3.softmax.round3.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019293119389450556,
+        "maximum": 0.025886669350411666,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "3.softmax.round4.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019496423250292154,
+        "maximum": 0.06696037131016815,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "3.softmax.round5.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.020453370506665243,
+        "maximum": 0.4255174138681699,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "3.softmax.round6.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.026013702905234627,
+        "maximum": 0.9592152089309128,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "3.attention.inverse_sqrt": {
+        "domain": [
+          0.2149047193985351,
+          1.5920550756550045
+        ],
+        "count": 158,
+        "minimum": 0.2704472833079306,
+        "maximum": 1.0414250162931549,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "3.gelu": {
+        "domain": [
+          -29.0,
+          15.0
+        ],
+        "count": 485376,
+        "minimum": -24.62691709385857,
+        "maximum": 10.28335164825804,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "3.mlp.inverse_sqrt": {
+        "domain": [
+          0.7851984461019706,
+          24.893500917798452
+        ],
+        "count": 158,
+        "minimum": 1.191588563320647,
+        "maximum": 18.773384401516594,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "4.softmax.centered_scores": {
+        "domain": [
+          -21,
+          27
+        ],
+        "count": 100728,
+        "minimum": -12.907194920584892,
+        "maximum": 13.284589074029078,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "4.softmax.base_exp": {
+        "domain": [
+          -0.5,
+          0.5
+        ],
+        "count": 100728,
+        "minimum": -0.20167492063413894,
+        "maximum": 0.20757170428170435,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "4.softmax.initial_mean_inverse": {
+        "domain": [
+          0.5,
+          2.0
+        ],
+        "count": 1896,
+        "minimum": 1.000078213386689,
+        "maximum": 1.0041059250490083,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "4.softmax.round0.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019235254307702846,
+        "maximum": 0.019375731818433013,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "4.softmax.round1.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019249424028826366,
+        "maximum": 0.01981618963864571,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "4.softmax.round2.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.01931162447501133,
+        "maximum": 0.02162787252750807,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "4.softmax.round3.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.01957885727810219,
+        "maximum": 0.029407615921553727,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "4.softmax.round4.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.020678806349823258,
+        "maximum": 0.08243715117112703,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "4.softmax.round5.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.02534171516839864,
+        "maximum": 0.6340672488189483,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "4.attention.inverse_sqrt": {
+        "domain": [
+          0.2312729507709523,
+          1.6074533862704286
+        ],
+        "count": 158,
+        "minimum": 0.29049359825533916,
+        "maximum": 1.2070733902075725,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "4.gelu": {
+        "domain": [
+          -31.0,
+          20.0
+        ],
+        "count": 485376,
+        "minimum": -26.037994931931422,
+        "maximum": 15.157753000794736,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "4.mlp.inverse_sqrt": {
+        "domain": [
+          0.793190483243672,
+          28.988524558932536
+        ],
+        "count": 158,
+        "minimum": 1.2126753995360904,
+        "maximum": 23.665375789650135,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "5.softmax.centered_scores": {
+        "domain": [
+          -40,
+          49
+        ],
+        "count": 100728,
+        "minimum": -22.523202576068744,
+        "maximum": 28.369046700573804,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "5.softmax.base_exp": {
+        "domain": [
+          -0.5,
+          0.5
+        ],
+        "count": 100728,
+        "minimum": -0.17596252012553706,
+        "maximum": 0.22163317734823285,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "5.softmax.initial_mean_inverse": {
+        "domain": [
+          0.5,
+          2.0
+        ],
+        "count": 1896,
+        "minimum": 1.0000317695307683,
+        "maximum": 1.0029401873840333,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "5.softmax.round0.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019232162047111923,
+        "maximum": 0.019309061862620113,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "5.softmax.round1.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.01923643019804316,
+        "maximum": 0.019540213720683375,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "5.softmax.round2.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019254157151250072,
+        "maximum": 0.020469359392574975,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "5.softmax.round3.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019330718583951967,
+        "maximum": 0.02467046095628682,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "5.softmax.round4.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019689604753101338,
+        "maximum": 0.048070302115071496,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "5.softmax.round5.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.021678863043526567,
+        "maximum": 0.29595158179958597,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "5.softmax.round6.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.029047864807297655,
+        "maximum": 0.9322465580512636,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "5.attention.inverse_sqrt": {
+        "domain": [
+          0.19584120252128448,
+          1.976462888114604
+        ],
+        "count": 158,
+        "minimum": 0.24609787551678866,
+        "maximum": 1.231178571379414,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "5.gelu": {
+        "domain": [
+          -33.0,
+          15.0
+        ],
+        "count": 485376,
+        "minimum": -28.90918488209149,
+        "maximum": 9.330645209616073,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "5.mlp.inverse_sqrt": {
+        "domain": [
+          0.7831888852728284,
+          30.867100729630536
+        ],
+        "count": 158,
+        "minimum": 1.1619257680605515,
+        "maximum": 25.387980382927665,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "6.softmax.centered_scores": {
+        "domain": [
+          -39,
+          42
+        ],
+        "count": 100728,
+        "minimum": -20.795211435748683,
+        "maximum": 26.140770584238386,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "6.softmax.base_exp": {
+        "domain": [
+          -0.5,
+          0.5
+        ],
+        "count": 100728,
+        "minimum": -0.1624625893417866,
+        "maximum": 0.2042247701893624,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "6.softmax.initial_mean_inverse": {
+        "domain": [
+          0.5,
+          2.0
+        ],
+        "count": 1896,
+        "minimum": 1.0000516262920423,
+        "maximum": 1.0022533162054257,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "6.softmax.round0.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019233129823249723,
+        "maximum": 0.0193045046350248,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "6.softmax.round1.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019240530076460823,
+        "maximum": 0.01954211120065974,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "6.softmax.round2.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.0192724210489668,
+        "maximum": 0.02064711308290713,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "6.softmax.round3.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019421137912763328,
+        "maximum": 0.026972484563416027,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "6.softmax.round4.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.02015708077456431,
+        "maximum": 0.07571138193235044,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "6.softmax.round5.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.02353247978049429,
+        "maximum": 0.5895987964236978,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "6.softmax.round6.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.03556155215313177,
+        "maximum": 0.987976761827496,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "6.attention.inverse_sqrt": {
+        "domain": [
+          0.16238742447226795,
+          2.0820782104558115
+        ],
+        "count": 158,
+        "minimum": 0.20368482200556626,
+        "maximum": 1.3453603906679514,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "6.gelu": {
+        "domain": [
+          -23.0,
+          13.0
+        ],
+        "count": 485376,
+        "minimum": -19.170082018173346,
+        "maximum": 9.84063686214394,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "6.mlp.inverse_sqrt": {
+        "domain": [
+          0.8242483660602402,
+          29.65754396849945
+        ],
+        "count": 158,
+        "minimum": 1.1723600143777062,
+        "maximum": 24.493043540681974,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "7.softmax.centered_scores": {
+        "domain": [
+          -22,
+          23
+        ],
+        "count": 100728,
+        "minimum": -10.751226941965804,
+        "maximum": 14.545900354093945,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "7.softmax.base_exp": {
+        "domain": [
+          -0.5,
+          0.5
+        ],
+        "count": 100728,
+        "minimum": -0.1679879209682157,
+        "maximum": 0.2272796930327179,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "7.softmax.initial_mean_inverse": {
+        "domain": [
+          0.5,
+          2.0
+        ],
+        "count": 1896,
+        "minimum": 1.000159758304241,
+        "maximum": 1.0031146871454424,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "7.softmax.round0.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019238150332249643,
+        "maximum": 0.019330140574425253,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "7.softmax.round1.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019260895418581846,
+        "maximum": 0.019632549513381673,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "7.softmax.round2.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.01935649360253739,
+        "maximum": 0.020884903970947673,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "7.softmax.round3.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019782444211199544,
+        "maximum": 0.030111259841708468,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "7.softmax.round4.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.021640290944120868,
+        "maximum": 0.139414992186151,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "7.softmax.round5.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.028281223161614927,
+        "maximum": 0.4566539160849704,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "7.attention.inverse_sqrt": {
+        "domain": [
+          0.16076407809162474,
+          1.8039839649406644
+        ],
+        "count": 158,
+        "minimum": 0.20165193244468832,
+        "maximum": 1.1766294683236582,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "7.gelu": {
+        "domain": [
+          -28.0,
+          40.0
+        ],
+        "count": 485376,
+        "minimum": -19.20039211139616,
+        "maximum": 33.81491983392475,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "7.mlp.inverse_sqrt": {
+        "domain": [
+          0.7712992796151437,
+          55.213603653605226
+        ],
+        "count": 158,
+        "minimum": 1.0975790594336747,
+        "maximum": 45.4979912467079,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "8.softmax.centered_scores": {
+        "domain": [
+          -23,
+          27
+        ],
+        "count": 100728,
+        "minimum": -11.568554544822025,
+        "maximum": 14.375469453877374,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "8.softmax.base_exp": {
+        "domain": [
+          -0.5,
+          0.5
+        ],
+        "count": 100728,
+        "minimum": -0.18075866476284413,
+        "maximum": 0.22461671021683396,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "8.softmax.initial_mean_inverse": {
+        "domain": [
+          0.5,
+          2.0
+        ],
+        "count": 1896,
+        "minimum": 1.000064835091826,
+        "maximum": 1.0038572137254564,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "8.softmax.round0.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.0192335324247482,
+        "maximum": 0.019367479566420705,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "8.softmax.round1.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.01924189355853719,
+        "maximum": 0.019787980148327413,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "8.softmax.round2.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019275852125401685,
+        "maximum": 0.021565950893630968,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "8.softmax.round3.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.0194159946238572,
+        "maximum": 0.0298236027315523,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "8.softmax.round4.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.020014064276132313,
+        "maximum": 0.07584656455330915,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "8.softmax.round5.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.02274782268535521,
+        "maximum": 0.31466015696552097,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "8.attention.inverse_sqrt": {
+        "domain": [
+          0.13962861548763014,
+          2.0561833619484005
+        ],
+        "count": 158,
+        "minimum": 0.1772302377791914,
+        "maximum": 1.3315651280608087,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "8.gelu": {
+        "domain": [
+          -38.0,
+          44.0
+        ],
+        "count": 485376,
+        "minimum": -23.750260774896077,
+        "maximum": 35.036513780639126,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "8.mlp.inverse_sqrt": {
+        "domain": [
+          0.740703421721475,
+          221.3972884472304
+        ],
+        "count": 158,
+        "minimum": 0.9701334723157831,
+        "maximum": 173.6799184970169,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "9.softmax.centered_scores": {
+        "domain": [
+          -21,
+          25
+        ],
+        "count": 100728,
+        "minimum": -10.543678400787716,
+        "maximum": 15.207082771982883,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "9.softmax.base_exp": {
+        "domain": [
+          -0.5,
+          0.5
+        ],
+        "count": 100728,
+        "minimum": -0.16474497501230806,
+        "maximum": 0.23761066831223254,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "9.softmax.initial_mean_inverse": {
+        "domain": [
+          0.5,
+          2.0
+        ],
+        "count": 1896,
+        "minimum": 1.000100220250958,
+        "maximum": 1.003918606458492,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "9.softmax.round0.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.01923496353314948,
+        "maximum": 0.019385234327845394,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "9.softmax.round1.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019248127795346313,
+        "maximum": 0.01987458444434775,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "9.softmax.round2.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019305305246414498,
+        "maximum": 0.022060027855226462,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "9.softmax.round3.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.01957796572866682,
+        "maximum": 0.03448302130430091,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "9.softmax.round4.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.02118163460828442,
+        "maximum": 0.11929399645329579,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "9.softmax.round5.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.029715665801170785,
+        "maximum": 0.4945657517804897,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "9.attention.inverse_sqrt": {
+        "domain": [
+          0.20169906844926772,
+          2.310096305778128
+        ],
+        "count": 158,
+        "minimum": 0.25424593717123195,
+        "maximum": 1.4152917194315577,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "9.gelu": {
+        "domain": [
+          -43.0,
+          41.0
+        ],
+        "count": 485376,
+        "minimum": -28.74206340543532,
+        "maximum": 32.59571963041599,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "9.mlp.inverse_sqrt": {
+        "domain": [
+          0.7066461525949039,
+          266.46726368730964
+        ],
+        "count": 158,
+        "minimum": 0.9183385519894203,
+        "maximum": 212.84316622484454,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "10.softmax.centered_scores": {
+        "domain": [
+          -22,
+          24
+        ],
+        "count": 100728,
+        "minimum": -10.981412465031859,
+        "maximum": 16.53781723000815,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "10.softmax.base_exp": {
+        "domain": [
+          -0.5,
+          0.5
+        ],
+        "count": 100728,
+        "minimum": -0.1715845697661228,
+        "maximum": 0.25840339421887737,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "10.softmax.initial_mean_inverse": {
+        "domain": [
+          0.5,
+          2.0
+        ],
+        "count": 1896,
+        "minimum": 1.0000795087867884,
+        "maximum": 1.004366902692563,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "10.softmax.round0.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019234547554849456,
+        "maximum": 0.019351690620312605,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "10.softmax.round1.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.01924635681712439,
+        "maximum": 0.0197421395813195,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "10.softmax.round2.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019297239898315555,
+        "maximum": 0.021514670337412424,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "10.softmax.round3.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019535498178846967,
+        "maximum": 0.031958502714553236,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "10.softmax.round4.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.02050972428341566,
+        "maximum": 0.1668214364708282,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "10.softmax.round5.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.02447193371047366,
+        "maximum": 0.47277064310032624,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "10.attention.inverse_sqrt": {
+        "domain": [
+          0.1653009126671861,
+          2.001004299336673
+        ],
+        "count": 158,
+        "minimum": 0.2115680959699933,
+        "maximum": 1.289283559323424,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "10.gelu": {
+        "domain": [
+          -20.0,
+          38.0
+        ],
+        "count": 485376,
+        "minimum": -11.973721589789678,
+        "maximum": 31.74365506770786,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "10.mlp.inverse_sqrt": {
+        "domain": [
+          0.685964686546274,
+          328.87036011412454
+        ],
+        "count": 158,
+        "minimum": 0.9010717179182222,
+        "maximum": 258.18080261360535,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "11.softmax.centered_scores": {
+        "domain": [
+          -22,
+          21
+        ],
+        "count": 100728,
+        "minimum": -10.138720668200175,
+        "maximum": 12.820039234491947,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "11.softmax.base_exp": {
+        "domain": [
+          -0.5,
+          0.5
+        ],
+        "count": 100728,
+        "minimum": -0.15841751044062774,
+        "maximum": 0.20031311303893667,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "11.softmax.initial_mean_inverse": {
+        "domain": [
+          0.5,
+          2.0
+        ],
+        "count": 1896,
+        "minimum": 1.0000028696061507,
+        "maximum": 1.0022795087070593,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "11.softmax.round0.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019230969002155186,
+        "maximum": 0.019309623667354947,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "11.softmax.round1.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019231568774505322,
+        "maximum": 0.0195575257146843,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "11.softmax.round2.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019233971055627977,
+        "maximum": 0.020634851196933857,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "11.softmax.round3.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019243605476801165,
+        "maximum": 0.02833114611884022,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "11.softmax.round4.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.01928234165808466,
+        "maximum": 0.11963113485524947,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "11.softmax.round5.denominator_inverse.K52": {
+        "domain": [
+          0.009615384615384616,
+          2.0
+        ],
+        "count": 624,
+        "minimum": 0.019438809749232285,
+        "maximum": 0.4426894857531253,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "11.attention.inverse_sqrt": {
+        "domain": [
+          0.23517965995010176,
+          6.947654567522412
+        ],
+        "count": 158,
+        "minimum": 0.58378212813811,
+        "maximum": 3.6816758007563575,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "11.gelu": {
+        "domain": [
+          -14.0,
+          12.0
+        ],
+        "count": 485376,
+        "minimum": -9.711029190264279,
+        "maximum": 6.363174523167947,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "11.mlp.inverse_sqrt": {
+        "domain": [
+          0.7275596961952456,
+          10.358724040712524
+        ],
+        "count": 158,
+        "minimum": 1.0792365790214025,
+        "maximum": 4.968826958848767,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "pooler.tanh.input": {
+        "domain": [
+          -34,
+          34
+        ],
+        "count": 2304,
+        "minimum": -23.932395605660776,
+        "maximum": 23.9434810778165,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "pooler.tanh.base": {
+        "domain": [
+          -1.0,
+          1.0
+        ],
+        "count": 2304,
+        "minimum": -0.37394368133844963,
+        "maximum": 0.3741168918408828,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "pooler.tanh.round0.denominator_inverse": {
+        "domain": [
+          1.0,
+          2.1
+        ],
+        "count": 2304,
+        "minimum": 1.0000000004765113,
+        "maximum": 1.127868968838803,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "pooler.tanh.round1.denominator_inverse": {
+        "domain": [
+          1.0,
+          2.1
+        ],
+        "count": 2304,
+        "minimum": 1.000000001906045,
+        "maximum": 1.402075729159112,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "pooler.tanh.round2.denominator_inverse": {
+        "domain": [
+          1.0,
+          2.1
+        ],
+        "count": 2304,
+        "minimum": 1.0000000076241804,
+        "maximum": 1.8181348763293257,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "pooler.tanh.round3.denominator_inverse": {
+        "domain": [
+          1.0,
+          2.1
+        ],
+        "count": 2304,
+        "minimum": 1.0000000304967214,
+        "maximum": 1.9899943190826082,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "pooler.tanh.round4.denominator_inverse": {
+        "domain": [
+          1.0,
+          2.1
+        ],
+        "count": 2304,
+        "minimum": 1.0000001219868784,
+        "maximum": 1.9999747192691553,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "pooler.tanh.round5.denominator_inverse": {
+        "domain": [
+          1.0,
+          2.1
+        ],
+        "count": 2304,
+        "minimum": 1.0000004879473943,
+        "maximum": 1.9999999998402171,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 3,
+        "examples_with_violations": 0
+      },
+      "0.softmax.round0.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.01695101871356946,
+        "maximum": 0.01721288826832118,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "0.softmax.round1.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.016956617295072744,
+        "maximum": 0.018097642910582912,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "0.softmax.round2.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.01697901621930586,
+        "maximum": 0.02248846497255816,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "0.softmax.round3.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.017068710624254805,
+        "maximum": 0.0626465181640199,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "0.softmax.round4.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.01742926264937997,
+        "maximum": 0.35996196363712774,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "1.softmax.round0.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.01694933474163608,
+        "maximum": 0.01703512917150579,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "1.softmax.round1.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.016949882575012173,
+        "maximum": 0.017299750889565136,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "1.softmax.round2.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.0169520828012914,
+        "maximum": 0.018424129000379038,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "1.softmax.round3.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.01696095856352529,
+        "maximum": 0.023769482695098675,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "1.softmax.round4.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.016997121813809277,
+        "maximum": 0.06277586362589929,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "1.softmax.round5.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.01714810203549005,
+        "maximum": 0.4662382096775176,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "1.softmax.round6.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.017821615123811703,
+        "maximum": 0.9692964501482887,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "2.softmax.round0.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.01694942513626853,
+        "maximum": 0.01709590798585792,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "2.softmax.round1.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.01695024506047135,
+        "maximum": 0.017565363044507887,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "2.softmax.round2.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.0169535401168842,
+        "maximum": 0.019759861768881032,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "2.softmax.round3.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.016966848718188363,
+        "maximum": 0.03367400832336515,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "2.softmax.round4.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.017021200288385854,
+        "maximum": 0.19290980033877753,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "2.softmax.round5.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.017249058440075214,
+        "maximum": 0.8744218028072739,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "2.softmax.round6.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.018270748858671124,
+        "maximum": 0.9992696622499696,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "3.softmax.round0.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.01694978751361378,
+        "maximum": 0.017007783307507487,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "3.softmax.round1.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.016951697407280752,
+        "maximum": 0.01718426235594613,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "3.softmax.round2.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.016959374239064063,
+        "maximum": 0.017896190956040448,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "3.softmax.round3.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.01699041685873518,
+        "maximum": 0.021470654277139307,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "3.softmax.round4.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.017117906468438665,
+        "maximum": 0.061513460318063075,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "3.softmax.round5.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.017666013416649577,
+        "maximum": 0.5735685397988994,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "3.softmax.round6.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.02039883107885084,
+        "maximum": 0.9900463131527375,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "4.softmax.round0.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.016952123235233558,
+        "maximum": 0.017041217875821926,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "4.softmax.round1.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.016961017309026858,
+        "maximum": 0.017318064410962005,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "4.softmax.round2.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.016996504498247623,
+        "maximum": 0.018431145455971593,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "4.softmax.round3.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.017138283337882955,
+        "maximum": 0.02419259892964431,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "4.softmax.round4.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.017712450644795843,
+        "maximum": 0.08371765339138135,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "4.softmax.round5.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.020194476418965036,
+        "maximum": 0.5732090966940077,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "5.softmax.round0.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.01695023095398576,
+        "maximum": 0.017050572567195405,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "5.softmax.round1.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.016953475216050125,
+        "maximum": 0.01736833416163551,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "5.softmax.round2.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.016966516619874274,
+        "maximum": 0.01877514657356212,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "5.softmax.round3.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.017019214320196964,
+        "maximum": 0.026385661699479757,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "5.softmax.round4.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.017234529169032415,
+        "maximum": 0.09176271326518999,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "5.softmax.round5.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.018135912508811695,
+        "maximum": 0.5126221694379374,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "5.softmax.round6.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.022109993411448724,
+        "maximum": 0.9508709425045245,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "6.softmax.round0.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.016950919581063047,
+        "maximum": 0.017026313471082664,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "6.softmax.round1.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.01695632668912172,
+        "maximum": 0.017263634145275552,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "6.softmax.round2.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.016978753240921716,
+        "maximum": 0.018327051498454008,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "6.softmax.round3.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.017075768789469613,
+        "maximum": 0.024951573760422667,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "6.softmax.round4.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.01753993353368785,
+        "maximum": 0.08213579369328601,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "6.softmax.round5.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.02032897870839732,
+        "maximum": 0.6251551085829767,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "6.softmax.round6.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.030730761204958164,
+        "maximum": 0.9905152217807429,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "7.softmax.round0.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.016955605962939747,
+        "maximum": 0.017045423332914724,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "7.softmax.round1.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.01697529215977643,
+        "maximum": 0.0173479619871881,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "7.softmax.round2.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.017056805887863364,
+        "maximum": 0.018670129776977115,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "7.softmax.round3.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.017413280608911803,
+        "maximum": 0.029358521918684335,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "7.softmax.round4.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.01909736433304048,
+        "maximum": 0.1529526052997462,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "7.softmax.round5.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.029209392735725988,
+        "maximum": 0.5073371432750016,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "8.softmax.round0.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.016951357886247822,
+        "maximum": 0.01703346794063651,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "8.softmax.round1.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.016958019971855944,
+        "maximum": 0.017293822223193436,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "8.softmax.round2.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.016984997392744835,
+        "maximum": 0.01838572727516121,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "8.softmax.round3.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.017095637711439134,
+        "maximum": 0.02309759885834268,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "8.softmax.round4.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.017561516129104553,
+        "maximum": 0.04879376752148993,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "8.softmax.round5.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.019630791177856776,
+        "maximum": 0.29852446502477326,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "9.softmax.round0.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.016952615783150243,
+        "maximum": 0.01705311200575742,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "9.softmax.round1.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.016963422386698318,
+        "maximum": 0.017370116828906643,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "9.softmax.round2.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.01700987501220215,
+        "maximum": 0.0187346519550294,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "9.softmax.round3.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.017226813235511063,
+        "maximum": 0.026917676115723287,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "9.softmax.round4.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.018454137901676323,
+        "maximum": 0.10915995539979484,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "9.softmax.round5.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.028979788097014063,
+        "maximum": 0.699081820100983,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "10.softmax.round0.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.016951850214746017,
+        "maximum": 0.01703604636369351,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "10.softmax.round1.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.01695995990844067,
+        "maximum": 0.017328710069457087,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "10.softmax.round2.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.01699253582786138,
+        "maximum": 0.019134635626893947,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "10.softmax.round3.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.01712424057695829,
+        "maximum": 0.03620998268881465,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "10.softmax.round4.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.017667040575939534,
+        "maximum": 0.22253632036890658,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "10.softmax.round5.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.020038029671889068,
+        "maximum": 0.4846701743610925,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "11.softmax.round0.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.016949249839288038,
+        "maximum": 0.017006877111275454,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "11.softmax.round1.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.016949541864540747,
+        "maximum": 0.01717981171440512,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "11.softmax.round2.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.01695071092280971,
+        "maximum": 0.017963976550765478,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "11.softmax.round3.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.016955395047725544,
+        "maximum": 0.024853832202707545,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "11.softmax.round4.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.016974198364838815,
+        "maximum": 0.11548480451569255,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "11.softmax.round5.denominator_inverse.K59": {
+        "domain": [
+          0.00847457627118644,
+          2.0
+        ],
+        "count": 708,
+        "minimum": 0.017050003220314584,
+        "maximum": 0.44932462168891696,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "0.softmax.round0.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.0212789741302082,
+        "maximum": 0.021612437886411026,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "0.softmax.round1.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021286145887624123,
+        "maximum": 0.022732633971762856,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "0.softmax.round2.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021314658531565334,
+        "maximum": 0.028783375686513745,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "0.softmax.round3.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021427864772398008,
+        "maximum": 0.06822725994548026,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "0.softmax.round4.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.02187577163412225,
+        "maximum": 0.41332355176885305,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "1.softmax.round0.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021276857839315953,
+        "maximum": 0.021365767257008162,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "1.softmax.round1.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021277648178580043,
+        "maximum": 0.021641536135761877,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "1.softmax.round2.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.0212808382277455,
+        "maximum": 0.022821736908930388,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "1.softmax.round3.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021293832581553065,
+        "maximum": 0.028530079081298756,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "1.softmax.round4.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021347758754604207,
+        "maximum": 0.07442898970632297,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "1.softmax.round5.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021580310728865317,
+        "maximum": 0.5427958163117468,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "1.softmax.round6.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.022666857964992435,
+        "maximum": 0.9821057657437564,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "2.softmax.round0.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.02127695912503411,
+        "maximum": 0.021457703472664253,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "2.softmax.round1.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021278051248122803,
+        "maximum": 0.02201084215229368,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "2.softmax.round2.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021282433912438406,
+        "maximum": 0.024358690642277317,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "2.softmax.round3.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021300082465383164,
+        "maximum": 0.0395698877469548,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "2.softmax.round4.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021371693812314022,
+        "maximum": 0.1959882382602145,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "2.softmax.round5.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.02166751156286107,
+        "maximum": 0.8210943026201296,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "2.softmax.round6.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.02294708016158572,
+        "maximum": 0.9975116551676617,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "3.softmax.round0.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021277127159808246,
+        "maximum": 0.021366194118506144,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "3.softmax.round1.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021278732990832536,
+        "maximum": 0.021630882907044794,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "3.softmax.round2.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021285240496292306,
+        "maximum": 0.022681745852312862,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "3.softmax.round3.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.02131199165537192,
+        "maximum": 0.027190111918385267,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "3.softmax.round4.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.02142557559217281,
+        "maximum": 0.05983292964271091,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "3.softmax.round5.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021947138537382612,
+        "maximum": 0.3983944579214949,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "3.softmax.round6.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.024862109770481138,
+        "maximum": 0.9540412235845065,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "4.softmax.round0.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021279931377479626,
+        "maximum": 0.02144911283882338,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "4.softmax.round1.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021289984179467755,
+        "maximum": 0.02195706019699359,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "4.softmax.round2.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021330529878984792,
+        "maximum": 0.023949213639853122,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "4.softmax.round3.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.02149559229391194,
+        "maximum": 0.03190960000966936,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "4.softmax.round4.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.022182293101795925,
+        "maximum": 0.09258161152423348,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "4.softmax.round5.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.025197379414631318,
+        "maximum": 0.5528216901834084,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "5.softmax.round0.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021277973532408703,
+        "maximum": 0.021385171586672195,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "5.softmax.round1.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021282190766007875,
+        "maximum": 0.021712270621841317,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "5.softmax.round2.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021299671043762326,
+        "maximum": 0.023049940713482504,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "5.softmax.round3.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021374864455272684,
+        "maximum": 0.028995862468586486,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "5.softmax.round4.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021724477365692305,
+        "maximum": 0.06455617968089422,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "5.softmax.round5.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.023542855609990546,
+        "maximum": 0.3393947903593479,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "5.softmax.round6.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.030268723651555335,
+        "maximum": 0.9338092384037249,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "6.softmax.round0.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021279355067954475,
+        "maximum": 0.021368184233503413,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "6.softmax.round1.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021288012792716783,
+        "maximum": 0.021653584793786106,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "6.softmax.round2.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.02132552577110442,
+        "maximum": 0.022892919360976944,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "6.softmax.round3.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021502392929777864,
+        "maximum": 0.029040103836048815,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "6.softmax.round4.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.022417045979394815,
+        "maximum": 0.07310606623969386,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "6.softmax.round5.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.026119731985149885,
+        "maximum": 0.4092110109477405,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "6.softmax.round6.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.03878953315342008,
+        "maximum": 0.9542204411123745,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "7.softmax.round0.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021283374185305428,
+        "maximum": 0.02140984725119282,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "7.softmax.round1.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021303598538581485,
+        "maximum": 0.021815825211731452,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "7.softmax.round2.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021383792923411155,
+        "maximum": 0.023495502166847853,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "7.softmax.round3.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021699991695747368,
+        "maximum": 0.03334545075434051,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "7.softmax.round4.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.02294304659758524,
+        "maximum": 0.1372453736853276,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "7.softmax.round5.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.0279254335463016,
+        "maximum": 0.4474796851900662,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "8.softmax.round0.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.0212796010877228,
+        "maximum": 0.0214398842747463,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "8.softmax.round1.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021288601439408496,
+        "maximum": 0.021926557221006993,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "8.softmax.round2.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021324496296524355,
+        "maximum": 0.023938796202668474,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "8.softmax.round3.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021467277350726628,
+        "maximum": 0.03388396355672217,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "8.softmax.round4.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.022033079359344544,
+        "maximum": 0.1151965138058026,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "8.softmax.round5.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.02427741194385015,
+        "maximum": 0.6405941047337546,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "9.softmax.round0.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021282666714184724,
+        "maximum": 0.02143356233952207,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "9.softmax.round1.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021301617671023045,
+        "maximum": 0.021924741656321182,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "9.softmax.round2.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021383105200997368,
+        "maximum": 0.02406277756037252,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "9.softmax.round3.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021763387089464258,
+        "maximum": 0.037440718766328145,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "9.softmax.round4.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.023898784581289054,
+        "maximum": 0.169102725747553,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "9.softmax.round5.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.034934665005919956,
+        "maximum": 0.7531422397205758,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "10.softmax.round0.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.02128288000116289,
+        "maximum": 0.021464789224621198,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "10.softmax.round1.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021301761119203167,
+        "maximum": 0.02204488038967624,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "10.softmax.round2.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021377494000263002,
+        "maximum": 0.024496437475526822,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "10.softmax.round3.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021682273643764915,
+        "maximum": 0.041416583467011006,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "10.softmax.round4.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.022919899784330736,
+        "maximum": 0.16056785779864202,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "10.softmax.round5.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.028092798160482855,
+        "maximum": 0.4544826681250377,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "11.softmax.round0.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.02127683813275971,
+        "maximum": 0.02137502670698079,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "11.softmax.round1.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.02127756544254396,
+        "maximum": 0.021680050397404695,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "11.softmax.round2.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021280475724408773,
+        "maximum": 0.022977960891743945,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "11.softmax.round3.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021292125537690488,
+        "maximum": 0.03098416418193579,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "11.softmax.round4.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.021338799335386124,
+        "maximum": 0.10591521364008634,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      },
+      "11.softmax.round5.denominator_inverse.K47": {
+        "domain": [
+          0.010638297872340425,
+          2.0
+        ],
+        "count": 564,
+        "minimum": 0.02152615763538194,
+        "maximum": 0.40812192394481805,
+        "below": 0,
+        "above": 0,
+        "nonfinite": 0,
+        "examples": 1,
+        "examples_with_violations": 0
+      }
+    },
+    "domain_failures": [],
+    "numeric_failures": [],
+    "complete_model_outputs": 3,
+    "logit_gate_passes": 3,
+    "native_prediction_agreements": 3,
+    "worst_complete_logit_error": 0.0008029081738061411,
+    "tokenization_sha256": "9ccc01afa9a82c5e346e2d6e578e97905e00b89a5c4dc8c0d3dc49dd86bcd4ec",
+    "all_training_examples_evaluated": false,
+    "no_jax_imported": true,
+    "validation_evaluated": false,
+    "labels_used": false,
+    "encrypted_execution": false,
+    "limitation": "Training-only float64 arithmetic analogue with native float32 logit reference; no label accuracy, unseen-input guarantee, CKKS error or runtime calibration. Padding is compacted using public masks and original positions before encrypted-graph analogue.",
+    "source_hashes_after": {
+      "/tmp/bert-mrpc-train-calibration-20261103/approximate_train.py": "7329ab4b8d9b780c18728c3cae10969fcf1d4d40a6bf6052bfaff842223cbf78",
+      "/tmp/bert-mrpc-train-calibration-20261103/approximate.py": "81fdb3b4539a91c65adec107643a36f048fb4822327dd55c86f9055be28e95c5",
+      "/tmp/bert-mrpc-train-calibration-20261103/test_approximate.py": "bf4bf2086877351219c2b88b734c4cb6a142d21899f7ea5dc2128287e4bb7e27",
+      "/tmp/bert-mrpc-train-calibration-20261103/calibrate.py": "27ba1c3dc671bdf31286bd174474608288c814dab1ac464b8f58952cf2144530",
+      "/tmp/bert-mrpc-train-calibration-20261103/audit.py": "e3bb08cbf1ec0b0c77d9086ed8cbc8da896ffe3f8e98c26e85ce88267c522bfe",
+      "/tmp/bert-mrpc-train-calibration-20261103/dataset_manifest.json": "0600cd315621ae30b7efa08857f9814b44e8d20e11667b43a7d3529e73c7d8ce",
+      "/tmp/bert-mrpc-train-calibration-20261103/select_v2.py": "03eed206f0d6c2457f7c3e92c853b2c1d4654bbe690dea963dae1f4a00f35cb6",
+      "/tmp/bert-mrpc-train-calibration-20261103/candidate-v2/selection_protocol.json": "2dcc9e55a7f4ad42e9a988c61c1d3bc24a9631e67370fb0c16d44048fc7f793a",
+      "/tmp/bert-mrpc-train-calibration-20261103/candidate-v2/report.json": "113551472373bc111bd54a8ae5b80f0e7599b3df2e2e8d4209ee8f4b36a39fcd",
+      "/tmp/bert-mrpc-train-calibration-20261103/candidate-v2/candidate_manifest.json": "4e2277beea7189aa1d77b168c500c8a175f6c630afa520fcc6b38cb5a179cff9",
+      "/tmp/bert-mrpc-train-calibration-20261103/train3668-v1/report.json": "6752eb35051d8a2078e6a2aa361462735a5b5564f10b4d43defd2548b044cb25",
+      "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/src/reference.py": "6d254c92b70257e773d1701a6f85fb592365e67d037b231b9e5a1589e64e7a04",
+      "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/models/bert/modeling_bert.py": "ef3407eae97090a4c0bfb635b3aafd4435248148e553e4ae307aa2b4aa1efcbc",
+      "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/models/bert/tokenization_bert.py": "2175151678441fe952744a55d309bdade829dcae496bf1ffda90e93e9f8d088f",
+      "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/models/bert/tokenization_bert_fast.py": "b3197237baa874ac770682b1926ae12a7c9236d95cd3815033539c1e9ed2e2c0",
+      "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/tokenization_utils_base.py": "32acd70cda55191fc1e1e659af62b9afce2411ddf21c5b8e2ffaa8ac0463da66",
+      "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/activations.py": "5e45852b518ed3fdfbff4d8a44dc934b74f6606670fd90f2fb6c486172f9792c"
+    },
+    "source_files_unchanged": true,
+    "elapsed_s": 5.957923408997885
+  },
+  "full_training_pass_established": false,
+  "validation_evaluated": false,
+  "encrypted_execution": false
+}

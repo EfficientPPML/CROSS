@@ -1,0 +1,408 @@
+{
+  "scope": "Exact frozen initial-softmax public resource/scale plan; no backend import.",
+  "passed": true,
+  "manifest_sha256": "4e2277beea7189aa1d77b168c500c8a175f6c630afa520fcc6b38cb5a179cff9",
+  "initialized_context": false,
+  "key_generation": false,
+  "encrypted_execution": false,
+  "logical_layout": {
+    "rows": 16,
+    "keys": 128,
+    "active_heads": 12,
+    "padded_heads": 16,
+    "row_pitch": 4096,
+    "physical_slots": 65536
+  },
+  "all_rows_distinct": true,
+  "public_per_row_masks": true,
+  "partial_queries": true,
+  "critical_path_levels": 22,
+  "reserved_output_levels": 2,
+  "exponential_degree": 8,
+  "initial_reciprocal_updates": 6,
+  "initial_seed": 0.8,
+  "initial_rounded_weight": -0.6400000000000001,
+  "initial_rounded_bias": 1.6,
+  "initial_inverse_domain": [
+    0.5,
+    2.0
+  ],
+  "centered_score_domain": [
+    -16.0,
+    16.0
+  ],
+  "squaring_rounds_implemented": 0,
+  "squaring_rounds_still_required": 5,
+  "actual_profile": {
+    "degree": 131072,
+    "depth": 49,
+    "scale_bits": 56,
+    "dnum": 4,
+    "Q_count": 100,
+    "P_count": 24,
+    "log2_QP": 3490.161581036245,
+    "canonical_scale": 6.89940115708969e+16,
+    "base_Q_over_scale": 33.40459842080586
+  },
+  "actual_ordered_q": [
+    2146959361,
+    1073479681,
+    138412033,
+    113246209,
+    132120577,
+    136314881,
+    130809857,
+    114032641,
+    127664129,
+    126615553,
+    115081217,
+    117964801,
+    125042689,
+    118751233,
+    120586241,
+    120324097,
+    347078657,
+    142344193,
+    145489921,
+    147849217,
+    163577857,
+    167510017,
+    151257089,
+    155189249,
+    158334977,
+    159645697,
+    158072833,
+    156499969,
+    206307329,
+    340000769,
+    167772161,
+    169869313,
+    200540161,
+    204472321,
+    173801473,
+    175636481,
+    185597953,
+    186646529,
+    184811521,
+    178782209,
+    191365121,
+    199229441,
+    189530113,
+    187432961,
+    336855041,
+    207880193,
+    211025921,
+    211812353,
+    332660737,
+    336068609,
+    214171649,
+    215482369,
+    329777153,
+    330301441,
+    215744513,
+    217317377,
+    329515009,
+    218628097,
+    219676673,
+    221249537,
+    328728577,
+    222035969,
+    224133121,
+    228065281,
+    323223553,
+    325844993,
+    230424577,
+    230686721,
+    319291393,
+    231473153,
+    234356737,
+    236716033,
+    306708481,
+    311427073,
+    305135617,
+    239337473,
+    302252033,
+    302776321,
+    290455553,
+    239861761,
+    285474817,
+    288882689,
+    284950529,
+    240648193,
+    276037633,
+    277086209,
+    244842497,
+    246415361,
+    274726913,
+    249561089,
+    253493249,
+    254279681,
+    270532609,
+    270794753,
+    256376833,
+    257949697,
+    269221889,
+    260571137,
+    261881857,
+    263454721
+  ],
+  "actual_ordered_p": [
+    1068236801,
+    1062469633,
+    1056440321,
+    1056178177,
+    1053818881,
+    1052508161,
+    1051721729,
+    1049100289,
+    1045430273,
+    1037303809,
+    1036779521,
+    1023148033,
+    1019478017,
+    1018429441,
+    1015283713,
+    1012924417,
+    1010565121,
+    1007681537,
+    1006108673,
+    1005060097,
+    1004535809,
+    998244353,
+    995622913,
+    993263617
+  ],
+  "recorded_secure_profile": true,
+  "integer_QP_bit_length": 3491,
+  "P_coverage_rechecked": true,
+  "rotation_indices": [
+    16,
+    32,
+    64,
+    128,
+    256,
+    512,
+    1024,
+    64512,
+    65024,
+    65280,
+    65408,
+    65472,
+    65504,
+    65520
+  ],
+  "rotation_key_count": 14,
+  "raw_rotation_key_bytes": 7281311744,
+  "raw_relinearization_key_bytes": 520093696,
+  "raw_ciphertext_bytes_at38": 81788928,
+  "logical_operations": {
+    "ciphertext_products": 18,
+    "plaintext_products": 16,
+    "nonzero_rotations": 28,
+    "composite_rescales": 26
+  },
+  "plans_by_input_level": {
+    "24": {
+      "input_level": 24,
+      "consumed_levels": 22,
+      "reserved_output_levels": 2,
+      "levels": {
+        "score_mean": 22,
+        "normalized_t": 21,
+        "base_exp": 17,
+        "mean_exp": 15,
+        "inverse": 4,
+        "base_times_inverse": 3,
+        "probabilities": 2
+      },
+      "static_inverse_scale_plan": {
+        "initial_scale_decimal": "14662555408000772.91516002223748933470202874452824719347690886486779169442371601808195643917264220476",
+        "initial_target_scale": 1.4662555408000772e+16,
+        "initial_plaintext_scale": 6056658653227356.0,
+        "rows": [
+          {
+            "update": 1,
+            "level": 14,
+            "scale": 1.4662555408000772e+16
+          },
+          {
+            "update": 2,
+            "level": 12,
+            "product_scale": 1.4422033756222878e+16,
+            "scale": 8548003303138235.0
+          },
+          {
+            "update": 3,
+            "level": 10,
+            "product_scale": 2.333146438554354e+16,
+            "scale": 8496289651384725.0
+          },
+          {
+            "update": 4,
+            "level": 8,
+            "product_scale": 2.1393183184918436e+16,
+            "scale": 8449923609126834.0
+          },
+          {
+            "update": 5,
+            "level": 6,
+            "product_scale": 1.1800394243821606e+16,
+            "scale": 6872249707716491.0
+          },
+          {
+            "update": 6,
+            "level": 4,
+            "product_scale": 3.1931101228492204e+16,
+            "scale": 1.616426429159833e+16
+          }
+        ],
+        "requested_final_scale": 1.6164264291598336e+16,
+        "final_relative_difference": -3.3306690738754696e-16
+      },
+      "actual_product_scale": 6.899401157089686e+16,
+      "final_scale": 6.89940115708969e+16,
+      "initial_updates": 6,
+      "first_weight": -0.6400000000000001,
+      "first_bias": 1.6,
+      "future_normalized_squarings": 5,
+      "implemented_squaring_rounds": 0
+    },
+    "38": {
+      "input_level": 38,
+      "consumed_levels": 22,
+      "reserved_output_levels": 2,
+      "levels": {
+        "score_mean": 36,
+        "normalized_t": 35,
+        "base_exp": 31,
+        "mean_exp": 29,
+        "inverse": 18,
+        "base_times_inverse": 17,
+        "probabilities": 16
+      },
+      "static_inverse_scale_plan": {
+        "initial_scale_decimal": "53438824661438001.85896693775122168516462457627500372107993800710344072674954067755969909305166645333",
+        "initial_target_scale": 5.3438824661438e+16,
+        "initial_plaintext_scale": 3.7645391113540664e+16,
+        "rows": [
+          {
+            "update": 1,
+            "level": 28,
+            "scale": 5.343882466143801e+16
+          },
+          {
+            "update": 2,
+            "level": 26,
+            "product_scale": 5.11784489031736e+16,
+            "scale": 5.833239437243225e+16
+          },
+          {
+            "update": 3,
+            "level": 24,
+            "product_scale": 3.694793472820366e+16,
+            "scale": 4.670100740684653e+16
+          },
+          {
+            "update": 4,
+            "level": 22,
+            "product_scale": 2.882094073851859e+16,
+            "scale": 3.0112534618492116e+16
+          },
+          {
+            "update": 5,
+            "level": 20,
+            "product_scale": 2.9668975313476052e+16,
+            "scale": 2.5149286703632964e+16
+          },
+          {
+            "update": 6,
+            "level": 18,
+            "product_scale": 4.551146005333276e+16,
+            "scale": 3.4641213716955212e+16
+          }
+        ],
+        "requested_final_scale": 3.4641213716955136e+16,
+        "final_relative_difference": 2.220446049250313e-15
+      },
+      "actual_product_scale": 6.899401157089705e+16,
+      "final_scale": 6.89940115708969e+16,
+      "initial_updates": 6,
+      "first_weight": -0.6400000000000001,
+      "first_bias": 1.6,
+      "future_normalized_squarings": 5,
+      "implemented_squaring_rounds": 0
+    },
+    "49": {
+      "input_level": 49,
+      "consumed_levels": 22,
+      "reserved_output_levels": 2,
+      "levels": {
+        "score_mean": 47,
+        "normalized_t": 46,
+        "base_exp": 42,
+        "mean_exp": 40,
+        "inverse": 29,
+        "base_times_inverse": 28,
+        "probabilities": 27
+      },
+      "static_inverse_scale_plan": {
+        "initial_scale_decimal": "85505669620757921.10086460256005445695405709064122635592704824410073945354976727802099642194094303435",
+        "initial_target_scale": 8.550566962075792e+16,
+        "initial_plaintext_scale": 1.022051632931174e+17,
+        "rows": [
+          {
+            "update": 1,
+            "level": 39,
+            "scale": 8.550566962075792e+16
+          },
+          {
+            "update": 2,
+            "level": 37,
+            "product_scale": 8.467702824080232e+16,
+            "scale": 7.911692184560066e+16
+          },
+          {
+            "update": 3,
+            "level": 35,
+            "product_scale": 7.474414430071549e+16,
+            "scale": 6.191051365687713e+16
+          },
+          {
+            "update": 4,
+            "level": 33,
+            "product_scale": 7.699644746743922e+16,
+            "scale": 6.449814971224897e+16
+          },
+          {
+            "update": 5,
+            "level": 31,
+            "product_scale": 8.371576656282734e+16,
+            "scale": 5.126730196468271e+16
+          },
+          {
+            "update": 6,
+            "level": 29,
+            "product_scale": 6.919690095128366e+16,
+            "scale": 4.8603362190950504e+16
+          }
+        ],
+        "requested_final_scale": 4.86033621909504e+16,
+        "final_relative_difference": 2.220446049250313e-15
+      },
+      "actual_product_scale": 6.899401157089704e+16,
+      "final_scale": 6.89940115708969e+16,
+      "initial_updates": 6,
+      "first_weight": -0.6400000000000001,
+      "first_bias": 1.6,
+      "future_normalized_squarings": 5,
+      "implemented_squaring_rounds": 0
+    }
+  },
+  "no_jax_imported": true,
+  "limitations": [
+    "Public ideal/static planning only; no ciphertext numerical pass or newly generated security profile.",
+    "No future normalized-squaring, genuine refresh, attention/V aggregation, block or full-model result.",
+    "Bounds are declared input contracts, not ciphertext checks or inferred from the observed fixtures.",
+    "Raw key/ciphertext payload excludes tables, compiler, formatted keys, host/device temporary buffers and peak-memory overhead."
+  ]
+}

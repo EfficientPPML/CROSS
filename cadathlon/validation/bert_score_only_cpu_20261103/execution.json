@@ -1,0 +1,62 @@
+{
+  "scope": "Archive verification, not a new numerical execution. CPU plaintext only.",
+  "archived_utc": "2026-11-03T01:02:20.031747+00:00",
+  "source_inventory": {
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/src/reference.py": {
+      "archive_path": "sources/00_reference.py.txt",
+      "sha256": "6d254c92b70257e773d1701a6f85fb592365e67d037b231b9e5a1589e64e7a04"
+    },
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_polynomial.py": {
+      "archive_path": "sources/01_encrypted_polynomial.py.txt",
+      "sha256": "d01cbcf26897c9b190919bb6b279e731716d7dcc4e687bbdfbc4e2e4baf5975e"
+    },
+    "/home/jianming_gatech/CROSS/cadathlon/validation/check_pretrained_bert_domains.py": {
+      "archive_path": "sources/02_check_pretrained_bert_domains.py.txt",
+      "sha256": "d3463f03bdfcb1a0539bf8b6333a22b9fc776231815ed120bf31a29b73f08c40"
+    },
+    "/tmp/streaming-bert-layout/row_attention.py": {
+      "archive_path": "sources/03_row_attention.py.txt",
+      "sha256": "320b74092bd45ff6e2b71e2e4d9204de4bdb7f7b53c184a516e0ee40bcab3269"
+    },
+    "/tmp/streaming-bert-review/inventory.json": {
+      "archive_path": "sources/04_inventory.json.txt",
+      "sha256": "97e3c19bf0d4ded16a3bf99fa9604fdba9b5f40bd5c2439a5249e64442ff68b9"
+    },
+    "/tmp/streaming-bert-scores/check_layout.py": {
+      "archive_path": "sources/05_check_layout.py.txt",
+      "sha256": "484c5b4c1170bc381f40516dcd0c1d8b0a9c30e33c27e38825a14ba016c1d0b5"
+    },
+    "/tmp/streaming-bert-scores/check_pinned_attention.py": {
+      "archive_path": "sources/06_check_pinned_attention.py.txt",
+      "sha256": "065e4303c6623c537eca59e465d1da82c7fb63aaf67936a83f04574696986594"
+    },
+    "/tmp/streaming-bert-scores/plan_composed_rotations.py": {
+      "archive_path": "sources/07_plan_composed_rotations.py.txt",
+      "sha256": "6bf6999426ec2869cd3bd5b913f039ad572d70d478f114643f241753680d2013"
+    },
+    "/tmp/streaming-bert-scores/score_layout.py": {
+      "archive_path": "sources/08_score_layout.py.txt",
+      "sha256": "ac642628356501f18859008170e78db51078e866d2015f28d2feeb7fe88066dc"
+    }
+  },
+  "runs": {
+    "seven_case": {
+      "session_id": 80575,
+      "exit_code": 0,
+      "reaped": true,
+      "source_files_unchanged": true
+    },
+    "layout": {
+      "exit_code": 0,
+      "source_files_unchanged": true
+    },
+    "rotation_composition": {
+      "session_id": 76763,
+      "exit_code": 0,
+      "reaped": true,
+      "source_files_unchanged": true
+    }
+  },
+  "command": "env JAX_PLATFORMS=cpu OMP_NUM_THREADS=4 OPENBLAS_NUM_THREADS=4 MKL_NUM_THREADS=4 CROSS_ROOT=/home/jianming_gatech/CROSS taskset -c144-147 /tmp/cross-pretrained-validation-env/bin/python /tmp/streaming-bert-scores/check_pinned_attention.py --snapshot /home/jianming_gatech/cross_validation_assets/bert/f150c1d609d1e50dd5e2e5408661cfac8339277c --output /tmp/streaming-bert-scores/run2 > /tmp/streaming-bert-scores/run2.log 2>&1",
+  "no_checkpoint_array_or_key_or_ciphertext_files": true
+}

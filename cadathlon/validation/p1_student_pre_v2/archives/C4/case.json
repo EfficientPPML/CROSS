@@ -1,0 +1,36 @@
+{
+  "id": "C4",
+  "instance": 1,
+  "batch": 100,
+  "devices": 8,
+  "verify": {
+    "scope": "final run",
+    "expected_images": 100,
+    "predictions_written": 100,
+    "labels_written": 100,
+    "complete": true,
+    "correct": 96,
+    "accuracy_over_expected": 0.96,
+    "top1_agreement_with_harness_model": 0.98,
+    "harness_model_correct": 95,
+    "own_cleartext": {
+      "status": "ok",
+      "compared": 100,
+      "top1_agreement": 1.0,
+      "cleartext_correct": 96
+    },
+    "status": "PASS"
+  },
+  "evidence_files": [
+    "test_labels.txt",
+    "test_pixels.txt",
+    "encrypted_model_predictions.txt",
+    "harness_model_predictions.txt"
+  ],
+  "suite_commit": "739378698fc1f668aff7246724b45cff76f04a98",
+  "seed": 3,
+  "baseline_profile": "student",
+  "devices_env": "8",
+  "archived_from": "/home/jianming_gatech/ml-inference/measurements/small",
+  "label": "student-baseline"
+}

@@ -104,6 +104,7 @@ class _HEMulAtLevel:
         extend_moduli=cache.p_towers,
         composite_degree=cache.composite_degree,
         finite_field_context=cache.ff_context_cls,
+        polynomial_factory=cache.multiplication_polynomial_factory,
     )
     self._hemul.control_gen(
         degree_layout=cache.degree_layout,
@@ -129,6 +130,7 @@ class _HEMulAtLevel:
           c=cache.c,
           degree_layout=cache.degree_layout,
           finite_field_context=cache.ff_context_cls,
+          polynomial_factory=cache.rescale_polynomial_factory,
       )
       self._post_rescale.control_gen(
           composite_degree=self._cd,
@@ -267,6 +269,7 @@ class _HEMulAtLevel:
         extend_moduli=self.cache.p_towers,
         composite_degree=self.cache.composite_degree,
         finite_field_context=self.cache.ff_context_cls,
+        polynomial_factory=self.cache.multiplication_polynomial_factory,
     )
     op.control_gen(
         degree_layout=self.cache.degree_layout,
@@ -325,6 +328,7 @@ class _HERotAtLevel:
     self._herot = herot._HERotKernel(
         cache.r, cache.c, cache.dnum, q_at_level, cache.p_towers,
         finite_field_context=cache.ff_context_cls,
+        polynomial_factory=cache.rotation_polynomial_factory,
     )
 
     self._herot.control_gen(
@@ -448,6 +452,7 @@ class _HERescaleAtLevels:
         c=cache.c,
         degree_layout=cache.degree_layout,
         finite_field_context=cache.ff_context_cls,
+        polynomial_factory=cache.rescale_polynomial_factory,
     )
     self._he_rescale.control_gen(composite_degree=total_drop)
 

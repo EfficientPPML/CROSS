@@ -1,0 +1,191 @@
+"""Verify/copy protected organizer P1/P3 collector evidence; no runtime imports."""
+from pathlib import Path, PurePosixPath
+import argparse, hashlib, json, math, os, shutil, stat, statistics, tarfile
+
+
+def require(condition, message):
+    if not condition:
+        raise ValueError(message)
+
+
+def sha(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def relative(name):
+    p = PurePosixPath(name)
+    require(not p.is_absolute() and '..' not in p.parts, f'unsafe evidence path: {name}')
+    return str(p)
+
+
+def regular(path):
+    require(stat.S_ISREG(path.lstat().st_mode), f'not a regular file: {path}')
+    return path
+
+
+def no_private_values(value, location):
+    forbidden = {'secret_key', 'private_key', 'sk', 'ciphertext', 'ciphertexts',
+                 'payload', 'pixels', 'labels', 'predictions', 'logits', 'embeddings',
+                 'decrypted', 'private_manifest'}
+    if isinstance(value, dict):
+        for key, item in value.items():
+            require(key.lower() not in forbidden, f'private/per-image field at {location}/{key}')
+            no_private_values(item, f'{location}/{key}')
+    elif isinstance(value, list):
+        for index, item in enumerate(value):
+            no_private_values(item, f'{location}/{index}')
+    elif isinstance(value, float):
+        require(math.isfinite(value), f'nonfinite evidence value at {location}')
+
+
+def read(base, name):
+    obj = json.loads(regular(base / relative(name)).read_text())
+    no_private_values(obj, name)
+    return obj
+
+
+def dead(pid):
+    require(type(pid) is int and pid > 1, f'invalid recorded PID: {pid}')
+    require(not Path(f'/proc/{pid}').exists(), f'recorded process still exists: {pid}')
+
+
+def secure(rings):
+    require(isinstance(rings, list) and rings, 'missing actual execution rings')
+    for ring in rings:
+        require(ring.get('security_bits', 0) >= 128 and ring.get('security_model') == 'classical', 'security gate metadata')
+        require(ring['num_q'] == len(ring['q_towers']) and ring['num_p'] == len(ring['p_towers']), 'ring limb mismatch')
+        actual = sum(math.log2(q) for q in ring['q_towers'] + ring['p_towers'])
+        require(math.isclose(actual, ring['log2_QP'], rel_tol=1e-12), 'actual QP mismatch')
+
+
+def verify_p1(base):
+    collection = read(base, 'collection.json'); report = read(base, 'report.json')
+    manifest = read(base, 'baseline_manifest_student.json'); score = read(base, 'self_score.json')
+    require(collection.get('passed') is True and collection.get('returncode') == 0, 'collector/evaluator did not pass')
+    require(not collection.get('prepared_only') and not collection.get('signals') and not collection.get('outer_timeout') and not collection.get('forced_kill'), 'non-complete attempt')
+    require(collection.get('collection_elapsed_s', 0) > 0, 'collector not finalized')
+    dead(collection['wrapper_pid']); dead(collection['evaluator_pid'])
+    require(0 < collection['external_evaluation_elapsed_s'] <= 300, 'external 300-second budget failed')
+    require(report.get('passed') is True and report.get('cleanup_passed') is True and report.get('within_budget') is True, 'report/cleanup/budget failure')
+    require(report.get('require_tpu') is True and report.get('mode') == 'baseline' and report.get('profile') == 'student' and report.get('gate_version') == 'student-v2', 'wrong evaluation contract')
+    require(report['budget_s'] == 300 and 0 < report['elapsed_s'] <= 300, 'internal budget failed')
+    identity = report['evaluation_id']
+    require(identity != collection.get('previous_evaluation_id') and collection.get('fresh_evaluation_id') is True, 'stale evaluation identity')
+    require(sha(base/'report.json') == sha(base/'calibration/report.json'), 'published proof report differs')
+    require(manifest['evaluation_id'] == identity and manifest['evaluation_profile'] == 'student' and manifest['gate_version'] == 'student-v2', 'manifest identity/profile mismatch')
+    require(manifest['evaluation_report'] == f'calibration/student-baseline/{identity}/report.json', 'manifest proof pointer mismatch')
+    for key in ('suite_commit', 'seed', 'runs_per_case', 'versions'):
+        require(manifest[key] == report[key], f'manifest/report {key} mismatch')
+    require(report['seed'] == 3 and report['runs_per_case'] == 3, 'wrong repeated schedule')
+    hashes = collection['source_sha256_before']; inventory = read(base, 'source_inventory.json')
+    require(hashes == collection['source_sha256_after'] == report['source_sha256'] == report['source_sha256_after'], 'source hashes changed or report differs')
+    require(collection['source_files_unchanged'] and collection['report_sources_match_snapshot'] and report['source_files_unchanged'], 'source equality gates missing')
+    require(set(inventory) == set(hashes), 'source inventory membership mismatch')
+    selected = {'collection.json', 'report.json', 'baseline_manifest_student.json', 'self_score.json',
+                'source_inventory.json', 'collector.py.txt', 'evaluator.log', 'C3.log', 'C4.log',
+                'self_score.stdout', 'self_score.stderr', 'calibration/report.json'}
+    for name, entry in inventory.items():
+        snapshot = relative(entry['snapshot'])
+        require(snapshot == 'sources/' + name + '.txt', 'unexpected source snapshot location')
+        path = regular(base/snapshot)
+        require(sha(path) == hashes[name] == entry['sha256'] and path.stat().st_size == entry['bytes'], f'snapshot bytes mismatch: {name}')
+        selected.add(snapshot)
+    require(sha(base/'collector.py.txt') == collection['wrapper_sha256'], 'collector snapshot mismatch')
+    require(set(report['cases']) == set(manifest['cases']) == set(score['cases']) == {'C3','C4'}, 'incomplete schedule')
+    for case, devices in (('C3',1),('C4',8)):
+        item = report['cases'][case]; archived = read(base, f'archives/{case}/case.json')
+        require(item.get('passed') is True and item['runs'] == 3 and item['images'] == 100, f'{case} incomplete')
+        require(item['evaluation_id'] == archived['evaluation_id'] == score['cases'][case]['evaluation_id'] == identity and archived['id'] == case, 'case identity mismatch')
+        require(archived['suite_commit'] == report['suite_commit'] and archived['label'] == report['label'] == manifest['evaluation_label'], 'case suite/label mismatch')
+        require(archived['baseline_profile'] == item['baseline_profile'] == 'student' and archived['seed'] == 3, 'case profile/seed mismatch')
+        require(archived['identity'] == item['identity'] == manifest['cases'][case]['identity'] == score['cases'][case]['identity'], 'model/input identity mismatch')
+        require(item['identity']['model'] == report['model_identity'], 'model manifest identity mismatch')
+        require(archived['execution'] == item['execution'] == manifest['cases'][case]['execution'], 'execution metadata mismatch')
+        require(len(item['execution']['devices']) == devices and all('TPU' in x for x in item['execution']['device_kinds']), 'TPU allocation mismatch')
+        secure(item['execution']['execution_rings'])
+        for name, expected in report['archive_sha256'][case].items():
+            require(name in {'case.json','results-1.json','results-2.json','results-3.json'}, 'unknown archive file')
+            path = f'archives/{case}/{name}'; require(sha(regular(base/path)) == expected, f'archive hash mismatch: {path}'); read(base,path); selected.add(path)
+        require(set(report['archive_sha256'][case]) == {'case.json','results-1.json','results-2.json','results-3.json'}, 'missing run archives')
+    require(score.get('passed') is True and collection['self_score_returncode'] == 0 and score['execution_points'] == 30 and score['speed_points'] == 0, 'baseline self-score failed')
+    for name in ('previous_report.json','previous_baseline_manifest_student.json'):
+        if (base/name).exists(): read(base,name); selected.add(name)
+    return selected, dict(profile='student-v2', passed=True, evaluation_id=identity,
+        external_elapsed_s=collection['external_evaluation_elapsed_s'], internal_elapsed_s=report['elapsed_s'],
+        exact_source_files=len(hashes), cleanup_passed=True, cpu_affinity=collection['cpu_affinity'],
+        self_score={'execution_points':score['execution_points'],'speed_points':score['speed_points']})
+
+
+def verify_p3(base):
+    process=read(base,'process.json'); report=read(base,'evaluation/report.json'); score=read(base,'self-score.json')
+    runner=read(base,'evaluator-process.json'); before=read(base,'source-start.json'); after=read(base,'source-end.json')
+    worker=read(base,'evaluation/worker.json')
+    require(worker.get('passed') is True and not worker.get('error'), 'worker cleanup/result did not pass')
+    require(process.get('passed') is True and process.get('returncode') == 0 and runner.get('returncode') == 0, 'collector/evaluator failure')
+    require(not process.get('prepared_only') and not process.get('cancelled_signals') and not process.get('outer_timeout') and not process.get('forced_kill'), 'non-complete attempt')
+    dead(process['pid']); require(process['pid'] == runner['pid'], 'process identity mismatch')
+    require(process['result'] == report and process['self_score'] == score, 'embedded result differs')
+    require(process['source_files_unchanged'] and before == after == process['source_sha256_start'] == process['source_sha256_end'], 'changed sources')
+    require(process['source_archive_sha256'] == sha(base/'sources.tar.gz'), 'source archive hash mismatch')
+    with tarfile.open(base/'sources.tar.gz') as tar:
+        members=tar.getmembers(); require(all(m.isfile() for m in members), 'source archive has nonregular member')
+        names=[relative(m.name) for m in members]; require(len(set(names)) == len(names), 'duplicate source member')
+        captured={m.name:hashlib.sha256(tar.extractfile(m).read()).hexdigest() for m in members}
+    require(captured == before, 'exact archived source bytes differ')
+    require(report.get('passed') is True and report.get('worker_returncode') == 0 and report.get('within_budget') is True and not report.get('error'), 'worker/evaluation/cleanup failure')
+    require(report['profile'] == report['gate_version'] == 'compact-v1' and report['mode'] == 'baseline', 'wrong profile')
+    require(report['budget_s'] == 300 and 0 < report['elapsed_s'] <= 300 and 0 < process['evaluator_process_elapsed_s'] <= 300, '300-second budget failed')
+    require(report['schedule'] == ['student1.in','student2.in'] and set(report['cases']) == set(report['schedule']), 'incomplete compact schedule')
+    prefix='cadathlon/non_agent_pset/p3_cnn/'
+    for name, expected in report['source_sha256'].items():
+        require(before.get(name) == expected, f'report source not bound: {name}')
+    for case in report['schedule']:
+        for suffix,expected in report['fixture_sha256'][case].items():
+            require(before[prefix+'test/'+Path(case).with_suffix(suffix).name] == expected, 'fixture identity mismatch')
+        item=report['cases'][case]
+        require(item.get('passed') is True and 'TPU' in item['device'], 'case failed/CPU')
+        require(len(item['server_s']) == len(item['end_to_end_s']) == 3 and len(item['warmup_s']) == len(item['warmup_server_s']) == 1, 'wrong warmup/repeat schedule')
+        require(all(type(x) in (float,int) and math.isfinite(x) and x > 0 for x in item['server_s'] + item['end_to_end_s']), 'invalid timings')
+        secure(item['execution_rings'])
+        measured = statistics.median(item['server_s'])
+        require(score['cases'][case]['median_server_s'] == score['cases'][case]['reference_median_server_s'] == measured, 'self-score timing mismatch')
+    require(report['model_source_sha256'] == before[prefix+'src/compact_models.py'], 'model source mismatch')
+    require(score['passed'] is True and process['self_score_returncode'] == 0 and score['correctness_points'] == score['points'] == 10 and score['speed_points'] == 0, 'self-score failed')
+    selected={'process.json','evaluator-process.json','stdout.json','stderr.log','source-start.json','source-end.json',
+              'sources.tar.gz','self-score.json','self-score.log','evaluation/report.json','evaluation/worker.json','evaluation/worker.log'}
+    for name in selected:
+        regular(base/name)
+        if name.endswith('.json'):read(base,name)
+    return selected,dict(profile='compact-v1',passed=True,external_elapsed_s=process['evaluator_process_elapsed_s'],
+        internal_elapsed_s=report['elapsed_s'],exact_source_files=len(before),worker_returncode=0,
+        cleanup_scope='Evaluator/worker exit0 and report pass include owned Mapping/process cleanup.',
+        self_score={'correctness_points':score['correctness_points'],'speed_points':score['speed_points']})
+
+
+def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('problem',choices=['p1','p3']); parser.add_argument('source',type=Path)
+    parser.add_argument('--destination',type=Path); parser.add_argument('--observed-collector-returncode',required=True,type=int)
+    parser.add_argument('--collector-pid',type=int,help='Additional outer collector PID, required for publication when not in report')
+    args=parser.parse_args(); base=args.source.resolve()
+    require(args.observed_collector_returncode == 0, 'caller did not observe terminal collector success')
+    if args.collector_pid:dead(args.collector_pid)
+    selected,summary=(verify_p1 if args.problem=='p1' else verify_p3)(base)
+    summary.update(scope='Independent protected-organizer evidence verification and explicit-whitelist copying; no fresh numerical execution.',
+                   collector_terminal_returncode=args.observed_collector_returncode,
+                   collector_terminal_observation='Provided by root after authoritative tool-session reaping.',
+                   source_directory=str(base),private_arrays_copied=False)
+    hashes={name:sha(regular(base/name)) for name in sorted(selected)}
+    summary['artifact_sha256']=hashes
+    if args.destination:
+        require(args.problem=='p1' or args.collector_pid is not None,'P3 publication requires reaped outer collector PID')
+        destination=args.destination.resolve(); destination.mkdir(parents=True,exist_ok=False)
+        for name in sorted(selected):
+            target=destination/name; target.parent.mkdir(parents=True,exist_ok=True); shutil.copyfile(base/name,target)
+            require(sha(target)==hashes[name],f'copy mismatch:{name}')
+        require(all(sha(base/name)==digest for name,digest in hashes.items()),'collector files changed during copy')
+        shutil.copyfile(Path(__file__),destination/'verify_archive.py.txt')
+        (destination/'verification.json').write_text(json.dumps(summary,indent=2,allow_nan=False)+'\n')
+    print(json.dumps(summary,indent=2,allow_nan=False))
+
+if __name__=='__main__':main()

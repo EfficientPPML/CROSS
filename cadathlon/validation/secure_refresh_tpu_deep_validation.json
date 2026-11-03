@@ -1,0 +1,107 @@
+{
+  "passed": true,
+  "scope": "One genuine keyless secure periodic refresh and encrypted square on the stated128-value public pattern; not complete model inference or a uniform accuracy guarantee over an interval.",
+  "backend": "tpu",
+  "exit_code": 0,
+  "process_reaped": true,
+  "public_key_temporary_directory_removed": true,
+  "input_pattern": {
+    "kind": "numpy.linspace",
+    "start": -14.2,
+    "stop": 14.2,
+    "length": 128,
+    "repetitions": 512,
+    "full_slots_checked": 65536
+  },
+  "public_bound": 16.0,
+  "meta_precision": 10,
+  "profile": {
+    "degree": 131072,
+    "depth": 49,
+    "period": 128,
+    "dnum": 4,
+    "scale_bits": 56
+  },
+  "level_budget": [
+    4,
+    4
+  ],
+  "actual_ring": {
+    "degree": 131072,
+    "num_slots": 65536,
+    "num_q": 100,
+    "num_p": 24,
+    "dnum": 4,
+    "max_level": 49,
+    "log2_QP": 3490.161581036245,
+    "security_bits": 128,
+    "security_model": "classical"
+  },
+  "security_ceiling_log2_QP": 3523,
+  "actual_output_level": 25,
+  "square_output_level": 24,
+  "absolute_error_gate": 0.001,
+  "refresh_max_abs_error": 1.9629325363368366e-05,
+  "refresh_max_relative_error": 7.71541561597148e-05,
+  "square_max_abs_error": 0.0005574724555685862,
+  "square_max_relative_error": 0.00015430363905494183,
+  "output_finite": true,
+  "server_has_secret_key": false,
+  "runtime_key_generation_forbidden": true,
+  "offline_rotation_key_count": 46,
+  "disk_public_key_bytes": 23924686848,
+  "setup_seconds": 1121.749107020998,
+  "refresh_seconds": 4124.1990231439995,
+  "component_seconds": 5314.3492729479985,
+  "component_timing_scope": "component timing through client validation; excludes final cleanup and process startup",
+  "external_wall_seconds": 5337.164331694999,
+  "max_observed_process_rss_kib": 53764996,
+  "memory_scope": "Sampled Linux process VmRSS/VmHWM, not TPU HBM peak.",
+  "source_file_count": 77,
+  "source_hashes_unchanged": true,
+  "raw_result": "secure_refresh_tpu_deep_raw.json",
+  "raw_log": "secure_refresh_tpu_deep.log",
+  "process_evidence": "secure_refresh_tpu_deep_process.json",
+  "source_archive": "secure_refresh_tpu_deep_sources.tar.gz",
+  "source_archive_sha256": "456b2766b9bc28991f3b3e5f3096867fca3a4dc297da98fccd9dcf08a9e508a3",
+  "validation_wrapper": "run_secure_refresh_tpu_deep_proof.py",
+  "same_call_stage_windows_seconds": [
+    {
+      "prescale_checkpoint_to_output_transform": 2285.8,
+      "coefficient_to_slot": 218.1,
+      "approximate_modular_reduction": 1723.2,
+      "slot_to_coefficient": 294.2
+    },
+    {
+      "prescale_checkpoint_to_output_transform": 1596.1,
+      "coefficient_to_slot": 116.6,
+      "approximate_modular_reduction": 1359.1,
+      "slot_to_coefficient": 92.5
+    }
+  ],
+  "stage_timing_scope": "Two bootstrap passes inside one meta refresh, from rounded log checkpoints. The second processes a different correction input and reuses compiled code. These are not a steady-state model benchmark.",
+  "nonblocking_profile": {
+    "artifact": "secure_refresh_tpu_deep_second_inner_profile.json",
+    "duration_seconds": 5,
+    "samples": 98,
+    "sampling_errors": 1,
+    "scope": "One second-pass inner-block sample, dominated by scalar encoding/list conversion. Not a whole-run breakdown."
+  },
+  "post_run_change": {
+    "description": "After archiving/reaping this run, introduced the private ndarray encoder and preserved the existing list interface; switched bootstrap encoding callers to the ndarray. No scalar-algebra or tensor change.",
+    "cpu_validation": "108 focused codec/array/NSD1-NSD2 scalar-add tests passed in1.06s; whitespace checks clean.",
+    "source_hashes_after_change": {
+      "jaxite_word/ckks_ctx.py": "1c457c3be4ce53215636141c65b5042ff7cb570d8627cd42053ad595c9ba43fa",
+      "jaxite_word/bootstrapping.py": "e44f748f5ef51ec68be0f224f4d8ff1068fe6c449f09c04532900a3ac4fcfc49",
+      "jaxite_word/codec_preparation_test.py": "18d0692ffe2d09d33973d14c64dba61147cbc5ea0f5269640bdee2d559a6c1d3"
+    },
+    "candidate_evidence": "secure_refresh_bulk_array_cpu.json",
+    "measurement_limit": "The successful TPU run used the archived earlier sources. No TPU speedup or new full-model accuracy claim follows from the post-run patch."
+  },
+  "not_established": [
+    "Full BERT/Qwen inference or accumulated error across many refreshes.",
+    "Other packed periods, including512,8192,32768 or65536.",
+    "A uniform approximation/error bound for every possible input in[-14.2,14.2].",
+    "Steady-state throughput, an accelerator memory peak, or a five-minute transformer schedule."
+  ]
+}

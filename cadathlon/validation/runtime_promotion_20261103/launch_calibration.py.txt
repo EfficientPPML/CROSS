@@ -1,0 +1,54 @@
+"""Launch one authorized post-promotion calibration with recorded host load."""
+import hashlib
+import json
+import os
+from pathlib import Path
+import platform
+import subprocess
+import sys
+import time
+
+ROOT = Path('/home/jianming_gatech/CROSS')
+NAME = sys.argv[1]
+assert NAME in ('p1', 'p3')
+PLAN = json.loads(Path('/tmp/post-promotion-calibration-plan-20261103/plan.json').read_text())
+SPEC = PLAN['plans'][NAME]
+OUT = Path(SPEC['output'])
+assert not OUT.exists(), 'fresh evidence directory required'
+RECORD = Path(str(OUT) + '.launch.json')
+assert not RECORD.exists(), 'fresh launch record required'
+def load():
+    names = ('pid,ppid,etimes,pcpu,rss,psr,args')
+    raw = subprocess.check_output(['ps', '-eo', names], text=True)
+    return {'loadavg': Path('/proc/loadavg').read_text().strip(),
+            'meminfo': Path('/proc/meminfo').read_text(),
+            'numerical_processes': [line for line in raw.splitlines() if any(token in line for token in
+                ('check_secure_routing.py', 'collect_p1_student_evaluation.py', 'check_p3_compact_followup.py',
+                 'evaluate.py', 'runner.py', 'run_bounded_qwen2_proof.py'))]}
+command = ['taskset', '-c', '0-127', *SPEC['launch_command']]
+record = {'passed': False, 'started_utc': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+          'command': command, 'host': platform.node(), 'platform': platform.platform(),
+          'scope': f'fresh {NAME} calibration after runtime promotion; independent CPU routing work remains active',
+          'exclusive_tpu_lease_owner': f'root/{NAME}-post-promotion',
+          'affinity': list(range(128)), 'competing_cpu_affinity': list(range(144,148)),
+          'plan_override': 'Healthy isolated CPU routing work continues. No other TPU process. Dedicated host affinities; no claim of controlled old/new speedup.',
+          'collector_sha256': hashlib.sha256((ROOT / SPEC['collector']).read_bytes()).hexdigest(),
+          'source_freeze': 'live measured core/demos/common/problem support frozen through P1 and P3',
+          'load_before': load(), 'driver_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
+RECORD.write_text(json.dumps(record, indent=2)+'\n')
+start = time.monotonic()
+with Path(str(OUT) + '.collector.log').open('x') as log:
+    child = subprocess.Popen(command, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
+    record['collector_pid'] = child.pid
+    RECORD.write_text(json.dumps(record, indent=2)+'\n')
+    print(json.dumps({'collector_pid': child.pid, 'output': str(OUT), 'record': str(RECORD)}), flush=True)
+    record['returncode'] = child.wait()
+record.update(elapsed_s=time.monotonic()-start, load_after=load(),
+              completed_utc=time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()))
+report_path = OUT / ('collection.json' if NAME == 'p1' else 'process.json')
+if report_path.exists():
+    report = json.loads(report_path.read_text())
+    record['passed'] = record['returncode'] == 0 and report.get('passed') is True
+RECORD.write_text(json.dumps(record, indent=2)+'\n')
+print(json.dumps({k: record[k] for k in ('passed','returncode','elapsed_s','completed_utc')}), flush=True)
+raise SystemExit(0 if record['passed'] else 1)

@@ -228,6 +228,18 @@ Debug logging goes to stderr. Public `.out` comparison uses tolerances rather
 than bytewise `diff`, since CKKS encryption is randomized. Never report the
 plaintext reference run as an encrypted result.
 
+`make preflight` checks callable interfaces without initializing an accelerator
+and fails for the unimplemented starter. `qwen_reference.py` is a separately
+selectable **experimental-unvalidated toy encrypted circuit**. Its interfaces
+pass preflight, but it has not passed all six encrypted fixtures or the full
+Qwen workload and supplies no scoring calibration. Select it explicitly with
+`--implementation qwen_reference.py`; use `--require-tpu` for actual TPU smoke
+measurements. The result retains its implementation status and labels the
+device count as requested, rather than claiming verified utilization.
+`CROSS_PUBLIC_KEY_DIRECTORY` selects a directory with sufficient space for
+its large temporary public evaluation keys. A preflight pass never establishes
+encrypted correctness or full-model performance.
+
 Proposed judging allocation: one TPU v6e chip, fixed host and package image per
 run; sequential exclusive reservations. CPU fallback is for development and
 cannot be compared to TPU leaderboard times. Build/key generation limit:

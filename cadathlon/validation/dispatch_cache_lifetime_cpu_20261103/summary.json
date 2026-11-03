@@ -1,0 +1,47 @@
+{
+  "flat_removal_safe_for_general_polynomial_api": false,
+  "explicit_array_component_passed": true,
+  "scope": "Secure CPU component/object-lifetime audit plus an intentionally insecure tiny pytree mechanics counterexample; no TPU/HBM/model performance proof.",
+  "secure_ring": {
+    "degree": 8192,
+    "q_count": 8,
+    "p_count": 2,
+    "dnum": 4,
+    "log2_qp": 212.45574163467,
+    "ceiling": 218
+  },
+  "secure_cycles": 6,
+  "level_sequence": [
+    3,
+    2,
+    1,
+    3,
+    2,
+    1
+  ],
+  "secure_seconds": 21.416560216999642,
+  "polynomial_tree_flatten_calls": 0,
+  "tracked_binding_arrays": 2293,
+  "tracked_facade_objects": 1111,
+  "retired_binding_arrays_alive_each_checkpoint": 0,
+  "remaining_facade_object_before_owner_drop": "One intentionally owner-held rotation coefficient map; collected when owner dropped.",
+  "alive_after_owner_drop_without_global_clear": 0,
+  "default_device_switch": {
+    "devices_available": 2,
+    "payload_device_preserved": true,
+    "max_client_abs_error": 1.1904374169757759e-07
+  },
+  "source_archive_members": 99,
+  "future_opt_in_constraints": [
+    "Dedicated process and fixed public circuit/device/layout/level set; explicit-array JAX transformation boundaries only.",
+    "Retain all synchronization, explicit binding, accessor, formatted-key, plaintext, level-table and registry eviction.",
+    "If Polynomial pytree metadata is present, preserve prior full-JAX-clear-before-registry-clear behavior; do not apply flat removal globally.",
+    "Retain session shutdown/global cache clearing; ordinary dispatch/executable allocator memory beyond tracked Python arrays is not bounded by this audit.",
+    "Bootstrap original low-memory stage clears remain unchanged; removing them would be a separate experiment."
+  ],
+  "limitations": [
+    "Weak reference observations prove Python object/backing ownership for tracked arrays, not total device or executable memory.",
+    "The initial audit tracker skipped reused Python object IDs and kept one local small binding; final version fixes both and is the cited result.",
+    "Source snapshot is an exact copy of the immutable root dispatch probe; root measured evidence remains unmodified."
+  ]
+}

@@ -1,0 +1,174 @@
+{
+  "scope": "Public key inventory and exact plaintext rotation-composition parity.",
+  "passed": true,
+  "key_policy": "Use one existing full-graph key when present; otherwise compose signed non-adjacent power-of-two rotations. Fixed public policy, no private branch.",
+  "existing_full_graph_key_count": 190,
+  "signed_power_basis_key_count": 31,
+  "additional_basis_keys_required": 0,
+  "plans": [
+    {
+      "baby_step": 16,
+      "one_key_per_logical_shift_union": 3942,
+      "requested_rotations_per_query_tile_forward_and_scatter": 51944,
+      "executed_rotations_per_query_tile_hybrid_existing_else_signed_binary": 199605,
+      "executed_rotations_per_example_S128_hybrid": 1596840,
+      "executed_rotations_per_query_tile_pure_signed_binary": 204901,
+      "used_existing_key_count": 141,
+      "additional_keys_beyond_existing_graph": 0,
+      "additional_multiplicative_depth": 0
+    },
+    {
+      "baby_step": 32,
+      "one_key_per_logical_shift_union": 1994,
+      "requested_rotations_per_query_tile_forward_and_scatter": 54992,
+      "executed_rotations_per_query_tile_hybrid_existing_else_signed_binary": 183609,
+      "executed_rotations_per_example_S128_hybrid": 1468872,
+      "executed_rotations_per_query_tile_pure_signed_binary": 196201,
+      "used_existing_key_count": 154,
+      "additional_keys_beyond_existing_graph": 0,
+      "additional_multiplicative_depth": 0
+    },
+    {
+      "baby_step": 64,
+      "one_key_per_logical_shift_union": 1044,
+      "requested_rotations_per_query_tile_forward_and_scatter": 60577,
+      "executed_rotations_per_query_tile_hybrid_existing_else_signed_binary": 167845,
+      "executed_rotations_per_example_S128_hybrid": 1342760,
+      "executed_rotations_per_query_tile_pure_signed_binary": 195229,
+      "used_existing_key_count": 173,
+      "additional_keys_beyond_existing_graph": 0,
+      "additional_multiplicative_depth": 0
+    },
+    {
+      "baby_step": 128,
+      "one_key_per_logical_shift_union": 618,
+      "requested_rotations_per_query_tile_forward_and_scatter": 50585,
+      "executed_rotations_per_query_tile_hybrid_existing_else_signed_binary": 127145,
+      "executed_rotations_per_example_S128_hybrid": 1017160,
+      "executed_rotations_per_query_tile_pure_signed_binary": 149544,
+      "used_existing_key_count": 133,
+      "additional_keys_beyond_existing_graph": 0,
+      "additional_multiplicative_depth": 0
+    },
+    {
+      "baby_step": 256,
+      "one_key_per_logical_shift_union": 500,
+      "requested_rotations_per_query_tile_forward_and_scatter": 64009,
+      "executed_rotations_per_query_tile_hybrid_existing_else_signed_binary": 174593,
+      "executed_rotations_per_example_S128_hybrid": 1396744,
+      "executed_rotations_per_query_tile_pure_signed_binary": 195633,
+      "used_existing_key_count": 114,
+      "additional_keys_beyond_existing_graph": 0,
+      "additional_multiplicative_depth": 0
+    },
+    {
+      "baby_step": 512,
+      "one_key_per_logical_shift_union": 634,
+      "requested_rotations_per_query_tile_forward_and_scatter": 58537,
+      "executed_rotations_per_query_tile_hybrid_existing_else_signed_binary": 181935,
+      "executed_rotations_per_example_S128_hybrid": 1455480,
+      "executed_rotations_per_query_tile_pure_signed_binary": 193764,
+      "used_existing_key_count": 111,
+      "additional_keys_beyond_existing_graph": 0,
+      "additional_multiplicative_depth": 0
+    },
+    {
+      "baby_step": 1024,
+      "one_key_per_logical_shift_union": 1084,
+      "requested_rotations_per_query_tile_forward_and_scatter": 55753,
+      "executed_rotations_per_query_tile_hybrid_existing_else_signed_binary": 193811,
+      "executed_rotations_per_example_S128_hybrid": 1550488,
+      "executed_rotations_per_query_tile_pure_signed_binary": 201179,
+      "used_existing_key_count": 118,
+      "additional_keys_beyond_existing_graph": 0,
+      "additional_multiplicative_depth": 0
+    }
+  ],
+  "literal_composed_diagonal_mask_checks": [
+    {
+      "tile": 0,
+      "offset": 0,
+      "inverse": false,
+      "exact": true
+    },
+    {
+      "tile": 0,
+      "offset": 0,
+      "inverse": true,
+      "exact": true
+    },
+    {
+      "tile": 0,
+      "offset": 15,
+      "inverse": false,
+      "exact": true
+    },
+    {
+      "tile": 0,
+      "offset": 15,
+      "inverse": true,
+      "exact": true
+    },
+    {
+      "tile": 7,
+      "offset": 0,
+      "inverse": false,
+      "exact": true
+    },
+    {
+      "tile": 7,
+      "offset": 0,
+      "inverse": true,
+      "exact": true
+    },
+    {
+      "tile": 7,
+      "offset": 15,
+      "inverse": false,
+      "exact": true
+    },
+    {
+      "tile": 7,
+      "offset": 15,
+      "inverse": true,
+      "exact": true
+    }
+  ],
+  "all65536_rotation_displacements_algebraically_verified": true,
+  "ciphertext_error_scope": "Exact NumPy permutation parity only. Every added key switch contributes real CKKS error/workspace/runtime; none is measured or bounded here.",
+  "attention_mask_depth": "Composition uses rotations only and adds no multiplicative levels. Compaction/scatter each still consume one public-linear/rescale level under the assumed BSGS circuit.",
+  "normalized_softmax_reduction_rotations": [
+    16,
+    32,
+    64,
+    128,
+    256,
+    512,
+    1024,
+    64512,
+    65024,
+    65280,
+    65408,
+    65472,
+    65504,
+    65520
+  ],
+  "limitations": [
+    "Counts concern only the128forward+128inverse maps for each16query tile, excluding QK/head reductions, V multiplication, softmax reductions, dense layers, and refresh.",
+    "No keys generated or ciphertext operations executed. Existing graph key count190 is itself a planned public inventory, not a proven full model.",
+    "A500logical-key direct BSGS variant is not required:31signed-power keys already occur in the graph, at substantially higher execution rotation counts.",
+    "Future factored head/row/key-position maps can trade additional public-mask levels for fewer rotations; not implemented here."
+  ],
+  "source_hashes_before": {
+    "/tmp/streaming-bert-scores/plan_composed_rotations.py": "6bf6999426ec2869cd3bd5b913f039ad572d70d478f114643f241753680d2013",
+    "/tmp/streaming-bert-scores/score_layout.py": "ac642628356501f18859008170e78db51078e866d2015f28d2feeb7fe88066dc",
+    "/tmp/streaming-bert-review/inventory.json": "97e3c19bf0d4ded16a3bf99fa9604fdba9b5f40bd5c2439a5249e64442ff68b9"
+  },
+  "source_hashes_after": {
+    "/tmp/streaming-bert-scores/plan_composed_rotations.py": "6bf6999426ec2869cd3bd5b913f039ad572d70d478f114643f241753680d2013",
+    "/tmp/streaming-bert-scores/score_layout.py": "ac642628356501f18859008170e78db51078e866d2015f28d2feeb7fe88066dc",
+    "/tmp/streaming-bert-review/inventory.json": "97e3c19bf0d4ded16a3bf99fa9604fdba9b5f40bd5c2439a5249e64442ff68b9"
+  },
+  "seconds": 1.7504377270015539,
+  "source_files_unchanged": true
+}

@@ -1,0 +1,68 @@
+"""Independent exact algebra and sign checks; no model or HE execution."""
+from fractions import Fraction as F
+from pathlib import Path
+import importlib.util
+import math
+import pytest
+spec=importlib.util.spec_from_file_location('certificate',Path(__file__).with_name('certify.py'))
+c=importlib.util.module_from_spec(spec);spec.loader.exec_module(c)
+
+def rule(coefficients,strategy='chebyshev',domain=(.5,1.5)):
+ return dict(domain=list(domain),degree=len(coefficients)-1,strategy=strategy,evaluation_coefficients=coefficients)
+
+@pytest.mark.parametrize('basis',['power','chebyshev'])
+def test_exact_affine_pullback_independent_evaluation(basis):
+ coefficients=list(map(F,[.25,-.5,1.25,-.0625,.125]));alpha=F(1)+F(1,2**51);beta=F(-1,2**54)
+ pulled=c.pullback(coefficients,basis,alpha,beta)
+ for u in (F(-1),F(0),F(1),F(2,7)):
+  assert c.evaluate(pulled,u)==c.evaluate(coefficients,alpha*u+beta,basis)
+
+@pytest.mark.parametrize('coefficients',[[F(1)],[F(0),F(1)],[F(0),F(0),F(1)],[F(1,2),F(3,4),F(-1,8)]])
+def test_exact_chebyshev_square_identity(coefficients):
+ squared=c.square(coefficients)
+ for t in (F(-1),F(0),F(1),F(3,11)):
+  assert c.evaluate(squared,t)==c.evaluate(coefficients,t)**2
+
+def test_global_constant_positive_polynomial_certificate():
+ r=c.exact_certificate(rule([1.]))
+ assert r['certified'] and r['exact_H_coefficient_L1']['upper_binary64']==.5
+ assert r['positive_polynomial_midpoint']
+
+def test_square_envelope_alone_does_not_certify_negative_root():
+ r=c.exact_certificate(rule([-1.]))
+ assert r['delta_below_one'] and not r['positive_polynomial_midpoint'] and not r['certified']
+
+def test_zero_polynomial_rejects_strict_delta_one_boundary():
+ r=c.exact_certificate(rule([0.]))
+ assert not r['certified'] and r['exact_H_coefficient_L1']['upper_binary64']==1
+
+def test_nonpositive_argument_domain_rejected():
+ with pytest.raises(AssertionError):c.exact_certificate(rule([1.],domain=(0.,1.)))
+
+def test_actual_rounded_affine_is_not_replaced_by_ideal_mapping():
+ r=rule([.125,.5,-.25],'power',(.1,.3));lo,hi=map(F,r['domain'])
+ A=F(2/(r['domain'][1]-r['domain'][0]));B=F(-(r['domain'][1]+r['domain'][0])/(r['domain'][1]-r['domain'][0]))
+ alpha=A*(hi-lo)/2;beta=A*(hi+lo)/2+B
+ assert alpha!=1 or beta!=0
+ p=c.pullback(list(map(F,r['evaluation_coefficients'])),'power',alpha,beta)
+ assert c.evaluate(p,F(1,3))!=c.evaluate(list(map(F,r['evaluation_coefficients'])),F(1,3),'power')
+ c.exact_certificate(r)
+
+def test_power_basis_coefficients_are_not_misread_as_chebyshev():
+ coefficients=list(map(F,[1.,0.,1.]))
+ power=c.pullback(coefficients,'power',F(1),F(0))
+ cheb=c.pullback(coefficients,'chebyshev',F(1),F(0))
+ assert c.evaluate(power,F(0))==1 and c.evaluate(cheb,F(0))==0
+ c.exact_certificate(rule([1.,0.,1.],'power'))
+ c.exact_certificate(rule([1.,0.,1.],'chebyshev'))
+
+def test_outward_float_endpoints_at_binary64_rounding_boundary():
+ for exact in (F(1)-F(1,2**54),F(1)+F(1,2**54),F(2,3),F(4,3)):
+  assert F(c.down(exact))<=exact<=F(c.up(exact))
+
+def test_rational_tighter_error_and_outward_multiplier_interval():
+ result=c.exact_certificate(rule([1.]));delta=F(1,2);bound=delta/(2-delta)
+ assert F(result['uniform_relative_error_upper'])>=bound
+ assert result['uniform_relative_error_upper']<result['crude_relative_error_upper']
+ lower,upper=result['normalized_multiplier_bounds']
+ assert F(lower)<=1-bound and F(upper)>=1+bound

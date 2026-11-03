@@ -1,0 +1,38 @@
+{
+  "note": "authored baseline measured on the author's 8-chip TPU v6e host; indicative only. ORGANIZER.md requires the judge to measure its own on contest hardware before scoring.",
+  "suite_commit": "739378698fc1f668aff7246724b45cff76f04a98",
+  "seed": 3,
+  "runs_per_case": 3,
+  "statistic": "median",
+  "metric": "throughput_images_per_s = images / median Timing['Encrypted computation'], the harness's own stage 7",
+  "cases": {
+    "C3": {
+      "runs": 3,
+      "baseline_profile": "student",
+      "one_time_setup_s": 70.62769999999999,
+      "median_encrypted_compute_s": 1.8364,
+      "median_server_execute_s": 1.531539,
+      "images": 100,
+      "throughput_images_per_s": 54.454367240252665,
+      "ms_per_image": 18.364,
+      "encrypted_accuracy": 0.96,
+      "own_cleartext_agreement": 1.0,
+      "verified": "PASS",
+      "correct": 96
+    },
+    "C4": {
+      "runs": 3,
+      "baseline_profile": "student",
+      "one_time_setup_s": 75.6216,
+      "median_encrypted_compute_s": 0.603,
+      "median_server_execute_s": 0.28171,
+      "images": 100,
+      "throughput_images_per_s": 165.8374792703151,
+      "ms_per_image": 6.03,
+      "encrypted_accuracy": 0.96,
+      "own_cleartext_agreement": 1.0,
+      "verified": "PASS",
+      "correct": 96
+    }
+  }
+}

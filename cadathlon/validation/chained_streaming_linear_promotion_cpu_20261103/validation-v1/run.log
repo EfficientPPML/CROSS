@@ -1,0 +1,164 @@
+........................................................................ [ 36%]
+........................................................................ [ 73%]
+............................F.................F....                      [100%]
+=================================== FAILURES ===================================
+_______ test_extracted_release_runs_fixtures_and_experimental_preflight ________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-193/test_extracted_release_runs_fi0')
+
+    def test_extracted_release_runs_fixtures_and_experimental_preflight(tmp_path):
+        """Test shipped paths, without relying on the source tree's import paths."""
+        source = Path(__file__).parents[1]
+        root = tmp_path / "cadathlon"
+        problems = ("non_agent_pset/p1_benchmark", "agent_pset/p2_bert",
+                    "non_agent_pset/p3_cnn", "agent_pset/p4_qwen")
+        for problem in problems:
+            shutil.copytree(source / problem, root / problem,
+                            ignore=shutil.ignore_patterns("__pycache__", "run", "results"))
+        shutil.copytree(source / "common", root / "common",
+                        ignore=shutil.ignore_patterns("__pycache__"))
+        (root / "validation").mkdir()
+        for filename in ("p1_student_suite.json", "p3_compact_baseline.json"):
+            shutil.copy2(source / "validation" / filename, root / "validation" / filename)
+        evidence = root / problems[0] / "src/suite/results/C3/evidence/labels.npy"
+        evidence.parent.mkdir(parents=True)
+        evidence.write_bytes(b"organizer-only labels")
+        scratch = root / problems[2] / "src/suite/run/active.json"
+        scratch.parent.mkdir(parents=True)
+        scratch.write_text('{"private": true}')
+        # New student calibration dependencies live outside ephemeral run/.
+        public_calibration = root / problems[0] / 'src/suite/calibration/student-baseline/test-id'
+        public_calibration.mkdir(parents=True)
+        (public_calibration/'report.json').write_text('{"aggregate_only": true}')
+        (public_calibration/'archives/C3').mkdir(parents=True)
+        (public_calibration/'archives/C3/case.json').write_text('{"images": 100}')
+>       subprocess.run([sys.executable, str(root / "common/package.py"), "release", str(root)], check=True)
+
+cadathlon/tests/test_package.py:122: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+input = None, capture_output = False, timeout = None, check = True
+popenargs = (['/home/jianming_gatech/miniconda3/envs/jaxite/bin/python', '/tmp/pytest-of-jianming_gatech/pytest-193/test_extracted...common/package.py', 'release', '/tmp/pytest-of-jianming_gatech/pytest-193/test_extracted_release_runs_fi0/cadathlon'],)
+kwargs = {}
+
+    def run(*popenargs,
+            input=None, capture_output=False, timeout=None, check=False, **kwargs):
+        """Run command with arguments and return a CompletedProcess instance.
+    
+        The returned instance will have attributes args, returncode, stdout and
+        stderr. By default, stdout and stderr are not captured, and those attributes
+        will be None. Pass stdout=PIPE and/or stderr=PIPE in order to capture them,
+        or pass capture_output=True to capture both.
+    
+        If check is True and the exit code was non-zero, it raises a
+        CalledProcessError. The CalledProcessError object will have the return code
+        in the returncode attribute, and output & stderr attributes if those streams
+        were captured.
+    
+        If timeout (seconds) is given and the process takes too long,
+         a TimeoutExpired exception will be raised.
+    
+        There is an optional argument "input", allowing you to
+        pass bytes or a string to the subprocess's stdin.  If you use this argument
+        you may not also use the Popen constructor's "stdin" argument, as
+        it will be used internally.
+    
+        By default, all communication is in bytes, and therefore any "input" should
+        be bytes, and the stdout and stderr will be bytes. If in text mode, any
+        "input" should be a string, and stdout and stderr will be strings decoded
+        according to locale encoding, or by "encoding" if set. Text mode is
+        triggered by setting any of text, encoding, errors or universal_newlines.
+    
+        The other arguments are the same as for the Popen constructor.
+        """
+        if input is not None:
+            if kwargs.get('stdin') is not None:
+                raise ValueError('stdin and input arguments may not both be used.')
+            kwargs['stdin'] = PIPE
+    
+        if capture_output:
+            if kwargs.get('stdout') is not None or kwargs.get('stderr') is not None:
+                raise ValueError('stdout and stderr arguments may not be used '
+                                 'with capture_output.')
+            kwargs['stdout'] = PIPE
+            kwargs['stderr'] = PIPE
+    
+        with Popen(*popenargs, **kwargs) as process:
+            try:
+                stdout, stderr = process.communicate(input, timeout=timeout)
+            except TimeoutExpired as exc:
+                process.kill()
+                if _mswindows:
+                    # Windows accumulates the output in a single blocking
+                    # read() call run on child threads, with the timeout
+                    # being done in a join() on those threads.  communicate()
+                    # _after_ kill() is required to collect that and add it
+                    # to the exception.
+                    exc.stdout, exc.stderr = process.communicate()
+                else:
+                    # POSIX _communicate already populated the output so
+                    # far into the TimeoutExpired exception.
+                    process.wait()
+                raise
+            except:  # Including KeyboardInterrupt, communicate handled that.
+                process.kill()
+                # We don't call process.wait() as .__exit__ does that for us.
+                raise
+            retcode = process.poll()
+            if check and retcode:
+>               raise CalledProcessError(retcode, process.args,
+                                         output=stdout, stderr=stderr)
+E               subprocess.CalledProcessError: Command '['/home/jianming_gatech/miniconda3/envs/jaxite/bin/python', '/tmp/pytest-of-jianming_gatech/pytest-193/test_extracted_release_runs_fi0/cadathlon/common/package.py', 'release', '/tmp/pytest-of-jianming_gatech/pytest-193/test_extracted_release_runs_fi0/cadathlon']' returned non-zero exit status 1.
+
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/subprocess.py:578: CalledProcessError
+----------------------------- Captured stderr call -----------------------------
+Traceback (most recent call last):
+  File "/tmp/pytest-of-jianming_gatech/pytest-193/test_extracted_release_runs_fi0/cadathlon/common/package.py", line 89, in <module>
+    main()
+    ~~~~^^
+  File "/tmp/pytest-of-jianming_gatech/pytest-193/test_extracted_release_runs_fi0/cadathlon/common/package.py", line 70, in main
+    for line in (folder / "EXCLUDE").read_text().splitlines()
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-193/test_extracted_release_runs_fi0/cadathlon/non_agent_pset/p1_benchmark/EXCLUDE'
+______ test_file_stage_imports_local_shared_runtime_without_private_paths ______
+
+staging = (<module 'bert_staging_under_test' from '/tmp/chained-streaming-linear-promotion-20261103/checkout/cadathlon/agent_pse...orts_local_0/upstream'), PosixPath('/tmp/pytest-of-jianming_gatech/pytest-193/test_file_stage_imports_local_0/staged'))
+
+    def test_file_stage_imports_local_shared_runtime_without_private_paths(staging):
+        stage, upstream, destination = staging
+        stage.stage(upstream, destination)
+        # An import-only handler demonstrates the file process's dependency path.
+        # It does not emit ciphertexts or pretend to implement BERT.
+        (destination/'submissions/bert_he.py').write_text('''import json
+    import encrypted_reference
+    import encrypted_streaming_linear
+    import encrypted_integer_affine
+    import encrypted_scaled_newton
+    
+    def server_preprocess_model(paths):
+        print(json.dumps({'import_only': True, 'helper': encrypted_reference.__file__, 'streaming_helper': encrypted_streaming_linear.__file__, 'integer_helper': encrypted_integer_affine.__file__, 'newton_helper': encrypted_scaled_newton.__file__, 'paths': sorted(paths)}))
+    ''')
+        env = dict(os.environ, PYTHONPATH='', CROSS_ROOT=str(ROOT), JAX_PLATFORMS='bert_staging_test_no_backend')
+        result = subprocess.run([sys.executable,'submissions/server_preprocess_model.py','0'],
+                                cwd=destination, env=env, capture_output=True, text=True)
+>       assert result.returncode == 0, result.stdout+result.stderr
+E       AssertionError: usage: server_preprocess_model.py [-h] {0,1,2,3}
+E         server_preprocess_model.py: error: Set CROSS_ROOT to the CROSS checkout containing your patch
+E         
+E       assert 2 == 0
+E        +  where 2 = CompletedProcess(args=['/home/jianming_gatech/miniconda3/envs/jaxite/bin/python', 'submissions/server_preprocess_model...el.py [-h] {0,1,2,3}\nserver_preprocess_model.py: error: Set CROSS_ROOT to the CROSS checkout containing your patch\n').returncode
+
+cadathlon/tests/test_bert_staging.py:118: AssertionError
+=========================== short test summary info ============================
+FAILED cadathlon/tests/test_package.py::test_extracted_release_runs_fixtures_and_experimental_preflight
+FAILED cadathlon/tests/test_bert_staging.py::test_file_stage_imports_local_shared_runtime_without_private_paths
+2 failed, 193 passed in 6.25s

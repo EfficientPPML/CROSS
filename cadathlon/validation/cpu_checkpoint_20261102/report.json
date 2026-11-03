@@ -1,0 +1,102 @@
+{
+  "scope": "CPU regression checkpoint; opt-in encrypted integration tests remain disabled and separately reported.",
+  "command": [
+    "taskset",
+    "-c",
+    "148-151",
+    "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+    "-m",
+    "pytest",
+    "cadathlon/tests",
+    "jaxite_word/ckks_ctx_test.py",
+    "jaxite_word/codec_preparation_test.py",
+    "jaxite_word/mapping_compile_test.py",
+    "jaxite_word/bsgs_test.py",
+    "jaxite_word/packing_test.py",
+    "jaxite_word/composite_prime_gen_test.py",
+    "jaxite_word/bootstrapping_test.py",
+    "-q",
+    "--junitxml=/tmp/cross-cpu-checkpoint-20261102/junit.xml"
+  ],
+  "environment": {
+    "JAX_PLATFORMS": "cpu",
+    "OMP_NUM_THREADS": "4",
+    "OPENBLAS_NUM_THREADS": "4"
+  },
+  "source_scope": [
+    "all Python files under jaxite_word, demos, common, tests and problem src directories; exclude caches/run/symlinks"
+  ],
+  "source_file_count": 203,
+  "review_base_commit": "98ca6833397069e4228c265d75fef64884218a28",
+  "versions": {
+    "jax": "0.12.0.1",
+    "jaxlib": "0.12.0.1",
+    "numpy": "2.5.4",
+    "torch": "2.15.0+cpu",
+    "libtpu": "0.0.50.1",
+    "pytest": "9.2.0"
+  },
+  "python": "3.13.18 | packaged by Anaconda, Inc. | (main, Oct 27 2026, 00:57:03) [GCC 14.3.0]",
+  "started_utc": "2026-11-02T20:50:12.265744+00:00",
+  "driver_sha256": "6192f2851a52e460e224b3ec03528c8db75aabbce1eddf0a26f12b785d6398db",
+  "opt_in_test_environment": {},
+  "returncode": 0,
+  "parent_elapsed_s": 233.03655453500141,
+  "completed_utc": "2026-11-02T20:54:05.302404+00:00",
+  "source_unchanged": true,
+  "changed_sources": [],
+  "passed": true,
+  "counts": {
+    "passed": 606,
+    "subtests_passed": 64,
+    "skipped": 10,
+    "failures": 0,
+    "errors": 0,
+    "junit_test_entries": 680
+  },
+  "pytest_elapsed_s": 230.58,
+  "skips": [
+    {
+      "test": "cadathlon.tests.test_encrypted_polynomial.test_secure_inverse_sqrt_and_rmsnorm_ciphertexts",
+      "reason": "opt-in secure CKKS compilation"
+    },
+    {
+      "test": "cadathlon.tests.test_encrypted_polynomial.test_uniform_constants_match_generic_encoder_bit_for_bit",
+      "reason": "opt-in real-context codec check"
+    },
+    {
+      "test": "cadathlon.tests.test_encrypted_polynomial.test_balanced_power_inverse_sqrt_with_bounded_caches",
+      "reason": "opt-in secure balanced-power circuit"
+    },
+    {
+      "test": "cadathlon.tests.test_encrypted_polynomial.test_secure_compiled_linear_scalar_eviction_residual_and_quadratic_depth",
+      "reason": "opt-in secure linear/residual/quadratic circuits"
+    },
+    {
+      "test": "cadathlon.tests.test_encrypted_refresh.test_actual_secure_keyless_refresh_and_continuation",
+      "reason": "opt-in large secure bootstrap"
+    },
+    {
+      "test": "cadathlon.tests.test_encrypted_refresh.test_actual_deep_profile_bounded_refresh_and_continuation",
+      "reason": "opt-in deep-profile bounded bootstrap"
+    },
+    {
+      "test": "jaxite_word.packing_test.SparseLoweringTest.test_diagonal_subset_and_maxima_agree_with_the_full_set_zero_conv",
+      "reason": "a zero matrix has no diagonals to subset"
+    },
+    {
+      "test": "jaxite_word.packing_test.SparseLoweringTest.test_diagonal_subset_and_maxima_agree_with_the_full_set_zero_dense",
+      "reason": "a zero matrix has no diagonals to subset"
+    },
+    {
+      "test": "jaxite_word.bootstrapping_test.BootstrappingFunctionalTest.test_n4096_meta_gate",
+      "reason": "N=4096 runs two full bootstraps (~70 min); set BOOTSTRAP_TEST_N4096=1"
+    },
+    {
+      "test": "jaxite_word.bootstrapping_test.BootstrappingFunctionalTest.test_n8192_single_pass_correctness",
+      "reason": "N=8192 runs a full bootstrap (~2 h, ~37 GB); set BOOTSTRAP_TEST_N8192=1"
+    }
+  ],
+  "skip_scope": "Six opt-in secure polynomial/refresh checks, two opt-in large bootstrap checks, and two inapplicable zero-diagonal subset cases were skipped. This CPU checkpoint does not replace the separate TPU/full-graph evidence.",
+  "peak_child_rss_kib": 2284124
+}

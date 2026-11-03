@@ -1,0 +1,45 @@
+{
+  "passed": true,
+  "scope": "CPU collector/lifecycle metadata only; no TPU or encrypted run",
+  "checks": {
+    "initial_regression_failure": {
+      "passed": false,
+      "returncode": 1,
+      "source_count": 183,
+      "elapsed_s": 5.7519118929994875,
+      "tests": 90,
+      "failures": 1,
+      "archive_sha256": "3fdc7d2331a935c49411a329ec24344aa5246b24eac9a13dad0cb5f1eeba2c62"
+    },
+    "intermediate_90pass": {
+      "passed": true,
+      "returncode": 0,
+      "source_count": 183,
+      "elapsed_s": 5.734717822997482,
+      "tests": 90,
+      "failures": 0,
+      "archive_sha256": "2387b898c57801285cadc7741ecc9e4c2584b85527daa1de5435d1bf5ce2ca5e"
+    },
+    "result": {
+      "passed": true,
+      "returncode": 0,
+      "source_count": 183,
+      "elapsed_s": 5.797270547001972,
+      "tests": 90,
+      "failures": 0,
+      "archive_sha256": "13a9f6bce02d4d8e4857cb1719791e3c68b56dc89dd635d84cbc37680570b826"
+    }
+  },
+  "base": "/tmp/runtime-followup-integration-20261103/checkout",
+  "copied_python_files_compared": 158,
+  "only_changed_files": [
+    "cadathlon/tests/test_transformer_suite.py",
+    "cadathlon/validation/check_transformer_suite.py"
+  ],
+  "patch_applies_to_composed_candidate": true,
+  "patch_sha256": "43b89ced9aa845da7cda86f5bae1655581a5ed1eedfa35906e3085da68538b3b",
+  "initial_failure_explanation": "One new regression expected six cases in the last prior sweep snapshot, but publication occurs before case6 so it contains five. Case6 has a separate passing process record. Corrected only the test expectation; runtime identical across both test checkpoints.",
+  "independent_review": "Transformer agent read-only review found no additional blocker; overall passed/source_files_unchanged remains authoritative.",
+  "checkpoint_scope": "Initial failure and intermediate pass share identical runtime; final pass additionally records initial source hashes before fallible package inspection.",
+  "final_patch_applies_to_composed_candidate": true
+}

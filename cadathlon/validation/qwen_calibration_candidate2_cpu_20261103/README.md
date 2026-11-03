@@ -1,0 +1,15 @@
+# Qwen candidate2 public selection
+
+All28 SiLU sites have supported analytic candidates under the reviewed public-bound rule:6 balanced Chebyshev polynomials and22 rational-tanh fallbacks. The domains come from exact outward public gate bounds, all28 actual uniform post-norm certificates and the fixed rational9/8 margin, rounded upward to integer radii48–3601. No observed validation extrema or model outputs selected these coefficients. All113 norm entries and every softmax rule are canonical-JSON identical to candidate1.
+
+The immutable protocol was frozen before selection. Each direct degree is tried in the fixed order8,12,16,24,32,48,64,96,128,192,256 on16385-point full-domain and16385-point central[-16,16] grids plus endpoints/zero. Unsupported direct polynomials use the prescribed base-tanh power degrees8/12/16/20/24 and the unchanged five-step reciprocal on[1,2.1]. All chosen rational bases are degree12; every sampled internal denominator is finite/in-domain. The unchanged absolute target is1e-4. These are sampled analytic-function checks, not uniform SiLU approximation proofs.
+
+Selection session32803 exited0/reaped in2.913s with20unchanged source/input files. The final selected manifest is0af45a8fc6d13b9d429ee1af2311b2cb6ac0aa4cde02eca56478472762482489. Source-bound preflight passed16tests. Postselection session85599 exited0/reaped:47tests passed,24sources unchanged. It exercised all28 selected rules through the unchanged strict arithmetic on every fixed grid, checked actual depth and all internal domains, and verified frozen norm/softmax identities. This is not a model run.
+
+Actual abstract depths areS8=11799,S16=12237,S19/S32=12675; the deepest SiLU is195levels. No secure ring, refresh placement, precision or runtime feasibility follows from those counts. Uniform norm certificates exclude subsequent arithmetic/CKKS error and require the unchanged variance domains and same-input relation; the9/8 margin is an engineering reserve, not a certified error budget.
+
+Two preparation artifacts are preserved: an initial decimal diagnostic serialization exceeded Python's4300-digit limit before a protocol or coefficients were produced, and a separately frozen intermediate protocol used a nearest binary64 diagnostic endpoint. Final preparation uses exact hex rational diagnostics and outward binary64 display endpoints. ExactFraction domain arithmetic was unchanged. The failed dependent preflight and intermediate source archives remain distinct from the passing final artifacts.
+
+Next model execution requires root review. The approved proposed order remains unchanged416-context calibration, fresh112-context validation, then the original published112-context regression against the same frozen candidate. No fitting may follow either validation result. Candidate1's historical calibration pass and original validation failure remain untouched, and fresh-set success cannot replace the published-suite obligation.
+
+`python verify_archive.py` audits exact archived sources, every public domain/certificate binding, unchanged rules, chosen analytic gates and cost summaries without executing a model.

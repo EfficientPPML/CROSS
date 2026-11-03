@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "/tmp/bert-mrpc-train-calibration-20261103/approximate_train.py", line 83, in <module>
+    if __name__=='__main__':raise SystemExit(main())
+                                             ~~~~^^
+  File "/tmp/bert-mrpc-train-calibration-20261103/approximate_train.py", line 54, in main
+    with np.errstate(over='raise',invalid='raise',divide='raise'):actual=engine.forward(config,weights,embeddings[mask])
+                                                                         ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/bert-mrpc-train-calibration-20261103/approximate.py", line 94, in forward
+    pooled=self.tanh(pooled,self.manifest['tanh'],'pooler.tanh')
+  File "/tmp/bert-mrpc-train-calibration-20261103/approximate.py", line 74, in tanh
+    inverse=self.inverse(denominator,self.manifest['tanh_reciprocal'],label+f'.round{i}.denominator_inverse.K{keys}')
+                                                                                                              ^^^^
+NameError: name 'keys' is not defined

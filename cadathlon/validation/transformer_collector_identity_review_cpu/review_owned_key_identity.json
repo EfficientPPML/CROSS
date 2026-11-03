@@ -1,0 +1,23 @@
+{
+  "candidate_sha256": "6fe8285c64b6e1f5b1af0724abe9bc52fd11b55443402e896cce1687fbfd8545",
+  "unrelated_directory_survived": false,
+  "replacement_directory_survived": false,
+  "record": {
+    "passed": false,
+    "command": [
+      "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+      "-c",
+      "import os; from pathlib import Path; p=Path(os.environ['CROSS_PUBLIC_KEY_DIRECTORY']); p.rmdir(); (p.parent/'unrelated-directory').rename(p); print('{}')"
+    ],
+    "timeout_s": null,
+    "cleanup_grace_s": 2.0,
+    "owned_public_key_directory": "/tmp/collector-identity-review-1sifiuri/shared/cross-transformer-case-i5vipba9",
+    "pid": 671047,
+    "returncode": 0,
+    "result": {},
+    "process_reaped": true,
+    "public_key_store_removed": true,
+    "process_elapsed_s": 0.022711339999659685
+  },
+  "scope": "Real CPU subprocess replacement test; all paths are isolated temporary test artifacts."
+}

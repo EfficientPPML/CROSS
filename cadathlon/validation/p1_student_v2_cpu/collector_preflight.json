@@ -1,0 +1,38 @@
+{
+  "scope": "Collector CPU preparation and real subprocess signal forwarding only; no TPU evaluation.",
+  "wrapper_sha256": "e1fb45f60b27d95d9b7318b9fbb528d239641c4c84ac07bd96568d9a8d9218c7",
+  "prepare_command": [
+    "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+    "/home/jianming_gatech/CROSS/cadathlon/validation/collect_p1_student_evaluation.py",
+    "--prepare-only",
+    "--output",
+    "/tmp/p1-student-v2-collector-preflight-current-20261102"
+  ],
+  "source_snapshots": 102,
+  "all_snapshot_bytes_match_hashes": true,
+  "source_files_unchanged": true,
+  "evaluation_launched": false,
+  "cancellation_checks": [
+    {
+      "signal": "SIGTERM",
+      "child_returncode": 1,
+      "elapsed_s": 2.2170008579996647,
+      "cleanup_finished": true,
+      "repeated_signal_ignored": true
+    },
+    {
+      "signal": "SIGINT",
+      "child_returncode": 1,
+      "elapsed_s": 2.216866957001912,
+      "cleanup_finished": true,
+      "repeated_signal_ignored": true
+    },
+    {
+      "signal": "SIGHUP",
+      "child_returncode": 1,
+      "elapsed_s": 2.2170085270008713,
+      "cleanup_finished": true,
+      "repeated_signal_ignored": true
+    }
+  ]
+}

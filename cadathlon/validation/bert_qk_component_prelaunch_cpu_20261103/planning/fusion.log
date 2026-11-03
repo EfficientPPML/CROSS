@@ -1,0 +1,43 @@
+{
+  "scope": "Public NumPy mask-fusion equivalence; no encryption or checkpoint execution.",
+  "passed": true,
+  "source_hashes_before": {
+    "check_fused_anchor.py": "54af32679fe6180634069a7d9725cc968cc34afa5dd82123af9f635101470552",
+    "score_layout.py": "f809715fce76837c35e6b6d803d5582397d7efe48d16350aa68dd5b9023b6b42"
+  },
+  "source_hashes_after": {
+    "check_fused_anchor.py": "54af32679fe6180634069a7d9725cc968cc34afa5dd82123af9f635101470552",
+    "score_layout.py": "f809715fce76837c35e6b6d803d5582397d7efe48d16350aa68dd5b9023b6b42"
+  },
+  "source_files_unchanged": true,
+  "all_128_maps_baseline_and_fused_equal_independent_head_dot_oracle": true,
+  "partial_row_cases": [
+    {
+      "valid_rows": 1,
+      "exact": true
+    },
+    {
+      "valid_rows": 15,
+      "exact": true
+    }
+  ],
+  "hostile_inactive_features": true,
+  "public_key_mask_crosses_tile_boundaries": true,
+  "baseline_depth_from_embeddings": 12,
+  "fused_depth_from_embeddings": 11,
+  "baseline_head_and_route_ptct_per_map": 18,
+  "fused_head_and_route_ptct_per_map": 17,
+  "private_queries_not_masked": true,
+  "cpu_affinity": [
+    144,
+    145,
+    146,
+    147
+  ],
+  "elapsed_s": 0.5388758529952611,
+  "limitations": [
+    "Synthetic public ideal arithmetic only; not native checkpoint or encrypted score proof.",
+    "Fusion changes the encrypted circuit; previous unchanged-map CKKS proof does not validate it.",
+    "Masked scores still require a separate later softmax validity contract."
+  ]
+}

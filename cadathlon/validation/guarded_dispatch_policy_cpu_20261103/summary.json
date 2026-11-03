@@ -1,0 +1,45 @@
+{
+  "status": "isolated opt-in policy proof; unpromoted",
+  "default_policy": "unchanged: full jax.clear_caches before Polynomial registry eviction",
+  "opt_in": "preserve_dispatch_cache=True with low_memory=True on EncryptedPolynomialEvaluator or CompiledArithmetic",
+  "guard": "Preserve ordinary dispatch caches only when Polynomial registry is empty; otherwise perform prior full JAX clear before clearing registry.",
+  "tests_passed": 35,
+  "tests_skipped": 4,
+  "pytest_seconds": 24.13,
+  "secure_component_passed": true,
+  "secure_component_seconds": 21.351918468993972,
+  "secure_ring": {
+    "degree": 8192,
+    "q_count": 8,
+    "p_count": 2,
+    "dnum": 4,
+    "actual_log2_qp": 212.45574163467,
+    "security_ceiling": 218
+  },
+  "secure_component_cycles": 6,
+  "polynomial_flatten_calls": 0,
+  "retired_control_arrays_alive_after_checkpoint": 0,
+  "owners_collected_without_final_jax_clear": true,
+  "max_client_abs_error": 5.6991221436542006e-08,
+  "two_device_default_switch": {
+    "devices_available": 2,
+    "payload_device_preserved": true,
+    "max_client_abs_error": 5.6991221436542006e-08
+  },
+  "shared_source_hashes_equal": true,
+  "source_members": 103,
+  "base_source_hashes": {
+    "cadathlon/common/encrypted_polynomial.py": "d01cbcf26897c9b190919bb6b279e731716d7dcc4e687bbdfbc4e2e4baf5975e",
+    "cadathlon/common/encrypted_packed_qwen.py": "3de3dbc8d6f7adb843387b1160346c4dab33d13e785d613df5b1560b26862cbd",
+    "cadathlon/tests/test_dispatch_cache_policy.py": null
+  },
+  "patch_apply_check": true,
+  "scope_constraints": [
+    "Dedicated serial evaluator process, fixed public circuit/device/layout/level set.",
+    "All synchronization and explicit binding/control/key/plaintext/level/registry eviction remain enabled.",
+    "Session shutdown and original Bootstrap stage JAX clears remain unchanged.",
+    "No generic guarantee for user code that mutates the registry or races JAX transforms concurrently.",
+    "Object weakrefs/backing lifetime does not measure total HBM, executable memory, allocator retention or accelerator performance.",
+    "No transformer end-to-end or calibrated timing claim; existing skipped secure polynomial suites are not claimed passing."
+  ]
+}

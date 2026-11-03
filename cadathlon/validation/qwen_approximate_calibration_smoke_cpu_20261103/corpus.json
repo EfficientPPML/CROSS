@@ -1,0 +1,608 @@
+{
+  "schema": "qwen-public-calibration-corpus-v1",
+  "selection": "32 authored topics x3 short framing variants. Fixed before native/exact/approximate model measurements. This is synthetic calibration, not independent validation. No labels or validation extrema are inputs.",
+  "prefill_buckets": [
+    8,
+    16,
+    32
+  ],
+  "calibration_prompts": [
+    {
+      "id": "cal_00_explain",
+      "topic": "astronomy",
+      "frame": "explain",
+      "text": "Explain: An astronomer tracks a comet through a sequence of clear nights. The apparent path changes against the distant stars as Earth and the comet move around the Sun. Explain how recorded times and viewing directions help estimate an orbit, and distinguish a measurement from a prediction."
+    },
+    {
+      "id": "cal_00_discuss",
+      "topic": "astronomy",
+      "frame": "discuss",
+      "text": "Discuss: An astronomer tracks a comet through a sequence of clear nights. The apparent path changes against the distant stars as Earth and the comet move around the Sun. Explain how recorded times and viewing directions help estimate an orbit, and distinguish a measurement from a prediction."
+    },
+    {
+      "id": "cal_00_continue",
+      "topic": "astronomy",
+      "frame": "continue",
+      "text": "Continue: An astronomer tracks a comet through a sequence of clear nights. The apparent path changes against the distant stars as Earth and the comet move around the Sun. Explain how recorded times and viewing directions help estimate an orbit, and distinguish a measurement from a prediction."
+    },
+    {
+      "id": "cal_01_explain",
+      "topic": "cooking",
+      "frame": "explain",
+      "text": "Explain: A cook prepares lentil soup for six guests using onions, carrots, tomatoes, and dried herbs. Some ingredients soften quickly while others need more time in the pot. Describe a sensible order of preparation and explain how tasting and adjusting the seasoning differ from following a fixed quantity."
+    },
+    {
+      "id": "cal_01_discuss",
+      "topic": "cooking",
+      "frame": "discuss",
+      "text": "Discuss: A cook prepares lentil soup for six guests using onions, carrots, tomatoes, and dried herbs. Some ingredients soften quickly while others need more time in the pot. Describe a sensible order of preparation and explain how tasting and adjusting the seasoning differ from following a fixed quantity."
+    },
+    {
+      "id": "cal_01_continue",
+      "topic": "cooking",
+      "frame": "continue",
+      "text": "Continue: A cook prepares lentil soup for six guests using onions, carrots, tomatoes, and dried herbs. Some ingredients soften quickly while others need more time in the pot. Describe a sensible order of preparation and explain how tasting and adjusting the seasoning differ from following a fixed quantity."
+    },
+    {
+      "id": "cal_02_explain",
+      "topic": "logic",
+      "frame": "explain",
+      "text": "Explain: A logic student compares the statements that every square is a rectangle and that every rectangle is a square. Draw the distinction using definitions, examples, and a counterexample. Then explain why one valid implication does not automatically establish its converse, even when the words sound similar."
+    },
+    {
+      "id": "cal_02_discuss",
+      "topic": "logic",
+      "frame": "discuss",
+      "text": "Discuss: A logic student compares the statements that every square is a rectangle and that every rectangle is a square. Draw the distinction using definitions, examples, and a counterexample. Then explain why one valid implication does not automatically establish its converse, even when the words sound similar."
+    },
+    {
+      "id": "cal_02_continue",
+      "topic": "logic",
+      "frame": "continue",
+      "text": "Continue: A logic student compares the statements that every square is a rectangle and that every rectangle is a square. Draw the distinction using definitions, examples, and a counterexample. Then explain why one valid implication does not automatically establish its converse, even when the words sound similar."
+    },
+    {
+      "id": "cal_03_explain",
+      "topic": "sorting",
+      "frame": "explain",
+      "text": "Explain: A programmer has a list of package labels and must arrange them alphabetically without losing duplicate entries. Explain the difference between a stable and an unstable sorting method. Discuss how empty lists, repeated labels, and mixed capitalization should be addressed in a clear specification before implementation."
+    },
+    {
+      "id": "cal_03_discuss",
+      "topic": "sorting",
+      "frame": "discuss",
+      "text": "Discuss: A programmer has a list of package labels and must arrange them alphabetically without losing duplicate entries. Explain the difference between a stable and an unstable sorting method. Discuss how empty lists, repeated labels, and mixed capitalization should be addressed in a clear specification before implementation."
+    },
+    {
+      "id": "cal_03_continue",
+      "topic": "sorting",
+      "frame": "continue",
+      "text": "Continue: A programmer has a list of package labels and must arrange them alphabetically without losing duplicate entries. Explain the difference between a stable and an unstable sorting method. Discuss how empty lists, repeated labels, and mixed capitalization should be addressed in a clear specification before implementation."
+    },
+    {
+      "id": "cal_04_explain",
+      "topic": "ocean_navigation",
+      "frame": "explain",
+      "text": "Explain: A sailor plans a short voyage between two islands with changing tides and a forecast of moderate wind. The chart shows shallow water near one shoreline and a sheltered harbor farther away. Explain which information is needed before choosing a route and why a backup destination is useful."
+    },
+    {
+      "id": "cal_04_discuss",
+      "topic": "ocean_navigation",
+      "frame": "discuss",
+      "text": "Discuss: A sailor plans a short voyage between two islands with changing tides and a forecast of moderate wind. The chart shows shallow water near one shoreline and a sheltered harbor farther away. Explain which information is needed before choosing a route and why a backup destination is useful."
+    },
+    {
+      "id": "cal_04_continue",
+      "topic": "ocean_navigation",
+      "frame": "continue",
+      "text": "Continue: A sailor plans a short voyage between two islands with changing tides and a forecast of moderate wind. The chart shows shallow water near one shoreline and a sheltered harbor farther away. Explain which information is needed before choosing a route and why a backup destination is useful."
+    },
+    {
+      "id": "cal_05_explain",
+      "topic": "ceramics",
+      "frame": "explain",
+      "text": "Explain: A potter shapes a clay bowl and waits for it to dry before firing it in a kiln. Uneven wall thickness can affect drying and heating. Describe how moisture, temperature changes, and glaze choice influence the finished object, while separating a general explanation from instructions for a specific kiln."
+    },
+    {
+      "id": "cal_05_discuss",
+      "topic": "ceramics",
+      "frame": "discuss",
+      "text": "Discuss: A potter shapes a clay bowl and waits for it to dry before firing it in a kiln. Uneven wall thickness can affect drying and heating. Describe how moisture, temperature changes, and glaze choice influence the finished object, while separating a general explanation from instructions for a specific kiln."
+    },
+    {
+      "id": "cal_05_continue",
+      "topic": "ceramics",
+      "frame": "continue",
+      "text": "Continue: A potter shapes a clay bowl and waits for it to dry before firing it in a kiln. Uneven wall thickness can affect drying and heating. Describe how moisture, temperature changes, and glaze choice influence the finished object, while separating a general explanation from instructions for a specific kiln."
+    },
+    {
+      "id": "cal_06_explain",
+      "topic": "probability",
+      "frame": "explain",
+      "text": "Explain: A student draws one card from a well shuffled ordinary deck and then replaces it before drawing again. Compare this experiment with drawing two cards without replacement. Explain how the sample space and the probability of the second event depend on whether the first card was returned."
+    },
+    {
+      "id": "cal_06_discuss",
+      "topic": "probability",
+      "frame": "discuss",
+      "text": "Discuss: A student draws one card from a well shuffled ordinary deck and then replaces it before drawing again. Compare this experiment with drawing two cards without replacement. Explain how the sample space and the probability of the second event depend on whether the first card was returned."
+    },
+    {
+      "id": "cal_06_continue",
+      "topic": "probability",
+      "frame": "continue",
+      "text": "Continue: A student draws one card from a well shuffled ordinary deck and then replaces it before drawing again. Compare this experiment with drawing two cards without replacement. Explain how the sample space and the probability of the second event depend on whether the first card was returned."
+    },
+    {
+      "id": "cal_07_explain",
+      "topic": "databases",
+      "frame": "explain",
+      "text": "Explain: A shop stores orders, customers, and products in separate database tables. An order may contain several products, and a product can appear in many orders. Explain the purpose of a linking table, a primary key, and a foreign key using a small example with no personal information."
+    },
+    {
+      "id": "cal_07_discuss",
+      "topic": "databases",
+      "frame": "discuss",
+      "text": "Discuss: A shop stores orders, customers, and products in separate database tables. An order may contain several products, and a product can appear in many orders. Explain the purpose of a linking table, a primary key, and a foreign key using a small example with no personal information."
+    },
+    {
+      "id": "cal_07_continue",
+      "topic": "databases",
+      "frame": "continue",
+      "text": "Continue: A shop stores orders, customers, and products in separate database tables. An order may contain several products, and a product can appear in many orders. Explain the purpose of a linking table, a primary key, and a foreign key using a small example with no personal information."
+    },
+    {
+      "id": "cal_08_explain",
+      "topic": "space_story",
+      "frame": "explain",
+      "text": "Explain: Beyond the last docking beacon, a courier spaceship receives a message from an abandoned research station. The message contains a familiar melody and a timestamp from tomorrow. Continue the scene by focusing on the crew disagreement about how to investigate, without assuming that the signal proves time travel."
+    },
+    {
+      "id": "cal_08_discuss",
+      "topic": "space_story",
+      "frame": "discuss",
+      "text": "Discuss: Beyond the last docking beacon, a courier spaceship receives a message from an abandoned research station. The message contains a familiar melody and a timestamp from tomorrow. Continue the scene by focusing on the crew disagreement about how to investigate, without assuming that the signal proves time travel."
+    },
+    {
+      "id": "cal_08_continue",
+      "topic": "space_story",
+      "frame": "continue",
+      "text": "Continue: Beyond the last docking beacon, a courier spaceship receives a message from an abandoned research station. The message contains a familiar melody and a timestamp from tomorrow. Continue the scene by focusing on the crew disagreement about how to investigate, without assuming that the signal proves time travel."
+    },
+    {
+      "id": "cal_09_explain",
+      "topic": "fairy_story",
+      "frame": "explain",
+      "text": "Explain: Inside a quiet clock shop, an apprentice discovers a tiny door behind the largest pendulum. The door opens only when all the clocks disagree by exactly one minute. Continue the story with a clear sequence of discoveries, giving the apprentice a practical reason to return before the shop opens."
+    },
+    {
+      "id": "cal_09_discuss",
+      "topic": "fairy_story",
+      "frame": "discuss",
+      "text": "Discuss: Inside a quiet clock shop, an apprentice discovers a tiny door behind the largest pendulum. The door opens only when all the clocks disagree by exactly one minute. Continue the story with a clear sequence of discoveries, giving the apprentice a practical reason to return before the shop opens."
+    },
+    {
+      "id": "cal_09_continue",
+      "topic": "fairy_story",
+      "frame": "continue",
+      "text": "Continue: Inside a quiet clock shop, an apprentice discovers a tiny door behind the largest pendulum. The door opens only when all the clocks disagree by exactly one minute. Continue the story with a clear sequence of discoveries, giving the apprentice a practical reason to return before the shop opens."
+    },
+    {
+      "id": "cal_10_explain",
+      "topic": "dialogue",
+      "frame": "explain",
+      "text": "Explain: Mira says that their walking group should leave early to avoid the afternoon heat. Tomas replies that one friend cannot arrive before breakfast. Write a short balanced conversation in which they compare options, clarify the constraint, and agree on a meeting point without dismissing either persons concern."
+    },
+    {
+      "id": "cal_10_discuss",
+      "topic": "dialogue",
+      "frame": "discuss",
+      "text": "Discuss: Mira says that their walking group should leave early to avoid the afternoon heat. Tomas replies that one friend cannot arrive before breakfast. Write a short balanced conversation in which they compare options, clarify the constraint, and agree on a meeting point without dismissing either persons concern."
+    },
+    {
+      "id": "cal_10_continue",
+      "topic": "dialogue",
+      "frame": "continue",
+      "text": "Continue: Mira says that their walking group should leave early to avoid the afternoon heat. Tomas replies that one friend cannot arrive before breakfast. Write a short balanced conversation in which they compare options, clarify the constraint, and agree on a meeting point without dismissing either persons concern."
+    },
+    {
+      "id": "cal_11_explain",
+      "topic": "ethics",
+      "frame": "explain",
+      "text": "Explain: A student council has a limited budget for improving shared study spaces. Some students prefer longer opening hours, while others request quieter rooms and better lighting. Explain a fair decision process that collects relevant information, makes tradeoffs visible, and allows the council to review the outcome later."
+    },
+    {
+      "id": "cal_11_discuss",
+      "topic": "ethics",
+      "frame": "discuss",
+      "text": "Discuss: A student council has a limited budget for improving shared study spaces. Some students prefer longer opening hours, while others request quieter rooms and better lighting. Explain a fair decision process that collects relevant information, makes tradeoffs visible, and allows the council to review the outcome later."
+    },
+    {
+      "id": "cal_11_continue",
+      "topic": "ethics",
+      "frame": "continue",
+      "text": "Continue: A student council has a limited budget for improving shared study spaces. Some students prefer longer opening hours, while others request quieter rooms and better lighting. Explain a fair decision process that collects relevant information, makes tradeoffs visible, and allows the council to review the outcome later."
+    },
+    {
+      "id": "cal_12_explain",
+      "topic": "measurement",
+      "frame": "explain",
+      "text": "Explain: A technician measures the same metal rod several times with two different instruments. The readings vary slightly and one instrument has a consistent offset. Explain the distinction between precision and accuracy, how repeated measurements can help, and why averaging alone does not remove every systematic error."
+    },
+    {
+      "id": "cal_12_discuss",
+      "topic": "measurement",
+      "frame": "discuss",
+      "text": "Discuss: A technician measures the same metal rod several times with two different instruments. The readings vary slightly and one instrument has a consistent offset. Explain the distinction between precision and accuracy, how repeated measurements can help, and why averaging alone does not remove every systematic error."
+    },
+    {
+      "id": "cal_12_continue",
+      "topic": "measurement",
+      "frame": "continue",
+      "text": "Continue: A technician measures the same metal rod several times with two different instruments. The readings vary slightly and one instrument has a consistent offset. Explain the distinction between precision and accuracy, how repeated measurements can help, and why averaging alone does not remove every systematic error."
+    },
+    {
+      "id": "cal_13_explain",
+      "topic": "units",
+      "frame": "explain",
+      "text": "Explain: A cyclist covers twelve kilometers in forty minutes and later travels another nine kilometers in half an hour. Explain how to calculate an average speed for the whole journey. Keep units explicit and discuss why averaging the two speeds without considering the durations can sometimes give an incorrect result."
+    },
+    {
+      "id": "cal_13_discuss",
+      "topic": "units",
+      "frame": "discuss",
+      "text": "Discuss: A cyclist covers twelve kilometers in forty minutes and later travels another nine kilometers in half an hour. Explain how to calculate an average speed for the whole journey. Keep units explicit and discuss why averaging the two speeds without considering the durations can sometimes give an incorrect result."
+    },
+    {
+      "id": "cal_13_continue",
+      "topic": "units",
+      "frame": "continue",
+      "text": "Continue: A cyclist covers twelve kilometers in forty minutes and later travels another nine kilometers in half an hour. Explain how to calculate an average speed for the whole journey. Keep units explicit and discuss why averaging the two speeds without considering the durations can sometimes give an incorrect result."
+    },
+    {
+      "id": "cal_14_explain",
+      "topic": "fractions_negative",
+      "frame": "explain",
+      "text": "Explain: A learner evaluates an expression containing negative numbers, fractions, and parentheses: three quarters minus the product of negative two and five eighths. Explain a transparent order of operations and show how signs are handled. Include a reasonableness check rather than presenting only the final numerical answer."
+    },
+    {
+      "id": "cal_14_discuss",
+      "topic": "fractions_negative",
+      "frame": "discuss",
+      "text": "Discuss: A learner evaluates an expression containing negative numbers, fractions, and parentheses: three quarters minus the product of negative two and five eighths. Explain a transparent order of operations and show how signs are handled. Include a reasonableness check rather than presenting only the final numerical answer."
+    },
+    {
+      "id": "cal_14_continue",
+      "topic": "fractions_negative",
+      "frame": "continue",
+      "text": "Continue: A learner evaluates an expression containing negative numbers, fractions, and parentheses: three quarters minus the product of negative two and five eighths. Explain a transparent order of operations and show how signs are handled. Include a reasonableness check rather than presenting only the final numerical answer."
+    },
+    {
+      "id": "cal_15_explain",
+      "topic": "sets",
+      "frame": "explain",
+      "text": "Explain: A club has members who study painting, members who study drama, and several members who study both. Explain union, intersection, and complement in this setting. Show why adding the sizes of two overlapping groups counts some members twice and describe the correction using a simple diagram in words."
+    },
+    {
+      "id": "cal_15_discuss",
+      "topic": "sets",
+      "frame": "discuss",
+      "text": "Discuss: A club has members who study painting, members who study drama, and several members who study both. Explain union, intersection, and complement in this setting. Show why adding the sizes of two overlapping groups counts some members twice and describe the correction using a simple diagram in words."
+    },
+    {
+      "id": "cal_15_continue",
+      "topic": "sets",
+      "frame": "continue",
+      "text": "Continue: A club has members who study painting, members who study drama, and several members who study both. Explain union, intersection, and complement in this setting. Show why adding the sizes of two overlapping groups counts some members twice and describe the correction using a simple diagram in words."
+    },
+    {
+      "id": "cal_16_explain",
+      "topic": "code_python",
+      "frame": "explain",
+      "text": "Explain: A Python function receives a sequence of integers and returns the first value that appears twice. Outline a solution using a set, then explain what should happen when no value repeats. Discuss how tests for an empty sequence and a duplicate at the end clarify the function contract."
+    },
+    {
+      "id": "cal_16_discuss",
+      "topic": "code_python",
+      "frame": "discuss",
+      "text": "Discuss: A Python function receives a sequence of integers and returns the first value that appears twice. Outline a solution using a set, then explain what should happen when no value repeats. Discuss how tests for an empty sequence and a duplicate at the end clarify the function contract."
+    },
+    {
+      "id": "cal_16_continue",
+      "topic": "code_python",
+      "frame": "continue",
+      "text": "Continue: A Python function receives a sequence of integers and returns the first value that appears twice. Outline a solution using a set, then explain what should happen when no value repeats. Discuss how tests for an empty sequence and a duplicate at the end clarify the function contract."
+    },
+    {
+      "id": "cal_17_explain",
+      "topic": "code_sql",
+      "frame": "explain",
+      "text": "Explain: A database query must list departments whose total recorded expense exceeds a stated threshold. Explain how grouping and filtering aggregate values differ from filtering individual rows. Give a small SQL style outline and identify where missing values, currency units, and duplicate transactions could affect the intended result."
+    },
+    {
+      "id": "cal_17_discuss",
+      "topic": "code_sql",
+      "frame": "discuss",
+      "text": "Discuss: A database query must list departments whose total recorded expense exceeds a stated threshold. Explain how grouping and filtering aggregate values differ from filtering individual rows. Give a small SQL style outline and identify where missing values, currency units, and duplicate transactions could affect the intended result."
+    },
+    {
+      "id": "cal_17_continue",
+      "topic": "code_sql",
+      "frame": "continue",
+      "text": "Continue: A database query must list departments whose total recorded expense exceeds a stated threshold. Explain how grouping and filtering aggregate values differ from filtering individual rows. Give a small SQL style outline and identify where missing values, currency units, and duplicate transactions could affect the intended result."
+    },
+    {
+      "id": "cal_18_explain",
+      "topic": "code_json",
+      "frame": "explain",
+      "text": "Explain: A configuration file contains a service name, a retry count, and a list of allowed regions. Describe a compact JSON example and explain which fields should be validated before the service starts. Distinguish a missing field, an incorrect data type, and a value outside an allowed range."
+    },
+    {
+      "id": "cal_18_discuss",
+      "topic": "code_json",
+      "frame": "discuss",
+      "text": "Discuss: A configuration file contains a service name, a retry count, and a list of allowed regions. Describe a compact JSON example and explain which fields should be validated before the service starts. Distinguish a missing field, an incorrect data type, and a value outside an allowed range."
+    },
+    {
+      "id": "cal_18_continue",
+      "topic": "code_json",
+      "frame": "continue",
+      "text": "Continue: A configuration file contains a service name, a retry count, and a list of allowed regions. Describe a compact JSON example and explain which fields should be validated before the service starts. Distinguish a missing field, an incorrect data type, and a value outside an allowed range."
+    },
+    {
+      "id": "cal_19_explain",
+      "topic": "code_html",
+      "frame": "explain",
+      "text": "Explain: A small web page presents a title, a navigation menu, and a description of a public exhibition. Explain how semantic HTML helps readers and assistive technology understand the structure. Discuss useful link text, alternative descriptions for images, and the difference between document content and visual styling."
+    },
+    {
+      "id": "cal_19_discuss",
+      "topic": "code_html",
+      "frame": "discuss",
+      "text": "Discuss: A small web page presents a title, a navigation menu, and a description of a public exhibition. Explain how semantic HTML helps readers and assistive technology understand the structure. Discuss useful link text, alternative descriptions for images, and the difference between document content and visual styling."
+    },
+    {
+      "id": "cal_19_continue",
+      "topic": "code_html",
+      "frame": "continue",
+      "text": "Continue: A small web page presents a title, a navigation menu, and a description of a public exhibition. Explain how semantic HTML helps readers and assistive technology understand the structure. Discuss useful link text, alternative descriptions for images, and the difference between document content and visual styling."
+    },
+    {
+      "id": "cal_20_explain",
+      "topic": "history_calendar",
+      "frame": "explain",
+      "text": "Explain: An archivist finds two letters that describe the same public ceremony but use different calendar conventions. Explain how a researcher might reconcile their dates using the place, year, and local convention. Emphasize documenting the conversion assumptions and retaining the date written in the original source."
+    },
+    {
+      "id": "cal_20_discuss",
+      "topic": "history_calendar",
+      "frame": "discuss",
+      "text": "Discuss: An archivist finds two letters that describe the same public ceremony but use different calendar conventions. Explain how a researcher might reconcile their dates using the place, year, and local convention. Emphasize documenting the conversion assumptions and retaining the date written in the original source."
+    },
+    {
+      "id": "cal_20_continue",
+      "topic": "history_calendar",
+      "frame": "continue",
+      "text": "Continue: An archivist finds two letters that describe the same public ceremony but use different calendar conventions. Explain how a researcher might reconcile their dates using the place, year, and local convention. Emphasize documenting the conversion assumptions and retaining the date written in the original source."
+    },
+    {
+      "id": "cal_21_explain",
+      "topic": "economics_example",
+      "frame": "explain",
+      "text": "Explain: Two neighboring towns trade grain and woven cloth. One town can produce more of both goods in a day, yet the opportunity cost of each product differs between them. Explain comparative advantage with a simple numerical illustration, without assuming that the example captures every real cost of trade."
+    },
+    {
+      "id": "cal_21_discuss",
+      "topic": "economics_example",
+      "frame": "discuss",
+      "text": "Discuss: Two neighboring towns trade grain and woven cloth. One town can produce more of both goods in a day, yet the opportunity cost of each product differs between them. Explain comparative advantage with a simple numerical illustration, without assuming that the example captures every real cost of trade."
+    },
+    {
+      "id": "cal_21_continue",
+      "topic": "economics_example",
+      "frame": "continue",
+      "text": "Continue: Two neighboring towns trade grain and woven cloth. One town can produce more of both goods in a day, yet the opportunity cost of each product differs between them. Explain comparative advantage with a simple numerical illustration, without assuming that the example captures every real cost of trade."
+    },
+    {
+      "id": "cal_22_explain",
+      "topic": "music_acoustics",
+      "frame": "explain",
+      "text": "Explain: A violin string and a flute can play notes with the same fundamental frequency while sounding different. Explain how harmonics, resonance, and the onset of a sound contribute to timbre. Describe what a microphone waveform can reveal and why a single frequency value cannot describe the entire sound."
+    },
+    {
+      "id": "cal_22_discuss",
+      "topic": "music_acoustics",
+      "frame": "discuss",
+      "text": "Discuss: A violin string and a flute can play notes with the same fundamental frequency while sounding different. Explain how harmonics, resonance, and the onset of a sound contribute to timbre. Describe what a microphone waveform can reveal and why a single frequency value cannot describe the entire sound."
+    },
+    {
+      "id": "cal_22_continue",
+      "topic": "music_acoustics",
+      "frame": "continue",
+      "text": "Continue: A violin string and a flute can play notes with the same fundamental frequency while sounding different. Explain how harmonics, resonance, and the onset of a sound contribute to timbre. Describe what a microphone waveform can reveal and why a single frequency value cannot describe the entire sound."
+    },
+    {
+      "id": "cal_23_explain",
+      "topic": "sports_rules",
+      "frame": "explain",
+      "text": "Explain: During a friendly doubles tournament, four teams discover that one scheduled court is unavailable. Explain how the organizers could revise the order of matches while preserving equal rest opportunities. State the assumptions needed before making a schedule and show how to communicate a change clearly to every team."
+    },
+    {
+      "id": "cal_23_discuss",
+      "topic": "sports_rules",
+      "frame": "discuss",
+      "text": "Discuss: During a friendly doubles tournament, four teams discover that one scheduled court is unavailable. Explain how the organizers could revise the order of matches while preserving equal rest opportunities. State the assumptions needed before making a schedule and show how to communicate a change clearly to every team."
+    },
+    {
+      "id": "cal_23_continue",
+      "topic": "sports_rules",
+      "frame": "continue",
+      "text": "Continue: During a friendly doubles tournament, four teams discover that one scheduled court is unavailable. Explain how the organizers could revise the order of matches while preserving equal rest opportunities. State the assumptions needed before making a schedule and show how to communicate a change clearly to every team."
+    },
+    {
+      "id": "cal_24_explain",
+      "topic": "spanish",
+      "frame": "explain",
+      "text": "Explain: Una investigadora compara varias formas de explicar un problema sencillo a estudiantes nuevos. Primero presenta un ejemplo concreto y despues pide que cada persona describa su razonamiento. Explica por que escuchar las respuestas ayuda a distinguir una dificultad de vocabulario de una dificultad con la idea principal."
+    },
+    {
+      "id": "cal_24_discuss",
+      "topic": "spanish",
+      "frame": "discuss",
+      "text": "Discuss: Una investigadora compara varias formas de explicar un problema sencillo a estudiantes nuevos. Primero presenta un ejemplo concreto y despues pide que cada persona describa su razonamiento. Explica por que escuchar las respuestas ayuda a distinguir una dificultad de vocabulario de una dificultad con la idea principal."
+    },
+    {
+      "id": "cal_24_continue",
+      "topic": "spanish",
+      "frame": "continue",
+      "text": "Continue: Una investigadora compara varias formas de explicar un problema sencillo a estudiantes nuevos. Primero presenta un ejemplo concreto y despues pide que cada persona describa su razonamiento. Explica por que escuchar las respuestas ayuda a distinguir una dificultad de vocabulario de una dificultad con la idea principal."
+    },
+    {
+      "id": "cal_25_explain",
+      "topic": "french",
+      "frame": "explain",
+      "text": "Explain: Une equipe prepare une visite publique dans un observatoire. Les visiteurs auront des connaissances differentes et peu de temps pour poser des questions. Propose une explication claire du fonctionnement dun telescope, en distinguant la collecte de lumiere, le grossissement et les limites imposees par les conditions atmospheriques."
+    },
+    {
+      "id": "cal_25_discuss",
+      "topic": "french",
+      "frame": "discuss",
+      "text": "Discuss: Une equipe prepare une visite publique dans un observatoire. Les visiteurs auront des connaissances differentes et peu de temps pour poser des questions. Propose une explication claire du fonctionnement dun telescope, en distinguant la collecte de lumiere, le grossissement et les limites imposees par les conditions atmospheriques."
+    },
+    {
+      "id": "cal_25_continue",
+      "topic": "french",
+      "frame": "continue",
+      "text": "Continue: Une equipe prepare une visite publique dans un observatoire. Les visiteurs auront des connaissances differentes et peu de temps pour poser des questions. Propose une explication claire du fonctionnement dun telescope, en distinguant la collecte de lumiere, le grossissement et les limites imposees par les conditions atmospheriques."
+    },
+    {
+      "id": "cal_26_explain",
+      "topic": "german",
+      "frame": "explain",
+      "text": "Explain: Eine kleine Gruppe plant einen gemeinsamen Ausflug an einem freien Nachmittag. Die Teilnehmenden haben unterschiedliche Interessen und muessen zu verschiedenen Zeiten zurueckkehren. Beschreibe einen nachvollziehbaren Entscheidungsprozess, der die festen Bedingungen zuerst klaert und danach mehrere passende Vorschlaege vergleicht, ohne eine einzelne Vorliebe als allgemeine Regel darzustellen."
+    },
+    {
+      "id": "cal_26_discuss",
+      "topic": "german",
+      "frame": "discuss",
+      "text": "Discuss: Eine kleine Gruppe plant einen gemeinsamen Ausflug an einem freien Nachmittag. Die Teilnehmenden haben unterschiedliche Interessen und muessen zu verschiedenen Zeiten zurueckkehren. Beschreibe einen nachvollziehbaren Entscheidungsprozess, der die festen Bedingungen zuerst klaert und danach mehrere passende Vorschlaege vergleicht, ohne eine einzelne Vorliebe als allgemeine Regel darzustellen."
+    },
+    {
+      "id": "cal_26_continue",
+      "topic": "german",
+      "frame": "continue",
+      "text": "Continue: Eine kleine Gruppe plant einen gemeinsamen Ausflug an einem freien Nachmittag. Die Teilnehmenden haben unterschiedliche Interessen und muessen zu verschiedenen Zeiten zurueckkehren. Beschreibe einen nachvollziehbaren Entscheidungsprozess, der die festen Bedingungen zuerst klaert und danach mehrere passende Vorschlaege vergleicht, ohne eine einzelne Vorliebe als allgemeine Regel darzustellen."
+    },
+    {
+      "id": "cal_27_explain",
+      "topic": "translation",
+      "frame": "explain",
+      "text": "Explain: Translate the idea of a patient explanation into several styles of English: a friendly note, a formal instruction, and a brief conversation. Use the same simple situation of helping someone find a misplaced document. Explain which details should remain unchanged even when the tone and sentence structure differ."
+    },
+    {
+      "id": "cal_27_discuss",
+      "topic": "translation",
+      "frame": "discuss",
+      "text": "Discuss: Translate the idea of a patient explanation into several styles of English: a friendly note, a formal instruction, and a brief conversation. Use the same simple situation of helping someone find a misplaced document. Explain which details should remain unchanged even when the tone and sentence structure differ."
+    },
+    {
+      "id": "cal_27_continue",
+      "topic": "translation",
+      "frame": "continue",
+      "text": "Continue: Translate the idea of a patient explanation into several styles of English: a friendly note, a formal instruction, and a brief conversation. Use the same simple situation of helping someone find a misplaced document. Explain which details should remain unchanged even when the tone and sentence structure differ."
+    },
+    {
+      "id": "cal_28_explain",
+      "topic": "tables",
+      "frame": "explain",
+      "text": "Explain: A table records three parcels with weights of two, five, and seven kilograms and delivery times of one, three, and two days. Explain two different summaries that answer different questions. State what additional information would be needed before using this tiny table to predict the delivery time of another parcel."
+    },
+    {
+      "id": "cal_28_discuss",
+      "topic": "tables",
+      "frame": "discuss",
+      "text": "Discuss: A table records three parcels with weights of two, five, and seven kilograms and delivery times of one, three, and two days. Explain two different summaries that answer different questions. State what additional information would be needed before using this tiny table to predict the delivery time of another parcel."
+    },
+    {
+      "id": "cal_28_continue",
+      "topic": "tables",
+      "frame": "continue",
+      "text": "Continue: A table records three parcels with weights of two, five, and seven kilograms and delivery times of one, three, and two days. Explain two different summaries that answer different questions. State what additional information would be needed before using this tiny table to predict the delivery time of another parcel."
+    },
+    {
+      "id": "cal_29_explain",
+      "topic": "strings",
+      "frame": "explain",
+      "text": "Explain: A text processing program receives names containing spaces, apostrophes, and accented characters. Explain why splitting every input at the first space is unreliable. Describe a representation that preserves the original text and discuss how validation can reject missing data without forcing all valid names into one narrow pattern."
+    },
+    {
+      "id": "cal_29_discuss",
+      "topic": "strings",
+      "frame": "discuss",
+      "text": "Discuss: A text processing program receives names containing spaces, apostrophes, and accented characters. Explain why splitting every input at the first space is unreliable. Describe a representation that preserves the original text and discuss how validation can reject missing data without forcing all valid names into one narrow pattern."
+    },
+    {
+      "id": "cal_29_continue",
+      "topic": "strings",
+      "frame": "continue",
+      "text": "Continue: A text processing program receives names containing spaces, apostrophes, and accented characters. Explain why splitting every input at the first space is unreliable. Describe a representation that preserves the original text and discuss how validation can reject missing data without forcing all valid names into one narrow pattern."
+    },
+    {
+      "id": "cal_30_explain",
+      "topic": "science_method",
+      "frame": "explain",
+      "text": "Explain: Two teams test whether a new insulation material reduces heat loss from identical containers. They obtain different results because their room temperatures and measurement intervals differ. Explain how a fair comparison could be designed, which variables should be recorded, and why uncertainty should accompany the reported difference."
+    },
+    {
+      "id": "cal_30_discuss",
+      "topic": "science_method",
+      "frame": "discuss",
+      "text": "Discuss: Two teams test whether a new insulation material reduces heat loss from identical containers. They obtain different results because their room temperatures and measurement intervals differ. Explain how a fair comparison could be designed, which variables should be recorded, and why uncertainty should accompany the reported difference."
+    },
+    {
+      "id": "cal_30_continue",
+      "topic": "science_method",
+      "frame": "continue",
+      "text": "Continue: Two teams test whether a new insulation material reduces heat loss from identical containers. They obtain different results because their room temperatures and measurement intervals differ. Explain how a fair comparison could be designed, which variables should be recorded, and why uncertainty should accompany the reported difference."
+    },
+    {
+      "id": "cal_31_explain",
+      "topic": "reflective_story",
+      "frame": "explain",
+      "text": "Explain: At the end of a long journey, a traveler opens a notebook filled with unfinished sketches instead of photographs. One sketch shows a doorway that no longer exists. Continue with a reflective scene about memory and careful observation, keeping the description grounded in specific details rather than explaining everything at once."
+    },
+    {
+      "id": "cal_31_discuss",
+      "topic": "reflective_story",
+      "frame": "discuss",
+      "text": "Discuss: At the end of a long journey, a traveler opens a notebook filled with unfinished sketches instead of photographs. One sketch shows a doorway that no longer exists. Continue with a reflective scene about memory and careful observation, keeping the description grounded in specific details rather than explaining everything at once."
+    },
+    {
+      "id": "cal_31_continue",
+      "topic": "reflective_story",
+      "frame": "continue",
+      "text": "Continue: At the end of a long journey, a traveler opens a notebook filled with unfinished sketches instead of photographs. One sketch shows a doorway that no longer exists. Continue with a reflective scene about memory and careful observation, keeping the description grounded in specific details rather than explaining everything at once."
+    }
+  ],
+  "decode_prompt_ids": [
+    "cal_00_continue",
+    "cal_02_continue",
+    "cal_04_continue",
+    "cal_06_continue",
+    "cal_08_continue",
+    "cal_10_continue",
+    "cal_12_continue",
+    "cal_14_continue",
+    "cal_16_continue",
+    "cal_18_continue",
+    "cal_20_continue",
+    "cal_22_continue",
+    "cal_24_continue",
+    "cal_26_continue",
+    "cal_28_continue",
+    "cal_30_continue"
+  ],
+  "decode_initial_length": 16,
+  "decode_steps": 4,
+  "tokenization": "Pinned tokenizer, raw text, no special tokens/chat/padding; require at least32 raw tokens then take firstS. Reject duplicate token sequences within a bucket and any exact collision with frozen validation token sequences."
+}

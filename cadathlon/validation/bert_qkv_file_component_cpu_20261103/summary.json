@@ -1,0 +1,120 @@
+{
+  "scope": "One genuine CPU full-checkpoint BERT layer0 QKV file-boundary component on two distinct rows; not a complete layer/model/MRPC stage or calibration.",
+  "passed": true,
+  "source_count": 128,
+  "source_files_unchanged": true,
+  "source_archive_sha256": "e60e2f01534636cb3460ce8ed0ecc5f25b7a99d85073d0be11eb9506ecb0f6e1",
+  "processes_absent": [
+    946001,
+    946002,
+    946007,
+    946051,
+    949230
+  ],
+  "owned_files_removed": true,
+  "checks": {
+    "query": {
+      "passed": true,
+      "max_abs_error": 5.453940358708418e-11,
+      "per_row_max_abs_error": [
+        5.453940358708418e-11,
+        1.7383108720272068e-11
+      ],
+      "padding_max_abs_error": 5.453940358708418e-11,
+      "slots_checked": 8192,
+      "gate": 1e-06
+    },
+    "key": {
+      "passed": true,
+      "max_abs_error": 5.444754932244104e-11,
+      "per_row_max_abs_error": [
+        5.444754932244104e-11,
+        1.723359894746959e-11
+      ],
+      "padding_max_abs_error": 5.444754932244104e-11,
+      "slots_checked": 8192,
+      "gate": 1e-06
+    },
+    "value": {
+      "passed": true,
+      "max_abs_error": 5.456285323491287e-11,
+      "per_row_max_abs_error": [
+        5.456285323491287e-11,
+        1.751211168377992e-11
+      ],
+      "padding_max_abs_error": 5.456285323491287e-11,
+      "slots_checked": 8192,
+      "gate": 1e-06
+    }
+  },
+  "worst_abs_error": 5.456285323491287e-11,
+  "fixed_gate": 1e-06,
+  "all_slots_checked": 24576,
+  "ring": {
+    "batch": 1,
+    "composite_degree": 2,
+    "degree": 16384,
+    "degree_layout": [
+      128,
+      128
+    ],
+    "dnum": 2,
+    "max_level": 1,
+    "num_slots": 8192,
+    "output_scale": 7.199603266083226e+16,
+    "p_towers": [
+      1073479681,
+      1073184769,
+      1073053697
+    ],
+    "precision": 32,
+    "q_towers": [
+      2147352577,
+      1073643521,
+      268271617,
+      268369921
+    ],
+    "scaling_factor": 7.199603266083226e+16,
+    "secret_distribution": "uniform_ternary",
+    "sigma": 3.190000057220459
+  },
+  "actual_log2_qp": 206.9965209854861,
+  "native_preprocessing_s": 2.6756837730063125,
+  "preprocessing_process_s": 3.3857011840009363,
+  "cryptographic_subprocess_total_s": 215.5865602699996,
+  "collector_total_s": 219.24243379900145,
+  "server_process_s": 205.2120197930053,
+  "per_projection_server_s": {
+    "query": 67.91363650099811,
+    "key": 66.53295835100289,
+    "value": 65.38079402699805
+  },
+  "keyless_server_guards": {
+    "server_secret_absent": true,
+    "client_codecs_and_keygen_forbidden": true,
+    "client_file_access_attempts": []
+  },
+  "cleanup_followup": {
+    "passed_cpu_tests": 34,
+    "source_count": 129,
+    "source_files_unchanged": true,
+    "patch_sha256": "b2db9089b3896a5a21f2e1043eb40a75f854772f9edb3dba853639493ae6051d",
+    "changed_files": {
+      "prototype/collect.py": {
+        "before_sha256": "46fcfc2bb9212b6cd02c3642d72d603c8af8896dc2a590bc89b23c304cbd2572",
+        "after_sha256": "72761d69e12375498ed49b8ac40e63f57b2ac6cc08fbc8002c96a683af852945"
+      },
+      "prototype/test_component.py": {
+        "before_sha256": "1d06e2edd23571f22a4dba1d8291f714afdc037a9abfed9a338344f2f2124e82",
+        "after_sha256": "690b5fc25f52470bab46c5d8bc5c60621019de1d957a4ce0e94fb86a825be2a5"
+      }
+    },
+    "encrypted_rerun_claim": false,
+    "independent_security_review": "No additional blocker; unknown active evidence fails closed and directory owner is pinned by fd."
+  },
+  "known_measured_collector_limit": "Original healthy numerical proof predates the cleanup follow-up for unavailable active-stage evidence and held directory-fd ownership. Its observed cleanup succeeded; it is not relabeled as a follow-up-source run.",
+  "timing_scope": "Observed CPU component timings, not calibrated performance. A brief separate metadata-test process shared CPU affinity during the server run; host load was uncontrolled.",
+  "full_bert_evaluated": false,
+  "mrpc_accuracy_evaluated": false,
+  "scoring_calibrated": false
+}

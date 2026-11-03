@@ -1,0 +1,174 @@
+"""Distinct-row NumPy/BSGS contract tests; no encryption or HE-error claim."""
+from dataclasses import dataclass
+from pathlib import Path
+from types import SimpleNamespace
+import os
+import subprocess
+import sys
+
+import numpy as np
+import pytest
+
+HERE=Path(__file__).resolve().parent
+sys.path[:0]=[str(HERE/'checkout'),str(HERE/'checkout/cadathlon/common')]
+from encrypted_streaming_linear import RowTileLayout, StreamingLinear
+
+@dataclass
+class Value:
+    slots: np.ndarray
+    level: int=2
+    _ckks_scale: float=1.
+
+class Adds:
+    def __getitem__(self,level):
+        return SimpleNamespace(add_plain=lambda a,b:Value(a.slots+b.slots,min(a.level,b.level)))
+
+class Arithmetic:
+    def __init__(self,slots):
+        self.ctx=SimpleNamespace(num_slots=slots,he_add=Adds())
+        self.rotations=set()
+    def _ensure_capacity(self,values,required):
+        assert all(v.level>=required for v in values)
+        return tuple(values)
+    def _level(self,value):return value.level
+    def _prepare(self,level):pass
+    def _finish(self,value):return value
+    def _encode_public(self,slots,level,scale):return Value(np.asarray(slots),level,scale)
+    def rotate(self,value,index):
+        if index%self.ctx.num_slots:self.rotations.add(index%self.ctx.num_slots)
+        return Value(np.roll(value.slots,-index),value.level)
+    def add(self,left,right):return Value(left.slots+right.slots,min(left.level,right.level))
+    def weighted_sum(self,values,weights,*,bias=0.):
+        values,weights=tuple(values),tuple(weights)
+        return Value(sum(v.slots*w for v,w in zip(values,weights))+bias,min(v.level for v in values)-1)
+
+DEFAULT_STRATEGY='direct'
+
+@pytest.fixture(params=['direct','chained'],autouse=True)
+def strategy(request,monkeypatch):
+    monkeypatch.setattr(sys.modules[__name__],'DEFAULT_STRATEGY',request.param)
+
+class PublicInventory(dict):
+    def get(self,key,default=None):return {'a':object(),'b':object()}
+
+class PublicMaps(dict):
+    def get(self,key,default=None):return object()
+
+class IdealLinear(StreamingLinear):
+    def __init__(self,layout):
+        self.rotation_strategy=DEFAULT_STRATEGY
+        self.layout=layout;self.arithmetic=Arithmetic(layout.slots);self.ctx=self.arithmetic.ctx
+        self.ctx.secret_key=None;self.ctx.parameters={}
+        self.ctx._param_cache=SimpleNamespace(secret_key=None,per_level_rotation_keys=False,
+            raw_rotation_keys=PublicInventory(),coef_maps=PublicMaps())
+    def _validate_ciphertext(self,value):
+        assert isinstance(value,Value) and value.slots.shape==(self.layout.slots,) and value.level>=1
+
+
+def matrix(outputs,inputs):
+    """Every rectangular dimension participates; boundary routes are explicit."""
+    weight=np.zeros((outputs,inputs)); row=np.arange(outputs)
+    weight[row,row%inputs]=.5
+    weight[row,(row+1)%inputs]+=-.25
+    for shift in (768,1536,2304):
+        source=row+shift;valid=source<inputs
+        weight[row[valid],source[valid]]+=.125
+    for target,source in ((0,inputs-1),(outputs-1,0),(min(63,outputs-1),min(64,inputs-1)),(min(64,outputs-1),min(63,inputs-1))):
+        weight[target,source]+=.0625
+    return weight
+
+
+@pytest.mark.parametrize('slots',[8192,65536])
+@pytest.mark.parametrize('outputs,inputs',[(768,768),(3072,768),(768,3072)])
+@pytest.mark.parametrize('partial',[False,True])
+def test_actual_bsgs_fullwidth_rectangular_hostile_padding_and_signed_source_mask(slots,outputs,inputs,partial):
+    layout=RowTileLayout(slots); valid=layout.rows_per_tile-1 if partial else layout.rows_per_tile
+    raw=(np.arange(slots,dtype=float).reshape(layout.rows_per_tile,4096)%17-8)*1e6
+    active=(np.arange(valid)[:,None]+1)*8+(np.arange(inputs)[None,:]%31)/32
+    raw[:valid,:inputs]=active
+    before=raw.copy(); public_mask=np.where(np.arange(slots)%3, .5,-1.).reshape(raw.shape)
+    public_mask[:,::7]=0.
+    weight=matrix(outputs,inputs);bias=(np.arange(outputs)%13-6)/64
+    worker=IdealLinear(layout)
+    result=worker.linear_tile(Value(raw.reshape(-1)),weight,bias,valid_rows=valid,input_mask=public_mask.reshape(-1))
+    expected=np.zeros_like(raw);expected[:valid,:outputs]=(active*public_mask[:valid,:inputs])@weight.T+bias
+    np.testing.assert_allclose(result.slots.reshape(raw.shape),expected,atol=1e-10,rtol=1e-13)
+    np.testing.assert_array_equal(raw,before)
+    assert result.level==1
+    assert worker.arithmetic.rotations<=set(worker.required_rotation_indices(weight,layout,rotation_strategy=worker.rotation_strategy))
+
+
+@pytest.mark.parametrize('slots',[8192,65536])
+def test_dense_asymmetric_matrix_distinct_rows_and_partial_bias(slots):
+    layout=RowTileLayout(slots);worker=IdealLinear(layout);valid=layout.rows_per_tile-1
+    rng=np.random.default_rng(417);raw=rng.uniform(1e4,2e4,slots).reshape(layout.rows_per_tile,4096)
+    raw[:valid,:9]=rng.normal(size=(valid,9))+np.arange(valid)[:,None]
+    weight=rng.normal(size=(7,9));bias=rng.normal(size=7)
+    mask=np.cos(np.arange(slots)).reshape(raw.shape)
+    result=worker.linear_tile(Value(raw.ravel()),weight,bias,valid_rows=valid,input_mask=mask.ravel())
+    expected=np.zeros_like(raw);expected[:valid,:7]=(raw[:valid,:9]*mask[:valid,:9])@weight.T+bias
+    np.testing.assert_allclose(result.slots.reshape(raw.shape),expected,rtol=1e-12,atol=1e-12)
+    assert result.level==1
+
+
+@pytest.mark.parametrize('slots',[8192,65536])
+def test_zero_matrix_keeps_bias_in_valid_rows_only(slots):
+    layout=RowTileLayout(slots);worker=IdealLinear(layout);bias=np.array([1.,-2.,3.])
+    result=worker.linear_tile(Value(np.full(slots,1e9)),np.zeros((3,5)),bias,valid_rows=1)
+    expected=np.zeros((layout.rows_per_tile,4096));expected[0,:3]=bias
+    np.testing.assert_array_equal(result.slots.reshape(expected.shape),expected)
+    assert result.level==1 and not worker.arithmetic.rotations
+
+
+@pytest.mark.parametrize('slots',[8192,65536])
+def test_codec_and_stream_preserve_distinct_rows_and_partial_last_tile(slots):
+    layout=RowTileLayout(slots); rows=layout.rows_per_tile+1
+    inputs=np.arange(rows*9,dtype=float).reshape(rows,9)/16
+    packed=list(layout.pack_client_rows(inputs))
+    assert len(packed)==2
+    np.testing.assert_array_equal(layout.unpack_client_rows(packed,rows=rows,width=9,padding_atol=0),inputs)
+    np.testing.assert_array_equal(packed[-1].reshape(layout.rows_per_tile,4096)[1:],0)
+    worker=IdealLinear(layout);weight=matrix(7,9);bias=np.arange(7)/8
+    output=list(worker.iter_evaluate((Value(v) for v in packed),weight,bias,rows=rows))
+    decoded=layout.unpack_client_rows((v.slots for v in output),rows=rows,width=7,padding_atol=1e-12)
+    np.testing.assert_allclose(decoded,inputs@weight.T+bias,atol=1e-12,rtol=1e-12)
+    assert all(v.level==1 for v in output)
+
+
+@pytest.mark.parametrize('missing',[True,False])
+def test_complete_stream_rejects_wrong_number_of_input_tiles(missing):
+    layout=RowTileLayout(8192); worker=IdealLinear(layout);tile=Value(np.zeros(8192))
+    with pytest.raises(ValueError,match='missing ciphertext|extra ciphertext'):
+        list(worker.iter_evaluate([tile]*(1 if missing else 3),np.eye(3),rows=3))
+    with pytest.raises(ValueError,match='missing client|extra client'):
+        layout.unpack_client_rows([tile.slots]*(1 if missing else 3),rows=3,width=3)
+
+
+@pytest.mark.parametrize('index',[8,4096+2])
+def test_unpack_checks_feature_and_inactive_row_padding(index):
+    layout=RowTileLayout(8192);tile=np.zeros(8192);tile[index]=1e-4
+    with pytest.raises(ValueError,match='padding'):
+        layout.unpack_client_rows([tile],rows=1,width=8,padding_atol=1e-5)
+    assert layout.unpack_client_rows([tile],rows=1,width=8,padding_atol=1e-3).shape==(1,8)
+
+
+@pytest.mark.parametrize('bad',[
+    {'valid_rows':0}, {'valid_rows':3}, {'valid_rows':True},
+    {'valid_rows':1,'input_mask':np.zeros(8)},
+    {'valid_rows':1,'input_mask':np.full(8192,np.nan)},
+])
+def test_invalid_public_tile_metadata(bad):
+    worker=IdealLinear(RowTileLayout(8192))
+    with pytest.raises(ValueError):worker.linear_tile(Value(np.zeros(8192)),np.eye(3),**bad)
+
+
+def test_layout_import_and_client_codec_do_not_import_backend():
+    script="""import sys
+sys.path.insert(0,sys.argv[1])
+from encrypted_streaming_linear import RowTileLayout
+x=RowTileLayout(8192)
+assert x.rows_per_tile==2
+assert not any(n=='jax' or n.startswith('jax.') or n=='jaxite_word' or n.startswith('jaxite_word.') for n in sys.modules)
+"""
+    subprocess.run([sys.executable,'-c',script,str(HERE/'checkout/cadathlon/common')],check=True,
+                   env=dict(os.environ,JAX_PLATFORMS='cpu'))

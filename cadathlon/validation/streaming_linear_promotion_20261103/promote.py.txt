@@ -1,0 +1,52 @@
+"""Apply the independently reviewed, source-bound streaming-linear component."""
+import hashlib
+import json
+from pathlib import Path
+import shutil
+import subprocess
+import tarfile
+import time
+
+ROOT = Path('/home/jianming_gatech/CROSS')
+A = ROOT/'cadathlon/validation/streaming_linear_qkv_cpu_20261103'
+OUT = ROOT/'cadathlon/validation/streaming_linear_promotion_20261103'
+PATCH = A/'combined_streaming_linear.patch'
+EXPECTED = 'c091da61fce22eee606b06bcdaa2f63edd6a5c1ba423ada88561a4ab6d96eeb9'
+def digest(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
+assert digest(PATCH) == EXPECTED
+names = [line[6:] for line in PATCH.read_text().splitlines() if line.startswith('+++ b/')]
+assert len(names) == len(set(names)) == 6
+check = json.loads((A/'closure_followup/calibration_source_check.json').read_text())
+def calibrations():
+    for data in check['calibrations'].values():
+        assert not set(names).intersection(data['sources'])
+        for name, record in data['sources'].items():
+            assert digest(ROOT/name) == record['expected'], name
+calibrations()
+with tarfile.open(A/'closure_followup/sources.tar.gz') as archive:
+    tested = {name: hashlib.sha256(archive.extractfile('checkout/'+name).read()).hexdigest() for name in names}
+assert tested['cadathlon/common/encrypted_streaming_linear.py'] == '83e12b9cf00f1393a47aadddffaaa1ff6b4d0745cb68d9393d2dd38a2a165ecb'
+OUT.mkdir(exist_ok=False)
+record = {'passed': False, 'scope': 'Local reusable streaming-linear component promotion; full models and file stages remain incomplete.',
+          'started_utc': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+          'patch_sha256': EXPECTED, 'before': {name: digest(ROOT/name) for name in names},
+          'tested_expected': tested, 'p1_measured_files_unchanged': 103, 'p3_measured_files_unchanged': 119,
+          'active_transformer_sweep': 'Uses its separate immutable 199-file snapshot; this promotion does not change that snapshot.',
+          'encrypted_scope': 'Two distinct full-width BERT QKV rows, all24576slots atN16384; rectangular/partial-row cases have ideal tests only.',
+          'commit_or_external_publication': False}
+(OUT/'promotion.json').write_text(json.dumps(record,indent=2)+'\n')
+shutil.copyfile(ROOT/'cadathlon/contestant-release.tar.gz', OUT/'previous_contestant_release.tar.gz')
+record['previous_release_sha256'] = digest(OUT/'previous_contestant_release.tar.gz')
+subprocess.run(['git','apply','--check',str(PATCH)],cwd=ROOT,check=True)
+subprocess.run(['git','apply',str(PATCH)],cwd=ROOT,check=True)
+after = {name: digest(ROOT/name) for name in names}
+assert after == tested
+calibrations()
+subprocess.run(['git','diff','--check','--',*names],cwd=ROOT,check=True)
+record.update(passed=True, after=after, exact_tested_bytes_verified=True)
+(OUT/'promotion.json').write_text(json.dumps(record,indent=2)+'\n')
+shutil.copyfile(__file__,OUT/'promote.py.txt')
+subprocess.run(['git','add','--',*names],cwd=ROOT,check=True)
+subprocess.run(['git','add','-f',str(OUT)],cwd=ROOT,check=True)
+print(json.dumps({'passed':True,'files':names,'calibrations_preserved':True},indent=2))

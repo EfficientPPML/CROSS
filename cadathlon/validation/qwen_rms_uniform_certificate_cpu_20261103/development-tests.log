@@ -1,0 +1,14 @@
+...........F                                                             [100%]
+=================================== FAILURES ===================================
+__________ test_power_basis_coefficients_are_not_misread_as_chebyshev __________
+
+    def test_power_basis_coefficients_are_not_misread_as_chebyshev():
+     power=c.exact_certificate(rule([1.,0.,1.],'power'))
+     cheb=c.exact_certificate(rule([1.,0.,1.],'chebyshev'))
+>    assert power['exact_H_coefficient_L1']!=cheb['exact_H_coefficient_L1']
+E    AssertionError: assert {'numerator_hex': '0x5', 'denominator_power_of_two': 0, 'upper_binary64': 5.0} != {'numerator_hex': '0x5', 'denominator_power_of_two': 0, 'upper_binary64': 5.0}
+
+/tmp/qwen-rms-polynomial-certificate-20261103/test_certify.py:54: AssertionError
+=========================== short test summary info ============================
+FAILED ../../tmp/qwen-rms-polynomial-certificate-20261103/test_certify.py::test_power_basis_coefficients_are_not_misread_as_chebyshev
+1 failed, 11 passed in 0.03s

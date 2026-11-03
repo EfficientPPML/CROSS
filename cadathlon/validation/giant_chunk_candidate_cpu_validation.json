@@ -1,0 +1,140 @@
+{
+  "passed": true,
+  "status": "Isolated candidate only; no production promotion",
+  "scope": "Secure shallow packed-linear ciphertext parity and scheduling/lifetime validation on CPU; no refresh/full transformer/TPU proof",
+  "source_file_count": 103,
+  "source_files_unchanged": true,
+  "archive_source_hashes_verified": true,
+  "tests": {
+    "passed": 39,
+    "failed": 0,
+    "seconds": 69.6929767900001
+  },
+  "memory_scope": {
+    "default_extra_payload_bytes": 268435456,
+    "maximum_pending_count": 8,
+    "rule": "min(groups,8,1+floor(extra_payload_budget/output_payload_bytes))",
+    "guarantee": "At most the configured additional queued ciphertext payload beyond one existing singleton output; consumed wrappers retire before refill",
+    "excluded": "Total device memory, babies, accumulator, NTT/key/control arrays, plaintext encodings and primitive working buffers are not bounded by this queue cap",
+    "tests": "Weak-reference queue lifetime/peak checks, exact public output-byte calculations including batch and Q levels, failure cleanup, and actual same-level NTT identity checks",
+    "measured_cpu_process_max_rss_kib": 553992
+  },
+  "crypto_scope": {
+    "degree": 8192,
+    "depth": 1,
+    "dnum": 2,
+    "q_count": 4,
+    "p_count": 3,
+    "actual_log2_qp": 206.9977101580269,
+    "security_bits": 128
+  },
+  "cases": [
+    {
+      "number": 0,
+      "bounded": false,
+      "variants": [
+        {
+          "candidate": false,
+          "seconds": 11.032654697999533,
+          "max_abs_error": 4.183188517803416e-12,
+          "cache_clears": 6,
+          "groups": 4,
+          "output_payload_bytes": 131072,
+          "pending_limit": 1
+        },
+        {
+          "candidate": true,
+          "seconds": 8.487966562999645,
+          "max_abs_error": 4.183188517803416e-12,
+          "cache_clears": 4,
+          "groups": 4,
+          "output_payload_bytes": 131072,
+          "pending_limit": 3
+        }
+      ],
+      "exact_payload_and_metadata": true
+    },
+    {
+      "number": 0,
+      "bounded": true,
+      "variants": [
+        {
+          "candidate": false,
+          "seconds": 10.910450080002192,
+          "max_abs_error": 4.183188517803416e-12,
+          "cache_clears": 6,
+          "groups": 4,
+          "output_payload_bytes": 131072,
+          "pending_limit": 1
+        },
+        {
+          "candidate": true,
+          "seconds": 8.44897235299868,
+          "max_abs_error": 4.183188517803416e-12,
+          "cache_clears": 4,
+          "groups": 4,
+          "output_payload_bytes": 131072,
+          "pending_limit": 3
+        }
+      ],
+      "exact_payload_and_metadata": true
+    },
+    {
+      "number": 1,
+      "bounded": false,
+      "variants": [
+        {
+          "candidate": false,
+          "seconds": 8.189781996999955,
+          "max_abs_error": 3.0187806464646028e-12,
+          "cache_clears": 4,
+          "groups": 3,
+          "output_payload_bytes": 131072,
+          "pending_limit": 1
+        },
+        {
+          "candidate": true,
+          "seconds": 5.708728510999208,
+          "max_abs_error": 3.0187806464646028e-12,
+          "cache_clears": 2,
+          "groups": 3,
+          "output_payload_bytes": 131072,
+          "pending_limit": 3
+        }
+      ],
+      "exact_payload_and_metadata": true
+    },
+    {
+      "number": 1,
+      "bounded": true,
+      "variants": [
+        {
+          "candidate": false,
+          "seconds": 8.156756217998918,
+          "max_abs_error": 3.0187806464646028e-12,
+          "cache_clears": 4,
+          "groups": 3,
+          "output_payload_bytes": 131072,
+          "pending_limit": 1
+        },
+        {
+          "candidate": true,
+          "seconds": 5.692450601000019,
+          "max_abs_error": 3.0187806464646028e-12,
+          "cache_clears": 2,
+          "groups": 3,
+          "output_payload_bytes": 131072,
+          "pending_limit": 3
+        }
+      ],
+      "exact_payload_and_metadata": true
+    }
+  ],
+  "timing_scope": "Development CPU run concurrent with other work; per-operation observations are not accelerator/model/calibration performance claims",
+  "artifacts": {
+    "giant_chunk_candidate_cpu.json": "673359cb19dad7408ea04349710ef1e7499576eabff78bd324dfc969bb4739a0",
+    "giant_chunk_candidate_cpu.log": "c61c2cdfaebee6c809949054fb88c8b881775403cd3661c39f4249913e91af79",
+    "giant_chunk_candidate_secure_cpu.json": "62fbb727f6b0aaebda6dca18699fe1ebb575c4c290c483ff679a733894f747b2",
+    "giant_chunk_candidate_cpu_sources.tar.gz": "bc4afd9aa772656c80ce891a55571e0852baf183cf43295c1ed4a6dbe17fb941"
+  }
+}

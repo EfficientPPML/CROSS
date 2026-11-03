@@ -1,0 +1,1589 @@
+{
+  "source_hashes_start": {
+    "/tmp/bounded-packed-reuse/plan_bounded_packed.py": "38ddf8c974462ce7f9d34ae8118d683978715b8691b40461a25f2e0c579d99d9",
+    "/tmp/bounded-packed-reuse/encrypted_bounded_arithmetic.py": "c3ca2b9e5846a1f50def3ee83574fbc42be09f928efc57db5788e5e136d9f428",
+    "/tmp/bounded-packed-reuse/encrypted_bounded_transformer.py": "ae6652c918248f802f0537577570342fbe2bb1868d7e9ff320317055767b21c5",
+    "/tmp/bounded-packed-reuse/encrypted_packed_transformer.py": "f0467c3fdfdee9be2d51978c07e93b8fb3e9025f46af0c32388c2d1484d0804c",
+    "/home/jianming_gatech/CROSS/jaxite_word/__init__.py": "fc78b0845c2314a523cb20e490ded0c8ef09c9c05fa50d92eb218ef247533096",
+    "/home/jianming_gatech/CROSS/jaxite_word/bconv.py": "53ac0665cf3803fc72672657146ef7c19c823f48f326cf7d54ae87a15ae92f82",
+    "/home/jianming_gatech/CROSS/jaxite_word/bconv_perf_test.py": "6d9a7083218b483c861441f8320522156793e8331245d4c1633401c61417a42f",
+    "/home/jianming_gatech/CROSS/jaxite_word/bconv_test.py": "2e6bc6acec05d26a02a0316e0963976050695ce0cb6ccf5e8113f79c0e05e252",
+    "/home/jianming_gatech/CROSS/jaxite_word/bootstrapping.py": "e44f748f5ef51ec68be0f224f4d8ff1068fe6c449f09c04532900a3ac4fcfc49",
+    "/home/jianming_gatech/CROSS/jaxite_word/bootstrapping_montgomery_test.py": "a21b00ec430a9a95809ef2f62530c0fb62871152dc1b2677f465f28e8e9c4971",
+    "/home/jianming_gatech/CROSS/jaxite_word/bootstrapping_openfhe_crosscheck.py": "4f9b9ea005d46ab15f4530f689d096b112fca4f09ffa46dcd3990a03d5159ecb",
+    "/home/jianming_gatech/CROSS/jaxite_word/bootstrapping_perf_test.py": "893703aaa8d347ead2b18952d9d366f503fbc84baed81ddf0dcb38de1f4dcadc",
+    "/home/jianming_gatech/CROSS/jaxite_word/bootstrapping_test.py": "9ac3e6c48d02093533720340c5494a7859359abb6a4da7149e71e6465eda2b19",
+    "/home/jianming_gatech/CROSS/jaxite_word/bsgs.py": "52a1027be9bf704fd3ffd453251d2b3136ab31a3242c12d341ca1374b1b82aed",
+    "/home/jianming_gatech/CROSS/jaxite_word/bsgs_perf_test.py": "b48c386ca26f247633525d6b554c8aad6da481ac8deaae811955d937f05a3e87",
+    "/home/jianming_gatech/CROSS/jaxite_word/bsgs_test.py": "11661f59f1f918d8025f5f7997d626618d4a047d234d9ff5323cf10534c7cca9",
+    "/home/jianming_gatech/CROSS/jaxite_word/ckks_composite_ctx_test.py": "aada892cc16abf8a88a32cb35c0a71bb42f73f70364b9c1ef9e800c4e7986eb9",
+    "/home/jianming_gatech/CROSS/jaxite_word/ckks_ctx.py": "1c457c3be4ce53215636141c65b5042ff7cb570d8627cd42053ad595c9ba43fa",
+    "/home/jianming_gatech/CROSS/jaxite_word/ckks_ctx_test.py": "e4545b1ce8510c96f18915d65a9a52b7251d55dfede0839bb921e0dc0566cb24",
+    "/home/jianming_gatech/CROSS/jaxite_word/ckks_level_ops_test.py": "21b919433fb433a750970808fb1f5697e2eb6fa52f1fafd30caf7d1b30dc6a51",
+    "/home/jianming_gatech/CROSS/jaxite_word/codec_preparation_test.py": "18d0692ffe2d09d33973d14c64dba61147cbc5ea0f5269640bdee2d559a6c1d3",
+    "/home/jianming_gatech/CROSS/jaxite_word/composite_prime_gen.py": "e3e689237d2b8449333774e84fa271a15a5c54ad603a32f7fcbe60ecb26f0317",
+    "/home/jianming_gatech/CROSS/jaxite_word/composite_prime_gen_test.py": "cde4424ace2598d38223aea87c838a35c77a2a4f238d0bea1fa3146dee54f18b",
+    "/home/jianming_gatech/CROSS/jaxite_word/fast_encryption_decryption_test.py": "0a191fc7ef7ad26a2ca4b8e6efd9e3d09fbbacba2d8572d2e82aafb0b5b8c789",
+    "/home/jianming_gatech/CROSS/jaxite_word/finite_field.py": "54418625f76e303d77a3055f93419e07895bdf71f706acc20ab0f6fe7c8def5e",
+    "/home/jianming_gatech/CROSS/jaxite_word/finite_field_perf_test.py": "55ae7be859879dbb409d00a2fc84706592d5b3bc04f84b217f7971dd9b3398bf",
+    "/home/jianming_gatech/CROSS/jaxite_word/finite_field_test.py": "303fd344cfd9910366db56b12e6fea44686bf69afcd6f9e6fffb51a9584c0c83",
+    "/home/jianming_gatech/CROSS/jaxite_word/he_ops.py": "bd0fb682b936a30c3faad9c09aad1337daa61657be744323605e73c875c99650",
+    "/home/jianming_gatech/CROSS/jaxite_word/he_params.py": "714d3227f65d2369976a798a13584cb8629c468f3b6c005d7193eac1f072948b",
+    "/home/jianming_gatech/CROSS/jaxite_word/headd.py": "53a691d7dc5d330886cfa11a990087d5ad4bb6dbabac47f3b85a281acc395d37",
+    "/home/jianming_gatech/CROSS/jaxite_word/headd_perf_test.py": "f813a1bd37afb4b024bf995153082b2edc5981c6de7c7eaefa84d3ad937e84c5",
+    "/home/jianming_gatech/CROSS/jaxite_word/headd_test.py": "b2e64d0d49f1148955ecac913629b81ef71a0fe76e06b71b7d8f65e45c38216e",
+    "/home/jianming_gatech/CROSS/jaxite_word/hemul.py": "49a87eed37de76b7b3ab31f1d19dd23a39035f031cfee41c4d9a204064502803",
+    "/home/jianming_gatech/CROSS/jaxite_word/hemul_double_rescaling_test.py": "0b0a0de67dcd4c241fabb5caf6c288cc11ff772832efcb805dee3fa17cdb2830",
+    "/home/jianming_gatech/CROSS/jaxite_word/hemul_perf_test.py": "20aa5093f23d67598013f9b10339f3bc61a5a746d2f30adda9ddd1bb3d2849b3",
+    "/home/jianming_gatech/CROSS/jaxite_word/hemul_test.py": "59c25e1032cfb4edfde8848cd101629891c7e8dec946d341392bd8671f1733bd",
+    "/home/jianming_gatech/CROSS/jaxite_word/herot.py": "bdb1ef0604150246b052cbc63dd41f6d92478505672d116aa13ce3bf4726eb89",
+    "/home/jianming_gatech/CROSS/jaxite_word/herot_perf_test.py": "cd77044bebe256dcd654047c80f1158765ea16eda1cdc9514b22a398ebf3db21",
+    "/home/jianming_gatech/CROSS/jaxite_word/herot_test.py": "f063f90b2a2eff3153eb44b37e2a6c2599a749277a28654e437b303a8b45a253",
+    "/home/jianming_gatech/CROSS/jaxite_word/hesub.py": "baad1322793dd239cb4e66749f05bf4982f58d0932b098abbd305ff2402cbf5e",
+    "/home/jianming_gatech/CROSS/jaxite_word/hesub_perf_test.py": "586d43858643665cf731c7d6b3adfe8a7f96399b78539aad35524f87b13dae27",
+    "/home/jianming_gatech/CROSS/jaxite_word/hesub_test.py": "894710564c6f6269b3bd89e13ab010418b9bce7e23b4f494e50f117fac31aa27",
+    "/home/jianming_gatech/CROSS/jaxite_word/key_gen.py": "4f5e53e421423e77757ca0596ae2607dbc2c6f80d21536b2e1c3f57a226b0fad",
+    "/home/jianming_gatech/CROSS/jaxite_word/key_gen_test.py": "65b0b60974ab5eea56cdeab4c4a8a30a132bf52d963682639b8842fea3e44dc7",
+    "/home/jianming_gatech/CROSS/jaxite_word/mapping.py": "c8d035d4b7d743b18324830eeb09b6cd2a562bc4862e6af2ee10702922f6816f",
+    "/home/jianming_gatech/CROSS/jaxite_word/mapping_compile_test.py": "985346d2677ff0296a63b032e0009d085d7b9d232a708454cd4bbaeeb3996964",
+    "/home/jianming_gatech/CROSS/jaxite_word/nn.py": "189cb48dff9124d32f84e6154b5e8403082d3eed87ab12d5fb1e80f1e21213de",
+    "/home/jianming_gatech/CROSS/jaxite_word/nn_test.py": "c1cd8502f110a4a15b44e8d781f5a5c6462b241f97d08bc26f52c0c484e02e37",
+    "/home/jianming_gatech/CROSS/jaxite_word/ntt_mm.py": "5a0cbff087f48f20c98cb5975f7894756a83d61fbdaaf5af358a1c7c192a1263",
+    "/home/jianming_gatech/CROSS/jaxite_word/ntt_mm_perf_test.py": "6bb76af76a637f766d431cd78486a4f168e1553823d72210e248e6b4aebc6054",
+    "/home/jianming_gatech/CROSS/jaxite_word/ntt_mm_test.py": "b19d63e3698a2c79e586bcf714d7474b3ca43c4a132ddab8aae6b27efbb8704a",
+    "/home/jianming_gatech/CROSS/jaxite_word/ntt_sm.py": "b57ebe4c8c1037288e3d50c9d3e443c4656a31d57bcb215ed7a302717d498a65",
+    "/home/jianming_gatech/CROSS/jaxite_word/ntt_sm_test.py": "ee1af34f58fc666438ea80442a66944dc5e3d50c2a26ec14a178c616752d7c63",
+    "/home/jianming_gatech/CROSS/jaxite_word/packing.py": "7496f37b7116b883c14f8e3d5cae6bd1ed7375d0a8d2425f78c8f84e347c0206",
+    "/home/jianming_gatech/CROSS/jaxite_word/packing_test.py": "ce1e1efcc57d931548a80aaf1e9e5b0f7e56e2bb9e4f9a385ea90a6b19102a43",
+    "/home/jianming_gatech/CROSS/jaxite_word/polynomial.py": "043e1dcdf9aca02f2df9435ac610c1561859b7d29a7dee1b7254bf9bc3c89a5b",
+    "/home/jianming_gatech/CROSS/jaxite_word/polynomial_test.py": "347a86e9495ace43af81c218a29fcc29c19b6341f0d0067193f443ffa1bb0dc1",
+    "/home/jianming_gatech/CROSS/jaxite_word/profiler.py": "440c7aa2026cfd6b29c37f4b9db78984f1dfbf484c1f7f841caab82ece9da543",
+    "/home/jianming_gatech/CROSS/jaxite_word/profiler_test.py": "5b0740511fb21d0f1a4f4a03947aca406d4808e6dc65cfbd916ce969ffcd77df",
+    "/home/jianming_gatech/CROSS/jaxite_word/ptct_mul.py": "2780cb5d261cbf3da611f79fc9a6b6ef98d4759c7508cad26ed5995699f5bf11",
+    "/home/jianming_gatech/CROSS/jaxite_word/ptct_mul_perf_test.py": "0136112ed02ef35fea3483bb4edbc4aa499eaed3d30e35ba0a47d4f8cdbaa626",
+    "/home/jianming_gatech/CROSS/jaxite_word/ptct_mul_test.py": "1a4895ef5ea02eb0242278607b8ff08393025944def0a44d01cdd6e746d6d382",
+    "/home/jianming_gatech/CROSS/jaxite_word/rescale.py": "7244fd87e9cf00168201e3a85d7a7c17259525f68ba82b4cebf64fe84757c73c",
+    "/home/jianming_gatech/CROSS/jaxite_word/rescale_double_rescaling_test.py": "f4709369e2595f3fde7f8fc9b9ae4fcbbcf45a8ece59bbd570202d48c69c980a",
+    "/home/jianming_gatech/CROSS/jaxite_word/rescale_perf_test.py": "c701da370637dc2ff2d2f65d5f1f182ca423ea372defc29a6f16c131d51120e2",
+    "/home/jianming_gatech/CROSS/jaxite_word/rescale_test.py": "96c5d2d5651c390062cb0f09ee4c613f6ae8f88f9416ee383c15c012567fe622",
+    "/home/jianming_gatech/CROSS/jaxite_word/rns.py": "41db559ea26e3149ada36ec8369cfa4a5a79876ae9253e0dbabe32c9c09ef158",
+    "/home/jianming_gatech/CROSS/jaxite_word/rns_test.py": "0194634e2e4a6f1d61da27cc158ba35872ae5922a5868bba54bb65b17de369a0",
+    "/home/jianming_gatech/CROSS/jaxite_word/tabIX.py": "8abf557fd986782a92d8b3517bf0d3470e1ae0ddc135eddd69efee87aabc78b6",
+    "/home/jianming_gatech/CROSS/jaxite_word/tabV.py": "385cda2816d6c2342ab39e57367b5a078d49102fdc7deaf165db4faa58fc20b0",
+    "/home/jianming_gatech/CROSS/jaxite_word/tabVI.py": "29cae4e85987d894c6944b050677d560340f1d214b329f9f02cab2c6db531310",
+    "/home/jianming_gatech/CROSS/jaxite_word/tabVII.py": "90b5f99e6ad2e2e156ea7cd167ec40c7186e99ffbc259edbac7f70668fa83e18",
+    "/home/jianming_gatech/CROSS/jaxite_word/util.py": "b34c675b50ae774cdb0ad913f8fc9c2f955b60bf4745006d3f81d7c013565026",
+    "/home/jianming_gatech/CROSS/jaxite_word/util_test.py": "9fbde79b0154169947608c11bbc8e50b3c104effee206747c2c71a4ced95424e",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_compilation.py": "4518d5f1cebba64fd1f5e1fb162da95fa7dde10936b01f274b0cdc6a31486fb2",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_packed_qwen.py": "3de3dbc8d6f7adb843387b1160346c4dab33d13e785d613df5b1560b26862cbd",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_packed_transformer.py": "f0467c3fdfdee9be2d51978c07e93b8fb3e9025f46af0c32388c2d1484d0804c",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_polynomial.py": "d01cbcf26897c9b190919bb6b279e731716d7dcc4e687bbdfbc4e2e4baf5975e",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_primitives.py": "9d8805a00be63a5b6a01f4f6adf611d3ffcd3c127ee1b73918add8b3767b68c8",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_reference.py": "a774760d660635fc5fcb5f9ab15c02dd48d88b1e5a855459d8405a415f7195a6",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_refresh.py": "1892d382a1b04f6d39059a038cf33766a768280aad7ec973c55a975fc2f32206",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_rotation.py": "6992fe6652eadf6d4957d5016456dcd031fac9e7f506dfeebc13b28f35765cee",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_transformer.py": "18846a05ad6076997eea70454c775a9a038c46f95b5c97687a08ac682e5501de",
+    "/home/jianming_gatech/CROSS/cadathlon/common/support.py": "458111de25dbae4418c474670cf45a2d39e8e6ba40b75c2d17ad8f96cbaaa40f",
+    "/home/jianming_gatech/CROSS/cadathlon/tests/test_packed_transformer.py": "ee82fb62048d9eb85901f5615f2cc006f4dc78cee05ff670e2b1e93f9fabf283",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/src/reference.py": "6d254c92b70257e773d1701a6f85fb592365e67d037b231b9e5a1589e64e7a04",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/test/test1.in": "91e26d127826b649b3470b3303154a8358aecf027e22ec54c0e31bf9a4240acb",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/test/test2.in": "72e033b6ea3f81ed554fc11206fbe1321de99e9b4b82b240b3f04a3ba879557e",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/test/test3.in": "3707189846653778b8338839229ed5c79233c8af3011223a43f88174f44febfe",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/test/test4.in": "97688631dc250c1caa66ada50f30a7cf9685ab6f5df5c05566bcba97fb7cdaf2",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/test/test5.in": "6943da7d806c16740c920d228ed22514f34fa8665b81522c1c7932cc7120735c",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/test/test6.in": "839baf64ae3256fadbbd7c35e7101a033d60191d7b8fa45ee45abcf0e7ec658a",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/test/test1.out": "7c949b1e50b4c42724f80c65711ca68e10e8da05fb7efb95807f86deb79c8b81",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/test/test2.out": "78a8048f007f62debe7ac64758e55f4ea691842e6206c30f6bce43fe18489e6c",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/test/test3.out": "1335ed4408c8734aa87d5b5ad6a235c9dcf46f6079b018b7b52ebf733772117c",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/test/test4.out": "76d841b882cd1e069bf827ed0f9d6633369558236704e02afb6628ddb8db7418",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/test/test5.out": "0f7457daa9ca77de42665f6b7f2b5b217a2ae5f6731ec2fbf4540263ae814532",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/test/test6.out": "d2e910f69eb792a43f2273d62aa76c1812f52b7e2d36e8a1d45934115d428057",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/src/reference.py": "667c8483648adcf583212b0f828347614423c1c1401807f4f9512612f74aa147",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/test/test1.in": "2e48f785cc4da8a47dd5e661b65d0b7e2f407ea413c1e9bab5a9e66dd0567c67",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/test/test2.in": "afa2249ba74cc0b23548430ab60d0dacf42cc0ea4eead7d4465e21fe648fe592",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/test/test3.in": "f68ea67dd9828e0aa82f705edd74589c20168bdbc551153cb586b7fe0fb47a91",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/test/test4.in": "4a7cfe8f27f41598ea5776e7a24328e3f1514ec74b3c578873cc9c99ca094a63",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/test/test5.in": "df67a2c4e59030d923b019c9d57a2eedd96d11ad1e4eb31bbbddee69d460c018",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/test/test6.in": "771bebbcace1bf4a3661f5918249ab8b335d27812acb182409538ab57302e6e7",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/test/test1.out": "9f1c877b620f66faa5eda9ef1a67987c6aabda279e131f9efc65799a99211a48",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/test/test2.out": "3e443497b9afd6f147a54d9d5a044a763b64f7c38022c5dec55f02b60ac1d79d",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/test/test3.out": "9110fe012ddb1b1dbc8586d0035f4275f49129221e6385ac6953076b0a84aae6",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/test/test4.out": "d25b560fb9723a98580d4cf2df8d11fe6ad4fc6d7b780bf6ee46166dd6c2dc72",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/test/test5.out": "5fd9d803b97f33233acc6d1172a91981d992c6b623c27db57ac74e3b03266585",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/test/test6.out": "43c12ab0fb8a9290fe843bf3c0ff8d83c1c3e8a335bf8f588afa196da61e6ba2"
+  },
+  "scope": "Conditional ideal-value public-bound/refresh planning only. No encryption, refresh error, or precision guarantee. Numeric values appear only in this validation program.",
+  "cases": {
+    "bert/1": {
+      "ideal_value_fixture_gate": true,
+      "error_vs_exact_fixture": {
+        "max_abs_error": 0.004302472913275679,
+        "nrmse": 0.011767180010083887,
+        "top1_agreement": 1.0
+      },
+      "refresh_calls": 0,
+      "maximum_public_refresh_bound": 0,
+      "final_level": 0,
+      "events": [],
+      "domains": {
+        "exp": {
+          "min": -0.6560568453916537,
+          "max": 0.461368074086535,
+          "domain": [
+            -4.0,
+            4.0
+          ],
+          "calls": 1
+        },
+        "reciprocal": {
+          "min": 1.0,
+          "max": 1.091173902802277,
+          "domain": [
+            0.5,
+            8.0
+          ],
+          "calls": 1
+        },
+        "inverse_sqrt": {
+          "min": 0.8468901869737574,
+          "max": 1.1953392645436791,
+          "domain": [
+            0.5,
+            1.5
+          ],
+          "calls": 2
+        },
+        "gelu": {
+          "min": -1.1956075013800618,
+          "max": 0.9054016399137763,
+          "domain": [
+            -3.0,
+            3.0
+          ],
+          "calls": 1
+        },
+        "tanh": {
+          "min": -0.954494799743577,
+          "max": 0.756093477734683,
+          "domain": [
+            -2.0,
+            2.0
+          ],
+          "calls": 1
+        }
+      }
+    },
+    "bert/2": {
+      "ideal_value_fixture_gate": true,
+      "error_vs_exact_fixture": {
+        "max_abs_error": 0.0008575027950339098,
+        "nrmse": 0.00318820429659784,
+        "top1_agreement": 1.0
+      },
+      "refresh_calls": 0,
+      "maximum_public_refresh_bound": 0,
+      "final_level": 0,
+      "events": [],
+      "domains": {
+        "exp": {
+          "min": -0.7920852334506612,
+          "max": 0.8806679251170928,
+          "domain": [
+            -4.0,
+            4.0
+          ],
+          "calls": 1
+        },
+        "reciprocal": {
+          "min": 1.0,
+          "max": 1.1860417027335937,
+          "domain": [
+            0.5,
+            8.0
+          ],
+          "calls": 1
+        },
+        "inverse_sqrt": {
+          "min": 0.8967265690762302,
+          "max": 1.2460293502215816,
+          "domain": [
+            0.5,
+            1.5
+          ],
+          "calls": 2
+        },
+        "gelu": {
+          "min": -1.7132684365713164,
+          "max": 1.3203380890942333,
+          "domain": [
+            -3.0,
+            3.0
+          ],
+          "calls": 1
+        },
+        "tanh": {
+          "min": -0.7408727330925061,
+          "max": 0.7471141404903443,
+          "domain": [
+            -2.0,
+            2.0
+          ],
+          "calls": 1
+        }
+      }
+    },
+    "bert/3": {
+      "ideal_value_fixture_gate": true,
+      "error_vs_exact_fixture": {
+        "max_abs_error": 0.0007700079624815559,
+        "nrmse": 0.004440138999802162,
+        "top1_agreement": 1.0
+      },
+      "refresh_calls": 5,
+      "maximum_public_refresh_bound": 8.0,
+      "final_level": 11,
+      "events": [
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 8.0,
+          "circuit_bound": 4.535111945020802,
+          "provenance": "Cauchy head-product bound divided by sqrt(actual head width)"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 4.0,
+          "circuit_bound": 2.4834057519356607,
+          "provenance": "softmax row-L1 envelope times public value bound"
+        },
+        {
+          "input_level": 3,
+          "output_level": 25,
+          "required": 3,
+          "public_bound": 2.0,
+          "circuit_bound": 1.5,
+          "provenance": "inverse_sqrt: declared input domain (0.5, 1.5)"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 5,
+          "public_bound": 4.0,
+          "circuit_bound": 3.0,
+          "provenance": "gelu: declared input domain (-3.0, 3.0)"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 2,
+          "public_bound": 8.0,
+          "circuit_bound": 4.898979485566357,
+          "provenance": "declared variance domain bounds centered/RMS coordinate energy"
+        }
+      ],
+      "domains": {
+        "exp": {
+          "min": -0.4370044971894879,
+          "max": 0.46664964708865425,
+          "domain": [
+            -4.0,
+            4.0
+          ],
+          "calls": 2
+        },
+        "reciprocal": {
+          "min": 1.0,
+          "max": 1.0496435048118329,
+          "domain": [
+            0.5,
+            8.0
+          ],
+          "calls": 2
+        },
+        "inverse_sqrt": {
+          "min": 0.9268351607123195,
+          "max": 1.3395130237999369,
+          "domain": [
+            0.5,
+            1.5
+          ],
+          "calls": 4
+        },
+        "gelu": {
+          "min": -1.3944084217483839,
+          "max": 1.2361967639823603,
+          "domain": [
+            -3.0,
+            3.0
+          ],
+          "calls": 2
+        },
+        "tanh": {
+          "min": -0.9938647398565348,
+          "max": 1.0210952888327551,
+          "domain": [
+            -2.0,
+            2.0
+          ],
+          "calls": 1
+        }
+      }
+    },
+    "bert/4": {
+      "ideal_value_fixture_gate": true,
+      "error_vs_exact_fixture": {
+        "max_abs_error": 0.0024241206100275026,
+        "nrmse": 0.010335468549510193,
+        "top1_agreement": 1.0
+      },
+      "refresh_calls": 5,
+      "maximum_public_refresh_bound": 16.0,
+      "final_level": 11,
+      "events": [
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 16.0,
+          "circuit_bound": 9.727940585399438,
+          "provenance": "Cauchy head-product bound divided by sqrt(actual head width)"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 8.0,
+          "circuit_bound": 3.9655026585354114,
+          "provenance": "softmax row-L1 envelope times public value bound"
+        },
+        {
+          "input_level": 3,
+          "output_level": 25,
+          "required": 3,
+          "public_bound": 2.0,
+          "circuit_bound": 1.5,
+          "provenance": "inverse_sqrt: declared input domain (0.5, 1.5)"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 5,
+          "public_bound": 4.0,
+          "circuit_bound": 3.0,
+          "provenance": "gelu: declared input domain (-3.0, 3.0)"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 2,
+          "public_bound": 8.0,
+          "circuit_bound": 6.000000000000001,
+          "provenance": "declared variance domain bounds centered/RMS coordinate energy"
+        }
+      ],
+      "domains": {
+        "exp": {
+          "min": -0.9577799046082527,
+          "max": 1.1918694449197211,
+          "domain": [
+            -4.0,
+            4.0
+          ],
+          "calls": 2
+        },
+        "reciprocal": {
+          "min": 1.0,
+          "max": 1.269180737884127,
+          "domain": [
+            0.5,
+            8.0
+          ],
+          "calls": 2
+        },
+        "inverse_sqrt": {
+          "min": 0.8086931584947399,
+          "max": 1.3835448550916287,
+          "domain": [
+            0.5,
+            1.5
+          ],
+          "calls": 4
+        },
+        "gelu": {
+          "min": -1.8790442095545266,
+          "max": 2.483046685680617,
+          "domain": [
+            -3.0,
+            3.0
+          ],
+          "calls": 2
+        },
+        "tanh": {
+          "min": -1.2033052077911186,
+          "max": 0.9364279784702276,
+          "domain": [
+            -2.0,
+            2.0
+          ],
+          "calls": 1
+        }
+      }
+    },
+    "bert/5": {
+      "ideal_value_fixture_gate": true,
+      "error_vs_exact_fixture": {
+        "max_abs_error": 0.0048824962155586404,
+        "nrmse": 0.01650566469226969,
+        "top1_agreement": 1.0
+      },
+      "refresh_calls": 8,
+      "maximum_public_refresh_bound": 16.0,
+      "final_level": 19,
+      "events": [
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 16.0,
+          "circuit_bound": 10.28964648731932,
+          "provenance": "Cauchy head-product bound divided by sqrt(actual head width)"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 8.0,
+          "circuit_bound": 3.8581333899181627,
+          "provenance": "softmax row-L1 envelope times public value bound"
+        },
+        {
+          "input_level": 3,
+          "output_level": 25,
+          "required": 3,
+          "public_bound": 2.0,
+          "circuit_bound": 1.5,
+          "provenance": "inverse_sqrt: declared input domain (0.5, 1.5)"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 5,
+          "public_bound": 4.0,
+          "circuit_bound": 3.0,
+          "provenance": "gelu: declared input domain (-3.0, 3.0)"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 2,
+          "public_bound": 8.0,
+          "circuit_bound": 6.000000000000001,
+          "provenance": "declared variance domain bounds centered/RMS coordinate energy"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 0.5,
+          "circuit_bound": 0.27995618707796194,
+          "provenance": "actual public polynomial coefficient envelope"
+        },
+        {
+          "input_level": 3,
+          "output_level": 25,
+          "required": 2,
+          "public_bound": 8.0,
+          "circuit_bound": 6.000000000000001,
+          "provenance": "declared variance domain bounds centered/RMS coordinate energy"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 5,
+          "public_bound": 4.0,
+          "circuit_bound": 2.0,
+          "provenance": "tanh: declared input domain (-2.0, 2.0)"
+        }
+      ],
+      "domains": {
+        "exp": {
+          "min": -0.9588646185900219,
+          "max": 0.7749524463722115,
+          "domain": [
+            -4.0,
+            4.0
+          ],
+          "calls": 3
+        },
+        "reciprocal": {
+          "min": 1.0,
+          "max": 1.1460494197959354,
+          "domain": [
+            0.5,
+            8.0
+          ],
+          "calls": 3
+        },
+        "inverse_sqrt": {
+          "min": 0.835580689051787,
+          "max": 1.3752356634355813,
+          "domain": [
+            0.5,
+            1.5
+          ],
+          "calls": 6
+        },
+        "gelu": {
+          "min": -1.9969039967069426,
+          "max": 2.2730766770964803,
+          "domain": [
+            -3.0,
+            3.0
+          ],
+          "calls": 3
+        },
+        "tanh": {
+          "min": -1.4976323883212657,
+          "max": 1.0536605339495042,
+          "domain": [
+            -2.0,
+            2.0
+          ],
+          "calls": 1
+        }
+      }
+    },
+    "bert/6": {
+      "ideal_value_fixture_gate": true,
+      "error_vs_exact_fixture": {
+        "max_abs_error": 0.0018840392066774014,
+        "nrmse": 0.004968745916655629,
+        "top1_agreement": 1.0
+      },
+      "refresh_calls": 8,
+      "maximum_public_refresh_bound": 16.0,
+      "final_level": 19,
+      "events": [
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 16.0,
+          "circuit_bound": 9.339243285556584,
+          "provenance": "Cauchy head-product bound divided by sqrt(actual head width)"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 8.0,
+          "circuit_bound": 3.9531507556121426,
+          "provenance": "softmax row-L1 envelope times public value bound"
+        },
+        {
+          "input_level": 3,
+          "output_level": 25,
+          "required": 3,
+          "public_bound": 2.0,
+          "circuit_bound": 1.5,
+          "provenance": "inverse_sqrt: declared input domain (0.5, 1.5)"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 5,
+          "public_bound": 4.0,
+          "circuit_bound": 3.0,
+          "provenance": "gelu: declared input domain (-3.0, 3.0)"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 2,
+          "public_bound": 8.0,
+          "circuit_bound": 6.000000000000001,
+          "provenance": "declared variance domain bounds centered/RMS coordinate energy"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 0.25,
+          "circuit_bound": 0.15074563919582568,
+          "provenance": "actual public polynomial coefficient envelope"
+        },
+        {
+          "input_level": 3,
+          "output_level": 25,
+          "required": 2,
+          "public_bound": 8.0,
+          "circuit_bound": 6.000000000000001,
+          "provenance": "declared variance domain bounds centered/RMS coordinate energy"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 5,
+          "public_bound": 4.0,
+          "circuit_bound": 2.0,
+          "provenance": "tanh: declared input domain (-2.0, 2.0)"
+        }
+      ],
+      "domains": {
+        "exp": {
+          "min": -1.3344859833706306,
+          "max": 1.3534898526021872,
+          "domain": [
+            -4.0,
+            4.0
+          ],
+          "calls": 3
+        },
+        "reciprocal": {
+          "min": 1.0,
+          "max": 1.2336502724871992,
+          "domain": [
+            0.5,
+            8.0
+          ],
+          "calls": 3
+        },
+        "inverse_sqrt": {
+          "min": 0.7691626915217681,
+          "max": 1.3279989434516133,
+          "domain": [
+            0.5,
+            1.5
+          ],
+          "calls": 6
+        },
+        "gelu": {
+          "min": -2.1826590522371,
+          "max": 2.4111348871967535,
+          "domain": [
+            -3.0,
+            3.0
+          ],
+          "calls": 3
+        },
+        "tanh": {
+          "min": -0.9799050899404622,
+          "max": 1.079684021171287,
+          "domain": [
+            -2.0,
+            2.0
+          ],
+          "calls": 1
+        }
+      }
+    },
+    "qwen/1": {
+      "ideal_value_fixture_gate": true,
+      "error_vs_exact_fixture": {
+        "max_abs_error": 0.030491730076014356,
+        "nrmse": 0.013616942983325412,
+        "top1_agreement": 1.0
+      },
+      "refresh_calls": 0,
+      "maximum_public_refresh_bound": 0,
+      "final_level": 0,
+      "events": [],
+      "domains": {
+        "inverse_sqrt": {
+          "min": 0.023803285477435557,
+          "max": 0.05260019264608852,
+          "domain": [
+            0.005,
+            0.35
+          ],
+          "calls": 3
+        },
+        "silu": {
+          "min": -0.6295241568621629,
+          "max": 0.84943135555461,
+          "domain": [
+            -2.0,
+            2.0
+          ],
+          "calls": 1
+        }
+      }
+    },
+    "qwen/2": {
+      "ideal_value_fixture_gate": true,
+      "error_vs_exact_fixture": {
+        "max_abs_error": 0.026664462862310945,
+        "nrmse": 0.018524133521614753,
+        "top1_agreement": 1.0
+      },
+      "refresh_calls": 3,
+      "maximum_public_refresh_bound": 4.0,
+      "final_level": 5,
+      "events": [
+        {
+          "input_level": 6,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 4.0,
+          "circuit_bound": 2.9071161064637043,
+          "provenance": "product of public operand bounds"
+        },
+        {
+          "input_level": 6,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        }
+      ],
+      "domains": {
+        "inverse_sqrt": {
+          "min": 0.008475706187553127,
+          "max": 0.2236179970839759,
+          "domain": [
+            0.005,
+            0.35
+          ],
+          "calls": 5
+        },
+        "exp": {
+          "min": -1.7770226932439752,
+          "max": 1.0064577111423283,
+          "domain": [
+            -4.0,
+            4.0
+          ],
+          "calls": 1
+        },
+        "reciprocal": {
+          "min": 0.9999999999999929,
+          "max": 1.5504194335174355,
+          "domain": [
+            0.5,
+            8.0
+          ],
+          "calls": 1
+        },
+        "silu": {
+          "min": -0.9043893874367176,
+          "max": 0.8416406453723174,
+          "domain": [
+            -2.0,
+            2.0
+          ],
+          "calls": 1
+        }
+      }
+    },
+    "qwen/3": {
+      "ideal_value_fixture_gate": true,
+      "error_vs_exact_fixture": {
+        "max_abs_error": 0.04742219110105783,
+        "nrmse": 0.03221083366668046,
+        "top1_agreement": 1.0
+      },
+      "refresh_calls": 11,
+      "maximum_public_refresh_bound": 4.0,
+      "final_level": 5,
+      "events": [
+        {
+          "input_level": 6,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 4.0,
+          "circuit_bound": 3.119352468024815,
+          "provenance": "product of public operand bounds"
+        },
+        {
+          "input_level": 6,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        },
+        {
+          "input_level": 3,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        },
+        {
+          "input_level": 3,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 4.0,
+          "circuit_bound": 3.094267659313181,
+          "provenance": "public rotary coefficient operator-norm bound"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 4.0,
+          "circuit_bound": 3.1500006238011786,
+          "provenance": "public rotary coefficient operator-norm bound"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 4.0,
+          "circuit_bound": 2.15796395147305,
+          "provenance": "softmax row-L1 envelope times public value bound"
+        },
+        {
+          "input_level": 6,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 4.0,
+          "circuit_bound": 2.9855396803896017,
+          "provenance": "product of public operand bounds"
+        },
+        {
+          "input_level": 6,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        }
+      ],
+      "domains": {
+        "inverse_sqrt": {
+          "min": 0.015626253459757784,
+          "max": 0.31715941315123747,
+          "domain": [
+            0.005,
+            0.35
+          ],
+          "calls": 9
+        },
+        "exp": {
+          "min": -1.7351091901266569,
+          "max": 2.24597921347104,
+          "domain": [
+            -4.0,
+            4.0
+          ],
+          "calls": 2
+        },
+        "reciprocal": {
+          "min": 0.9999999999999929,
+          "max": 2.987304244646219,
+          "domain": [
+            0.5,
+            8.0
+          ],
+          "calls": 2
+        },
+        "silu": {
+          "min": -1.1244416576984468,
+          "max": 0.8999589799609732,
+          "domain": [
+            -2.0,
+            2.0
+          ],
+          "calls": 2
+        }
+      }
+    },
+    "qwen/4": {
+      "ideal_value_fixture_gate": true,
+      "error_vs_exact_fixture": {
+        "max_abs_error": 0.025871586461854168,
+        "nrmse": 0.01605003654235505,
+        "top1_agreement": 1.0
+      },
+      "refresh_calls": 11,
+      "maximum_public_refresh_bound": 4.0,
+      "final_level": 5,
+      "events": [
+        {
+          "input_level": 6,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 4.0,
+          "circuit_bound": 3.0109389380263822,
+          "provenance": "product of public operand bounds"
+        },
+        {
+          "input_level": 6,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        },
+        {
+          "input_level": 3,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        },
+        {
+          "input_level": 3,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 4.0,
+          "circuit_bound": 3.182372383228462,
+          "provenance": "public rotary coefficient operator-norm bound"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 4.0,
+          "circuit_bound": 3.159244552971049,
+          "provenance": "public rotary coefficient operator-norm bound"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 4.0,
+          "circuit_bound": 1.8363628003009842,
+          "provenance": "softmax row-L1 envelope times public value bound"
+        },
+        {
+          "input_level": 6,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 4.0,
+          "circuit_bound": 3.2992553433375895,
+          "provenance": "product of public operand bounds"
+        },
+        {
+          "input_level": 6,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        }
+      ],
+      "domains": {
+        "inverse_sqrt": {
+          "min": 0.009603954705258794,
+          "max": 0.2702327768639898,
+          "domain": [
+            0.005,
+            0.35
+          ],
+          "calls": 9
+        },
+        "exp": {
+          "min": -2.6439675537977383,
+          "max": 2.5711401242954786,
+          "domain": [
+            -4.0,
+            4.0
+          ],
+          "calls": 2
+        },
+        "reciprocal": {
+          "min": 0.9999999999999929,
+          "max": 2.7529621980960446,
+          "domain": [
+            0.5,
+            8.0
+          ],
+          "calls": 2
+        },
+        "silu": {
+          "min": -0.8948536572621567,
+          "max": 0.981204073205744,
+          "domain": [
+            -2.0,
+            2.0
+          ],
+          "calls": 2
+        }
+      }
+    },
+    "qwen/5": {
+      "ideal_value_fixture_gate": true,
+      "error_vs_exact_fixture": {
+        "max_abs_error": 0.03932663214209575,
+        "nrmse": 0.018298373289114767,
+        "top1_agreement": 1.0
+      },
+      "refresh_calls": 19,
+      "maximum_public_refresh_bound": 4.0,
+      "final_level": 5,
+      "events": [
+        {
+          "input_level": 6,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 4.0,
+          "circuit_bound": 3.152048386941972,
+          "provenance": "product of public operand bounds"
+        },
+        {
+          "input_level": 6,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        },
+        {
+          "input_level": 3,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        },
+        {
+          "input_level": 3,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 4.0,
+          "circuit_bound": 3.1845511430158004,
+          "provenance": "public rotary coefficient operator-norm bound"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 4.0,
+          "circuit_bound": 3.1295086032800405,
+          "provenance": "public rotary coefficient operator-norm bound"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 2.0,
+          "circuit_bound": 1.7081735603952708,
+          "provenance": "softmax row-L1 envelope times public value bound"
+        },
+        {
+          "input_level": 6,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 4.0,
+          "circuit_bound": 3.301874838242891,
+          "provenance": "product of public operand bounds"
+        },
+        {
+          "input_level": 6,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        },
+        {
+          "input_level": 3,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        },
+        {
+          "input_level": 3,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 4.0,
+          "circuit_bound": 3.1856162086211297,
+          "provenance": "public rotary coefficient operator-norm bound"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 4.0,
+          "circuit_bound": 3.185331977518974,
+          "provenance": "public rotary coefficient operator-norm bound"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 2.0,
+          "circuit_bound": 1.65653602267573,
+          "provenance": "softmax row-L1 envelope times public value bound"
+        },
+        {
+          "input_level": 6,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 4.0,
+          "circuit_bound": 3.3142821674939738,
+          "provenance": "product of public operand bounds"
+        },
+        {
+          "input_level": 6,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        }
+      ],
+      "domains": {
+        "inverse_sqrt": {
+          "min": 0.012135818816400199,
+          "max": 0.23263263762520955,
+          "domain": [
+            0.005,
+            0.35
+          ],
+          "calls": 13
+        },
+        "exp": {
+          "min": -2.0007159462779116,
+          "max": 2.185710288306266,
+          "domain": [
+            -4.0,
+            4.0
+          ],
+          "calls": 3
+        },
+        "reciprocal": {
+          "min": 0.9999999999999929,
+          "max": 2.669359534847247,
+          "domain": [
+            0.5,
+            8.0
+          ],
+          "calls": 3
+        },
+        "silu": {
+          "min": -0.972550817171403,
+          "max": 0.8468319224441191,
+          "domain": [
+            -2.0,
+            2.0
+          ],
+          "calls": 3
+        }
+      }
+    },
+    "qwen/6": {
+      "ideal_value_fixture_gate": true,
+      "error_vs_exact_fixture": {
+        "max_abs_error": 0.017334105926255283,
+        "nrmse": 0.009827903834232602,
+        "top1_agreement": 1.0
+      },
+      "refresh_calls": 19,
+      "maximum_public_refresh_bound": 8.0,
+      "final_level": 5,
+      "events": [
+        {
+          "input_level": 6,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 4.0,
+          "circuit_bound": 3.44480574307421,
+          "provenance": "product of public operand bounds"
+        },
+        {
+          "input_level": 6,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        },
+        {
+          "input_level": 3,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        },
+        {
+          "input_level": 3,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 4.0,
+          "circuit_bound": 3.0536150546850385,
+          "provenance": "public rotary coefficient operator-norm bound"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 4.0,
+          "circuit_bound": 3.1819567819202144,
+          "provenance": "public rotary coefficient operator-norm bound"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 2.0,
+          "circuit_bound": 1.6792739382899304,
+          "provenance": "softmax row-L1 envelope times public value bound"
+        },
+        {
+          "input_level": 6,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 8.0,
+          "circuit_bound": 3.5988654607413135,
+          "provenance": "product of public operand bounds"
+        },
+        {
+          "input_level": 6,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        },
+        {
+          "input_level": 3,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        },
+        {
+          "input_level": 3,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 4.0,
+          "circuit_bound": 3.1213255476251587,
+          "provenance": "public rotary coefficient operator-norm bound"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 4.0,
+          "circuit_bound": 3.0645150831614476,
+          "provenance": "public rotary coefficient operator-norm bound"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 2.0,
+          "circuit_bound": 1.5967358808368524,
+          "provenance": "softmax row-L1 envelope times public value bound"
+        },
+        {
+          "input_level": 6,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        },
+        {
+          "input_level": 2,
+          "output_level": 25,
+          "required": 1,
+          "public_bound": 4.0,
+          "circuit_bound": 3.3373741312964293,
+          "provenance": "product of public operand bounds"
+        },
+        {
+          "input_level": 6,
+          "output_level": 25,
+          "required": 6,
+          "public_bound": 0.5,
+          "circuit_bound": 0.35,
+          "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)"
+        }
+      ],
+      "domains": {
+        "inverse_sqrt": {
+          "min": 0.009195861773651724,
+          "max": 0.2916878989989938,
+          "domain": [
+            0.005,
+            0.35
+          ],
+          "calls": 13
+        },
+        "exp": {
+          "min": -2.773891673167108,
+          "max": 2.867411038894992,
+          "domain": [
+            -4.0,
+            4.0
+          ],
+          "calls": 3
+        },
+        "reciprocal": {
+          "min": 0.9999999999999929,
+          "max": 2.7273839859163074,
+          "domain": [
+            0.5,
+            8.0
+          ],
+          "calls": 3
+        },
+        "silu": {
+          "min": -1.1150599196430564,
+          "max": 1.1235721056357226,
+          "domain": [
+            -2.0,
+            2.0
+          ],
+          "calls": 3
+        }
+      }
+    }
+  },
+  "source_hashes_end": {
+    "/tmp/bounded-packed-reuse/plan_bounded_packed.py": "38ddf8c974462ce7f9d34ae8118d683978715b8691b40461a25f2e0c579d99d9",
+    "/tmp/bounded-packed-reuse/encrypted_bounded_arithmetic.py": "c3ca2b9e5846a1f50def3ee83574fbc42be09f928efc57db5788e5e136d9f428",
+    "/tmp/bounded-packed-reuse/encrypted_bounded_transformer.py": "ae6652c918248f802f0537577570342fbe2bb1868d7e9ff320317055767b21c5",
+    "/tmp/bounded-packed-reuse/encrypted_packed_transformer.py": "f0467c3fdfdee9be2d51978c07e93b8fb3e9025f46af0c32388c2d1484d0804c",
+    "/home/jianming_gatech/CROSS/jaxite_word/__init__.py": "fc78b0845c2314a523cb20e490ded0c8ef09c9c05fa50d92eb218ef247533096",
+    "/home/jianming_gatech/CROSS/jaxite_word/bconv.py": "53ac0665cf3803fc72672657146ef7c19c823f48f326cf7d54ae87a15ae92f82",
+    "/home/jianming_gatech/CROSS/jaxite_word/bconv_perf_test.py": "6d9a7083218b483c861441f8320522156793e8331245d4c1633401c61417a42f",
+    "/home/jianming_gatech/CROSS/jaxite_word/bconv_test.py": "2e6bc6acec05d26a02a0316e0963976050695ce0cb6ccf5e8113f79c0e05e252",
+    "/home/jianming_gatech/CROSS/jaxite_word/bootstrapping.py": "e44f748f5ef51ec68be0f224f4d8ff1068fe6c449f09c04532900a3ac4fcfc49",
+    "/home/jianming_gatech/CROSS/jaxite_word/bootstrapping_montgomery_test.py": "a21b00ec430a9a95809ef2f62530c0fb62871152dc1b2677f465f28e8e9c4971",
+    "/home/jianming_gatech/CROSS/jaxite_word/bootstrapping_openfhe_crosscheck.py": "4f9b9ea005d46ab15f4530f689d096b112fca4f09ffa46dcd3990a03d5159ecb",
+    "/home/jianming_gatech/CROSS/jaxite_word/bootstrapping_perf_test.py": "893703aaa8d347ead2b18952d9d366f503fbc84baed81ddf0dcb38de1f4dcadc",
+    "/home/jianming_gatech/CROSS/jaxite_word/bootstrapping_test.py": "9ac3e6c48d02093533720340c5494a7859359abb6a4da7149e71e6465eda2b19",
+    "/home/jianming_gatech/CROSS/jaxite_word/bsgs.py": "52a1027be9bf704fd3ffd453251d2b3136ab31a3242c12d341ca1374b1b82aed",
+    "/home/jianming_gatech/CROSS/jaxite_word/bsgs_perf_test.py": "b48c386ca26f247633525d6b554c8aad6da481ac8deaae811955d937f05a3e87",
+    "/home/jianming_gatech/CROSS/jaxite_word/bsgs_test.py": "11661f59f1f918d8025f5f7997d626618d4a047d234d9ff5323cf10534c7cca9",
+    "/home/jianming_gatech/CROSS/jaxite_word/ckks_composite_ctx_test.py": "aada892cc16abf8a88a32cb35c0a71bb42f73f70364b9c1ef9e800c4e7986eb9",
+    "/home/jianming_gatech/CROSS/jaxite_word/ckks_ctx.py": "1c457c3be4ce53215636141c65b5042ff7cb570d8627cd42053ad595c9ba43fa",
+    "/home/jianming_gatech/CROSS/jaxite_word/ckks_ctx_test.py": "e4545b1ce8510c96f18915d65a9a52b7251d55dfede0839bb921e0dc0566cb24",
+    "/home/jianming_gatech/CROSS/jaxite_word/ckks_level_ops_test.py": "21b919433fb433a750970808fb1f5697e2eb6fa52f1fafd30caf7d1b30dc6a51",
+    "/home/jianming_gatech/CROSS/jaxite_word/codec_preparation_test.py": "18d0692ffe2d09d33973d14c64dba61147cbc5ea0f5269640bdee2d559a6c1d3",
+    "/home/jianming_gatech/CROSS/jaxite_word/composite_prime_gen.py": "e3e689237d2b8449333774e84fa271a15a5c54ad603a32f7fcbe60ecb26f0317",
+    "/home/jianming_gatech/CROSS/jaxite_word/composite_prime_gen_test.py": "cde4424ace2598d38223aea87c838a35c77a2a4f238d0bea1fa3146dee54f18b",
+    "/home/jianming_gatech/CROSS/jaxite_word/fast_encryption_decryption_test.py": "0a191fc7ef7ad26a2ca4b8e6efd9e3d09fbbacba2d8572d2e82aafb0b5b8c789",
+    "/home/jianming_gatech/CROSS/jaxite_word/finite_field.py": "54418625f76e303d77a3055f93419e07895bdf71f706acc20ab0f6fe7c8def5e",
+    "/home/jianming_gatech/CROSS/jaxite_word/finite_field_perf_test.py": "55ae7be859879dbb409d00a2fc84706592d5b3bc04f84b217f7971dd9b3398bf",
+    "/home/jianming_gatech/CROSS/jaxite_word/finite_field_test.py": "303fd344cfd9910366db56b12e6fea44686bf69afcd6f9e6fffb51a9584c0c83",
+    "/home/jianming_gatech/CROSS/jaxite_word/he_ops.py": "bd0fb682b936a30c3faad9c09aad1337daa61657be744323605e73c875c99650",
+    "/home/jianming_gatech/CROSS/jaxite_word/he_params.py": "714d3227f65d2369976a798a13584cb8629c468f3b6c005d7193eac1f072948b",
+    "/home/jianming_gatech/CROSS/jaxite_word/headd.py": "53a691d7dc5d330886cfa11a990087d5ad4bb6dbabac47f3b85a281acc395d37",
+    "/home/jianming_gatech/CROSS/jaxite_word/headd_perf_test.py": "f813a1bd37afb4b024bf995153082b2edc5981c6de7c7eaefa84d3ad937e84c5",
+    "/home/jianming_gatech/CROSS/jaxite_word/headd_test.py": "b2e64d0d49f1148955ecac913629b81ef71a0fe76e06b71b7d8f65e45c38216e",
+    "/home/jianming_gatech/CROSS/jaxite_word/hemul.py": "49a87eed37de76b7b3ab31f1d19dd23a39035f031cfee41c4d9a204064502803",
+    "/home/jianming_gatech/CROSS/jaxite_word/hemul_double_rescaling_test.py": "0b0a0de67dcd4c241fabb5caf6c288cc11ff772832efcb805dee3fa17cdb2830",
+    "/home/jianming_gatech/CROSS/jaxite_word/hemul_perf_test.py": "20aa5093f23d67598013f9b10339f3bc61a5a746d2f30adda9ddd1bb3d2849b3",
+    "/home/jianming_gatech/CROSS/jaxite_word/hemul_test.py": "59c25e1032cfb4edfde8848cd101629891c7e8dec946d341392bd8671f1733bd",
+    "/home/jianming_gatech/CROSS/jaxite_word/herot.py": "bdb1ef0604150246b052cbc63dd41f6d92478505672d116aa13ce3bf4726eb89",
+    "/home/jianming_gatech/CROSS/jaxite_word/herot_perf_test.py": "cd77044bebe256dcd654047c80f1158765ea16eda1cdc9514b22a398ebf3db21",
+    "/home/jianming_gatech/CROSS/jaxite_word/herot_test.py": "f063f90b2a2eff3153eb44b37e2a6c2599a749277a28654e437b303a8b45a253",
+    "/home/jianming_gatech/CROSS/jaxite_word/hesub.py": "baad1322793dd239cb4e66749f05bf4982f58d0932b098abbd305ff2402cbf5e",
+    "/home/jianming_gatech/CROSS/jaxite_word/hesub_perf_test.py": "586d43858643665cf731c7d6b3adfe8a7f96399b78539aad35524f87b13dae27",
+    "/home/jianming_gatech/CROSS/jaxite_word/hesub_test.py": "894710564c6f6269b3bd89e13ab010418b9bce7e23b4f494e50f117fac31aa27",
+    "/home/jianming_gatech/CROSS/jaxite_word/key_gen.py": "4f5e53e421423e77757ca0596ae2607dbc2c6f80d21536b2e1c3f57a226b0fad",
+    "/home/jianming_gatech/CROSS/jaxite_word/key_gen_test.py": "65b0b60974ab5eea56cdeab4c4a8a30a132bf52d963682639b8842fea3e44dc7",
+    "/home/jianming_gatech/CROSS/jaxite_word/mapping.py": "c8d035d4b7d743b18324830eeb09b6cd2a562bc4862e6af2ee10702922f6816f",
+    "/home/jianming_gatech/CROSS/jaxite_word/mapping_compile_test.py": "985346d2677ff0296a63b032e0009d085d7b9d232a708454cd4bbaeeb3996964",
+    "/home/jianming_gatech/CROSS/jaxite_word/nn.py": "189cb48dff9124d32f84e6154b5e8403082d3eed87ab12d5fb1e80f1e21213de",
+    "/home/jianming_gatech/CROSS/jaxite_word/nn_test.py": "c1cd8502f110a4a15b44e8d781f5a5c6462b241f97d08bc26f52c0c484e02e37",
+    "/home/jianming_gatech/CROSS/jaxite_word/ntt_mm.py": "5a0cbff087f48f20c98cb5975f7894756a83d61fbdaaf5af358a1c7c192a1263",
+    "/home/jianming_gatech/CROSS/jaxite_word/ntt_mm_perf_test.py": "6bb76af76a637f766d431cd78486a4f168e1553823d72210e248e6b4aebc6054",
+    "/home/jianming_gatech/CROSS/jaxite_word/ntt_mm_test.py": "b19d63e3698a2c79e586bcf714d7474b3ca43c4a132ddab8aae6b27efbb8704a",
+    "/home/jianming_gatech/CROSS/jaxite_word/ntt_sm.py": "b57ebe4c8c1037288e3d50c9d3e443c4656a31d57bcb215ed7a302717d498a65",
+    "/home/jianming_gatech/CROSS/jaxite_word/ntt_sm_test.py": "ee1af34f58fc666438ea80442a66944dc5e3d50c2a26ec14a178c616752d7c63",
+    "/home/jianming_gatech/CROSS/jaxite_word/packing.py": "7496f37b7116b883c14f8e3d5cae6bd1ed7375d0a8d2425f78c8f84e347c0206",
+    "/home/jianming_gatech/CROSS/jaxite_word/packing_test.py": "ce1e1efcc57d931548a80aaf1e9e5b0f7e56e2bb9e4f9a385ea90a6b19102a43",
+    "/home/jianming_gatech/CROSS/jaxite_word/polynomial.py": "043e1dcdf9aca02f2df9435ac610c1561859b7d29a7dee1b7254bf9bc3c89a5b",
+    "/home/jianming_gatech/CROSS/jaxite_word/polynomial_test.py": "347a86e9495ace43af81c218a29fcc29c19b6341f0d0067193f443ffa1bb0dc1",
+    "/home/jianming_gatech/CROSS/jaxite_word/profiler.py": "440c7aa2026cfd6b29c37f4b9db78984f1dfbf484c1f7f841caab82ece9da543",
+    "/home/jianming_gatech/CROSS/jaxite_word/profiler_test.py": "5b0740511fb21d0f1a4f4a03947aca406d4808e6dc65cfbd916ce969ffcd77df",
+    "/home/jianming_gatech/CROSS/jaxite_word/ptct_mul.py": "2780cb5d261cbf3da611f79fc9a6b6ef98d4759c7508cad26ed5995699f5bf11",
+    "/home/jianming_gatech/CROSS/jaxite_word/ptct_mul_perf_test.py": "0136112ed02ef35fea3483bb4edbc4aa499eaed3d30e35ba0a47d4f8cdbaa626",
+    "/home/jianming_gatech/CROSS/jaxite_word/ptct_mul_test.py": "1a4895ef5ea02eb0242278607b8ff08393025944def0a44d01cdd6e746d6d382",
+    "/home/jianming_gatech/CROSS/jaxite_word/rescale.py": "7244fd87e9cf00168201e3a85d7a7c17259525f68ba82b4cebf64fe84757c73c",
+    "/home/jianming_gatech/CROSS/jaxite_word/rescale_double_rescaling_test.py": "f4709369e2595f3fde7f8fc9b9ae4fcbbcf45a8ece59bbd570202d48c69c980a",
+    "/home/jianming_gatech/CROSS/jaxite_word/rescale_perf_test.py": "c701da370637dc2ff2d2f65d5f1f182ca423ea372defc29a6f16c131d51120e2",
+    "/home/jianming_gatech/CROSS/jaxite_word/rescale_test.py": "96c5d2d5651c390062cb0f09ee4c613f6ae8f88f9416ee383c15c012567fe622",
+    "/home/jianming_gatech/CROSS/jaxite_word/rns.py": "41db559ea26e3149ada36ec8369cfa4a5a79876ae9253e0dbabe32c9c09ef158",
+    "/home/jianming_gatech/CROSS/jaxite_word/rns_test.py": "0194634e2e4a6f1d61da27cc158ba35872ae5922a5868bba54bb65b17de369a0",
+    "/home/jianming_gatech/CROSS/jaxite_word/tabIX.py": "8abf557fd986782a92d8b3517bf0d3470e1ae0ddc135eddd69efee87aabc78b6",
+    "/home/jianming_gatech/CROSS/jaxite_word/tabV.py": "385cda2816d6c2342ab39e57367b5a078d49102fdc7deaf165db4faa58fc20b0",
+    "/home/jianming_gatech/CROSS/jaxite_word/tabVI.py": "29cae4e85987d894c6944b050677d560340f1d214b329f9f02cab2c6db531310",
+    "/home/jianming_gatech/CROSS/jaxite_word/tabVII.py": "90b5f99e6ad2e2e156ea7cd167ec40c7186e99ffbc259edbac7f70668fa83e18",
+    "/home/jianming_gatech/CROSS/jaxite_word/util.py": "b34c675b50ae774cdb0ad913f8fc9c2f955b60bf4745006d3f81d7c013565026",
+    "/home/jianming_gatech/CROSS/jaxite_word/util_test.py": "9fbde79b0154169947608c11bbc8e50b3c104effee206747c2c71a4ced95424e",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_compilation.py": "4518d5f1cebba64fd1f5e1fb162da95fa7dde10936b01f274b0cdc6a31486fb2",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_packed_qwen.py": "3de3dbc8d6f7adb843387b1160346c4dab33d13e785d613df5b1560b26862cbd",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_packed_transformer.py": "f0467c3fdfdee9be2d51978c07e93b8fb3e9025f46af0c32388c2d1484d0804c",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_polynomial.py": "d01cbcf26897c9b190919bb6b279e731716d7dcc4e687bbdfbc4e2e4baf5975e",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_primitives.py": "9d8805a00be63a5b6a01f4f6adf611d3ffcd3c127ee1b73918add8b3767b68c8",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_reference.py": "a774760d660635fc5fcb5f9ab15c02dd48d88b1e5a855459d8405a415f7195a6",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_refresh.py": "1892d382a1b04f6d39059a038cf33766a768280aad7ec973c55a975fc2f32206",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_rotation.py": "6992fe6652eadf6d4957d5016456dcd031fac9e7f506dfeebc13b28f35765cee",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_transformer.py": "18846a05ad6076997eea70454c775a9a038c46f95b5c97687a08ac682e5501de",
+    "/home/jianming_gatech/CROSS/cadathlon/common/support.py": "458111de25dbae4418c474670cf45a2d39e8e6ba40b75c2d17ad8f96cbaaa40f",
+    "/home/jianming_gatech/CROSS/cadathlon/tests/test_packed_transformer.py": "ee82fb62048d9eb85901f5615f2cc006f4dc78cee05ff670e2b1e93f9fabf283",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/src/reference.py": "6d254c92b70257e773d1701a6f85fb592365e67d037b231b9e5a1589e64e7a04",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/test/test1.in": "91e26d127826b649b3470b3303154a8358aecf027e22ec54c0e31bf9a4240acb",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/test/test2.in": "72e033b6ea3f81ed554fc11206fbe1321de99e9b4b82b240b3f04a3ba879557e",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/test/test3.in": "3707189846653778b8338839229ed5c79233c8af3011223a43f88174f44febfe",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/test/test4.in": "97688631dc250c1caa66ada50f30a7cf9685ab6f5df5c05566bcba97fb7cdaf2",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/test/test5.in": "6943da7d806c16740c920d228ed22514f34fa8665b81522c1c7932cc7120735c",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/test/test6.in": "839baf64ae3256fadbbd7c35e7101a033d60191d7b8fa45ee45abcf0e7ec658a",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/test/test1.out": "7c949b1e50b4c42724f80c65711ca68e10e8da05fb7efb95807f86deb79c8b81",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/test/test2.out": "78a8048f007f62debe7ac64758e55f4ea691842e6206c30f6bce43fe18489e6c",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/test/test3.out": "1335ed4408c8734aa87d5b5ad6a235c9dcf46f6079b018b7b52ebf733772117c",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/test/test4.out": "76d841b882cd1e069bf827ed0f9d6633369558236704e02afb6628ddb8db7418",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/test/test5.out": "0f7457daa9ca77de42665f6b7f2b5b217a2ae5f6731ec2fbf4540263ae814532",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/test/test6.out": "d2e910f69eb792a43f2273d62aa76c1812f52b7e2d36e8a1d45934115d428057",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/src/reference.py": "667c8483648adcf583212b0f828347614423c1c1401807f4f9512612f74aa147",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/test/test1.in": "2e48f785cc4da8a47dd5e661b65d0b7e2f407ea413c1e9bab5a9e66dd0567c67",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/test/test2.in": "afa2249ba74cc0b23548430ab60d0dacf42cc0ea4eead7d4465e21fe648fe592",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/test/test3.in": "f68ea67dd9828e0aa82f705edd74589c20168bdbc551153cb586b7fe0fb47a91",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/test/test4.in": "4a7cfe8f27f41598ea5776e7a24328e3f1514ec74b3c578873cc9c99ca094a63",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/test/test5.in": "df67a2c4e59030d923b019c9d57a2eedd96d11ad1e4eb31bbbddee69d460c018",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/test/test6.in": "771bebbcace1bf4a3661f5918249ab8b335d27812acb182409538ab57302e6e7",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/test/test1.out": "9f1c877b620f66faa5eda9ef1a67987c6aabda279e131f9efc65799a99211a48",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/test/test2.out": "3e443497b9afd6f147a54d9d5a044a763b64f7c38022c5dec55f02b60ac1d79d",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/test/test3.out": "9110fe012ddb1b1dbc8586d0035f4275f49129221e6385ac6953076b0a84aae6",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/test/test4.out": "d25b560fb9723a98580d4cf2df8d11fe6ad4fc6d7b780bf6ee46166dd6c2dc72",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/test/test5.out": "5fd9d803b97f33233acc6d1172a91981d992c6b623c27db57ac74e3b03266585",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/test/test6.out": "43c12ab0fb8a9290fe843bf3c0ff8d83c1c3e8a335bf8f588afa196da61e6ba2"
+  },
+  "source_files_unchanged": true
+}

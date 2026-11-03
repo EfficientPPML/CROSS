@@ -1,0 +1,57 @@
+Starting test1.in; raw output: /tmp/transformer-sweep-plan-20261103/cancel-final-publication-failure/test1
+{
+  "initial_source_failure": {
+    "exception": "simulated unreadable initial source",
+    "output_created": true,
+    "report_exists": false
+  },
+  "cancellation_masking": {
+    "raised_type": "OSError",
+    "raised": "simulated final publication failure",
+    "context_type": "KeyboardInterrupt",
+    "primary_only_in_exception_context": true,
+    "existing_report": {
+      "scope": "encrypted public synthetic fixtures only",
+      "model": "qwen",
+      "selected_cases": [
+        "test1.in"
+      ],
+      "cases": {},
+      "warmups": 1,
+      "repeats": 3,
+      "started_utc": "2026-11-03T03:23:51Z",
+      "software": {
+        "python": "3.13.18",
+        "executable": "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+        "jax": "0.12.0.1",
+        "jaxlib": "0.12.0.1",
+        "libtpu": "0.0.50.1",
+        "numpy": "2.5.4",
+        "torch": "2.15.0+cpu"
+      },
+      "host": "t1v-n-a4e6c486-w-0",
+      "environment": {
+        "CROSS_ROOT": null,
+        "PYTHONPATH": null,
+        "JAX_PLATFORMS": "cpu",
+        "OMP_NUM_THREADS": "1",
+        "OPENBLAS_NUM_THREADS": "1",
+        "CROSS_PUBLIC_KEY_DIRECTORY": null,
+        "CROSS_LEVEL_PARAMS_MAX": null,
+        "CROSS_BARRETT_NTT_CONTEXT_CACHE_CAPACITY": null,
+        "XLA_FLAGS": null
+      },
+      "child_environment_overrides": {
+        "CROSS_ROOT": "/tmp/runtime-followup-integration-20261103/checkout",
+        "JAX_PLATFORMS": "tpu",
+        "PYTHONUNBUFFERED": "1"
+      },
+      "source_hashes_start": {
+        "source": "unchanged"
+      },
+      "source_scope": "core/demos/common/problem Python, adjacent implementation Python, six input/output fixtures, wrapper; not an arbitrary external import closure",
+      "active_case": "test1.in"
+    }
+  },
+  "scope": "Controlled metadata-only failure injection; no child launched, no JAX/TPU/crypto, no candidate edits."
+}

@@ -1,0 +1,92 @@
+{
+  "scope": "Actual secure CPU comparison of normalized versus direct-input toy degree8 GELU/tanh polynomials. Isolated opt-in guard experiment, not a promoted runtime or complete model proof.",
+  "production_changed": false,
+  "ring": {
+    "degree": 16384,
+    "depth": 5,
+    "dnum": 6,
+    "q_count": 12,
+    "p_count": 3,
+    "actual_log2_qp": 430.9836305330081,
+    "security_bits": 128
+  },
+  "passed": true,
+  "elapsed_s": 78.48812086999897,
+  "checks": {
+    "gelu": {
+      "domain": [
+        -3.0,
+        3.0
+      ],
+      "degree": 8,
+      "maximum_raw_power": 6561.0,
+      "coefficients": [
+        0.8951931472368967,
+        1.5,
+        0.7091537351064183,
+        0.0,
+        -0.1380968761502116,
+        0.0,
+        0.03728653109292528,
+        0.0,
+        -0.010656004887342085
+      ],
+      "results": {
+        "normalized": {
+          "max_abs_error": 3.949507387801532e-12,
+          "output_level": 0,
+          "wall_s": 18.50946695300081
+        },
+        "direct": {
+          "max_abs_error": 4.1386893911976586e-12,
+          "output_level": 1,
+          "wall_s": 17.83612628300034
+        }
+      }
+    },
+    "tanh": {
+      "domain": [
+        -2.0,
+        2.0
+      ],
+      "degree": 8,
+      "maximum_raw_power": 256.0,
+      "coefficients": [
+        0.0,
+        1.1179361516973907,
+        0.0,
+        -0.1887112390550966,
+        0.0,
+        0.042871488598435446,
+        0.0,
+        -0.009543034592729585,
+        0.0
+      ],
+      "results": {
+        "normalized": {
+          "max_abs_error": 2.7391977575064175e-12,
+          "output_level": 0,
+          "wall_s": 19.91039070000261
+        },
+        "direct": {
+          "max_abs_error": 2.683450683882427e-12,
+          "output_level": 1,
+          "wall_s": 19.37477654900067
+        }
+      }
+    }
+  },
+  "source_files_unchanged": true,
+  "candidate_difference": "--- frozen/encrypted_polynomial.py\n+++ isolated/polynomial_candidate.py\n@@ -37,8 +37,8 @@\n         # a centered quadratic. Its raw x and x^2 intermediates are bounded\n         # by 2 and 4 on the declared domain. Shifted inverse-square-root\n         # domains must retain their explicit affine transformation.\n-        if self.input_power_basis and (lo != -hi or hi > 2 or len(self.coefficients) != 3):\n-            raise ValueError(\"input power basis requires a centered quadratic domain bounded by [-2, 2]\")\n+        if self.input_power_basis and (lo != -hi or hi > 3 or not 2 <= len(self.coefficients) <= 9 or hi ** (len(self.coefficients)-1) > 6561):\n+            raise ValueError(\"experimental raw powers require a centered degree<=8 domain with raw magnitudes<=6561\")\n \n     @classmethod\n     def interpolate(cls, name: str, function: Callable, domain, degree: int):\n",
+  "limitations": [
+    "Only declared GELU[-3,3] and tanh[-2,2] degree8 contracts were evaluated on257gridvalues repeated through the full8192-slot vector.",
+    "Each direct-input circuit removes one actual affine/rescale level. The arithmetic kernels and scale-tracking code are unchanged; the isolated guard permits the bounded raw powers.",
+    "No bootstrap, complete encrypted model, new large-ring profile, baseline calibration or runtime speedup is established.",
+    "Whole-model depth, refresh placement/public ranges and actual secure ring parameters must be replanned before any promotion."
+  ],
+  "artifacts": {
+    "centered_power_depth_probe_raw.json": "9e3b35e016e27ed7b09ce2c41459d44500e973b109df0972578645a3cb5ad818",
+    "centered_power_depth_probe.log": "940cb6eb77a55ee8bc43697124e88a6661252a9c63b5e984601a28b7b2034eae",
+    "centered_power_depth_probe_sources.tar.gz": "336120700344d8e4bb13a029cde2c9c0bd182124de4d1080b187ccfc7ac70baf"
+  }
+}

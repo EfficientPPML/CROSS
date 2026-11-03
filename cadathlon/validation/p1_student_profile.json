@@ -1,0 +1,811 @@
+{
+  "status": "all six public TPU fixtures and trained100 on1/8TPUs passed",
+  "profile": "CD2, scaling_mod_size42, first_mod_size43, register_word_size24, dnum4; derived secure N8192",
+  "scope": "Real encrypted P1 with unchanged model/input/output gates. No complete upstream-harness timing or official scoring calibration claimed.",
+  "trained_timing_note": "total_s measures run after imports and device discovery through release, not process startup.",
+  "trained_command": "JAX_PLATFORMS=tpu OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python cadathlon/validation/check_p1_student_profile.py --devices {1,8}",
+  "trained_model_sha256": "2d3409cccba1622b4c49a4ade76deec2a7ba9de37d80c9fd3ab883c05a85047e",
+  "trained_checks": [
+    {
+      "passed": true,
+      "mode": "trained-model-arithmetic-check",
+      "profile": "student",
+      "images": 100,
+      "devices": [
+        "TPU_0(process=0,(0,0,0,0))"
+      ],
+      "setup_including_warmup_s": 60.73670607699978,
+      "server_s": 1.531699450999895,
+      "end_to_end_s": 6.396706282000196,
+      "cleartext_correct": 96,
+      "encrypted_correct": 96,
+      "execution_rings": [
+        {
+          "degree": 8192,
+          "num_slots": 4096,
+          "num_q": 8,
+          "num_p": 2,
+          "dnum": null,
+          "max_level": 3,
+          "q_towers": [
+            4079617,
+            1196033,
+            1589249,
+            1376257,
+            2277377,
+            1720321,
+            1769473,
+            1785857
+          ],
+          "p_towers": [
+            8273921,
+            8257537
+          ],
+          "log2_Q": 166.49832178445186,
+          "log2_QP": 212.45574163467,
+          "security_bits": 128,
+          "security_model": "classical"
+        },
+        {
+          "degree": 8192,
+          "num_slots": 4096,
+          "num_q": 8,
+          "num_p": 2,
+          "dnum": 4,
+          "max_level": 3,
+          "q_towers": [
+            4079617,
+            1196033,
+            1589249,
+            1376257,
+            2277377,
+            1720321,
+            1769473,
+            1785857
+          ],
+          "p_towers": [
+            8273921,
+            8257537
+          ],
+          "log2_Q": 166.49832178445186,
+          "log2_QP": 212.45574163467,
+          "security_bits": 128,
+          "security_model": "classical"
+        }
+      ],
+      "fixture_sha256": {
+        "test_pixels.txt": "7800ae49fc05819de7a66732be077d801d6328a847f59d317e615d5202bdb8b4",
+        "test_labels.txt": "5cf84167d6e047119cea478827f0f70b02b2d85b2b2b43a36558714d1dd2f720"
+      },
+      "python": "3.13.18",
+      "packages": {
+        "jax": "0.12.0.1",
+        "jaxlib": "0.12.0.1",
+        "numpy": "2.5.4",
+        "torch": "2.15.0+cpu"
+      },
+      "max_abs_error": 3.6553649351844797e-07,
+      "nrmse": 3.752585125125589e-09,
+      "top1_agreement": 1.0,
+      "total_s": 67.67984497199996
+    },
+    {
+      "passed": true,
+      "mode": "trained-model-arithmetic-check",
+      "profile": "student",
+      "images": 100,
+      "devices": [
+        "TPU_0(process=0,(0,0,0,0))",
+        "TPU_1(process=0,(1,0,0,0))",
+        "TPU_2(process=0,(0,1,0,0))",
+        "TPU_3(process=0,(1,1,0,0))",
+        "TPU_4(process=0,(0,2,0,0))",
+        "TPU_5(process=0,(1,2,0,0))",
+        "TPU_6(process=0,(0,3,0,0))",
+        "TPU_7(process=0,(1,3,0,0))"
+      ],
+      "setup_including_warmup_s": 65.979238162,
+      "server_s": 0.2897449970000707,
+      "end_to_end_s": 5.152667487000144,
+      "cleartext_correct": 96,
+      "encrypted_correct": 96,
+      "execution_rings": [
+        {
+          "degree": 8192,
+          "num_slots": 4096,
+          "num_q": 8,
+          "num_p": 2,
+          "dnum": null,
+          "max_level": 3,
+          "q_towers": [
+            4079617,
+            1196033,
+            1589249,
+            1376257,
+            2277377,
+            1720321,
+            1769473,
+            1785857
+          ],
+          "p_towers": [
+            8273921,
+            8257537
+          ],
+          "log2_Q": 166.49832178445186,
+          "log2_QP": 212.45574163467,
+          "security_bits": 128,
+          "security_model": "classical"
+        },
+        {
+          "degree": 8192,
+          "num_slots": 4096,
+          "num_q": 8,
+          "num_p": 2,
+          "dnum": 4,
+          "max_level": 3,
+          "q_towers": [
+            4079617,
+            1196033,
+            1589249,
+            1376257,
+            2277377,
+            1720321,
+            1769473,
+            1785857
+          ],
+          "p_towers": [
+            8273921,
+            8257537
+          ],
+          "log2_Q": 166.49832178445186,
+          "log2_QP": 212.45574163467,
+          "security_bits": 128,
+          "security_model": "classical"
+        }
+      ],
+      "fixture_sha256": {
+        "test_pixels.txt": "7800ae49fc05819de7a66732be077d801d6328a847f59d317e615d5202bdb8b4",
+        "test_labels.txt": "5cf84167d6e047119cea478827f0f70b02b2d85b2b2b43a36558714d1dd2f720"
+      },
+      "python": "3.13.18",
+      "packages": {
+        "jax": "0.12.0.1",
+        "jaxlib": "0.12.0.1",
+        "numpy": "2.5.4",
+        "torch": "2.15.0+cpu"
+      },
+      "max_abs_error": 2.9567525672291595e-07,
+      "nrmse": 3.7847301501019025e-09,
+      "top1_agreement": 1.0,
+      "total_s": 71.62795213300024
+    }
+  ],
+  "cpu_test1": {
+    "case": "test1.in",
+    "mode": "HE-synthetic-smoke",
+    "devices": [
+      "cpu:0"
+    ],
+    "batch": 1,
+    "profile": "student",
+    "execution_rings": [
+      {
+        "degree": 8192,
+        "num_slots": 4096,
+        "num_q": 8,
+        "num_p": 2,
+        "dnum": null,
+        "max_level": 3,
+        "q_towers": [
+          4079617,
+          1196033,
+          1589249,
+          1376257,
+          2277377,
+          1720321,
+          1769473,
+          1785857
+        ],
+        "p_towers": [
+          8273921,
+          8257537
+        ],
+        "log2_Q": 166.49832178445186,
+        "log2_QP": 212.45574163467,
+        "security_bits": 128,
+        "security_model": "classical"
+      },
+      {
+        "degree": 8192,
+        "num_slots": 4096,
+        "num_q": 8,
+        "num_p": 2,
+        "dnum": 4,
+        "max_level": 3,
+        "q_towers": [
+          4079617,
+          1196033,
+          1589249,
+          1376257,
+          2277377,
+          1720321,
+          1769473,
+          1785857
+        ],
+        "p_towers": [
+          8273921,
+          8257537
+        ],
+        "log2_Q": 166.49832178445186,
+        "log2_QP": 212.45574163467,
+        "security_bits": 128,
+        "security_model": "classical"
+      }
+    ],
+    "setup_s": 0.25473600299983445,
+    "end_to_end_s": [
+      42.52207445900012,
+      42.80781730600029
+    ],
+    "server_s": [
+      42.46958146899988,
+      42.75414185699992
+    ],
+    "warmup_s": [
+      73.35431246799999
+    ],
+    "warmup_server_s": [
+      72.66673939100019
+    ],
+    "cold_start_included": false,
+    "median_s": 42.664945882500206,
+    "images_per_s": 0.023438445293098752,
+    "ms_per_image": 42664.94588250021,
+    "trained_accuracy_evaluated": false,
+    "max_abs_error": 8.675754920028922e-09,
+    "nrmse": 2.9087493852482594e-08,
+    "top1_agreement": 1.0,
+    "total_s": 160.3990224019999
+  },
+  "cpu_timing_note": "CPU execution is much slower than TPU; the remaining CPU sweep and trained100 CPU run were stopped, not counted as passes.",
+  "completed_at_utc": "2026-11-02T17:16:33.011571+00:00",
+  "libtpu": "0.0.50.1",
+  "public_fixture_command": "JAX_PLATFORMS=tpu OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python cadathlon/non_agent_pset/p1_benchmark/src/runner.py --case cadathlon/non_agent_pset/p1_benchmark/test/test{1..6}.in --student-baseline --warmups 1 --repeats 2",
+  "public_fixture_checks": [
+    {
+      "case": "test1.in",
+      "mode": "HE-synthetic-smoke",
+      "devices": [
+        "TPU_0(process=0,(0,0,0,0))"
+      ],
+      "batch": 1,
+      "profile": "student",
+      "execution_rings": [
+        {
+          "degree": 8192,
+          "num_slots": 4096,
+          "num_q": 8,
+          "num_p": 2,
+          "dnum": null,
+          "max_level": 3,
+          "q_towers": [
+            4079617,
+            1196033,
+            1589249,
+            1376257,
+            2277377,
+            1720321,
+            1769473,
+            1785857
+          ],
+          "p_towers": [
+            8273921,
+            8257537
+          ],
+          "log2_Q": 166.49832178445186,
+          "log2_QP": 212.45574163467,
+          "security_bits": 128,
+          "security_model": "classical"
+        },
+        {
+          "degree": 8192,
+          "num_slots": 4096,
+          "num_q": 8,
+          "num_p": 2,
+          "dnum": 4,
+          "max_level": 3,
+          "q_towers": [
+            4079617,
+            1196033,
+            1589249,
+            1376257,
+            2277377,
+            1720321,
+            1769473,
+            1785857
+          ],
+          "p_towers": [
+            8273921,
+            8257537
+          ],
+          "log2_Q": 166.49832178445186,
+          "log2_QP": 212.45574163467,
+          "security_bits": 128,
+          "security_model": "classical"
+        }
+      ],
+      "setup_s": 0.5159579830001348,
+      "end_to_end_s": [
+        0.06702313000005233,
+        0.0664295490000768
+      ],
+      "server_s": [
+        0.016956699999809643,
+        0.017013899999710702
+      ],
+      "warmup_s": [
+        59.473286991999885
+      ],
+      "warmup_server_s": [
+        58.60142460299994
+      ],
+      "cold_start_included": false,
+      "median_s": 0.06672633950006457,
+      "images_per_s": 14.986585619596775,
+      "ms_per_image": 66.72633950006457,
+      "trained_accuracy_evaluated": false,
+      "max_abs_error": 5.503710320819977e-09,
+      "nrmse": 2.3697023213392118e-08,
+      "top1_agreement": 1.0,
+      "total_s": 70.17303445200014
+    },
+    {
+      "case": "test2.in",
+      "mode": "HE-synthetic-smoke",
+      "devices": [
+        "TPU_0(process=0,(0,0,0,0))"
+      ],
+      "batch": 2,
+      "profile": "student",
+      "execution_rings": [
+        {
+          "degree": 8192,
+          "num_slots": 4096,
+          "num_q": 8,
+          "num_p": 2,
+          "dnum": null,
+          "max_level": 3,
+          "q_towers": [
+            4079617,
+            1196033,
+            1589249,
+            1376257,
+            2277377,
+            1720321,
+            1769473,
+            1785857
+          ],
+          "p_towers": [
+            8273921,
+            8257537
+          ],
+          "log2_Q": 166.49832178445186,
+          "log2_QP": 212.45574163467,
+          "security_bits": 128,
+          "security_model": "classical"
+        },
+        {
+          "degree": 8192,
+          "num_slots": 4096,
+          "num_q": 8,
+          "num_p": 2,
+          "dnum": 4,
+          "max_level": 3,
+          "q_towers": [
+            4079617,
+            1196033,
+            1589249,
+            1376257,
+            2277377,
+            1720321,
+            1769473,
+            1785857
+          ],
+          "p_towers": [
+            8273921,
+            8257537
+          ],
+          "log2_Q": 166.49832178445186,
+          "log2_QP": 212.45574163467,
+          "security_bits": 128,
+          "security_model": "classical"
+        }
+      ],
+      "setup_s": 0.5518673920000765,
+      "end_to_end_s": [
+        0.12698543699980291,
+        0.12666465800020887
+      ],
+      "server_s": [
+        0.031982659000277636,
+        0.031970190000265575
+      ],
+      "warmup_s": [
+        59.29098406200001
+      ],
+      "warmup_server_s": [
+        58.35036955300029
+      ],
+      "cold_start_included": false,
+      "median_s": 0.1268250475000059,
+      "images_per_s": 15.76975557608135,
+      "ms_per_image": 63.41252375000295,
+      "trained_accuracy_evaluated": false,
+      "max_abs_error": 4.638058382668009e-09,
+      "nrmse": 1.8342629715195116e-07,
+      "top1_agreement": 1.0,
+      "total_s": 69.63943056499966
+    },
+    {
+      "case": "test3.in",
+      "mode": "HE-synthetic-smoke",
+      "devices": [
+        "TPU_0(process=0,(0,0,0,0))"
+      ],
+      "batch": 4,
+      "profile": "student",
+      "execution_rings": [
+        {
+          "degree": 8192,
+          "num_slots": 4096,
+          "num_q": 8,
+          "num_p": 2,
+          "dnum": null,
+          "max_level": 3,
+          "q_towers": [
+            4079617,
+            1196033,
+            1589249,
+            1376257,
+            2277377,
+            1720321,
+            1769473,
+            1785857
+          ],
+          "p_towers": [
+            8273921,
+            8257537
+          ],
+          "log2_Q": 166.49832178445186,
+          "log2_QP": 212.45574163467,
+          "security_bits": 128,
+          "security_model": "classical"
+        },
+        {
+          "degree": 8192,
+          "num_slots": 4096,
+          "num_q": 8,
+          "num_p": 2,
+          "dnum": 4,
+          "max_level": 3,
+          "q_towers": [
+            4079617,
+            1196033,
+            1589249,
+            1376257,
+            2277377,
+            1720321,
+            1769473,
+            1785857
+          ],
+          "p_towers": [
+            8273921,
+            8257537
+          ],
+          "log2_Q": 166.49832178445186,
+          "log2_QP": 212.45574163467,
+          "security_bits": 128,
+          "security_model": "classical"
+        }
+      ],
+      "setup_s": 0.5316445000003114,
+      "end_to_end_s": [
+        0.2589605049997772,
+        0.25949399499995707
+      ],
+      "server_s": [
+        0.0625812789999145,
+        0.0625615890003246
+      ],
+      "warmup_s": [
+        59.6092435569999
+      ],
+      "warmup_server_s": [
+        58.588688886
+      ],
+      "cold_start_included": false,
+      "median_s": 0.2592272499998671,
+      "images_per_s": 15.430476541343745,
+      "ms_per_image": 64.80681249996678,
+      "trained_accuracy_evaluated": false,
+      "max_abs_error": 1.7112440853228605e-08,
+      "nrmse": 1.3334673678340165e-08,
+      "top1_agreement": 1.0,
+      "total_s": 70.23805137699992
+    },
+    {
+      "case": "test4.in",
+      "mode": "HE-synthetic-smoke",
+      "devices": [
+        "TPU_0(process=0,(0,0,0,0))",
+        "TPU_1(process=0,(1,0,0,0))"
+      ],
+      "batch": 4,
+      "profile": "student",
+      "execution_rings": [
+        {
+          "degree": 8192,
+          "num_slots": 4096,
+          "num_q": 8,
+          "num_p": 2,
+          "dnum": null,
+          "max_level": 3,
+          "q_towers": [
+            4079617,
+            1196033,
+            1589249,
+            1376257,
+            2277377,
+            1720321,
+            1769473,
+            1785857
+          ],
+          "p_towers": [
+            8273921,
+            8257537
+          ],
+          "log2_Q": 166.49832178445186,
+          "log2_QP": 212.45574163467,
+          "security_bits": 128,
+          "security_model": "classical"
+        },
+        {
+          "degree": 8192,
+          "num_slots": 4096,
+          "num_q": 8,
+          "num_p": 2,
+          "dnum": 4,
+          "max_level": 3,
+          "q_towers": [
+            4079617,
+            1196033,
+            1589249,
+            1376257,
+            2277377,
+            1720321,
+            1769473,
+            1785857
+          ],
+          "p_towers": [
+            8273921,
+            8257537
+          ],
+          "log2_Q": 166.49832178445186,
+          "log2_QP": 212.45574163467,
+          "security_bits": 128,
+          "security_model": "classical"
+        }
+      ],
+      "setup_s": 0.5160596800001258,
+      "end_to_end_s": [
+        0.23056055500001094,
+        0.230767386000025
+      ],
+      "server_s": [
+        0.03564344999995228,
+        0.03649494899991623
+      ],
+      "warmup_s": [
+        65.94522917800032
+      ],
+      "warmup_server_s": [
+        64.88551039799995
+      ],
+      "cold_start_included": false,
+      "median_s": 0.23066397050001797,
+      "images_per_s": 17.34124315700049,
+      "ms_per_image": 57.66599262500449,
+      "trained_accuracy_evaluated": false,
+      "max_abs_error": 2.4242842344701643e-08,
+      "nrmse": 4.160689085896974e-08,
+      "top1_agreement": 1.0,
+      "total_s": 76.59161898699995
+    },
+    {
+      "case": "test5.in",
+      "mode": "HE-synthetic-smoke",
+      "devices": [
+        "TPU_0(process=0,(0,0,0,0))",
+        "TPU_1(process=0,(1,0,0,0))"
+      ],
+      "batch": 8,
+      "profile": "student",
+      "execution_rings": [
+        {
+          "degree": 8192,
+          "num_slots": 4096,
+          "num_q": 8,
+          "num_p": 2,
+          "dnum": null,
+          "max_level": 3,
+          "q_towers": [
+            4079617,
+            1196033,
+            1589249,
+            1376257,
+            2277377,
+            1720321,
+            1769473,
+            1785857
+          ],
+          "p_towers": [
+            8273921,
+            8257537
+          ],
+          "log2_Q": 166.49832178445186,
+          "log2_QP": 212.45574163467,
+          "security_bits": 128,
+          "security_model": "classical"
+        },
+        {
+          "degree": 8192,
+          "num_slots": 4096,
+          "num_q": 8,
+          "num_p": 2,
+          "dnum": 4,
+          "max_level": 3,
+          "q_towers": [
+            4079617,
+            1196033,
+            1589249,
+            1376257,
+            2277377,
+            1720321,
+            1769473,
+            1785857
+          ],
+          "p_towers": [
+            8273921,
+            8257537
+          ],
+          "log2_Q": 166.49832178445186,
+          "log2_QP": 212.45574163467,
+          "security_bits": 128,
+          "security_model": "classical"
+        }
+      ],
+      "setup_s": 0.5269432499999311,
+      "end_to_end_s": [
+        0.4570724019999943,
+        0.45697449099998266
+      ],
+      "server_s": [
+        0.06944996799984438,
+        0.07013424899969323
+      ],
+      "warmup_s": [
+        63.44079553499978
+      ],
+      "warmup_server_s": [
+        62.2293624480003
+      ],
+      "cold_start_included": false,
+      "median_s": 0.4570234464999885,
+      "images_per_s": 17.50457238302806,
+      "ms_per_image": 57.12793081249856,
+      "trained_accuracy_evaluated": false,
+      "max_abs_error": 1.5246152673675795e-08,
+      "nrmse": 2.412248720711249e-08,
+      "top1_agreement": 1.0,
+      "total_s": 74.40951578900012
+    },
+    {
+      "case": "test6.in",
+      "mode": "HE-synthetic-smoke",
+      "devices": [
+        "TPU_0(process=0,(0,0,0,0))",
+        "TPU_1(process=0,(1,0,0,0))",
+        "TPU_2(process=0,(0,1,0,0))",
+        "TPU_3(process=0,(1,1,0,0))"
+      ],
+      "batch": 8,
+      "profile": "student",
+      "execution_rings": [
+        {
+          "degree": 8192,
+          "num_slots": 4096,
+          "num_q": 8,
+          "num_p": 2,
+          "dnum": null,
+          "max_level": 3,
+          "q_towers": [
+            4079617,
+            1196033,
+            1589249,
+            1376257,
+            2277377,
+            1720321,
+            1769473,
+            1785857
+          ],
+          "p_towers": [
+            8273921,
+            8257537
+          ],
+          "log2_Q": 166.49832178445186,
+          "log2_QP": 212.45574163467,
+          "security_bits": 128,
+          "security_model": "classical"
+        },
+        {
+          "degree": 8192,
+          "num_slots": 4096,
+          "num_q": 8,
+          "num_p": 2,
+          "dnum": 4,
+          "max_level": 3,
+          "q_towers": [
+            4079617,
+            1196033,
+            1589249,
+            1376257,
+            2277377,
+            1720321,
+            1769473,
+            1785857
+          ],
+          "p_towers": [
+            8273921,
+            8257537
+          ],
+          "log2_Q": 166.49832178445186,
+          "log2_QP": 212.45574163467,
+          "security_bits": 128,
+          "security_model": "classical"
+        }
+      ],
+      "setup_s": 0.5229864900002212,
+      "end_to_end_s": [
+        0.4306601420003062,
+        0.4258957819997704
+      ],
+      "server_s": [
+        0.03914443899975595,
+        0.03910907900035454
+      ],
+      "warmup_s": [
+        66.52701813600015
+      ],
+      "warmup_server_s": [
+        65.29293862999975
+      ],
+      "cold_start_included": false,
+      "median_s": 0.4282779620000383,
+      "images_per_s": 18.679457524828898,
+      "ms_per_image": 53.53474525000479,
+      "trained_accuracy_evaluated": false,
+      "max_abs_error": 2.1844669267911954e-08,
+      "nrmse": 3.0027438735876955e-08,
+      "top1_agreement": 1.0,
+      "total_s": 77.42693975100019
+    }
+  ],
+  "public_fixture_total_runner_s": 438.478590921,
+  "public_fixture_timing_note": "Sum of runner total_s excludes Python process startup/exit. Six separate synthetic fixtures still exceed300s; no five-minute full-suite claim. Short ranked suite needs independent complete wall-time measurement.",
+  "unit_tests": {
+    "passed": 177,
+    "skipped": 2,
+    "subtests": 14,
+    "scope": "cadathlon tests: security, baseline_keys, baseline_warmup, runner_timing, runner_devices, module_loading; full jaxite_word/packing_test.py"
+  }
+}

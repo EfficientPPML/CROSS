@@ -1,0 +1,69 @@
+{
+  "passed": true,
+  "scope": "Validation-only isolated real-uniform public CKKS codec candidate; no production integration, encrypted bootstrap timing, accelerator transfer timing, or model-performance claim",
+  "production_matrix_cases": 264,
+  "full_ring_independent_reference_cases": 3,
+  "additional_edge_cases": 2601,
+  "additional_independent_reference_checks": 1537,
+  "source_hashes_unchanged": true,
+  "observed_process_exit_codes": {
+    "production_matrix": 0,
+    "edge_suite": 0
+  },
+  "candidate_source_sha256": "315b7db17280b85f016b98e55068d06f7b205664cab31e4e24239bf067c8e678",
+  "guarded_envelope": [
+    "One-dimensional real-uniform finite numeric vector; power-of-two slot count dividing N/2",
+    "Power-of-two cyclotomic order; compatible positive uint31 moduli with accepted roots",
+    "Finite positive binary64 scale, default NumPy floating error configuration, NSD exactly integer1 or2",
+    "Default signed bound and integer word bits1 through61; rounded coefficient within centered half interval",
+    "Finite FFT intermediates: abs(constant)<=maxfloat/slot_count; finite scaled coefficient",
+    "Nonzero scaled magnitudes requiring logc<0 delegate to preserve ScalingFactorTooSmall; exact underflow to zero retains ordinary zero encoding"
+  ],
+  "fallback": "All unsupported vector/parameter/error-policy settings delegate to unchanged _ckks_encode_array; warning and exception parity checked. Python input iterators and unusual scalar/container types are not consumed by the fast path.",
+  "mathematical_basis": "For a real uniform vector, each FFT difference is exactly zero and each nonzero sum is a power-of-two scaling; guarded intermediates stay finite. Division by the power-of-two slot count returns the same binary64 constant. Only coefficient0 is nonzero, so its standard-residue NTT image is uniform in each modulus. The candidate uses the same log2/ceil, nearest_int, log_approx restoration and integer noise-scale multiplier as the ordinary codec.",
+  "timing": {
+    "encoding_only_seconds": {
+      "ordinary_array_codec": [
+        1.1915134410010069,
+        1.1739418010001827,
+        1.174212122001336
+      ],
+      "guarded_uniform_codec": [
+        0.004312370001571253,
+        0.004361589999462012,
+        0.004378270001325291
+      ]
+    },
+    "scope": "Warm public NTT tables; fully materialized host arrays; excludes transfer and client encryption",
+    "separate_cpu_array_conversion_seconds": {
+      "ordinary_array": [
+        0.00010302000009687617,
+        5.9300000430084765e-05,
+        4.456999886315316e-05
+      ],
+      "candidate_array": [
+        3.9030001062201336e-05,
+        3.859000207739882e-05,
+        3.4690001484705135e-05
+      ]
+    },
+    "conversion_scope": "Warm CPU JAX ndarray conversion; may share host buffers, not a TPU transfer measurement"
+  },
+  "development_notes": [
+    "Initial independent-oracle harness used full16 slots for sparse extreme values, which could overflow a reference FFT that the sparse candidate did not use; corrected to preserve slot count.",
+    "The independent scalar reference expects normalized complex values; boolean/raw NumPy inputs were normalized as in the production codec before comparison.",
+    "Candidate conservatively delegates every nondefault NumPy floating error mode to preserve caller-selected warnings and exceptions.",
+    "Earlier48-case scalar experiment and already-landed ndarray/list conversion patch are separate evidence; these timings do not include those historical runs."
+  ],
+  "reproduction": [
+    "Extract measured_source under a checkout root and isolated files to /tmp/refresh-scalar-lab-v2 (scripts record the original /home/jianming_gatech/CROSS path).",
+    "Set JAX_PLATFORMS=cpu, OMP_NUM_THREADS=4, OPENBLAS_NUM_THREADS=4; run check_uniform_scalar.py and check_scalar_edges.py with the recorded JAX environment. Original affinity: CPU152\u2013155."
+  ],
+  "artifacts": {
+    "scalar_uniform_codec_production_cpu.json": "1b0577312dbdbab8372ce36b34397e0258d492a5e91584a61e7e8a53a35b2b06",
+    "scalar_uniform_codec_edges_cpu.json": "1b614bd9d5ab7caaa66ec5192e1fae1e378abfcac1fc19f2d3b6db65068fe4d7",
+    "scalar_uniform_codec_production_cpu.log": "4f7e51515109db37dfce4b1bad6bbd73b243bf03bb2c7a8bcac430194ca31fa6",
+    "scalar_uniform_codec_edges_cpu.log": "815af986c0c011e6ccdbc2963806fae2072fff1441ca7de3da1c8b8060a9e57d",
+    "scalar_uniform_codec_cpu_sources.tar.gz": "e92bb322be17f7ff1c0efc2a8c0a0a678469433df5c3c5d6225111756c0b525a"
+  }
+}

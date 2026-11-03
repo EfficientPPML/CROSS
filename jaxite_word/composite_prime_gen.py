@@ -76,6 +76,18 @@ def composite_prime_gen(
     moduli_q = [0] * num_primes
     record = set()
 
+    def next_in_register(q):
+        # Once ascending candidates exceed the word size, the old while-True
+        # search can never satisfy its acceptance condition. Python integers
+        # do not overflow, so relying on NextPrime's overflow check hangs.
+        limit = 1 << register_word_size
+        if q + cycl_order >= limit:
+            raise ValueError("No next prime within register_word_size")
+        result = _next_prime(q, cycl_order)
+        if result >= limit:
+            raise ValueError("No next prime within register_word_size")
+        return result
+
     # Phase 1: Generate last cd primes (scaling factor base) from scalingModSize
     rem_bits = scaling_mod_size
     for d in range(1, cd + 1):
@@ -132,7 +144,7 @@ def composite_prime_gen(
             for step in range(n_next):
                 q = sf_int - sf_rem + 1 + cycl_order
                 while True:
-                    q = _next_prime(q, cycl_order)
+                    q = next_in_register(q)
                     if (math.log2(q) <= register_word_size and
                         q not in record and q not in q_current):
                         break
@@ -159,7 +171,7 @@ def composite_prime_gen(
             for step in range(n_next):
                 q = sf_int - sf_rem + 1 + cycl_order
                 while True:
-                    q = _next_prime(q, cycl_order)
+                    q = next_in_register(q)
                     if (math.log2(q) <= register_word_size and
                         q not in record and q not in q_current):
                         break
@@ -182,9 +194,9 @@ def composite_prime_gen(
             if n_prev > 0:
                 q_adj = q_prev[n_prev - 1]
                 while prime_product < sf:
-                    q_new = _next_prime(q_adj, cycl_order)
+                    q_new = next_in_register(q_adj)
                     while q_new in record or q_new in q_current:
-                        q_new = _next_prime(q_new, cycl_order)
+                        q_new = next_in_register(q_new)
                     prime_product = prime_product // q_adj * q_new
                     q_current.discard(q_adj)
                     q_adj = q_new

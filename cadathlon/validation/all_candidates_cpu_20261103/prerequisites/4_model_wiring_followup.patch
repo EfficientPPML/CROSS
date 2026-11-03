@@ -1,0 +1,394 @@
+--- /dev/null
++++ b/cadathlon/agent_pset/p2_bert/src/bert_optimized_reference.py
+@@ -0,0 +1,20 @@
++"""Explicit experimental packed toy reference with reviewed optional controls.
++
++Enables scoped public NTT reuse and guarded dispatch-cache retention. Default
++adapters and ring profiles are unchanged. Bootstrap still clears its own stage
++caches. This adapter is unvalidated as a complete encrypted model, full-model
++file-stage implementation, accelerator-memory result or calibrated baseline.
++"""
++from pathlib import Path
++import sys
++sys.path.insert(0, str(Path(__file__).resolve().parent))
++from p2_runtime import install_common_path
++install_common_path(__file__)
++from encrypted_reference import create_toy_session
++
++IMPLEMENTATION_STATUS = 'experimental-unvalidated'
++
++def create_session(config, weights, *, batch, sequence_length, devices):
++    return create_toy_session('bert', config, weights, batch=batch,
++        sequence_length=sequence_length, devices=devices, packed_pairs=True, bounded_refresh=True,
++        ntt_subsets=True, preserve_dispatch_cache=True)
+--- /dev/null
++++ b/cadathlon/agent_pset/p4_qwen/src/qwen_optimized_reference.py
+@@ -0,0 +1,18 @@
++"""Explicit experimental packed toy reference with reviewed optional controls.
++
++Enables scoped public NTT reuse and guarded dispatch-cache retention. Default
++adapters and ring profiles are unchanged. Bootstrap still clears its own stage
++caches. This adapter is unvalidated as a complete encrypted model, full-model
++file-stage implementation, accelerator-memory result or calibrated baseline.
++"""
++from pathlib import Path
++import sys
++sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'common'))
++from encrypted_reference import create_toy_session
++
++IMPLEMENTATION_STATUS = 'experimental-unvalidated'
++
++def create_session(config, weights, *, batch, sequence_length, devices):
++    return create_toy_session('qwen', config, weights, batch=batch,
++        sequence_length=sequence_length, devices=devices, packed_pairs=True, bounded_refresh=True,
++        ntt_subsets=True, preserve_dispatch_cache=True)
+--- a/cadathlon/common/encrypted_bounded_arithmetic.py
++++ b/cadathlon/common/encrypted_bounded_arithmetic.py
+@@ -155,11 +155,12 @@
+     _relations = ('_public_row_l2_bound', '_public_head_l2_bounds',
+                   '_public_normalization_affine')
+ 
+-    def __init__(self, context, refresher=None, *, low_memory=True):
++    def __init__(self, context, refresher=None, *, low_memory=True, preserve_dispatch_cache=False):
+         from encrypted_refresh import BoundedSecureRefresh
+         if refresher is not None and (not isinstance(refresher, BoundedSecureRefresh) or refresher.ctx is not context):
+             raise TypeError('bounded arithmetic requires BoundedSecureRefresh on the same context')
+-        super().__init__(context, low_memory=low_memory)
++        super().__init__(context, low_memory=low_memory,
++            preserve_dispatch_cache=preserve_dispatch_cache)
+         self.refresher = refresher
+         self.refresh_events = []
+ 
+--- a/cadathlon/common/encrypted_bounded_transformer.py
++++ b/cadathlon/common/encrypted_bounded_transformer.py
+@@ -83,9 +83,11 @@
+ 
+ 
+ class BoundedPackedTransformer(PackedTransformer):
+-    def __init__(self, context, layout, refresher, *, low_memory=True):
+-        super().__init__(context, layout, low_memory=low_memory)
+-        self.arithmetic = BoundedArithmetic(context, refresher, low_memory=low_memory)
++    def __init__(self, context, layout, refresher, *, low_memory=True, preserve_dispatch_cache=False):
++        super().__init__(context, layout, low_memory=low_memory,
++            preserve_dispatch_cache=preserve_dispatch_cache)
++        self.arithmetic = BoundedArithmetic(context, refresher, low_memory=low_memory,
++            preserve_dispatch_cache=preserve_dispatch_cache)
+         self._head_contract = None
+ 
+     def contract(self, value, bound, reason):
+--- a/cadathlon/common/encrypted_packed_qwen.py
++++ b/cadathlon/common/encrypted_packed_qwen.py
+@@ -119,12 +119,13 @@
+ 
+ 
+ class PackedQwen1:
+-    def __init__(self, context, *, low_memory=False):
++    def __init__(self, context, *, low_memory=False, preserve_dispatch_cache=False):
+         self.ctx = context
+         self.features = 32
+         if context.num_slots < 2 * self.features or context.num_slots % self.features:
+             raise ValueError('F32 packing requires divisible slot count')
+-        self.arithmetic = CompiledArithmetic(context, low_memory=low_memory)
++        self.arithmetic = CompiledArithmetic(context, low_memory=low_memory,
++            preserve_dispatch_cache=preserve_dispatch_cache)
+         self.phase_results = []
+ 
+     def public_feature(self, values):
+--- a/cadathlon/common/encrypted_packed_transformer.py
++++ b/cadathlon/common/encrypted_packed_transformer.py
+@@ -171,11 +171,12 @@
+ 
+ 
+ class PackedTransformer:
+-    def __init__(self, context, layout, *, low_memory=False):
++    def __init__(self, context, layout, *, low_memory=False, preserve_dispatch_cache=False):
+         if context.num_slots != layout.slots:
+             raise ValueError('packed layout differs from initialized context slots')
+         self.ctx, self.layout, self.features = context, layout, layout.features
+-        self.arithmetic = CompiledArithmetic(context, low_memory=low_memory)
++        self.arithmetic = CompiledArithmetic(context, low_memory=low_memory,
++            preserve_dispatch_cache=preserve_dispatch_cache)
+ 
+     def linear(self, value, weight, bias=None, *, input_mask=None):
+         """One-level sparse BSGS with one active rotation key at a time."""
+--- a/cadathlon/common/encrypted_reference.py
++++ b/cadathlon/common/encrypted_reference.py
+@@ -49,7 +49,7 @@
+ 
+ 
+ class ToyReferenceSession:
+-    def __init__(self, model, config, weights, *, batch, sequence_length, devices, packed=False, packed_pairs=False, bounded_refresh=False, ntt_subsets=False):
++    def __init__(self, model, config, weights, *, batch, sequence_length, devices, packed=False, packed_pairs=False, bounded_refresh=False, ntt_subsets=False, preserve_dispatch_cache=False):
+         from jaxite_word import CKKSContext, he_params, key_gen, util
+         from jaxite_word.composite_prime_gen import composite_prime_gen
+         import jax
+@@ -64,6 +64,9 @@
+         self.bounded_refresh = bounded_refresh
+         if type(ntt_subsets) is not bool:
+             raise TypeError('ntt_subsets must be an explicit boolean')
++        if type(preserve_dispatch_cache) is not bool:
++            raise TypeError('preserve_dispatch_cache must be an explicit boolean')
++        self.preserve_dispatch_cache = preserve_dispatch_cache
+         self.ntt_subsets = None
+         self.closed = False
+         if packed and packed_pairs:
+@@ -163,24 +166,29 @@
+             from encrypted_refresh import BoundedSecureRefresh
+             self.refresher = BoundedSecureRefresh(self.ctx, period=self.layout.period,
+                 level_budget=refresh_contract['level_budget'], low_memory=True,
+-                compiled=True, meta_precision=10)
++                compiled=True, meta_precision=10,
++                preserve_dispatch_cache=preserve_dispatch_cache)
+         if packed_pairs:
+             if needs_refresh:
+                 from encrypted_bounded_transformer import BoundedPackedTransformer
+-                self.ops = BoundedPackedTransformer(self.ctx, self.layout, self.refresher, low_memory=True)
++                self.ops = BoundedPackedTransformer(self.ctx, self.layout, self.refresher, low_memory=True,
++                    preserve_dispatch_cache=preserve_dispatch_cache)
+             else:
+                 from encrypted_packed_transformer import PackedTransformer
+-                self.ops = PackedTransformer(self.ctx, self.layout, low_memory=True)
++                self.ops = PackedTransformer(self.ctx, self.layout, low_memory=True,
++                    preserve_dispatch_cache=preserve_dispatch_cache)
+             self.evaluator = self.ops.arithmetic
+             self.evaluator.progress = report
+         elif packed:
+             from encrypted_packed_qwen import PackedQwen1
+-            self.ops = PackedQwen1(self.ctx, low_memory=True)
++            self.ops = PackedQwen1(self.ctx, low_memory=True,
++                preserve_dispatch_cache=preserve_dispatch_cache)
+             self.evaluator = self.ops.arithmetic
+             self.evaluator.progress = report
+         else:
+             self.evaluator = EncryptedPolynomialEvaluator(self.ctx, strategy='power', low_memory=True,
+-                progress=report, refresher=self.refresher, compiled_multiply=True, compiled_linear=True)
++                progress=report, refresher=self.refresher, compiled_multiply=True, compiled_linear=True,
++                preserve_dispatch_cache=preserve_dispatch_cache)
+             self.ops = EncryptedTensorOps(self.evaluator, self.layout)
+         print(f'[experimental-{model}] setup completed in {time.perf_counter()-started:.1f}s', file=sys.stderr, flush=True)
+ 
+@@ -259,13 +267,14 @@
+             raise errors[0]
+ 
+ 
+-def create_toy_session(model, config, weights, *, batch, sequence_length, devices, packed=False, packed_pairs=False, bounded_refresh=False, ntt_subsets=False):
++def create_toy_session(model, config, weights, *, batch, sequence_length, devices, packed=False, packed_pairs=False, bounded_refresh=False, ntt_subsets=False, preserve_dispatch_cache=False):
+     # Preserve a partially initialized owner so setup failures can release any
+     # already-created device contexts as well as normal close() paths.
+     session = object.__new__(ToyReferenceSession)
+     try:
+         session.__init__(model, config, weights, batch=batch, sequence_length=sequence_length, devices=devices,
+-                         packed=packed, packed_pairs=packed_pairs, bounded_refresh=bounded_refresh, ntt_subsets=ntt_subsets)
++                         packed=packed, packed_pairs=packed_pairs, bounded_refresh=bounded_refresh, ntt_subsets=ntt_subsets,
++                         preserve_dispatch_cache=preserve_dispatch_cache)
+         return session
+     except BaseException as error:
+         try:
+--- a/cadathlon/common/encrypted_refresh.py
++++ b/cadathlon/common/encrypted_refresh.py
+@@ -157,14 +157,16 @@
+ 
+     input_level = 1
+ 
+-    def __init__(self, context, *, period, level_budget=(2, 2), low_memory=True, compiled=False):
++    def __init__(self, context, *, period, level_budget=(2, 2), low_memory=True, compiled=False,
++                 preserve_dispatch_cache=False):
+         from encrypted_polynomial import EncryptedPolynomialEvaluator
+         from jaxite_word.bootstrapping import Bootstrap
+ 
+         # Reuse the strict real-context, Q/P-security and secret-key checks.
+         self.evaluator = EncryptedPolynomialEvaluator(
+             context, strategy='power', low_memory=low_memory,
+-            compiled_multiply=compiled, compiled_linear=compiled)
++            compiled_multiply=compiled, compiled_linear=compiled,
++            preserve_dispatch_cache=preserve_dispatch_cache)
+         self.ctx = context
+         cache = context._param_cache
+         if context.num_slots != context.degree // 2:
+@@ -330,12 +332,14 @@
+     """
+     input_level = 2
+ 
+-    def __init__(self, context, *, public_bound=1., meta_precision=None, compiled=True, **kwargs):
++    def __init__(self, context, *, public_bound=1., meta_precision=None, compiled=True,
++                 preserve_dispatch_cache=False, **kwargs):
+         self.public_bound = self._bound(public_bound)
+         if meta_precision is not None and (type(meta_precision) is not int or not 1 <= meta_precision <= 62):
+             raise ValueError('meta_precision must be an integer in [1, 62] or None')
+         self.meta_precision = meta_precision
+-        super().__init__(context, compiled=compiled, **kwargs)
++        super().__init__(context, compiled=compiled,
++            preserve_dispatch_cache=preserve_dispatch_cache, **kwargs)
+ 
+     @staticmethod
+     def _bound(value):
+--- a/cadathlon/tests/test_bert_staging.py
++++ b/cadathlon/tests/test_bert_staging.py
+@@ -50,7 +50,7 @@
+     common = destination/manifest['common_directory']
+     names = set(manifest['common_sha256'])
+     assert {'support.py','transformer_runner.py','encrypted_reference.py','encrypted_compilation.py',
+-            'encrypted_primitives.py','encrypted_bounded_transformer.py'} <= names
++            'encrypted_primitives.py','encrypted_bounded_transformer.py','encrypted_ntt.py'} <= names
+     for name, expected in manifest['common_sha256'].items():
+         assert hashlib.sha256((common/name).read_bytes()).hexdigest() == expected
+         assert (common/name).read_bytes() == (ROOT/'cadathlon/common'/name).read_bytes()
+@@ -65,7 +65,7 @@
+     assert 'p2_runtime.py' in manifest['starter_sha256']
+ 
+ 
+-@pytest.mark.parametrize('adapter', ['bert_reference.py','bert_packed_reference.py','bert_bounded_reference.py'])
++@pytest.mark.parametrize('adapter', ['bert_reference.py','bert_packed_reference.py','bert_bounded_reference.py','bert_optimized_reference.py'])
+ def test_staged_adapters_import_but_do_not_claim_missing_full_stages(staging, adapter):
+     stage, upstream, destination = staging
+     stage.stage(upstream, destination)
+--- /dev/null
++++ b/cadathlon/tests/test_optimized_transformer_wiring.py
+@@ -0,0 +1,131 @@
++"""Optional control wiring and lifecycle only; no encrypted-model claim."""
++from contextlib import nullcontext
++import importlib
++import json
++from pathlib import Path
++import sys
++from types import SimpleNamespace
++import pytest
++
++ROOT=Path(__file__).resolve().parents[2]
++sys.path[:0]=[str(ROOT),str(ROOT/'cadathlon/common')]
++from support import load_module
++import encrypted_reference as reference
++from encrypted_polynomial import EncryptedPolynomialEvaluator
++from encrypted_packed_transformer import PackedTransformer, PackedPairLayout
++from encrypted_bounded_transformer import BoundedPackedTransformer
++from encrypted_bounded_arithmetic import BoundedArithmetic
++from encrypted_packed_qwen import CompiledArithmetic, PackedQwen1
++from encrypted_refresh import SecureRefresh, BoundedSecureRefresh
++
++CONSTRUCTORS={
++ 'arithmetic':lambda context,**kw:CompiledArithmetic(context,**kw),
++ 'bounded_arithmetic':lambda context,**kw:BoundedArithmetic(context,**kw),
++ 'packed':lambda context,**kw:PackedTransformer(context,PackedPairLayout(1,1,32,64),**kw),
++ 'bounded_packed':lambda context,**kw:BoundedPackedTransformer(context,PackedPairLayout(1,1,32,64),None,**kw),
++ 'single_token':lambda context,**kw:PackedQwen1(context,**kw),
++ 'refresh':lambda context,**kw:SecureRefresh(context,period=4,**kw),
++ 'bounded_refresh':lambda context,**kw:BoundedSecureRefresh(context,period=4,**kw),
++}
++
++@pytest.mark.parametrize('kind',CONSTRUCTORS)
++@pytest.mark.parametrize('bad',[None,1,'yes'])
++def test_strict_flag_reaches_validator_before_context_use(kind,bad):
++ with pytest.raises(TypeError,match='explicit boolean'):
++  CONSTRUCTORS[kind](SimpleNamespace(num_slots=64),low_memory=True,preserve_dispatch_cache=bad)
++
++@pytest.mark.parametrize('kind',CONSTRUCTORS)
++def test_opt_in_requires_low_memory_at_every_entry(kind):
++ with pytest.raises(ValueError,match='low_memory'):
++  CONSTRUCTORS[kind](SimpleNamespace(num_slots=64),low_memory=False,preserve_dispatch_cache=True)
++
++@pytest.mark.parametrize('kind',CONSTRUCTORS)
++@pytest.mark.parametrize('selected',[False,True])
++def test_constructor_forwards_default_or_explicit_policy(monkeypatch,kind,selected):
++ observed=[]
++ class Boundary(Exception):pass
++ def validate(self,context,**kwargs):
++  observed.append(kwargs);raise Boundary
++ monkeypatch.setattr(EncryptedPolynomialEvaluator,'__init__',validate)
++ options={'preserve_dispatch_cache':True} if selected else {}
++ with pytest.raises(Boundary):CONSTRUCTORS[kind](SimpleNamespace(num_slots=64),low_memory=True,**options)
++ assert observed[0]['preserve_dispatch_cache'] is selected
++
++@pytest.mark.parametrize('bad',[None,1,'yes'])
++def test_session_rejects_bad_flag_before_any_key_generation(monkeypatch,bad):
++ from jaxite_word import key_gen
++ def forbidden(*a,**k):pytest.fail('key generation reached with invalid option')
++ monkeypatch.setattr(key_gen,'gen_pke_pair',forbidden)
++ with pytest.raises(TypeError,match='preserve_dispatch_cache'):
++  reference.create_toy_session('qwen',{}, {},batch=1,sequence_length=1,devices=[],preserve_dispatch_cache=bad)
++
++@pytest.mark.parametrize('model,number,packed,packed_pairs',[
++ ('bert',1,False,True),('qwen',2,False,True),('qwen',1,True,False),('qwen',1,False,False)])
++@pytest.mark.parametrize('selected',[False,True])
++def test_session_wires_ops_refresh_and_cleans_owned_provider(monkeypatch,model,number,packed,packed_pairs,selected):
++ """Fake keys/contexts isolate factory control flow; the public ring remains real."""
++ import jax
++ from jaxite_word import key_gen,ckks_ctx
++ import jaxite_word
++ import encrypted_ntt, encrypted_refresh
++ folder=ROOT/'cadathlon/agent_pset'/('p2_bert' if model=='bert' else 'p4_qwen')
++ case=json.loads((folder/f'test/test{number}.in').read_text())
++ weights,embeddings,*_=load_module(folder/'src/reference.py').make_case(case)
++ if packed_pairs:
++  import encrypted_packed_transformer as packed_module
++  actual_plan=packed_module.plan_packed_transformer(model,case['config'],weights,
++      batch=embeddings.shape[0],sequence=embeddings.shape[1])
++  monkeypatch.setattr(packed_module,'plan_packed_transformer',lambda *a,**kw:actual_plan)
++ events=[];observed={}
++ class Context:
++  def __init__(self,params):
++   self.parameters=params;self.degree=params['degree'];self.num_slots=params['num_slots']
++   self._param_cache=SimpleNamespace(ntt_q_max=object())
++  def program_initialization(self,*args,**kwargs):pass
++ monkeypatch.setattr(jaxite_word,'CKKSContext',Context)
++ monkeypatch.setattr(jax,'default_device',lambda device:nullcontext())
++ monkeypatch.setattr(jax.numpy,'asarray',lambda *a,**k:SimpleNamespace(transpose=lambda *x:object()))
++ monkeypatch.setattr(key_gen,'gen_pke_pair',lambda *args,**kw:{'secret_key':object(),'public_key':object()})
++ monkeypatch.setattr(key_gen,'gen_evaluation_key',lambda *a,**kw:{'a':[0],'b':[0]})
++ owner=SimpleNamespace(keys={},close=lambda:events.append('keys'))
++ monkeypatch.setattr(encrypted_refresh.ClientRotationKeyStore,'generate',lambda *a,**kw:owner)
++ provider=SimpleNamespace(close=lambda:events.append('ntt'))
++ monkeypatch.setattr(encrypted_ntt,'enable_scoped_ntt_subsets',lambda context:provider)
++ def refresh(context,**kwargs):
++  observed['refresh']=kwargs;return SimpleNamespace(ctx=context)
++ monkeypatch.setattr(encrypted_refresh,'BoundedSecureRefresh',refresh)
++ def graph(context,*args,**kwargs):
++  observed['graph']=kwargs;return SimpleNamespace(arithmetic=SimpleNamespace(ctx=context))
++ for module,name in [('encrypted_packed_transformer','PackedTransformer'),('encrypted_bounded_transformer','BoundedPackedTransformer'),('encrypted_packed_qwen','PackedQwen1')]:
++  monkeypatch.setattr(importlib.import_module(module),name,graph)
++ def evaluator(context,**kwargs):
++  observed['evaluator']=kwargs;return SimpleNamespace(ctx=context)
++ monkeypatch.setattr(reference,'EncryptedPolynomialEvaluator',evaluator)
++ monkeypatch.setattr(reference,'EncryptedTensorOps',lambda evaluator,layout:object())
++ monkeypatch.setattr(ckks_ctx,'evict_context_caches',lambda context:events.append('context'))
++ monkeypatch.setattr(jax,'clear_caches',lambda:events.append('jax'))
++ monkeypatch.setattr(reference.gc,'collect',lambda:events.append('gc'))
++ monkeypatch.delenv('CROSS_SKIP_TOPLEVEL_ROTKEYS',raising=False)
++ options={'preserve_dispatch_cache':True,'ntt_subsets':True} if selected else {}
++ session=reference.create_toy_session(model,case['config'],weights,batch=embeddings.shape[0],sequence_length=embeddings.shape[1],devices=[SimpleNamespace(memory_stats=lambda:{})],packed=packed,packed_pairs=packed_pairs,bounded_refresh=packed_pairs,**options)
++ assert session.preserve_dispatch_cache is selected
++ for kwargs in observed.values():assert kwargs['preserve_dispatch_cache'] is selected
++ assert ('refresh' in observed)==(model=='qwen' and number==2)
++ assert session.ntt_subsets is (provider if selected else None)
++ session.close();session.close()
++ assert events==(['ntt'] if selected else [])+['context','context','jax','gc','keys']
++
++@pytest.mark.parametrize('model,problem',[('bert','p2_bert'),('qwen','p4_qwen')])
++def test_optimized_adapter_explicitly_opts_in_and_default_adapter_does_not(monkeypatch,model,problem):
++ captured=[]
++ def create(*args,**kwargs):captured.append((args,kwargs));return object()
++ monkeypatch.setattr(reference,'create_toy_session',create)
++ folder=ROOT/'cadathlon/agent_pset'/problem/'src'
++ for name in (f'{model}_bounded_reference.py',f'{model}_optimized_reference.py'):
++  module=load_module(folder/name)
++  assert module.IMPLEMENTATION_STATUS=='experimental-unvalidated'
++  module.create_session({}, {},batch=1,sequence_length=2,devices=[])
++ old,new=[row[1] for row in captured]
++ assert 'preserve_dispatch_cache' not in old and 'ntt_subsets' not in old
++ assert new['preserve_dispatch_cache'] is True and new['ntt_subsets'] is True
++ assert new['packed_pairs'] is True and new['bounded_refresh'] is True
+--- a/cadathlon/tests/test_package.py
++++ b/cadathlon/tests/test_package.py
+@@ -148,10 +148,12 @@
+         assert json.loads(result.stdout)["mode"] == "plaintext-reference"
+     for problem, reference in ((problems[1], "bert_reference.py"), (problems[1], "bert_packed_reference.py"),
+                                (problems[1], "bert_bounded_reference.py"),
++                               (problems[1], "bert_optimized_reference.py"),
+                                (problems[3], "qwen_reference.py"),
+                                (problems[3], "qwen_packed_reference.py"),
+                                (problems[3], "qwen_packed_pair_reference.py"),
+-                               (problems[3], "qwen_bounded_reference.py")):
++                               (problems[3], "qwen_bounded_reference.py"),
++                               (problems[3], "qwen_optimized_reference.py")):
+         src = extracted / problem / "src"
+         result = subprocess.run([sys.executable, "runner.py", "--preflight", "--implementation", reference],
+                                 cwd=src, env=env, text=True, capture_output=True)

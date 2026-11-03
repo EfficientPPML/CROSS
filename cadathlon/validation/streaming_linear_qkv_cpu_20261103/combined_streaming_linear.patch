@@ -1,0 +1,552 @@
+--- /dev/null
++++ b/cadathlon/common/encrypted_streaming_linear.py
+@@ -0,0 +1,244 @@
++"""Experimental distinct-row linear tiles using genuine CKKS BSGS arithmetic.
++
++Each physical feature block holds a different client row. Unused features and
++unused rows are zero; there is no periodic-row replication. The evaluator uses
++only ciphertexts, public matrix/bias/mask data and an initialized keyless context.
++It borrows the context and does not encrypt, decrypt, generate keys or refresh.
++
++This is a component for streamed full-width projections, not a complete BERT or
++Qwen implementation. The client codec is backend-free; crypto imports are lazy.
++"""
++from dataclasses import dataclass
++from types import SimpleNamespace
++import math
++import numpy as np
++
++
++def _positive_integer(value, name):
++    if type(value) is not int or value < 1:
++        raise ValueError(name + ' must be a positive integer')
++    return value
++
++
++def _finite_real_array(value, name):
++    array = np.asarray(value)
++    if array.dtype.kind not in 'fiu' or not np.isfinite(array).all():
++        raise ValueError(name + ' must contain finite real numbers')
++    result = array.astype(np.float64, copy=False)
++    if not np.isfinite(result).all():
++        raise ValueError(name + ' exceeds float64 range')
++    return result
++
++
++@dataclass(frozen=True)
++class RowTileLayout:
++    """Public layout for disjoint rows; F4096 fits BERT widths768 and3072.
++
++    Layout metadata is public. Exact logical row count is required to unpack or
++    evaluate a stream. Partial final tiles have zero inactive rows, including
++    their affine bias; those rows never become additional logical inputs.
++    """
++    slots: int
++    features: int = 4096
++
++    def __post_init__(self):
++        for name in ('slots', 'features'):
++            value = _positive_integer(getattr(self, name), name)
++            if value & (value - 1):
++                raise ValueError(name + ' must be a power of two')
++        if self.slots < 2 * self.features or self.slots % self.features:
++            raise ValueError('slots must contain at least two complete feature blocks')
++
++    @property
++    def rows_per_tile(self):
++        return self.slots // self.features
++
++    def _width(self, width):
++        if _positive_integer(width, 'width') > self.features:
++            raise ValueError('width exceeds the feature block')
++        return width
++
++    def _valid_rows(self, valid_rows):
++        if _positive_integer(valid_rows, 'valid_rows') > self.rows_per_tile:
++            raise ValueError('valid_rows exceeds tile capacity')
++        return valid_rows
++
++    def tile_count(self, rows):
++        return (_positive_integer(rows, 'rows') + self.rows_per_tile - 1) // self.rows_per_tile
++
++    def linear_contract(self, *, rows, input_width, output_width):
++        """Exact public shape/order contract for a linear ciphertext stream."""
++        count = self.tile_count(rows)
++        self._width(input_width); self._width(output_width)
++        return {'schema': 'distinct-row-linear-v1', 'slots': self.slots,
++            'features': self.features, 'rows': rows, 'input_width': input_width,
++            'output_width': output_width, 'rows_per_tile': self.rows_per_tile,
++            'tile_count': count, 'last_tile_rows': rows-(count-1)*self.rows_per_tile,
++            'row_order': 'contiguous-input-order', 'feature_padding': 'zero',
++            'inactive_rows': 'zero-including-bias'}
++
++    def feature(self, values, *, valid_rows):
++        """Public feature constants, zero outside active rows/features."""
++        values = _finite_real_array(values, 'feature constants')
++        if values.ndim != 1:
++            raise ValueError('feature constants must be a vector')
++        self._width(len(values)); self._valid_rows(valid_rows)
++        result = np.zeros((self.rows_per_tile, self.features), dtype=np.float64)
++        result[:valid_rows, :len(values)] = values
++        return result.reshape(self.slots)
++
++    def input_mask(self, width, *, valid_rows):
++        return self.feature(np.ones(self._width(width)), valid_rows=valid_rows)
++
++    def pack_client_rows(self, rows):
++        """Yield full-slot client plaintexts, one tile at a time.
++
++        This method does no encryption. The caller must keep the supplied rows
++        unchanged while consuming the iterator. No input row is repeated.
++        """
++        rows = _finite_real_array(rows, 'client rows')
++        if rows.ndim != 2 or rows.shape[0] < 1:
++            raise ValueError('client rows must be a nonempty rank-two array')
++        self._width(rows.shape[1])
++        for start in range(0, len(rows), self.rows_per_tile):
++            block = rows[start:start + self.rows_per_tile]
++            tile = np.zeros((self.rows_per_tile, self.features), dtype=np.float64)
++            tile[:len(block), :rows.shape[1]] = block
++            yield tile.reshape(self.slots)
++
++    def unpack_client_rows(self, tiles, *, rows, width, padding_atol=None):
++        """Decode logical rows; reject missing/extra tiles and optional bad padding.
++
++        Decoded CKKS padding is approximate. A caller may supply a nonnegative
++        absolute error tolerance; this never changes logical row selection.
++        """
++        count = self.tile_count(rows); self._width(width)
++        if padding_atol is not None and (isinstance(padding_atol, (bool, np.bool_))
++                or not isinstance(padding_atol, (int, float))
++                or not math.isfinite(padding_atol) or padding_atol < 0):
++            raise ValueError('padding_atol must be a finite nonnegative real number')
++        iterator = iter(tiles); output = np.empty((rows, width), dtype=np.float64)
++        for index in range(count):
++            try:
++                raw = next(iterator)
++            except StopIteration as error:
++                raise ValueError('missing client output tile') from error
++            tile = _finite_real_array(raw, 'client output tile')
++            if tile.shape != (self.slots,):
++                raise ValueError('client output tile must contain every physical slot')
++            tile = tile.reshape(self.rows_per_tile, self.features)
++            start = index * self.rows_per_tile; valid = min(self.rows_per_tile, rows-start)
++            if padding_atol is not None:
++                if (np.any(np.abs(tile[:valid, width:]) > padding_atol)
++                        or np.any(np.abs(tile[valid:]) > padding_atol)):
++                    raise ValueError('decoded tile padding exceeds the declared tolerance')
++            output[start:start+valid] = tile[:valid, :width]
++        try:
++            next(iterator)
++        except StopIteration:
++            return output
++        raise ValueError('extra client output tile')
++
++
++class StreamingLinear:
++    """Borrow a secure keyless context and evaluate one row tile at a time.
++
++    Uses the existing sparse MatrixDiagonals/CompiledArithmetic implementation
++    via PackedTransformer.linear. Each map consumes one real rescale level.
++    Masks are public source-coordinate weights; row/feature padding is masked
++    even if incoming ciphertext padding is hostile. Output feature padding and
++    inactive rows are zero in the ideal circuit, up to ordinary CKKS error.
++    """
++    def __init__(self, context, layout, *, low_memory=True, preserve_dispatch_cache=False):
++        if not isinstance(layout, RowTileLayout):
++            raise TypeError('expected RowTileLayout')
++        if type(low_memory) is not bool or type(preserve_dispatch_cache) is not bool:
++            raise TypeError('memory options must be explicit booleans')
++        if context.num_slots != layout.slots:
++            raise ValueError('context slots differ from the row layout')
++        if context.degree != 2 * layout.slots:
++            raise ValueError('row layout must cover every physical CKKS slot')
++        cache = getattr(context, '_param_cache', None)
++        if cache is not None and cache.batch != 1:
++            raise ValueError('row tiles require a batch-one evaluator context')
++        from encrypted_packed_qwen import CompiledArithmetic
++        self.ctx, self.layout = context, layout
++        # Constructor validates initialization, CD2, actual secure Q/P and all
++        # three possible secret-key locations before creating arithmetic.
++        self.arithmetic = CompiledArithmetic(context, low_memory=low_memory,
++            preserve_dispatch_cache=preserve_dispatch_cache)
++
++    @staticmethod
++    def required_rotation_indices(weight, layout):
++        if not isinstance(layout, RowTileLayout):
++            raise TypeError('expected RowTileLayout')
++        from encrypted_packed_qwen import MatrixDiagonals
++        weight = _finite_real_array(weight, 'public weight')
++        return tuple(sorted(MatrixDiagonals(weight, layout.slots, layout.features).rotations))
++
++    def _validate_ciphertext(self, value):
++        from jaxite_word import Polynomial
++        from support import require_secure_execution
++        if (self.ctx.secret_key is not None or self.ctx._param_cache.secret_key is not None
++                or self.ctx.parameters.get('secret_key') is not None):
++            raise ValueError('streamed evaluator must remain keyless')
++        if not isinstance(value, Polynomial):
++            raise TypeError('linear input must be a canonical Polynomial ciphertext')
++        if (value.batch != 1 or value.num_elements != 2
++                or value.degree != 2 * self.layout.slots):
++            raise ValueError('row tiles require one two-component ciphertext with the declared ring degree')
++        require_secure_execution(self.ctx, value)
++        if self.arithmetic._level(value) < 1:
++            raise ValueError('streamed linear requires one remaining rescale level')
++
++    def linear_tile(self, value, weight, bias=None, *, valid_rows, input_mask=None):
++        self.layout._valid_rows(valid_rows)
++        weight = _finite_real_array(weight, 'public weight')
++        if weight.ndim != 2:
++            raise ValueError('public weight must be a matrix')
++        self.layout._width(weight.shape[0]); self.layout._width(weight.shape[1])
++        if bias is not None:
++            bias = _finite_real_array(bias, 'public bias')
++            if bias.shape != (weight.shape[0],):
++                raise ValueError('public bias differs from the output width')
++        mask = self.layout.input_mask(weight.shape[1], valid_rows=valid_rows)
++        if input_mask is not None:
++            input_mask = _finite_real_array(input_mask, 'public source mask')
++            if input_mask.shape != (self.layout.slots,):
++                raise ValueError('public source mask must contain every physical slot')
++            mask *= input_mask
++        self._validate_ciphertext(value)
++        from encrypted_packed_transformer import PackedTransformer
++        # Per-call bias view avoids changing shared layout state. It restores
++        # zeros in inactive rows as part of the existing public bias addition.
++        active_layout = SimpleNamespace(slots=self.layout.slots,
++            feature=lambda values: self.layout.feature(values, valid_rows=valid_rows))
++        graph = SimpleNamespace(ctx=self.ctx, layout=active_layout,
++            features=self.layout.features, arithmetic=self.arithmetic)
++        return PackedTransformer.linear(graph, value, weight, bias, input_mask=mask)
++
++    def iter_evaluate(self, ciphertexts, weight, bias=None, *, rows):
++        """Yield outputs without retaining the stream; consume to verify its size.
++
++        A partial consumer cannot establish that no trailing input tiles exist.
++        Complete consumption rejects both missing and extra ciphertext tiles.
++        No client codec is called by this evaluator.
++        """
++        count = self.layout.tile_count(rows); iterator = iter(ciphertexts)
++        for index in range(count):
++            try:
++                value = next(iterator)
++            except StopIteration as error:
++                raise ValueError('missing ciphertext tile') from error
++            valid = min(self.layout.rows_per_tile, rows-index*self.layout.rows_per_tile)
++            yield self.linear_tile(value, weight, bias, valid_rows=valid)
++            del value
++        try:
++            next(iterator)
++        except StopIteration:
++            return
++        raise ValueError('extra ciphertext tile')
++
++    def clear(self):
++        """Release arithmetic bindings/caches; the caller still owns the context."""
++        self.arithmetic._clear_working_caches()
+--- a/cadathlon/common/package.py
++++ b/cadathlon/common/package.py
+@@ -12,6 +12,7 @@
+     "encrypted_refresh.py", "encrypted_rotation.py", "encrypted_compilation.py",
+     "encrypted_primitives.py", "encrypted_ntt.py", "encrypted_packed_qwen.py", "encrypted_packed_transformer.py",
+     "encrypted_bounded_arithmetic.py", "encrypted_bounded_transformer.py",
++    "encrypted_streaming_linear.py",
+ )
+ PUBLIC_RELEASE_EVIDENCE = (
+     "validation/p1_student_suite.json", "validation/p3_compact_baseline.json",
+--- /dev/null
++++ b/cadathlon/tests/test_streaming_linear.py
+@@ -0,0 +1,158 @@
++"""Distinct-row NumPy/BSGS contract tests; no encryption or HE-error claim."""
++from dataclasses import dataclass
++from pathlib import Path
++from types import SimpleNamespace
++import os
++import subprocess
++import sys
++
++import numpy as np
++import pytest
++
++ROOT=Path(os.environ.get('CROSS_STREAMING_ROOT',Path(__file__).resolve().parents[2]))
++sys.path[:0]=[str(ROOT),str(ROOT/'cadathlon/common')]
++from encrypted_streaming_linear import RowTileLayout, StreamingLinear
++
++@dataclass
++class Value:
++    slots: np.ndarray
++    level: int=2
++    _ckks_scale: float=1.
++
++class Adds:
++    def __getitem__(self,level):
++        return SimpleNamespace(add_plain=lambda a,b:Value(a.slots+b.slots,min(a.level,b.level)))
++
++class Arithmetic:
++    def __init__(self,slots):
++        self.ctx=SimpleNamespace(num_slots=slots,he_add=Adds())
++        self.rotations=set()
++    def _ensure_capacity(self,values,required):
++        assert all(v.level>=required for v in values)
++        return tuple(values)
++    def _level(self,value):return value.level
++    def _prepare(self,level):pass
++    def _finish(self,value):return value
++    def _encode_public(self,slots,level,scale):return Value(np.asarray(slots),level,scale)
++    def rotate(self,value,index):
++        if index%self.ctx.num_slots:self.rotations.add(index%self.ctx.num_slots)
++        return Value(np.roll(value.slots,-index),value.level)
++    def add(self,left,right):return Value(left.slots+right.slots,min(left.level,right.level))
++    def weighted_sum(self,values,weights,*,bias=0.):
++        values,weights=tuple(values),tuple(weights)
++        return Value(sum(v.slots*w for v,w in zip(values,weights))+bias,min(v.level for v in values)-1)
++
++class IdealLinear(StreamingLinear):
++    def __init__(self,layout):
++        self.layout=layout;self.arithmetic=Arithmetic(layout.slots);self.ctx=self.arithmetic.ctx
++    def _validate_ciphertext(self,value):
++        assert isinstance(value,Value) and value.slots.shape==(self.layout.slots,) and value.level>=1
++
++
++def matrix(outputs,inputs):
++    """Every rectangular dimension participates; boundary routes are explicit."""
++    weight=np.zeros((outputs,inputs)); row=np.arange(outputs)
++    weight[row,row%inputs]=.5
++    weight[row,(row+1)%inputs]+=-.25
++    for shift in (768,1536,2304):
++        source=row+shift;valid=source<inputs
++        weight[row[valid],source[valid]]+=.125
++    for target,source in ((0,inputs-1),(outputs-1,0),(min(63,outputs-1),min(64,inputs-1)),(min(64,outputs-1),min(63,inputs-1))):
++        weight[target,source]+=.0625
++    return weight
++
++
++@pytest.mark.parametrize('slots',[8192,65536])
++@pytest.mark.parametrize('outputs,inputs',[(768,768),(3072,768),(768,3072)])
++@pytest.mark.parametrize('partial',[False,True])
++def test_actual_bsgs_fullwidth_rectangular_hostile_padding_and_signed_source_mask(slots,outputs,inputs,partial):
++    layout=RowTileLayout(slots); valid=layout.rows_per_tile-1 if partial else layout.rows_per_tile
++    raw=(np.arange(slots,dtype=float).reshape(layout.rows_per_tile,4096)%17-8)*1e6
++    active=(np.arange(valid)[:,None]+1)*8+(np.arange(inputs)[None,:]%31)/32
++    raw[:valid,:inputs]=active
++    before=raw.copy(); public_mask=np.where(np.arange(slots)%3, .5,-1.).reshape(raw.shape)
++    public_mask[:,::7]=0.
++    weight=matrix(outputs,inputs);bias=(np.arange(outputs)%13-6)/64
++    worker=IdealLinear(layout)
++    result=worker.linear_tile(Value(raw.reshape(-1)),weight,bias,valid_rows=valid,input_mask=public_mask.reshape(-1))
++    expected=np.zeros_like(raw);expected[:valid,:outputs]=(active*public_mask[:valid,:inputs])@weight.T+bias
++    np.testing.assert_allclose(result.slots.reshape(raw.shape),expected,atol=1e-10,rtol=1e-13)
++    np.testing.assert_array_equal(raw,before)
++    assert result.level==1
++    assert worker.arithmetic.rotations<=set(worker.required_rotation_indices(weight,layout))
++
++
++@pytest.mark.parametrize('slots',[8192,65536])
++def test_dense_asymmetric_matrix_distinct_rows_and_partial_bias(slots):
++    layout=RowTileLayout(slots);worker=IdealLinear(layout);valid=layout.rows_per_tile-1
++    rng=np.random.default_rng(417);raw=rng.uniform(1e4,2e4,slots).reshape(layout.rows_per_tile,4096)
++    raw[:valid,:9]=rng.normal(size=(valid,9))+np.arange(valid)[:,None]
++    weight=rng.normal(size=(7,9));bias=rng.normal(size=7)
++    mask=np.cos(np.arange(slots)).reshape(raw.shape)
++    result=worker.linear_tile(Value(raw.ravel()),weight,bias,valid_rows=valid,input_mask=mask.ravel())
++    expected=np.zeros_like(raw);expected[:valid,:7]=(raw[:valid,:9]*mask[:valid,:9])@weight.T+bias
++    np.testing.assert_allclose(result.slots.reshape(raw.shape),expected,rtol=1e-12,atol=1e-12)
++    assert result.level==1
++
++
++@pytest.mark.parametrize('slots',[8192,65536])
++def test_zero_matrix_keeps_bias_in_valid_rows_only(slots):
++    layout=RowTileLayout(slots);worker=IdealLinear(layout);bias=np.array([1.,-2.,3.])
++    result=worker.linear_tile(Value(np.full(slots,1e9)),np.zeros((3,5)),bias,valid_rows=1)
++    expected=np.zeros((layout.rows_per_tile,4096));expected[0,:3]=bias
++    np.testing.assert_array_equal(result.slots.reshape(expected.shape),expected)
++    assert result.level==1 and not worker.arithmetic.rotations
++
++
++@pytest.mark.parametrize('slots',[8192,65536])
++def test_codec_and_stream_preserve_distinct_rows_and_partial_last_tile(slots):
++    layout=RowTileLayout(slots); rows=layout.rows_per_tile+1
++    inputs=np.arange(rows*9,dtype=float).reshape(rows,9)/16
++    packed=list(layout.pack_client_rows(inputs))
++    assert len(packed)==2
++    np.testing.assert_array_equal(layout.unpack_client_rows(packed,rows=rows,width=9,padding_atol=0),inputs)
++    np.testing.assert_array_equal(packed[-1].reshape(layout.rows_per_tile,4096)[1:],0)
++    worker=IdealLinear(layout);weight=matrix(7,9);bias=np.arange(7)/8
++    output=list(worker.iter_evaluate((Value(v) for v in packed),weight,bias,rows=rows))
++    decoded=layout.unpack_client_rows((v.slots for v in output),rows=rows,width=7,padding_atol=1e-12)
++    np.testing.assert_allclose(decoded,inputs@weight.T+bias,atol=1e-12,rtol=1e-12)
++    assert all(v.level==1 for v in output)
++
++
++@pytest.mark.parametrize('missing',[True,False])
++def test_complete_stream_rejects_wrong_number_of_input_tiles(missing):
++    layout=RowTileLayout(8192); worker=IdealLinear(layout);tile=Value(np.zeros(8192))
++    with pytest.raises(ValueError,match='missing ciphertext|extra ciphertext'):
++        list(worker.iter_evaluate([tile]*(1 if missing else 3),np.eye(3),rows=3))
++    with pytest.raises(ValueError,match='missing client|extra client'):
++        layout.unpack_client_rows([tile.slots]*(1 if missing else 3),rows=3,width=3)
++
++
++@pytest.mark.parametrize('index',[8,4096+2])
++def test_unpack_checks_feature_and_inactive_row_padding(index):
++    layout=RowTileLayout(8192);tile=np.zeros(8192);tile[index]=1e-4
++    with pytest.raises(ValueError,match='padding'):
++        layout.unpack_client_rows([tile],rows=1,width=8,padding_atol=1e-5)
++    assert layout.unpack_client_rows([tile],rows=1,width=8,padding_atol=1e-3).shape==(1,8)
++
++
++@pytest.mark.parametrize('bad',[
++    {'valid_rows':0}, {'valid_rows':3}, {'valid_rows':True},
++    {'valid_rows':1,'input_mask':np.zeros(8)},
++    {'valid_rows':1,'input_mask':np.full(8192,np.nan)},
++])
++def test_invalid_public_tile_metadata(bad):
++    worker=IdealLinear(RowTileLayout(8192))
++    with pytest.raises(ValueError):worker.linear_tile(Value(np.zeros(8192)),np.eye(3),**bad)
++
++
++def test_layout_import_and_client_codec_do_not_import_backend():
++    script="""import sys
++sys.path.insert(0,sys.argv[1])
++from encrypted_streaming_linear import RowTileLayout
++x=RowTileLayout(8192)
++assert x.rows_per_tile==2
++assert not any(n=='jax' or n.startswith('jax.') or n=='jaxite_word' or n.startswith('jaxite_word.') for n in sys.modules)
++"""
++    subprocess.run([sys.executable,'-c',script,str(ROOT/'cadathlon/common')],check=True,
++                   env=dict(os.environ,JAX_PLATFORMS='cpu'))
+--- /dev/null
++++ b/cadathlon/tests/test_streaming_linear_contracts.py
+@@ -0,0 +1,85 @@
++"""Backend-free client/preflight and keyless boundary checks; no encryption."""
++from pathlib import Path
++from types import SimpleNamespace
++import importlib,json,os,subprocess,sys
++import numpy as np
++import pytest
++ROOT=Path(os.environ.get('CROSS_STREAMING_ROOT',Path(__file__).resolve().parents[2]))
++sys.path[:0]=[str(ROOT),str(ROOT/'cadathlon/common')]
++from encrypted_streaming_linear import RowTileLayout,StreamingLinear
++
++def test_client_codec_import_requires_no_crypto_backend():
++ code='''import importlib.abc,sys
++class Deny(importlib.abc.MetaPathFinder):
++ def find_spec(self,fullname,path=None,target=None):
++  if fullname.split('.')[0] in ('jax','jaxlib','jaxite_word','encrypted_packed_qwen','encrypted_packed_transformer'):raise AssertionError('crypto backend import: '+fullname)
++sys.meta_path.insert(0,Deny())
++import encrypted_streaming_linear as m
++import numpy as np
++layout=m.RowTileLayout(8192)
++rows=np.arange(3*768,dtype=float).reshape(3,768)
++np.testing.assert_array_equal(layout.unpack_client_rows(layout.pack_client_rows(rows),rows=3,width=768,padding_atol=0),rows)
++'''
++ env=os.environ.copy();env['PYTHONPATH']=str(ROOT/'cadathlon/common')
++ completed=subprocess.run([sys.executable,'-c',code],env=env,text=True,capture_output=True)
++ assert completed.returncode==0,completed.stderr
++
++def test_declared_package_closure_includes_module():
++ import package
++ assert 'encrypted_streaming_linear.py' in package.COMMON_RUNTIME_FILES
++ package.required_files(ROOT/'cadathlon/common',package.COMMON_RUNTIME_FILES)
++
++@pytest.mark.parametrize('where',['context','cache','parameters'])
++def test_secret_in_any_location_is_rejected_on_every_call(where):
++ evaluator=object.__new__(StreamingLinear)
++ evaluator.ctx=SimpleNamespace(secret_key=None,_param_cache=SimpleNamespace(secret_key=None),parameters={})
++ if where=='parameters':evaluator.ctx.parameters['secret_key']=object()
++ elif where=='cache':evaluator.ctx._param_cache.secret_key=object()
++ else:evaluator.ctx.secret_key=object()
++ with pytest.raises(ValueError,match='remain keyless'):evaluator._validate_ciphertext(np.ones(8192))
++
++def test_plaintext_is_not_an_evaluator_input():
++ evaluator=object.__new__(StreamingLinear)
++ evaluator.ctx=SimpleNamespace(secret_key=None,_param_cache=SimpleNamespace(secret_key=None),parameters={})
++ with pytest.raises(TypeError,match='canonical Polynomial ciphertext'):evaluator._validate_ciphertext(np.ones(8192))
++
++@pytest.mark.parametrize('options',[{'low_memory':1},{'preserve_dispatch_cache':'yes'}])
++def test_options_rejected_before_backend_construction(options):
++ with pytest.raises(TypeError,match='explicit booleans'):StreamingLinear(SimpleNamespace(num_slots=8192),RowTileLayout(8192),**options)
++
++def test_inconsistent_context_slots_rejected():
++ with pytest.raises(ValueError,match='context slots'):StreamingLinear(SimpleNamespace(num_slots=65536),RowTileLayout(8192))
++
++@pytest.mark.parametrize('kind',['weight_complex','bias_complex','mask_complex','weight_nan','bias_nan','mask_nan','weight_shape','bias_shape','mask_shape'])
++def test_malformed_public_data_rejected_before_ciphertext_access(kind):
++ evaluator=object.__new__(StreamingLinear);evaluator.layout=RowTileLayout(8192)
++ evaluator._validate_ciphertext=lambda value:(_ for _ in ()).throw(AssertionError('ciphertext accessed'))
++ w=np.eye(3);b=np.arange(3.);m=np.ones(8192)
++ if kind=='weight_complex':w=w.astype(complex)+1j
++ if kind=='bias_complex':b=b.astype(complex)+1j
++ if kind=='mask_complex':m=m.astype(complex)+1j
++ if kind=='weight_nan':w[0,0]=np.nan
++ if kind=='bias_nan':b[0]=np.nan
++ if kind=='mask_nan':m[0]=np.nan
++ if kind=='weight_shape':w=np.ones(3)
++ if kind=='bias_shape':b=np.ones(4)
++ if kind=='mask_shape':m=np.ones(4)
++ with pytest.raises(ValueError):evaluator.linear_tile(object(),w,b,valid_rows=1,input_mask=m)
++
++@pytest.mark.parametrize('slots,rows',[(8192,2),(8192,3),(65536,16),(65536,19)])
++def test_exact_public_tile_contract(slots,rows):
++ layout=RowTileLayout(slots);per=slots//4096;count=(rows+per-1)//per
++ contract=layout.linear_contract(rows=rows,input_width=768,output_width=3072)
++ assert contract=={'schema':'distinct-row-linear-v1','slots':slots,'features':4096,'rows':rows,'input_width':768,'output_width':3072,'rows_per_tile':per,'tile_count':count,'last_tile_rows':rows-(count-1)*per,'row_order':'contiguous-input-order','feature_padding':'zero','inactive_rows':'zero-including-bias'}
++
++@pytest.mark.parametrize('kwargs',[{'rows':True,'input_width':768,'output_width':768},{'rows':2,'input_width':0,'output_width':768},{'rows':2,'input_width':768,'output_width':4097}])
++def test_invalid_contract_shape(kwargs):
++ with pytest.raises(ValueError):RowTileLayout(8192).linear_contract(**kwargs)
++
++def test_partial_physical_ring_context_rejected_before_arithmetic():
++ with pytest.raises(ValueError,match='every physical CKKS slot'):
++  StreamingLinear(SimpleNamespace(num_slots=8192,degree=32768),RowTileLayout(8192))
++
++def test_batch_context_rejected_before_arithmetic():
++ with pytest.raises(ValueError,match='batch-one'):
++  StreamingLinear(SimpleNamespace(num_slots=8192,degree=16384,_param_cache=SimpleNamespace(batch=2)),RowTileLayout(8192))
+--- a/cadathlon/tests/test_package.py
++++ b/cadathlon/tests/test_package.py
+@@ -33,3 +33,3 @@
+                  "encrypted_packed_qwen.py", "encrypted_packed_transformer.py",
+-                 "encrypted_bounded_arithmetic.py", "encrypted_bounded_transformer.py"):
++                 "encrypted_bounded_arithmetic.py", "encrypted_bounded_transformer.py", "encrypted_streaming_linear.py"):
+         (common / name).write_text("")
+@@ -51,2 +51,3 @@
+     assert "common/encrypted_bounded_transformer.py" in names
++    assert "common/encrypted_streaming_linear.py" in names
+     assert "common/encrypted_transformer.py" in names
+@@ -130,2 +131,3 @@
+         assert "common/encrypted_bounded_transformer.py" in names
++        assert "common/encrypted_streaming_linear.py" in names
+         assert "validation/p1_student_suite.json" in names
+--- a/cadathlon/tests/test_bert_staging.py
++++ b/cadathlon/tests/test_bert_staging.py
+@@ -52,3 +52,4 @@
+     assert {'support.py','transformer_runner.py','encrypted_reference.py','encrypted_compilation.py',
+-            'encrypted_primitives.py','encrypted_bounded_transformer.py','encrypted_ntt.py'} <= names
++            'encrypted_primitives.py','encrypted_bounded_transformer.py','encrypted_ntt.py',
++            'encrypted_streaming_linear.py'} <= names
+     for name, expected in manifest['common_sha256'].items():
+@@ -81,7 +82,8 @@
+ 
++@pytest.mark.parametrize('helper_name', ['encrypted_primitives.py','encrypted_streaming_linear.py'])
+ @pytest.mark.parametrize('damage', ['changed','missing','no-manifest'])
+-def test_staged_provenance_failure_never_falls_back_to_checkout(staging, damage):
++def test_staged_provenance_failure_never_falls_back_to_checkout(staging, damage, helper_name):
+     stage, upstream, destination = staging
+     stage.stage(upstream, destination)
+-    helper = destination/'submissions/_cross_common/encrypted_primitives.py'
++    helper = destination/'submissions/_cross_common'/helper_name
+     if damage == 'changed':
+@@ -105,5 +107,6 @@
+ import encrypted_reference
++import encrypted_streaming_linear
+ 
+ def server_preprocess_model(paths):
+-    print(json.dumps({'import_only': True, 'helper': encrypted_reference.__file__, 'paths': sorted(paths)}))
++    print(json.dumps({'import_only': True, 'helper': encrypted_reference.__file__, 'streaming_helper': encrypted_streaming_linear.__file__, 'paths': sorted(paths)}))
+ ''')
+@@ -116,2 +119,3 @@
+     assert Path(report['helper']) == destination/'submissions/_cross_common/encrypted_reference.py'
++    assert Path(report['streaming_helper']) == destination/'submissions/_cross_common/encrypted_streaming_linear.py'
+     assert {'client_private','test_input','preprocessed_input','decrypted_results'}.isdisjoint(report['paths'])

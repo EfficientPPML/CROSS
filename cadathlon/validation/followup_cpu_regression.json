@@ -1,0 +1,31 @@
+{
+  "recorded_at_utc": "2026-11-02T18:47:15.107445+00:00",
+  "scope": "CPU regressions only. No full encrypted transformer or secure-ring TPU bootstrap success is implied.",
+  "environment": {
+    "jax": "0.12.0.1",
+    "jaxlib": "0.12.0.1",
+    "numpy": "2.5.4",
+    "torch": "2.15.0+cpu"
+  },
+  "broad_checkpoint": {
+    "command": "JAX_PLATFORMS=cpu OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python -m pytest -q cadathlon/tests jaxite_word/ckks_ctx_test.py jaxite_word/codec_preparation_test.py jaxite_word/composite_prime_gen_test.py jaxite_word/packing_test.py jaxite_word/mapping_compile_test.py jaxite_word/bsgs_test.py jaxite_word/bootstrapping_test.py",
+    "passed": 538,
+    "skipped": 8,
+    "subtests_passed": 64,
+    "elapsed_s": 210.52,
+    "returncode": 0,
+    "output": "....................................................................sss. [ 13%]\n................s....................................................... [ 26%]\n........................................................................ [ 39%]\n.......................................................................................................... [ 58%]\n.....................................................................ss. [ 72%]\n............................................................... [ 83%]\n....................................................... [ 93%]\n...............................ss.                                       [100%]\n538 passed, 8 skipped, 64 subtests passed in 210.52s (0:03:30)\n",
+    "limitation": "Tests were collected before the later synchronization registry regression was added; concurrent experimental helper development is not represented as a frozen final-source run."
+  },
+  "synchronization_followup": {
+    "command": "JAX_PLATFORMS=cpu OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python -m pytest -q cadathlon/tests/test_security.py cadathlon/tests/test_runner_timing.py cadathlon/tests/test_transformer_runner.py",
+    "passed": 43,
+    "elapsed_s": 1.22,
+    "returncode": 0,
+    "covers": [
+      "payload-only synchronization avoids retaining static NTT contexts",
+      "completed request ciphertexts are released before next encryption",
+      "actual-ring gates and timing behavior"
+    ]
+  }
+}

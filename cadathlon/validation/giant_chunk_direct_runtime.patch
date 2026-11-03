@@ -1,0 +1,144 @@
+--- a/cadathlon/common/encrypted_packed_transformer.py
++++ b/cadathlon/common/encrypted_packed_transformer.py
+@@ -6,12 +6,81 @@
+ Full encrypted graph validation is required before any reference claim.
+ """
+ from dataclasses import dataclass
++from collections import deque
++from contextlib import closing
+ import math
+ import numpy as np
+ 
+ from encrypted_packed_qwen import CompiledArithmetic, MatrixDiagonals
+ 
+ 
++DEFAULT_EXTRA_PAYLOAD_BYTES = 256 * 1024**2
++DEFAULT_MAX_PENDING = 8
++
++
++def pending_limit(output_payload_bytes, groups, *, extra_payload_bytes=DEFAULT_EXTRA_PAYLOAD_BYTES,
++                  max_pending=DEFAULT_MAX_PENDING):
++    """Count one existing singleton payload plus a bounded extra live queue."""
++    for name, value in [('groups', groups), ('max_pending', max_pending)]:
++        if type(value) is not int or value < 1:
++            raise ValueError(name + ' must be a positive integer')
++    if type(extra_payload_bytes) is not int or extra_payload_bytes < 0:
++        raise ValueError('extra payload budget must be a nonnegative integer')
++    if output_payload_bytes is None:
++        # Symbolic plaintext/depth planners have no physical ciphertext shape.
++        return 1
++    if type(output_payload_bytes) is not int or output_payload_bytes < 1:
++        raise ValueError('output payload size must be a positive integer')
++    return min(groups, max_pending, 1 + extra_payload_bytes // output_payload_bytes)
++
++
++def output_payload_bytes(graph, value):
++    """Exact public shape/dtype size after the weighted sum's one rescale."""
++    payload = getattr(value, 'polynomial', None)
++    cache = getattr(graph.ctx, '_param_cache', None)
++    if payload is None or cache is None:
++        return None
++    level = graph.arithmetic._level(value)
++    if level < 1:
++        raise ValueError('insufficient packed-linear level')
++    shape = tuple(payload.shape)
++    if len(shape) < 2 or any(type(n) is not int or n < 1 for n in shape):
++        raise ValueError('invalid public ciphertext payload shape')
++    output_limbs = cache.num_q_at_level(level - 1)
++    if type(output_limbs) is not int or output_limbs < 1:
++        raise ValueError('invalid output modulus count')
++    return math.prod(shape[:-1]) * output_limbs * np.dtype(payload.dtype).itemsize
++
++
++def giant_chunks(groups, make_inner, limit):
++    """Yield in original order, releasing consumed queued wrappers promptly."""
++    if type(limit) is not int or limit < 1:
++        raise ValueError('positive pending limit required')
++    iterator = iter(groups)
++    while True:
++        pending = deque()
++        item = None
++        try:
++            for _ in range(limit):
++                try:
++                    giant, indices = next(iterator)
++                except StopIteration:
++                    break
++                pending.append((giant, make_inner(giant, indices)))
++            if not pending:
++                return
++            while pending:
++                item = pending.popleft()
++                yield item
++                # The consumer also releases its inner/contribution locals.
++                # Neither side may pin the preceding chunk during a new fill.
++                item = None
++        finally:
++            item = None
++            pending.clear()
++
++
++
+ def _power_two(n):
+     if type(n) is not int or n < 1:
+         raise ValueError('positive integer dimension required')
+@@ -109,7 +178,6 @@
+         self.arithmetic = CompiledArithmetic(context, low_memory=low_memory)
+ 
+     def linear(self, value, weight, bias=None, *, input_mask=None):
+-        """One-level sparse BSGS with one active rotation key at a time."""
+         source = MatrixDiagonals(weight, self.layout.slots, self.features)
+         if bias is not None and np.shape(bias) != (source.weight.shape[0],):
+             raise ValueError('packed linear bias differs from output rows')
+@@ -121,6 +189,7 @@
+         if not source.active:
+             return self.arithmetic.weighted_sum([value], [0.], bias=bias_slots)
+         (value,) = self.arithmetic._ensure_capacity((value,), 1)
++        count_bytes = output_payload_bytes(self, value)
+         babies = {0: value}
+         for index in sorted({d % source.n1 for d in source.active} - {0}):
+             babies[index] = self.arithmetic.rotate(value, index)
+@@ -128,21 +197,28 @@
+         for diagonal in source.active:
+             giant = diagonal // source.n1 * source.n1
+             groups.setdefault(giant, []).append(diagonal)
+-        result = None
+-        for giant, indices in groups.items():
++        limit = pending_limit(count_bytes, len(groups),
++            extra_payload_bytes=getattr(self, 'linear_extra_payload_bytes', DEFAULT_EXTRA_PAYLOAD_BYTES),
++            max_pending=getattr(self, 'linear_max_pending', DEFAULT_MAX_PENDING))
++
++        def make_inner(giant, indices):
+             diagonals = source.materialize_diagonals(indices)
+             values, weights = [], []
+             for index in indices:
+                 diagonal = diagonals[index]
+                 if input_mask is not None:
+-                    # The mask belongs to the source coordinate of each
+-                    # diagonal, including masks that vary within a block.
+                     diagonal = diagonal * np.roll(input_mask, -index)
+                 values.append(babies[index % source.n1])
+                 weights.append(np.roll(diagonal, giant))
+-            inner = self.arithmetic.weighted_sum(values, weights)
+-            contribution = self.arithmetic.rotate(inner, giant)
+-            result = contribution if result is None else self.arithmetic.add(result, contribution)
++            return self.arithmetic.weighted_sum(values, weights)
++
++        result = None
++        with closing(giant_chunks(groups.items(), make_inner, limit)) as chunks:
++            for giant, inner in chunks:
++                contribution = self.arithmetic.rotate(inner, giant)
++                del inner
++                result = contribution if result is None else self.arithmetic.add(result, contribution)
++                del contribution
+         if bias is not None:
+             level = self.arithmetic._level(result)
+             self.arithmetic._prepare(level)
+@@ -150,6 +226,7 @@
+             result = self.ctx.he_add[level].add_plain(result, constant)
+         return self.arithmetic._finish(result)
+ 
++
+     def segmented_sum(self, value, length, stride, *, factor=1., bias=0.):
+         if _power_two(length) != length or type(stride) is not int or stride < 1 or self.layout.slots % (length*stride):
+             raise ValueError('segmented reduction must partition the packed slots')

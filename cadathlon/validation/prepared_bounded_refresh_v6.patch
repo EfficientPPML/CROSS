@@ -1,0 +1,1316 @@
+--- /dev/null
++++ b/cadathlon/common/encrypted_bounded_arithmetic.py
+@@ -0,0 +1,276 @@
++"""Experimental public-bound scheduling for genuine homomorphic refresh.
++
++Bounds describe IDEAL plaintext circuit contracts, excluding CKKS/refresh error, and are never inferred from
++ciphertext slots. Declaring a contract does not range-check or clip data.
++The 12.5% range slack is not a stochastic noise budget or domain-membership proof.
++This module is used only by explicit experimental bounded adapters.
++Complete encrypted deep-case gates remain required before validation claims.
++"""
++from functools import lru_cache
++from fractions import Fraction
++import math
++import numpy as np
++
++from encrypted_packed_qwen import CompiledArithmetic
++
++
++def _up(value):
++    if not math.isfinite(value) or value < 0:
++        raise ValueError('public magnitude propagation overflowed or became invalid')
++    return 0. if value == 0 else math.nextafter(value, math.inf)
++
++
++def _fraction_upper(value):
++    result = float(value)
++    if not math.isfinite(result) or value < 0:
++        raise ValueError('public bound exceeds floating-point capacity')
++    while Fraction(result) < value:
++        result = math.nextafter(result, math.inf)
++    return result
++
++
++@lru_cache(maxsize=256)
++def public_power_coefficients(approximation, output_weight=1.):
++    """Exact Chebyshev coefficients of the actual public power circuit.
++
++    The coefficients returned are Fractions in canonical t on [-1,1]. This
++    includes binary64 affine normalization, cheb2poly conversion, optional
++    direct-input SiLU division, and every final output-weight multiplication.
++    It excludes CKKS encoding/operation error and inspects no ciphertext.
++    """
++    lo, hi = approximation.domain
++    coefficients = np.polynomial.chebyshev.cheb2poly(approximation.coefficients)
++    if approximation.input_power_basis:
++        coefficients = coefficients / hi ** np.arange(len(coefficients))
++        alpha, beta = Fraction(hi), Fraction(0)
++    else:
++        slope = Fraction(2/(hi-lo))
++        alpha = slope*(Fraction(hi)-Fraction(lo))/2
++        beta = slope*(Fraction(hi)+Fraction(lo))/2 + Fraction(-(hi+lo)/(hi-lo))
++    weighted = [Fraction(float(x*output_weight)) for x in coefficients]
++    powers = [Fraction(0) for _ in weighted]
++    for n, coefficient in enumerate(weighted):
++        for k in range(n+1):
++            powers[k] += coefficient*math.comb(n,k)*alpha**k*beta**(n-k)
++    chebyshev = [Fraction(0) for _ in powers]
++    basis = [Fraction(1)]
++    for coefficient in powers:
++        for k, term in enumerate(basis):
++            chebyshev[k] += coefficient*term
++        next_basis = [Fraction(0) for _ in range(len(basis)+1)]
++        for k, term in enumerate(basis):
++            if k == 0:
++                next_basis[1] += term
++            else:
++                next_basis[k-1] += term/2
++                next_basis[k+1] += term/2
++        basis = next_basis
++    return tuple(chebyshev)
++
++
++@lru_cache(maxsize=256)
++def public_polynomial_difference(approximation, output_weight=1.):
++    """Certified public coefficient-L1 difference from weight*p_chebyshev."""
++    actual = public_power_coefficients(approximation, output_weight)
++    return _fraction_upper(sum(abs(a-Fraction(output_weight)*Fraction(c))
++                               for a,c in zip(actual, approximation.coefficients)))
++
++
++def refresh_public_bound(bound):
++    """Public power-of-two range with slack for approximate arithmetic."""
++    if not math.isfinite(bound) or bound < 0:
++        raise ValueError('finite nonnegative public magnitude bound required')
++    widened = _up(1.125*bound)
++    # log2 can round a value immediately above a power of two back to the
++    # integer exponent. frexp preserves that strict range distinction.
++    fraction, exponent = math.frexp(max(2.**-10, widened))
++    try:
++        rounded = math.ldexp(1., exponent-1 if fraction == .5 else exponent)
++    except OverflowError as error:
++        raise ValueError('public refresh range exceeds floating-point capacity') from error
++    if not math.isfinite(rounded):
++        raise ValueError('public refresh range exceeds floating-point capacity')
++    return rounded
++
++
++@lru_cache(None)
++def normalized_inverse_bound(approximation):
++    """Upper envelope for |sqrt(x)*p(x)| on the declared variance interval.
++
++    The public grid is widened by a global derivative bound, not used as a
++    sample-only maximum. |T_n|<=1 and |T_n'|<=n^2 give the derivative envelope;
++    conservative floating-point slack is included. No activations are read.
++    """
++    lo, hi = approximation.domain
++    if lo <= 0:
++        raise ValueError('positive variance domain required')
++    c = np.asarray(approximation.coefficients, dtype=float)
++    magnitude = float(np.abs(c).sum())
++    derivative = float(np.sum(np.arange(len(c))**2 * np.abs(c)))
++    lipschitz = magnitude/(2*math.sqrt(lo)) + math.sqrt(hi)*2*derivative/(hi-lo)
++    points = 65537
++    x = np.linspace(lo, hi, points)
++    t = (2*x-lo-hi)/(hi-lo)
++    sampled = float(np.max(np.abs(np.sqrt(x)*np.polynomial.chebyshev.chebval(t, c))))
++    result = sampled + lipschitz*(hi-lo)/(2*(points-1)) + 1e-11*max(1., magnitude*math.sqrt(hi))
++    result = _up(result + _up(math.sqrt(hi)*public_polynomial_difference(approximation)))
++    if not math.isfinite(result):
++        raise ValueError('normalization bound exceeds floating-point capacity')
++    return result
++
++
++@lru_cache(None)
++def polynomial_envelope(approximation):
++    """Public polynomial grid widened by its global Chebyshev derivative."""
++    c = np.asarray(approximation.coefficients, dtype=float)
++    t = np.linspace(-1., 1., 65537)
++    values = np.polynomial.chebyshev.chebval(t, c)
++    derivative = float(np.sum(np.arange(len(c))**2*np.abs(c)))
++    margin = derivative/65536 + 1e-11*max(1., float(np.sum(np.abs(c))))
++    margin = _up(margin + public_polynomial_difference(approximation))
++    return float(values.min())-margin, float(values.max())+margin
++
++
++@lru_cache(None)
++def reciprocal_ratio_bound(approximation, output_weight=1.):
++    """Envelope for |x*p(x)|, including a global derivative grid margin."""
++    lo, hi = approximation.domain
++    if lo <= 0:
++        raise ValueError('positive denominator domain required')
++    if not math.isfinite(output_weight) or output_weight <= 0:
++        raise ValueError('positive finite public reciprocal output weight required')
++    c = np.asarray(approximation.coefficients, dtype=float)
++    x = np.linspace(lo, hi, 65537)
++    t = (2*x-lo-hi)/(hi-lo)
++    magnitude = float(np.sum(np.abs(c)))
++    derivative = magnitude + hi*2/(hi-lo)*float(np.sum(np.arange(len(c))**2*np.abs(c)))
++    nominal = (float(np.max(np.abs(x*np.polynomial.chebyshev.chebval(t,c))))
++               + derivative*(hi-lo)/(2*65536) + 1e-11*max(1.,hi*magnitude))
++    difference = _fraction_upper(Fraction(hi)*Fraction(public_polynomial_difference(approximation, output_weight))/Fraction(output_weight))
++    return _up(nominal+difference)
++
++
++class BoundedArithmetic(CompiledArithmetic):
++    """Tracked public magnitudes with a real keyless bounded bootstrap."""
++    _relations = ('_public_row_l2_bound', '_public_head_l2_bounds',
++                  '_public_normalization_affine')
++
++    def __init__(self, context, refresher=None, *, low_memory=True):
++        from encrypted_refresh import BoundedSecureRefresh
++        if refresher is not None and (not isinstance(refresher, BoundedSecureRefresh) or refresher.ctx is not context):
++            raise TypeError('bounded arithmetic requires BoundedSecureRefresh on the same context')
++        super().__init__(context, low_memory=low_memory)
++        self.refresher = refresher
++        self.refresh_events = []
++
++    @classmethod
++    def forget_relations(cls, value):
++        """Generic arithmetic does not preserve correlated norm contracts.
++
++        Polynomial clones copy their complete __dict__; retaining a source's
++        affine or energy contract on a different message can underbound it.
++        Only semantic operations may explicitly restore these relationships.
++        """
++        for name in cls._relations:
++            value.__dict__.pop(name, None)
++        return value
++
++    @classmethod
++    def preserve_relations(cls, source, result):
++        if source is result:
++            return result
++        cls.forget_relations(result)
++        for name in cls._relations:
++            if hasattr(source, name):
++                setattr(result, name, getattr(source, name))
++        return result
++
++    @staticmethod
++    def public_bound(value):
++        bound = getattr(value, '_public_absolute_bound', None)
++        if bound is None or not math.isfinite(bound) or bound < 0:
++            raise ValueError('ciphertext requires an explicit finite public magnitude contract')
++        return bound
++
++    def declare_bound(self, value, bound, reason='public circuit contract'):
++        bound = float(bound)
++        if not math.isfinite(bound) or bound < 0:
++            raise ValueError('finite nonnegative public magnitude contract required')
++        self._level(value)
++        value._public_absolute_bound = bound
++        value._public_bound_provenance = reason
++        return value
++
++    def _ensure_capacity(self, values, required):
++        values = tuple(values)
++        if self.refresher is None:
++            return values
++        reserve = self.refresher.input_level
++        minimum = required + reserve
++        output, refreshed = [], {}
++        for value in values:
++            level = self._level(value)
++            bound = self.public_bound(value)
++            if level < minimum:
++                if level < reserve:
++                    raise ValueError(f'bounded refresh needs {reserve} input levels; only {level} remain')
++                if self.refresher.output_level < minimum:
++                    raise ValueError(f'bounded refresh supplies {self.refresher.output_level} levels; operation needs {minimum}')
++                original = value
++                if id(original) not in refreshed:
++                    scale_bound = refresh_public_bound(bound)
++                    self.checkpoint(value, 'bounded homomorphic refresh starting')
++                    value = self.refresher.refresh(value, public_bound=scale_bound)
++                    if self._level(value) < minimum:
++                        raise ValueError('bounded homomorphic refresh returned insufficient capacity')
++                    value = self.preserve_relations(original, value)
++                    value = self.declare_bound(value, bound, getattr(original, '_public_bound_provenance', 'public arithmetic bound'))
++                    self.checkpoint(value, 'bounded homomorphic refresh complete')
++                    refreshed[id(original)] = value
++                    self.refresh_events.append(dict(input_level=level, output_level=self._level(value),
++                        required=required, public_bound=scale_bound, circuit_bound=bound, provenance=getattr(original, '_public_bound_provenance', 'public arithmetic bound')))
++                else:
++                    value = refreshed[id(original)]
++            output.append(value)
++        return tuple(output)
++
++    def _lower(self, value, level):
++        bound = self.public_bound(value)
++        result = self.preserve_relations(value, super()._lower(value, level))
++        return self.declare_bound(result, bound, getattr(value, '_public_bound_provenance', 'public arithmetic bound'))
++
++    def add(self, left, right, *, subtract=False):
++        bound = _fraction_upper(Fraction(self.public_bound(left)) + Fraction(self.public_bound(right)))
++        return self.declare_bound(self.forget_relations(super().add(left, right, subtract=subtract)), bound, 'triangle bound for addition/subtraction')
++
++    def rotate(self, value, shift):
++        bound = self.public_bound(value)
++        result = super().rotate(value, shift)
++        if result is not value:
++            self.forget_relations(result)
++        return self.declare_bound(result, bound, 'public permutation')
++
++    def multiply(self, left, right):
++        bound = _fraction_upper(Fraction(self.public_bound(left)) * Fraction(self.public_bound(right)))
++        return self.declare_bound(self.forget_relations(super().multiply(left, right)), bound, 'product of public operand bounds')
++
++    def weighted_sum(self, values, weights, *, bias=0.):
++        values, weights = tuple(values), tuple(weights)
++        if not values or len(values) != len(weights):
++            raise ValueError('nonempty equally sized ciphertexts and public weights required')
++        bound = Fraction(0)
++        for value, weight in zip(values, weights):
++            bound += Fraction(self.public_bound(value))*Fraction(float(np.max(np.abs(weight))))
++        bound = _fraction_upper(bound + Fraction(float(np.max(np.abs(bias)))))
++        return self.declare_bound(self.forget_relations(super().weighted_sum(values, weights, bias=bias)), bound, 'public weighted-sum triangle bound')
++
++    def evaluate(self, value, approximation, *, output_weights=1.):
++        value = self.declare_bound(value, max(abs(x) for x in approximation.domain),
++                                   f'{approximation.name}: declared input domain {approximation.domain}')
++        result = super().evaluate(value, approximation, output_weights=output_weights)
++        # Pull the actual rounded power circuit back into exact Chebyshev
++        # coefficients before applying |T_n|<=1. Output masks/count factors
++        # are public and often contain only one or two distinct values.
++        bound = _fraction_upper(max(sum(map(abs, public_power_coefficients(approximation, float(weight))))
++                                    for weight in np.unique(output_weights)))
++        return self.declare_bound(self.forget_relations(result), bound, 'actual public polynomial coefficient envelope')
+--- /dev/null
++++ b/cadathlon/common/encrypted_bounded_transformer.py
+@@ -0,0 +1,318 @@
++"""Experimental packed refresh schedule with conditional ideal-value bounds.
++
++Every bound comes from public weights, layout algebra, or a declared
++polynomial input domain. These are not bounds on accumulated CKKS error.
++Complete encrypted case gates remain required; no plaintext fallback exists.
++"""
++import math
++from fractions import Fraction
++from functools import lru_cache
++import numpy as np
++
++from encrypted_packed_transformer import PackedTransformer, _power_two
++from encrypted_bounded_arithmetic import (BoundedArithmetic, normalized_inverse_bound,
++    polynomial_envelope, reciprocal_ratio_bound)
++
++
++def _upper_float(value):
++    result = float(value)
++    while Fraction(result) < value:
++        result = math.nextafter(result, math.inf)
++    return result
++
++
++def _upper_sqrt(value):
++    value = Fraction(value)
++    if value < 0:
++        raise ValueError('nonnegative public squared norm required')
++    if value == 0:
++        return 0.
++    # Scaling the rational before conversion avoids float(value) underflow
++    # even when its square root is well within binary64's normal range.
++    exponent = (value.numerator.bit_length()-value.denominator.bit_length())//2
++    shift = 2*exponent
++    scaled = value/(1 << shift) if shift >= 0 else value*(1 << -shift)
++    try:
++        result = math.ldexp(math.sqrt(float(scaled)), exponent)
++    except OverflowError as error:
++        raise ValueError('public norm exceeds floating-point capacity') from error
++    while Fraction(result)**2 < value:
++        result = math.nextafter(result, math.inf)
++        if not math.isfinite(result):
++            raise ValueError('public norm exceeds floating-point capacity')
++    return result
++
++
++def _product(*values):
++    result = Fraction(1)
++    for value in values:
++        result *= Fraction(value)
++    return _upper_float(result)
++
++
++def _norm(values):
++    return _upper_sqrt(sum(Fraction(float(x))**2 for x in values))
++
++
++def _matrix_norm_bound(matrix):
++    gram = [[sum(x*y for x,y in zip(left,right)) for right in matrix] for left in matrix]
++    gershgorin = max(sum(abs(x) for x in row) for row in gram)
++    frobenius = sum(x*x for row in matrix for x in row)
++    return _upper_sqrt(min(gershgorin, frobenius))
++
++
++@lru_cache(maxsize=128)
++def _affine_bounds(rows, bias, gamma, beta, energy):
++    # Public binary-rational products, with outward float/sqrt conversion.
++    w = [[Fraction(float(x)) for x in row] for row in rows]
++    gamma = [Fraction(float(x)) for x in gamma]
++    beta = [Fraction(float(x)) for x in beta]
++    a = [[x*g for x,g in zip(row,gamma)] for row in w]
++    c = [sum(x*b for x,b in zip(row,beta))+Fraction(float(offset)) for row,offset in zip(w,bias)]
++    row_l2 = max(_upper_sqrt(sum(x*x for x in row)) for row in a)
++    coordinate = _upper_float(Fraction(energy)*Fraction(row_l2)+max(map(abs,c)))
++    energy_out = _upper_float(Fraction(energy)*Fraction(_matrix_norm_bound(a))
++                              + Fraction(_upper_sqrt(sum(x*x for x in c))))
++    return coordinate, energy_out
++
++
++def public_affine_bounds(weight, bias, gamma, beta, energy):
++    weight = np.asarray(weight, dtype=float)
++    bias = np.zeros(weight.shape[0]) if bias is None else np.asarray(bias, dtype=float)
++    return _affine_bounds(tuple(map(tuple,weight)), tuple(bias), tuple(gamma), tuple(beta), float(energy))
++
++
++class BoundedPackedTransformer(PackedTransformer):
++    def __init__(self, context, layout, refresher, *, low_memory=True):
++        super().__init__(context, layout, low_memory=low_memory)
++        self.arithmetic = BoundedArithmetic(context, refresher, low_memory=low_memory)
++        self._head_contract = None
++
++    def contract(self, value, bound, reason):
++        return self.arithmetic.declare_bound(value, bound, reason)
++
++    def linear(self, value, weight, bias=None, *, input_mask=None):
++        weight = np.asarray(weight, dtype=float)
++        coordinate = self.arithmetic.public_bound(value)
++        energy = getattr(value, '_public_row_l2_bound', _upper_float(Fraction(_upper_sqrt(Fraction(weight.shape[1])))*Fraction(coordinate)))
++        mask_bound = 1. if input_mask is None else float(np.max(np.abs(input_mask)))
++        coordinate = _upper_float(Fraction(coordinate)*Fraction(mask_bound))
++        energy = _upper_float(Fraction(energy)*Fraction(mask_bound))
++        affine = getattr(value, '_public_normalization_affine', None)
++        if affine is not None and len(affine[0]) == weight.shape[1]:
++            gamma, beta, underlying_energy = affine
++            if input_mask is None:
++                # Keep the known normalization affine inside each public map.
++                # This avoids separately maximizing correlated gamma/beta.
++                effective = gamma, beta, underlying_energy
++            else:
++                effective = np.ones(weight.shape[1]), np.zeros(weight.shape[1]), energy
++        else:
++            effective = np.ones(weight.shape[1]), np.zeros(weight.shape[1]), energy
++        bound, output_energy = public_affine_bounds(weight, bias, *effective)
++        row_l1 = max(sum(Fraction(abs(float(x))) for x in row) for row in weight)
++        triangle = _upper_float(row_l1*Fraction(coordinate) + Fraction(0. if bias is None else float(np.max(np.abs(bias)))))
++        bound = min(bound, triangle)
++        result = super().linear(value, weight, bias, input_mask=input_mask)
++        self.arithmetic.forget_relations(result)
++        result = self.contract(result, bound, 'public row-L1/row-L2 matrix bound plus public bias')
++        result._public_row_l2_bound = output_energy
++        if self._head_contract is not None:
++            heads, dim = self._head_contract
++            padded = _power_two(dim)
++            if weight.shape[0] == heads*padded:
++                bounds = []
++                for head in range(heads):
++                    block = slice(head*padded, head*padded+dim)
++                    bounds.append(public_affine_bounds(weight[block], None if bias is None else bias[block], *effective)[1])
++                result._public_head_l2_bounds = tuple(bounds)
++        return result
++
++    def segmented_sum(self, value, length, stride, *, factor=1., bias=0., group_l1_bound=None):
++        if _power_two(length) != length or type(stride) is not int or stride < 1 or self.layout.slots % (length*stride):
++            raise ValueError('segmented reduction must partition the packed slots')
++        coordinate = self.arithmetic.public_bound(value)
++        maximum_group_l1 = _product(length, coordinate)
++        group_l1 = maximum_group_l1 if group_l1_bound is None else min(maximum_group_l1, group_l1_bound)
++        # Prepare once, before creating rotated aliases. Refreshing every
++        # rotated copy separately is unnecessary and can dominate the graph.
++        (value,) = self.arithmetic._ensure_capacity((value,), 1)
++        result = value
++        steps = [stride*(1 << bit) for bit in range((length-1).bit_length())]
++        for step in steps:
++            result = self.arithmetic.add(result, self.arithmetic.rotate(result, step))
++        # Before the anchor mask, a sliding window intersects up to TWO
++        # aligned groups. A bound on a signed group sum is insufficient here;
++        # the caller must bound the sum of absolute values within each group.
++        result = self.contract(result, min(maximum_group_l1, _product(2, group_l1)),
++                               'sliding window spans at most two groups with a public absolute-sum bound')
++        anchor = ((np.arange(self.layout.slots)//stride) % length == 0).astype(float)
++        result = self.arithmetic.weighted_sum([result], [anchor*factor], bias=anchor*bias)
++        for step in steps:
++            result = self.arithmetic.add(result, self.arithmetic.rotate(result, -step))
++        # Broadcast copies have disjoint support. Their magnitudes do not add.
++        bound = _upper_float(Fraction(group_l1)*Fraction(float(np.max(np.abs(factor))))
++                             + Fraction(float(np.max(np.abs(bias)))))
++        return self.contract(result, bound, 'masked aligned reduction followed by disjoint broadcast')
++
++    def normalize(self, value, gamma, epsilon, approximation, *, bias=None, center=False):
++        gamma = np.asarray(gamma, dtype=float)
++        h = len(gamma)
++        if not math.isfinite(epsilon) or epsilon <= 0 or h > self.features:
++            raise ValueError('invalid packed normalization contract')
++        if center:
++            # Both branches must use the same prepared ciphertext; otherwise
++            # linear's internal refresh leaves the subtraction with a depleted
++            # original and can require refreshing the centered value again.
++            (value,) = self.arithmetic._ensure_capacity((value,), 1)
++            mean = self.linear(value, np.full((h, h), 1/h))
++            value = self.arithmetic.add(value, mean, subtract=True)
++        # Use the actual binary64 public mean coefficient, rather than
++        # assuming that 1/h is represented exactly (e.g. h=24).
++        inverse_mean_weight = Fraction(1)/Fraction(1/h)
++        variance_energy = inverse_mean_weight*Fraction(approximation.domain[1])
++        value = self.contract(value, _upper_sqrt(variance_energy),
++                              'declared variance domain bounds centered/RMS coordinate energy')
++        (value,) = self.arithmetic._ensure_capacity((value,), 2)
++        squared = self.arithmetic.multiply(value, value)
++        variance = self.segmented_sum(squared, self.features, 1, factor=1/h, bias=epsilon,
++                                      group_l1_bound=_upper_float(variance_energy))
++        del squared
++        inverse = self.arithmetic.evaluate(variance, approximation)
++        del variance
++        normalized = self.arithmetic.multiply(value, inverse)
++        ratio = normalized_inverse_bound(approximation)
++        normalized_energy = _upper_sqrt(inverse_mean_weight*Fraction(ratio)**2)
++        normalized = self.contract(normalized, normalized_energy,
++                                    'normalization energy inequality and public polynomial ratio envelope')
++        result = self.arithmetic.weighted_sum([normalized], [self.layout.feature(gamma)],
++                      bias=0. if bias is None else self.layout.feature(bias))
++        result._public_row_l2_bound = _upper_float(Fraction(normalized_energy)*Fraction(float(np.max(np.abs(gamma))))
++                                                 + Fraction(0. if bias is None else _norm(bias)))
++        result._public_normalization_affine = (tuple(gamma), tuple(np.zeros(h) if bias is None else bias), normalized_energy)
++        return result
++
++    def normalize_heads(self, value, gamma, epsilon, approximation, heads):
++        gamma = np.asarray(gamma, dtype=float)
++        d, padded = len(gamma), _power_two(len(gamma))
++        active = self.head_mask(heads, d, include_padding=True)
++        inverse_mean_weight = Fraction(1)/Fraction(1/d)
++        variance_energy = inverse_mean_weight*Fraction(approximation.domain[1])
++        value = self.contract(value, _upper_sqrt(variance_energy),
++                              'declared head-variance domain bounds head coordinate energy')
++        (value,) = self.arithmetic._ensure_capacity((value,), 2)
++        squared = self.arithmetic.multiply(value, value)
++        dummy = sum(approximation.domain)/2
++        variance = self.segmented_sum(squared, padded, 1, factor=active/d,
++            bias=active*epsilon+(1-active)*dummy, group_l1_bound=_upper_float(variance_energy))
++        del squared
++        inverse = self.arithmetic.evaluate(variance, approximation, output_weights=active)
++        del variance
++        normalized = self.arithmetic.multiply(value, inverse)
++        del inverse
++        ratio = normalized_inverse_bound(approximation)
++        normalized_energy = _upper_sqrt(inverse_mean_weight*Fraction(ratio)**2)
++        normalized = self.contract(normalized, normalized_energy,
++                                    'head normalization energy inequality and public polynomial ratio envelope')
++        affine = np.zeros(self.features)
++        for head in range(heads):
++            affine[head*padded:head*padded+d] = gamma
++        result = self.arithmetic.weighted_sum([normalized], [self.layout.feature(affine)])
++        energy = _product(normalized_energy, float(np.max(np.abs(gamma))))
++        result._public_head_l2_bounds = (energy,)*heads
++        result._public_row_l2_bound = _upper_sqrt(Fraction(heads)*Fraction(energy)**2)
++        return result
++
++    def transpose_pairs(self, value):
++        bound = self.arithmetic.public_bound(value)
++        (prepared,) = self.arithmetic._ensure_capacity((value,), 1)
++        result = self.contract(super().transpose_pairs(prepared), bound, 'public query/key permutation')
++        for name in ('_public_row_l2_bound', '_public_head_l2_bounds'):
++            if hasattr(value, name): setattr(result, name, getattr(value, name))
++        return result
++
++    def rope(self, value, heads, head_dim, theta):
++        # Bound the exact binary64 public rotation coefficients. They are
++        # close to orthogonal but cos(theta)^2+sin(theta)^2 need not equal 1.
++        frequencies = theta ** (-2*np.arange(head_dim//2)/head_dim)
++        positions = np.minimum(np.arange(self.layout.width), self.layout.sequence-1)
++        angles = positions[:, None]*frequencies[None, :]
++        margin = _upper_sqrt(max(Fraction(float(c))**2+Fraction(float(s))**2
++                                 for c,s in zip(np.cos(angles).flat, np.sin(angles).flat)))
++        head_energy = getattr(value, '_public_head_l2_bounds', None)
++        bound = _product(margin, max(head_energy)) if head_energy is not None else _upper_sqrt(
++            Fraction(2)*Fraction(self.arithmetic.public_bound(value))**2*Fraction(margin)**2)
++        (prepared,) = self.arithmetic._ensure_capacity((value,), 1)
++        result = self.contract(super().rope(prepared, heads, head_dim, theta), bound,
++                               'public rotary coefficient operator-norm bound')
++        if head_energy is not None:
++            result._public_head_l2_bounds = tuple(_product(x, margin) for x in head_energy)
++        if hasattr(value, '_public_row_l2_bound'):
++            result._public_row_l2_bound = _product(value._public_row_l2_bound, margin)
++        return result
++
++    def attention(self, query, key, value, *, heads, head_dim, mask, counts, approximations):
++        padded = _power_two(head_dim)
++        active = self.head_mask(heads, head_dim, include_padding=True)
++        mask = mask*active
++        q_energy = getattr(query, '_public_head_l2_bounds', (_upper_sqrt(Fraction(head_dim)*Fraction(self.arithmetic.public_bound(query))**2),)*heads)
++        k_energy = getattr(key, '_public_head_l2_bounds', (_upper_sqrt(Fraction(head_dim)*Fraction(self.arithmetic.public_bound(key))**2),)*heads)
++        product_l1 = max(_upper_float(Fraction(q)*Fraction(k)) for q,k in zip(q_energy,k_energy))
++        score_bound = _upper_float(Fraction(product_l1)*Fraction(1/math.sqrt(head_dim)))
++        value_bound = self.arithmetic.public_bound(value)
++        positive = polynomial_envelope(approximations['exp'])[0] >= 0
++        ratio = max(reciprocal_ratio_bound(approximations['reciprocal'], float(1/count))
++                    for count in np.unique(counts)) if positive else None
++        key, value = self.transpose_pairs(key), self.transpose_pairs(value)
++        products = self.arithmetic.multiply(query, key)
++        scores = self.segmented_sum(products, padded, 1, factor=mask/math.sqrt(head_dim), group_l1_bound=product_l1)
++        del products, key
++        scores = self.contract(scores, score_bound, 'Cauchy head-product bound divided by sqrt(actual head width)')
++        # Keep mean and centering on one prepared score value. Preparing
++        # before sliding sums also uses the tighter aligned-score contract.
++        (scores,) = self.arithmetic._ensure_capacity((scores,), 1)
++        mean = self.segmented_sum(scores, self.layout.width, self.features, factor=1/counts,
++                                   group_l1_bound=_product(float(np.max(counts)), score_bound))
++        averaging_gain = max(Fraction(float(count))*Fraction(float(1/count)) for count in np.unique(counts))
++        mean = self.contract(mean, _upper_float(Fraction(score_bound)*averaging_gain),
++                             'valid-key average with actual binary64 public mean weights')
++        centered = self.arithmetic.add(scores, mean, subtract=True)
++        exponentials = self.arithmetic.evaluate(centered, approximations['exp'], output_weights=mask)
++        del scores, mean, centered
++        denominator = self.segmented_sum(exponentials, self.layout.width, self.features,
++            factor=1/counts, bias=1-active,
++            group_l1_bound=(_upper_float(Fraction(approximations['reciprocal'].domain[1]) /
++                                       min(Fraction(float(1/count)) for count in np.unique(counts))) if positive else None))
++        inverse = self.arithmetic.evaluate(denominator, approximations['reciprocal'], output_weights=active/counts)
++        del denominator
++        probabilities = self.arithmetic.multiply(exponentials, inverse)
++        del exponentials, inverse
++        if positive:
++            probabilities = self.contract(probabilities, ratio,
++                'positive exponentials and declared denominator imply probability/row-L1 ratio envelope')
++        attended = self.arithmetic.multiply(probabilities, value)
++        del probabilities, value
++        result = self.segmented_sum(attended, self.layout.width, self.features,
++                                     group_l1_bound=_product(value_bound, ratio) if positive else None)
++        return result if not positive else self.contract(result, _product(value_bound, ratio),
++                  'softmax row-L1 envelope times public value bound')
++
++    def evaluate(self, value, model, config, weights, approximations, attention_mask=None):
++        heads = config['num_attention_heads']
++        dim = config['head_dim'] if model == 'qwen' else config['hidden_size']//heads
++        self._head_contract = heads, dim
++        if model == 'qwen':
++            table = np.asarray(weights['model.embed_tokens.weight'])
++            coordinate = float(np.max(np.abs(table)))
++            energy = max(_upper_sqrt(sum(Fraction(float(x))**2 for x in row)) for row in table)
++        else:
++            gamma = np.asarray(weights['bert.embeddings.LayerNorm.weight'])
++            beta = np.asarray(weights['bert.embeddings.LayerNorm.bias'])
++            normalized_energy = _upper_float(Fraction(_upper_sqrt(Fraction(config['hidden_size'])))*Fraction(float(np.max(np.abs(gamma)))))
++            coordinate = _upper_float(Fraction(normalized_energy)+Fraction(float(np.max(np.abs(beta)))))
++            energy = _upper_float(Fraction(normalized_energy)+Fraction(_upper_sqrt(sum(Fraction(float(x))**2 for x in beta))))
++        value = self.contract(value, coordinate, 'public embedding table or client LayerNorm energy inequality')
++        value._public_row_l2_bound = energy
++        if model == 'bert':
++            value._public_normalization_affine = (tuple(gamma), tuple(beta), _upper_sqrt(Fraction(config['hidden_size'])))
++        return super().evaluate(value, model, config, weights, approximations, attention_mask)
+--- a/cadathlon/common/encrypted_reference.py
++++ b/cadathlon/common/encrypted_reference.py
+@@ -1,9 +1,9 @@
+ """Experimental real-CKKS sessions for the public transformer operator graphs.
+ 
+ This development implementation is not a validated or calibrated baseline.
+-Graphs exceeding one secure leveled chain require the pending bounded
+-refresh integration. Each public case still requires end-to-end encrypted accuracy
+-validation. No plaintext execution fallback or client refresh exists.
++Graphs exceeding one secure leveled chain require an explicit experimental
++packed-pair bounded-refresh opt-in. Declared polynomial domains are conditions,
++and each public case still requires end-to-end encrypted accuracy validation. No plaintext execution fallback or client refresh exists.
+ """
+ from __future__ import annotations
+ 
+@@ -49,7 +49,7 @@
+ 
+ 
+ class ToyReferenceSession:
+-    def __init__(self, model, config, weights, *, batch, sequence_length, devices, packed=False, packed_pairs=False):
++    def __init__(self, model, config, weights, *, batch, sequence_length, devices, packed=False, packed_pairs=False, bounded_refresh=False):
+         from jaxite_word import CKKSContext, he_params, key_gen, util
+         from jaxite_word.composite_prime_gen import composite_prime_gen
+         import jax
+@@ -57,6 +57,11 @@
+         self.model, self.config, self.weights = model, dict(config), weights
+         self.packed = bool(packed)
+         self.packed_pairs = bool(packed_pairs)
++        if type(bounded_refresh) is not bool:
++            raise TypeError('bounded_refresh must be an explicit boolean')
++        if bounded_refresh and not packed_pairs:
++            raise ValueError('bounded refresh is supported only by the experimental packed-pair layout')
++        self.bounded_refresh = bounded_refresh
+         self.closed = False
+         if packed and packed_pairs:
+             raise ValueError('select one experimental packed layout')
+@@ -88,7 +93,7 @@
+             from encrypted_packed_transformer import PackedPairLayout
+             self.layout = PackedPairLayout(batch, sequence_length, plan['features'], degree // 2)
+         needs_refresh = plan['depth'] > 52
+-        if needs_refresh:
++        if needs_refresh and not bounded_refresh:
+             raise ValueError(f'circuit depth {plan["depth"]} requires bounded homomorphic refresh; '
+                              'its range-aware integration is not validated yet')
+         chain_depth, dnum = reference_ring_profile(plan['depth'])
+@@ -149,12 +154,17 @@
+                   file=sys.stderr, flush=True)
+         self.refresher = None
+         if needs_refresh:
+-            from encrypted_refresh import SecureRefresh
+-            self.refresher = SecureRefresh(self.ctx, period=self.layout.period,
+-                level_budget=refresh_contract['level_budget'], low_memory=True)
++            from encrypted_refresh import BoundedSecureRefresh
++            self.refresher = BoundedSecureRefresh(self.ctx, period=self.layout.period,
++                level_budget=refresh_contract['level_budget'], low_memory=True,
++                compiled=True, meta_precision=10)
+         if packed_pairs:
+-            from encrypted_packed_transformer import PackedTransformer
+-            self.ops = PackedTransformer(self.ctx, self.layout, low_memory=True)
++            if needs_refresh:
++                from encrypted_bounded_transformer import BoundedPackedTransformer
++                self.ops = BoundedPackedTransformer(self.ctx, self.layout, self.refresher, low_memory=True)
++            else:
++                from encrypted_packed_transformer import PackedTransformer
++                self.ops = PackedTransformer(self.ctx, self.layout, low_memory=True)
+             self.evaluator = self.ops.arithmetic
+             self.evaluator.progress = report
+         elif packed:
+@@ -239,13 +249,13 @@
+             raise errors[0]
+ 
+ 
+-def create_toy_session(model, config, weights, *, batch, sequence_length, devices, packed=False, packed_pairs=False):
++def create_toy_session(model, config, weights, *, batch, sequence_length, devices, packed=False, packed_pairs=False, bounded_refresh=False):
+     # Preserve a partially initialized owner so setup failures can release any
+     # already-created device contexts as well as normal close() paths.
+     session = object.__new__(ToyReferenceSession)
+     try:
+         session.__init__(model, config, weights, batch=batch, sequence_length=sequence_length, devices=devices,
+-                         packed=packed, packed_pairs=packed_pairs)
++                         packed=packed, packed_pairs=packed_pairs, bounded_refresh=bounded_refresh)
+         return session
+     except BaseException as error:
+         try:
+--- /dev/null
++++ b/cadathlon/agent_pset/p2_bert/src/bert_bounded_reference.py
+@@ -0,0 +1,15 @@
++"""Opt-in experimental bounded packed toy bert; no full-model or calibration claim.
++
++Only a real encrypted complete-case gate validates this candidate. Declared
++polynomial input domains are conditions, and refresh accuracy is period-specific.
++"""
++from pathlib import Path
++import sys
++sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'common'))
++from encrypted_reference import create_toy_session
++
++IMPLEMENTATION_STATUS = 'experimental-unvalidated'
++
++def create_session(config, weights, *, batch, sequence_length, devices):
++    return create_toy_session('bert', config, weights, batch=batch,
++        sequence_length=sequence_length, devices=devices, packed_pairs=True, bounded_refresh=True)
+--- /dev/null
++++ b/cadathlon/agent_pset/p4_qwen/src/qwen_bounded_reference.py
+@@ -0,0 +1,15 @@
++"""Opt-in experimental bounded packed toy qwen; no full-model or calibration claim.
++
++Only a real encrypted complete-case gate validates this candidate. Declared
++polynomial input domains are conditions, and refresh accuracy is period-specific.
++"""
++from pathlib import Path
++import sys
++sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'common'))
++from encrypted_reference import create_toy_session
++
++IMPLEMENTATION_STATUS = 'experimental-unvalidated'
++
++def create_session(config, weights, *, batch, sequence_length, devices):
++    return create_toy_session('qwen', config, weights, batch=batch,
++        sequence_length=sequence_length, devices=devices, packed_pairs=True, bounded_refresh=True)
+--- /dev/null
++++ b/cadathlon/tests/test_bounded_contracts.py
+@@ -0,0 +1,320 @@
++"""Experimental regressions for conditional ideal bounds; no encrypted proof.
++
++Primitives deliberately clone every metadata field, as Polynomial does.
++Only the real bound/relationship wrappers are under test. The separate
++secure metadata probe provides actual CKKS evidence; these tests do not.
++"""
++from fractions import Fraction as F
++import math
++import os
++from pathlib import Path
++from types import SimpleNamespace
++import sys
++
++import numpy as np
++import pytest
++
++HERE = Path(__file__).resolve().parent
++candidates = ([Path(os.environ['CROSS_REPO'])] if 'CROSS_REPO' in os.environ else [])
++candidates += [Path.cwd(), *HERE.parents]
++ROOT = next(path.resolve() for path in candidates if (path/'jaxite_word').is_dir()
++            and (path/'cadathlon/common').is_dir())
++sys.path[:0] = [str(HERE), str(ROOT), str(ROOT/'cadathlon/common')]
++from encrypted_packed_qwen import CompiledArithmetic
++from encrypted_packed_transformer import PackedPairLayout
++from encrypted_transformer import public_toy_approximations
++from encrypted_bounded_arithmetic import (BoundedArithmetic, public_power_coefficients,
++    public_polynomial_difference, refresh_public_bound, _fraction_upper)
++from encrypted_bounded_transformer import (BoundedPackedTransformer, _matrix_norm_bound,
++    _upper_sqrt, public_affine_bounds)
++
++
++class Value:
++    def __init__(self, slots, level=10):
++        self.slots = np.asarray(slots, dtype=float)
++        self.level = level
++        self._ckks_scale = 1.
++
++    def clone(self, slots=None, level=None):
++        result = object.__new__(type(self))
++        result.__dict__ = self.__dict__.copy()
++        result.slots = self.slots if slots is None else np.asarray(slots)
++        result.level = self.level if level is None else level
++        return result
++
++
++class Primitives(CompiledArithmetic):
++    """Sibling subclass makes BoundedArithmetic.super() hit this primitive layer."""
++    def __init__(self, slots):
++        self.ctx = SimpleNamespace(num_slots=slots)
++        self.strategy, self.scale, self.refresher = 'power', 1., None
++        self.refresh_events, self.declarations = [], []
++
++    def _level(self, value):
++        return value.level
++
++    def _lower(self, value, level):
++        assert level <= value.level
++        return value if level == value.level else value.clone(level=level)
++
++    def checkpoint(self, value, label):
++        return value
++
++    def add(self, left, right, *, subtract=False):
++        slots = left.slots-right.slots if subtract else left.slots+right.slots
++        return left.clone(slots, min(left.level, right.level))
++
++    def multiply(self, left, right):
++        left, right = self._ensure_capacity((left, right), 1)
++        return left.clone(left.slots*right.slots, min(left.level, right.level)-1)
++
++    def weighted_sum(self, values, weights, *, bias=0.):
++        values = self._ensure_capacity(tuple(values), 1)
++        slots = sum(value.slots*weight for value, weight in zip(values, weights))+bias
++        return values[0].clone(slots, min(value.level for value in values)-1)
++
++    def rotate(self, value, shift):
++        return value if shift % self.ctx.num_slots == 0 else value.clone(np.roll(value.slots, -shift))
++
++
++class Arithmetic(BoundedArithmetic, Primitives):
++    def __init__(self, slots=4):
++        Primitives.__init__(self, slots)
++
++    def declare_bound(self, value, bound, reason='public circuit contract'):
++        self.declarations.append(dict(reason=reason, bound=bound,
++                                      observed=float(np.max(np.abs(value.slots)))))
++        return BoundedArithmetic.declare_bound(self, value, bound, reason)
++
++
++def annotated(arithmetic, slots=None, level=10):
++    value = Value([.2, -.3, .5, .1] if slots is None else slots, level)
++    arithmetic.declare_bound(value, 1., 'source contract')
++    value._public_row_l2_bound = 2.
++    value._public_head_l2_bounds = (1., 1.5)
++    value._public_normalization_affine = ((1., 2., 3., 4.), (0., .1, .2, .3), 2.)
++    return value
++
++
++def relations(value):
++    return {name: getattr(value, name) for name in BoundedArithmetic._relations if hasattr(value, name)}
++
++
++@pytest.mark.parametrize('operation', ['add', 'subtract', 'multiply', 'weighted_sum', 'rotate', 'polynomial'])
++def test_message_changing_operations_discard_cloned_correlations(operation):
++    arithmetic = Arithmetic()
++    left, right = annotated(arithmetic), annotated(arithmetic, [-.4, .2, .1, -.6])
++    original_left, original_right = relations(left), relations(right)
++    if operation == 'add':
++        result = arithmetic.add(left, right)
++        expected = left.slots+right.slots
++    elif operation == 'subtract':
++        result = arithmetic.add(left, right, subtract=True)
++        expected = left.slots-right.slots
++    elif operation == 'multiply':
++        result = arithmetic.multiply(left, right)
++        expected = left.slots*right.slots
++    elif operation == 'weighted_sum':
++        result = arithmetic.weighted_sum([left, right], [2., -3.], bias=.7)
++        expected = 2*left.slots-3*right.slots+.7
++    elif operation == 'rotate':
++        result = arithmetic.rotate(left, -1)
++        expected = np.roll(left.slots, 1)
++    else:
++        approximation = public_toy_approximations('qwen')['silu']
++        weights = np.array([1., 0., .5, -1.])
++        result = arithmetic.evaluate(left, approximation, output_weights=weights)
++        expected = approximation.evaluate_public(left.slots)*weights
++    assert result is not left and relations(result) == {}
++    assert relations(left) == original_left and relations(right) == original_right
++    np.testing.assert_allclose(result.slots, expected, rtol=0, atol=1e-14)
++    assert arithmetic.public_bound(result) >= np.max(np.abs(expected))
++
++
++@pytest.mark.parametrize('shift', [0, 4, -8])
++def test_identity_rotation_keeps_message_correlations(shift):
++    arithmetic = Arithmetic()
++    value = annotated(arithmetic)
++    expected = relations(value)
++    assert arithmetic.rotate(value, shift) is value
++    assert relations(value) == expected
++
++
++@pytest.mark.parametrize('level', [10, 4])
++def test_level_reduction_preserves_message_and_correlations(level):
++    arithmetic = Arithmetic()
++    value = annotated(arithmetic)
++    result = arithmetic._lower(value, level)
++    assert result.level == level and value.level == 10
++    assert (result is value) == (level == 10)
++    assert relations(result) == relations(value)
++    assert result._public_bound_provenance == 'source contract'
++    np.testing.assert_array_equal(result.slots, value.slots)
++
++
++@pytest.mark.parametrize('all_relations', [False, True])
++def test_hypothetical_fresh_wrapper_refresh_preserves_only_source_correlations(all_relations):
++    arithmetic = Arithmetic()
++    source = annotated(arithmetic, level=2)
++    if not all_relations:
++        del source._public_head_l2_bounds, source._public_normalization_affine
++    expected, calls = relations(source), []
++
++    def refresh(value, *, public_bound):
++        calls.append(public_bound)
++        fresh = annotated(arithmetic, value.slots.copy(), level=25)
++        fresh._public_row_l2_bound = 999.
++        return fresh
++
++    arithmetic.refresher = SimpleNamespace(input_level=2, output_level=25, refresh=refresh)
++    left, right = arithmetic._ensure_capacity((source, source), 1)
++    assert left is right and left is not source
++    assert len(calls) == len(arithmetic.refresh_events) == 1
++    assert relations(left) == expected and relations(source) == expected
++    assert left._public_absolute_bound == source._public_absolute_bound
++    assert left._public_bound_provenance == 'source contract'
++    np.testing.assert_array_equal(left.slots, source.slots)
++
++
++@pytest.mark.parametrize('operation', ['add', 'multiply', 'weighted_sum'])
++def test_basic_bounds_round_outward_including_underflow(operation):
++    arithmetic = Arithmetic()
++    left, right = Value(np.zeros(4)), Value(np.zeros(4))
++    a, b = (1., 2.**-54) if operation == 'add' else (2.**-800, 2.**-800)
++    arithmetic.declare_bound(left, a)
++    arithmetic.declare_bound(right, b)
++    if operation == 'add':
++        result, exact = arithmetic.add(left, right), F(a)+F(b)
++    elif operation == 'multiply':
++        result, exact = arithmetic.multiply(left, right), F(a)*F(b)
++    else:
++        result, exact = arithmetic.weighted_sum([left], [b]), F(a)*F(b)
++    assert F(arithmetic.public_bound(result)) >= exact > 0
++
++
++@pytest.mark.parametrize('exponent', [-1000, -11, -10, -9, 0, 1, 30, 500, 1000])
++def test_refresh_rounding_near_binary_powers_covers_exact_slack(exponent):
++    boundary = math.ldexp(1., exponent)/1.125
++    for value in (math.nextafter(boundary, -math.inf), boundary, math.nextafter(boundary, math.inf)):
++        bound = refresh_public_bound(value)
++        assert F(bound) >= F(9, 8)*F(value)
++        assert bound >= 2.**-10 and math.frexp(bound)[0] == .5
++
++
++def test_refresh_floor():
++    for value in (0., math.ulp(0.), 2.**-30):
++        assert refresh_public_bound(value) == 2.**-10
++
++
++@pytest.mark.parametrize('value', [-1., math.inf, -math.inf, math.nan, sys.float_info.max])
++def test_refresh_invalid_or_overflow_range_is_rejected(value):
++    with pytest.raises(ValueError):
++        refresh_public_bound(value)
++
++
++def test_row_norm_is_not_operator_norm_and_root_rounds_outward():
++    matrix = [[F(1)]*16 for _ in range(4)]
++    assert math.sqrt(sum(x*x for x in matrix[0])) == 4.
++    assert _matrix_norm_bound(matrix) == 8.
++    assert F(math.sqrt(3))**2 < 3
++    assert F(_upper_sqrt(F(3)))**2 >= 3
++    assert _matrix_norm_bound([[F(1), F(1), F(1)]]) == _upper_sqrt(F(3))
++
++
++@pytest.mark.parametrize('power', [-3000, -1500, 0, 1000, 2046])
++def test_root_scaling_handles_underflow_and_large_rationals(power):
++    exact = F(2)**power
++    result = _upper_sqrt(exact)
++    assert math.isfinite(result) and F(result)**2 >= exact
++    previous = math.nextafter(result, -math.inf)
++    assert previous < 0 or F(previous)**2 < exact
++
++
++@pytest.mark.parametrize('value', [F(-1), F(2)**2048])
++def test_root_rejects_negative_or_overflow(value):
++    with pytest.raises(ValueError):
++        _upper_sqrt(value)
++
++
++def test_affine_bound_includes_gamma_beta_and_bias():
++    weight = np.array([[1., -2., 3.], [-4., 5., -6.]])
++    gamma, beta, bias = (-2., .5, 3.), (.1, -.2, .3), (.01, -.04)
++    energy = 2.5
++    coordinate, row_l2 = public_affine_bounds(weight, bias, gamma, beta, energy)
++    for vector in ([2.5, 0., 0.], [0., -2.5, 0.], [0., 0., 2.5], [1.5, -2., 0.]):
++        outputs = [sum(F(float(w))*(F(g)*F(x)+F(b)) for w, g, x, b in zip(row, gamma, vector, beta))+F(offset)
++                   for row, offset in zip(weight, bias)]
++        assert max(map(abs, outputs)) <= F(coordinate)
++        assert sum(value*value for value in outputs) <= F(row_l2)**2
++
++
++def test_segmented_windows_need_absolute_group_bounds_before_masking():
++    graph = object.__new__(BoundedPackedTransformer)
++    graph.layout = PackedPairLayout(1, 1, 32, 64)
++    graph.features = 32
++    graph.arithmetic = Arithmetic(64)
++    graph.ctx = graph.arithmetic.ctx
++    squares = np.zeros(64)
++    squares[15] = squares[32] = 23.9
++    value = Value(squares)
++    graph.arithmetic.declare_bound(value, 23.9)
++    result = graph.segmented_sum(value, 32, 1, factor=1/16, bias=1e-5, group_l1_bound=24.)
++    raw = next(row for row in graph.arithmetic.declarations if row['reason'].startswith('sliding window'))
++    assert raw['observed'] == 47.8 and raw['bound'] == 48.
++    assert raw['observed'] > refresh_public_bound(24.)
++    np.testing.assert_allclose(result.slots, 23.9/16+1e-5, rtol=0, atol=1e-14)
++    signed = np.array([100., -100., -100., 100.])
++    windows = signed+np.roll(signed, -1)
++    np.testing.assert_array_equal(windows[::2], [0., 0.])
++    assert max(abs(windows)) == 200.  # Signed aligned sums cannot replace group L1.
++
++
++def exact_chebyshev(coefficients, t):
++    if len(coefficients) == 1:
++        return coefficients[0]
++    previous, current = F(1), t
++    result = coefficients[0]+coefficients[1]*t
++    for coefficient in coefficients[2:]:
++        previous, current = current, 2*t*current-previous
++        result += coefficient*current
++    return result
++
++
++def exact_actual_power_circuit(approximation, output_weight, t):
++    """Evaluate the runtime's rounded public constants with exact arithmetic."""
++    lo, hi = approximation.domain
++    x = (F(lo)+F(hi))/2 + (F(hi)-F(lo))*t/2
++    coefficients = np.polynomial.chebyshev.cheb2poly(approximation.coefficients)
++    if approximation.input_power_basis:
++        coefficients = coefficients/hi**np.arange(len(coefficients))
++        argument = x
++    else:
++        argument = F(2/(hi-lo))*x+F(-(hi+lo)/(hi-lo))
++    weighted = [F(float(np.float64(coefficient)*np.float64(output_weight))) for coefficient in coefficients]
++    # Horner is independent of the helper's affine expansion/Chebyshev conversion.
++    result = F(0)
++    for coefficient in reversed(weighted):
++        result = result*argument+coefficient
++    return result
++
++
++@pytest.mark.parametrize('name,weight', [('inverse_sqrt', 1.), ('reciprocal', 1/3),
++                                       ('reciprocal', 1/7), ('silu', 1.)])
++def test_exact_power_pullback_and_difference_bound(name, weight):
++    approximation = public_toy_approximations('qwen')[name]
++    actual = public_power_coefficients(approximation, weight)
++    nominal = tuple(F(weight)*F(value) for value in approximation.coefficients)
++    exact_difference = sum(abs(a-b) for a, b in zip(actual, nominal))
++    difference_bound = public_polynomial_difference(approximation, weight)
++    assert F(difference_bound) >= exact_difference
++    # More distinct exact points than the degree prove polynomial identity.
++    for index in range(len(actual)+1):
++        t = F(-1)+F(2*index, len(actual))
++        expected = exact_actual_power_circuit(approximation, weight, t)
++        assert exact_chebyshev(actual, t) == expected
++        assert abs(expected-exact_chebyshev(nominal, t)) <= F(difference_bound)
++
++
++def test_fraction_bound_preserves_a_positive_subnormal_result():
++    exact = F(math.ulp(0.))/2
++    assert _fraction_upper(exact) == math.ulp(0.)
+--- /dev/null
++++ b/cadathlon/tests/test_bounded_shared_preparation.py
+@@ -0,0 +1,68 @@
++"""Control-flow regression only: preparation must feed both shared branches.
++
++The fake preparation returns a fresh wrapper, as genuine refresh does. These
++checks exercise graph alias ownership; they do not emulate refresh noise or
++claim encrypted numerical validity.
++"""
++import sys
++from pathlib import Path
++from types import SimpleNamespace
++import numpy as np
++import pytest
++ROOT=Path(__file__).resolve().parents[2]
++sys.path[:0]=[str(Path(__file__).resolve().parent),str(ROOT),str(ROOT/'cadathlon/common')]
++from encrypted_bounded_transformer import BoundedPackedTransformer
++from encrypted_transformer import public_toy_approximations
++
++class BranchesChecked(Exception):pass
++
++class Arithmetic:
++    def __init__(self):self.prepared=None;self.prepare_calls=0;self.mean_source=None
++    def _ensure_capacity(self,values,required):
++        assert len(values)==1 and required==1
++        value=values[0]
++        if value is not self.prepared:
++            self.prepare_calls+=1
++            self.prepared=SimpleNamespace(_public_absolute_bound=1.)
++        return (self.prepared,)
++    def add(self,left,right,subtract=False):
++        assert subtract
++        assert left is self.mean_source is self.prepared
++        assert self.prepare_calls==1
++        raise BranchesChecked
++    @staticmethod
++    def public_bound(value):return getattr(value,'_public_absolute_bound',1.)
++    @staticmethod
++    def declare_bound(value,bound,reason=''):value._public_absolute_bound=bound;return value
++    @staticmethod
++    def multiply(left,right):return SimpleNamespace()
++
++
++def test_centered_normalization_reuses_prepared_input_for_mean_and_subtraction():
++    graph=object.__new__(BoundedPackedTransformer);graph.features=4;graph.arithmetic=Arithmetic()
++    def linear(value,*args,**kwargs):
++        # Mean's own public linear primitive also performs capacity preparation.
++        (prepared,)=graph.arithmetic._ensure_capacity((value,),1)
++        graph.arithmetic.mean_source=prepared
++        return SimpleNamespace()
++    graph.linear=linear
++    with pytest.raises(BranchesChecked):
++        graph.normalize(SimpleNamespace(),np.ones(4),1e-5,public_toy_approximations('bert')['inverse_sqrt'],center=True)
++
++
++def test_attention_reuses_prepared_scores_for_mean_and_centering():
++    graph=object.__new__(BoundedPackedTransformer);graph.features=4
++    graph.layout=SimpleNamespace(width=2);graph.arithmetic=Arithmetic()
++    graph.head_mask=lambda *args,**kwargs:np.ones(8)
++    graph.transpose_pairs=lambda value:value
++    calls=[]
++    def segmented(value,*args,**kwargs):
++        calls.append(value)
++        if len(calls)==1:return SimpleNamespace()
++        (prepared,)=graph.arithmetic._ensure_capacity((value,),1)
++        graph.arithmetic.mean_source=prepared
++        return SimpleNamespace()
++    graph.segmented_sum=segmented
++    with pytest.raises(BranchesChecked):
++        graph.attention(SimpleNamespace(),SimpleNamespace(),SimpleNamespace(),heads=1,head_dim=2,
++            mask=np.ones(8),counts=np.full(8,2.),approximations=public_toy_approximations('bert'))
+--- /dev/null
++++ b/cadathlon/tests/test_bounded_reference_preflight.py
+@@ -0,0 +1,37 @@
++"""Candidate integration planning only: all client key creation is forbidden."""
++import os
++import json,sys
++from pathlib import Path
++from types import SimpleNamespace
++import pytest
++ROOT=Path(__file__).resolve().parents[2]
++HERE=Path(__file__).resolve().parent
++sys.path[:0]=[str(HERE),str(HERE.parent),str(ROOT),str(ROOT/'cadathlon/common')]
++from support import load_module
++candidate=load_module(ROOT/'cadathlon/common/encrypted_reference.py')
++from jaxite_word import key_gen
++
++class ReachedKeyBoundary(Exception):pass
++
++@pytest.mark.parametrize('model,number', [('bert',n) for n in range(3,7)]+[('qwen',n) for n in range(2,7)])
++def test_deep_opt_in_is_explicit_and_packed_only(monkeypatch,model,number):
++    problem='p2_bert' if model=='bert' else 'p4_qwen'
++    folder=ROOT/'cadathlon/agent_pset'/problem
++    case=json.loads((folder/f'test/test{number}.in').read_text())
++    weights,embeddings,*_=load_module(folder/'src/reference.py').make_case(case)
++    calls=[]
++    def forbidden(*args,**kwargs):
++        calls.append((args,kwargs))
++        raise ReachedKeyBoundary('no actual key generation in planning test')
++    monkeypatch.setattr(key_gen,'gen_pke_pair',forbidden)
++    monkeypatch.delenv('CROSS_SKIP_TOPLEVEL_ROTKEYS',raising=False)
++    args=dict(batch=embeddings.shape[0],sequence_length=embeddings.shape[1],devices=(SimpleNamespace(memory_stats=lambda:{}),))
++    with pytest.raises(ValueError,match='requires bounded homomorphic refresh'):
++        candidate.create_toy_session(model,case['config'],weights,packed_pairs=True,**args)
++    assert not calls
++    with pytest.raises(ValueError,match='packed-pair layout'):
++        candidate.create_toy_session(model,case['config'],weights,bounded_refresh=True,**args)
++    assert not calls
++    with pytest.raises(ReachedKeyBoundary):
++        candidate.create_toy_session(model,case['config'],weights,packed_pairs=True,bounded_refresh=True,**args)
++    assert len(calls)==1
+--- /dev/null
++++ b/cadathlon/tests/test_bounded_transformer_plan.py
+@@ -0,0 +1,88 @@
++"""Conditional ideal-value planning only; no encrypted/refresh-error claim.
++
++Run with JAX_PLATFORMS=cpu and CROSS_REPO pointing to the reviewed checkout.
++The companion draft modules are imported from this script directory.
++"""
++import sys,json,math,os,hashlib
++from pathlib import Path
++from types import SimpleNamespace
++ROOT=Path(__file__).resolve().parents[2]
++sys.path[:0]=[str(Path(__file__).resolve().parent),str(ROOT),str(ROOT/'cadathlon/common')]
++import numpy as np
++from encrypted_packed_transformer import PackedTransformer,PackedPairLayout,packed_feature_width,plan_packed_transformer
++from encrypted_bounded_arithmetic import BoundedArithmetic
++from encrypted_bounded_transformer import BoundedPackedTransformer
++from encrypted_transformer import public_toy_approximations
++from support import load_module,metrics
++test=load_module(ROOT/'cadathlon/tests/test_packed_transformer.py')
++Value=test._Value
++
++class Primitives(test.PlanningArithmetic):
++    @staticmethod
++    def clone(source,slots,level):
++        result=Value(slots,level)
++        result.__dict__.update(source.__dict__)
++        result.slots,result.level=slots,level
++        return result
++    def _lower(self,value,level):
++        assert level<=value.level
++        return value if level==value.level else self.clone(value,value.slots,level)
++    def add(self,left,right,subtract=False):
++        return self.clone(left,left.slots-right.slots if subtract else left.slots+right.slots,min(left.level,right.level))
++    def weighted_sum(self, values, weights, bias=0.):
++        values=self._ensure_capacity(tuple(values),1)
++        return self.clone(values[0],sum(value.slots*weight for value,weight in zip(values,weights))+bias,min(x.level for x in values)-1)
++    def multiply(self,left,right):
++        left,right=self._ensure_capacity((left,right),1)
++        return self.clone(left,left.slots*right.slots,min(left.level,right.level)-1)
++    def _encode_public(self,slots,level,scale):
++        value=super()._encode_public(slots,level,scale)
++        return self.declare_bound(value,float(np.max(np.abs(slots))),'public bias constant')
++
++class Arithmetic(BoundedArithmetic,Primitives):
++    def __init__(self,slots,refresh):
++        Primitives.__init__(self,slots)
++        self.refresh_events=[]
++        if refresh:
++            def ideal_refresh(value,*,public_bound):
++                assert np.max(np.abs(value.slots))<=public_bound+1e-9
++                return Value(value.slots,25)
++            self.refresher=SimpleNamespace(input_level=2,output_level=25,refresh=ideal_refresh)
++        else:self.refresher=None
++    def rotate(self,value,shift):
++        if not shift % self.ctx.num_slots:return value
++        self.rotations.add(shift % self.ctx.num_slots)
++        result=self.clone(value,np.roll(value.slots,-shift),value.level)
++        return self.declare_bound(self.forget_relations(result),self.public_bound(value),'public permutation')
++    def declare_bound(self,value,bound,reason='public circuit contract'):
++        assert float(np.max(np.abs(value.slots)))<=bound+1e-8*max(1,bound),(reason,bound,float(np.max(np.abs(value.slots))))
++        return BoundedArithmetic.declare_bound(self,value,bound,reason)
++
++import pytest
++
++@pytest.mark.parametrize('model,number',[(model,n) for model in ('bert','qwen') for n in range(1,7)])
++def test_complete_bounded_graph_preserves_ideal_contracts_and_fixture_gate(model,number):
++    problem='p2_bert' if model=='bert' else 'p4_qwen'
++    folder=ROOT/'cadathlon/agent_pset'/problem
++    oracle=load_module(folder/'src/reference.py')
++    case=json.loads((folder/f'test/test{number}.in').read_text());args=oracle.make_case(case)
++    weights,embeddings=args[:2];mask=args[2] if model=='bert' else None
++    b,s,h=embeddings.shape;f=packed_feature_width(model,case['config'])
++    period=(1<<(b-1).bit_length())*(1<<(s-1).bit_length())**2*f
++    layout=PackedPairLayout(b,s,f,max(period,2*f))
++    plan=plan_packed_transformer(model,case['config'],weights,batch=b,sequence=s,slots=layout.slots,attention_mask=mask)
++    graph=object.__new__(BoundedPackedTransformer);graph.layout=layout;graph.features=f
++    graph.arithmetic=Arithmetic(layout.slots,plan['depth']>52);graph.ctx=graph.arithmetic.ctx
++    initial=49 if plan['depth']>52 else plan['depth']
++    result=graph.evaluate(Value(layout.pack_client_embeddings(embeddings)[0],initial),model,case['config'],weights,public_toy_approximations(model),mask)
++    golden=np.asarray(json.loads((folder/f'test/test{number}.out').read_text())['logits'])
++    actual=layout.unpack_client_features([result.slots],output_features=golden.shape[-1])[:,0 if model=='bert' else -1]
++    errors=metrics(actual,golden)
++    if model=='bert':
++        assert np.all(np.abs(actual-golden)<=.02+.01*np.abs(golden))
++        assert np.array_equal(actual[:,1]>=actual[:,0],golden[:,1]>=golden[:,0])
++    else:
++        assert errors['nrmse']<=.10 and errors['max_abs_error']<=.20
++    # Bound checks run at every declaration and every fresh-wrapper refresh.
++    assert result.level>=0
++    assert max((event['public_bound'] for event in graph.arithmetic.refresh_events),default=0)<=16
+--- /dev/null
++++ b/cadathlon/tests/test_encrypted_bounded_metadata.py
+@@ -0,0 +1,68 @@
++"""Secure shallow CKKS metadata regression; no bootstrap or full model claim."""
++import os
++import sys,json,math,time,hashlib
++from pathlib import Path
++ROOT=Path(__file__).resolve().parents[2]
++sys.path[:0]=[str(Path(__file__).resolve().parent),str(ROOT),str(ROOT/'cadathlon/common')]
++import jax,numpy as np
++from jaxite_word import CKKSContext,key_gen,util,he_params
++from jaxite_word.composite_prime_gen import composite_prime_gen
++from encrypted_refresh import ClientRotationKeyStore
++from encrypted_bounded_arithmetic import BoundedArithmetic
++
++
++def test_secure_arithmetic_invalidates_only_unsupported_specialized_contracts():
++    jax.config.update('jax_enable_x64',True)
++    start=time.monotonic();N=8192;depth=1;dnum=2
++    report=dict(checks={})
++    q=composite_prime_gen(2,2*(depth+1),61,56,2*N,31)
++    p=util.generate_p_towers(q,dnum,N,aux_bits=30)
++    assert he_params.qp_is_secure(q,p,N,he_params.SecurityTarget(128,'classical'))
++    he_params.assert_p_coverage(q,p,dnum)
++    report['ring']=dict(degree=N,depth=depth,dnum=dnum,q_count=len(q),p_count=len(p),actual_log2_qp=sum(map(math.log2,q+p)),security_bits=128)
++    k=key_gen.gen_pke_pair(q,[],N)
++    ek=key_gen.gen_evaluation_key(k['secret_key'],q=q,P=p,dnum=dnum)
++    store=ClientRotationKeyStore.generate(k['secret_key'],q,p,degree=N,dnum=dnum,rotations=[1])
++    S=float(q[-2])*q[-1]
++    params=dict(degree=N,num_slots=N//2,scaling_factor=S,output_scale=S,q_towers=q,p_towers=p,composite_degree=2,degree_layout=(64,128),p=56,CKKS_M_FACTOR=1,max_bits_in_word=61,noise_scale_degree=1)
++    client=CKKSContext(dict(params,**k))
++    ctx=CKKSContext(dict(params,evaluation_key=[jax.numpy.asarray(ek[n],dtype='uint32').transpose(0,2,1) for n in ('a','b')]))
++    ctx.program_initialization([1],dnum=dnum,r=64,c=128,batch=1,pregenerated_rotation_keys=store.keys)
++    client._polynomial_ntt_ctx=ctx._param_cache.ntt_q_max
++    assert ctx.secret_key is None and ctx._param_cache.secret_key is None and ctx.parameters.get('secret_key') is None
++    def forbidden(*a,**kw):raise AssertionError('server encrypt/decrypt forbidden')
++    ctx.encrypt=ctx.decrypt=ctx.encrypt_slots=ctx.decrypt_slots=forbidden
++    ops=BoundedArithmetic(ctx,low_memory=True)
++    x=np.tile([.1,.35,-.2,.3],N//8)
++    a=ops.declare_bound(client.encrypt_slots(x),.35)
++    relations=dict(_public_row_l2_bound=.35,_public_head_l2_bounds=(.35,),_public_normalization_affine=((1.,),(0.,),.35))
++    a.__dict__.update(relations)
++    clone=a._clone_with_payload(a.polynomial)
++    assert all(getattr(clone,n)==v for n,v in relations.items())
++    del clone
++    report['actual_clone_copies_relations']=True
++
++    def check(name,result,expected,level,retains):
++        result.polynomial.block_until_ready()
++        observed=client.decrypt_slots(result)
++        error=float(np.max(np.abs(observed-expected)))
++        for key,value in relations.items():
++            assert (getattr(result,key,None)==value) if retains else not hasattr(result,key), (name,key)
++            assert getattr(a,key)==value
++        assert ops._level(result)==level and getattr(result,'_ckks_nsd',1)==1
++        assert math.isclose(result._ckks_scale,S,rel_tol=1e-12)
++        assert error<1e-6,(name,error)
++        report['checks'][name]=dict(max_abs_error=error,output_level=level,specialized_contracts_preserved=retains)
++
++    check('addition_invalidates',ops.add(a,a),2*x,1,False)
++    check('multiplication_invalidates',ops.multiply(a,a),x*x,0,False)
++    check('weighted_sum_invalidates',ops.weighted_sum([a],[2.],bias=.1),2*x+.1,0,False)
++    check('feature_rotation_invalidates',ops.rotate(a,1),np.roll(x,-1),1,False)
++    assert ops.rotate(a,0) is a
++    check('identity_preserves',ops.rotate(a,N//2),x,1,True)
++    check('level_reduction_preserves',ops._lower(a,0),x,0,True)
++    assert len(report['checks'])==6
++    from jaxite_word import ckks_ctx
++    ckks_ctx.evict_context_caches(client)
++    ckks_ctx.evict_context_caches(ctx)
++    store.close()

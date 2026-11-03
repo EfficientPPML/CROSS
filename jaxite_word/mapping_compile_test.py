@@ -1544,6 +1544,51 @@ if pytest is not None:
   ]
 
 
+class DynamicConstantsCompilationTest(absltest.TestCase):
+  def test_concurrent_cleanup_defers_global_cache_clear_until_joined(self):
+    import jax
+    from concurrent.futures import ThreadPoolExecutor
+
+    with mock.patch.object(jax, 'clear_caches') as clear:
+      with mapping_mod.defer_cache_clearing():
+        with ThreadPoolExecutor(max_workers=2) as workers:
+          futures = [workers.submit(mapping_mod._discard_program_state, None, {})
+                     for _ in range(2)]
+          for future in futures:
+            future.result()
+        clear.assert_not_called()
+      clear.assert_called_once_with()
+
+  def test_cache_deferral_flushes_after_exception(self):
+    import jax
+    with mock.patch.object(jax, 'clear_caches') as clear:
+      with self.assertRaisesRegex(RuntimeError, 'build failed'):
+        with mapping_mod.defer_cache_clearing():
+          mapping_mod._discard_program_state(None, {})
+          raise RuntimeError('build failed')
+      clear.assert_called_once_with()
+
+  def test_resident_constants_and_multiple_inputs_match_direct_program(self):
+    import jax
+
+    # Two distinct constants and a nonlinear operation exercise both operand
+    # lifting and the compiled arithmetic, across more than one request.
+    weights = jnp.arange(64, dtype=jnp.uint32).reshape(8, 8)
+    bias = jnp.arange(8, dtype=jnp.uint32)
+
+    def program(value):
+      return (value @ weights + bias) ** 2
+
+    executable = mapping_mod._compile_single_device_program(
+        program, jax.ShapeDtypeStruct((1, 8), jnp.uint32),
+        (jax.local_devices()[0],),
+    )
+    for value in (np.arange(8, dtype=np.uint32), np.ones(8, dtype=np.uint32)):
+      actual = executable(value[None, :])
+      expected = (value @ np.asarray(weights) + np.asarray(bias)) ** 2
+      np.testing.assert_array_equal(actual, expected[None, :])
+
+
 _NUM_SLOTS = 128
 # The logical-workload lowering suite that stood here exercised
 # nn.lower_model, which no longer exists. What outlived it moved to

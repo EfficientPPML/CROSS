@@ -167,7 +167,7 @@ tbody tr:nth-child(even) { background: var(--bg-sidebar); }
     <nav class="sidebar-nav">
       <div class="nav-section"><h2 class="nav-title">Problem set</h2><ul class="nav-links"><li><a href="../../../non_agent_pset/p1_benchmark/doc/problem.html">MNIST throughput</a></li>
 <li><a href="../../../agent_pset/p2_bert/doc/problem.html">BERT / MRPC</a></li>
-<li><a href="../../../non_agent_pset/p3_cnn/doc/problem.html">LeNet &amp; AlexNetTiny</a></li>
+<li><a href="../../../non_agent_pset/p3_cnn/doc/problem.html">Encrypted CNNs</a></li>
 <li><a href="../../../agent_pset/p4_qwen/doc/problem.html" class="active" aria-current="page">Qwen3-0.6B</a></li></ul></div>
       <div class="nav-section"><h2 class="nav-title">This problem</h2><ul class="nav-links"><li><a href="#1-introduction">Introduction</a></li>
 <li><a href="#2-problem-statement">Problem statement</a></li>
@@ -496,6 +496,17 @@ make submit                        # writes ../submission.tar.gz
 Debug logging goes to stderr. Public <code>.out</code> comparison uses tolerances rather
 than bytewise <code>diff</code>, since CKKS encryption is randomized. Never report the
 plaintext reference run as an encrypted result.</p>
+<p><code>make preflight</code> checks callable interfaces without initializing an accelerator
+and fails for the unimplemented starter. <code>qwen_reference.py</code> is a separately
+selectable <strong>experimental-unvalidated toy encrypted circuit</strong>. Its interfaces
+pass preflight, but it has not passed all six encrypted fixtures or the full
+Qwen workload and supplies no scoring calibration. Select it explicitly with
+<code>--implementation qwen_reference.py</code>; use <code>--require-tpu</code> for actual TPU smoke
+measurements. The result retains its implementation status and labels the
+device count as requested, rather than claiming verified utilization.
+<code>CROSS_PUBLIC_KEY_DIRECTORY</code> selects a directory with sufficient space for
+its large temporary public evaluation keys. A preflight pass never establishes
+encrypted correctness or full-model performance.</p>
 <p>Proposed judging allocation: one TPU v6e chip, fixed host and package image per
 run; sequential exclusive reservations. CPU fallback is for development and
 cannot be compared to TPU leaderboard times. Build/key generation limit:

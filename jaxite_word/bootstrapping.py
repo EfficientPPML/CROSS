@@ -57,6 +57,7 @@ def _mod_raise_array(ct_polynomial: jnp.ndarray,
   Steps: INTT → unreduced CRT interpolation → extend → NTT.
   """
   import util as _util
+  import numpy as _np
 
   src_moduli = list(src_moduli)
   dst_moduli = list(dst_moduli)
@@ -85,7 +86,10 @@ def _mod_raise_array(ct_polynomial: jnp.ndarray,
   poly_degree = r_dim * c_dim
 
   # Flatten to (num_polys, degree, num_src)
-  flat = arr.reshape(-1, poly_degree, num_src)
+  # The following signed-digit CRT and NTT routines execute on the host.
+  # Transfer once: indexing a device array inside their scalar loops causes
+  # hundreds of thousands of separate TPU-to-host reads at secure ring sizes.
+  flat = _np.asarray(arr.reshape(-1, poly_degree, num_src))
   num_polys = flat.shape[0]
 
   # CRT constants
@@ -4286,7 +4290,7 @@ class Bootstrap:
 
     # Encode the constant via CKKS encode (handles negacyclic NTT correctly).
     const_slots = [complex(scalar, 0.0)] * self._num_slots
-    from ckks_ctx import _ckks_encode as ckks_encode
+    from ckks_ctx import _ckks_encode_array as ckks_encode
     m = self._degree * 2
     encoded_rns = ckks_encode(
         slots=const_slots,
@@ -4578,7 +4582,7 @@ class Bootstrap:
     # Bootstrap DFT diagonals are evaluator-owned complex constants, so they
     # use the private complex-capable encoder rather than the real-only public
     # inference boundary.
-    from ckks_ctx import _ckks_encode as ckks_encode
+    from ckks_ctx import _ckks_encode_array as ckks_encode
     encoded_rns = ckks_encode(
         slots=slots,
         cycl_order=self._degree * 2,
@@ -4589,7 +4593,7 @@ class Bootstrap:
         max_bits_value=self.ctx.parameters.get(
             "max_bits_value", (1 << 63) - (1 << 9) - 1),
     )
-    arr = jnp.array(encoded_rns, dtype=jnp.uint64)
+    arr = jnp.asarray(encoded_rns, dtype=jnp.uint64)
     return arr.reshape(*self._cache.degree_layout, num_q).astype(jnp.uint32)
 
   def _infer_level(self, ct) -> int:

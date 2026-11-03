@@ -1,0 +1,27 @@
+{
+  "scope": "Independent plaintext row-layout/attention semantics and public parameter/key accounting only; no HE model or nonlinear approximation proof.",
+  "layout_passed": true,
+  "layout_source_unchanged": true,
+  "inventory_sources_match_at_archive": {
+    "/tmp/streaming-bert-review/inventory.py": true,
+    "/home/jianming_gatech/CROSS/jaxite_word/bsgs.py": true,
+    "/home/jianming_gatech/CROSS/jaxite_word/bootstrapping.py": true,
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_refresh.py": true,
+    "/home/jianming_gatech/CROSS/jaxite_word/he_params.py": true,
+    "/home/jianming_gatech/CROSS/jaxite_word/util.py": true,
+    "/home/jianming_gatech/CROSS/jaxite_word/composite_prime_gen.py": true
+  },
+  "command_environment": {
+    "JAX_PLATFORMS": "cpu",
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "affinity": "152-155",
+    "python": "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python"
+  },
+  "limitations": [
+    "Inventory recorded source hashes after planning; archive verifies those bytes, not a historical before/after claim.",
+    "Exact exp and division are plaintext semantic oracles.",
+    "No pretrained full block, actual ciphertext bound/level schedule, full-slot bootstrap error, HBM or runtime is proven."
+  ]
+}

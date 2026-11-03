@@ -1,0 +1,55 @@
+import unittest,json,math
+from pathlib import Path
+import numpy as np
+from approximate import Arithmetic,DomainViolation
+HERE=Path(__file__).resolve().parent
+def manifest():return json.loads((HERE/'candidate-v2/candidate_manifest.json').read_text())
+
+class Composition(unittest.TestCase):
+    def test_balanced_polynomials_against_independent_clenshaw(self):
+        m=manifest();engine=Arithmetic(m)
+        rules=[r['polynomial'] for r in m['gelu'].values()]+[r['polynomial'] for r in m['norms'].values()]
+        for p in rules:
+            x=np.linspace(*p['domain'],35);lo,hi=p['domain'];t=x*(2/(hi-lo))-(hi+lo)/(hi-lo)
+            actual=engine.polynomial(x,p,'chebyshev','p');expected=np.polynomial.chebyshev.chebval(t,p['coefficients'])
+            np.testing.assert_allclose(actual,expected,atol=3e-12,rtol=3e-12)
+
+    def test_domain_failure_records_and_precedes_polynomial(self):
+        m=manifest();engine=Arithmetic(m);p=m['gelu']['0']['polynomial']
+        with self.assertRaises(DomainViolation) as e:engine.polynomial(np.array([p['domain'][1]+1]),p,'chebyshev','bad')
+        self.assertEqual(e.exception.label,'bad');self.assertEqual(engine.observations['bad']['above'],1)
+        with self.assertRaises(DomainViolation):engine.inverse(np.array([0.]),m['initial_reciprocal'],'denominator')
+
+    def test_actual_public_K_denominators_and_mass(self):
+        m=manifest();engine=Arithmetic(m)
+        for k in (1,15,64,128):
+            scores=np.linspace(-15,15,k)[None,None,:]
+            actual=engine.softmax(scores,m['softmax']['0'],f'k{k}')
+            exact=np.exp(scores-np.max(scores,axis=-1,keepdims=True));exact/=exact.sum(axis=-1,keepdims=True)
+            np.testing.assert_allclose(actual,exact,atol=2e-8,rtol=2e-8)
+            self.assertLess(abs(float(actual.sum())-1),1e-12)
+        self.assertIn('k128.round4.denominator_inverse',engine.observations)
+
+    def test_full_graph_exact_operators_matches_independent_native(self):
+        import torch
+        from transformers import BertConfig,BertForSequenceClassification
+        class Exact(Arithmetic):
+            def norm(self,x,gamma,beta,epsilon,rule,label):
+                centered=x-x.mean(axis=-1,keepdims=True);return centered/np.sqrt(np.mean(centered*centered,axis=-1,keepdims=True)+epsilon)*gamma+beta
+            def polynomial(self,x,rule,strategy,label):
+                if rule['name']!='gelu':raise AssertionError('unexpected test operator')
+                return .5*x*(1+np.vectorize(math.erf)(x/np.sqrt(2)))
+            def softmax(self,x,rule,label):
+                v=np.exp(x-x.max(axis=-1,keepdims=True));return v/v.sum(axis=-1,keepdims=True)
+            def tanh(self,x,rule,label):return np.tanh(x)
+        torch.set_num_threads(1);torch.manual_seed(9)
+        config=BertConfig(vocab_size=32,hidden_size=12,num_hidden_layers=2,num_attention_heads=3,intermediate_size=19)
+        config._attn_implementation='eager';model=BertForSequenceClassification(config).double().eval()
+        tokens=dict(input_ids=torch.arange(128).reshape(1,-1)%32,attention_mask=torch.tensor([[1]*9+[0]*119]),token_type_ids=torch.zeros((1,128),dtype=torch.long))
+        with torch.no_grad():expected=model(**tokens).logits[0].numpy();emb=model.bert.embeddings(input_ids=tokens['input_ids'],token_type_ids=tokens['token_type_ids'])[0,:9].numpy()
+        weights={n:v.detach().numpy() for n,v in model.state_dict().items()}
+        actual=Exact(manifest()).forward(config.to_dict(),weights,emb)
+        np.testing.assert_allclose(actual,expected,atol=1e-12,rtol=1e-12)
+        self.assertTrue(np.isfinite(actual).all())
+
+if __name__=='__main__':unittest.main()

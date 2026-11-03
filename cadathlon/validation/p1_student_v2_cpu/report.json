@@ -1,0 +1,75 @@
+{
+  "scope": "CPU-only P1 student-v2 evaluator/scoring/package regressions. No TPU evaluation or new performance calibration.",
+  "command": [
+    "taskset",
+    "-c",
+    "144-147",
+    "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+    "-m",
+    "pytest",
+    "cadathlon/tests/test_scoring.py",
+    "cadathlon/tests/test_evaluation_schedule.py",
+    "cadathlon/tests/test_student_evidence.py",
+    "cadathlon/tests/test_suite_profiles.py",
+    "cadathlon/tests/test_baseline_warmup.py",
+    "cadathlon/tests/test_package.py",
+    "-q",
+    "--junitxml=/home/jianming_gatech/CROSS/cadathlon/validation/p1_student_v2_cpu/pytest.xml"
+  ],
+  "environment": {
+    "JAX_PLATFORMS": "cpu",
+    "OMP_NUM_THREADS": "4",
+    "OPENBLAS_NUM_THREADS": "4",
+    "cpu_affinity": [
+      144,
+      145,
+      146,
+      147
+    ]
+  },
+  "returncode": 0,
+  "elapsed_s": 7.31066790100158,
+  "source_hashes_before": {
+    "cadathlon/non_agent_pset/p1_benchmark/src/Makefile": "92488521284292aeedcf70837bb253d6d8ac8dbdc2e06cc2e4940129bf14883e",
+    "cadathlon/non_agent_pset/p1_benchmark/src/bench_opt.py": "d8e43761fc08f48fa2b466b712b78519de77ac86ab3ab1f99e9ff41c624571a6",
+    "cadathlon/non_agent_pset/p1_benchmark/src/suite/evaluate.py": "504fefe0c594ec6b96d7c78a8d68e6eccdb74364413e8c68968a2404ebf69a9c",
+    "cadathlon/non_agent_pset/p1_benchmark/src/suite/score.py": "0060a75db1621bd6bf65e23bb90aa3c683af96fc99d1af989970818004dc3eaa",
+    "cadathlon/non_agent_pset/p1_benchmark/src/suite/p1_evidence.py": "3fc1461378606bf03657fd8ee1daeb5823be3d1800c245d37f6adb1bf7d0d85b",
+    "cadathlon/non_agent_pset/p1_benchmark/src/suite/archive.py": "4b54586529638839c92faec5158200274751f44bf059ca5f08fa839c9727f3ca",
+    "cadathlon/non_agent_pset/p1_benchmark/src/suite/stage_lib.py": "686ad72e3f89c11c9bb6f3bfd992843723081881d63c985c4d81090abdd2f4ac",
+    "cadathlon/non_agent_pset/p1_benchmark/src/suite/service_daemon.py": "c9a29ff6f679bf0164b363ee2e91a90487e705c77bea65a73673c79c3ff7b861",
+    "cadathlon/non_agent_pset/p1_benchmark/src/suite/suite_config.json": "fcc46644c4c2e494d9ae3844e47ff067c9e44fc84a611ee4554690d2f0a1dd22",
+    "cadathlon/tests/test_scoring.py": "150c85a06f670bb86dd06cb444432855b53bc2c82fc6c0bbbe822dec64f0e249",
+    "cadathlon/tests/test_evaluation_schedule.py": "cdd242bd8d6d45d91f6d680ef8bba82aef7e7634b278ba185b260ea5557f9647",
+    "cadathlon/tests/test_student_evidence.py": "3258778b11a35679de2c92279a69f2aecab8997b1593e84f67686dbce3b70104",
+    "cadathlon/tests/test_suite_profiles.py": "a00be81005bf5c4bdce5455510dc9eeadecc4413e0f65ecabd9f8f8ec1f5bd5d",
+    "cadathlon/tests/test_baseline_warmup.py": "aabc29b3684dcab686a02e92e81789408801fdf6ae1d7df2505073c830b35d87",
+    "cadathlon/tests/test_package.py": "0baa95cb2d0aebe0fb6b80aa676f2be60feb2e1c1398963132ad636d176ffb61"
+  },
+  "source_hashes_after": {
+    "cadathlon/non_agent_pset/p1_benchmark/src/Makefile": "92488521284292aeedcf70837bb253d6d8ac8dbdc2e06cc2e4940129bf14883e",
+    "cadathlon/non_agent_pset/p1_benchmark/src/bench_opt.py": "d8e43761fc08f48fa2b466b712b78519de77ac86ab3ab1f99e9ff41c624571a6",
+    "cadathlon/non_agent_pset/p1_benchmark/src/suite/evaluate.py": "504fefe0c594ec6b96d7c78a8d68e6eccdb74364413e8c68968a2404ebf69a9c",
+    "cadathlon/non_agent_pset/p1_benchmark/src/suite/score.py": "0060a75db1621bd6bf65e23bb90aa3c683af96fc99d1af989970818004dc3eaa",
+    "cadathlon/non_agent_pset/p1_benchmark/src/suite/p1_evidence.py": "3fc1461378606bf03657fd8ee1daeb5823be3d1800c245d37f6adb1bf7d0d85b",
+    "cadathlon/non_agent_pset/p1_benchmark/src/suite/archive.py": "4b54586529638839c92faec5158200274751f44bf059ca5f08fa839c9727f3ca",
+    "cadathlon/non_agent_pset/p1_benchmark/src/suite/stage_lib.py": "686ad72e3f89c11c9bb6f3bfd992843723081881d63c985c4d81090abdd2f4ac",
+    "cadathlon/non_agent_pset/p1_benchmark/src/suite/service_daemon.py": "c9a29ff6f679bf0164b363ee2e91a90487e705c77bea65a73673c79c3ff7b861",
+    "cadathlon/non_agent_pset/p1_benchmark/src/suite/suite_config.json": "fcc46644c4c2e494d9ae3844e47ff067c9e44fc84a611ee4554690d2f0a1dd22",
+    "cadathlon/tests/test_scoring.py": "150c85a06f670bb86dd06cb444432855b53bc2c82fc6c0bbbe822dec64f0e249",
+    "cadathlon/tests/test_evaluation_schedule.py": "cdd242bd8d6d45d91f6d680ef8bba82aef7e7634b278ba185b260ea5557f9647",
+    "cadathlon/tests/test_student_evidence.py": "3258778b11a35679de2c92279a69f2aecab8997b1593e84f67686dbce3b70104",
+    "cadathlon/tests/test_suite_profiles.py": "a00be81005bf5c4bdce5455510dc9eeadecc4413e0f65ecabd9f8f8ec1f5bd5d",
+    "cadathlon/tests/test_baseline_warmup.py": "aabc29b3684dcab686a02e92e81789408801fdf6ae1d7df2505073c830b35d87",
+    "cadathlon/tests/test_package.py": "0baa95cb2d0aebe0fb6b80aa676f2be60feb2e1c1398963132ad636d176ffb61"
+  },
+  "source_files_unchanged": true,
+  "versions": {
+    "pytest": "9.2.0",
+    "jax": "0.12.0.1",
+    "jaxlib": "0.12.0.1",
+    "numpy": "2.5.4",
+    "torch": "2.15.0+cpu"
+  },
+  "historical_student_manifest_unchanged": true
+}

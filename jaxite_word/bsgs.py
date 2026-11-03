@@ -329,13 +329,13 @@ class _BSGSMatVecAtLevel:
           for i in active_i_per_j[j]
       ]
       slots = [
-          [complex(float(value), 0.0) for value in diagonal]
-          + [0j] * (self.ctx.num_slots - self.n)
+          np.pad(np.asarray(diagonal, dtype=np.float64),
+                 (0, self.ctx.num_slots - self.n))
           for _, diagonal in items
       ]
       if n_jobs > 1:
         with ThreadPoolExecutor(max_workers=n_jobs) as executor:
-          futures = [executor.submit(encoder.encode, values) for values in slots]
+          futures = [executor.submit(encoder._encode_host_array, values) for values in slots]
           for (key, _), future in zip(items, futures, strict=True):
             try:
               plaintext = future.result()
@@ -345,19 +345,19 @@ class _BSGSMatVecAtLevel:
                   f'pt_scale={pt_scale}; pick a larger scale.'
               ) from error
             encoded[key] = np.asarray(
-                plaintext.polynomial[0, 0], dtype=np.uint32
+                plaintext, dtype=np.uint32
             ).reshape(self.r, self.c, self.num_q_in)
       else:
         for (key, _), values in zip(items, slots, strict=True):
           try:
-            plaintext = encoder.encode(values)
+            plaintext = encoder._encode_host_array(values)
           except scaling_error as error:
             raise ValueError(
                 f'MatVec diagonal {key} underflowed CKKS encode at '
                 f'pt_scale={pt_scale}; pick a larger scale.'
             ) from error
           encoded[key] = np.asarray(
-              plaintext.polynomial[0, 0], dtype=np.uint32
+              plaintext, dtype=np.uint32
           ).reshape(self.r, self.c, self.num_q_in)
 
     # Stack eager plaintexts and record the indices needed by both runtimes.
@@ -672,12 +672,12 @@ class _BSGSMatVecAtLevel:
                   pre_rotate_diagonal(diagonal, j, self.n1)
               )
             slots = [
-                [complex(float(value), 0.0) for value in diagonal]
-                + [0j] * (self.ctx.num_slots - self.n)
+                np.pad(np.asarray(diagonal, dtype=np.float64),
+                       (0, self.ctx.num_slots - self.n))
                 for diagonal in step_diagonals
             ]
             futures = (
-                [executor.submit(self._encoder.encode, values) for values in slots]
+                [executor.submit(self._encoder._encode_host_array, values) for values in slots]
                 if executor is not None
                 else None
             )
@@ -687,7 +687,7 @@ class _BSGSMatVecAtLevel:
                 plaintext = (
                     futures[offset].result()
                     if futures is not None
-                    else self._encoder.encode(values)
+                    else self._encoder._encode_host_array(values)
                 )
               except self._scaling_error as error:
                 raise ValueError(
@@ -695,7 +695,7 @@ class _BSGSMatVecAtLevel:
                     f'encode at pt_scale={self._pt_scale}; pick a larger scale.'
                 ) from error
               plaintexts.append(np.asarray(
-                  plaintext.polynomial[0, 0], dtype=np.uint32
+                  plaintext, dtype=np.uint32
               ).reshape(self.r, self.c, self.num_q_in))
             points = jnp.asarray(np.stack(plaintexts))
             contribution = self._giant_step_fn(
