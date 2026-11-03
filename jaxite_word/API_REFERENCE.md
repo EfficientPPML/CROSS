@@ -79,6 +79,14 @@ exact but quadratic in ciphertext width. Pass
 `packing.PackingPolicy(lazy_constants=True)` to keep the matrix-free source
 instead; at demo width the difference is gigabytes.
 
+`PackingPolicy(dnum=...)` optionally sets the HYBRID key-switch partition
+count before deriving the ring. More digits can reduce the auxiliary P chain
+and the required ring size, at the cost of more key-switch work. The value
+must be between 1 and the program's logical Q-modulus count and must satisfy
+the existing parameter-generation invariants. `None` preserves automatic
+selection. All profiles still enforce the requested security strength;
+changing precision or partitioning requires independent numerical validation.
+
 The public deployment flow is deliberately sequential:
 
 | Stage | Public API | Responsibility |
@@ -92,7 +100,15 @@ The public deployment flow is deliberately sequential:
 duck-typed look-alike is refused, because one producer of a packed program is
 the point. Its remaining keywords are scheduling only -- `global_batch`,
 `devices`, `dnum`, `compile_mode`, `bsgs_n_jobs`, `bsgs_streaming`,
-`cache_rotation_keys`, `headroom`, `input_scale`, `input_nsd`, `perf_test`.
+`cache_rotation_keys`, `headroom`, `input_scale`, `input_nsd`, `perf_test`,
+`dynamic_constants`.
+
+`dynamic_constants=True` keeps immutable model and evaluation-key arrays as
+resident runtime operands instead of embedding them in HLO. This reduces
+compile-time serialization and constant folding for large models. It is
+opt-in and currently requires one device, `compile_mode="whole"`, and no
+bootstrap operations. These arrays are owned by the Mapping and released by
+`release()`; they are not re-encoded on each request.
 `dnum` may only restate the value in the secure ring plan; none of these
 options change what the program computes or which ring it runs on.
 

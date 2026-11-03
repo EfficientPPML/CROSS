@@ -35,6 +35,7 @@ class _HEMulKernel:
       extend_moduli,
       composite_degree=1,
       finite_field_context=BarrettContext,
+      polynomial_factory=None,
   ):
     self.batch = batch
     self.r = r
@@ -45,6 +46,8 @@ class _HEMulKernel:
     self.composite_degree = composite_degree
     self.extend_moduli = extend_moduli
     self.ff_context_cls = finite_field_context
+    # Optional owner-scoped control construction; ordinary dispatch is default.
+    self._polynomial_factory = Polynomial if polynomial_factory is None else polynomial_factory
     self.last_tower_moduli = original_moduli[-1]
     self.evalkey_a_vector = jnp.zeros((dnum, 0), dtype=jnp.uint64)
     self.evalkey_b_vector = jnp.zeros((dnum, 0), dtype=jnp.uint64)
@@ -160,6 +163,7 @@ class _HEMulKernel:
             c=self.c,
             degree_layout=self.degree_layout,
             finite_field_context=self.ff_context_cls,
+            polynomial_factory=self._polynomial_factory,
         )
         self._he_rescale_pre.control_gen(
             composite_degree=1, perf_test=perf_test
@@ -175,6 +179,7 @@ class _HEMulKernel:
             c=self.c,
             degree_layout=self.degree_layout,
             finite_field_context=self.ff_context_cls,
+            polynomial_factory=self._polynomial_factory,
         )
         self._he_rescale_post.control_gen(
             composite_degree=post_cd, perf_test=perf_test
@@ -190,6 +195,7 @@ class _HEMulKernel:
             c=self.c,
             degree_layout=self.degree_layout,
             finite_field_context=self.ff_context_cls,
+            polynomial_factory=self._polynomial_factory,
         )
         self._he_rescale.control_gen(
             composite_degree=composite_degree, perf_test=perf_test
@@ -214,7 +220,7 @@ class _HEMulKernel:
         'precision': 32,
         'degree_layout': self.degree_layout,
     }
-    self.ct_obj = Polynomial(
+    self.ct_obj = self._polynomial_factory(
         ct_shapes,
         parameters={
             'moduli': self.drop_last_moduli,
@@ -225,7 +231,7 @@ class _HEMulKernel:
     )
     ct_single_shapes = dict(ct_shapes)
     ct_single_shapes['num_elements'] = 1
-    self.ct_single = Polynomial(
+    self.ct_single = self._polynomial_factory(
         ct_single_shapes,
         parameters={
             'moduli': self.drop_last_moduli,
@@ -238,7 +244,7 @@ class _HEMulKernel:
     # Pre-build the 3-element hemul_no_relin output container once (compile
     # time); the per-call path only sets its .polynomial. ntt_ctx = ff_ctx keeps
     # it mod-reduce-only (relinearize never NTTs it).
-    self.ct_no_relin_out = Polynomial(
+    self.ct_no_relin_out = self._polynomial_factory(
         {
             'batch': self.batch,
             'num_elements': 3,
@@ -265,7 +271,7 @@ class _HEMulKernel:
         'num_moduli': overall_sizeP_in,
         'degree_layout': self.degree_layout,
     }
-    self.ct_extend = Polynomial(
+    self.ct_extend = self._polynomial_factory(
         ct_extend_shapes,
         parameters={
             'moduli': self.extend_moduli,
@@ -388,14 +394,14 @@ class _HEMulKernel:
       shapes_part['num_moduli'] = len(target_moduli)
       params_part = ct_params_common.copy()
       params_part['moduli'] = target_moduli
-      self.ks_ct_parts.append(Polynomial(shapes_part, params_part))
+      self.ks_ct_parts.append(self._polynomial_factory(shapes_part, params_part))
 
     # CT for KS result (drop_last + extend moduli)
     shapes_dle = ct_shapes_common.copy()
     shapes_dle['num_moduli'] = len(drop_last_extend_moduli)
     params_dle = ct_params_common.copy()
     params_dle['moduli'] = drop_last_extend_moduli
-    self.ks_ct_drop_last_extend = Polynomial(shapes_dle, params_dle)
+    self.ks_ct_drop_last_extend = self._polynomial_factory(shapes_dle, params_dle)
 
     # ==========================================================================
     # 5. Parameter Reshape
