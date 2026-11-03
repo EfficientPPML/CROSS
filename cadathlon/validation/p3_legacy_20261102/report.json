@@ -1,0 +1,345 @@
+{
+  "passed": true,
+  "scope": "original full-model P3 cases 1--4; not compact-v1",
+  "review_base_commit": "98ca6833397069e4228c265d75fef64884218a28",
+  "versions": {
+    "jax": "0.12.0.1",
+    "jaxlib": "0.12.0.1",
+    "libtpu": "0.0.50.1",
+    "numpy": "2.5.4",
+    "torch": "2.15.0+cpu"
+  },
+  "python": "3.13.18 | packaged by Anaconda, Inc. | (main, Oct 27 2026, 00:57:03) [GCC 14.3.0]",
+  "cases": {
+    "test1.in": {
+      "case": "test1.in",
+      "command": [
+        "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+        "/home/jianming_gatech/CROSS/cadathlon/non_agent_pset/p3_cnn/src/runner.py",
+        "--case",
+        "/home/jianming_gatech/CROSS/cadathlon/non_agent_pset/p3_cnn/test/test1.in",
+        "--baseline",
+        "--warmups",
+        "0",
+        "--repeats",
+        "1"
+      ],
+      "passed": true,
+      "started_utc": "2026-11-02T20:10:01.329238+00:00",
+      "returncode": 0,
+      "parent_elapsed_s": 548.3116112209991,
+      "source_unchanged": true,
+      "runner": {
+        "case": "test1.in",
+        "mode": "HE-synthetic-smoke",
+        "device": "TPU_0(process=0,(0,0,0,0))",
+        "passed": true,
+        "implementation": "baseline.py",
+        "execution_rings": [
+          {
+            "degree": 32768,
+            "num_slots": 16384,
+            "num_q": 16,
+            "num_p": 4,
+            "dnum": 4,
+            "max_level": 7,
+            "q_towers": [
+              2147352577,
+              1065484289,
+              1065811969,
+              1068236801,
+              1079443457,
+              1080360961,
+              1068433409,
+              1068564481,
+              1077477377,
+              1069219841,
+              1070727169,
+              1071513601,
+              1073872897,
+              1074266113,
+              1072496641,
+              1073479681
+            ],
+            "p_towers": [
+              2146959361,
+              2146041857,
+              2145976321,
+              2144796673
+            ],
+            "log2_Q": 480.96377040094364,
+            "log2_QP": 604.9596299590162,
+            "security_bits": 128,
+            "security_model": "classical"
+          }
+        ],
+        "setup_s": 528.344222572001,
+        "end_to_end_s": [
+          1.4376382200007356
+        ],
+        "server_s": [
+          0.7676732589989115
+        ],
+        "warmup_s": [],
+        "warmup_server_s": [],
+        "cold_start_included": true,
+        "median_s": 1.4376382200007356,
+        "batch": 1,
+        "trained_accuracy_evaluated": false,
+        "max_abs_error": 1.4862069908083697e-13,
+        "nrmse": 6.6170254458336786e-12,
+        "top1_agreement": 1.0,
+        "total_s": 540.1400766119987
+      },
+      "peak_child_rss_kib": 131042996
+    },
+    "test2.in": {
+      "case": "test2.in",
+      "command": [
+        "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+        "/home/jianming_gatech/CROSS/cadathlon/non_agent_pset/p3_cnn/src/runner.py",
+        "--case",
+        "/home/jianming_gatech/CROSS/cadathlon/non_agent_pset/p3_cnn/test/test2.in",
+        "--baseline",
+        "--warmups",
+        "0",
+        "--repeats",
+        "1"
+      ],
+      "passed": true,
+      "started_utc": "2026-11-02T20:19:09.651609+00:00",
+      "returncode": 0,
+      "parent_elapsed_s": 603.6852687629998,
+      "source_unchanged": true,
+      "runner": {
+        "case": "test2.in",
+        "mode": "HE-synthetic-smoke",
+        "device": "TPU_0(process=0,(0,0,0,0))",
+        "passed": true,
+        "implementation": "baseline.py",
+        "execution_rings": [
+          {
+            "degree": 32768,
+            "num_slots": 16384,
+            "num_q": 16,
+            "num_p": 4,
+            "dnum": 4,
+            "max_level": 7,
+            "q_towers": [
+              2147352577,
+              1065484289,
+              1065811969,
+              1068236801,
+              1079443457,
+              1080360961,
+              1068433409,
+              1068564481,
+              1077477377,
+              1069219841,
+              1070727169,
+              1071513601,
+              1073872897,
+              1074266113,
+              1072496641,
+              1073479681
+            ],
+            "p_towers": [
+              2146959361,
+              2146041857,
+              2145976321,
+              2144796673
+            ],
+            "log2_Q": 480.96377040094364,
+            "log2_QP": 604.9596299590162,
+            "security_bits": 128,
+            "security_model": "classical"
+          }
+        ],
+        "setup_s": 583.0891035469995,
+        "end_to_end_s": [
+          2.0108148439994693
+        ],
+        "server_s": [
+          1.041430245999436
+        ],
+        "warmup_s": [],
+        "warmup_server_s": [],
+        "cold_start_included": true,
+        "median_s": 2.0108148439994693,
+        "batch": 2,
+        "trained_accuracy_evaluated": false,
+        "max_abs_error": 3.767090805961715e-13,
+        "nrmse": 1.5275279445423072e-11,
+        "top1_agreement": 1.0,
+        "total_s": 595.3497787520009
+      },
+      "peak_child_rss_kib": 134220380
+    },
+    "test3.in": {
+      "case": "test3.in",
+      "command": [
+        "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+        "/home/jianming_gatech/CROSS/cadathlon/non_agent_pset/p3_cnn/src/runner.py",
+        "--case",
+        "/home/jianming_gatech/CROSS/cadathlon/non_agent_pset/p3_cnn/test/test3.in",
+        "--baseline",
+        "--warmups",
+        "0",
+        "--repeats",
+        "1"
+      ],
+      "passed": true,
+      "started_utc": "2026-11-02T20:29:13.347950+00:00",
+      "returncode": 0,
+      "parent_elapsed_s": 619.3399245239998,
+      "source_unchanged": true,
+      "runner": {
+        "case": "test3.in",
+        "mode": "HE-synthetic-smoke",
+        "device": "TPU_0(process=0,(0,0,0,0))",
+        "passed": true,
+        "implementation": "baseline.py",
+        "execution_rings": [
+          {
+            "degree": 32768,
+            "num_slots": 16384,
+            "num_q": 16,
+            "num_p": 4,
+            "dnum": 4,
+            "max_level": 7,
+            "q_towers": [
+              2147352577,
+              1065484289,
+              1065811969,
+              1068236801,
+              1079443457,
+              1080360961,
+              1068433409,
+              1068564481,
+              1077477377,
+              1069219841,
+              1070727169,
+              1071513601,
+              1073872897,
+              1074266113,
+              1072496641,
+              1073479681
+            ],
+            "p_towers": [
+              2146959361,
+              2146041857,
+              2145976321,
+              2144796673
+            ],
+            "log2_Q": 480.96377040094364,
+            "log2_QP": 604.9596299590162,
+            "security_bits": 128,
+            "security_model": "classical"
+          }
+        ],
+        "setup_s": 597.9209088400003,
+        "end_to_end_s": [
+          3.0613977209995937
+        ],
+        "server_s": [
+          1.46857147099945
+        ],
+        "warmup_s": [],
+        "warmup_server_s": [],
+        "cold_start_included": true,
+        "median_s": 3.0613977209995937,
+        "batch": 4,
+        "trained_accuracy_evaluated": false,
+        "max_abs_error": 8.843290683069327e-13,
+        "nrmse": 2.8224221927318433e-11,
+        "top1_agreement": 1.0,
+        "total_s": 611.1565872390001
+      },
+      "peak_child_rss_kib": 134106848
+    },
+    "test4.in": {
+      "case": "test4.in",
+      "command": [
+        "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+        "/home/jianming_gatech/CROSS/cadathlon/non_agent_pset/p3_cnn/src/runner.py",
+        "--case",
+        "/home/jianming_gatech/CROSS/cadathlon/non_agent_pset/p3_cnn/test/test4.in",
+        "--baseline",
+        "--warmups",
+        "0",
+        "--repeats",
+        "1"
+      ],
+      "passed": true,
+      "started_utc": "2026-11-02T20:39:32.698933+00:00",
+      "returncode": 0,
+      "parent_elapsed_s": 453.82324665300075,
+      "source_unchanged": true,
+      "runner": {
+        "case": "test4.in",
+        "mode": "HE-synthetic-smoke",
+        "device": "TPU_0(process=0,(0,0,0,0))",
+        "passed": true,
+        "implementation": "baseline.py",
+        "execution_rings": [
+          {
+            "degree": 32768,
+            "num_slots": 16384,
+            "num_q": 16,
+            "num_p": 4,
+            "dnum": 4,
+            "max_level": 7,
+            "q_towers": [
+              2147352577,
+              1065484289,
+              1065811969,
+              1068236801,
+              1079443457,
+              1080360961,
+              1068433409,
+              1068564481,
+              1077477377,
+              1069219841,
+              1070727169,
+              1071513601,
+              1073872897,
+              1074266113,
+              1072496641,
+              1073479681
+            ],
+            "p_towers": [
+              2146959361,
+              2146041857,
+              2145976321,
+              2144796673
+            ],
+            "log2_Q": 480.96377040094364,
+            "log2_QP": 604.9596299590162,
+            "security_bits": 128,
+            "security_model": "classical"
+          }
+        ],
+        "setup_s": 433.3939159549991,
+        "end_to_end_s": [
+          1.3199086429995077
+        ],
+        "server_s": [
+          0.6619034119994467
+        ],
+        "warmup_s": [],
+        "warmup_server_s": [],
+        "cold_start_included": true,
+        "median_s": 1.3199086429995077,
+        "batch": 1,
+        "trained_accuracy_evaluated": false,
+        "max_abs_error": 4.0290513980689724e-13,
+        "nrmse": 1.422192221171569e-11,
+        "top1_agreement": 1.0,
+        "total_s": 444.7868552489999
+      },
+      "peak_child_rss_kib": 110034384
+    }
+  },
+  "parent_elapsed_s": 2225.230089791001,
+  "parent_peak_rss_kib": 31132
+}

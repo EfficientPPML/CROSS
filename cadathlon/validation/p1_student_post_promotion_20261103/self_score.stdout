@@ -1,0 +1,264 @@
+{
+  "passed": true,
+  "suite_commit": "739378698fc1f668aff7246724b45cff76f04a98",
+  "seed": 3,
+  "runs_per_case": 3,
+  "statistic": "median",
+  "cases": {
+    "C3": {
+      "passed": 1,
+      "reasons": [],
+      "throughput_ratio": 1.0,
+      "points": 15.0,
+      "runs": 3,
+      "baseline_profile": "student",
+      "evaluation_id": "9250e83535a84d98a3918c629d64380c",
+      "identity": {
+        "model": {
+          "weights_sha256": "2d3409cccba1622b4c49a4ade76deec2a7ba9de37d80c9fd3ab883c05a85047e",
+          "manifest_sha256": "9d415adaa53d97868b25a1b608c3cf17429f0a0a40b412fea48bf606c225e963"
+        },
+        "pixels_sha256": "7800ae49fc05819de7a66732be077d801d6328a847f59d317e615d5202bdb8b4",
+        "labels_sha256": "5cf84167d6e047119cea478827f0f70b02b2d85b2b2b43a36558714d1dd2f720"
+      },
+      "execution": {
+        "devices": [
+          "TPU_0(process=0,(0,0,0,0))"
+        ],
+        "device_kinds": [
+          "TPU v6 lite"
+        ],
+        "execution_rings": [
+          {
+            "degree": 8192,
+            "num_slots": 4096,
+            "num_q": 8,
+            "num_p": 2,
+            "dnum": null,
+            "max_level": 3,
+            "q_towers": [
+              4079617,
+              1196033,
+              1589249,
+              1376257,
+              2277377,
+              1720321,
+              1769473,
+              1785857
+            ],
+            "p_towers": [
+              8273921,
+              8257537
+            ],
+            "log2_Q": 166.49832178445186,
+            "log2_QP": 212.45574163467,
+            "security_bits": 128,
+            "security_model": "classical"
+          },
+          {
+            "degree": 8192,
+            "num_slots": 4096,
+            "num_q": 8,
+            "num_p": 2,
+            "dnum": 4,
+            "max_level": 3,
+            "q_towers": [
+              4079617,
+              1196033,
+              1589249,
+              1376257,
+              2277377,
+              1720321,
+              1769473,
+              1785857
+            ],
+            "p_towers": [
+              8273921,
+              8257537
+            ],
+            "log2_Q": 166.49832178445186,
+            "log2_QP": 212.45574163467,
+            "security_bits": 128,
+            "security_model": "classical"
+          }
+        ],
+        "batch": 100
+      },
+      "runs_note": "same images every run; spread is machine noise only",
+      "total_s_including_one_time_setup": 89.5367,
+      "one_time_setup_s": 68.8269,
+      "median_encrypted_compute_s": 1.8138,
+      "max_encrypted_compute_s": 1.8441,
+      "median_server_execute_s": 1.531326,
+      "images": 100,
+      "throughput_images_per_s": 55.132870217223505,
+      "ms_per_image": 18.138,
+      "encrypted_accuracy": 0.96,
+      "min_encrypted_accuracy": 0.96,
+      "harness_model_accuracy": 0.95,
+      "samples_scored": 100,
+      "harness_verdict": {
+        "scope": "final run",
+        "expected_images": 100,
+        "predictions_written": 100,
+        "labels_written": 100,
+        "complete": true,
+        "correct": 96,
+        "accuracy_over_expected": 0.96,
+        "top1_agreement_with_harness_model": 0.98,
+        "harness_model_correct": 95,
+        "own_cleartext": {
+          "status": "ok",
+          "compared": 100,
+          "top1_agreement": 1.0,
+          "cleartext_correct": 96
+        },
+        "status": "PASS"
+      },
+      "own_cleartext_agreement": 1.0,
+      "harness_reference_model_accuracy_for_context": 0.95,
+      "read_from": "/home/jianming_gatech/CROSS/cadathlon/non_agent_pset/p1_benchmark/src/suite/results/C3_student-baseline"
+    },
+    "C4": {
+      "passed": 1,
+      "reasons": [],
+      "throughput_ratio": 1.0,
+      "points": 15.0,
+      "runs": 3,
+      "baseline_profile": "student",
+      "evaluation_id": "9250e83535a84d98a3918c629d64380c",
+      "identity": {
+        "model": {
+          "weights_sha256": "2d3409cccba1622b4c49a4ade76deec2a7ba9de37d80c9fd3ab883c05a85047e",
+          "manifest_sha256": "9d415adaa53d97868b25a1b608c3cf17429f0a0a40b412fea48bf606c225e963"
+        },
+        "pixels_sha256": "7800ae49fc05819de7a66732be077d801d6328a847f59d317e615d5202bdb8b4",
+        "labels_sha256": "5cf84167d6e047119cea478827f0f70b02b2d85b2b2b43a36558714d1dd2f720"
+      },
+      "execution": {
+        "devices": [
+          "TPU_0(process=0,(0,0,0,0))",
+          "TPU_1(process=0,(1,0,0,0))",
+          "TPU_2(process=0,(0,1,0,0))",
+          "TPU_3(process=0,(1,1,0,0))",
+          "TPU_4(process=0,(0,2,0,0))",
+          "TPU_5(process=0,(1,2,0,0))",
+          "TPU_6(process=0,(0,3,0,0))",
+          "TPU_7(process=0,(1,3,0,0))"
+        ],
+        "device_kinds": [
+          "TPU v6 lite",
+          "TPU v6 lite",
+          "TPU v6 lite",
+          "TPU v6 lite",
+          "TPU v6 lite",
+          "TPU v6 lite",
+          "TPU v6 lite",
+          "TPU v6 lite"
+        ],
+        "execution_rings": [
+          {
+            "degree": 8192,
+            "num_slots": 4096,
+            "num_q": 8,
+            "num_p": 2,
+            "dnum": null,
+            "max_level": 3,
+            "q_towers": [
+              4079617,
+              1196033,
+              1589249,
+              1376257,
+              2277377,
+              1720321,
+              1769473,
+              1785857
+            ],
+            "p_towers": [
+              8273921,
+              8257537
+            ],
+            "log2_Q": 166.49832178445186,
+            "log2_QP": 212.45574163467,
+            "security_bits": 128,
+            "security_model": "classical"
+          },
+          {
+            "degree": 8192,
+            "num_slots": 4096,
+            "num_q": 8,
+            "num_p": 2,
+            "dnum": 4,
+            "max_level": 3,
+            "q_towers": [
+              4079617,
+              1196033,
+              1589249,
+              1376257,
+              2277377,
+              1720321,
+              1769473,
+              1785857
+            ],
+            "p_towers": [
+              8273921,
+              8257537
+            ],
+            "log2_Q": 166.49832178445186,
+            "log2_QP": 212.45574163467,
+            "security_bits": 128,
+            "security_model": "classical"
+          }
+        ],
+        "batch": 100
+      },
+      "runs_note": "same images every run; spread is machine noise only",
+      "total_s_including_one_time_setup": 97.074,
+      "one_time_setup_s": 72.7011,
+      "median_encrypted_compute_s": 0.5757,
+      "max_encrypted_compute_s": 0.5774,
+      "median_server_execute_s": 0.274494,
+      "images": 100,
+      "throughput_images_per_s": 173.70158068438423,
+      "ms_per_image": 5.757000000000001,
+      "encrypted_accuracy": 0.96,
+      "min_encrypted_accuracy": 0.96,
+      "harness_model_accuracy": 0.95,
+      "samples_scored": 100,
+      "harness_verdict": {
+        "scope": "final run",
+        "expected_images": 100,
+        "predictions_written": 100,
+        "labels_written": 100,
+        "complete": true,
+        "correct": 96,
+        "accuracy_over_expected": 0.96,
+        "top1_agreement_with_harness_model": 0.98,
+        "harness_model_correct": 95,
+        "own_cleartext": {
+          "status": "ok",
+          "compared": 100,
+          "top1_agreement": 1.0,
+          "cleartext_correct": 96
+        },
+        "status": "PASS"
+      },
+      "own_cleartext_agreement": 1.0,
+      "harness_reference_model_accuracy_for_context": 0.95,
+      "read_from": "/home/jianming_gatech/CROSS/cadathlon/non_agent_pset/p1_benchmark/src/suite/results/C4_student-baseline"
+    }
+  },
+  "evaluation_profile": "student",
+  "ranked_case_ids": [
+    "C3",
+    "C4"
+  ],
+  "baseline_error": null,
+  "evaluation_error": null,
+  "execution_points": 30.0,
+  "speed_points": 0.0,
+  "evidence_points": "assessed by the judge from REPORT.md (10 max)",
+  "subtotal_without_evidence": 30.0,
+  "geometric_mean_throughput_ratio": 1.0,
+  "note": "organizer arithmetic over harness-written measurement files; not an official score without a judge rerun"
+}

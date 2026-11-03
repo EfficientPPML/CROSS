@@ -1,0 +1,124 @@
+[p3] CROSS submission: OpenFHE is not used.
+[p3] CROSS is a JAX library; nothing to compile.
+         [p3] ring degree=8192 slots=4096 depth=3 security=128-bit | devices=8
+         [p3] service resident on 8 chip(s), batch=100; warm-up 60.6s
+         [p3] ring degree=8192 slots=4096 max_level=3 log2(QP)=212.5 security=128-bit
+         [p3] encrypted 100 image(s) into 100 ciphertext(s)
+         [p3] 100 image(s) on 8 chip(s): 0.2765s accelerator time -> 2.765 ms/image, 361.67 images/s
+         [p3] encrypted 100 image(s) into 100 ciphertext(s)
+         [p3] 100 image(s) on 8 chip(s): 0.2745s accelerator time -> 2.745 ms/image, 364.31 images/s
+         [p3] encrypted 100 image(s) into 100 ciphertext(s)
+         [p3] 100 image(s) on 8 chip(s): 0.2735s accelerator time -> 2.735 ms/image, 365.58 images/s
+
+[harness] Running submission for small inference
+[harness] Using mlp model from mnist with mnist dataset
+[34m03:37:24 [harness] 1: Test dataset generation completed (elapsed: 9.7459s)[0m
+[34m03:37:27 [harness] 2.2: Key Generation completed (elapsed: 2.2988s)[0m
+[33m         [harness] Public and evaluation keys size: 1.3M[0m
+[34m03:38:37 [harness] 3: Encrypted model preprocessing completed (elapsed: 70.4023s)[0m
+
+         [harness] Run 1 of 3
+[34m03:38:39 [harness] 4: Input generation completed (elapsed: 2.2545s)[0m
+[34m03:38:39 [harness] 5: Input preprocessing completed (elapsed: 0.1007s)[0m
+[34m03:38:45 [harness] 6: Input encryption completed (elapsed: 5.4038s)[0m
+[33m         [harness] Encrypted input size: 50.2M[0m
+[34m03:38:45 [harness] 7: Encrypted computation completed (elapsed: 0.5774s)[0m
+[33m         [harness] Encrypted results size: 12.7M[0m
+[34m03:38:50 [harness] 8: Result decryption completed (elapsed: 4.2455s)[0m
+[34m03:38:50 [harness] 9: Result postprocessing completed (elapsed: 0.0807s)[0m
+[34m03:38:52 [harness] 10.1: Harness: Run inference for harness plaintext model completed (elapsed: 2.3206s)[0m
+[harness] Encrypted model: 0.9600 (96/100 correct)
+[harness] Harness model: 0.9500 (95/100 correct)
+[34m03:38:52 [harness] 10.2: Harness: Run quality check completed (elapsed: 0.0004s)[0m
+[32m         [submission] Server reported steps: {'client_key_generation_s': 1.681991, 'server_setup_s': 70.313271, 'server_service_build_s': 1.294288, 'server_warmup_s': 60.621301, 'client_preprocess_s': 0.01995, 'client_encrypt_s': 3.374147, 'client_encrypt_setup_s': 1.412449, 'client_input_ciphertexts': 100.0, 'server_encrypted_compute_s': 0.488957, 'server_execute_s': 0.276498, 'server_per_inference_s': 0.002765, 'server_images_per_s': 361.665777, 'server_bundle_load_s': 0.147089, 'server_bundle_store_s': 0.061946, 'server_result_ciphertexts': 100.0, 'client_decrypt_s': 2.214348, 'client_decrypt_setup_s': 1.40416, 'client_postprocess_s': 0.000372}[0m
+[35m         [submission] client_key_generation_s: 1.681991s[0m
+[35m         [submission] server_setup_s: 70.313271s[0m
+[35m         [submission] server_service_build_s: 1.294288s[0m
+[35m         [submission] server_warmup_s: 60.621301s[0m
+[35m         [submission] client_preprocess_s: 0.01995s[0m
+[35m         [submission] client_encrypt_s: 3.374147s[0m
+[35m         [submission] client_encrypt_setup_s: 1.412449s[0m
+[35m         [submission] client_input_ciphertexts: 100.0s[0m
+[35m         [submission] server_encrypted_compute_s: 0.488957s[0m
+[35m         [submission] server_execute_s: 0.276498s[0m
+[35m         [submission] server_per_inference_s: 0.002765s[0m
+[35m         [submission] server_images_per_s: 361.665777s[0m
+[35m         [submission] server_bundle_load_s: 0.147089s[0m
+[35m         [submission] server_bundle_store_s: 0.061946s[0m
+[35m         [submission] server_result_ciphertexts: 100.0s[0m
+[35m         [submission] client_decrypt_s: 2.214348s[0m
+[35m         [submission] client_decrypt_setup_s: 1.40416s[0m
+[35m         [submission] client_postprocess_s: 0.000372s[0m
+[total latency] 97.4306s
+
+         [harness] Run 2 of 3
+[34m03:38:54 [harness] 4: Input generation completed (elapsed: 2.1073s)[0m
+[34m03:38:54 [harness] 5: Input preprocessing completed (elapsed: 0.1007s)[0m
+[34m03:39:00 [harness] 6: Input encryption completed (elapsed: 5.3483s)[0m
+[33m         [harness] Encrypted input size: 50.2M[0m
+[34m03:39:00 [harness] 7: Encrypted computation completed (elapsed: 0.5757s)[0m
+[33m         [harness] Encrypted results size: 12.7M[0m
+[34m03:39:04 [harness] 8: Result decryption completed (elapsed: 4.1592s)[0m
+[34m03:39:04 [harness] 9: Result postprocessing completed (elapsed: 0.0807s)[0m
+[34m03:39:06 [harness] 10.1: Harness: Run inference for harness plaintext model completed (elapsed: 2.0766s)[0m
+[harness] Encrypted model: 0.9600 (96/100 correct)
+[harness] Harness model: 0.9500 (95/100 correct)
+[34m03:39:06 [harness] 10.2: Harness: Run quality check completed (elapsed: 0.0003s)[0m
+[32m         [submission] Server reported steps: {'client_key_generation_s': 1.681991, 'server_setup_s': 70.313271, 'server_service_build_s': 1.294288, 'server_warmup_s': 60.621301, 'client_preprocess_s': 0.020145, 'client_encrypt_s': 3.367195, 'client_encrypt_setup_s': 1.402418, 'client_input_ciphertexts': 100.0, 'server_encrypted_compute_s': 0.48656, 'server_execute_s': 0.274494, 'server_per_inference_s': 0.002745, 'server_images_per_s': 364.307158, 'server_bundle_load_s': 0.150521, 'server_bundle_store_s': 0.058039, 'server_result_ciphertexts': 100.0, 'client_decrypt_s': 2.188842, 'client_decrypt_setup_s': 1.412704, 'client_postprocess_s': 0.000432}[0m
+[35m         [submission] client_key_generation_s: 1.681991s[0m
+[35m         [submission] server_setup_s: 70.313271s[0m
+[35m         [submission] server_service_build_s: 1.294288s[0m
+[35m         [submission] server_warmup_s: 60.621301s[0m
+[35m         [submission] client_preprocess_s: 0.020145s[0m
+[35m         [submission] client_encrypt_s: 3.367195s[0m
+[35m         [submission] client_encrypt_setup_s: 1.402418s[0m
+[35m         [submission] client_input_ciphertexts: 100.0s[0m
+[35m         [submission] server_encrypted_compute_s: 0.48656s[0m
+[35m         [submission] server_execute_s: 0.274494s[0m
+[35m         [submission] server_per_inference_s: 0.002745s[0m
+[35m         [submission] server_images_per_s: 364.307158s[0m
+[35m         [submission] server_bundle_load_s: 0.150521s[0m
+[35m         [submission] server_bundle_store_s: 0.058039s[0m
+[35m         [submission] server_result_ciphertexts: 100.0s[0m
+[35m         [submission] client_decrypt_s: 2.188842s[0m
+[35m         [submission] client_decrypt_setup_s: 1.412704s[0m
+[35m         [submission] client_postprocess_s: 0.000432s[0m
+[total latency] 96.8958s
+
+         [harness] Run 3 of 3
+[34m03:39:08 [harness] 4: Input generation completed (elapsed: 2.077s)[0m
+[34m03:39:09 [harness] 5: Input preprocessing completed (elapsed: 0.1017s)[0m
+[34m03:39:14 [harness] 6: Input encryption completed (elapsed: 5.4044s)[0m
+[33m         [harness] Encrypted input size: 50.2M[0m
+[34m03:39:15 [harness] 7: Encrypted computation completed (elapsed: 0.5476s)[0m
+[33m         [harness] Encrypted results size: 12.7M[0m
+[34m03:39:19 [harness] 8: Result decryption completed (elapsed: 4.3081s)[0m
+[34m03:39:19 [harness] 9: Result postprocessing completed (elapsed: 0.0814s)[0m
+[34m03:39:21 [harness] 10.1: Harness: Run inference for harness plaintext model completed (elapsed: 2.1064s)[0m
+[harness] Encrypted model: 0.9600 (96/100 correct)
+[harness] Harness model: 0.9500 (95/100 correct)
+[34m03:39:21 [harness] 10.2: Harness: Run quality check completed (elapsed: 0.0003s)[0m
+[32m         [submission] Server reported steps: {'client_key_generation_s': 1.681991, 'server_setup_s': 70.313271, 'server_service_build_s': 1.294288, 'server_warmup_s': 60.621301, 'client_preprocess_s': 0.020353, 'client_encrypt_s': 3.37615, 'client_encrypt_setup_s': 1.408875, 'client_input_ciphertexts': 100.0, 'server_encrypted_compute_s': 0.459578, 'server_execute_s': 0.273539, 'server_per_inference_s': 0.002735, 'server_images_per_s': 365.578294, 'server_bundle_load_s': 0.12479, 'server_bundle_store_s': 0.057983, 'server_result_ciphertexts': 100.0, 'client_decrypt_s': 2.275556, 'client_decrypt_setup_s': 1.40582, 'client_postprocess_s': 0.000436}[0m
+[35m         [submission] client_key_generation_s: 1.681991s[0m
+[35m         [submission] server_setup_s: 70.313271s[0m
+[35m         [submission] server_service_build_s: 1.294288s[0m
+[35m         [submission] server_warmup_s: 60.621301s[0m
+[35m         [submission] client_preprocess_s: 0.020353s[0m
+[35m         [submission] client_encrypt_s: 3.37615s[0m
+[35m         [submission] client_encrypt_setup_s: 1.408875s[0m
+[35m         [submission] client_input_ciphertexts: 100.0s[0m
+[35m         [submission] server_encrypted_compute_s: 0.459578s[0m
+[35m         [submission] server_execute_s: 0.273539s[0m
+[35m         [submission] server_per_inference_s: 0.002735s[0m
+[35m         [submission] server_images_per_s: 365.578294s[0m
+[35m         [submission] server_bundle_load_s: 0.12479s[0m
+[35m         [submission] server_bundle_store_s: 0.057983s[0m
+[35m         [submission] server_result_ciphertexts: 100.0s[0m
+[35m         [submission] client_decrypt_s: 2.275556s[0m
+[35m         [submission] client_decrypt_setup_s: 1.40582s[0m
+[35m         [submission] client_postprocess_s: 0.000436s[0m
+[total latency] 97.074s
+
+All steps completed for the small inference!
+archived 3 file(s) -> /home/jianming_gatech/CROSS/cadathlon/non_agent_pset/p1_benchmark/src/suite/results/C4_student-baseline
+  harness verdict (final run): PASS | 96/100 correct
