@@ -1,6 +1,15 @@
 # Problem 1: Higher-throughput encrypted MNIST on eight TPU chips
 
-**CADathlon · `non_agent_pset` · ESSENTIAL problem · 100 points · proposed duration: 8 hours**
+**CADathlon · `non_agent_pset` · ESSENTIAL problem · 100 points · ~1.5-hour topic within the proposed 8-hour event**
+
+The default short competition schedule is **student**: C3/C4, 100 images on
+one/eight TPU chips, with a 300-second complete evaluation budget. Begin with
+`baseline_student.py`, then run `make -C src suite-evaluate-baseline`,
+`make -C src suite-evaluate`, and `make -C src suite-score` from this problem's
+directory after organizer asset preparation. The last command only scores
+existing protected reports; it does not run inference. Section 2.3.1 specifies
+this schedule. The original six-case workload remains an explicit `legacy`
+option and uses a separate calibration.
 
 ## 1. Introduction
 
@@ -11,11 +20,12 @@ security. It is not the fastest entry on that table.
 
 Your task is to raise **throughput of the encrypted MNIST classifier across
 eight TPU v6e chips** while preserving its outputs, weights and cryptographic
-security. Unlike Problem 3, which optimizes one network on one chip, this
+security. Unlike Problem 3, which optimizes two CNNs each on one chip, this
 track is about **how many images per second a fixed serving stack delivers**,
 and the headroom is mostly in how images are placed into ciphertexts.
 
-The baseline leaves the ring nine-tenths empty. `make baseline-plan` reports:
+The legacy baseline leaves the ring nine-tenths empty. The local development
+command `make baseline-plan` reports that legacy plan:
 
 ```json
 {"depth": 3, "degree": 16384, "num_slots": 8192,
@@ -24,6 +34,8 @@ The baseline leaves the ring nine-tenths empty. `make baseline-plan` reports:
 
 One image occupies 784 of 8192 slots and the baseline puts one image in each
 ciphertext, so roughly 90% of every homomorphic operation is spent on zeros.
+The student baseline uses 4096 slots instead, with 784/4096 = 19.14% input
+occupancy; it still places one image per ciphertext.
 Published submissions to the same benchmark reach far lower per-image cost by
 placing the **batch** on the ring axis instead of the feature axis. Closing
 that gap is the core of this problem; it is a packing and scheduling problem,
@@ -64,7 +76,10 @@ service.release()         # free device memory
 
 The bundle is deliberately opaque: it may be one ciphertext, a list, or any
 nesting of `Polynomial` values plus integer bookkeeping. **This is what lets
-you change the packing.** The baseline in `src/baseline.py` puts one image per
+you change the packing.** For student evaluation, preserve the
+`baseline_student.py` packing policy and supplied `keys` handling as your
+starting point. Copying the legacy default policy produces keys incompatible
+with the student suite. The baseline in `src/baseline.py` puts one image per
 ciphertext and one ciphertext per chip; you are not required to keep that.
 
 `execute` runs on encrypted data only. It may not decrypt, call the cleartext
@@ -102,7 +117,8 @@ Complete these tasks:
    cost, and explain which operations or memory transfers it reduces.
 3. **P3.3 — scale across chips:** show what your change does to 8-chip
    throughput and to scaling efficiency relative to one chip.
-4. **P3.4 — compare and explain:** run all six ranked cases, preserve
+4. **P3.4 — compare and explain:** run C3/C4 for student, or all six ranked
+   cases for explicit legacy evaluation; preserve
    numerical and label accuracy, and report throughput with evidence.
 
 Suggested starting points: place several images in the slot axis of one
@@ -112,7 +128,7 @@ fuse; shorten buffer lifetimes; reduce the client codec cost, which dominates
 small batches. `Mapping.estimate_live_memory()` is a logical estimate; use a
 profiler for actual peak HBM and label the two separately.
 
-### 2.3 Inputs, outputs and six ranked workloads
+### 2.3 Inputs, outputs and the legacy ranked workloads
 
 The public `test1.in`–`test6.in` are JSON descriptions with batch size, device
 count, synthetic data seed and weight seed. `testN.out` holds real cleartext
@@ -135,6 +151,69 @@ All six ranked cases use TPU v6e chips from one host:
 C1 and C2 measure latency, where padding a batch of one across eight chips
 cannot help. C3–C6 measure throughput, where packing can. A single change that
 helps only one regime is a partial result; say so in the report.
+
+### 2.3.1 Short student schedule (default competition path)
+
+For an approximately 1.5-hour topic slot, the `student` evaluation profile
+selects **C3 and C4 only**: 100 images on one chip and on eight chips. The
+remaining four legacy ranked cases remain available for extended regression
+and scaling experiments; the six local synthetic fixtures remain unchanged.
+This is a published workload change, not a faster result on the six-case
+legacy workload.
+
+The student reference is `baseline_student.py`, with the same model and a
+128-bit-secure N=8192 ring (42-bit composite scale, four HYBRID digits,
+log2(QP)=212.456 with ceiling 218). The suite supplies keys for that ring when
+`P1_BASELINE_PROFILE=student`. Candidate implementations must use compatible
+keys. Legacy baseline timings must not be used for this profile.
+
+After staging the upstream suite, data and its cleartext checkpoint, measure
+the **complete** selected schedule with:
+
+```bash
+make -C src suite-evaluate-baseline
+make -C src suite-evaluate
+make -C src suite-score
+```
+
+The evaluation includes setup, three harness repetitions, per-case archiving,
+correctness checks and daemon cleanup. It fails if the entire schedule exceeds
+the budget. Baseline calibration and candidate results use distinct profile
+names. Inspect the generated report and logs; only actual TPU measurements
+can establish that a particular host meets five minutes. The follow-up baseline
+run completed this entire two-case schedule in **257.56 seconds**, with three
+repetitions per case and 100% agreement with the ranked model in cleartext.
+See `cadathlon/validation/p1_student_suite.json` for measurements and limits;
+recalibrate on your contest host. Dataset download and
+training the upstream harness's separate cleartext model are organizer asset
+preparation and must be completed before timing student evaluations.
+
+The `student-v2` scorer requires a successful complete report with matching
+evaluation ID, C3/C4 archive hashes, frozen model/input identities, actual TPU
+hardware, software versions, unchanged sources, and completed cleanup within
+300 seconds. A failed new attempt invalidates its previous latest-run report;
+reusing individual old successful cases cannot satisfy the complete-run gate.
+`suite-score` is offline arithmetic and returns nonzero for missing or stale
+evidence. CPU fixture checks and `suite-gates` do not satisfy these conditions.
+
+Baseline publication stores only aggregate reports and measurement JSON under
+`src/suite/calibration/student-baseline/<evaluation_id>/`, bound by
+`baseline_manifest_student.json`. This proof ships with the release and survives
+`make clean`; it contains no per-image labels, predictions, pixels or keys.
+Failed recalibration preserves the prior published calibration. Candidate
+reports remain in `suite/run/` and must be regenerated after cleaning. The
+recorded 257.56-second run passed this complete `student-v2` contract and its
+baseline self-score (30 correctness points, zero speed points). The earlier
+262.14-second report is retained unchanged under
+`validation/p1_student_pre_v2/historical_run.json`; it predates this stronger
+binding and cannot replace a `student-v2` calibration.
+
+The short schedule retains **30 correctness + 60 speed + 10 evidence points**:
+each of its two cases receives `15*G + 30*G*clamp(log2(R)/2,0,1)`.
+Use `score.py --evaluation-profile student` (or the Make target above).
+The six-case formula in section 4 applies to the `legacy` schedule. Select
+one schedule, calibrate it on the contest hardware, and announce it before
+the event; do not compare scores or baselines across schedules/ring profiles.
 
 ### 2.4 Authored baseline observations
 
@@ -364,10 +443,10 @@ benchmark suite (section 2.5):
 cd cadathlon/non_agent_pset/p1_benchmark
 make -C src suite-check                          # pinned checkout, harness intact
 make -C src suite-install
-make -C src suite-baseline SIZE=2 P3_DEVICES=8   # C6 baseline
-make -C src suite-test     SIZE=2 P3_DEVICES=8   # C6 with your implementation
+make -C src suite-baseline SIZE=2 P3_DEVICES=8 P1_BASELINE_PROFILE=legacy
+make -C src suite-test     SIZE=2 P3_DEVICES=8 P1_BASELINE_PROFILE=legacy
 make -C src suite-gates
-make -C src suite-score
+make -C src suite-score P1_BASELINE_PROFILE=legacy
 make -C src suite-stop
 ```
 
@@ -376,28 +455,35 @@ make -C src suite-stop
 points at the suite checkout if it is not `~/ml-inference`.
 
 The editable TODO deliberately raises `NotImplementedError` until completed.
-`baseline.py` provides working reference code; copying it produces a valid
-starting point with no speedup. `make all` only checks Python syntax. Logs go
+`baseline.py` provides the legacy reference; `baseline_student.py` is the
+default competition starting point. `make all` checks Python syntax and runs
+the pure arithmetic scorer self-tests; it performs no TPU evaluation. Logs go
 to stderr and one machine-readable JSON result goes to stdout per case. Do not
 byte-compare noisy CKKS outputs to `.out`; use the stated bounds.
 
-**Runtime limits:** up to eight TPU v6e chips on the fixed host image, 512 GiB
+**Legacy per-case runtime limits:** up to eight TPU v6e chips on the fixed host image, 512 GiB
 maximum host RSS, and no device OOM. Prepare, key generation and compilation
 may take at most **30 minutes per configuration**. Each online batch may take
 at most **300 seconds**. A failed or timed-out case scores zero. CPU runs are
 useful for correctness but do not count toward the TPU score.
 
-Prepare once per configuration and release it before building the next. Two
-untimed warm-up requests, then five measured runs on distinct batches from a
-fixed published selection. Fresh encryption every time. Synchronize output
-ciphertexts with `jax.block_until_ready` before stopping the server timer.
-Count dispatch, server computation, online host work and mandatory transfers;
-no lazy work may escape timing. Report median and p95 (nearest-rank) of the
-five samples. Ranked throughput `X = B / T`, where `T` is the median
-**end-to-end batch wall time** from client encryption through decryption for
-`B` images. Also report server-only timing and `T / B` seconds per image.
-Baseline and candidate use identical boundaries, images, ring and device
-counts.
+The student schedule additionally requires **the complete C3/C4 evaluation
+within 300 seconds**, including setup, repetitions, validation and cleanup.
+The longer legacy per-case limits do not override that whole-run budget.
+
+Prepare once per configuration and release it before building the next.
+The local synthetic runner defaults to two warmups and five measured requests
+on the same fixture, with fresh encryption every time. Its server-only and
+client-to-client times are development diagnostics, not the ranked metric.
+
+The ranked suite performs stage-3 warmup once, then **three** harness runs on
+the same seed-derived images, as explained in section 2.5. Ranked throughput
+is `X = B / median(Timing["Encrypted computation"])`: the harness's own stage
+7, including its subprocess/RPC and ciphertext loading/storing work. It does
+not include client encryption/decryption. Synchronize encrypted outputs before
+stopping the server timer. Also report server-only time and full evaluation
+wall time separately. Baseline and candidate use identical timing boundaries,
+images and assigned device counts.
 
 Compilation, key generation and constant preparation are reported separately
 and excluded from warm `T`. They still obey the setup limit. Reuse only public
@@ -409,6 +495,9 @@ used. Throughput obtained by changing the ranked batch or the assigned chip
 count does not count as an optimization.
 
 ## 4. How to score
+
+The formula below is for explicit **legacy** evaluation. The default student
+schedule uses section 2.3.1's two-case weights and complete-run evidence gate.
 
 Let `G_i` equal 1 only if case i passes all numerical, accuracy, privacy,
 parameter, memory and runtime gates, otherwise 0. Let `R_i = X_i / X_base_i`

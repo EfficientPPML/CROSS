@@ -137,23 +137,35 @@ def device_count(default: int = 1) -> int:
     return int(os.environ.get("P3_DEVICES", default))
 
 
+def baseline_profile():
+    profile = os.environ.get("P1_BASELINE_PROFILE", "legacy")
+    if profile not in ("legacy", "student"):
+        raise ValueError(f"unknown P1_BASELINE_PROFILE: {profile!r}")
+    return profile
+
+
 def implementation():
     """Load baseline.py or the contestant's bench_opt.py."""
     sys.path.insert(0, str(PROBLEM_DIR.parents[1] / "common"))
     from support import load_module
-    name = "baseline.py" if os.environ.get("P3_BASELINE") else "bench_opt.py"
+    profile = baseline_profile()
+    name = ("baseline_student.py" if profile == "student" else "baseline.py") \
+        if os.environ.get("P3_BASELINE") else "bench_opt.py"
     sys.path.insert(0, str(SRC_DIR))          # so a golden's `from baseline import` works
     return load_module(SRC_DIR / name)
 
 
 def load_model():
     """The fixed p3 network with the organizer weight asset."""
+    from p1_evidence import model_identity
+    model_identity(PROBLEM_DIR)
     cross_root()
     import torch
     sys.path.insert(0, str(SRC_DIR))
-    from reference import build_model
+    from support import load_module
+    reference = load_module(SRC_DIR / "reference.py")
 
-    model = build_model(50)
+    model = reference.build_model(50)
     weights = PROBLEM_DIR / "weights" / "mlp_784_50_10.pth"
     if not weights.is_file():
         raise SystemExit(f"{weights} missing; see weights/MANIFEST.json")
@@ -203,8 +215,12 @@ def pack_program(model=None):
     from jaxite_word import nn, packing
     if model is None:
         model = load_model()
-    return packing.pack(nn.vectorize(model, INPUT_SHAPE, warn=False),
-                        packing.PackingPolicy(lazy_constants=True))
+    policy = packing.PackingPolicy(lazy_constants=True)
+    if baseline_profile() == "student":
+        sys.path.insert(0, str(SRC_DIR))
+        from support import load_module
+        policy = load_module(SRC_DIR / "baseline_student.py").packing_policy()
+    return packing.pack(nn.vectorize(model, INPUT_SHAPE, warn=False), policy)
 
 
 def build_service(batch: int, devices, keys):
