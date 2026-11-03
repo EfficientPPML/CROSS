@@ -1,5 +1,20 @@
 # SHIP bootstrap validation and performance
 
+## Matched-parameter comparison status — 2026-11-03
+
+The historical native CROSS Meta-BTS and CROSS SHIP measurements use different
+Q/P chains and input/output scales. They do not establish a matched-parameter
+speedup. The Jaxite measurement below is a locally patched implementation,
+not the pristine upstream baseline requested for the new comparison.
+
+Pristine upstream `main` is pinned to
+`1c35ddd29179e946ab7d08515053cefd7e76c46e`. CPU compatibility checks found a
+multi-P final-addition shape failure and a larger-P key-generation overflow.
+The original single-P, zero-noise control passes, but it does not meet the
+common noisy full-bootstrap contract. No new comparative TPU latency is
+reported. See the [reproducer and results](../../benchmarks/ship_equivalence/README.md)
+for exact scope, commands, and remaining work.
+
 ## Comparison with Jaxite SHIP
 
 The native CROSS implementation measured **1.271x faster** than the earlier
