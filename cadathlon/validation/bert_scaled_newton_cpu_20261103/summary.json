@@ -1,0 +1,217 @@
+{
+  "scope": "Seven pinned plaintext cases, unchanged fixed gates, normalized Newton s=4; no secure execution or refresh precision claim.",
+  "passed": true,
+  "elapsed_s": 45.0981303830049,
+  "source_files_unchanged": true,
+  "tracked_source_count": 7,
+  "source_hashes_before": {
+    "/tmp/scaled-newton-factored-bert-20261103/check_pinned_attention.py": "36a5304080ce4984cf2cbaf8d26198e894b1ef41eed5bbd0f12a646a44057344",
+    "/tmp/scaled-newton-factored-bert-20261103/score_layout.py": "f809715fce76837c35e6b6d803d5582397d7efe48d16350aa68dd5b9023b6b42",
+    "/tmp/scaled-newton-factored-bert-20261103/scaled_softmax.py": "817b59acb58a2b5abb85022b05e15a47b804b52efd48bfcea2d184b7260d84ab",
+    "/tmp/streaming-bert-layout/row_attention.py": "320b74092bd45ff6e2b71e2e4d9204de4bdb7f7b53c184a516e0ee40bcab3269",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/src/reference.py": "6d254c92b70257e773d1701a6f85fb592365e67d037b231b9e5a1589e64e7a04",
+    "/home/jianming_gatech/CROSS/cadathlon/validation/check_pretrained_bert_domains.py": "d3463f03bdfcb1a0539bf8b6333a22b9fc776231815ed120bf31a29b73f08c40",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_polynomial.py": "d01cbcf26897c9b190919bb6b279e731716d7dcc4e687bbdfbc4e2e4baf5975e"
+  },
+  "source_hashes_after": {
+    "/tmp/scaled-newton-factored-bert-20261103/check_pinned_attention.py": "36a5304080ce4984cf2cbaf8d26198e894b1ef41eed5bbd0f12a646a44057344",
+    "/tmp/scaled-newton-factored-bert-20261103/score_layout.py": "f809715fce76837c35e6b6d803d5582397d7efe48d16350aa68dd5b9023b6b42",
+    "/tmp/scaled-newton-factored-bert-20261103/scaled_softmax.py": "817b59acb58a2b5abb85022b05e15a47b804b52efd48bfcea2d184b7260d84ab",
+    "/tmp/streaming-bert-layout/row_attention.py": "320b74092bd45ff6e2b71e2e4d9204de4bdb7f7b53c184a516e0ee40bcab3269",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/src/reference.py": "6d254c92b70257e773d1701a6f85fb592365e67d037b231b9e5a1589e64e7a04",
+    "/home/jianming_gatech/CROSS/cadathlon/validation/check_pretrained_bert_domains.py": "d3463f03bdfcb1a0539bf8b6333a22b9fc776231815ed120bf31a29b73f08c40",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_polynomial.py": "d01cbcf26897c9b190919bb6b279e731716d7dcc4e687bbdfbc4e2e4baf5975e"
+  },
+  "model_revision": "f150c1d609d1e50dd5e2e5408661cfac8339277c",
+  "asset_sha256": {
+    "config.json": "ec2b6cd6ce741dda6c972aea96f9d1a449cbb4b5349e688c5370a9b2f6872d30",
+    "model.safetensors": "e1f8085ef673c9eb8a1a93a84270742e8aa0ccbceadef01eef15e26c44b46034",
+    "tokenizer.json": "5b3360be30cdf39081153cf9d30bfb0503c011462fc9f77f097127c83ef0f4d9",
+    "tokenizer_config.json": "0f6d13e6f4da6f9e24f22ada6bc3be571123d858d7c0c05a8a7cd55a9c23c2e8",
+    "vocab.txt": "eeaa9875b23b04b4c54ef759d03db9d1ba1554838f8fb26c5d96fa551df93d02"
+  },
+  "versions": {
+    "numpy": "2.5.4",
+    "torch": "2.15.0+cpu",
+    "transformers": "4.51.3",
+    "safetensors": "0.8.0"
+  },
+  "cpu_affinity": [
+    152,
+    153,
+    154,
+    155
+  ],
+  "command": [
+    "taskset",
+    "-c",
+    "152-155",
+    "env",
+    "JAX_PLATFORMS=cpu",
+    "OMP_NUM_THREADS=1",
+    "OPENBLAS_NUM_THREADS=1",
+    "MKL_NUM_THREADS=1",
+    "/tmp/cross-pretrained-validation-env/bin/python",
+    "/tmp/scaled-newton-factored-bert-20261103/check_pinned_attention.py",
+    "--snapshot",
+    "/home/jianming_gatech/cross_validation_assets/bert/f150c1d609d1e50dd5e2e5408661cfac8339277c",
+    "--output",
+    "/tmp/scaled-newton-factored-bert-20261103/pinned-result"
+  ],
+  "cases": [
+    {
+      "case": "public_pair_0",
+      "sequence": 128,
+      "valid_keys": 15,
+      "passed": true,
+      "errors": {
+        "probability_vs_unchanged": 1.3322676295501878e-15,
+        "context_vs_unchanged": 2.55351295663786e-15,
+        "full_block_vs_unchanged": 3.552713678800501e-15,
+        "probability_vs_exact": 1.6355450327409926e-10,
+        "context_vs_transformers": 2.8957480857627615e-10,
+        "full_block_vs_numpy": 2.412523514294662e-10,
+        "full_block_vs_transformers": 2.412514632510465e-10
+      },
+      "domain_failure_records": 0,
+      "newton_bound_failure_records": 0,
+      "unchanged_baseline_passed": true,
+      "padded_query_output_max_abs": 6.334009976427452
+    },
+    {
+      "case": "public_pair_1",
+      "sequence": 128,
+      "valid_keys": 15,
+      "passed": true,
+      "errors": {
+        "probability_vs_unchanged": 1.3322676295501878e-15,
+        "context_vs_unchanged": 2.3314683517128287e-15,
+        "full_block_vs_unchanged": 3.552713678800501e-15,
+        "probability_vs_exact": 1.6310441885991622e-10,
+        "context_vs_transformers": 2.927908471228591e-10,
+        "full_block_vs_numpy": 2.495674777946988e-10,
+        "full_block_vs_transformers": 2.495585960105018e-10
+      },
+      "domain_failure_records": 0,
+      "newton_bound_failure_records": 0,
+      "unchanged_baseline_passed": true,
+      "padded_query_output_max_abs": 6.687362269176681
+    },
+    {
+      "case": "public_pair_2",
+      "sequence": 128,
+      "valid_keys": 16,
+      "passed": true,
+      "errors": {
+        "probability_vs_unchanged": 0.0,
+        "context_vs_unchanged": 0.0,
+        "full_block_vs_unchanged": 0.0,
+        "probability_vs_exact": 1.6646473088854918e-10,
+        "context_vs_transformers": 2.821438083167038e-10,
+        "full_block_vs_numpy": 2.3242474611606667e-10,
+        "full_block_vs_transformers": 2.3243185154342427e-10
+      },
+      "domain_failure_records": 0,
+      "newton_bound_failure_records": 0,
+      "unchanged_baseline_passed": true,
+      "padded_query_output_max_abs": 6.434104790062426
+    },
+    {
+      "case": "public_pair_3",
+      "sequence": 128,
+      "valid_keys": 128,
+      "passed": true,
+      "errors": {
+        "probability_vs_unchanged": 0.0,
+        "context_vs_unchanged": 0.0,
+        "full_block_vs_unchanged": 0.0,
+        "probability_vs_exact": 2.4992663494316503e-10,
+        "context_vs_transformers": 5.259910285104752e-10,
+        "full_block_vs_numpy": 1.851283570886153e-10,
+        "full_block_vs_transformers": 1.851301334454547e-10
+      },
+      "domain_failure_records": 0,
+      "newton_bound_failure_records": 0,
+      "unchanged_baseline_passed": true,
+      "padded_query_output_max_abs": null
+    },
+    {
+      "case": "public_boundary_mask",
+      "sequence": 128,
+      "valid_keys": 11,
+      "passed": true,
+      "errors": {
+        "probability_vs_unchanged": 1.7208456881689926e-15,
+        "context_vs_unchanged": 2.886579864025407e-15,
+        "full_block_vs_unchanged": 3.552713678800501e-15,
+        "probability_vs_exact": 1.6420309556508528e-10,
+        "context_vs_transformers": 3.605551135432705e-10,
+        "full_block_vs_numpy": 2.430238232875581e-10,
+        "full_block_vs_transformers": 2.4302515555518767e-10
+      },
+      "domain_failure_records": 0,
+      "newton_bound_failure_records": 0,
+      "unchanged_baseline_passed": true,
+      "padded_query_output_max_abs": 12.517616406449447
+    },
+    {
+      "case": "public_last_key_only",
+      "sequence": 128,
+      "valid_keys": 1,
+      "passed": true,
+      "errors": {
+        "probability_vs_unchanged": 0.0,
+        "context_vs_unchanged": 0.0,
+        "full_block_vs_unchanged": 0.0,
+        "probability_vs_exact": 0.0,
+        "context_vs_transformers": 3.9968028886505635e-15,
+        "full_block_vs_numpy": 0.0,
+        "full_block_vs_transformers": 1.3766765505351941e-14
+      },
+      "domain_failure_records": 0,
+      "newton_bound_failure_records": 0,
+      "unchanged_baseline_passed": true,
+      "padded_query_output_max_abs": 12.111939234262309
+    },
+    {
+      "case": "public_partial_tile17",
+      "sequence": 17,
+      "valid_keys": 15,
+      "passed": true,
+      "errors": {
+        "probability_vs_unchanged": 1.3322676295501878e-15,
+        "context_vs_unchanged": 2.55351295663786e-15,
+        "full_block_vs_unchanged": 1.7763568394002505e-15,
+        "probability_vs_exact": 1.619976375266674e-10,
+        "context_vs_transformers": 2.8957480857627615e-10,
+        "full_block_vs_numpy": 2.412514632510465e-10,
+        "full_block_vs_transformers": 2.412496868942071e-10
+      },
+      "domain_failure_records": 0,
+      "newton_bound_failure_records": 0,
+      "unchanged_baseline_passed": true,
+      "padded_query_output_max_abs": 6.330546657973762
+    }
+  ],
+  "intermediate_range_record_count": 14100,
+  "intermediate_ranges_beyond_fixed_binary64_allowance": 0,
+  "strict_range_excursion_records": 2316,
+  "largest_strict_excursion": 4.440892098500626e-16,
+  "minimum_observed_intermediate": -2.5600000000000005,
+  "maximum_observed_intermediate": 4.0,
+  "maximum_scaled_z": 4.0,
+  "declared_scaled_z_upper": 8.0,
+  "softmax_abstract_unfused_depth": 232,
+  "counts_scope": "Stored arithmetic counters retain the original abstract convention:148 ciphertext products,87 public affine stages vs82 baseline. The distinct mean anchor mask is accounted in232depth but requires one additional affine stage beyond that legacy counter; no complete HE schedule is implemented.",
+  "limitations": [
+    "Only attention softmax uses the proposed polynomial/Newton circuit. QKV projections and remaining block dense/GELU/LayerNorm are exact plaintext oracles.",
+    "Score compaction/scatter execute factored public-mask and rotation networks in NumPy; no ciphertext map executes here.",
+    "Abstract depth ignores CKKS rounding, scale alignment, refresh errors and implementation fusion. No secure arithmetic or full-model gate is established.",
+    "The exact normalized-Newton bounds rely on correlated positive values. Binary64 diagnostics do not prove CKKS/refresh stability or unseen-input domains.",
+    "The abstract depth is232=227 reviewed-unfused baseline+five final public scales; no actual HE schedule or precision claim.",
+    "The score layout has period65536 and no alias averaging; it is not covered by the period128 refresh proof.",
+    "Three public pairs plus adversarial public masks and one long pair are not MRPC accuracy or certified unseen-input domains."
+  ],
+  "raw_report_gzip_sha256": "43571908d6aaa1938fd44b933fe5d06b25c1603929f8b191061c8665f51d93b8",
+  "tracked_sources_archive_sha256": "fb566afacc7556a9f515cb61b518bbc2400120ce1c0dc50c77c16de158ff500b"
+}

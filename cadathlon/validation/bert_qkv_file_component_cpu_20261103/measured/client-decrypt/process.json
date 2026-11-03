@@ -1,0 +1,68 @@
+{
+  "passed": true,
+  "command": [
+    "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+    "/tmp/bert-qkv-file-component-20261103/prototype/component.py",
+    "finish",
+    "--root",
+    "/tmp/cross-bert-qkv-component-ornrbwmg",
+    "--request-id",
+    "bd7967211863464eb1947e712b68d341"
+  ],
+  "timeout_s": null,
+  "cleanup_grace_s": 30.0,
+  "owned_public_key_directory": "/tmp/cross-transformer-case-jcrnxask",
+  "owned_public_key_directory_identity": {
+    "device": 66305,
+    "inode": 2356593
+  },
+  "pid": 949230,
+  "returncode": 0,
+  "result": {
+    "stage": "client-decrypt",
+    "passed": true,
+    "checks": {
+      "query": {
+        "passed": true,
+        "max_abs_error": 5.453940358708418e-11,
+        "per_row_max_abs_error": [
+          5.453940358708418e-11,
+          1.7383108720272068e-11
+        ],
+        "padding_max_abs_error": 5.453940358708418e-11,
+        "slots_checked": 8192,
+        "gate": 1e-06
+      },
+      "key": {
+        "passed": true,
+        "max_abs_error": 5.444754932244104e-11,
+        "per_row_max_abs_error": [
+          5.444754932244104e-11,
+          1.723359894746959e-11
+        ],
+        "padding_max_abs_error": 5.444754932244104e-11,
+        "slots_checked": 8192,
+        "gate": 1e-06
+      },
+      "value": {
+        "passed": true,
+        "max_abs_error": 5.456285323491287e-11,
+        "per_row_max_abs_error": [
+          5.456285323491287e-11,
+          1.751211168377992e-11
+        ],
+        "padding_max_abs_error": 5.456285323491287e-11,
+        "slots_checked": 8192,
+        "gate": 1e-06
+      }
+    },
+    "worst_abs_error": 5.456285323491287e-11,
+    "all_slots_checked": 24576,
+    "full_bert_evaluated": false,
+    "mrpc_accuracy_evaluated": false
+  },
+  "process_reaped": true,
+  "public_key_store_removed": true,
+  "owned_directory_handle_closed": true,
+  "process_elapsed_s": 1.328073802003928
+}

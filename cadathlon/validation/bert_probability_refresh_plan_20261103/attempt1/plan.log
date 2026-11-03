@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "/tmp/bert-probability-refresh-plan-20261103/plan.py", line 70, in <module>
+    if __name__=='__main__':main()
+                            ~~~~^^
+  File "/tmp/bert-probability-refresh-plan-20261103/plan.py", line 11, in main
+    before={str(p.relative_to(LAB)):hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}
+                                                   ~~~~~~~~~~~~^^
+  File "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_abc.py", line 625, in read_bytes
+    with self.open(mode='rb') as f:
+         ~~~~~~~~~^^^^^^^^^^^
+  File "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+IsADirectoryError: [Errno 21] Is a directory: '/tmp/bert-probability-refresh-plan-20261103/inputs/__pycache__'

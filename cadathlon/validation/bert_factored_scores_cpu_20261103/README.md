@@ -1,0 +1,13 @@
+# Factored BERT score routing: plaintext validation
+
+All 128 forward and inverse maps matched independent indexing oracles with hostile padding. The seven pinned full-width BERT layer-zero cases also passed: maximum probability error was **2.50e-10**, attention-context error **5.26e-10**, and block error **2.50e-10**. The pinned CPU run completed in **30.64 seconds** with six unchanged measured source files. Together with the routing checker, seven exact sources are archived.
+
+The layout keeps 16 query rows at a 4096-slot pitch. Each row uses its lower 2048 slots for 128 keys and 16 head groups; its upper half is inactive. Public mask/rotation stages move head bits and insert key bits without moving query rows. The map executes these stages directly in NumPy; it does not substitute sparse gathers for the candidate path.
+
+For a 128-token example, forward plus inverse maps request **18,176 rotations** with 30 direct keys, or **27,392 rotations** using 24 signed-power keys. These are map-only operation counts, not runtime measurements. Seven segmented reductions add another 784 rotations across eight score ciphertexts. Each map direction adds nine multiplicative levels. The earlier million-rotation map plan is preserved separately.
+
+[Independent review](../factored_bert_score_review_cpu_20261103/README.md) verified the maps, chunk reductions, masks and partial rows. It also found that the reused simulator's 226-level softmax count omits one unfused masking stage: the explicit unfused schedule needs at least 227 levels. Neither count includes the full encrypted implementation. The leading dimensions in the old softmax reshape no longer represent duplicate aliases; each 2048-slot reduction chunk remains independent.
+
+**Remaining requirements:** full-period refresh has not been validated; there is no alias averaging at period 65536. Reciprocal intermediates can reach 128–256, exceeding the existing bound-16 refresh evidence. Only attention softmax uses the proposed polynomial/Newton arithmetic in the pinned block comparison; dense layers, GELU and LayerNorm remain plaintext oracles. This does not establish encrypted BERT, MRPC accuracy, TPU timing or a practical complete model.
+
+[summary.json](summary.json) records exact source hashes, operation counts, corrected limits and raw artifact hashes. `sources.tar.gz` contains the measured checker, map, row helper and repository dependencies. To reproduce, restore those dependencies, place the archived `row_attention.py` beside the checker, set `CROSS_ROOT` to the matching checkout, and supply the pinned checkpoint path to `check_pinned_attention.py --snapshot ... --output ...` in the recorded Transformers environment. Checkpoint weights are not archived.

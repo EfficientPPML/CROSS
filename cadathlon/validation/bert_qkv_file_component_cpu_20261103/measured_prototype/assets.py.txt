@@ -1,0 +1,51 @@
+"""Trusted pinned BERT preprocessing; never imported by the evaluator."""
+from pathlib import Path
+import argparse,hashlib,json,os,struct,time
+import numpy as np
+from spec import REVISION,ASSETS,EXAMPLE,KINDS
+def digest(path):
+ with Path(path).open('rb') as f:return hashlib.file_digest(f,'sha256').hexdigest()
+def write(path,value):Path(path).write_text(json.dumps(value,indent=2,allow_nan=False)+'\n')
+def tensor_bytes(snapshot,name):
+ with (snapshot/'model.safetensors').open('rb') as f:
+  n=struct.unpack('<Q',f.read(8))[0];header=json.loads(f.read(n));entry=header[name];start,stop=entry['data_offsets'];f.seek(8+n+start);raw=f.read(stop-start)
+ if entry['dtype']!='F32':raise ValueError('expected pinned F32 tensor')
+ return np.frombuffer(raw,dtype='<f4').reshape(entry['shape']).copy()
+def prepare(snapshot,private,model):
+ started=time.perf_counter();hashes={n:digest(snapshot/n) for n in ASSETS}
+ if hashes!=ASSETS or snapshot.name!=REVISION:raise ValueError('pinned BERT asset mismatch')
+ import importlib.metadata,torch
+ from transformers import AutoTokenizer,BertForSequenceClassification
+ torch.set_num_threads(1)
+ tokenizer=AutoTokenizer.from_pretrained(snapshot,local_files_only=True)
+ network,loading=BertForSequenceClassification.from_pretrained(snapshot,local_files_only=True,use_safetensors=True,torch_dtype=torch.float64,attn_implementation='eager',output_loading_info=True)
+ if loading['missing_keys'] or loading.get('mismatched_keys') or loading.get('error_msgs') or set(loading['unexpected_keys'])-{'bert.embeddings.position_ids'}:raise ValueError('incomplete pinned model')
+ network.eval();tokens=tokenizer(*EXAMPLE,max_length=128,padding='max_length',truncation=True,return_tensors='pt')
+ with torch.no_grad():
+  full=network.bert.embeddings(input_ids=tokens['input_ids'],token_type_ids=tokens['token_type_ids'])
+  rows=full[0,:2].numpy().copy()
+  native=np.stack([getattr(network.bert.encoder.layer[0].attention.self,kind)(full)[0,:2].numpy() for kind in KINDS])
+ if rows.shape!=(2,768) or np.array_equal(rows[0],rows[1]) or not np.isfinite(rows).all():raise ValueError('distinct genuine embedding rows required')
+ private.mkdir(mode=0o700);model.mkdir()
+ np.save(private/'embeddings.npy',rows,allow_pickle=False);np.save(private/'expected.npy',native,allow_pickle=False)
+ write(private/'tokens.json',{k:v.tolist() for k,v in tokens.items()})
+ manifest={'schema':'pinned-bert-layer0-qkv-v1','model_id':'google-bert/bert-base-cased-finetuned-mrpc','revision':REVISION,'asset_sha256':hashes,'tensors':{}}
+ oracle_error=0.
+ for i,kind in enumerate(KINDS):
+  for suffix,shape in (('weight',(768,768)),('bias',(768,))):
+   name=f'bert.encoder.layer.0.attention.self.{kind}.{suffix}';array=tensor_bytes(snapshot,name)
+   if array.shape!=shape:raise ValueError('pinned tensor shape mismatch')
+   state=network.state_dict()[name].numpy()
+   if not np.array_equal(array.astype(np.float64),state):raise ValueError('native tensor differs from safetensors bytes')
+   file=f'{kind}_{suffix}.npy';np.save(model/file,array,allow_pickle=False)
+   manifest['tensors'][file]={'name':name,'shape':list(shape),'dtype':array.dtype.str,'file_sha256':digest(model/file),'tensor_sha256':hashlib.sha256(array.tobytes()).hexdigest()}
+  w=np.load(model/f'{kind}_weight.npy',allow_pickle=False);b=np.load(model/f'{kind}_bias.npy',allow_pickle=False)
+  oracle_error=max(oracle_error,float(np.max(np.abs(rows@w.astype(np.float64).T+b-native[i]))))
+ if oracle_error>1e-12:raise ValueError('independent dense oracle mismatch')
+ write(model/'model_manifest.json',manifest)
+ report={'scope':'Trusted client preprocessing only: complete128-position embedding module; selected two distinct rows; full768x768 layer0 QKV native oracles.','passed':True,'rows':[0,1],'shape':list(rows.shape),'full_embedding_shape':list(full.shape),'embedding_sha256':digest(private/'embeddings.npy'),'expected_sha256':digest(private/'expected.npy'),'tokenization_sha256':digest(private/'tokens.json'),'model_manifest_sha256':digest(model/'model_manifest.json'),'asset_sha256':hashes,'model_revision':REVISION,'oracle_error':oracle_error,'elapsed_s':time.perf_counter()-started,'versions':{n:importlib.metadata.version(n) for n in ('numpy','torch','transformers','tokenizers','safetensors')}}
+ write(private/'preprocessing.json',report)
+ for file in private.iterdir():os.chmod(file,0o600)
+ print(json.dumps(report,allow_nan=False))
+if __name__=='__main__':
+ p=argparse.ArgumentParser(description=__doc__);p.add_argument('--snapshot',type=Path,required=True);p.add_argument('--private',type=Path,required=True);p.add_argument('--model',type=Path,required=True);a=p.parse_args();prepare(a.snapshot,a.private,a.model)

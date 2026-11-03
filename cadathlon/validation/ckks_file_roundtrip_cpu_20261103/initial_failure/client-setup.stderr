@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/tmp/cross-bert-file-roundtrip/driver.py", line 332, in <module>
+    if __name__=='__main__':raise SystemExit(main())
+                                             ~~~~^^
+  File "/tmp/cross-bert-file-roundtrip/driver.py", line 323, in main
+    if args.stage=='client-setup':report=client_setup(args.public,args.private,args.upload,args.request_id)
+                                         ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/cross-bert-file-roundtrip/driver.py", line 154, in client_setup
+    request=save_ciphertext(ciphertext,upload,public=public,request_id=request_id,role='request')
+  File "/tmp/cross-bert-file-roundtrip/transport.py", line 190, in save_ciphertext
+    raise ValueError('ciphertext differs from its public role contract')
+ValueError: ciphertext differs from its public role contract

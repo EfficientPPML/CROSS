@@ -1,0 +1,90 @@
+{
+  "scope": "Short nonblocking stack-only observation of the already-running public proof.",
+  "pid": 612486,
+  "command": [
+    "sudo",
+    "-n",
+    "/home/jianming_gatech/miniconda3/envs/jaxite/bin/py-spy",
+    "record",
+    "--pid",
+    "612486",
+    "--duration",
+    "20",
+    "--rate",
+    "10",
+    "--format",
+    "raw",
+    "--threads",
+    "--idle",
+    "--nonblocking",
+    "--output",
+    "/tmp/qwen2-stack-sampling-20261103.raw"
+  ],
+  "started_utc": "2026-11-03T00:35:58Z",
+  "source_archive_sha256": "9f70293ee3ecb9bf5502147b903e09175f40293557786851c429faaf7a1b80d2",
+  "proof_source_count": 146,
+  "proof_sources_unchanged_before": true,
+  "sampling_semantics": "10Hz Python stack snapshots including idle/waiting threads; not native CPU attribution or a whole-request performance measurement. Nonblocking collection can miss or race frames. No locals, no native stacks and no signals that pause target execution requested.",
+  "target_overhead": "Profiler wall/child CPU cost is measured below; perturbation of the running target is not separately measured, so these are not calibration timings.",
+  "returncode": 0,
+  "elapsed_s": 21.929144069999893,
+  "observer_child_user_cpu_s": 0.262059,
+  "observer_child_system_cpu_s": 2.410291,
+  "proof_sources_unchanged_after": true,
+  "raw_sha256": "5a77cd8691dfde420762e589183aea8aa6a35942956cd9f7d82cb0a964f9d9f1",
+  "sample_count": 195,
+  "sampling_errors": 4,
+  "threads": {
+    "thread (612486): MainThread": 195
+  },
+  "mutually_exclusive_stack_ownership": {
+    "NTT table construction including nested JAX work": {
+      "count": 112,
+      "percent": 57.43589743589744
+    },
+    "Other public control/key preparation including nested JAX work": {
+      "count": 35,
+      "percent": 17.94871794871795
+    },
+    "Ciphertext arithmetic/dispatch/compilation outside preparation": {
+      "count": 28,
+      "percent": 14.35897435897436
+    },
+    "Plaintext encoding excluding controls": {
+      "count": 17,
+      "percent": 8.717948717948717
+    },
+    "Cache release": {
+      "count": 3,
+      "percent": 1.5384615384615385
+    }
+  },
+  "inclusive_backend_compile_samples": 99,
+  "inclusive_backend_compile_percent": 50.76923076923077,
+  "leaf_frames": {
+    "backend_compile_and_load (jax/_src/compiler.py:402)": 99,
+    "shifted_mod_bytes_host (jaxite_word/util.py:237)": 33,
+    "_shifted_mod_words (jaxite_word/util.py:229)": 19,
+    "_vectorized_ntt (jaxite_word/ckks_ctx.py:471)": 7,
+    "_shifted_mod_words (jaxite_word/util.py:226)": 5,
+    "array (jax/_src/numpy/array_constructors.py:301)": 5,
+    "_vectorized_ntt (jaxite_word/ckks_ctx.py:473)": 4,
+    "_vectorized_ntt (jaxite_word/ckks_ctx.py:474)": 4,
+    "stack (numpy/_core/shape_base.py:465)": 4,
+    "_value (jax/_src/array.py:696)": 3,
+    "_clear_working_caches (encrypted_polynomial.py:189)": 3,
+    "__array__ (jax/_src/array.py:448)": 2,
+    "try_to_block (jax/_src/api.py:2791)": 1,
+    "_vectorized_ntt (jaxite_word/ckks_ctx.py:462)": 1,
+    "_vectorized_ntt (jaxite_word/ckks_ctx.py:475)": 1,
+    "compile_or_get_cached (jax/_src/compiler.py:452)": 1,
+    "tree_flatten (jax/_src/tree_util.py:90)": 1,
+    "_get_aval_array (jax/_src/array.py:1168)": 1,
+    "_arraylike (jax/_src/numpy/util.py:126)": 1
+  },
+  "graph_frames": {
+    "_qwen (encrypted_packed_transformer.py:351)": 165,
+    "_qwen (encrypted_packed_transformer.py:347)": 29
+  },
+  "interpretation": "This window spans the end of V projection and start of Q projection. Control/table preparation owns 147/195 sampled stacks (75.38%). Backend compilation appears in 99/195 (50.77%) and overlaps those ownership categories. These are sample fractions from one 20-second phase window, not CPU utilization, whole-model fractions or speedup predictions."
+}

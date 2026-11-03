@@ -1,0 +1,504 @@
+{
+  "scope": "Plaintext pinned layer0 layout proof plus public payload/key/depth planning; no encrypted block, full model, MRPC, runtime or HBM claim.",
+  "created_utc": "2026-11-03T00:47:36.508511+00:00",
+  "proof": {
+    "path": "/tmp/streaming-bert-layout/native-result3/report.json",
+    "sha256": "f45e8c74e2143959c3bbfbf48bb8858d790d7e53f544b5662c75a6a562c32375",
+    "cases": 7,
+    "passed": true,
+    "max_abs_block_or_attention_error": 1.9539925233402755e-14,
+    "elapsed_s": 12.1168507149996,
+    "peak_rss_kib_plaintext_oracle_process": 1676176,
+    "retains_actual_padded_query_rows": true
+  },
+  "layout": {
+    "row_width": 4096,
+    "head_count": 12,
+    "head_width": 64,
+    "active_hidden": 768,
+    "mlp_width": 3072,
+    "slots": 65536,
+    "rows_per_tile": 16,
+    "sequence": 128,
+    "tiles_per_example": 8,
+    "ciphertext_period": 65536,
+    "alias_count": 1,
+    "streaming": "Query tile outer loop, key tile middle loop, 16 cyclic whole-tile row offsets; all keys meet each query exactly once.",
+    "batching": "Stream examples independently; no cross-example ciphertext batching assumed.",
+    "public_masks": "Key-validity and head-anchor masks only. Logical padded queries remain computed; tail rows beyond sequence length are discarded by public position."
+  },
+  "attention_counts_per_example_layer": {
+    "ciphertext_products": 3080,
+    "rotations": 21360,
+    "ciphertext_additions": 22576,
+    "public_multiplications": 4104,
+    "opaque_exponentials": 1024,
+    "opaque_reciprocals": 8
+  },
+  "attention_rotation_keys": [
+    1,
+    2,
+    4,
+    8,
+    16,
+    32,
+    4096,
+    8192,
+    12288,
+    16384,
+    20480,
+    24576,
+    28672,
+    32768,
+    36864,
+    40960,
+    45056,
+    49152,
+    53248,
+    57344,
+    61440,
+    65504,
+    65520,
+    65528,
+    65532,
+    65534,
+    65535
+  ],
+  "depth": {
+    "opaque_exponential_depth": "E",
+    "opaque_reciprocal_depth": "R",
+    "schedule": [
+      {
+        "stage": "Q/K/V public linear projection",
+        "cumulative_depth": "1"
+      },
+      {
+        "stage": "Q*K",
+        "cumulative_depth": "2"
+      },
+      {
+        "stage": "head sum anchor mask and public score/mean scale",
+        "cumulative_depth": "3"
+      },
+      {
+        "stage": "mean subtraction then key-validity mask before exp",
+        "cumulative_depth": "4"
+      },
+      {
+        "stage": "opaque exp",
+        "cumulative_depth": "4+E"
+      },
+      {
+        "stage": "zero invalid exp outputs",
+        "cumulative_depth": "5+E"
+      },
+      {
+        "stage": "denominator reciprocal; neutral inactive denominators are public ones",
+        "cumulative_depth": "5+E+R"
+      },
+      {
+        "stage": "reciprocal head-anchor mask",
+        "cumulative_depth": "6+E+R"
+      },
+      {
+        "stage": "numerator times broadcast reciprocal",
+        "cumulative_depth": "7+E+R"
+      },
+      {
+        "stage": "attention output public projection",
+        "cumulative_depth": "8+E+R"
+      }
+    ],
+    "parallel_numerator_depth": "6+E before the final product",
+    "excluded": "LayerNorm, GELU, residual alignment, MLP, CKKS refresh and all realized nonlinear circuits. No numeric total depth or refresh count is claimed."
+  },
+  "payload_plan": {
+    "ciphertext_max_level_bytes": 104857600,
+    "plaintext_max_level_bytes": 52428800,
+    "eight_tile_activation_set_bytes": 838860800,
+    "resident_x_q_k_v_32_tile_payload_bytes": 3355443200,
+    "proposed_host_or_disk_spill": "X/K/V plus completed output: at most32 tile payloads per example,3.125GiB at maxlevel. Q is produced one tile at a time. Disk spill and asynchronous lifetime implementation are not present in this NumPy prototype.",
+    "proposed_attention_explicit_schedule": {
+      "permanent_second_pass_CT_buffers": [
+        "query",
+        "mean",
+        "numerator",
+        "denominator",
+        "current_key_tile",
+        "current_value_tile"
+      ],
+      "max_additional_CT_buffers": 3,
+      "ordinary_arithmetic_slot_buffer_count": 9,
+      "ordinary_arithmetic_max_level_payload_bytes": 943718400,
+      "assumptions": [
+        "Old immutable arithmetic temporaries are released as soon as their sole consumer has synchronized.",
+        "A rotate/add butterfly has old, rotated and new accumulator payloads: three including its current work buffer.",
+        "The exp/reciprocal call is atomic only in this accounting; its additional working set must be added separately.",
+        "Public plaintext masks, key bindings, NTT tables, decomposition scratch, compiler buffers, cached inputs and output queues are excluded. This is not an HBM peak bound.",
+        "The current NumPy simulator does not implement ciphertext disk/host transfers or this explicit release schedule."
+      ]
+    },
+    "bsqs_current_implementation_upper_bound": {
+      "qkv_output_pooler": {
+        "shape": [
+          768,
+          768
+        ],
+        "active_diagonals_upper_bound": 1535,
+        "baby_vectors": 64,
+        "giant_groups": 24,
+        "baby_vector_payload_at_level49_bytes": 6710886400,
+        "one_max_giant_plaintext_group_bytes": 3355443200,
+        "staged_rotation_key_uint32_payload_bytes": 45046824960,
+        "scope": "Current BSGS dense-support upper bound at level49, excludes copies, coefficient maps, controls and kernel workspaces; giant keys use level48. memory_bounded streams diagonals, but still stages all baby/giant keys and baby ciphertexts."
+      },
+      "mlp_up": {
+        "shape": [
+          3072,
+          768
+        ],
+        "active_diagonals_upper_bound": 3839,
+        "baby_vectors": 64,
+        "giant_groups": 60,
+        "baby_vector_payload_at_level49_bytes": 6710886400,
+        "one_max_giant_plaintext_group_bytes": 3355443200,
+        "staged_rotation_key_uint32_payload_bytes": 63468208128,
+        "scope": "Current BSGS dense-support upper bound at level49, excludes copies, coefficient maps, controls and kernel workspaces; giant keys use level48. memory_bounded streams diagonals, but still stages all baby/giant keys and baby ciphertexts."
+      },
+      "mlp_down": {
+        "shape": [
+          768,
+          3072
+        ],
+        "active_diagonals_upper_bound": 3839,
+        "baby_vectors": 64,
+        "giant_groups": 60,
+        "baby_vector_payload_at_level49_bytes": 6710886400,
+        "one_max_giant_plaintext_group_bytes": 3355443200,
+        "staged_rotation_key_uint32_payload_bytes": 63468208128,
+        "scope": "Current BSGS dense-support upper bound at level49, excludes copies, coefficient maps, controls and kernel workspaces; giant keys use level48. memory_bounded streams diagonals, but still stages all baby/giant keys and baby ciphertexts."
+      },
+      "classifier": {
+        "shape": [
+          2,
+          768
+        ],
+        "active_diagonals_upper_bound": 769,
+        "baby_vectors": 32,
+        "giant_groups": 25,
+        "baby_vector_payload_at_level49_bytes": 3355443200,
+        "one_max_giant_plaintext_group_bytes": 1677721600,
+        "staged_rotation_key_uint32_payload_bytes": 28915531776,
+        "scope": "Current BSGS dense-support upper bound at level49, excludes copies, coefficient maps, controls and kernel workspaces; giant keys use level48. memory_bounded streams diagonals, but still stages all baby/giant keys and baby ciphertexts."
+      }
+    },
+    "full_slot_refresh": "No sparse alias averaging; the period128 numerical proof does not cover period65536. Full-slot refresh numerical accuracy and memory remain unvalidated."
+  },
+  "key_inventory": {
+    "independent_inventory_path": "/tmp/streaming-bert-review/inventory.json",
+    "independent_inventory_sha256": "97e3c19bf0d4ded16a3bf99fa9604fdba9b5f40bd5c2439a5249e64442ff68b9",
+    "actual_qp_profile": {
+      "q_count": 100,
+      "p_count": 24,
+      "dnum": 4,
+      "actual_log2_qp": 3490.161581036245,
+      "security_ceiling": 3523,
+      "refresh_period": 65536,
+      "normalized_refresh_output_level": 25
+    },
+    "raw_pair_bytes": 520093696,
+    "direct_graph_rotations": 190,
+    "fullslot_bootstrap_rotations": 106,
+    "union_rotations": 225,
+    "union_raw_pair_bytes": 117021081600,
+    "includes": "All row graph layernorm/dense/classifier keys plus planned full-slot refresh, not just the demonstrated attention routine.",
+    "excludes": "Relinearization/public encryption keys, maps, manifests, file-format overhead, copied/device-staged arrays and compiler memory."
+  },
+  "live_filesystem_snapshot": {
+    "/tmp": {
+      "available_bytes": 83612016640,
+      "total_bytes": 103865303040
+    },
+    "/dev/shm": {
+      "available_bytes": 731274997760,
+      "total_bytes": 760920805376
+    }
+  },
+  "domain_observations": {
+    "public_pair_0": {
+      "centered_valid_queries": {
+        "minimum": -6.550620482683996,
+        "maximum": 10.25436206703855,
+        "count": 2700,
+        "nonfinite": 0,
+        "comparison_domain": [
+          -9,
+          12
+        ],
+        "below": 0,
+        "above": 0
+      },
+      "unmasked_exp": {
+        "minimum": 7.213986363646177e-05,
+        "maximum": 1847522.8647780733,
+        "count": 23040,
+        "nonfinite": 0
+      },
+      "centered_padded_queries": {
+        "minimum": -9.536903772753188,
+        "maximum": 14.42935630779182,
+        "count": 20340,
+        "nonfinite": 0,
+        "comparison_domain": [
+          -9,
+          12
+        ],
+        "below": 2,
+        "above": 13
+      },
+      "denominator_mean_exp": {
+        "minimum": 1.0695577234455387,
+        "maximum": 123169.3411426265,
+        "count": 1536,
+        "nonfinite": 0
+      }
+    },
+    "public_pair_1": {
+      "centered_valid_queries": {
+        "minimum": -6.1628457198012905,
+        "maximum": 10.13738845160268,
+        "count": 2700,
+        "nonfinite": 0,
+        "comparison_domain": [
+          -9,
+          12
+        ],
+        "below": 0,
+        "above": 0
+      },
+      "unmasked_exp": {
+        "minimum": 5.581314721884644e-05,
+        "maximum": 1239317.8009811668,
+        "count": 23040,
+        "nonfinite": 0
+      },
+      "centered_padded_queries": {
+        "minimum": -9.793501103088474,
+        "maximum": 14.030071625688343,
+        "count": 20340,
+        "nonfinite": 0,
+        "comparison_domain": [
+          -9,
+          12
+        ],
+        "below": 2,
+        "above": 13
+      },
+      "denominator_mean_exp": {
+        "minimum": 1.1128951559366134,
+        "maximum": 82623.27652831754,
+        "count": 1536,
+        "nonfinite": 0
+      }
+    },
+    "public_pair_2": {
+      "centered_valid_queries": {
+        "minimum": -6.166182991477029,
+        "maximum": 10.073982526608848,
+        "count": 3072,
+        "nonfinite": 0,
+        "comparison_domain": [
+          -9,
+          12
+        ],
+        "below": 0,
+        "above": 0
+      },
+      "unmasked_exp": {
+        "minimum": 3.087330394549165e-05,
+        "maximum": 1289157.1542444439,
+        "count": 24576,
+        "nonfinite": 0
+      },
+      "denominator_mean_exp": {
+        "minimum": 1.0802442123601184,
+        "maximum": 80573.96709583054,
+        "count": 1536,
+        "nonfinite": 0
+      },
+      "centered_padded_queries": {
+        "minimum": -10.385618697464544,
+        "maximum": 14.069499193996684,
+        "count": 21504,
+        "nonfinite": 0,
+        "comparison_domain": [
+          -9,
+          12
+        ],
+        "below": 2,
+        "above": 12
+      }
+    },
+    "public_pair_3": {
+      "centered_valid_queries": {
+        "minimum": -11.692880302712462,
+        "maximum": 12.598232713589088,
+        "count": 196608,
+        "nonfinite": 0,
+        "comparison_domain": [
+          -9,
+          12
+        ],
+        "below": 80,
+        "above": 5
+      },
+      "unmasked_exp": {
+        "minimum": 8.353079349516982e-06,
+        "maximum": 296034.92422387993,
+        "count": 196608,
+        "nonfinite": 0
+      },
+      "denominator_mean_exp": {
+        "minimum": 1.0711862577237345,
+        "maximum": 2523.526859887535,
+        "count": 1536,
+        "nonfinite": 0
+      }
+    },
+    "public_boundary_mask": {
+      "centered_valid_queries": {
+        "minimum": -11.966099520166697,
+        "maximum": 11.900887716273825,
+        "count": 1452,
+        "nonfinite": 0,
+        "comparison_domain": [
+          -9,
+          12
+        ],
+        "below": 11,
+        "above": 0
+      },
+      "unmasked_exp": {
+        "minimum": 6.684800512193628e-07,
+        "maximum": 4496299.054592642,
+        "count": 16896,
+        "nonfinite": 0
+      },
+      "centered_padded_queries": {
+        "minimum": -14.218259281957577,
+        "maximum": 15.318765184044803,
+        "count": 15444,
+        "nonfinite": 0,
+        "comparison_domain": [
+          -9,
+          12
+        ],
+        "below": 69,
+        "above": 14
+      },
+      "denominator_mean_exp": {
+        "minimum": 1.0098219258334513,
+        "maximum": 410332.0131975031,
+        "count": 1536,
+        "nonfinite": 0
+      }
+    },
+    "public_last_key_only": {
+      "centered_padded_queries": {
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "count": 1524,
+        "nonfinite": 0,
+        "comparison_domain": [
+          -9,
+          12
+        ],
+        "below": 0,
+        "above": 0
+      },
+      "unmasked_exp": {
+        "minimum": 1.0,
+        "maximum": 1.0,
+        "count": 1536,
+        "nonfinite": 0
+      },
+      "denominator_mean_exp": {
+        "minimum": 1.0,
+        "maximum": 1.0,
+        "count": 1536,
+        "nonfinite": 0
+      },
+      "centered_valid_queries": {
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "count": 12,
+        "nonfinite": 0,
+        "comparison_domain": [
+          -9,
+          12
+        ],
+        "below": 0,
+        "above": 0
+      }
+    },
+    "public_partial_tile17": {
+      "centered_valid_queries": {
+        "minimum": -6.550620482683996,
+        "maximum": 10.25436206703855,
+        "count": 2700,
+        "nonfinite": 0,
+        "comparison_domain": [
+          -9,
+          12
+        ],
+        "below": 0,
+        "above": 0
+      },
+      "unmasked_exp": {
+        "minimum": 0.0013125357915627445,
+        "maximum": 28406.18173073522,
+        "count": 5760,
+        "nonfinite": 0
+      },
+      "centered_padded_queries": {
+        "minimum": -6.6357942941082175,
+        "maximum": 6.53693903281551,
+        "count": 360,
+        "nonfinite": 0,
+        "comparison_domain": [
+          -9,
+          12
+        ],
+        "below": 0,
+        "above": 0
+      },
+      "denominator_mean_exp": {
+        "minimum": 1.0695577234455387,
+        "maximum": 2557.8443664162437,
+        "count": 204,
+        "nonfinite": 0
+      }
+    }
+  },
+  "next_minimal_prototype": [
+    "Use a separate scalar-score layout per query tile:16 queries \u00d7128 keys \u00d716 padded heads=32768 slots, versus repeated4096 features.",
+    "Construct and independently verify a public linear compaction/scatter map between head anchors and scalar scores. Its rotations and mask levels are additional and not covered by this proof.",
+    "Apply the previously planned normalized repeated-squaring softmax to that scalar layout, with new public domains covering padded queries or explicitly retain public valid-query compaction.",
+    "Scatter each fixed key offset probability to head anchors and stream weighted V accumulation; the probability route avoids storing large raw exponentials.",
+    "Prove full-slot refresh and actual row-linear controls/workspaces before proposing a full encrypted layer or checkpoint."
+  ],
+  "limitations": [
+    "Observed domains on seven cases are not certified bounds or a replacement calibration.",
+    "The exact raw-exponential route reaches4.496e6 on a public boundary mask; it cannot inherit bound16 refresh assumptions.",
+    "Current fully staged BSGS key controls can exceed an individual TPU chip even with memory_bounded=True; lower-level scheduling or streaming key bindings needs separate implementation/proof.",
+    "The union raw public-key store exceeds current /tmp free space. /dev/shm capacity is a live snapshot shared with other jobs; fit is not reserved or measured performance.",
+    "No fitted logits/labels, clipping, private-value branch, HE inference, full12layer model or MRPC accuracy result."
+  ],
+  "source_sha256": {
+    "/tmp/streaming-bert-layout/summarize_plan.py": "3a908e43460e9b269ab9dc3295aeca1119618aafc7bda77d18b0766bc2360956",
+    "/tmp/streaming-bert-layout/row_attention.py": "320b74092bd45ff6e2b71e2e4d9204de4bdb7f7b53c184a516e0ee40bcab3269",
+    "/tmp/streaming-bert-layout/check_pretrained_block.py": "36d10185e62a83f0bb346bd6f06a7fc82ee18ac1bcf4cce2ac9823bc69d47768",
+    "/home/jianming_gatech/CROSS/jaxite_word/bsgs.py": "52a1027be9bf704fd3ffd453251d2b3136ab31a3242c12d341ca1374b1b82aed",
+    "/home/jianming_gatech/CROSS/jaxite_word/he_params.py": "714d3227f65d2369976a798a13584cb8629c468f3b6c005d7193eac1f072948b"
+  }
+}

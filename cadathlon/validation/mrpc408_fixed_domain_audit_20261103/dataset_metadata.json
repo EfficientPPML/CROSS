@@ -1,0 +1,1104 @@
+{
+  "_id": "621ffdd236468d709f181e3f",
+  "id": "nyu-mll/glue",
+  "author": "nyu-mll",
+  "sha": "bcdcba79d07bc864c1c254ccfcedcce55bcc9a8c",
+  "lastModified": "2024-01-30T07:41:18.000Z",
+  "private": false,
+  "gated": false,
+  "disabled": false,
+  "tags": [
+    "task_categories:text-classification",
+    "task_ids:acceptability-classification",
+    "task_ids:natural-language-inference",
+    "task_ids:semantic-similarity-scoring",
+    "task_ids:sentiment-classification",
+    "task_ids:text-scoring",
+    "annotations_creators:other",
+    "language_creators:other",
+    "multilinguality:monolingual",
+    "source_datasets:original",
+    "language:en",
+    "license:other",
+    "size_categories:1M<n<10M",
+    "format:parquet",
+    "modality:tabular",
+    "modality:text",
+    "library:datasets",
+    "library:pandas",
+    "library:mlcroissant",
+    "library:polars",
+    "arxiv:1804.07461",
+    "region:us",
+    "qa-nli",
+    "coreference-nli",
+    "paraphrase-identification"
+  ],
+  "description": "\n\t\n\t\t\n\t\n\t\n\t\tDataset Card for GLUE\n\t\n\n\n\t\n\t\t\n\t\n\t\n\t\tDataset Summary\n\t\n\nGLUE, the General Language Understanding Evaluation benchmark (https://gluebenchmark.com/) is a collection of resources for training, evaluating, and analyzing natural language understanding systems.\n\n\t\n\t\t\n\t\n\t\n\t\tSupported Tasks and Leaderboards\n\t\n\nThe leaderboard for the GLUE benchmark can be found at this address. It comprises the following tasks:\n\n\t\n\t\t\n\t\n\t\n\t\tax\n\t\n\nA manually-curated evaluation dataset for fine-grained\u2026 See the full description on the dataset page: https://huggingface.co/datasets/nyu-mll/glue.",
+  "paperswithcode_id": "glue",
+  "downloads": 662404,
+  "likes": 783,
+  "cardData": {
+    "annotations_creators": [
+      "other"
+    ],
+    "language_creators": [
+      "other"
+    ],
+    "language": [
+      "en"
+    ],
+    "license": [
+      "other"
+    ],
+    "multilinguality": [
+      "monolingual"
+    ],
+    "size_categories": [
+      "10K<n<100K"
+    ],
+    "source_datasets": [
+      "original"
+    ],
+    "task_categories": [
+      "text-classification"
+    ],
+    "task_ids": [
+      "acceptability-classification",
+      "natural-language-inference",
+      "semantic-similarity-scoring",
+      "sentiment-classification",
+      "text-scoring"
+    ],
+    "paperswithcode_id": "glue",
+    "pretty_name": "GLUE (General Language Understanding Evaluation benchmark)",
+    "config_names": [
+      "ax",
+      "cola",
+      "mnli",
+      "mnli_matched",
+      "mnli_mismatched",
+      "mrpc",
+      "qnli",
+      "qqp",
+      "rte",
+      "sst2",
+      "stsb",
+      "wnli"
+    ],
+    "tags": [
+      "qa-nli",
+      "coreference-nli",
+      "paraphrase-identification"
+    ],
+    "dataset_info": [
+      {
+        "config_name": "ax",
+        "features": [
+          {
+            "name": "premise",
+            "dtype": "string"
+          },
+          {
+            "name": "hypothesis",
+            "dtype": "string"
+          },
+          {
+            "name": "label",
+            "dtype": {
+              "class_label": {
+                "names": {
+                  "0": "entailment",
+                  "1": "neutral",
+                  "2": "contradiction"
+                }
+              }
+            }
+          },
+          {
+            "name": "idx",
+            "dtype": "int32"
+          }
+        ],
+        "splits": [
+          {
+            "name": "test",
+            "num_bytes": 237694,
+            "num_examples": 1104
+          }
+        ],
+        "download_size": 80767,
+        "dataset_size": 237694
+      },
+      {
+        "config_name": "cola",
+        "features": [
+          {
+            "name": "sentence",
+            "dtype": "string"
+          },
+          {
+            "name": "label",
+            "dtype": {
+              "class_label": {
+                "names": {
+                  "0": "unacceptable",
+                  "1": "acceptable"
+                }
+              }
+            }
+          },
+          {
+            "name": "idx",
+            "dtype": "int32"
+          }
+        ],
+        "splits": [
+          {
+            "name": "train",
+            "num_bytes": 484869,
+            "num_examples": 8551
+          },
+          {
+            "name": "validation",
+            "num_bytes": 60322,
+            "num_examples": 1043
+          },
+          {
+            "name": "test",
+            "num_bytes": 60513,
+            "num_examples": 1063
+          }
+        ],
+        "download_size": 326394,
+        "dataset_size": 605704
+      },
+      {
+        "config_name": "mnli",
+        "features": [
+          {
+            "name": "premise",
+            "dtype": "string"
+          },
+          {
+            "name": "hypothesis",
+            "dtype": "string"
+          },
+          {
+            "name": "label",
+            "dtype": {
+              "class_label": {
+                "names": {
+                  "0": "entailment",
+                  "1": "neutral",
+                  "2": "contradiction"
+                }
+              }
+            }
+          },
+          {
+            "name": "idx",
+            "dtype": "int32"
+          }
+        ],
+        "splits": [
+          {
+            "name": "train",
+            "num_bytes": 74619646,
+            "num_examples": 392702
+          },
+          {
+            "name": "validation_matched",
+            "num_bytes": 1833783,
+            "num_examples": 9815
+          },
+          {
+            "name": "validation_mismatched",
+            "num_bytes": 1949231,
+            "num_examples": 9832
+          },
+          {
+            "name": "test_matched",
+            "num_bytes": 1848654,
+            "num_examples": 9796
+          },
+          {
+            "name": "test_mismatched",
+            "num_bytes": 1950703,
+            "num_examples": 9847
+          }
+        ],
+        "download_size": 57168425,
+        "dataset_size": 82202017
+      },
+      {
+        "config_name": "mnli_matched",
+        "features": [
+          {
+            "name": "premise",
+            "dtype": "string"
+          },
+          {
+            "name": "hypothesis",
+            "dtype": "string"
+          },
+          {
+            "name": "label",
+            "dtype": {
+              "class_label": {
+                "names": {
+                  "0": "entailment",
+                  "1": "neutral",
+                  "2": "contradiction"
+                }
+              }
+            }
+          },
+          {
+            "name": "idx",
+            "dtype": "int32"
+          }
+        ],
+        "splits": [
+          {
+            "name": "validation",
+            "num_bytes": 1833783,
+            "num_examples": 9815
+          },
+          {
+            "name": "test",
+            "num_bytes": 1848654,
+            "num_examples": 9796
+          }
+        ],
+        "download_size": 2435055,
+        "dataset_size": 3682437
+      },
+      {
+        "config_name": "mnli_mismatched",
+        "features": [
+          {
+            "name": "premise",
+            "dtype": "string"
+          },
+          {
+            "name": "hypothesis",
+            "dtype": "string"
+          },
+          {
+            "name": "label",
+            "dtype": {
+              "class_label": {
+                "names": {
+                  "0": "entailment",
+                  "1": "neutral",
+                  "2": "contradiction"
+                }
+              }
+            }
+          },
+          {
+            "name": "idx",
+            "dtype": "int32"
+          }
+        ],
+        "splits": [
+          {
+            "name": "validation",
+            "num_bytes": 1949231,
+            "num_examples": 9832
+          },
+          {
+            "name": "test",
+            "num_bytes": 1950703,
+            "num_examples": 9847
+          }
+        ],
+        "download_size": 2509009,
+        "dataset_size": 3899934
+      },
+      {
+        "config_name": "mrpc",
+        "features": [
+          {
+            "name": "sentence1",
+            "dtype": "string"
+          },
+          {
+            "name": "sentence2",
+            "dtype": "string"
+          },
+          {
+            "name": "label",
+            "dtype": {
+              "class_label": {
+                "names": {
+                  "0": "not_equivalent",
+                  "1": "equivalent"
+                }
+              }
+            }
+          },
+          {
+            "name": "idx",
+            "dtype": "int32"
+          }
+        ],
+        "splits": [
+          {
+            "name": "train",
+            "num_bytes": 943843,
+            "num_examples": 3668
+          },
+          {
+            "name": "validation",
+            "num_bytes": 105879,
+            "num_examples": 408
+          },
+          {
+            "name": "test",
+            "num_bytes": 442410,
+            "num_examples": 1725
+          }
+        ],
+        "download_size": 1033400,
+        "dataset_size": 1492132
+      },
+      {
+        "config_name": "qnli",
+        "features": [
+          {
+            "name": "question",
+            "dtype": "string"
+          },
+          {
+            "name": "sentence",
+            "dtype": "string"
+          },
+          {
+            "name": "label",
+            "dtype": {
+              "class_label": {
+                "names": {
+                  "0": "entailment",
+                  "1": "not_entailment"
+                }
+              }
+            }
+          },
+          {
+            "name": "idx",
+            "dtype": "int32"
+          }
+        ],
+        "splits": [
+          {
+            "name": "train",
+            "num_bytes": 25612443,
+            "num_examples": 104743
+          },
+          {
+            "name": "validation",
+            "num_bytes": 1368304,
+            "num_examples": 5463
+          },
+          {
+            "name": "test",
+            "num_bytes": 1373093,
+            "num_examples": 5463
+          }
+        ],
+        "download_size": 19278324,
+        "dataset_size": 28353840
+      },
+      {
+        "config_name": "qqp",
+        "features": [
+          {
+            "name": "question1",
+            "dtype": "string"
+          },
+          {
+            "name": "question2",
+            "dtype": "string"
+          },
+          {
+            "name": "label",
+            "dtype": {
+              "class_label": {
+                "names": {
+                  "0": "not_duplicate",
+                  "1": "duplicate"
+                }
+              }
+            }
+          },
+          {
+            "name": "idx",
+            "dtype": "int32"
+          }
+        ],
+        "splits": [
+          {
+            "name": "train",
+            "num_bytes": 50900820,
+            "num_examples": 363846
+          },
+          {
+            "name": "validation",
+            "num_bytes": 5653754,
+            "num_examples": 40430
+          },
+          {
+            "name": "test",
+            "num_bytes": 55171111,
+            "num_examples": 390965
+          }
+        ],
+        "download_size": 73982265,
+        "dataset_size": 111725685
+      },
+      {
+        "config_name": "rte",
+        "features": [
+          {
+            "name": "sentence1",
+            "dtype": "string"
+          },
+          {
+            "name": "sentence2",
+            "dtype": "string"
+          },
+          {
+            "name": "label",
+            "dtype": {
+              "class_label": {
+                "names": {
+                  "0": "entailment",
+                  "1": "not_entailment"
+                }
+              }
+            }
+          },
+          {
+            "name": "idx",
+            "dtype": "int32"
+          }
+        ],
+        "splits": [
+          {
+            "name": "train",
+            "num_bytes": 847320,
+            "num_examples": 2490
+          },
+          {
+            "name": "validation",
+            "num_bytes": 90728,
+            "num_examples": 277
+          },
+          {
+            "name": "test",
+            "num_bytes": 974053,
+            "num_examples": 3000
+          }
+        ],
+        "download_size": 1274409,
+        "dataset_size": 1912101
+      },
+      {
+        "config_name": "sst2",
+        "features": [
+          {
+            "name": "sentence",
+            "dtype": "string"
+          },
+          {
+            "name": "label",
+            "dtype": {
+              "class_label": {
+                "names": {
+                  "0": "negative",
+                  "1": "positive"
+                }
+              }
+            }
+          },
+          {
+            "name": "idx",
+            "dtype": "int32"
+          }
+        ],
+        "splits": [
+          {
+            "name": "train",
+            "num_bytes": 4681603,
+            "num_examples": 67349
+          },
+          {
+            "name": "validation",
+            "num_bytes": 106252,
+            "num_examples": 872
+          },
+          {
+            "name": "test",
+            "num_bytes": 216640,
+            "num_examples": 1821
+          }
+        ],
+        "download_size": 3331080,
+        "dataset_size": 5004495
+      },
+      {
+        "config_name": "stsb",
+        "features": [
+          {
+            "name": "sentence1",
+            "dtype": "string"
+          },
+          {
+            "name": "sentence2",
+            "dtype": "string"
+          },
+          {
+            "name": "label",
+            "dtype": "float32"
+          },
+          {
+            "name": "idx",
+            "dtype": "int32"
+          }
+        ],
+        "splits": [
+          {
+            "name": "train",
+            "num_bytes": 754791,
+            "num_examples": 5749
+          },
+          {
+            "name": "validation",
+            "num_bytes": 216064,
+            "num_examples": 1500
+          },
+          {
+            "name": "test",
+            "num_bytes": 169974,
+            "num_examples": 1379
+          }
+        ],
+        "download_size": 766983,
+        "dataset_size": 1140829
+      },
+      {
+        "config_name": "wnli",
+        "features": [
+          {
+            "name": "sentence1",
+            "dtype": "string"
+          },
+          {
+            "name": "sentence2",
+            "dtype": "string"
+          },
+          {
+            "name": "label",
+            "dtype": {
+              "class_label": {
+                "names": {
+                  "0": "not_entailment",
+                  "1": "entailment"
+                }
+              }
+            }
+          },
+          {
+            "name": "idx",
+            "dtype": "int32"
+          }
+        ],
+        "splits": [
+          {
+            "name": "train",
+            "num_bytes": 107109,
+            "num_examples": 635
+          },
+          {
+            "name": "validation",
+            "num_bytes": 12162,
+            "num_examples": 71
+          },
+          {
+            "name": "test",
+            "num_bytes": 37889,
+            "num_examples": 146
+          }
+        ],
+        "download_size": 63522,
+        "dataset_size": 157160
+      }
+    ],
+    "configs": [
+      {
+        "config_name": "ax",
+        "data_files": [
+          {
+            "split": "test",
+            "path": "ax/test-*"
+          }
+        ]
+      },
+      {
+        "config_name": "cola",
+        "data_files": [
+          {
+            "split": "train",
+            "path": "cola/train-*"
+          },
+          {
+            "split": "validation",
+            "path": "cola/validation-*"
+          },
+          {
+            "split": "test",
+            "path": "cola/test-*"
+          }
+        ]
+      },
+      {
+        "config_name": "mnli",
+        "data_files": [
+          {
+            "split": "train",
+            "path": "mnli/train-*"
+          },
+          {
+            "split": "validation_matched",
+            "path": "mnli/validation_matched-*"
+          },
+          {
+            "split": "validation_mismatched",
+            "path": "mnli/validation_mismatched-*"
+          },
+          {
+            "split": "test_matched",
+            "path": "mnli/test_matched-*"
+          },
+          {
+            "split": "test_mismatched",
+            "path": "mnli/test_mismatched-*"
+          }
+        ]
+      },
+      {
+        "config_name": "mnli_matched",
+        "data_files": [
+          {
+            "split": "validation",
+            "path": "mnli_matched/validation-*"
+          },
+          {
+            "split": "test",
+            "path": "mnli_matched/test-*"
+          }
+        ]
+      },
+      {
+        "config_name": "mnli_mismatched",
+        "data_files": [
+          {
+            "split": "validation",
+            "path": "mnli_mismatched/validation-*"
+          },
+          {
+            "split": "test",
+            "path": "mnli_mismatched/test-*"
+          }
+        ]
+      },
+      {
+        "config_name": "mrpc",
+        "data_files": [
+          {
+            "split": "train",
+            "path": "mrpc/train-*"
+          },
+          {
+            "split": "validation",
+            "path": "mrpc/validation-*"
+          },
+          {
+            "split": "test",
+            "path": "mrpc/test-*"
+          }
+        ]
+      },
+      {
+        "config_name": "qnli",
+        "data_files": [
+          {
+            "split": "train",
+            "path": "qnli/train-*"
+          },
+          {
+            "split": "validation",
+            "path": "qnli/validation-*"
+          },
+          {
+            "split": "test",
+            "path": "qnli/test-*"
+          }
+        ]
+      },
+      {
+        "config_name": "qqp",
+        "data_files": [
+          {
+            "split": "train",
+            "path": "qqp/train-*"
+          },
+          {
+            "split": "validation",
+            "path": "qqp/validation-*"
+          },
+          {
+            "split": "test",
+            "path": "qqp/test-*"
+          }
+        ]
+      },
+      {
+        "config_name": "rte",
+        "data_files": [
+          {
+            "split": "train",
+            "path": "rte/train-*"
+          },
+          {
+            "split": "validation",
+            "path": "rte/validation-*"
+          },
+          {
+            "split": "test",
+            "path": "rte/test-*"
+          }
+        ]
+      },
+      {
+        "config_name": "sst2",
+        "data_files": [
+          {
+            "split": "train",
+            "path": "sst2/train-*"
+          },
+          {
+            "split": "validation",
+            "path": "sst2/validation-*"
+          },
+          {
+            "split": "test",
+            "path": "sst2/test-*"
+          }
+        ]
+      },
+      {
+        "config_name": "stsb",
+        "data_files": [
+          {
+            "split": "train",
+            "path": "stsb/train-*"
+          },
+          {
+            "split": "validation",
+            "path": "stsb/validation-*"
+          },
+          {
+            "split": "test",
+            "path": "stsb/test-*"
+          }
+        ]
+      },
+      {
+        "config_name": "wnli",
+        "data_files": [
+          {
+            "split": "train",
+            "path": "wnli/train-*"
+          },
+          {
+            "split": "validation",
+            "path": "wnli/validation-*"
+          },
+          {
+            "split": "test",
+            "path": "wnli/test-*"
+          }
+        ]
+      }
+    ],
+    "train-eval-index": [
+      {
+        "config": "cola",
+        "task": "text-classification",
+        "task_id": "binary_classification",
+        "splits": {
+          "train_split": "train",
+          "eval_split": "validation"
+        },
+        "col_mapping": {
+          "sentence": "text",
+          "label": "target"
+        }
+      },
+      {
+        "config": "sst2",
+        "task": "text-classification",
+        "task_id": "binary_classification",
+        "splits": {
+          "train_split": "train",
+          "eval_split": "validation"
+        },
+        "col_mapping": {
+          "sentence": "text",
+          "label": "target"
+        }
+      },
+      {
+        "config": "mrpc",
+        "task": "text-classification",
+        "task_id": "natural_language_inference",
+        "splits": {
+          "train_split": "train",
+          "eval_split": "validation"
+        },
+        "col_mapping": {
+          "sentence1": "text1",
+          "sentence2": "text2",
+          "label": "target"
+        }
+      },
+      {
+        "config": "qqp",
+        "task": "text-classification",
+        "task_id": "natural_language_inference",
+        "splits": {
+          "train_split": "train",
+          "eval_split": "validation"
+        },
+        "col_mapping": {
+          "question1": "text1",
+          "question2": "text2",
+          "label": "target"
+        }
+      },
+      {
+        "config": "stsb",
+        "task": "text-classification",
+        "task_id": "natural_language_inference",
+        "splits": {
+          "train_split": "train",
+          "eval_split": "validation"
+        },
+        "col_mapping": {
+          "sentence1": "text1",
+          "sentence2": "text2",
+          "label": "target"
+        }
+      },
+      {
+        "config": "mnli",
+        "task": "text-classification",
+        "task_id": "natural_language_inference",
+        "splits": {
+          "train_split": "train",
+          "eval_split": "validation_matched"
+        },
+        "col_mapping": {
+          "premise": "text1",
+          "hypothesis": "text2",
+          "label": "target"
+        }
+      },
+      {
+        "config": "mnli_mismatched",
+        "task": "text-classification",
+        "task_id": "natural_language_inference",
+        "splits": {
+          "train_split": "train",
+          "eval_split": "validation"
+        },
+        "col_mapping": {
+          "premise": "text1",
+          "hypothesis": "text2",
+          "label": "target"
+        }
+      },
+      {
+        "config": "mnli_matched",
+        "task": "text-classification",
+        "task_id": "natural_language_inference",
+        "splits": {
+          "train_split": "train",
+          "eval_split": "validation"
+        },
+        "col_mapping": {
+          "premise": "text1",
+          "hypothesis": "text2",
+          "label": "target"
+        }
+      },
+      {
+        "config": "qnli",
+        "task": "text-classification",
+        "task_id": "natural_language_inference",
+        "splits": {
+          "train_split": "train",
+          "eval_split": "validation"
+        },
+        "col_mapping": {
+          "question": "text1",
+          "sentence": "text2",
+          "label": "target"
+        }
+      },
+      {
+        "config": "rte",
+        "task": "text-classification",
+        "task_id": "natural_language_inference",
+        "splits": {
+          "train_split": "train",
+          "eval_split": "validation"
+        },
+        "col_mapping": {
+          "sentence1": "text1",
+          "sentence2": "text2",
+          "label": "target"
+        }
+      },
+      {
+        "config": "wnli",
+        "task": "text-classification",
+        "task_id": "natural_language_inference",
+        "splits": {
+          "train_split": "train",
+          "eval_split": "validation"
+        },
+        "col_mapping": {
+          "sentence1": "text1",
+          "sentence2": "text2",
+          "label": "target"
+        }
+      }
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes"
+    },
+    {
+      "rfilename": "README.md"
+    },
+    {
+      "rfilename": "ax/test-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "cola/test-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "cola/train-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "cola/validation-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "mnli/test_matched-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "mnli/test_mismatched-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "mnli/train-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "mnli/validation_matched-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "mnli/validation_mismatched-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "mnli_matched/test-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "mnli_matched/validation-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "mnli_mismatched/test-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "mnli_mismatched/validation-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "mrpc/test-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "mrpc/train-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "mrpc/validation-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "qnli/test-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "qnli/train-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "qnli/validation-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "qqp/test-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "qqp/train-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "qqp/validation-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "rte/test-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "rte/train-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "rte/validation-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "sst2/test-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "sst2/train-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "sst2/validation-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "stsb/test-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "stsb/train-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "stsb/validation-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "wnli/test-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "wnli/train-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "wnli/validation-00000-of-00001.parquet"
+    }
+  ],
+  "createdAt": "2022-03-02T23:29:22.000Z",
+  "usedStorage": 4006562287
+}

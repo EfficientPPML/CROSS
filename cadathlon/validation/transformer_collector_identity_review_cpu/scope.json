@@ -1,0 +1,7 @@
+{
+  "status": "reproduced defect in isolated candidate, not applied live",
+  "finding": "A replacement ordinary directory is deleted because cleanup checks symlinks but not original inode identity.",
+  "nested_wrapper_finding": "Outer wrapper recursively deletes its parent despite child key cleanup failure; it must respect child ownership-loss/incomplete-cleanup signal.",
+  "scope": "CPU subprocess and temporary paths only; no cryptography or TPU activity.",
+  "candidate_source_hash_matches_reviewed_copy": true
+}

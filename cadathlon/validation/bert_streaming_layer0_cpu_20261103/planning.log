@@ -1,0 +1,96 @@
+{
+  "proof": {
+    "path": "/tmp/streaming-bert-layout/native-result3/report.json",
+    "sha256": "f45e8c74e2143959c3bbfbf48bb8858d790d7e53f544b5662c75a6a562c32375",
+    "cases": 7,
+    "passed": true,
+    "max_abs_block_or_attention_error": 1.9539925233402755e-14,
+    "elapsed_s": 12.1168507149996,
+    "peak_rss_kib_plaintext_oracle_process": 1676176,
+    "retains_actual_padded_query_rows": true
+  },
+  "keys": {
+    "independent_inventory_path": "/tmp/streaming-bert-review/inventory.json",
+    "independent_inventory_sha256": "97e3c19bf0d4ded16a3bf99fa9604fdba9b5f40bd5c2439a5249e64442ff68b9",
+    "actual_qp_profile": {
+      "q_count": 100,
+      "p_count": 24,
+      "dnum": 4,
+      "actual_log2_qp": 3490.161581036245,
+      "security_ceiling": 3523,
+      "refresh_period": 65536,
+      "normalized_refresh_output_level": 25
+    },
+    "raw_pair_bytes": 520093696,
+    "direct_graph_rotations": 190,
+    "fullslot_bootstrap_rotations": 106,
+    "union_rotations": 225,
+    "union_raw_pair_bytes": 117021081600,
+    "includes": "All row graph layernorm/dense/classifier keys plus planned full-slot refresh, not just the demonstrated attention routine.",
+    "excludes": "Relinearization/public encryption keys, maps, manifests, file-format overhead, copied/device-staged arrays and compiler memory."
+  },
+  "linear_working_sets": {
+    "qkv_output_pooler": {
+      "shape": [
+        768,
+        768
+      ],
+      "active_diagonals_upper_bound": 1535,
+      "baby_vectors": 64,
+      "giant_groups": 24,
+      "baby_vector_payload_at_level49_bytes": 6710886400,
+      "one_max_giant_plaintext_group_bytes": 3355443200,
+      "staged_rotation_key_uint32_payload_bytes": 45046824960,
+      "scope": "Current BSGS dense-support upper bound at level49, excludes copies, coefficient maps, controls and kernel workspaces; giant keys use level48. memory_bounded streams diagonals, but still stages all baby/giant keys and baby ciphertexts."
+    },
+    "mlp_up": {
+      "shape": [
+        3072,
+        768
+      ],
+      "active_diagonals_upper_bound": 3839,
+      "baby_vectors": 64,
+      "giant_groups": 60,
+      "baby_vector_payload_at_level49_bytes": 6710886400,
+      "one_max_giant_plaintext_group_bytes": 3355443200,
+      "staged_rotation_key_uint32_payload_bytes": 63468208128,
+      "scope": "Current BSGS dense-support upper bound at level49, excludes copies, coefficient maps, controls and kernel workspaces; giant keys use level48. memory_bounded streams diagonals, but still stages all baby/giant keys and baby ciphertexts."
+    },
+    "mlp_down": {
+      "shape": [
+        768,
+        3072
+      ],
+      "active_diagonals_upper_bound": 3839,
+      "baby_vectors": 64,
+      "giant_groups": 60,
+      "baby_vector_payload_at_level49_bytes": 6710886400,
+      "one_max_giant_plaintext_group_bytes": 3355443200,
+      "staged_rotation_key_uint32_payload_bytes": 63468208128,
+      "scope": "Current BSGS dense-support upper bound at level49, excludes copies, coefficient maps, controls and kernel workspaces; giant keys use level48. memory_bounded streams diagonals, but still stages all baby/giant keys and baby ciphertexts."
+    },
+    "classifier": {
+      "shape": [
+        2,
+        768
+      ],
+      "active_diagonals_upper_bound": 769,
+      "baby_vectors": 32,
+      "giant_groups": 25,
+      "baby_vector_payload_at_level49_bytes": 3355443200,
+      "one_max_giant_plaintext_group_bytes": 1677721600,
+      "staged_rotation_key_uint32_payload_bytes": 28915531776,
+      "scope": "Current BSGS dense-support upper bound at level49, excludes copies, coefficient maps, controls and kernel workspaces; giant keys use level48. memory_bounded streams diagonals, but still stages all baby/giant keys and baby ciphertexts."
+    }
+  },
+  "storage": {
+    "/tmp": {
+      "available_bytes": 83612016640,
+      "total_bytes": 103865303040
+    },
+    "/dev/shm": {
+      "available_bytes": 731274997760,
+      "total_bytes": 760920805376
+    }
+  }
+}

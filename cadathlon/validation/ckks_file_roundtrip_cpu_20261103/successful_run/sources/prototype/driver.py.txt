@@ -1,0 +1,341 @@
+"""Isolated real CKKS file-stage foundation; not BERT or a performance baseline."""
+from __future__ import annotations
+import argparse, contextlib, hashlib, importlib, json, math, os, signal
+from pathlib import Path
+import shutil, subprocess, sys, tempfile, time, uuid
+os.environ['JAX_PLATFORMS'] = 'cpu'
+import numpy as np
+ROOT = Path(os.environ.get('CROSS_ROOT','/home/jianming_gatech/CROSS')).resolve()
+sys.path[:0] = [str(ROOT), str(ROOT/'cadathlon/common')]
+HERE = Path(__file__).resolve().parent
+
+
+def sha(path):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def canonical(value):
+    return json.dumps(value,sort_keys=True,separators=(',',':'),allow_nan=False).encode()
+
+
+def write_json(path,value):
+    Path(path).write_text(json.dumps(value,indent=2,allow_nan=False)+'\n')
+
+
+def crypto():
+    import jax
+    from jaxite_word import CKKSContext,he_params,key_gen
+    jax.config.update('jax_enable_x64',True)
+    assert {device.platform for device in jax.devices()} == {'cpu'}
+    return jax,CKKSContext,he_params,key_gen
+
+
+def parameters():
+    _,_,hp,_=crypto()
+    q=[4079617,1196033,1589249,1376257,2277377,1720321,1769473,1785857]
+    p=[8273921,8257537];scale=float(q[-2])*q[-1]
+    result=dict(degree=8192,num_slots=4096,q_towers=q,p_towers=p,
+        composite_degree=2,degree_layout=[64,128],precision=32,max_level=3,
+        scaling_factor=scale,output_scale=scale,dnum=4,batch=2,
+        sigma=hp.DEFAULT_SIGMA,secret_distribution=hp.SECRET_DISTRIBUTION)
+    check_parameters(result)
+    return result
+
+
+def check_parameters(params):
+    expected={'degree','num_slots','q_towers','p_towers','composite_degree','degree_layout',
+              'precision','max_level','scaling_factor','output_scale','dnum','batch','sigma','secret_distribution'}
+    if not isinstance(params,dict) or set(params)!=expected:
+        raise ValueError('public parameters must contain exactly the declared nonsecret fields')
+    _,_,hp,_=crypto()
+    if (params['q_towers']!=[4079617,1196033,1589249,1376257,2277377,1720321,1769473,1785857]
+            or params['p_towers']!=[8273921,8257537] or params['degree']!=8192 or params['num_slots']!=4096 or params['composite_degree']!=2
+            or params['degree_layout']!=[64,128] or params['precision']!=32
+            or params['max_level']!=3 or len(params['q_towers'])!=8 or params['dnum']!=4
+            or params['batch']!=2 or params['sigma']!=hp.DEFAULT_SIGMA
+            or params['secret_distribution']!=hp.SECRET_DISTRIBUTION):
+        raise ValueError('unsupported prototype parameter contract')
+    if not hp.qp_is_secure(params['q_towers'],params['p_towers'],params['degree'],hp.SecurityTarget(128,'classical')):
+        raise ValueError('public ring is not128-bit secure')
+    hp.assert_p_coverage(params['q_towers'],params['p_towers'],params['dnum'])
+    expected_scale=float(params['q_towers'][-2])*params['q_towers'][-1]
+    if params['scaling_factor']!=expected_scale or params['output_scale']!=expected_scale:
+        raise ValueError('noncanonical public scale')
+
+
+def ctx_parameters(params):
+    return {key:params[key] for key in ('degree','num_slots','q_towers','p_towers',
+        'composite_degree','degree_layout','scaling_factor','output_scale','sigma','secret_distribution')} | {
+        'p':42,'CKKS_M_FACTOR':1,'max_bits_in_word':61,'noise_scale_degree':1}
+
+
+def store_array(directory,name,value):
+    array=np.asarray(value,dtype=np.uint32)
+    np.save(directory/name,array,allow_pickle=False)
+    return dict(sha256=sha(directory/name),dtype='uint32',shape=list(array.shape))
+
+
+def array_contract(name,params):
+    q,p,n,d=params['q_towers'],params['p_towers'],params['degree'],params['dnum']
+    parts=(len(q)+((len(q)+d-1)//d)-1)//((len(q)+d-1)//d)
+    return ((2,len(q),n),q,1) if name=='public_key.npy' else ((parts,len(q)+len(p),n),q+p,1)
+
+
+def read_public(directory):
+    directory=Path(directory)
+    manifest_path=directory/'public_manifest.json'
+    if manifest_path.is_symlink() or not manifest_path.is_file():
+        raise ValueError('public manifest must be a regular file')
+    manifest=json.loads(manifest_path.read_text())
+    body={key:value for key,value in manifest.items() if key!='context_id'}
+    if (set(manifest)!={'schema','parameters','rotations','arrays','representation','keygen_source_sha256','context_id'}
+            or manifest.get('schema')!='public-ckks-v1') or sha_bytes(canonical(body))!=manifest.get('context_id'):
+        raise ValueError('public context identity differs from its manifest')
+    if manifest['keygen_source_sha256']!=sha(ROOT/'jaxite_word/key_gen.py'):
+        raise ValueError('public key-generation source version mismatch')
+    if manifest['representation']!='standard-ntt-residues/digit-modulus-degree':
+        raise ValueError('unsupported public key representation')
+    check_parameters(manifest['parameters'])
+    names={'public_key.npy','relin_a.npy','relin_b.npy'} | {f'rot_{index}_{part}.npy' for index in (3,4091) for part in ('a','b')}
+    if manifest['rotations']!=[3,4091] or set(manifest['arrays'])!=names:
+        raise ValueError('public key inventory differs from the circuit')
+    if {p.name for p in directory.iterdir()} != names|{'public_manifest.json'}:
+        raise ValueError('unexpected public file inventory')
+    arrays={}
+    for name in sorted(names):
+        path=directory/name;desc=manifest['arrays'][name]
+        if not isinstance(desc,dict) or set(desc)!={'sha256','dtype','shape'}:
+            raise ValueError('public array descriptors must contain exactly the declared fields')
+        if path.is_symlink() or not path.is_file() or sha(path)!=desc['sha256']:
+            raise ValueError('public key file identity mismatch: '+name)
+        array=np.load(path,allow_pickle=False,mmap_mode='r')
+        shape,moduli,axis=array_contract(name,manifest['parameters'])
+        if (array.dtype!=np.uint32 or array.shape!=shape or desc['dtype']!='uint32'
+                or desc['shape']!=list(shape)):
+            raise ValueError('public key dtype/shape mismatch: '+name)
+        if np.any(array>=np.asarray(moduli,dtype=np.uint32)[None,:,None]):
+            raise ValueError('public key has noncanonical residues: '+name)
+        arrays[name]=array
+    return manifest,arrays
+
+
+def sha_bytes(value):
+    return hashlib.sha256(value).hexdigest()
+
+
+def client_setup(public_dir,private_dir,upload,request_id):
+    from transport import save_ciphertext,manifest_digest
+    jax,Context,hp,kg=crypto();params=parameters()
+    public_dir.mkdir();private_dir.mkdir(mode=0o700)
+    q,p=params['q_towers'],params['p_towers']
+    pair=kg.gen_pke_pair(q,[],params['degree'],noise_std=params['sigma'])
+    evaluation=kg.gen_evaluation_key(pair['secret_key'],q=q,P=p,dnum=params['dnum'],noise_std=params['sigma'])
+    arrays={'public_key.npy':store_array(public_dir,'public_key.npy',pair['public_key'])}
+    for part in ('a','b'):
+        name=f'relin_{part}.npy';arrays[name]=store_array(public_dir,name,evaluation[part])
+    for index in (3,4091):
+        rotation=kg.gen_rotation_key(pair['secret_key'],q,p,index,dnum=params['dnum'],noise_std=params['sigma'])[index]
+        for part in ('a','b'):
+            name=f'rot_{index}_{part}.npy';arrays[name]=store_array(public_dir,name,rotation[part])
+    body=dict(schema='public-ckks-v1',parameters=params,rotations=[3,4091],arrays=arrays,
+        representation='standard-ntt-residues/digit-modulus-degree',keygen_source_sha256=sha(ROOT/'jaxite_word/key_gen.py'))
+    public=body|{'context_id':sha_bytes(canonical(body))}
+    write_json(public_dir/'public_manifest.json',public)
+    secret=store_array(private_dir,'secret.npy',pair['secret_key'])
+    inputs=np.random.default_rng().uniform(-.5,.5,(2,params['num_slots']))
+    np.save(private_dir/'client_inputs.npy',inputs,allow_pickle=False)
+    private=dict(schema='private-ckks-v1',context_id=public['context_id'],secret=secret,
+        input_sha256=sha(private_dir/'client_inputs.npy'),request_id=request_id,sample_ids=[9017,42])
+    os.chmod(private_dir/'secret.npy',0o600);os.chmod(private_dir/'client_inputs.npy',0o600)
+    context=Context(dict(ctx_parameters(params),**pair))
+    ciphertext=context.encrypt_slots_batch(inputs)
+    # The fresh codec uses noise_scale_degree=1 but does not attach its tag.
+    # Initialize that known construction metadata before strict file transport.
+    assert context.parameters['noise_scale_degree']==1
+    assert getattr(ciphertext,'_ckks_nsd',1)==1
+    ciphertext._ckks_nsd=1
+    from support import require_secure_execution
+    rings=require_secure_execution(context,ciphertext)
+    request=save_ciphertext(ciphertext,upload,public=public,request_id=request_id,role='request')
+    private['request_digest']=manifest_digest(request)
+    write_json(private_dir/'private_manifest.json',private)
+    return dict(stage='client-setup',passed=True,context_id=public['context_id'],ring=rings,
+        public_file_bytes=sum(path.stat().st_size for path in public_dir.iterdir()),
+        public_manifest_has_no_client_fields=True,input_ciphertext_batch=ciphertext.batch)
+
+
+def server(public_dir,upload,download,request_id):
+    from transport import load_ciphertext,save_ciphertext,manifest_digest
+    from encrypted_packed_qwen import CompiledArithmetic
+    from support import require_secure_execution,synchronize
+    # This is a file-access regression guard, not an OS security sandbox.
+    private_root=public_dir.parent/'client_only';blocked=[]
+    def audit(event,args):
+        if event=='open' and isinstance(args[0],(str,bytes,os.PathLike)):
+            path=Path(os.fsdecode(args[0])).resolve()
+            if path==private_root or private_root in path.parents:
+                blocked.append(str(path));raise PermissionError('server attempted client-only file access')
+    sys.addaudithook(audit)
+    public,arrays=read_public(public_dir);params=public['parameters']
+    jax,Context,hp,kg=crypto()
+    def forbidden(*args,**kwargs):raise AssertionError('server invoked client key generation/decryption')
+    key_modules={name:importlib.import_module(name) for name in ('key_gen','jaxite_word.key_gen')}
+    for module in key_modules.values():
+        for name in ('gen_pke_pair','gen_evaluation_key','gen_rotation_key'):
+            setattr(module,name,forbidden)
+    for name in ('decrypt','decrypt_slots','decrypt_slots_batch'):
+        setattr(Context,name,forbidden)
+    context=Context(dict(ctx_parameters(params),evaluation_key=[
+        jax.numpy.asarray(arrays[f'relin_{part}.npy']).transpose(0,2,1) for part in ('a','b')]))
+    rotation_keys={index:{part:arrays[f'rot_{index}_{part}.npy'] for part in ('a','b')} for index in public['rotations']}
+    context.program_initialization(public['rotations'],dnum=params['dnum'],r=64,c=128,batch=2,
+        pregenerated_rotation_keys=rotation_keys)
+    assert context.secret_key is None and context._param_cache.secret_key is None
+    assert context.parameters.get('secret_key') is None and context.public_key is None
+    value,request=load_ciphertext(upload,public=public,request_id=request_id,role='request')
+    rings=require_secure_execution(context,value)
+    arithmetic=CompiledArithmetic(context)
+    affine=arithmetic.weighted_sum([value],[.75],bias=.125)
+    square=arithmetic.multiply(affine,affine)
+    plus=arithmetic.rotate(square,3);minus=arithmetic.rotate(square,-5)
+    output=arithmetic.weighted_sum([square,plus,minus],[1.,.5,-.25],bias=-.2)
+    synchronize(output);require_secure_execution(context,output)
+    save_ciphertext(output,download,public=public,request_id=request_id,role='response',
+        input_digest=manifest_digest(request))
+    return dict(stage='public-server',passed=True,context_id=public['context_id'],ring=rings,
+        output_moduli=output.num_moduli,output_nsd=output._ckks_nsd,output_scale=output._ckks_scale,
+        server_secret_absent=True,server_keygen_and_decrypt_forbidden=True,
+        guarded_keygen_modules=sorted(key_modules),
+        client_file_access_attempts=blocked,scope='actual affine, square, positive/negative rotation and weighted sum; no model')
+
+
+def read_private(private_dir,public,request_id):
+    private=json.loads((private_dir/'private_manifest.json').read_text())
+    if (set(private)!={'schema','context_id','secret','input_sha256','request_id','request_digest','sample_ids'}
+            or private['schema']!='private-ckks-v1') or private['context_id']!=public['context_id'] or private['request_id']!=request_id:
+        raise ValueError('private context/request identity mismatch')
+    if {p.name for p in private_dir.iterdir()}!={'private_manifest.json','secret.npy','client_inputs.npy'}:
+        raise ValueError('unexpected client-only inventory')
+    if any(path.is_symlink() or not path.is_file() for path in private_dir.iterdir()):
+        raise ValueError('client-only artifacts must be regular files')
+    if sha(private_dir/'secret.npy')!=private['secret']['sha256'] or sha(private_dir/'client_inputs.npy')!=private['input_sha256']:
+        raise ValueError('private artifact digest mismatch')
+    secret=np.load(private_dir/'secret.npy',allow_pickle=False)
+    inputs=np.load(private_dir/'client_inputs.npy',allow_pickle=False)
+    q=public['parameters']['q_towers'];n=public['parameters']['degree']
+    if (set(private['secret'])!={'sha256','dtype','shape'} or private['secret']['dtype']!='uint32'
+            or private['secret']['shape']!=[len(q),n]):
+        raise ValueError('private secret descriptor mismatch')
+    ids=private['sample_ids']
+    if len(ids)!=2 or any(type(value) is not int for value in ids) or len(set(ids))!=2:
+        raise ValueError('client sample identities must be2 distinct integers')
+    if secret.dtype!=np.uint32 or secret.shape!=(len(q),n) or np.any(secret>=np.asarray(q,dtype=np.uint32)[:,None]):
+        raise ValueError('invalid private secret representation')
+    if inputs.dtype!=np.float64 or inputs.shape!=(2,n//2) or not np.isfinite(inputs).all():
+        raise ValueError('invalid client-only input representation')
+    return private,secret,inputs
+
+
+def client_finish(public_dir,private_dir,upload,download,request_id):
+    from transport import load_ciphertext
+    public,arrays=read_public(public_dir)
+    private,secret,inputs=read_private(private_dir,public,request_id)
+    if sha(upload/'transport.json')!=private['request_digest']:
+        raise ValueError('uploaded request differs from client-owned original digest')
+    _,Context,_,_=crypto()
+    context=Context(dict(ctx_parameters(public['parameters']),secret_key=secret.tolist()))
+    result,manifest=load_ciphertext(download,public=public,request_id=request_id,role='response',
+        input_digest=private['request_digest'])
+    decoded=np.asarray(context.decrypt_slots_batch(result))
+    by_id={identity:row for identity,row in zip(private['sample_ids'],decoded,strict=True)}
+    actual=np.asarray([by_id[identity] for identity in private['sample_ids']])
+    square=(.75*inputs+.125)**2
+    expected=square+.5*np.roll(square,-3,axis=1)-.25*np.roll(square,5,axis=1)-.2
+    error=float(np.max(np.abs(actual-expected)))
+    if actual.shape!=(2,4096) or not np.isfinite(actual).all() or error>1e-6:
+        raise AssertionError(f'client numerical gate failed: shape={actual.shape}, max_abs={error}')
+    return dict(stage='client-finish',passed=True,max_abs_error=error,tolerance=1e-6,
+        samples=len(private['sample_ids']),all_slots_compared=int(actual.size),
+        client_restored_sample_ids=True,oracle_computed_only_on_client=True,
+        scope='real-valued rotation convention verified; conjugation untested')
+
+
+def run(output):
+    output.mkdir(exist_ok=False)
+    result={'passed':False,'scope':'secure CPU cross-process ciphertext transport component only; no BERT/MRPC/TPU claim','stages':[]}
+    started=time.monotonic()
+    sources=[Path(__file__),HERE/'transport.py',HERE/'bundle_io.py']+list((ROOT/'jaxite_word').rglob('*.py'))+list((ROOT/'cadathlon/common').glob('*.py'))
+    result['source_sha256_before']={str(path):sha(path) for path in sources}
+    try:
+        with tempfile.TemporaryDirectory(prefix='cross-file-stage-owned-') as folder:
+            workspace=Path(folder);public=workspace/'public';private=workspace/'client_only'
+            upload=workspace/'upload';download=workspace/'download';request_id=uuid.uuid4().hex
+            for stage in ('client-setup','server','client-finish'):
+                command=[sys.executable,str(Path(__file__)),'--stage',stage,'--public',str(public),
+                    '--upload',str(upload),'--download',str(download),'--request-id',request_id]
+                if stage!='server':command+=['--private',str(private)]
+                stage_started=time.monotonic()
+                with (output/f'{stage}.stderr').open('w') as err:
+                    process=subprocess.Popen(command,cwd=HERE,stdout=subprocess.PIPE,stderr=err,text=True,start_new_session=True)
+                    try:
+                        stdout,_=process.communicate(timeout=180)
+                    except BaseException:
+                        try: os.killpg(process.pid,signal.SIGTERM)
+                        except ProcessLookupError: pass
+                        try: process.wait(timeout=10)
+                        except subprocess.TimeoutExpired:
+                            try: os.killpg(process.pid,signal.SIGKILL)
+                            except ProcessLookupError: pass
+                            process.wait(timeout=10)
+                        raise
+                (output/f'{stage}.stdout').write_text(stdout)
+                record=dict(stage=stage,returncode=process.returncode,elapsed_s=time.monotonic()-stage_started)
+                if process.returncode:
+                    result['stages'].append(record)
+                    raise RuntimeError(f'{stage} failed; see raw stderr')
+                report=json.loads(stdout);record['report']=report;result['stages'].append(record)
+                if not report['passed']:raise RuntimeError(f'{stage} did not pass')
+            # Preserve public descriptions only; keys and client data are owned
+            # temporary artifacts and are deleted with the workspace.
+            for source,name in ((public/'public_manifest.json','public_manifest.json'),
+                                (upload/'transport.json','request_transport.json'),
+                                (download/'transport.json','response_transport.json')):
+                shutil.copyfile(source,output/name)
+        result['owned_artifacts_removed']=not workspace.exists()
+        result['passed']=result['owned_artifacts_removed']
+    except Exception as error:
+        result['error']=f'{type(error).__name__}: {error}'
+    finally:
+        result['owned_artifacts_removed']=('workspace' in locals() and not workspace.exists())
+        result['source_sha256_after']={str(path):sha(path) for path in sources}
+        result['source_files_unchanged']=result['source_sha256_after']==result['source_sha256_before']
+        result['passed']=result['passed'] and result['source_files_unchanged']
+        result['elapsed_s']=time.monotonic()-started
+        write_json(output/'report.json',result)
+    print(json.dumps({'passed':result['passed'],'output':str(output),'error':result.get('error')}))
+    return 0 if result['passed'] else 1
+
+
+def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--stage',choices=('client-setup','server','client-finish'))
+    parser.add_argument('--public',type=Path);parser.add_argument('--private',type=Path)
+    parser.add_argument('--upload',type=Path);parser.add_argument('--download',type=Path)
+    parser.add_argument('--request-id');parser.add_argument('--output',type=Path)
+    args=parser.parse_args()
+    if args.output:
+        def cancelled(signum, frame): raise InterruptedError(f'collector cancelled by signal{signum}')
+        for signum in (signal.SIGTERM,signal.SIGHUP):signal.signal(signum,cancelled)
+        return run(args.output.resolve())
+    started=time.monotonic()
+    with contextlib.redirect_stdout(sys.stderr):
+        if args.stage=='client-setup':report=client_setup(args.public,args.private,args.upload,args.request_id)
+        elif args.stage=='server':report=server(args.public,args.upload,args.download,args.request_id)
+        elif args.stage=='client-finish':report=client_finish(args.public,args.private,args.upload,args.download,args.request_id)
+        else:parser.error('--stage or --output required')
+    report['process_elapsed_s']=time.monotonic()-started
+    print(json.dumps(report,allow_nan=False))
+    return 0
+
+
+if __name__=='__main__':raise SystemExit(main())

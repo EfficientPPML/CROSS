@@ -1,0 +1,78 @@
+{
+  "passed": true,
+  "command": [
+    "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+    "/tmp/cross-optimized-twelve-20261103/checkout/validation_sweep.py",
+    "child",
+    "--root",
+    "/tmp/cross-optimized-twelve-20261103/checkout",
+    "--security-output",
+    "/tmp/cross-optimized-twelve-20261103/evidence/bert/test1/security_device.json",
+    "--requests",
+    "1",
+    "--runner",
+    "/tmp/cross-optimized-twelve-20261103/checkout/cadathlon/agent_pset/p2_bert/src/runner.py",
+    "--",
+    "--case",
+    "/tmp/cross-optimized-twelve-20261103/checkout/cadathlon/agent_pset/p2_bert/test/test1.in",
+    "--implementation",
+    "/tmp/cross-optimized-twelve-20261103/checkout/cadathlon/agent_pset/p2_bert/src/bert_optimized_reference.py",
+    "--require-tpu",
+    "--warmups",
+    "0",
+    "--repeats",
+    "1"
+  ],
+  "timeout_s": null,
+  "cleanup_grace_s": 30.0,
+  "owned_public_key_directory": "/dev/shm/cross-optimized-twelve-20261103/cross-transformer-case-n_pj4ejr",
+  "owned_public_key_directory_identity": {
+    "device": 24,
+    "inode": 224
+  },
+  "pid": 959719,
+  "returncode": 0,
+  "result": {
+    "case": "test1.in",
+    "full_bert_evaluated": false,
+    "mrpc_accuracy_evaluated": false,
+    "mode": "HE-synthetic-smoke",
+    "total_s": 2322.0219199229978,
+    "passed": true,
+    "setup_s": 592.8390801989954,
+    "implementation": "/tmp/cross-optimized-twelve-20261103/checkout/cadathlon/agent_pset/p2_bert/src/bert_optimized_reference.py",
+    "implementation_status": "experimental-unvalidated",
+    "server_s": 1704.1855845089958,
+    "end_to_end_s": 1714.3393077709989,
+    "samples": [
+      {
+        "server_s": 1704.1855845089958,
+        "end_to_end_s": 1714.3393077709989
+      }
+    ],
+    "warmup_samples": [],
+    "cold_start_included": true,
+    "requested_platforms": [
+      "tpu"
+    ],
+    "requested_device_count": 1,
+    "requested_device_kinds": [
+      "TPU v6 lite"
+    ],
+    "max_abs_error": 0.004302472196941964,
+    "nrmse": 0.011767177989092036,
+    "top1_agreement": 1.0
+  },
+  "process_reaped": true,
+  "public_key_store_removed": true,
+  "owned_directory_handle_closed": true,
+  "process_elapsed_s": 2329.452328567,
+  "resources": {
+    "samples": 2216,
+    "sample_interval_s": 1.0,
+    "sampled_peak_process_tree_rss_bytes": 40368857088,
+    "scope": "Sampled sum of RSS for observed owned process-group/descendant tree; shared pages can be counted twice, transient peaks/escaped descendants can be missed. Not an OS sandbox or a continuous peak guarantee."
+  },
+  "source_files_unchanged": true,
+  "security_device_sha256": "80064e46dd209e14644de5082b59bba33ab3698d8d7c95ab302c3bc9c9dc0dbb"
+}

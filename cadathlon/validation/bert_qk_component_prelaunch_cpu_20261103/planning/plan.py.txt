@@ -1,0 +1,126 @@
+"""Public integer/byte inventory for a proposed BERT QK component; no backend."""
+from pathlib import Path
+from datetime import datetime, timezone
+import hashlib
+import json
+import math
+import os
+import shutil
+
+HERE = Path(__file__).resolve().parent
+ROOT = Path(os.environ.get('CROSS_ROOT', '/home/jianming_gatech/CROSS'))
+N, SLOTS, F, TILES = 131072, 65536, 4096, 8
+ring_file = ROOT/'cadathlon/validation/bert_factored_routing_secure_cpu_20261103/report.json'
+linear_file = ROOT/'cadathlon/validation/streaming_linear_qkv_cpu_20261103/measured/public_manifest.json'
+ring = json.loads(ring_file.read_text())['ring']
+measured = json.loads(linear_file.read_text())
+linear = {r if r < 4096 else r-8192+SLOTS for r in measured['rotations']}
+active = {d % SLOTS for d in range(-767, 768)}
+babies = {d % 64 for d in active} - {0}
+giants = {d // 64 * 64 for d in active} - {0}
+assert linear == babies | giants and len(linear) == 86
+head = {1 << bit for bit in range(6)}
+token = {F*offset for offset in range(1, 16)}
+forward = ({63*(1 << bit) for bit in range(4)}
+           | {(-16*(1 << bit)) % SLOTS for bit in range(4)}
+           | {(-256*tile) % SLOTS for tile in range(1, 8)})
+direct = linear | head | token | forward
+representative = linear | head | {15*F} | ({63*(1 << bit) for bit in range(4)}
+           | {(-16*(1 << bit)) % SLOTS for bit in range(4)} | {(-256*7) % SLOTS})
+assert len(direct) == 110 and len(representative) == 93
+
+# An explicit composition uses existing BSGS keys for every forward-map shift.
+# Only four positive row-power keys are added. Summed shifts prove index parity;
+# this does not establish accumulated key-switch noise.
+parts = {63: [63], 126: [64, 62], 252: [192, 60], 504: [448, 56],
+    -16: [-64, 48], -32: [-64, 32], -64: [-64], -128: [-128],
+    0: [], -256: [-256], -512: [-512], -768: [-768],
+    -1024: [-512, -512], -1280: [-768, -512],
+    -1536: [-768, -768], -1792: [-768, -768, -256]}
+for shift, sequence in parts.items():
+    assert sum(sequence) % SLOTS == shift % SLOTS
+    assert all(part % SLOTS in linear for part in sequence)
+row_power = {F*(1 << bit) for bit in range(4)}
+bounded = linear | row_power
+for offset in range(16):
+    assert sum(F*(1 << bit) for bit in range(4) if offset & (1 << bit)) == offset*F
+assert len(bounded) == 90
+maps = TILES*TILES*16
+forward_rotations = TILES*sum(8 + int(tile != 0) for tile in range(8) for _ in range(16))
+composed_forward = TILES*sum(sum(len(parts[x]) for x in (63,126,252,504,-16,-32,-64,-128,-256*tile))
+                            for tile in range(8) for _ in range(16))
+row_rotations = TILES*15
+composed_rows = TILES*sum(i.bit_count() for i in range(16))
+linear_rotations = 16*len(linear)
+head_rotations = 6*maps
+key_bytes = 2*4*(38+10)*N*4
+ct = lambda level: 2*N*(2*(level+1))*4
+report = dict(scope=__doc__, proposed_only=True, encrypted_execution=False,
+    generated_utc=datetime.now(timezone.utc).isoformat(),
+    layout=dict(sequence=128, query_tiles=8, key_tiles=8, rows_per_tile=16,
+                pitch=4096, heads=12, head_width=64, score_head_padding=16,
+                score_slots_per_query=2048, slots=SLOTS, period=SLOTS, aliases=1),
+    parameters=dict(degree=N, composite_degree=2, depth=18, dnum=4, q_count=38,
+                    p_count=10, q_towers=ring['q_towers'], p_towers=ring['p_towers'],
+                    actual_log2_qp=ring['actual_log2_qp'], security_bits=128,
+                    degree_layout=[256,512], scale=ring['scale'],
+                    provenance='Exact profile from the completed one-map encrypted routing proof; no new key generation.'),
+    levels=dict(embeddings=18, query_key=17, product=16,
+                baseline_anchor=15, baseline_forward_initial_mask=14, baseline_scores=6,
+                fused_forward_initial_mask=15, fused_scores=7,
+                baseline_path_levels=12, fused_path_levels=11),
+    linear_inventory=dict(maps=16, distinct_weights=2, shape=[768,768], active_diagonals=1535,
+                          baby_step=64, baby_rotations=63, nonzero_giant_rotations=23,
+                          giant_groups=24, per_map_rotations=86),
+    operations=dict(score_maps=maps, ciphertext_products=maps,
+        plaintext_products_baseline=16*1535+18*maps,
+        plaintext_products_fused=16*1535+17*maps,
+        composite_rescales_baseline=16*24+19*maps,
+        composite_rescales_fused=16*24+18*maps,
+        ciphertext_additions=16*1534+6*maps+8*maps+8*127,
+        plaintext_bias_additions=16, linear_rotations=linear_rotations,
+        cyclic_key_rotations_shared_across_queries=row_rotations,
+        head_reduction_rotations=head_rotations, direct_forward_rotations=forward_rotations,
+        direct_total_rotations=linear_rotations+row_rotations+head_rotations+forward_rotations,
+        bounded_key_row_rotations=composed_rows, bounded_key_forward_rotations=composed_forward,
+        bounded_key_total_rotations=linear_rotations+composed_rows+head_rotations+composed_forward,
+        no_refresh=True, no_nonlinear=True),
+    rotation_keys=dict(linear=sorted(linear), head_reduce=sorted(head), direct_token=sorted(token),
+        forward_map=sorted(forward), direct_union=sorted(direct), direct_count=len(direct),
+        bounded_union=sorted(bounded), bounded_count=len(bounded),
+        representative_direct=sorted(representative), representative_direct_count=len(representative),
+        existing_key_compositions={str(k):v for k,v in parts.items()}),
+    storage=dict(one_rotation_or_relinearization_pair_bytes=key_bytes,
+        direct_rotation_keys_bytes=len(direct)*key_bytes,
+        bounded_rotation_keys_bytes=len(bounded)*key_bytes,
+        representative_rotation_keys_bytes=len(representative)*key_bytes,
+        additional_relinearization_pair_bytes=key_bytes,
+        public_encryption_pair_bytes=2*38*N*4,
+        input_ciphertext_bytes=ct(18), projected_ciphertext_bytes=ct(17),
+        product_ciphertext_bytes=ct(16), baseline_score_ciphertext_bytes=ct(6),
+        fused_score_ciphertext_bytes=ct(7), eight_uploaded_ciphertexts_bytes=8*ct(18),
+        eight_query_ciphertexts_bytes=8*ct(17), eight_baseline_scores_bytes=8*ct(6),
+        linear_64_baby_payload_bytes=64*ct(18), linear_8_pending_payload_bytes=8*ct(17),
+        public_two_weight_matrices_float64_bytes=2*768*768*8,
+        disk_current_free_bytes=shutil.disk_usage('/tmp').free,
+        tmpfs_current_free_bytes=shutil.disk_usage('/dev/shm').free,
+        scope='Raw arrays/payload only; NPY headers, descriptors, public controls, decoded weights, JIT, key-switch workspace and runtime buffers are additional. Free space is a live observation, not reserved capacity.'),
+    representative=dict(query_tile=0, key_tile=7, offset=15,
+        projections=2, distinct_input_tiles=2, score_anchors=192,
+        full_physical_slots_checked=65536, direct_rotation_calls=2*86+1+6+9,
+        baseline_plaintext_products=2*1535+18,
+        baseline_composite_rescales=2*24+19,
+        ciphertext_products=1, fixed_proposed_absolute_gate=1e-6,
+        source='Pinned full128 native embedding rows0:16 and112:128; public weights unchanged. Keep native Q/K and score oracles in the client-private subtree.'),
+    limitations=['Counts describe a proposed literal circuit, not executed encryption or runtime estimates.',
+        'Baseline repeats the tested anchor filter; optional fusion has ideal-only equivalence evidence.',
+        'Full128 output sums128 encrypted contributions per query tile; zero ideal support does not cancel accumulated ciphertext noise.',
+        'The representative component has192scores, not all196608 logical scores or attention probabilities.',
+        'No softmax, V aggregation, residual, LayerNorm, refresh, full-model gate or MRPC accuracy is included.'])
+sources = [Path(__file__), HERE/'check_fused_anchor.py', HERE/'score_layout.py', HERE/'fusion.json',
+    ring_file, linear_file, ROOT/'jaxite_word/bsgs.py',
+    ROOT/'cadathlon/common/encrypted_packed_qwen.py', ROOT/'cadathlon/common/encrypted_packed_transformer.py',
+    ROOT/'cadathlon/common/encrypted_polynomial.py']
+report['source_sha256'] = {str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in sources}
+(HERE/'plan.json').write_text(json.dumps(report, indent=2)+'\n')
+print(json.dumps({k:report[k] for k in ('levels','operations','storage','representative')}, indent=2))

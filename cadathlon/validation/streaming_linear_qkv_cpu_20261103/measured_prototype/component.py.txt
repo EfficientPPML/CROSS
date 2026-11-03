@@ -1,0 +1,124 @@
+"""Three real CKKS subprocesses for a pinned full-width BERT QKV row tile."""
+from pathlib import Path
+import argparse,gc,hashlib,importlib,json,math,os,sys,time
+import numpy as np
+if os.environ.get('JAX_PLATFORMS')!='cpu':raise RuntimeError('CPU component requires explicit JAX_PLATFORMS=cpu')
+ROOT=Path(os.environ['CROSS_ROOT']).resolve();sys.path[:0]=[str(ROOT),str(ROOT/'cadathlon/common')]
+from spec import KINDS,ROTATIONS,parameters
+from contracts import check_parameters,digest,write,sha,pack_rows,unpack_rows,load_model,store_array,load_public,linear_source_sha256,packing_contract
+from transport import load_ciphertext,save_ciphertext,manifest_digest,_json,_read_regular
+
+def crypto():
+ import jax
+ from jaxite_word import CKKSContext,ckks_ctx,key_gen
+ jax.config.update('jax_enable_x64',True)
+ if {d.platform for d in jax.devices()}!={'cpu'}:raise ValueError('unexpected accelerator')
+ return jax,CKKSContext,ckks_ctx,key_gen
+
+def context_parameters(p):
+ return {k:p[k] for k in ('degree','num_slots','q_towers','p_towers','composite_degree','degree_layout','scaling_factor','output_scale','sigma','secret_distribution')}|{'p':56,'CKKS_M_FACTOR':1,'max_bits_in_word':61,'noise_scale_degree':1}
+
+def setup(root,request_id):
+ jax,Context,ckks,kg=crypto();p=parameters();bits=check_parameters(p)
+ private,public,model=root/'client_only',root/'public',root/'model'
+ model_manifest,_=load_model(model)
+ preprocessing=_json(_read_regular(private/'preprocessing.json',65536))
+ if (sha(model/'model_manifest.json')!=preprocessing['model_manifest_sha256']
+     or sha(private/'embeddings.npy')!=preprocessing['embedding_sha256']
+     or sha(private/'expected.npy')!=preprocessing['expected_sha256']):raise ValueError('trusted preprocessing output changed')
+ public.mkdir();start=time.perf_counter()
+ pair=kg.gen_pke_pair(p['q_towers'],[],p['degree'],noise_std=p['sigma'])
+ ek=kg.gen_evaluation_key(pair['secret_key'],q=p['q_towers'],P=p['p_towers'],dnum=p['dnum'],noise_std=p['sigma'])
+ arrays={'public_key.npy':store_array(public,'public_key.npy',pair['public_key'])}
+ for part in ('a','b'):arrays[f'relin_{part}.npy']=store_array(public,f'relin_{part}.npy',ek[part])
+ for number,index in enumerate(ROTATIONS,1):
+  keys=kg.gen_rotation_key(pair['secret_key'],p['q_towers'],p['p_towers'],index,dnum=p['dnum'],noise_std=p['sigma'])[index]
+  for part in ('a','b'):
+   name=f'rot_{index}_{part}.npy';arrays[name]=store_array(public,name,keys[part])
+  if number%20==0:print(f'client generated {number}/{len(ROTATIONS)} rotation keys',file=sys.stderr,flush=True)
+ body={'schema':'bert-qkv-public-ckks-v2','streaming_linear_source_sha256':linear_source_sha256(),'parameters':p,'rotations':ROTATIONS,'arrays':arrays,'representation':'standard-ntt-residues/digit-modulus-degree','keygen_source_sha256':sha(kg.__file__),'model_manifest_sha256':sha(model/'model_manifest.json'),'packing':packing_contract()}
+ manifest=body|{'context_id':digest(body)};write(public/'public_manifest.json',manifest)
+ secret=store_array(private,'secret.npy',pair['secret_key']);os.chmod(private/'secret.npy',0o600)
+ preprocessing=_json(_read_regular(private/'preprocessing.json',65536))
+ if sha(private/'embeddings.npy')!=preprocessing['embedding_sha256'] or sha(private/'expected.npy')!=preprocessing['expected_sha256']:raise ValueError('trusted preprocessing output changed')
+ rows=np.load(private/'embeddings.npy',allow_pickle=False)
+ if np.array_equal(rows[0],rows[1]):raise ValueError('input rows must differ')
+ client=Context(dict(context_parameters(p),**pair));encrypted=client.encrypt_slots(pack_rows(rows));assert getattr(encrypted,'_ckks_nsd',1)==1;encrypted._ckks_nsd=1
+ from support import require_secure_execution
+ rings=require_secure_execution(client,encrypted)
+ request=save_ciphertext(encrypted,root/'upload',public=manifest,request_id=request_id,role='request')
+ write(private/'private_manifest.json',{'schema':'bert-qkv-private-v1','context_id':manifest['context_id'],'request_id':request_id,'request_digest':manifest_digest(request),'secret':secret,'preprocessing_sha256':sha(private/'preprocessing.json'),'sample_ids':[9017],'row_positions':[0,1]})
+ ckks.evict_context_caches(client);jax.clear_caches();gc.collect()
+ return {'stage':'client-encrypt','passed':True,'context_id':manifest['context_id'],'ring':rings,'actual_log2_qp':bits,'elapsed_s':time.perf_counter()-start,'public_key_bytes':sum(f.stat().st_size for f in public.iterdir()),'request_count':1,'request_payload_bytes':524288}
+
+def evaluate(root,request_id):
+ # The function never reads preprocessing, token IDs, private embeddings,
+ # expected plaintext outputs or the original checkpoint directory.
+ private=root/'client_only';blocked=[]
+ def audit(event,args):
+  if event=='open' and isinstance(args[0],(str,bytes,os.PathLike)):
+   p=Path(os.fsdecode(args[0])).resolve()
+   if p==private or private in p.parents:blocked.append(str(p));raise PermissionError('server attempted client-only file access')
+ sys.addaudithook(audit)
+ jax,Context,ckks,kg=crypto();public,arrays,matrices=load_public(root/'public',root/'model');p=public['parameters']
+ def forbidden(*args,**kwargs):raise AssertionError('server client-codec or keygen call forbidden')
+ for name in ('key_gen','jaxite_word.key_gen'):
+  module=importlib.import_module(name)
+  for method in ('gen_pke_pair','gen_evaluation_key','gen_rotation_key','key_switch_gen'):setattr(module,method,forbidden)
+ for method in ('encrypt','encrypt_slots','encrypt_slots_batch','decrypt','decrypt_slots','decrypt_slots_batch'):setattr(Context,method,forbidden)
+ context=Context(dict(context_parameters(p),evaluation_key=[jax.numpy.asarray(arrays[f'relin_{part}.npy']).transpose(0,2,1) for part in ('a','b')]))
+ rotations={i:{part:arrays[f'rot_{i}_{part}.npy'] for part in ('a','b')} for i in ROTATIONS}
+ context.program_initialization(ROTATIONS,dnum=2,r=128,c=128,batch=1,pregenerated_rotation_keys=rotations)
+ assert context.secret_key is None and context._param_cache.secret_key is None and context.parameters.get('secret_key') is None and context.public_key is None
+ from encrypted_ntt import enable_scoped_ntt_subsets
+ from encrypted_streaming_linear import StreamingLinear,RowTileLayout
+ from encrypted_packed_qwen import MatrixDiagonals
+ from support import require_secure_execution,synchronize
+ owner=enable_scoped_ntt_subsets(context);graph=StreamingLinear(context,RowTileLayout(8192),low_memory=True,preserve_dispatch_cache=True)
+ value,request=load_ciphertext(root/'upload',public=public,request_id=request_id,role='request');require_secure_execution(context,value)
+ input_digest=manifest_digest(request);download=root/'download';download.mkdir();records={};responses={};started=time.perf_counter()
+ for kind in KINDS:
+  weight,bias=matrices[kind];diagonals=MatrixDiagonals(weight,8192,4096)
+  if len(diagonals.active)!=1535 or diagonals.n1!=64 or sorted(diagonals.rotations)!=ROTATIONS:raise ValueError('matrix plan differs from key inventory')
+  begin=time.perf_counter();output=graph.linear_tile(value,weight,bias,valid_rows=2);synchronize(output)
+  rings=require_secure_execution(context,output)
+  if graph.arithmetic._level(output)!=0 or output._ckks_nsd!=1:raise ValueError('unexpected projection output level')
+  response=save_ciphertext(output,download/kind,public=public,request_id=request_id,role=kind,input_digest=input_digest)
+  responses[kind]=manifest_digest(response);records[kind]={'server_s':time.perf_counter()-begin,'ring':rings,'level':0,'scale':output._ckks_scale,'nsd':output._ckks_nsd,'slots':8192}
+  print(f'{kind} complete: {records[kind]["server_s"]:.2f}s',file=sys.stderr,flush=True);del output
+ write(download/'responses.json',{'schema':'bert-qkv-responses-v1','context_id':public['context_id'],'request_id':request_id,'input_digest':input_digest,'outputs':responses})
+ graph.clear();owner.close();ckks.evict_context_caches(context);jax.clear_caches();gc.collect()
+ return {'stage':'keyless-server','passed':True,'checks':records,'server_s':time.perf_counter()-started,'server_secret_absent':True,'client_codecs_and_keygen_forbidden':True,'client_file_access_attempts':blocked,'input_count':1,'output_count':3,'logical_distinct_rows':2,'no_refresh':True,'full_bert_evaluated':False}
+
+def finish(root,request_id):
+ jax,Context,ckks,kg=crypto();public,arrays,_=load_public(root/'public',root/'model');p=public['parameters'];private=root/'client_only'
+ m=_json(_read_regular(private/'private_manifest.json',65536))
+ expected={'schema','context_id','request_id','request_digest','secret','preprocessing_sha256','sample_ids','row_positions'}
+ if set(m)!=expected or m['schema']!='bert-qkv-private-v1' or m['context_id']!=public['context_id'] or m['request_id']!=request_id or m['sample_ids']!=[9017] or m['row_positions']!=[0,1]:raise ValueError('private context identity differs')
+ if sha(private/'preprocessing.json')!=m['preprocessing_sha256']:raise ValueError('preprocessing identity differs')
+ prep=_json(_read_regular(private/'preprocessing.json',65536))
+ if sha(private/'embeddings.npy')!=prep['embedding_sha256'] or sha(private/'expected.npy')!=prep['expected_sha256']:raise ValueError('private oracle changed')
+ from transport import validate_ciphertext
+ _,_,_,request=validate_ciphertext(root/'upload',public=public,request_id=request_id,role='request')
+ if manifest_digest(request)!=m['request_digest']:raise ValueError('request identity differs')
+ desc=m['secret'];path=private/'secret.npy'
+ if path.is_symlink() or sha(path)!=desc['sha256'] or desc['dtype']!='uint32' or desc['shape']!=[4,16384]:raise ValueError('private key differs')
+ secret=np.load(path,allow_pickle=False)
+ if secret.dtype!=np.uint32 or secret.shape!=(4,16384) or np.any(secret>=np.asarray(p['q_towers'],dtype=np.uint32)[:,None]):raise ValueError('private key residues invalid')
+ context=Context(dict(context_parameters(p),secret_key=secret,public_key=arrays['public_key.npy']))
+ download=root/'download';aggregate=_json(_read_regular(download/'responses.json',65536))
+ expected={'schema':'bert-qkv-responses-v1','context_id':public['context_id'],'request_id':request_id,'input_digest':m['request_digest']}
+ if set(aggregate)!=set(expected)|{'outputs'} or any(aggregate[k]!=v for k,v in expected.items()) or set(aggregate['outputs'])!=set(KINDS) or {q.name for q in download.iterdir()}!=set(KINDS)|{'responses.json'}:raise ValueError('response inventory differs')
+ native=np.load(private/'expected.npy',allow_pickle=False);checks={}
+ if native.shape!=(3,2,768) or native.dtype!=np.float64 or not np.isfinite(native).all():raise ValueError('invalid private reference')
+ for i,kind in enumerate(KINDS):
+  value,response=load_ciphertext(download/kind,public=public,request_id=request_id,role=kind,input_digest=m['request_digest'])
+  if manifest_digest(response)!=aggregate['outputs'][kind]:raise ValueError('response digest differs')
+  decoded=np.asarray(context.decrypt_slots(value));expected=pack_rows(native[i]);diff=np.abs(decoded-expected);padding=np.ones((2,4096),bool);padding[:,:768]=False
+  error=float(diff.max());checks[kind]={'passed':bool(error<=1e-6),'max_abs_error':error,'per_row_max_abs_error':diff.reshape(2,4096).max(axis=1).tolist(),'padding_max_abs_error':float(diff[padding.ravel()].max()),'slots_checked':8192,'gate':1e-6}
+ ckks.evict_context_caches(context);jax.clear_caches();gc.collect()
+ return {'stage':'client-decrypt','passed':all(x['passed'] for x in checks.values()),'checks':checks,'worst_abs_error':max(x['max_abs_error'] for x in checks.values()),'all_slots_checked':3*8192,'full_bert_evaluated':False,'mrpc_accuracy_evaluated':False}
+
+if __name__=='__main__':
+ parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('stage',choices=('setup','server','finish'));parser.add_argument('--root',type=Path,required=True);parser.add_argument('--request-id',required=True);args=parser.parse_args()
+ result={'setup':setup,'server':evaluate,'finish':finish}[args.stage](args.root.resolve(),args.request_id);print(json.dumps(result,allow_nan=False));raise SystemExit(0 if result['passed'] else 1)

@@ -1,0 +1,27 @@
+{
+  "command": [
+    "env",
+    "JAX_PLATFORMS=cpu",
+    "OMP_NUM_THREADS=4",
+    "OPENBLAS_NUM_THREADS=4",
+    "MKL_NUM_THREADS=4",
+    "CROSS_ROOT=/home/jianming_gatech/CROSS",
+    "taskset",
+    "-c",
+    "144-147",
+    "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+    "/tmp/cross-bert-file-roundtrip/driver.py",
+    "--output",
+    "/tmp/cross-bert-file-roundtrip-result2"
+  ],
+  "cwd": "/home/jianming_gatech/CROSS",
+  "terminal_exec_session": 17455,
+  "exit_code": 0,
+  "versions_at_archive": {
+    "jax": "0.12.0.1",
+    "jaxlib": "0.12.0.1",
+    "numpy": "2.5.4"
+  },
+  "python": "3.13.18",
+  "timing_scope": "report.elapsed_s is internal collector wall time; stage elapsed times include each child process startup/exit. No total detached-process peak RSS was measured."
+}

@@ -1,0 +1,368 @@
+{
+  "scope": "Exact public GELU64 envelope and optional refresh relocation; no HE execution.",
+  "passed": true,
+  "manifest_sha256": "4e2277beea7189aa1d77b168c500c8a175f6c630afa520fcc6b38cb5a179cff9",
+  "coefficient_sha256": "ed5e604dcfb1b9cf1d783160c758a822144ff51c666e9980508abdf4174b7d75",
+  "exact_binary64_coefficient_l1": {
+    "numerator": "4942821290336594210231",
+    "denominator": "295147905179352825856",
+    "upper_binary64": 16.74692994122044
+  },
+  "l1_with_12_5_percent_margin": {
+    "numerator": "44485391613029347892079",
+    "denominator": "2361183241434822606848",
+    "upper_binary64": 18.840296183872994
+  },
+  "simple_l1_certifies_bound16": false,
+  "actual_evaluation": "Balanced Chebyshev identities; no cheb2poly/monomial conversion.",
+  "rounded_normalization": {
+    "weight": {
+      "numerator": "8235153604334621",
+      "denominator": "144115188075855872",
+      "upper_binary64": 0.05714285714285714
+    },
+    "bias": {
+      "numerator": "3602879701896397",
+      "denominator": "18014398509481984",
+      "upper_binary64": 0.2
+    },
+    "mapped_endpoints": [
+      {
+        "numerator": "-144115188075855865",
+        "denominator": "144115188075855872",
+        "upper_binary64": -0.9999999999999999
+      },
+      {
+        "numerator": "72057594037927935",
+        "denominator": "72057594037927936",
+        "upper_binary64": 1.0
+      }
+    ],
+    "image_subset_minus1_plus1": true,
+    "statement": "Binary64 public affine coefficients interpreted exactly; encryption/encoding/arithmetic errors excluded."
+  },
+  "tighter_certificate": {
+    "method": "Exact rational grid plus global derivative envelope; |T_n prime|<=n^2 on[-1,1].",
+    "grid_intervals": 4096,
+    "grid_points": 4097,
+    "max_grid_abs": {
+      "numerator": "4132060369512657889845",
+      "denominator": "295147905179352825856",
+      "upper_binary64": 13.999965092084
+    },
+    "argmax_index": 4096,
+    "derivative_upper": {
+      "numerator": "89739219462657730299687",
+      "denominator": "295147905179352825856",
+      "upper_binary64": 304.0483021830218
+    },
+    "nearest_grid_distance": {
+      "numerator": "1",
+      "denominator": "4096",
+      "upper_binary64": 0.000244140625
+    },
+    "polynomial_abs_upper": {
+      "numerator": "17014658492986504447104807",
+      "denominator": "1208925819614629174706176",
+      "upper_binary64": 14.074195634609152
+    },
+    "upper_with_12_5_percent_margin": {
+      "numerator": "153131926436878540023943263",
+      "denominator": "9671406556917033397649408",
+      "upper_binary64": 15.833470088935297
+    },
+    "bound16_margin_after_guard": {
+      "numerator": "1610578473793994338447265",
+      "denominator": "9671406556917033397649408",
+      "upper_binary64": 0.1665299110647046
+    },
+    "bound16_exact_real_polynomial_supported": true
+  },
+  "scale_basis_distinctions": [
+    "Coefficient L1 alone exceeds16; tighter interval proof is required.",
+    "All65 supplied binary64 coefficients are kept. Public constants2,-1 in balanced identities are exact real coefficients; output weight1 leaves them unchanged.",
+    "Actual rounded domain map is covered because its image stays inside[-1,1]. This does not bound CKKS perturbations of that map or subsequent products.",
+    "Monomial cheb2poly conversion has different rounded coefficients and conditioning and is not the selected64-degree evaluator.",
+    "A12.5% public guard is a stated envelope margin, not a proven CKKS error estimate."
+  ],
+  "levels": {
+    "domain_map": 1,
+    "balanced_degree64_multiply_depth": 6,
+    "balanced_identity_public_affine_depth": 6,
+    "final_weighted_sum": 1,
+    "total_GELU": 14,
+    "output25_tail": [
+      25,
+      24,
+      10,
+      25,
+      24,
+      24,
+      13
+    ]
+  },
+  "profiles": [
+    {
+      "name": "current49_p56_d4",
+      "depth": 49,
+      "scale_bits": 56,
+      "dnum": 4,
+      "Q_count": 100,
+      "P_count": 24,
+      "log2_QP": 3490.161581036245,
+      "refresh_output": 25,
+      "graph_plus_refresh_keys_unchanged": 224,
+      "raw_direct_rotation_store_GiB": 108.5,
+      "old_tail_refreshes": 2,
+      "new_tail_refreshes": 2,
+      "tail": [
+        [
+          "attention_norm_refresh",
+          25
+        ],
+        [
+          "first_linear",
+          24
+        ],
+        [
+          "GELU64",
+          10
+        ],
+        [
+          "GELU_output_refresh",
+          25
+        ],
+        [
+          "output_linear",
+          24
+        ],
+        [
+          "residual_add",
+          24
+        ],
+        [
+          "MLP_norm",
+          13
+        ]
+      ],
+      "modes": {
+        "integer-affine-static": {
+          "inherited_all_K_level_feasible": false,
+          "inherited_K128_total_refreshes": null,
+          "optional_relocated_K128_total_refreshes": null,
+          "optional_relocated_output_level": null
+        },
+        "prospective-parallel-error": {
+          "inherited_all_K_level_feasible": true,
+          "inherited_K128_total_refreshes": 7,
+          "optional_relocated_K128_total_refreshes": 7,
+          "optional_relocated_output_level": 13
+        }
+      },
+      "note": "At output29 the old no-intermediate-refresh tail already works; forcing this optional refresh adds one and is unnecessary."
+    },
+    {
+      "name": "depth52_p56_d6",
+      "depth": 52,
+      "scale_bits": 56,
+      "dnum": 6,
+      "Q_count": 106,
+      "P_count": 17,
+      "log2_QP": 3443.4410412074694,
+      "refresh_output": 28,
+      "graph_plus_refresh_keys_unchanged": 224,
+      "raw_direct_rotation_store_GiB": 161.4375,
+      "old_tail_refreshes": 2,
+      "new_tail_refreshes": 2,
+      "tail": [
+        [
+          "attention_norm_refresh",
+          28
+        ],
+        [
+          "first_linear",
+          27
+        ],
+        [
+          "GELU64",
+          13
+        ],
+        [
+          "GELU_output_refresh",
+          28
+        ],
+        [
+          "output_linear",
+          27
+        ],
+        [
+          "residual_add",
+          27
+        ],
+        [
+          "MLP_norm",
+          16
+        ]
+      ],
+      "modes": {
+        "integer-affine-static": {
+          "inherited_all_K_level_feasible": true,
+          "inherited_K128_total_refreshes": 12,
+          "optional_relocated_K128_total_refreshes": 12,
+          "optional_relocated_output_level": 16
+        },
+        "prospective-parallel-error": {
+          "inherited_all_K_level_feasible": true,
+          "inherited_K128_total_refreshes": 7,
+          "optional_relocated_K128_total_refreshes": 7,
+          "optional_relocated_output_level": 16
+        }
+      },
+      "note": "At output29 the old no-intermediate-refresh tail already works; forcing this optional refresh adds one and is unnecessary."
+    },
+    {
+      "name": "depth52_p60_d12",
+      "depth": 52,
+      "scale_bits": 60,
+      "dnum": 12,
+      "Q_count": 106,
+      "P_count": 10,
+      "log2_QP": 3462.663831184505,
+      "refresh_output": 28,
+      "graph_plus_refresh_keys_unchanged": 224,
+      "raw_direct_rotation_store_GiB": 304.5,
+      "old_tail_refreshes": 2,
+      "new_tail_refreshes": 2,
+      "tail": [
+        [
+          "attention_norm_refresh",
+          28
+        ],
+        [
+          "first_linear",
+          27
+        ],
+        [
+          "GELU64",
+          13
+        ],
+        [
+          "GELU_output_refresh",
+          28
+        ],
+        [
+          "output_linear",
+          27
+        ],
+        [
+          "residual_add",
+          27
+        ],
+        [
+          "MLP_norm",
+          16
+        ]
+      ],
+      "modes": {
+        "integer-affine-static": {
+          "inherited_all_K_level_feasible": true,
+          "inherited_K128_total_refreshes": 12,
+          "optional_relocated_K128_total_refreshes": 12,
+          "optional_relocated_output_level": 16
+        },
+        "prospective-parallel-error": {
+          "inherited_all_K_level_feasible": true,
+          "inherited_K128_total_refreshes": 7,
+          "optional_relocated_K128_total_refreshes": 7,
+          "optional_relocated_output_level": 16
+        }
+      },
+      "note": "At output29 the old no-intermediate-refresh tail already works; forcing this optional refresh adds one and is unnecessary."
+    },
+    {
+      "name": "depth53_p60_d14",
+      "depth": 53,
+      "scale_bits": 60,
+      "dnum": 14,
+      "Q_count": 108,
+      "P_count": 9,
+      "log2_QP": 3492.282216688514,
+      "refresh_output": 29,
+      "graph_plus_refresh_keys_unchanged": 224,
+      "raw_direct_rotation_store_GiB": 358.3125,
+      "old_tail_refreshes": 1,
+      "new_tail_refreshes": 2,
+      "tail": [
+        [
+          "attention_norm_refresh",
+          29
+        ],
+        [
+          "first_linear",
+          28
+        ],
+        [
+          "GELU64",
+          14
+        ],
+        [
+          "GELU_output_refresh",
+          29
+        ],
+        [
+          "output_linear",
+          28
+        ],
+        [
+          "residual_add",
+          28
+        ],
+        [
+          "MLP_norm",
+          17
+        ]
+      ],
+      "modes": {
+        "integer-affine-static": {
+          "inherited_all_K_level_feasible": true,
+          "inherited_K128_total_refreshes": 11,
+          "optional_relocated_K128_total_refreshes": 12,
+          "optional_relocated_output_level": 17
+        },
+        "prospective-parallel-error": {
+          "inherited_all_K_level_feasible": true,
+          "inherited_K128_total_refreshes": 6,
+          "optional_relocated_K128_total_refreshes": 7,
+          "optional_relocated_output_level": 17
+        }
+      },
+      "note": "At output29 the old no-intermediate-refresh tail already works; forcing this optional refresh adds one and is unnecessary."
+    }
+  ],
+  "obligations": [
+    "Every actual first-linear activation must satisfy the frozen[-21,14] GELU domain, including approximation and encryption perturbations; finite train/dev coverage does not certify arbitrary inputs.",
+    "The encrypted balanced circuit and refresh must preserve the tighter envelope plus an explicit CKKS error allowance; this is not established by exact-real coefficients.",
+    "Full65536-slot refresh with bound16 and the common ring/keys remains its own numerical obligation; the completed sparse-period128 result cannot be substituted.",
+    "Attention-normalized residual values still require their own justified refresh bound (prior native estimate suggests128), and are retained/lowered without changing scale for the final residual add.",
+    "Output linear must mask sourcewidth3072 and inactive rows; GELU padding isP(0), not zero.",
+    "MLP variance+epsilon must remain in its frozen domain before inverse square root; removing a residual refresh does not certify that domain.",
+    "The output25 whole-block level path depends on the prospective tracked-residual inverse; its all130-rule component is currently running and does not establish common-ring or composed-softmax precision.",
+    "No new rotation keys arise from moving a full-slot refresh, but the same direct graph/bootstrap union, temporary controls and tables are still required. Raw stores are not peak-memory estimates."
+  ],
+  "source_hashes_before": {
+    "/tmp/gelu64-refresh-bound-20261103/plan.py": "8cdc72f2aee4c1075575bc80f3b77198a9eb2da2430e6bccfcc671a9508c1de0",
+    "/home/jianming_gatech/CROSS/cadathlon/validation/mrpc_training_domain_candidate_20261103/explicit_v2_prelaunch/candidate-v2/candidate_manifest.json": "4e2277beea7189aa1d77b168c500c8a175f6c630afa520fcc6b38cb5a179cff9",
+    "/tmp/bert-first-block-v2-integration-plan-20261103/report.json": "ada749e7eadf29372f18461a7ce883debebcb974be1df4213eed8e089e42a8e0",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_polynomial.py": "912283bab82fff445671fc97fb4e49be16204d75c3132203092bc7eca7fb059a"
+  },
+  "elapsed_s": 1.8555866750029963,
+  "source_hashes_after": {
+    "/tmp/gelu64-refresh-bound-20261103/plan.py": "8cdc72f2aee4c1075575bc80f3b77198a9eb2da2430e6bccfcc671a9508c1de0",
+    "/home/jianming_gatech/CROSS/cadathlon/validation/mrpc_training_domain_candidate_20261103/explicit_v2_prelaunch/candidate-v2/candidate_manifest.json": "4e2277beea7189aa1d77b168c500c8a175f6c630afa520fcc6b38cb5a179cff9",
+    "/tmp/bert-first-block-v2-integration-plan-20261103/report.json": "ada749e7eadf29372f18461a7ce883debebcb974be1df4213eed8e089e42a8e0",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_polynomial.py": "912283bab82fff445671fc97fb4e49be16204d75c3132203092bc7eca7fb059a"
+  },
+  "source_files_unchanged": true,
+  "source_archive_verified": true,
+  "source_archive_sha256": "eaaaa50539f6c1d39f511ab4c2b58bbe8d583eeeee4f1f65a16db82c3f7995cd"
+}

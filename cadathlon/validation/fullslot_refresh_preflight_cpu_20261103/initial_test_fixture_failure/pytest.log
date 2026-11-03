@@ -1,0 +1,28 @@
+........F............                                                    [100%]
+=================================== FAILURES ===================================
+______________ test_actual_secure_full_slot_public_plan_no_keygen ______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x73a6f25e5a70>
+
+    def test_actual_secure_full_slot_public_plan_no_keygen(monkeypatch):
+        from jaxite_word import CKKSContext,key_gen,he_params
+        from jaxite_word.bootstrapping import Bootstrap
+        from encrypted_refresh import RefreshProfile,refresh_plan
+        def forbidden(*args,**kwargs):raise AssertionError('crypto construction forbidden in preflight')
+        monkeypatch.setattr(CKKSContext,'__init__',forbidden);monkeypatch.setattr(Bootstrap,'__init__',forbidden)
+        for name in ('gen_pke_pair','gen_rotation_key','gen_evaluation_key'):monkeypatch.setattr(key_gen,name,forbidden)
+        params=RefreshProfile(131072,49,56,61,4).parameters();plan=refresh_plan(131072,65536,(4,4),max_level=49)
+        assert len(params['q_towers'])==100 and len(params['p_towers'])==24
+        assert he_params.qp_is_secure(params['q_towers'],params['p_towers'],131072,he_params.SecurityTarget(128,'classical'))
+        he_params.assert_p_coverage(params['q_towers'],params['p_towers'],4)
+        assert len(plan['rotations'])==106 and 262143 in plan['rotations']
+        assert plan['output_level']==25 and plan['period']==65536
+>       assert proof.required_key_space(params,plan['rotations'])==55197859840
+E       AssertionError: assert 55197908992 == 55197859840
+E        +  where 55197908992 = <function required_key_space at 0x73a6f3db19e0>({'degree': 131072, 'num_slots': 65536, 'scaling_factor': 6.89940115708969e+16, 'output_scale': 6.89940115708969e+16, ...}, (1, 2, 3, 4, 5, 6, ...))
+E        +    where <function required_key_space at 0x73a6f3db19e0> = proof.required_key_space
+
+/tmp/bert-fullslot-refresh-candidate-20261103/prototype/test_preflight.py:76: AssertionError
+=========================== short test summary info ============================
+FAILED ../../tmp/bert-fullslot-refresh-candidate-20261103/prototype/test_preflight.py::test_actual_secure_full_slot_public_plan_no_keygen
+1 failed, 20 passed in 0.96s

@@ -1,0 +1,8 @@
+{"starting": "public_pair_0", "sequence": 128, "valid_keys": 15}
+Traceback (most recent call last):
+  File "/tmp/streaming-bert-layout/check_pretrained_block.py", line 105, in <module>
+    if __name__=='__main__':raise SystemExit(main())
+                                             ~~~~^^
+  File "/tmp/streaming-bert-layout/check_pretrained_block.py", line 73, in main
+    additive=torch.where(native_mask[:,None,None,:],0.,torch.finfo(torch.float64).min)
+RuntimeError: value cannot be converted to type float without overflow

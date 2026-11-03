@@ -1,0 +1,30 @@
+{
+  "candidate_sha256": "2a4dc0f849a6a4d3066d1de473bbea4c1fe26d4f43cd559dc01c097b6c377d19",
+  "unrelated_directory_survived": false,
+  "replacement_directory_survived": true,
+  "record": {
+    "passed": false,
+    "command": [
+      "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+      "-c",
+      "import os; from pathlib import Path; p=Path(os.environ['CROSS_PUBLIC_KEY_DIRECTORY']); p.rmdir(); (p.parent/'unrelated-directory').rename(p); print('{}')"
+    ],
+    "timeout_s": null,
+    "cleanup_grace_s": 2.0,
+    "owned_public_key_directory": "/tmp/collector-identity-review-_e2u_m63/shared/cross-transformer-case-kzn3cm4a",
+    "owned_public_key_directory_identity": {
+      "device": 66305,
+      "inode": 2342400
+    },
+    "pid": 686389,
+    "returncode": 0,
+    "result": {},
+    "process_reaped": true,
+    "public_key_store_removed": false,
+    "key_cleanup_error": "RuntimeError: owned directory identity was replaced; retained",
+    "error": "owned public key directory cleanup failed",
+    "owned_directory_handle_closed": true,
+    "process_elapsed_s": 0.022457549999671755
+  },
+  "scope": "Real CPU subprocess replacement test; all paths are isolated temporary test artifacts."
+}

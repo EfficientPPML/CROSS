@@ -1,0 +1,24 @@
+{
+  "source_manifest": "/tmp/cross-optimized-twelve-20261103/checkout/validation_snapshot.json",
+  "source_manifest_sha256": "1fbca19a43f0830f4beb9ad00659c5b79e01ea10d89aa6466801340373f210bc",
+  "source_files": 199,
+  "active_frozen_checkout_changes": [],
+  "existing_main_vs_sweep_drift": [
+    "cadathlon/common/package.py",
+    "validation_sweep.py"
+  ],
+  "proposed_patch_files": [
+    "cadathlon/common/encrypted_chained_streaming_linear.py",
+    "cadathlon/common/package.py",
+    "cadathlon/tests/test_chained_streaming_linear.py",
+    "cadathlon/tests/test_package.py"
+  ],
+  "proposed_overlap_with_sweep_inventory": [
+    "cadathlon/common/package.py"
+  ],
+  "unchanged_original_linear_helper_sha256": {
+    "cadathlon/common/encrypted_packed_transformer.py": "5745ffdd852314887fa29fabd4edeb87d3d6e99560c451d6a19617515a2ed5be",
+    "cadathlon/common/encrypted_streaming_linear.py": "83e12b9cf00f1393a47aadddffaaa1ff6b4d0745cb68d9393d2dd38a2a165ecb"
+  },
+  "note": "Only package.py overlaps. It already differs in current main after prior Newton publication; the new allowlist change is not an execution dependency. The isolated active199-source checkout remains unchanged; no live edits were made."
+}

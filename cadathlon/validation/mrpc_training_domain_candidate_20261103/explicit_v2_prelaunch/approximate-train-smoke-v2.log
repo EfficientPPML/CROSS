@@ -1,0 +1,12 @@
+{"completed": 1, "domain_failures": 0, "numeric_failures": 0, "elapsed_s": 4.028174274993944}
+Traceback (most recent call last):
+  File "/tmp/bert-mrpc-train-calibration-20261103/approximate_train.py", line 83, in <module>
+    if __name__=='__main__':raise SystemExit(main())
+                                             ~~~~^^
+  File "/tmp/bert-mrpc-train-calibration-20261103/approximate_train.py", line 64, in main
+    accumulate(aggregate,engine.observations);report['completed_examples']=i+1
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/bert-mrpc-train-calibration-20261103/calibrate.py", line 15, in accumulate
+    out=result[name];assert out['domain']==row['domain']
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

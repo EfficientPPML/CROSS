@@ -1,0 +1,79 @@
+"""Public NumPy mask-fusion equivalence; no encryption or checkpoint execution."""
+from pathlib import Path
+import hashlib
+import json
+import os
+import time
+import numpy as np
+from score_layout import ScoreMap, POSITIONS, ROW_INDEX, SLOTS
+
+HERE = Path(__file__).resolve().parent
+paths = [Path(__file__), HERE/'score_layout.py']
+before = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}
+started = time.monotonic()
+rng = np.random.default_rng(20261103)
+queries = rng.integers(-32, 32, (16, 4096)).astype(float)/16
+keys = rng.integers(-32, 32, (128, 4096)).astype(float)/16
+# Deliberately hostile inactive feature padding must never affect a head dot.
+queries[:, 768:] = rng.uniform(4, 8, (16, 3328))
+keys[:, 768:] = -rng.uniform(4, 8, (128, 3328))
+valid_keys = np.zeros(128, bool)
+valid_keys[[0, 15, 16, 31, 63, 64, 95, 111, 112, 127]] = True
+records = []
+for tile in range(8):
+    for offset in range(16):
+        mapping = ScoreMap(tile, offset)
+        aligned = np.roll(keys[tile*16:(tile+1)*16], -offset, axis=0)
+        product = (queries*aligned).reshape(-1)
+        reduced = product
+        for bit in range(6):
+            reduced = reduced + np.roll(reduced, -(1 << bit))
+        key_indices = tile*16 + (np.arange(16)+offset) % 16
+        key_mask = np.repeat(valid_keys[key_indices], 4096)
+        expected = np.zeros(SLOTS)
+        dots = (queries[:, :768].reshape(16, 12, 64)
+                * aligned[:, :768].reshape(16, 12, 64)).sum(-1)/8
+        dots *= valid_keys[key_indices, None]
+        expected[mapping.target] = dots.reshape(-1)
+        anchor_weights = mapping.source_mask.astype(float)*key_mask/8
+        # Existing composition: one head mask then the unchanged route mask.
+        baseline = mapping.apply(reduced*anchor_weights)
+        # Proposed fusion: exactly one initial PTCT weight, then same bit routes.
+        fused = reduced*anchor_weights
+        for bit in range(4):
+            fused = mapping.route(fused, (POSITIONS & (1 << (6+bit))) != 0, 63*(1 << bit))
+        for bit in range(4):
+            fused = mapping.route(fused, (((ROW_INDEX+offset) % 16) & (1 << bit)) != 0, -16*(1 << bit))
+        fused = mapping.rotate(fused, -256*tile)
+        assert np.array_equal(baseline, expected)
+        assert np.array_equal(fused, expected)
+        assert np.count_nonzero(fused) <= 192
+        records.append(dict(tile=tile, offset=offset, exact=True))
+# Inactive logical final-tile rows are separate from public padded query rows:
+# the latter must remain. Public row selection can join the same initial mask.
+partial = []
+for rows in (1, 15):
+    row_weights = np.repeat(np.arange(16) < rows, 4096)
+    mapping = ScoreMap(7, 15)
+    actual = mapping.apply(product*row_weights)
+    expected = mapping.oracle(product*row_weights)
+    assert np.array_equal(actual, expected)
+    assert not actual.reshape(16, 4096)[rows:].any()
+    partial.append(dict(valid_rows=rows, exact=True))
+after = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}
+report = dict(scope=__doc__, passed=before == after,
+    source_hashes_before=before, source_hashes_after=after,
+    source_files_unchanged=before == after,
+    all_128_maps_baseline_and_fused_equal_independent_head_dot_oracle=True,
+    cases=records, partial_row_cases=partial,
+    hostile_inactive_features=True, public_key_mask_crosses_tile_boundaries=True,
+    baseline_depth_from_embeddings=12, fused_depth_from_embeddings=11,
+    baseline_head_and_route_ptct_per_map=18, fused_head_and_route_ptct_per_map=17,
+    private_queries_not_masked=True, cpu_affinity=sorted(os.sched_getaffinity(0)),
+    elapsed_s=time.monotonic()-started,
+    limitations=['Synthetic public ideal arithmetic only; not native checkpoint or encrypted score proof.',
+                 'Fusion changes the encrypted circuit; previous unchanged-map CKKS proof does not validate it.',
+                 'Masked scores still require a separate later softmax validity contract.'])
+(HERE/'fusion.json').write_text(json.dumps(report, indent=2)+'\n')
+print(json.dumps({k:v for k,v in report.items() if k not in {'cases'}}, indent=2))
+raise SystemExit(0 if report['passed'] else 1)

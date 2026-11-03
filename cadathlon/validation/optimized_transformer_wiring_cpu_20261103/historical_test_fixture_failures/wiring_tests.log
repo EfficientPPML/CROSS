@@ -1,0 +1,368 @@
+.............................................FF..FF....                  [100%]
+=================================== FAILURES ===================================
+_ test_session_wires_ops_refresh_and_cleans_owned_provider[False-bert-1-False-True] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75bd7ab29ef0>
+model = 'bert', number = 1, packed = False, packed_pairs = True
+selected = False
+
+    @pytest.mark.parametrize('model,number,packed,packed_pairs',[
+     ('bert',1,False,True),('qwen',2,False,True),('qwen',1,True,False),('qwen',1,False,False)])
+    @pytest.mark.parametrize('selected',[False,True])
+    def test_session_wires_ops_refresh_and_cleans_owned_provider(monkeypatch,model,number,packed,packed_pairs,selected):
+     """Fake keys/contexts isolate factory control flow; the public ring remains real."""
+     import jax
+     from jaxite_word import key_gen,ckks_ctx
+     import jaxite_word
+     import encrypted_ntt, encrypted_refresh
+     folder=ROOT/'cadathlon/agent_pset'/('p2_bert' if model=='bert' else 'p4_qwen')
+     case=json.loads((folder/f'test/test{number}.in').read_text())
+     weights,embeddings,*_=load_module(folder/'src/reference.py').make_case(case)
+     events=[];observed={}
+     class Context:
+      def __init__(self,params):
+       self.parameters=params;self.degree=params['degree'];self.num_slots=params['num_slots']
+       self._param_cache=SimpleNamespace(ntt_q_max=object())
+      def program_initialization(self,*args,**kwargs):pass
+     monkeypatch.setattr(jaxite_word,'CKKSContext',Context)
+     monkeypatch.setattr(jax,'default_device',lambda device:nullcontext())
+     monkeypatch.setattr(jax.numpy,'asarray',lambda *a,**k:SimpleNamespace(transpose=lambda *x:object()))
+     monkeypatch.setattr(key_gen,'gen_pke_pair',lambda *args,**kw:{'secret_key':object(),'public_key':object()})
+     monkeypatch.setattr(key_gen,'gen_evaluation_key',lambda *a,**kw:{'a':[0],'b':[0]})
+     owner=SimpleNamespace(keys={},close=lambda:events.append('keys'))
+     monkeypatch.setattr(encrypted_refresh.ClientRotationKeyStore,'generate',lambda *a,**kw:owner)
+     provider=SimpleNamespace(close=lambda:events.append('ntt'))
+     monkeypatch.setattr(encrypted_ntt,'enable_scoped_ntt_subsets',lambda context:provider)
+     def refresh(context,**kwargs):
+      observed['refresh']=kwargs;return SimpleNamespace(ctx=context)
+     monkeypatch.setattr(encrypted_refresh,'BoundedSecureRefresh',refresh)
+     def graph(context,*args,**kwargs):
+      observed['graph']=kwargs;return SimpleNamespace(arithmetic=SimpleNamespace(ctx=context))
+     for module,name in [('encrypted_packed_transformer','PackedTransformer'),('encrypted_bounded_transformer','BoundedPackedTransformer'),('encrypted_packed_qwen','PackedQwen1')]:
+      monkeypatch.setattr(importlib.import_module(module),name,graph)
+     def evaluator(context,**kwargs):
+      observed['evaluator']=kwargs;return SimpleNamespace(ctx=context)
+     monkeypatch.setattr(reference,'EncryptedPolynomialEvaluator',evaluator)
+     monkeypatch.setattr(reference,'EncryptedTensorOps',lambda evaluator,layout:object())
+     monkeypatch.setattr(ckks_ctx,'evict_context_caches',lambda context:events.append('context'))
+     monkeypatch.setattr(jax,'clear_caches',lambda:events.append('jax'))
+     monkeypatch.setattr(reference.gc,'collect',lambda:events.append('gc'))
+     monkeypatch.delenv('CROSS_SKIP_TOPLEVEL_ROTKEYS',raising=False)
+     options={'preserve_dispatch_cache':True,'ntt_subsets':True} if selected else {}
+>    session=reference.create_toy_session(model,case['config'],weights,batch=embeddings.shape[0],sequence_length=embeddings.shape[1],devices=[SimpleNamespace(memory_stats=lambda:{})],packed=packed,packed_pairs=packed_pairs,bounded_refresh=packed_pairs,**options)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+cadathlon/tests/test_optimized_transformer_wiring.py:105: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+cadathlon/common/encrypted_reference.py:275: in create_toy_session
+    session.__init__(model, config, weights, batch=batch, sequence_length=sequence_length, devices=devices,
+cadathlon/common/encrypted_reference.py:82: in __init__
+    plan = plan_packed_transformer(model, config, weights, batch=batch, sequence=sequence_length,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+model = 'bert'
+config = {'hidden_size': 16, 'intermediate_size': 32, 'num_attention_heads': 4, 'num_hidden_layers': 1, ...}
+weights = {'bert.embeddings.word_embeddings.weight': array([[-6.58196510e-02, -9.06324368e-02, -5.50135830e-03,
+        -6.99961...2, 0.96849572, 0.99266802,
+       1.03872733, 0.94779806, 0.90703512, 1.02186185, 0.92859155,
+       1.02375967]), ...}
+batch = 1, sequence = 4, slots = 65536
+attention_mask = array([[ True,  True,  True,  True]])
+
+    def plan_packed_transformer(model, config, weights, *, batch, sequence, slots=65536, attention_mask=None):
+        """Exact graph depth/rotation inventory without keys or activation values."""
+        from types import SimpleNamespace
+        from encrypted_transformer import _DepthOnlyEvaluator, _PlannedValue, public_toy_approximations
+    
+        features = packed_feature_width(model, config)
+        layout = PackedPairLayout(batch, sequence, features, slots)
+        rotations = set()
+    
+        class Arithmetic(_DepthOnlyEvaluator):
+            def rotate(self, value, shift):
+                if shift % slots:
+                    rotations.add(shift % slots)
+                return value
+    
+            def checkpoint(self, value, label):
+                return value
+    
+>       class Planner(PackedTransformer):
+E       TypeError: function() argument 'code' must be code, not str
+
+cadathlon/common/encrypted_packed_transformer.py:474: TypeError
+_ test_session_wires_ops_refresh_and_cleans_owned_provider[False-qwen-2-False-True] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75bd6fdca8d0>
+model = 'qwen', number = 2, packed = False, packed_pairs = True
+selected = False
+
+    @pytest.mark.parametrize('model,number,packed,packed_pairs',[
+     ('bert',1,False,True),('qwen',2,False,True),('qwen',1,True,False),('qwen',1,False,False)])
+    @pytest.mark.parametrize('selected',[False,True])
+    def test_session_wires_ops_refresh_and_cleans_owned_provider(monkeypatch,model,number,packed,packed_pairs,selected):
+     """Fake keys/contexts isolate factory control flow; the public ring remains real."""
+     import jax
+     from jaxite_word import key_gen,ckks_ctx
+     import jaxite_word
+     import encrypted_ntt, encrypted_refresh
+     folder=ROOT/'cadathlon/agent_pset'/('p2_bert' if model=='bert' else 'p4_qwen')
+     case=json.loads((folder/f'test/test{number}.in').read_text())
+     weights,embeddings,*_=load_module(folder/'src/reference.py').make_case(case)
+     events=[];observed={}
+     class Context:
+      def __init__(self,params):
+       self.parameters=params;self.degree=params['degree'];self.num_slots=params['num_slots']
+       self._param_cache=SimpleNamespace(ntt_q_max=object())
+      def program_initialization(self,*args,**kwargs):pass
+     monkeypatch.setattr(jaxite_word,'CKKSContext',Context)
+     monkeypatch.setattr(jax,'default_device',lambda device:nullcontext())
+     monkeypatch.setattr(jax.numpy,'asarray',lambda *a,**k:SimpleNamespace(transpose=lambda *x:object()))
+     monkeypatch.setattr(key_gen,'gen_pke_pair',lambda *args,**kw:{'secret_key':object(),'public_key':object()})
+     monkeypatch.setattr(key_gen,'gen_evaluation_key',lambda *a,**kw:{'a':[0],'b':[0]})
+     owner=SimpleNamespace(keys={},close=lambda:events.append('keys'))
+     monkeypatch.setattr(encrypted_refresh.ClientRotationKeyStore,'generate',lambda *a,**kw:owner)
+     provider=SimpleNamespace(close=lambda:events.append('ntt'))
+     monkeypatch.setattr(encrypted_ntt,'enable_scoped_ntt_subsets',lambda context:provider)
+     def refresh(context,**kwargs):
+      observed['refresh']=kwargs;return SimpleNamespace(ctx=context)
+     monkeypatch.setattr(encrypted_refresh,'BoundedSecureRefresh',refresh)
+     def graph(context,*args,**kwargs):
+      observed['graph']=kwargs;return SimpleNamespace(arithmetic=SimpleNamespace(ctx=context))
+     for module,name in [('encrypted_packed_transformer','PackedTransformer'),('encrypted_bounded_transformer','BoundedPackedTransformer'),('encrypted_packed_qwen','PackedQwen1')]:
+      monkeypatch.setattr(importlib.import_module(module),name,graph)
+     def evaluator(context,**kwargs):
+      observed['evaluator']=kwargs;return SimpleNamespace(ctx=context)
+     monkeypatch.setattr(reference,'EncryptedPolynomialEvaluator',evaluator)
+     monkeypatch.setattr(reference,'EncryptedTensorOps',lambda evaluator,layout:object())
+     monkeypatch.setattr(ckks_ctx,'evict_context_caches',lambda context:events.append('context'))
+     monkeypatch.setattr(jax,'clear_caches',lambda:events.append('jax'))
+     monkeypatch.setattr(reference.gc,'collect',lambda:events.append('gc'))
+     monkeypatch.delenv('CROSS_SKIP_TOPLEVEL_ROTKEYS',raising=False)
+     options={'preserve_dispatch_cache':True,'ntt_subsets':True} if selected else {}
+>    session=reference.create_toy_session(model,case['config'],weights,batch=embeddings.shape[0],sequence_length=embeddings.shape[1],devices=[SimpleNamespace(memory_stats=lambda:{})],packed=packed,packed_pairs=packed_pairs,bounded_refresh=packed_pairs,**options)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+cadathlon/tests/test_optimized_transformer_wiring.py:105: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+cadathlon/common/encrypted_reference.py:275: in create_toy_session
+    session.__init__(model, config, weights, batch=batch, sequence_length=sequence_length, devices=devices,
+cadathlon/common/encrypted_reference.py:82: in __init__
+    plan = plan_packed_transformer(model, config, weights, batch=batch, sequence=sequence_length,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+model = 'qwen'
+config = {'hidden_size': 16, 'intermediate_size': 24, 'num_attention_heads': 4, 'num_key_value_heads': 2, ...}
+weights = {'model.embed_tokens.weight': array([[ 0.03176649,  0.27746447, -0.20393469,  0.00288813,  0.05193775,
+         0.1908...4, 1.00710149, 1.01683823,
+       1.05705146, 1.01810386, 1.0501212 , 0.96276781, 1.06407775,
+       1.04020521]), ...}
+batch = 1, sequence = 2, slots = 65536, attention_mask = array([[ True,  True]])
+
+    def plan_packed_transformer(model, config, weights, *, batch, sequence, slots=65536, attention_mask=None):
+        """Exact graph depth/rotation inventory without keys or activation values."""
+        from types import SimpleNamespace
+        from encrypted_transformer import _DepthOnlyEvaluator, _PlannedValue, public_toy_approximations
+    
+        features = packed_feature_width(model, config)
+        layout = PackedPairLayout(batch, sequence, features, slots)
+        rotations = set()
+    
+        class Arithmetic(_DepthOnlyEvaluator):
+            def rotate(self, value, shift):
+                if shift % slots:
+                    rotations.add(shift % slots)
+                return value
+    
+            def checkpoint(self, value, label):
+                return value
+    
+>       class Planner(PackedTransformer):
+E       TypeError: function() argument 'code' must be code, not str
+
+cadathlon/common/encrypted_packed_transformer.py:474: TypeError
+_ test_session_wires_ops_refresh_and_cleans_owned_provider[True-bert-1-False-True] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75bd7b5e2270>
+model = 'bert', number = 1, packed = False, packed_pairs = True, selected = True
+
+    @pytest.mark.parametrize('model,number,packed,packed_pairs',[
+     ('bert',1,False,True),('qwen',2,False,True),('qwen',1,True,False),('qwen',1,False,False)])
+    @pytest.mark.parametrize('selected',[False,True])
+    def test_session_wires_ops_refresh_and_cleans_owned_provider(monkeypatch,model,number,packed,packed_pairs,selected):
+     """Fake keys/contexts isolate factory control flow; the public ring remains real."""
+     import jax
+     from jaxite_word import key_gen,ckks_ctx
+     import jaxite_word
+     import encrypted_ntt, encrypted_refresh
+     folder=ROOT/'cadathlon/agent_pset'/('p2_bert' if model=='bert' else 'p4_qwen')
+     case=json.loads((folder/f'test/test{number}.in').read_text())
+     weights,embeddings,*_=load_module(folder/'src/reference.py').make_case(case)
+     events=[];observed={}
+     class Context:
+      def __init__(self,params):
+       self.parameters=params;self.degree=params['degree'];self.num_slots=params['num_slots']
+       self._param_cache=SimpleNamespace(ntt_q_max=object())
+      def program_initialization(self,*args,**kwargs):pass
+     monkeypatch.setattr(jaxite_word,'CKKSContext',Context)
+     monkeypatch.setattr(jax,'default_device',lambda device:nullcontext())
+     monkeypatch.setattr(jax.numpy,'asarray',lambda *a,**k:SimpleNamespace(transpose=lambda *x:object()))
+     monkeypatch.setattr(key_gen,'gen_pke_pair',lambda *args,**kw:{'secret_key':object(),'public_key':object()})
+     monkeypatch.setattr(key_gen,'gen_evaluation_key',lambda *a,**kw:{'a':[0],'b':[0]})
+     owner=SimpleNamespace(keys={},close=lambda:events.append('keys'))
+     monkeypatch.setattr(encrypted_refresh.ClientRotationKeyStore,'generate',lambda *a,**kw:owner)
+     provider=SimpleNamespace(close=lambda:events.append('ntt'))
+     monkeypatch.setattr(encrypted_ntt,'enable_scoped_ntt_subsets',lambda context:provider)
+     def refresh(context,**kwargs):
+      observed['refresh']=kwargs;return SimpleNamespace(ctx=context)
+     monkeypatch.setattr(encrypted_refresh,'BoundedSecureRefresh',refresh)
+     def graph(context,*args,**kwargs):
+      observed['graph']=kwargs;return SimpleNamespace(arithmetic=SimpleNamespace(ctx=context))
+     for module,name in [('encrypted_packed_transformer','PackedTransformer'),('encrypted_bounded_transformer','BoundedPackedTransformer'),('encrypted_packed_qwen','PackedQwen1')]:
+      monkeypatch.setattr(importlib.import_module(module),name,graph)
+     def evaluator(context,**kwargs):
+      observed['evaluator']=kwargs;return SimpleNamespace(ctx=context)
+     monkeypatch.setattr(reference,'EncryptedPolynomialEvaluator',evaluator)
+     monkeypatch.setattr(reference,'EncryptedTensorOps',lambda evaluator,layout:object())
+     monkeypatch.setattr(ckks_ctx,'evict_context_caches',lambda context:events.append('context'))
+     monkeypatch.setattr(jax,'clear_caches',lambda:events.append('jax'))
+     monkeypatch.setattr(reference.gc,'collect',lambda:events.append('gc'))
+     monkeypatch.delenv('CROSS_SKIP_TOPLEVEL_ROTKEYS',raising=False)
+     options={'preserve_dispatch_cache':True,'ntt_subsets':True} if selected else {}
+>    session=reference.create_toy_session(model,case['config'],weights,batch=embeddings.shape[0],sequence_length=embeddings.shape[1],devices=[SimpleNamespace(memory_stats=lambda:{})],packed=packed,packed_pairs=packed_pairs,bounded_refresh=packed_pairs,**options)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+cadathlon/tests/test_optimized_transformer_wiring.py:105: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+cadathlon/common/encrypted_reference.py:275: in create_toy_session
+    session.__init__(model, config, weights, batch=batch, sequence_length=sequence_length, devices=devices,
+cadathlon/common/encrypted_reference.py:82: in __init__
+    plan = plan_packed_transformer(model, config, weights, batch=batch, sequence=sequence_length,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+model = 'bert'
+config = {'hidden_size': 16, 'intermediate_size': 32, 'num_attention_heads': 4, 'num_hidden_layers': 1, ...}
+weights = {'bert.embeddings.word_embeddings.weight': array([[-6.58196510e-02, -9.06324368e-02, -5.50135830e-03,
+        -6.99961...2, 0.96849572, 0.99266802,
+       1.03872733, 0.94779806, 0.90703512, 1.02186185, 0.92859155,
+       1.02375967]), ...}
+batch = 1, sequence = 4, slots = 65536
+attention_mask = array([[ True,  True,  True,  True]])
+
+    def plan_packed_transformer(model, config, weights, *, batch, sequence, slots=65536, attention_mask=None):
+        """Exact graph depth/rotation inventory without keys or activation values."""
+        from types import SimpleNamespace
+        from encrypted_transformer import _DepthOnlyEvaluator, _PlannedValue, public_toy_approximations
+    
+        features = packed_feature_width(model, config)
+        layout = PackedPairLayout(batch, sequence, features, slots)
+        rotations = set()
+    
+        class Arithmetic(_DepthOnlyEvaluator):
+            def rotate(self, value, shift):
+                if shift % slots:
+                    rotations.add(shift % slots)
+                return value
+    
+            def checkpoint(self, value, label):
+                return value
+    
+>       class Planner(PackedTransformer):
+E       TypeError: function() argument 'code' must be code, not str
+
+cadathlon/common/encrypted_packed_transformer.py:474: TypeError
+_ test_session_wires_ops_refresh_and_cleans_owned_provider[True-qwen-2-False-True] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75bd6fdf7540>
+model = 'qwen', number = 2, packed = False, packed_pairs = True, selected = True
+
+    @pytest.mark.parametrize('model,number,packed,packed_pairs',[
+     ('bert',1,False,True),('qwen',2,False,True),('qwen',1,True,False),('qwen',1,False,False)])
+    @pytest.mark.parametrize('selected',[False,True])
+    def test_session_wires_ops_refresh_and_cleans_owned_provider(monkeypatch,model,number,packed,packed_pairs,selected):
+     """Fake keys/contexts isolate factory control flow; the public ring remains real."""
+     import jax
+     from jaxite_word import key_gen,ckks_ctx
+     import jaxite_word
+     import encrypted_ntt, encrypted_refresh
+     folder=ROOT/'cadathlon/agent_pset'/('p2_bert' if model=='bert' else 'p4_qwen')
+     case=json.loads((folder/f'test/test{number}.in').read_text())
+     weights,embeddings,*_=load_module(folder/'src/reference.py').make_case(case)
+     events=[];observed={}
+     class Context:
+      def __init__(self,params):
+       self.parameters=params;self.degree=params['degree'];self.num_slots=params['num_slots']
+       self._param_cache=SimpleNamespace(ntt_q_max=object())
+      def program_initialization(self,*args,**kwargs):pass
+     monkeypatch.setattr(jaxite_word,'CKKSContext',Context)
+     monkeypatch.setattr(jax,'default_device',lambda device:nullcontext())
+     monkeypatch.setattr(jax.numpy,'asarray',lambda *a,**k:SimpleNamespace(transpose=lambda *x:object()))
+     monkeypatch.setattr(key_gen,'gen_pke_pair',lambda *args,**kw:{'secret_key':object(),'public_key':object()})
+     monkeypatch.setattr(key_gen,'gen_evaluation_key',lambda *a,**kw:{'a':[0],'b':[0]})
+     owner=SimpleNamespace(keys={},close=lambda:events.append('keys'))
+     monkeypatch.setattr(encrypted_refresh.ClientRotationKeyStore,'generate',lambda *a,**kw:owner)
+     provider=SimpleNamespace(close=lambda:events.append('ntt'))
+     monkeypatch.setattr(encrypted_ntt,'enable_scoped_ntt_subsets',lambda context:provider)
+     def refresh(context,**kwargs):
+      observed['refresh']=kwargs;return SimpleNamespace(ctx=context)
+     monkeypatch.setattr(encrypted_refresh,'BoundedSecureRefresh',refresh)
+     def graph(context,*args,**kwargs):
+      observed['graph']=kwargs;return SimpleNamespace(arithmetic=SimpleNamespace(ctx=context))
+     for module,name in [('encrypted_packed_transformer','PackedTransformer'),('encrypted_bounded_transformer','BoundedPackedTransformer'),('encrypted_packed_qwen','PackedQwen1')]:
+      monkeypatch.setattr(importlib.import_module(module),name,graph)
+     def evaluator(context,**kwargs):
+      observed['evaluator']=kwargs;return SimpleNamespace(ctx=context)
+     monkeypatch.setattr(reference,'EncryptedPolynomialEvaluator',evaluator)
+     monkeypatch.setattr(reference,'EncryptedTensorOps',lambda evaluator,layout:object())
+     monkeypatch.setattr(ckks_ctx,'evict_context_caches',lambda context:events.append('context'))
+     monkeypatch.setattr(jax,'clear_caches',lambda:events.append('jax'))
+     monkeypatch.setattr(reference.gc,'collect',lambda:events.append('gc'))
+     monkeypatch.delenv('CROSS_SKIP_TOPLEVEL_ROTKEYS',raising=False)
+     options={'preserve_dispatch_cache':True,'ntt_subsets':True} if selected else {}
+>    session=reference.create_toy_session(model,case['config'],weights,batch=embeddings.shape[0],sequence_length=embeddings.shape[1],devices=[SimpleNamespace(memory_stats=lambda:{})],packed=packed,packed_pairs=packed_pairs,bounded_refresh=packed_pairs,**options)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+cadathlon/tests/test_optimized_transformer_wiring.py:105: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+cadathlon/common/encrypted_reference.py:275: in create_toy_session
+    session.__init__(model, config, weights, batch=batch, sequence_length=sequence_length, devices=devices,
+cadathlon/common/encrypted_reference.py:82: in __init__
+    plan = plan_packed_transformer(model, config, weights, batch=batch, sequence=sequence_length,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+model = 'qwen'
+config = {'hidden_size': 16, 'intermediate_size': 24, 'num_attention_heads': 4, 'num_key_value_heads': 2, ...}
+weights = {'model.embed_tokens.weight': array([[ 0.03176649,  0.27746447, -0.20393469,  0.00288813,  0.05193775,
+         0.1908...4, 1.00710149, 1.01683823,
+       1.05705146, 1.01810386, 1.0501212 , 0.96276781, 1.06407775,
+       1.04020521]), ...}
+batch = 1, sequence = 2, slots = 65536, attention_mask = array([[ True,  True]])
+
+    def plan_packed_transformer(model, config, weights, *, batch, sequence, slots=65536, attention_mask=None):
+        """Exact graph depth/rotation inventory without keys or activation values."""
+        from types import SimpleNamespace
+        from encrypted_transformer import _DepthOnlyEvaluator, _PlannedValue, public_toy_approximations
+    
+        features = packed_feature_width(model, config)
+        layout = PackedPairLayout(batch, sequence, features, slots)
+        rotations = set()
+    
+        class Arithmetic(_DepthOnlyEvaluator):
+            def rotate(self, value, shift):
+                if shift % slots:
+                    rotations.add(shift % slots)
+                return value
+    
+            def checkpoint(self, value, label):
+                return value
+    
+>       class Planner(PackedTransformer):
+E       TypeError: function() argument 'code' must be code, not str
+
+cadathlon/common/encrypted_packed_transformer.py:474: TypeError
+=========================== short test summary info ============================
+FAILED cadathlon/tests/test_optimized_transformer_wiring.py::test_session_wires_ops_refresh_and_cleans_owned_provider[False-bert-1-False-True]
+FAILED cadathlon/tests/test_optimized_transformer_wiring.py::test_session_wires_ops_refresh_and_cleans_owned_provider[False-qwen-2-False-True]
+FAILED cadathlon/tests/test_optimized_transformer_wiring.py::test_session_wires_ops_refresh_and_cleans_owned_provider[True-bert-1-False-True]
+FAILED cadathlon/tests/test_optimized_transformer_wiring.py::test_session_wires_ops_refresh_and_cleans_owned_provider[True-qwen-2-False-True]
+4 failed, 51 passed in 0.99s

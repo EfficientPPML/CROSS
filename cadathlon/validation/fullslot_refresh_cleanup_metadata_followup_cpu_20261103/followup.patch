@@ -1,0 +1,58 @@
+--- a/prototype/proof.py
++++ b/prototype/proof.py
+@@ -135,6 +135,13 @@
+             for error in errors:
+                 if error is not primary:primary.add_note('Other cleanup failure: '+repr(error))
+             raise primary
++    return [type(error).__name__+': '+str(error) for error in errors]
++
++
++def record_cleanup(report, contexts, owner, key_store, active_error, callbacks=None):
++    report['cleanup_completed']=False
++    report['cleanup_errors']=release_all(contexts,owner,key_store,active_error,callbacks)
++    report['cleanup_completed']=not report['cleanup_errors']
+ 
+ 
+ def run(report):
+@@ -256,8 +263,7 @@
+             callbacks.append(refresh.evaluator._clear_working_caches)
+             callbacks.extend(helper.clear for helper in (refresh.compiled_primitives or ()))
+         contexts=[client,server];refresh=client=server=checkpoint=None
+-        release_all(contexts,owner,key_store,active,callbacks)
+-        report['cleanup_completed']=True
++        record_cleanup(report,contexts,owner,key_store,active,callbacks)
+         report['peak_host_rss_kib']=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+         report['memory_scope']='Linux process ru_maxrss only; not accelerator HBM or whole-machine peak'
+ 
+--- a/prototype/test_preflight.py
++++ b/prototype/test_preflight.py
+@@ -265,3 +265,29 @@
+     assert collect.run(tmp_path/'out')==1
+     result=json.loads((tmp_path/'out/report.json').read_text())
+     assert not result['passed'] and 'package metadata unreadable' in result['error']
++
++
++@pytest.mark.parametrize('mode',('healthy','primary-and-cleanup-failure','cleanup-only-cancellation'))
++def test_cleanup_completion_metadata_matches_attempted_releases(monkeypatch,mode):
++    import jax
++    from jaxite_word import ckks_ctx
++    events=[];primary=KeyboardInterrupt('original cancellation') if mode=='primary-and-cleanup-failure' else None
++    def close_owner():
++        events.append('owner')
++        if mode=='primary-and-cleanup-failure':raise RuntimeError('owner release failed')
++        if mode=='cleanup-only-cancellation':raise KeyboardInterrupt('cleanup cancellation')
++    monkeypatch.setattr(ckks_ctx,'evict_context_caches',lambda context:events.append('context'))
++    monkeypatch.setattr(jax,'clear_caches',lambda:events.append('jax'))
++    monkeypatch.setattr(proof.gc,'collect',lambda:events.append('gc'))
++    owner=types.SimpleNamespace(close=close_owner);keys=types.SimpleNamespace(close=lambda:events.append('keys'))
++    report={}
++    if mode=='cleanup-only-cancellation':
++        with pytest.raises(KeyboardInterrupt,match='cleanup cancellation'):
++            proof.record_cleanup(report,[object()],owner,keys,primary)
++        assert report['cleanup_completed'] is False
++    else:
++        proof.record_cleanup(report,[object()],owner,keys,primary)
++        assert report['cleanup_completed'] is (mode=='healthy')
++        assert bool(report['cleanup_errors']) is (mode!='healthy')
++        if primary is not None:assert any('owner release failed' in note for note in primary.__notes__)
++    assert events==['owner','context','jax','gc','keys']

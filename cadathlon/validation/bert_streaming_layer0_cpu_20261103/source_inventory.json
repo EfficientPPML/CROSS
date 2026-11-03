@@ -1,0 +1,69 @@
+{
+  "scope": "Archive verification, not a new numerical run. No checkpoint arrays, ciphertexts or keys included.",
+  "archived_utc": "2026-11-03T00:49:43.575958+00:00",
+  "command": "env JAX_PLATFORMS=cpu OMP_NUM_THREADS=4 OPENBLAS_NUM_THREADS=4 MKL_NUM_THREADS=4 CROSS_ROOT=/home/jianming_gatech/CROSS taskset -c 144-147 /tmp/cross-pretrained-validation-env/bin/python /tmp/streaming-bert-layout/check_pretrained_block.py --snapshot /home/jianming_gatech/cross_validation_assets/bert/f150c1d609d1e50dd5e2e5408661cfac8339277c --output /tmp/streaming-bert-layout/native-result3 > /tmp/streaming-bert-layout/native-result3.log 2>&1",
+  "tool_session_id": 76058,
+  "exit_code": 0,
+  "reaped": true,
+  "original_sources": {
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/src/reference.py": {
+      "archive_path": "sources/00_reference.py.txt",
+      "sha256": "6d254c92b70257e773d1701a6f85fb592365e67d037b231b9e5a1589e64e7a04"
+    },
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_refresh.py": {
+      "archive_path": "sources/01_encrypted_refresh.py.txt",
+      "sha256": "9e7992c1c7cd47e31dc9914cbcdb6c03fe907158e6cce128b006f8500302836e"
+    },
+    "/home/jianming_gatech/CROSS/cadathlon/validation/check_pretrained_bert_domains.py": {
+      "archive_path": "sources/02_check_pretrained_bert_domains.py.txt",
+      "sha256": "d3463f03bdfcb1a0539bf8b6333a22b9fc776231815ed120bf31a29b73f08c40"
+    },
+    "/home/jianming_gatech/CROSS/jaxite_word/bootstrapping.py": {
+      "archive_path": "sources/03_bootstrapping.py.txt",
+      "sha256": "e44f748f5ef51ec68be0f224f4d8ff1068fe6c449f09c04532900a3ac4fcfc49"
+    },
+    "/home/jianming_gatech/CROSS/jaxite_word/bsgs.py": {
+      "archive_path": "sources/04_bsgs.py.txt",
+      "sha256": "52a1027be9bf704fd3ffd453251d2b3136ab31a3242c12d341ca1374b1b82aed"
+    },
+    "/home/jianming_gatech/CROSS/jaxite_word/composite_prime_gen.py": {
+      "archive_path": "sources/05_composite_prime_gen.py.txt",
+      "sha256": "e3e689237d2b8449333774e84fa271a15a5c54ad603a32f7fcbe60ecb26f0317"
+    },
+    "/home/jianming_gatech/CROSS/jaxite_word/he_params.py": {
+      "archive_path": "sources/06_he_params.py.txt",
+      "sha256": "714d3227f65d2369976a798a13584cb8629c468f3b6c005d7193eac1f072948b"
+    },
+    "/home/jianming_gatech/CROSS/jaxite_word/util.py": {
+      "archive_path": "sources/07_util.py.txt",
+      "sha256": "b34c675b50ae774cdb0ad913f8fc9c2f955b60bf4745006d3f81d7c013565026"
+    },
+    "/tmp/streaming-bert-layout/check_pretrained_block.py": {
+      "archive_path": "sources/08_check_pretrained_block.py.txt",
+      "sha256": "36d10185e62a83f0bb346bd6f06a7fc82ee18ac1bcf4cce2ac9823bc69d47768"
+    },
+    "/tmp/streaming-bert-layout/row_attention.py": {
+      "archive_path": "sources/09_row_attention.py.txt",
+      "sha256": "320b74092bd45ff6e2b71e2e4d9204de4bdb7f7b53c184a516e0ee40bcab3269"
+    },
+    "/tmp/streaming-bert-layout/summarize_plan.py": {
+      "archive_path": "sources/10_summarize_plan.py.txt",
+      "sha256": "3a908e43460e9b269ab9dc3295aeca1119618aafc7bda77d18b0766bc2360956"
+    },
+    "/tmp/streaming-bert-review/check_cnn_layout.py": {
+      "archive_path": "sources/11_check_cnn_layout.py.txt",
+      "sha256": "8ed838081ce5d753472fa8200a75ee3dee300ab743f42bd88ddcb15df5d10284"
+    },
+    "/tmp/streaming-bert-review/inventory.py": {
+      "archive_path": "sources/12_inventory.py.txt",
+      "sha256": "5758b1d2d382fa5f7316f634c390eeb6e8a0a88c3d70d8cd35a5b1c57504b4e9"
+    },
+    "/tmp/streaming-bert-review/layout_checks.py": {
+      "archive_path": "sources/13_layout_checks.py.txt",
+      "sha256": "281288bddfa56dcb689375b82fbb930955dd93cf0b57344147299e4933614db8"
+    }
+  },
+  "proof_sources_unchanged_during_run": true,
+  "extra_archive_source_scope": "planning/inventory helpers were hash-verified against their existing artifacts at archive time; layout_checks.py has an archive-time hash only.",
+  "earlier_failure_scope": "Preserved raw failure log only. Pre-fix wrapper source bytes were not separately captured; do not apply successful source hashes to it."
+}

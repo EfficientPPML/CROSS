@@ -1,0 +1,823 @@
+{
+  "scope": "Plaintext full-width pinned BERT encoder layer0 attention/layout parity; no encrypted execution or MRPC evaluation.",
+  "model_revision": "f150c1d609d1e50dd5e2e5408661cfac8339277c",
+  "asset_sha256": {
+    "config.json": "ec2b6cd6ce741dda6c972aea96f9d1a449cbb4b5349e688c5370a9b2f6872d30",
+    "model.safetensors": "e1f8085ef673c9eb8a1a93a84270742e8aa0ccbceadef01eef15e26c44b46034",
+    "tokenizer.json": "5b3360be30cdf39081153cf9d30bfb0503c011462fc9f77f097127c83ef0f4d9",
+    "tokenizer_config.json": "0f6d13e6f4da6f9e24f22ada6bc3be571123d858d7c0c05a8a7cd55a9c23c2e8",
+    "vocab.txt": "eeaa9875b23b04b4c54ef759d03db9d1ba1554838f8fb26c5d96fa551df93d02"
+  },
+  "layer": 0,
+  "hidden": 768,
+  "heads": 12,
+  "head_dimension": 64,
+  "intermediate": 3072,
+  "examples": [
+    [
+      "The committee approved the proposal.",
+      "The committee approved the proposal."
+    ],
+    [
+      "A person is playing a guitar.",
+      "Someone is performing music."
+    ],
+    [
+      "The train arrived at noon.",
+      "The weather will be cold tomorrow."
+    ],
+    [
+      "The committee reviews the proposal and discusses the evidence. The committee reviews the proposal and discusses the evidence. The committee reviews the proposal and discusses the evidence. The committee reviews the proposal and discusses the evidence. The committee reviews the proposal and discusses the evidence. The committee reviews the proposal and discusses the evidence. The committee reviews the proposal and discusses the evidence. The committee reviews the proposal and discusses the evidence. The committee reviews the proposal and discusses the evidence. The committee reviews the proposal and discusses the evidence. The committee reviews the proposal and discusses the evidence. The committee reviews the proposal and discusses the evidence. The committee reviews the proposal and discusses the evidence. The committee reviews the proposal and discusses the evidence. The committee reviews the proposal and discusses the evidence. The committee reviews the proposal and discusses the evidence. The committee reviews the proposal and discusses the evidence. The committee reviews the proposal and discusses the evidence. The committee reviews the proposal and discusses the evidence. The committee reviews the proposal and discusses the evidence. ",
+      "Members discuss the proposal before reaching a decision. Members discuss the proposal before reaching a decision. Members discuss the proposal before reaching a decision. Members discuss the proposal before reaching a decision. Members discuss the proposal before reaching a decision. Members discuss the proposal before reaching a decision. Members discuss the proposal before reaching a decision. Members discuss the proposal before reaching a decision. Members discuss the proposal before reaching a decision. Members discuss the proposal before reaching a decision. Members discuss the proposal before reaching a decision. Members discuss the proposal before reaching a decision. Members discuss the proposal before reaching a decision. Members discuss the proposal before reaching a decision. Members discuss the proposal before reaching a decision. Members discuss the proposal before reaching a decision. Members discuss the proposal before reaching a decision. Members discuss the proposal before reaching a decision. Members discuss the proposal before reaching a decision. Members discuss the proposal before reaching a decision. "
+    ]
+  ],
+  "cases": [
+    {
+      "case": "public_pair_0",
+      "sequence": 128,
+      "valid_keys": 15,
+      "padded_queries": 113,
+      "passed": true,
+      "maximum_absolute_errors": {
+        "context_vs_dense": 3.552713678800501e-15,
+        "context_vs_transformers": 3.9968028886505635e-15,
+        "full_block_vs_numpy": 2.6645352591003757e-15,
+        "full_block_vs_transformers": 1.9539925233402755e-14
+      },
+      "padded_query_output_max_abs": 6.334009976232953,
+      "observed_ranges": {
+        "centered_valid_queries": {
+          "minimum": -6.550620482683996,
+          "maximum": 10.25436206703855,
+          "count": 2700,
+          "nonfinite": 0,
+          "comparison_domain": [
+            -9,
+            12
+          ],
+          "below": 0,
+          "above": 0
+        },
+        "unmasked_exp": {
+          "minimum": 7.213986363646177e-05,
+          "maximum": 1847522.8647780733,
+          "count": 23040,
+          "nonfinite": 0
+        },
+        "centered_padded_queries": {
+          "minimum": -9.536903772753188,
+          "maximum": 14.42935630779182,
+          "count": 20340,
+          "nonfinite": 0,
+          "comparison_domain": [
+            -9,
+            12
+          ],
+          "below": 2,
+          "above": 13
+        },
+        "denominator_mean_exp": {
+          "minimum": 1.0695577234455387,
+          "maximum": 123169.3411426265,
+          "count": 1536,
+          "nonfinite": 0
+        }
+      },
+      "layout_plan": {
+        "rows": 16,
+        "features": 4096,
+        "slots": 65536,
+        "sequence": 128,
+        "tiles": 8,
+        "ciphertext_slot_period": 65536,
+        "attention_rotation_indices": [
+          1,
+          2,
+          4,
+          8,
+          16,
+          32,
+          4096,
+          8192,
+          12288,
+          16384,
+          20480,
+          24576,
+          28672,
+          32768,
+          36864,
+          40960,
+          45056,
+          49152,
+          53248,
+          57344,
+          61440,
+          65504,
+          65520,
+          65528,
+          65532,
+          65534,
+          65535
+        ],
+        "actual_simulated_counts": {
+          "ciphertext_products": 3080,
+          "rotations": 21360,
+          "ciphertext_additions": 22576,
+          "public_multiplications": 4104,
+          "opaque_exponentials": 1024,
+          "opaque_reciprocals": 8
+        },
+        "expected_counts": {
+          "ciphertext_products": 3080,
+          "opaque_exponentials": 1024,
+          "opaque_reciprocals": 8
+        },
+        "critical_depth_from_block_input": "7 + E + R (including one Q/K/V projection level; E/R are opaque exp/reciprocal depths)",
+        "output_projection_extra_levels": 1,
+        "notes": [
+          "Exact exp/division establish only layout semantics, not realizable CKKS nonlinear operators.",
+          "The unnormalized exponential route differs from the previously composed normalized repeated-squaring circuit.",
+          "Batches may stream one example at a time; token rows are never replicas of every key/feature pair.",
+          "Only public key masks apply; all actual padded query rows are retained."
+        ]
+      }
+    },
+    {
+      "case": "public_pair_1",
+      "sequence": 128,
+      "valid_keys": 15,
+      "padded_queries": 113,
+      "passed": true,
+      "maximum_absolute_errors": {
+        "context_vs_dense": 2.3175905639050143e-15,
+        "context_vs_transformers": 3.4416913763379853e-15,
+        "full_block_vs_numpy": 3.552713678800501e-15,
+        "full_block_vs_transformers": 1.5987211554602254e-14
+      },
+      "padded_query_output_max_abs": 6.687362268978244,
+      "observed_ranges": {
+        "centered_valid_queries": {
+          "minimum": -6.1628457198012905,
+          "maximum": 10.13738845160268,
+          "count": 2700,
+          "nonfinite": 0,
+          "comparison_domain": [
+            -9,
+            12
+          ],
+          "below": 0,
+          "above": 0
+        },
+        "unmasked_exp": {
+          "minimum": 5.581314721884644e-05,
+          "maximum": 1239317.8009811668,
+          "count": 23040,
+          "nonfinite": 0
+        },
+        "centered_padded_queries": {
+          "minimum": -9.793501103088474,
+          "maximum": 14.030071625688343,
+          "count": 20340,
+          "nonfinite": 0,
+          "comparison_domain": [
+            -9,
+            12
+          ],
+          "below": 2,
+          "above": 13
+        },
+        "denominator_mean_exp": {
+          "minimum": 1.1128951559366134,
+          "maximum": 82623.27652831754,
+          "count": 1536,
+          "nonfinite": 0
+        }
+      },
+      "layout_plan": {
+        "rows": 16,
+        "features": 4096,
+        "slots": 65536,
+        "sequence": 128,
+        "tiles": 8,
+        "ciphertext_slot_period": 65536,
+        "attention_rotation_indices": [
+          1,
+          2,
+          4,
+          8,
+          16,
+          32,
+          4096,
+          8192,
+          12288,
+          16384,
+          20480,
+          24576,
+          28672,
+          32768,
+          36864,
+          40960,
+          45056,
+          49152,
+          53248,
+          57344,
+          61440,
+          65504,
+          65520,
+          65528,
+          65532,
+          65534,
+          65535
+        ],
+        "actual_simulated_counts": {
+          "ciphertext_products": 3080,
+          "rotations": 21360,
+          "ciphertext_additions": 22576,
+          "public_multiplications": 4104,
+          "opaque_exponentials": 1024,
+          "opaque_reciprocals": 8
+        },
+        "expected_counts": {
+          "ciphertext_products": 3080,
+          "opaque_exponentials": 1024,
+          "opaque_reciprocals": 8
+        },
+        "critical_depth_from_block_input": "7 + E + R (including one Q/K/V projection level; E/R are opaque exp/reciprocal depths)",
+        "output_projection_extra_levels": 1,
+        "notes": [
+          "Exact exp/division establish only layout semantics, not realizable CKKS nonlinear operators.",
+          "The unnormalized exponential route differs from the previously composed normalized repeated-squaring circuit.",
+          "Batches may stream one example at a time; token rows are never replicas of every key/feature pair.",
+          "Only public key masks apply; all actual padded query rows are retained."
+        ]
+      }
+    },
+    {
+      "case": "public_pair_2",
+      "sequence": 128,
+      "valid_keys": 16,
+      "padded_queries": 112,
+      "passed": true,
+      "maximum_absolute_errors": {
+        "context_vs_dense": 1.7763568394002505e-15,
+        "context_vs_transformers": 3.552713678800501e-15,
+        "full_block_vs_numpy": 3.552713678800501e-15,
+        "full_block_vs_transformers": 1.5987211554602254e-14
+      },
+      "padded_query_output_max_abs": 6.434104789839636,
+      "observed_ranges": {
+        "centered_valid_queries": {
+          "minimum": -6.166182991477029,
+          "maximum": 10.073982526608848,
+          "count": 3072,
+          "nonfinite": 0,
+          "comparison_domain": [
+            -9,
+            12
+          ],
+          "below": 0,
+          "above": 0
+        },
+        "unmasked_exp": {
+          "minimum": 3.087330394549165e-05,
+          "maximum": 1289157.1542444439,
+          "count": 24576,
+          "nonfinite": 0
+        },
+        "denominator_mean_exp": {
+          "minimum": 1.0802442123601184,
+          "maximum": 80573.96709583054,
+          "count": 1536,
+          "nonfinite": 0
+        },
+        "centered_padded_queries": {
+          "minimum": -10.385618697464544,
+          "maximum": 14.069499193996684,
+          "count": 21504,
+          "nonfinite": 0,
+          "comparison_domain": [
+            -9,
+            12
+          ],
+          "below": 2,
+          "above": 12
+        }
+      },
+      "layout_plan": {
+        "rows": 16,
+        "features": 4096,
+        "slots": 65536,
+        "sequence": 128,
+        "tiles": 8,
+        "ciphertext_slot_period": 65536,
+        "attention_rotation_indices": [
+          1,
+          2,
+          4,
+          8,
+          16,
+          32,
+          4096,
+          8192,
+          12288,
+          16384,
+          20480,
+          24576,
+          28672,
+          32768,
+          36864,
+          40960,
+          45056,
+          49152,
+          53248,
+          57344,
+          61440,
+          65504,
+          65520,
+          65528,
+          65532,
+          65534,
+          65535
+        ],
+        "actual_simulated_counts": {
+          "ciphertext_products": 3080,
+          "rotations": 21360,
+          "ciphertext_additions": 22576,
+          "public_multiplications": 4104,
+          "opaque_exponentials": 1024,
+          "opaque_reciprocals": 8
+        },
+        "expected_counts": {
+          "ciphertext_products": 3080,
+          "opaque_exponentials": 1024,
+          "opaque_reciprocals": 8
+        },
+        "critical_depth_from_block_input": "7 + E + R (including one Q/K/V projection level; E/R are opaque exp/reciprocal depths)",
+        "output_projection_extra_levels": 1,
+        "notes": [
+          "Exact exp/division establish only layout semantics, not realizable CKKS nonlinear operators.",
+          "The unnormalized exponential route differs from the previously composed normalized repeated-squaring circuit.",
+          "Batches may stream one example at a time; token rows are never replicas of every key/feature pair.",
+          "Only public key masks apply; all actual padded query rows are retained."
+        ]
+      }
+    },
+    {
+      "case": "public_pair_3",
+      "sequence": 128,
+      "valid_keys": 128,
+      "padded_queries": 0,
+      "passed": true,
+      "maximum_absolute_errors": {
+        "context_vs_dense": 8.43769498715119e-15,
+        "context_vs_transformers": 5.10702591327572e-15,
+        "full_block_vs_numpy": 3.552713678800501e-15,
+        "full_block_vs_transformers": 7.105427357601002e-15
+      },
+      "padded_query_output_max_abs": null,
+      "observed_ranges": {
+        "centered_valid_queries": {
+          "minimum": -11.692880302712462,
+          "maximum": 12.598232713589088,
+          "count": 196608,
+          "nonfinite": 0,
+          "comparison_domain": [
+            -9,
+            12
+          ],
+          "below": 80,
+          "above": 5
+        },
+        "unmasked_exp": {
+          "minimum": 8.353079349516982e-06,
+          "maximum": 296034.92422387993,
+          "count": 196608,
+          "nonfinite": 0
+        },
+        "denominator_mean_exp": {
+          "minimum": 1.0711862577237345,
+          "maximum": 2523.526859887535,
+          "count": 1536,
+          "nonfinite": 0
+        }
+      },
+      "layout_plan": {
+        "rows": 16,
+        "features": 4096,
+        "slots": 65536,
+        "sequence": 128,
+        "tiles": 8,
+        "ciphertext_slot_period": 65536,
+        "attention_rotation_indices": [
+          1,
+          2,
+          4,
+          8,
+          16,
+          32,
+          4096,
+          8192,
+          12288,
+          16384,
+          20480,
+          24576,
+          28672,
+          32768,
+          36864,
+          40960,
+          45056,
+          49152,
+          53248,
+          57344,
+          61440,
+          65504,
+          65520,
+          65528,
+          65532,
+          65534,
+          65535
+        ],
+        "actual_simulated_counts": {
+          "ciphertext_products": 3080,
+          "rotations": 21360,
+          "ciphertext_additions": 22576,
+          "public_multiplications": 4104,
+          "opaque_exponentials": 1024,
+          "opaque_reciprocals": 8
+        },
+        "expected_counts": {
+          "ciphertext_products": 3080,
+          "opaque_exponentials": 1024,
+          "opaque_reciprocals": 8
+        },
+        "critical_depth_from_block_input": "7 + E + R (including one Q/K/V projection level; E/R are opaque exp/reciprocal depths)",
+        "output_projection_extra_levels": 1,
+        "notes": [
+          "Exact exp/division establish only layout semantics, not realizable CKKS nonlinear operators.",
+          "The unnormalized exponential route differs from the previously composed normalized repeated-squaring circuit.",
+          "Batches may stream one example at a time; token rows are never replicas of every key/feature pair.",
+          "Only public key masks apply; all actual padded query rows are retained."
+        ]
+      }
+    },
+    {
+      "case": "public_boundary_mask",
+      "sequence": 128,
+      "valid_keys": 11,
+      "padded_queries": 117,
+      "passed": true,
+      "maximum_absolute_errors": {
+        "context_vs_dense": 2.4424906541753444e-15,
+        "context_vs_transformers": 4.440892098500626e-15,
+        "full_block_vs_numpy": 2.220446049250313e-15,
+        "full_block_vs_transformers": 1.687538997430238e-14
+      },
+      "padded_query_output_max_abs": 12.517616406496488,
+      "observed_ranges": {
+        "centered_valid_queries": {
+          "minimum": -11.966099520166697,
+          "maximum": 11.900887716273825,
+          "count": 1452,
+          "nonfinite": 0,
+          "comparison_domain": [
+            -9,
+            12
+          ],
+          "below": 11,
+          "above": 0
+        },
+        "unmasked_exp": {
+          "minimum": 6.684800512193628e-07,
+          "maximum": 4496299.054592642,
+          "count": 16896,
+          "nonfinite": 0
+        },
+        "centered_padded_queries": {
+          "minimum": -14.218259281957577,
+          "maximum": 15.318765184044803,
+          "count": 15444,
+          "nonfinite": 0,
+          "comparison_domain": [
+            -9,
+            12
+          ],
+          "below": 69,
+          "above": 14
+        },
+        "denominator_mean_exp": {
+          "minimum": 1.0098219258334513,
+          "maximum": 410332.0131975031,
+          "count": 1536,
+          "nonfinite": 0
+        }
+      },
+      "layout_plan": {
+        "rows": 16,
+        "features": 4096,
+        "slots": 65536,
+        "sequence": 128,
+        "tiles": 8,
+        "ciphertext_slot_period": 65536,
+        "attention_rotation_indices": [
+          1,
+          2,
+          4,
+          8,
+          16,
+          32,
+          4096,
+          8192,
+          12288,
+          16384,
+          20480,
+          24576,
+          28672,
+          32768,
+          36864,
+          40960,
+          45056,
+          49152,
+          53248,
+          57344,
+          61440,
+          65504,
+          65520,
+          65528,
+          65532,
+          65534,
+          65535
+        ],
+        "actual_simulated_counts": {
+          "ciphertext_products": 3080,
+          "rotations": 21360,
+          "ciphertext_additions": 22576,
+          "public_multiplications": 4104,
+          "opaque_exponentials": 1024,
+          "opaque_reciprocals": 8
+        },
+        "expected_counts": {
+          "ciphertext_products": 3080,
+          "opaque_exponentials": 1024,
+          "opaque_reciprocals": 8
+        },
+        "critical_depth_from_block_input": "7 + E + R (including one Q/K/V projection level; E/R are opaque exp/reciprocal depths)",
+        "output_projection_extra_levels": 1,
+        "notes": [
+          "Exact exp/division establish only layout semantics, not realizable CKKS nonlinear operators.",
+          "The unnormalized exponential route differs from the previously composed normalized repeated-squaring circuit.",
+          "Batches may stream one example at a time; token rows are never replicas of every key/feature pair.",
+          "Only public key masks apply; all actual padded query rows are retained."
+        ]
+      }
+    },
+    {
+      "case": "public_last_key_only",
+      "sequence": 128,
+      "valid_keys": 1,
+      "padded_queries": 127,
+      "passed": true,
+      "maximum_absolute_errors": {
+        "context_vs_dense": 0.0,
+        "context_vs_transformers": 3.9968028886505635e-15,
+        "full_block_vs_numpy": 0.0,
+        "full_block_vs_transformers": 1.3766765505351941e-14
+      },
+      "padded_query_output_max_abs": 12.111939234262309,
+      "observed_ranges": {
+        "centered_padded_queries": {
+          "minimum": 0.0,
+          "maximum": 0.0,
+          "count": 1524,
+          "nonfinite": 0,
+          "comparison_domain": [
+            -9,
+            12
+          ],
+          "below": 0,
+          "above": 0
+        },
+        "unmasked_exp": {
+          "minimum": 1.0,
+          "maximum": 1.0,
+          "count": 1536,
+          "nonfinite": 0
+        },
+        "denominator_mean_exp": {
+          "minimum": 1.0,
+          "maximum": 1.0,
+          "count": 1536,
+          "nonfinite": 0
+        },
+        "centered_valid_queries": {
+          "minimum": 0.0,
+          "maximum": 0.0,
+          "count": 12,
+          "nonfinite": 0,
+          "comparison_domain": [
+            -9,
+            12
+          ],
+          "below": 0,
+          "above": 0
+        }
+      },
+      "layout_plan": {
+        "rows": 16,
+        "features": 4096,
+        "slots": 65536,
+        "sequence": 128,
+        "tiles": 8,
+        "ciphertext_slot_period": 65536,
+        "attention_rotation_indices": [
+          1,
+          2,
+          4,
+          8,
+          16,
+          32,
+          4096,
+          8192,
+          12288,
+          16384,
+          20480,
+          24576,
+          28672,
+          32768,
+          36864,
+          40960,
+          45056,
+          49152,
+          53248,
+          57344,
+          61440,
+          65504,
+          65520,
+          65528,
+          65532,
+          65534,
+          65535
+        ],
+        "actual_simulated_counts": {
+          "ciphertext_products": 3080,
+          "rotations": 21360,
+          "ciphertext_additions": 22576,
+          "public_multiplications": 4104,
+          "opaque_exponentials": 1024,
+          "opaque_reciprocals": 8
+        },
+        "expected_counts": {
+          "ciphertext_products": 3080,
+          "opaque_exponentials": 1024,
+          "opaque_reciprocals": 8
+        },
+        "critical_depth_from_block_input": "7 + E + R (including one Q/K/V projection level; E/R are opaque exp/reciprocal depths)",
+        "output_projection_extra_levels": 1,
+        "notes": [
+          "Exact exp/division establish only layout semantics, not realizable CKKS nonlinear operators.",
+          "The unnormalized exponential route differs from the previously composed normalized repeated-squaring circuit.",
+          "Batches may stream one example at a time; token rows are never replicas of every key/feature pair.",
+          "Only public key masks apply; all actual padded query rows are retained."
+        ]
+      }
+    },
+    {
+      "case": "public_partial_tile17",
+      "sequence": 17,
+      "valid_keys": 15,
+      "padded_queries": 2,
+      "passed": true,
+      "maximum_absolute_errors": {
+        "context_vs_dense": 1.9984014443252818e-15,
+        "context_vs_transformers": 3.9968028886505635e-15,
+        "full_block_vs_numpy": 1.7763568394002505e-15,
+        "full_block_vs_transformers": 1.2434497875801753e-14
+      },
+      "padded_query_output_max_abs": 6.330546657732509,
+      "observed_ranges": {
+        "centered_valid_queries": {
+          "minimum": -6.550620482683996,
+          "maximum": 10.25436206703855,
+          "count": 2700,
+          "nonfinite": 0,
+          "comparison_domain": [
+            -9,
+            12
+          ],
+          "below": 0,
+          "above": 0
+        },
+        "unmasked_exp": {
+          "minimum": 0.0013125357915627445,
+          "maximum": 28406.18173073522,
+          "count": 5760,
+          "nonfinite": 0
+        },
+        "centered_padded_queries": {
+          "minimum": -6.6357942941082175,
+          "maximum": 6.53693903281551,
+          "count": 360,
+          "nonfinite": 0,
+          "comparison_domain": [
+            -9,
+            12
+          ],
+          "below": 0,
+          "above": 0
+        },
+        "denominator_mean_exp": {
+          "minimum": 1.0695577234455387,
+          "maximum": 2557.8443664162437,
+          "count": 204,
+          "nonfinite": 0
+        }
+      },
+      "layout_plan": {
+        "rows": 16,
+        "features": 4096,
+        "slots": 65536,
+        "sequence": 17,
+        "tiles": 2,
+        "ciphertext_slot_period": 65536,
+        "attention_rotation_indices": [
+          1,
+          2,
+          4,
+          8,
+          16,
+          32,
+          4096,
+          8192,
+          12288,
+          16384,
+          20480,
+          24576,
+          28672,
+          32768,
+          36864,
+          40960,
+          45056,
+          49152,
+          53248,
+          57344,
+          61440,
+          65504,
+          65520,
+          65528,
+          65532,
+          65534,
+          65535
+        ],
+        "actual_simulated_counts": {
+          "ciphertext_products": 194,
+          "rotations": 1344,
+          "ciphertext_additions": 1420,
+          "public_multiplications": 258,
+          "opaque_exponentials": 64,
+          "opaque_reciprocals": 2
+        },
+        "expected_counts": {
+          "ciphertext_products": 194,
+          "opaque_exponentials": 64,
+          "opaque_reciprocals": 2
+        },
+        "critical_depth_from_block_input": "7 + E + R (including one Q/K/V projection level; E/R are opaque exp/reciprocal depths)",
+        "output_projection_extra_levels": 1,
+        "notes": [
+          "Exact exp/division establish only layout semantics, not realizable CKKS nonlinear operators.",
+          "The unnormalized exponential route differs from the previously composed normalized repeated-squaring circuit.",
+          "Batches may stream one example at a time; token rows are never replicas of every key/feature pair.",
+          "Only public key masks apply; all actual padded query rows are retained."
+        ]
+      }
+    }
+  ],
+  "passed": true,
+  "source_hashes_before": {
+    "/tmp/streaming-bert-layout/check_pretrained_block.py": "36d10185e62a83f0bb346bd6f06a7fc82ee18ac1bcf4cce2ac9823bc69d47768",
+    "/tmp/streaming-bert-layout/row_attention.py": "320b74092bd45ff6e2b71e2e4d9204de4bdb7f7b53c184a516e0ee40bcab3269",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/src/reference.py": "6d254c92b70257e773d1701a6f85fb592365e67d037b231b9e5a1589e64e7a04",
+    "/home/jianming_gatech/CROSS/cadathlon/validation/check_pretrained_bert_domains.py": "d3463f03bdfcb1a0539bf8b6333a22b9fc776231815ed120bf31a29b73f08c40"
+  },
+  "source_hashes_after": {
+    "/tmp/streaming-bert-layout/check_pretrained_block.py": "36d10185e62a83f0bb346bd6f06a7fc82ee18ac1bcf4cce2ac9823bc69d47768",
+    "/tmp/streaming-bert-layout/row_attention.py": "320b74092bd45ff6e2b71e2e4d9204de4bdb7f7b53c184a516e0ee40bcab3269",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/src/reference.py": "6d254c92b70257e773d1701a6f85fb592365e67d037b231b9e5a1589e64e7a04",
+    "/home/jianming_gatech/CROSS/cadathlon/validation/check_pretrained_bert_domains.py": "d3463f03bdfcb1a0539bf8b6333a22b9fc776231815ed120bf31a29b73f08c40"
+  },
+  "source_files_unchanged": true,
+  "versions": {
+    "numpy": "2.5.4",
+    "torch": "2.15.0+cpu",
+    "transformers": "4.51.3",
+    "safetensors": "0.8.0"
+  },
+  "elapsed_s": 12.1168507149996,
+  "peak_rss_kib": 1676176,
+  "limitations": [
+    "Exact exp/division, GELU and LayerNorm are plaintext oracle functions, not CKKS circuits.",
+    "Prior centered-score interval[-9,12] was selected on valid query tokens of three short pairs; padded-query and other-input violations remain visible here.",
+    "Unnormalized exp accumulation differs from prior normalized repeated squaring; observed large magnitudes may make it unsuitable for CKKS refresh.",
+    "Each Q/K/V projection and remaining dense layer is NumPy/Torch; full-width BSGS execution/precision is not validated.",
+    "Full-slot period65536 has no sparse alias averaging; period128 refresh proof does not apply."
+  ]
+}

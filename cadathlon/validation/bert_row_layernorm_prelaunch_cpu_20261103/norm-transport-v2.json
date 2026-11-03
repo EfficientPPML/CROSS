@@ -1,0 +1,44 @@
+{
+  "scope": "backend-free strict public key/model/two-request ciphertext metadata and lifecycle tests; no encryption/security numerical proof",
+  "command": [
+    "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+    "-m",
+    "pytest",
+    "/tmp/bert-row-layernorm-candidate-20261103/prototype/test_norm_transport.py",
+    "-q",
+    "--junitxml=/tmp/bert-row-layernorm-candidate-20261103/norm-transport-v2.xml"
+  ],
+  "environment": {
+    "JAX_PLATFORMS": "cpu",
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "affinity": [
+      148,
+      149,
+      150,
+      151
+    ]
+  },
+  "exit_code": 0,
+  "elapsed_s": 0.8451753089975682,
+  "source_before": {
+    "prototype/spec.py": "490fad7fa473600c580339b50ad098ef3aac74fa381490efed6fc6147c226b12",
+    "prototype/transport.py": "e35f0d9286d1d5c343b7bca9aed40ec6c2c706e23609975dfaea399f3fb68759",
+    "prototype/contracts.py": "72d2daa05a31ca3679163f1bf8bf016a321a2cc1a03630e7dbe851dcda6c8fb1",
+    "prototype/test_norm_transport.py": "f2a34e4fe188229effc3da0208af93bccf8eeb77fc6498a4072142ec05d6b201",
+    "checkout/cadathlon/common/encrypted_streaming_linear.py": "83e12b9cf00f1393a47aadddffaaa1ff6b4d0745cb68d9393d2dd38a2a165ecb",
+    "checkout/cadathlon/common/encrypted_row_normalization.py": "91d26d4d8cb01f5a97afdfe089905a18e0335399c42483b0e8cd322eb17e1769"
+  },
+  "source_after": {
+    "prototype/spec.py": "490fad7fa473600c580339b50ad098ef3aac74fa381490efed6fc6147c226b12",
+    "prototype/transport.py": "e35f0d9286d1d5c343b7bca9aed40ec6c2c706e23609975dfaea399f3fb68759",
+    "prototype/contracts.py": "72d2daa05a31ca3679163f1bf8bf016a321a2cc1a03630e7dbe851dcda6c8fb1",
+    "prototype/test_norm_transport.py": "f2a34e4fe188229effc3da0208af93bccf8eeb77fc6498a4072142ec05d6b201",
+    "checkout/cadathlon/common/encrypted_streaming_linear.py": "83e12b9cf00f1393a47aadddffaaa1ff6b4d0745cb68d9393d2dd38a2a165ecb",
+    "checkout/cadathlon/common/encrypted_row_normalization.py": "91d26d4d8cb01f5a97afdfe089905a18e0335399c42483b0e8cd322eb17e1769"
+  },
+  "source_files_unchanged": true,
+  "source_archive_sha256": "f31c907035198628f0561451327d394b71224df6c77684317189a32d444c8a84",
+  "passed": true
+}

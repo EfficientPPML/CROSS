@@ -1,0 +1,137 @@
+"""Verify and whitelist-copy terminal LayerNorm component evidence, never key/payload files."""
+from pathlib import Path, PurePosixPath
+import argparse, hashlib, json, math, re, shutil, stat, tarfile
+
+LAB=Path('/tmp/bert-row-layernorm-precision60-20261103')
+RUN=LAB/'run-v1'
+REPO=LAB/'checkout'
+
+
+def require(condition,message):
+    if not condition: raise ValueError(message)
+
+
+def read(path):
+    require(stat.S_ISREG(path.lstat().st_mode),f'not regular: {path}')
+    return path.read_bytes()
+
+
+def sha(path): return hashlib.sha256(read(path)).hexdigest()
+
+
+def aggregate(value):
+    prohibited={'secret_key','private_key','sk','payload','ciphertext','ciphertexts',
+                'embeddings','decrypted','logits','labels','predictions','input_ids','token_ids'}
+    if isinstance(value,dict):
+        for key,child in value.items():
+            require(key.lower() not in prohibited,f'private-valued JSON field: {key}')
+            aggregate(child)
+    elif isinstance(value,list):
+        for child in value: aggregate(child)
+    elif isinstance(value,float): require(math.isfinite(value),'nonfinite report field')
+
+
+def archive_sources(report):
+    before=report['source_hashes_start'];after=report['source_hashes_end']
+    require(report['source_files_unchanged'] and before==after,'measured sources changed')
+    require(len(before)==111,'wrong measured inventory')
+    require(sha(RUN/'sources.tar.gz')==report['source_archive_sha256'],'source archive digest differs')
+    expected={}
+    for name,digest in before.items():
+        path=Path(name)
+        member='repository/'+str(path.relative_to(REPO)) if path.is_relative_to(REPO) else 'prototype/'+path.name
+        require(member not in expected,'source basename collision')
+        expected[member]=digest
+        require(sha(path)==digest,f'current frozen source differs: {path}')
+    actual={}
+    with tarfile.open(RUN/'sources.tar.gz') as archive:
+        for member in archive.getmembers():
+            path=PurePosixPath(member.name)
+            require(member.isfile() and not path.is_absolute() and '..' not in path.parts,'unsafe tar member')
+            require(member.name not in actual,'duplicate tar member')
+            actual[member.name]=hashlib.sha256(archive.extractfile(member).read()).hexdigest()
+    require(actual==expected,'exact measured source bytes differ')
+    return len(actual)
+
+
+def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('destination',type=Path)
+    parser.add_argument('--observed-exit-code',type=int,required=True)
+    args=parser.parse_args()
+    report=json.loads(read(RUN/'report.json'));aggregate(report)
+    require(report['all_processes_reaped'],'not all stages reaped')
+    require(report['owned_component_directory_removed'] and report['owned_directory_handle_closed'],'owned cleanup failed')
+    require(not Path(report['owned_component_directory']).exists(),'owned private/key directory remains')
+    sources=archive_sources(report)
+    pids=[report['wrapper_pid']]+[stage['pid'] for stage in report['stages'].values() if 'pid' in stage]
+    require(all(not Path(f'/proc/{pid}').exists() for pid in pids),'recorded PID remains')
+    passed=report.get('passed') is True
+    require((args.observed_exit_code==0)==passed,'exit/report disagree')
+    require(report['cpu_affinity']==[140,141,142,143],'unexpected CPU affinity')
+    require(report['gate']==1e-6,'changed gate')
+    if passed:
+        require(set(report['stages'])=={'public-preflight','client-preprocess','client-encrypt','keyless-server','client-decrypt'},'incomplete protocol')
+        for label,stage in report['stages'].items():
+            require(stage['passed'] and stage['returncode']==0 and stage['process_reaped'],f'failed {label}')
+        server=report['stages']['keyless-server']['result']
+        client=report['stages']['client-decrypt']['result']
+        require(server['server_secret_absent'] and server['client_codecs_and_keygen_forbidden'] and not server['client_file_access_attempts'],'keyless boundary failed')
+        require(server['no_refresh'] and server['input_count']==2 and server['output_count']==8,'unexpected component graph')
+        require(server['input_payloads_unchanged'],'mutated input ciphertexts')
+        require(client['all_slots_checked']==131072,'incomplete numeric gate')
+        require(len(client['checks'])==8,'missing checkpoint')
+        for role in ('attention','mlp'):
+            for kind,level in (('mean',11),('variance',9),('inverse',3),('output',1)):
+                name=role+'_'+kind;check=client['checks'][name];observed=server['checks'][name]
+                require(check['passed'] and check['slots_checked']==16384 and check['gate']==1e-6 and check['max_abs_error']<=1e-6,'numeric gate failed')
+                require(observed['level']==level and type(observed['nsd']) is int and observed['nsd']==1,'metadata mismatch')
+                ring=observed['ring'][0]
+                require(ring['degree']==32768 and ring['num_q']==26 and ring['num_p']==3 and ring['dnum']==13 and ring['log2_QP']<=881,'wrong execution ring')
+                require(ring['security_bits']==128 and ring['security_model']=='classical','wrong security model')
+        for label,stage in report['stages'].items():
+            require(stage['public_key_store_removed'] and stage['owned_directory_handle_closed'],'stage cleanup incomplete')
+            require(not Path(stage['owned_public_key_directory']).exists(),'stage public keys remain')
+        require(not report['full_attention_evaluated'] and not report['full_bert_evaluated'] and not report['mrpc_accuracy_evaluated'],'scope changed')
+    outer=read(LAB/'run-v1.log').decode()
+    exit_match=re.search(r'Exit status: (\d+)\s*$',outer)
+    require(exit_match is not None and int(exit_match.group(1))==args.observed_exit_code,'GNU time exit differs')
+    rss=re.search(r'Maximum resident set size \(kbytes\): (\d+)',outer)
+    wall=re.search(r'Elapsed \(wall clock\) time \(h:mm:ss or m:ss\): ([\d:.]+)',outer)
+    require(rss and wall,'external process resource record missing')
+    parts=[float(x) for x in wall.group(1).split(':')]
+    elapsed=sum(value*60**i for i,value in enumerate(reversed(parts)))
+    top=['report.json','sources.tar.gz','preprocessing.json','model_manifest.json','public_manifest.json',
+         'attention_request_transport.json','mlp_request_transport.json','responses.json']
+    top += [role+'_'+kind+'_transport.json' for role in ('attention','mlp') for kind in ('mean','variance','inverse','output')]
+    require(all((RUN/name).is_file() for name in top),'expected public evidence missing')
+    files={RUN/name:'measured/'+name for name in top if (RUN/name).is_file()}
+    for stage in report['stages']:
+        for name in ('process.json','stderr.log','stdout.json'):
+            path=RUN/stage/name
+            if path.is_file():files[path]='measured/'+stage+'/'+name
+    files[LAB/'run-v1.log']='run.log'
+    files[Path(__file__).resolve()]='verify_archive.py.txt'
+    # Every filename is explicitly selected. No recursive copy enters the owned
+    # private/key/model/input/output root; no .npy/.npz files are accepted.
+    for source,target in files.items():
+        require(source.suffix not in ('.npy','.npz'),'binary payload selected')
+        if source.suffix=='.json':aggregate(json.loads(read(source)))
+    dest=args.destination.resolve();dest.mkdir(parents=True,exist_ok=False)
+    copied={}
+    for source,target in files.items():
+        data=read(source);digest=hashlib.sha256(data).hexdigest()
+        out=dest/target;out.parent.mkdir(parents=True,exist_ok=True);out.write_bytes(data)
+        require(sha(out)==sha(source)==digest,'copy changed')
+        copied[target]=digest
+    verification=dict(scope='Terminal CPU precision60 LayerNorm component evidence verification; no new crypto execution.',
+        passed=True,component_passed=passed,observed_tool_session=90252,
+        observed_terminal_exit_code=args.observed_exit_code,recorded_processes_absent=pids,
+        measured_source_files=sources,exact_archive_verified=True,owned_private_key_directory_absent=True,
+        private_arrays_keys_ciphertexts_copied=False,internal_elapsed_s=report['elapsed_s'],
+        external_elapsed_s=elapsed,external_elapsed_text=wall.group(1),peak_rss_kib=int(rss.group(1)),
+        copied_artifact_sha256=copied)
+    (dest/'verification.json').write_text(json.dumps(verification,indent=2)+'\n')
+    print(json.dumps(verification,indent=2))
+
+if __name__=='__main__':main()

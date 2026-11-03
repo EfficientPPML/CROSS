@@ -1,0 +1,215 @@
+--- a/cadathlon/validation/check_transformer_suite.py
++++ b/cadathlon/validation/check_transformer_suite.py
+@@ -348,22 +348,32 @@
+ 
+ def evaluate(args):
+     problem = ROOT / "cadathlon/agent_pset" / PROBLEMS[args.model]
+-    implementation = args.implementation.resolve(strict=True)
+     # Atomic creation prevents stale artifacts and concurrent writers.
+     args.output.mkdir(parents=True, exist_ok=False)
+-    initial = source_manifest(problem, implementation)
+     selected = tuple(f"test{i}.in" for i in args.cases)
+     report = {"scope": "encrypted public synthetic fixtures only",
+               "model": args.model, "selected_cases": selected, "cases": {},
+               "warmups": args.warmups, "repeats": args.repeats,
+               "started_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+-              "software": software_versions(), "host": platform.node(),
+-              "environment": {key: os.environ.get(key) for key in ENVIRONMENT},
+-              "child_environment_overrides": child_environment_overrides(),
+-              "source_hashes_start": initial,
++              "passed": False, "complete": False, "all_six_passed": False,
++              "scoring_calibrated": False, "full_model_evaluated": False,
++              "implementation_requested": str(args.implementation),
++              "source_hashes_start": None, "source_files_unchanged": False,
+               "source_scope": "core/demos/common/problem Python, adjacent implementation Python, six input/output fixtures, wrapper; not an arbitrary external import closure"}
+     started = time.monotonic()
+-    try:
++    initial = implementation = caught = None
++    try:
++        # Record ownership of this fresh attempt before fallible source,
++        # implementation or package inspection. A prelaunch failure must not
++        # leave an empty directory indistinguishable from an unstarted sweep.
++        write_json(args.output / "report.json", report)
++        implementation = args.implementation.resolve(strict=True)
++        initial = source_manifest(problem, implementation)
++        report["source_hashes_start"] = initial
++        report.update(software=software_versions(),
++                      host=platform.node(),
++                      environment={key: os.environ.get(key) for key in ENVIRONMENT},
++                      child_environment_overrides=child_environment_overrides())
+         for case in selected:
+             directory = args.output / Path(case).stem
+             directory.mkdir()
+@@ -401,20 +411,36 @@
+             if not record["source_files_unchanged"] or cleanup_incomplete:
+                 break
+     except BaseException as error:
++        caught = error
+         report["error"] = f"{type(error).__name__}: {error}"
+         raise
+     finally:
++        final_cancellation = None
+         report.pop("active_case", None)
+         report["elapsed_s"] = time.monotonic() - started
+         try:
+-            report["source_hashes_end"] = source_manifest(problem, implementation)
+-        except OSError as error:
++            report["source_hashes_end"] = (source_manifest(problem, implementation)
++                                            if implementation is not None else None)
++        except BaseException as error:
+             report["source_hashes_end"] = None
+-            report["source_read_error"] = str(error)
+-        report["source_files_unchanged"] = report["source_hashes_end"] == initial
++            report["source_read_error"] = f"{type(error).__name__}: {error}"
++            if not isinstance(error, Exception):
++                final_cancellation = error
++                report.setdefault("error", f"{type(error).__name__}: {error}")
++            if caught is not None:
++                caught.add_note(f"Final source inspection also failed: {type(error).__name__}: {error}")
++        report["source_files_unchanged"] = initial is not None and report["source_hashes_end"] == initial
+         report.update(summarize(report["cases"], selected, warmups=args.warmups, repeats=args.repeats))
+         report["passed"] = report["all_six_passed"] and report["source_files_unchanged"] and "error" not in report
+-        write_json(args.output / "report.json", report)
++        try:
++            write_json(args.output / "report.json", report)
++        except BaseException as error:
++            primary = caught if caught is not None else final_cancellation
++            if primary is None:
++                raise
++            primary.add_note(f"Final sweep evidence write failed: {type(error).__name__}: {error}")
++        if caught is None and final_cancellation is not None:
++            raise final_cancellation
+     return 0 if report["passed"] else 1
+ 
+ 
+--- a/cadathlon/tests/test_transformer_suite.py
++++ b/cadathlon/tests/test_transformer_suite.py
+@@ -264,3 +264,128 @@
+     except RuntimeError:
+         assert raise_inside
+     assert {sig: signal.getsignal(sig) for sig in previous} == previous
++
++
++@pytest.mark.parametrize('error_type', [FileNotFoundError, KeyboardInterrupt, SystemExit])
++def test_initial_source_failure_records_failed_attempt_without_launch(monkeypatch, tmp_path, error_type):
++    primary = error_type('initial source inspection failed')
++    def fail_sources(*args):
++        raise primary
++    args = prepare_evaluation(monkeypatch, tmp_path, sources=fail_sources)
++    def no_launch(*args, **kwargs):
++        pytest.fail('a source-inspection failure must not launch a child')
++    monkeypatch.setattr(suite, 'run_case', no_launch)
++    with pytest.raises(error_type) as observed:
++        suite.evaluate(args)
++    assert observed.value is primary
++    report = json.loads((args.output / 'report.json').read_text())
++    assert report['passed'] is False and report['complete'] is False
++    assert report['all_six_passed'] is False and report['scoring_calibrated'] is False
++    assert report['source_hashes_start'] is None and report['source_hashes_end'] is None
++    assert report['source_files_unchanged'] is False and report['cases'] == {}
++    assert 'initial source inspection failed' in report['error']
++
++
++@pytest.mark.parametrize('stage', ['implementation', 'software', 'initial_publication'])
++def test_prelaunch_failure_keeps_concrete_failed_metadata(monkeypatch, tmp_path, stage):
++    args = prepare_evaluation(monkeypatch, tmp_path)
++    if stage == 'implementation':
++        args.implementation.unlink()
++        error_type = FileNotFoundError
++    elif stage == 'software':
++        def fail():
++            raise RuntimeError('package metadata unavailable')
++        monkeypatch.setattr(suite, 'software_versions', fail)
++        error_type = RuntimeError
++    else:
++        real_write = suite.write_json
++        calls = 0
++        def write(path, value):
++            nonlocal calls
++            calls += 1
++            if calls == 1:
++                raise OSError('initial write interrupted')
++            return real_write(path, value)
++        monkeypatch.setattr(suite, 'write_json', write)
++        error_type = OSError
++    def no_launch(*args, **kwargs):
++        pytest.fail('prelaunch metadata failure must not launch a child')
++    monkeypatch.setattr(suite, 'run_case', no_launch)
++    with pytest.raises(error_type):
++        suite.evaluate(args)
++    report = json.loads((args.output / 'report.json').read_text())
++    assert report['passed'] is False and report['cases'] == {} and report['error']
++    assert report['implementation_requested'] == str(args.implementation)
++    if stage == 'software':
++        assert report['source_hashes_start'] == report['source_hashes_end'] == {'source.py': 'unchanged'}
++        assert report['source_files_unchanged'] is True
++
++
++@pytest.mark.parametrize('error_type', [KeyboardInterrupt, SystemExit, RuntimeError])
++def test_final_sweep_publication_preserves_primary_error(monkeypatch, tmp_path, error_type):
++    args = prepare_evaluation(monkeypatch, tmp_path)
++    primary = error_type('primary child failure')
++    def fail_child(*args, **kwargs):
++        raise primary
++    real_write = suite.write_json
++    def fail_final_write(path, value):
++        if 'elapsed_s' in value:
++            raise OSError('final report publication failed')
++        return real_write(path, value)
++    monkeypatch.setattr(suite, 'run_case', fail_child)
++    monkeypatch.setattr(suite, 'write_json', fail_final_write)
++    with pytest.raises(error_type) as observed:
++        suite.evaluate(args)
++    assert observed.value is primary
++    assert any('Final sweep evidence write failed: OSError' in note for note in primary.__notes__)
++    # The last successfully written record remains explicitly incomplete.
++    report = json.loads((args.output / 'report.json').read_text())
++    assert report['passed'] is False and report['complete'] is False
++
++
++def test_final_publication_failure_prevents_success_return(monkeypatch, tmp_path):
++    args = prepare_evaluation(monkeypatch, tmp_path)
++    real_write = suite.write_json
++    def fail_final_write(path, value):
++        if 'elapsed_s' in value:
++            raise OSError('cannot publish final success')
++        return real_write(path, value)
++    monkeypatch.setattr(suite, 'write_json', fail_final_write)
++    with pytest.raises(OSError, match='cannot publish final success'):
++        suite.evaluate(args)
++    report = json.loads((args.output / 'report.json').read_text())
++    assert len(report['cases']) == 5 and report['passed'] is False
++    # The last case has its own completed record; the sweep snapshot was
++    # written before it started, and final publication never succeeded.
++    assert json.loads((args.output / 'test6/process.json').read_text())['passed'] is True
++    assert report['complete'] is False and report['scoring_calibrated'] is False
++
++
++@pytest.mark.parametrize('publication_failure', [False, True])
++def test_final_source_cancellation_is_preserved_after_publication(monkeypatch, tmp_path, publication_failure):
++    calls = 0
++    cancellation = KeyboardInterrupt('cancelled final source inspection')
++    def sources(*args):
++        nonlocal calls
++        calls += 1
++        if calls == 8:  # initial + six completed cases, then final inspection
++            raise cancellation
++        return {'source.py': 'unchanged'}
++    args = prepare_evaluation(monkeypatch, tmp_path, sources=sources)
++    real_write = suite.write_json
++    def write(path, value):
++        if publication_failure and 'elapsed_s' in value:
++            raise OSError('secondary final publication failure')
++        return real_write(path, value)
++    monkeypatch.setattr(suite, 'write_json', write)
++    with pytest.raises(KeyboardInterrupt) as observed:
++        suite.evaluate(args)
++    assert observed.value is cancellation
++    report = json.loads((args.output / 'report.json').read_text())
++    assert report['passed'] is False
++    if publication_failure:
++        assert any('Final sweep evidence write failed' in note for note in cancellation.__notes__)
++    else:
++        assert report['source_files_unchanged'] is False
++        assert report['source_hashes_end'] is None
++        assert 'cancelled final source inspection' in report['error']

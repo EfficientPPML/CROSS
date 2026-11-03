@@ -1,0 +1,67 @@
+{
+  "passed": true,
+  "returncode": 0,
+  "source_hashes_before": {
+    "cadathlon/validation/check_transformer_suite.py": "2a4dc0f849a6a4d3066d1de473bbea4c1fe26d4f43cd559dc01c097b6c377d19",
+    "cadathlon/validation/run_bounded_qwen2_proof.py": "62a4633668dc633821c1f8e1753473b4ba7563768b9590d4a9959a9c480d78d7",
+    "cadathlon/tests/test_transformer_suite.py": "e73a7435eb13a9d4b278d5c293f18f84c2a93585ac3d5218f3184283fed84cea",
+    "cadathlon/tests/test_transformer_owned_keys.py": "4897e0eab14ecb934061fc4a7f84ead913b43b9ad52e07ae4a8c0e41728da67d",
+    "cadathlon/tests/test_bounded_qwen2_proof.py": "03bf9e44bd8bcbad61f5e21b8f7a764f3ed83f1eb3b23c8f68931eba2e7ec67b"
+  },
+  "source_hashes_after": {
+    "cadathlon/validation/check_transformer_suite.py": "2a4dc0f849a6a4d3066d1de473bbea4c1fe26d4f43cd559dc01c097b6c377d19",
+    "cadathlon/validation/run_bounded_qwen2_proof.py": "62a4633668dc633821c1f8e1753473b4ba7563768b9590d4a9959a9c480d78d7",
+    "cadathlon/tests/test_transformer_suite.py": "e73a7435eb13a9d4b278d5c293f18f84c2a93585ac3d5218f3184283fed84cea",
+    "cadathlon/tests/test_transformer_owned_keys.py": "4897e0eab14ecb934061fc4a7f84ead913b43b9ad52e07ae4a8c0e41728da67d",
+    "cadathlon/tests/test_bounded_qwen2_proof.py": "03bf9e44bd8bcbad61f5e21b8f7a764f3ed83f1eb3b23c8f68931eba2e7ec67b"
+  },
+  "source_files_unchanged": true,
+  "elapsed_s": 5.676104882997606,
+  "command": [
+    "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "cadathlon/tests/test_transformer_suite.py",
+    "cadathlon/tests/test_transformer_owned_keys.py",
+    "cadathlon/tests/test_bounded_qwen2_proof.py"
+  ],
+  "cwd": "/tmp/transformer-collector-ownedkeys-20261103",
+  "affinity": [
+    152,
+    153,
+    154,
+    155
+  ],
+  "environment": {
+    "JAX_PLATFORMS": "cpu",
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1"
+  },
+  "status": "isolated ownership followup; unapplied through live Qwen source freeze",
+  "tests_passed": 78,
+  "pytest_elapsed_s": 5.53,
+  "base_source_hashes": {
+    "cadathlon/validation/check_transformer_suite.py": "e3c200254b3a9f6f124696fa7856c08c6205ef4876df4c293569307c5fccdeb9",
+    "cadathlon/validation/run_bounded_qwen2_proof.py": "afc1857798e1aafe4937188bfaf94d92d4ee105ec2fb52846163b48b792cf576",
+    "cadathlon/tests/test_transformer_suite.py": "28373bf1c67a9efb3004a9277c6bebaa11487129fd74547e642652bdebad72f3",
+    "cadathlon/tests/test_transformer_owned_keys.py": null,
+    "cadathlon/tests/test_bounded_qwen2_proof.py": "8148b93b36c650cde66dcc125b5ca8c3002df3e8d7075f47b9fcf6648d90b01a"
+  },
+  "patch_applies_to_current_live_source": true,
+  "initial_candidate_source_hashes": {
+    "cadathlon/tests/test_bounded_qwen2_proof.py": "8148b93b36c650cde66dcc125b5ca8c3002df3e8d7075f47b9fcf6648d90b01a",
+    "cadathlon/tests/test_transformer_owned_keys.py": "83bef5a52e891191980df01050ff2fa57f9ed6f00b4891f8fd1ac233a826abe5",
+    "cadathlon/tests/test_transformer_suite.py": "e73a7435eb13a9d4b278d5c293f18f84c2a93585ac3d5218f3184283fed84cea",
+    "cadathlon/validation/check_transformer_suite.py": "6fe8285c64b6e1f5b1af0724abe9bc52fd11b55443402e896cce1687fbfd8545",
+    "cadathlon/validation/run_bounded_qwen2_proof.py": "afc1857798e1aafe4937188bfaf94d92d4ee105ec2fb52846163b48b792cf576"
+  },
+  "scope": "CPU subprocess, directory identity and cancellation lifecycle only; no encryption or TPU result",
+  "limitations": [
+    "The pinned original directory descriptor prevents inode reuse and the pre-delete lstat catches completed replacement/move. This is not an atomic defense against arbitrary same-user manipulation during recursive deletion or entries moved into the owned tree.",
+    "Unknown inner cleanup state retains the outer parent for manual recovery. Uncatchable SIGKILL cannot execute cleanup.",
+    "Initial65-test archive remains unchanged. Interim72 and final78 checkpoints overlap; counts are not additive.",
+    "Generic process.json and wrapper report.json describe their separate nested ownership scopes. A wrapper launch failure can correctly have no reaped child while still removing its owned outer directory."
+  ]
+}

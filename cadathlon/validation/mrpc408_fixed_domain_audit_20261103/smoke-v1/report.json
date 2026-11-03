@@ -1,0 +1,2650 @@
+{
+  "scope": "Native-only fixed-contract MRPC validation audit; no approximate or HE forward.",
+  "passed": true,
+  "completed_examples": 3,
+  "dataset": {
+    "dataset": "nyu-mll/glue",
+    "configuration": "mrpc",
+    "split": "validation",
+    "revision": "bcdcba79d07bc864c1c254ccfcedcce55bcc9a8c",
+    "url": "https://huggingface.co/datasets/nyu-mll/glue/resolve/bcdcba79d07bc864c1c254ccfcedcce55bcc9a8c/mrpc/validation-00000-of-00001.parquet",
+    "file": "validation.parquet",
+    "bytes": 75678,
+    "sha256": "33c007dbf5bfa8463d87a13e6226df8c0fcf2596c2cd39d0f3bb79754e00f50f",
+    "local_search_before_download": "No MRPC data files in BERT_validation, .cache/huggingface, or cross_validation_assets including ignored/hidden files; only upstream loader sources existed."
+  },
+  "model_revision": "f150c1d609d1e50dd5e2e5408661cfac8339277c",
+  "model_assets": {
+    "config.json": "ec2b6cd6ce741dda6c972aea96f9d1a449cbb4b5349e688c5370a9b2f6872d30",
+    "model.safetensors": "e1f8085ef673c9eb8a1a93a84270742e8aa0ccbceadef01eef15e26c44b46034",
+    "tokenizer.json": "5b3360be30cdf39081153cf9d30bfb0503c011462fc9f77f097127c83ef0f4d9",
+    "tokenizer_config.json": "0f6d13e6f4da6f9e24f22ada6bc3be571123d858d7c0c05a8a7cd55a9c23c2e8",
+    "vocab.txt": "eeaa9875b23b04b4c54ef759d03db9d1ba1554838f8fb26c5d96fa551df93d02"
+  },
+  "contracts": {
+    "norms": {
+      "0.attention": {
+        "domain": [
+          0.3175095347982688,
+          1.1853786301897118
+        ],
+        "method": "power",
+        "degree": 12,
+        "iterations": 5
+      },
+      "0.mlp": {
+        "domain": [
+          1.0641702295685478,
+          7.77505592596739
+        ],
+        "method": "power",
+        "degree": 16,
+        "iterations": 6
+      },
+      "1.attention": {
+        "domain": [
+          0.23704575650795504,
+          1.2070054363296931
+        ],
+        "method": "power",
+        "degree": 12,
+        "iterations": 6
+      },
+      "1.mlp": {
+        "domain": [
+          0.946842253815884,
+          31.02299313698311
+        ],
+        "method": "power",
+        "degree": 32,
+        "iterations": 8
+      },
+      "2.attention": {
+        "domain": [
+          0.2408904184695401,
+          1.239186868089599
+        ],
+        "method": "power",
+        "degree": 12,
+        "iterations": 6
+      },
+      "2.mlp": {
+        "domain": [
+          1.0374898566454187,
+          37.475938356140304
+        ],
+        "method": "power",
+        "degree": 32,
+        "iterations": 8
+      },
+      "3.attention": {
+        "domain": [
+          0.21577013245863302,
+          1.048163458438662
+        ],
+        "method": "power",
+        "degree": 12,
+        "iterations": 6
+      },
+      "3.mlp": {
+        "domain": [
+          0.9663793422829697,
+          25.182337581642173
+        ],
+        "method": "power",
+        "degree": 32,
+        "iterations": 8
+      },
+      "4.attention": {
+        "domain": [
+          0.2321878603422849,
+          1.122139363939497
+        ],
+        "method": "power",
+        "degree": 12,
+        "iterations": 6
+      },
+      "4.mlp": {
+        "domain": [
+          1.0351589246783657,
+          28.677804850304458
+        ],
+        "method": "power",
+        "degree": 32,
+        "iterations": 8
+      },
+      "5.attention": {
+        "domain": [
+          0.19703831751078957,
+          1.3904797750997746
+        ],
+        "method": "power",
+        "degree": 16,
+        "iterations": 6
+      },
+      "5.mlp": {
+        "domain": [
+          1.0059956393732474,
+          30.303766555402053
+        ],
+        "method": "power",
+        "degree": 32,
+        "iterations": 8
+      },
+      "6.attention": {
+        "domain": [
+          0.16330028229305768,
+          1.5841269213893792
+        ],
+        "method": "power",
+        "degree": 16,
+        "iterations": 7
+      },
+      "6.mlp": {
+        "domain": [
+          0.9842912066182974,
+          29.544259589468258
+        ],
+        "method": "power",
+        "degree": 32,
+        "iterations": 8
+      },
+      "7.attention": {
+        "domain": [
+          0.1614954413623032,
+          1.2789712474313717
+        ],
+        "method": "power",
+        "degree": 16,
+        "iterations": 6
+      },
+      "7.mlp": {
+        "domain": [
+          0.9599207591841173,
+          54.66482271182408
+        ],
+        "method": "newton",
+        "degree": 48,
+        "iterations": 9
+      },
+      "8.attention": {
+        "domain": [
+          0.14040232210799455,
+          1.4273237334489128
+        ],
+        "method": "power",
+        "degree": 16,
+        "iterations": 7
+      },
+      "8.mlp": {
+        "domain": [
+          0.864697748651513,
+          218.39017788539405
+        ],
+        "method": "newton",
+        "degree": 96,
+        "iterations": 11
+      },
+      "9.attention": {
+        "domain": [
+          0.20296117046468742,
+          1.7204447231827555
+        ],
+        "method": "power",
+        "degree": 16,
+        "iterations": 7
+      },
+      "9.mlp": {
+        "domain": [
+          0.7852900663501012,
+          267.3959021510363
+        ],
+        "method": "newton",
+        "degree": 128,
+        "iterations": 11
+      },
+      "10.attention": {
+        "domain": [
+          0.16701867557301636,
+          1.3933951927555366
+        ],
+        "method": "power",
+        "degree": 16,
+        "iterations": 7
+      },
+      "10.mlp": {
+        "domain": [
+          0.7414986782884628,
+          319.5292435647607
+        ],
+        "method": "newton",
+        "degree": 128,
+        "iterations": 11
+      },
+      "11.attention": {
+        "domain": [
+          0.30118013406787913,
+          3.1414759692369336
+        ],
+        "method": "power",
+        "degree": 16,
+        "iterations": 7
+      },
+      "11.mlp": {
+        "domain": [
+          1.0746727878966804,
+          5.182371637378334
+        ],
+        "method": "power",
+        "degree": 12,
+        "iterations": 6
+      }
+    },
+    "gelu": {
+      "0": {
+        "domain": [
+          -19,
+          11
+        ],
+        "degree": 48,
+        "strategy": "balanced Chebyshev",
+        "rejected_monomial_coefficient_l1": 539124772002771.5
+      },
+      "1": {
+        "domain": [
+          -16,
+          29
+        ],
+        "degree": 96,
+        "strategy": "balanced Chebyshev",
+        "rejected_monomial_coefficient_l1": 1.0961067035648807e+31
+      },
+      "2": {
+        "domain": [
+          -16,
+          26
+        ],
+        "degree": 64,
+        "strategy": "balanced Chebyshev",
+        "rejected_monomial_coefficient_l1": 9.6559016370074e+20
+      },
+      "3": {
+        "domain": [
+          -29,
+          15
+        ],
+        "degree": 96,
+        "strategy": "balanced Chebyshev",
+        "rejected_monomial_coefficient_l1": 5.0605861531781797e+30
+      },
+      "4": {
+        "domain": [
+          -31,
+          20
+        ],
+        "degree": 96,
+        "strategy": "balanced Chebyshev",
+        "rejected_monomial_coefficient_l1": 5.417518033596109e+31
+      },
+      "5": {
+        "domain": [
+          -33,
+          12
+        ],
+        "degree": 64,
+        "strategy": "balanced Chebyshev",
+        "rejected_monomial_coefficient_l1": 7.342187926032704e+20
+      },
+      "6": {
+        "domain": [
+          -23,
+          13
+        ],
+        "degree": 64,
+        "strategy": "balanced Chebyshev",
+        "rejected_monomial_coefficient_l1": 1.0895696518410037e+20
+      },
+      "7": {
+        "domain": [
+          -20,
+          39
+        ],
+        "degree": 96,
+        "strategy": "balanced Chebyshev",
+        "rejected_monomial_coefficient_l1": 4.708694921860412e+32
+      },
+      "8": {
+        "domain": [
+          -25,
+          42
+        ],
+        "degree": 128,
+        "strategy": "balanced Chebyshev",
+        "rejected_monomial_coefficient_l1": 2.2286225579117334e+43
+      },
+      "9": {
+        "domain": [
+          -29,
+          39
+        ],
+        "degree": 128,
+        "strategy": "balanced Chebyshev",
+        "rejected_monomial_coefficient_l1": 1.7715981902138695e+44
+      },
+      "10": {
+        "domain": [
+          -14,
+          37
+        ],
+        "degree": 96,
+        "strategy": "balanced Chebyshev",
+        "rejected_monomial_coefficient_l1": 2.470940212461624e+31
+      },
+      "11": {
+        "domain": [
+          -11,
+          8
+        ],
+        "degree": 32,
+        "strategy": "balanced Chebyshev",
+        "rejected_monomial_coefficient_l1": 215251237.07657006
+      }
+    },
+    "softmax": {
+      "0": {
+        "centered_domain": [
+          -9,
+          12
+        ],
+        "squarings": 5
+      },
+      "1": {
+        "centered_domain": [
+          -19,
+          18
+        ],
+        "squarings": 6
+      },
+      "2": {
+        "centered_domain": [
+          -28,
+          27
+        ],
+        "squarings": 6
+      },
+      "3": {
+        "centered_domain": [
+          -19,
+          19
+        ],
+        "squarings": 6
+      },
+      "4": {
+        "centered_domain": [
+          -10,
+          11
+        ],
+        "squarings": 5
+      },
+      "5": {
+        "centered_domain": [
+          -20,
+          18
+        ],
+        "squarings": 6
+      },
+      "6": {
+        "centered_domain": [
+          -19,
+          22
+        ],
+        "squarings": 6
+      },
+      "7": {
+        "centered_domain": [
+          -9,
+          12
+        ],
+        "squarings": 5
+      },
+      "8": {
+        "centered_domain": [
+          -8,
+          9
+        ],
+        "squarings": 5
+      },
+      "9": {
+        "centered_domain": [
+          -10,
+          11
+        ],
+        "squarings": 5
+      },
+      "10": {
+        "centered_domain": [
+          -10,
+          13
+        ],
+        "squarings": 5
+      },
+      "11": {
+        "centered_domain": [
+          -8,
+          11
+        ],
+        "squarings": 5
+      }
+    },
+    "tanh": {
+      "domain": [
+        -24,
+        24
+      ],
+      "base_degree": 12,
+      "doublings": 5,
+      "reciprocal_iterations": 5
+    },
+    "selection": "Fixed from prior analytic-function domains/targets and power conditioning, before comparing any full-model logits."
+  },
+  "native_dtype": "torch.float32 (upstream default)",
+  "sequence_length": 128,
+  "padding": "max_length",
+  "truncation": true,
+  "attention_implementation": "eager",
+  "batch_size": 1,
+  "threads": 8,
+  "cpu_affinity": [
+    172,
+    173,
+    174,
+    175,
+    176,
+    177,
+    178,
+    179
+  ],
+  "source_hashes_before": {
+    "/tmp/bert-mrpc408-domain-audit-20261103/audit.py": "e3bb08cbf1ec0b0c77d9086ed8cbc8da896ffe3f8e98c26e85ce88267c522bfe",
+    "/tmp/bert-mrpc408-domain-audit-20261103/test_audit.py": "d6958824f23aa5f95396d6a2739372e62376250caa6fbf4b1ac18428c915e0a9",
+    "/tmp/bert-mrpc408-domain-audit-20261103/dataset_manifest.json": "87af9e00fbebe9a89cfd065638724def3db2f27a4bcef0ca660647acf3f88642",
+    "/home/jianming_gatech/CROSS/cadathlon/validation/compose_pretrained_bert_arithmetic.json": "20dc8138fcf4cd0d0e24fa7ad97f590019de518749b191e482b51e2909cd703c",
+    "/home/jianming_gatech/CROSS/cadathlon/validation/plan_pretrained_bert_operators.json": "5375b528c861178c1f113a547c7048c49e466b9ac32ca1ad68292adbe219298c",
+    "/home/jianming_gatech/CROSS/cadathlon/validation/compose_pretrained_bert_arithmetic.py": "ae261ea18d3417d5b42d2e97bb71c7ce53c22f1d4c62e7130588f8611b530ce8",
+    "/home/jianming_gatech/CROSS/cadathlon/validation/check_pretrained_bert_domains.py": "d3463f03bdfcb1a0539bf8b6333a22b9fc776231815ed120bf31a29b73f08c40",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/src/stages.py": "957a65289589caa24b139dfef9ae0cc8b91c986890d0a9dfad12c9103bbd62e8",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/src/benchmark.py": "acb6c5679106e00dd1c482dd750ca4620423f13c9b37e7c7bbce1781b8e76aec",
+    "/home/jianming_gatech/BERT_validation/harness/generate_input.py": "634804f0235ca611de32e535d4e55139eda109d7620c20129586b68efc73cfe1",
+    "/home/jianming_gatech/BERT_validation/harness/generate_dataset.py": "4dc6d35336f8d609b9676752fd0a041a40b19c1dcde822b989e44e5e20a30d6d",
+    "/home/jianming_gatech/BERT_validation/harness/params.py": "e1e12436a385e1ca6f59f3c7b4ec0f4a4d3dc38c6ab9669125a66b4df6b9cd3b",
+    "/home/jianming_gatech/BERT_validation/harness/run_submission.py": "997fcf575999c6c0a35fa0561dd1a90d3f5565303bd1b6800c078511139f4590",
+    "/home/jianming_gatech/BERT_validation/harness/utils.py": "e73b7ba164e18da00b57a53f8245a1df29cbfc3fc5424a7e734c0a4c7e2dabae",
+    "/home/jianming_gatech/BERT_validation/harness/mrpc/mrpc.py": "60115e739e420b006c0baf433be0c61ee88fb26fa5c1e3edc038e2ff2d3e4321",
+    "/home/jianming_gatech/BERT_validation/harness/mrpc/model.py": "784685ccd7f09e5267c604ede7cbe21eb5e1d7a4df8eef6bfb77a6bce74b2fb4",
+    "/home/jianming_gatech/BERT_validation/harness/mrpc/test.py": "13ed5c720cada62aaf73d88b5b7afb9de4e6fcd22ed96b0f43324ec8d0e33a24",
+    "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/models/bert/modeling_bert.py": "ef3407eae97090a4c0bfb635b3aafd4435248148e553e4ae307aa2b4aa1efcbc",
+    "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/models/bert/tokenization_bert.py": "2175151678441fe952744a55d309bdade829dcae496bf1ffda90e93e9f8d088f",
+    "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/models/bert/tokenization_bert_fast.py": "b3197237baa874ac770682b1926ae12a7c9236d95cd3815033539c1e9ed2e2c0",
+    "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/tokenization_utils_base.py": "32acd70cda55191fc1e1e659af62b9afce2411ddf21c5b8e2ffaa8ac0463da66",
+    "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/activations.py": "5e45852b518ed3fdfbff4d8a44dc934b74f6606670fd90f2fb6c486172f9792c",
+    "/home/jianming_gatech/cross_validation_assets/bert/f150c1d609d1e50dd5e2e5408661cfac8339277c/config.json": "ec2b6cd6ce741dda6c972aea96f9d1a449cbb4b5349e688c5370a9b2f6872d30",
+    "/home/jianming_gatech/cross_validation_assets/bert/f150c1d609d1e50dd5e2e5408661cfac8339277c/tokenizer.json": "5b3360be30cdf39081153cf9d30bfb0503c011462fc9f77f097127c83ef0f4d9",
+    "/home/jianming_gatech/cross_validation_assets/bert/f150c1d609d1e50dd5e2e5408661cfac8339277c/tokenizer_config.json": "0f6d13e6f4da6f9e24f22ada6bc3be571123d858d7c0c05a8a7cd55a9c23c2e8",
+    "/home/jianming_gatech/cross_validation_assets/bert/f150c1d609d1e50dd5e2e5408661cfac8339277c/vocab.txt": "eeaa9875b23b04b4c54ef759d03db9d1ba1554838f8fb26c5d96fa551df93d02"
+  },
+  "source_archive_sha256": "e862cad64d72953b3a56a3ff0acfffdcc5287d88b9076649defe5a010c9c48bb",
+  "source_archive_verified": true,
+  "versions": {
+    "numpy": "2.5.4",
+    "torch": "2.15.0+cpu",
+    "transformers": "4.51.3",
+    "tokenizers": "0.21.4",
+    "safetensors": "0.8.0",
+    "pyarrow": "23.0.1"
+  },
+  "limitations": [
+    "Native activation-domain audit, not approximate inference, encrypted inference, or runtime calibration.",
+    "Original full-model domains came from three public pairs and are held fixed here; failures are not retuned.",
+    "Valid-query observations match public padding-compacted arithmetic plans; padded-query observations are reported separately.",
+    "Internal approximate Newton/normalization trajectories and CKKS error are not evaluated.",
+    "100/200 sets are explicit reproducible base-seed42 harness subsets, not universal subset guarantees.",
+    "No plaintext hidden-state arrays, token arrays, sentence text, logits, or weights are persisted in the report."
+  ],
+  "subsets": {
+    "3": {
+      "size": 3,
+      "base_seed": 42,
+      "derived_input_seed": 191664963,
+      "positions": [
+        0,
+        1,
+        2
+      ],
+      "target_ids": [
+        9,
+        18,
+        25
+      ],
+      "correct": 3,
+      "accuracy": 1.0,
+      "domains": {
+        "0.softmax.centered_scores.valid_queries": {
+          "domain": [
+            -9,
+            12
+          ],
+          "count": 131676,
+          "minimum": -11.141212121644639,
+          "maximum": 11.72734335870482,
+          "below": 3,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 2
+        },
+        "0.softmax.base_exp.valid_queries": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 131676,
+          "minimum": -0.34816287880139496,
+          "maximum": 0.3664794799595256,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "0.softmax.centered_scores.padded_queries": {
+          "domain": [
+            -9,
+            12
+          ],
+          "count": 137124,
+          "minimum": -12.672171510208864,
+          "maximum": 13.952699731104076,
+          "below": 126,
+          "above": 128,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 3
+        },
+        "0.softmax.base_exp.padded_queries": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 137124,
+          "minimum": -0.396005359694027,
+          "maximum": 0.43602186659700237,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "0.attention.inverse_sqrt.valid_queries": {
+          "domain": [
+            0.3175095347982688,
+            1.1853786301897118
+          ],
+          "count": 175,
+          "minimum": 0.3604473902225754,
+          "maximum": 1.1325559414313473,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "0.attention.inverse_sqrt.padded_queries": {
+          "domain": [
+            0.3175095347982688,
+            1.1853786301897118
+          ],
+          "count": 209,
+          "minimum": 0.3690676204222191,
+          "maximum": 0.4544340443746327,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "0.gelu.valid_queries": {
+          "domain": [
+            -19,
+            11
+          ],
+          "count": 537600,
+          "minimum": -15.065069198608398,
+          "maximum": 9.533042907714844,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "0.gelu.padded_queries": {
+          "domain": [
+            -19,
+            11
+          ],
+          "count": 642048,
+          "minimum": -12.154860496520996,
+          "maximum": 7.337104320526123,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "0.mlp.inverse_sqrt.valid_queries": {
+          "domain": [
+            1.0641702295685478,
+            7.77505592596739
+          ],
+          "count": 175,
+          "minimum": 1.1499302100062958,
+          "maximum": 6.505741344701463,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "0.mlp.inverse_sqrt.padded_queries": {
+          "domain": [
+            1.0641702295685478,
+            7.77505592596739
+          ],
+          "count": 209,
+          "minimum": 2.684033330985135,
+          "maximum": 3.36852924978694,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "1.softmax.centered_scores.valid_queries": {
+          "domain": [
+            -19,
+            18
+          ],
+          "count": 131676,
+          "minimum": -23.532870057970285,
+          "maximum": 29.801040816027673,
+          "below": 28,
+          "above": 149,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 3
+        },
+        "1.softmax.base_exp.valid_queries": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 131676,
+          "minimum": -0.3677010946557857,
+          "maximum": 0.4656412627504324,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "1.softmax.centered_scores.padded_queries": {
+          "domain": [
+            -19,
+            18
+          ],
+          "count": 137124,
+          "minimum": -25.466498692924123,
+          "maximum": 20.196863918653076,
+          "below": 73,
+          "above": 22,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 3
+        },
+        "1.softmax.base_exp.padded_queries": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 137124,
+          "minimum": -0.3979140420769394,
+          "maximum": 0.3155759987289543,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "1.attention.inverse_sqrt.valid_queries": {
+          "domain": [
+            0.23704575650795504,
+            1.2070054363296931
+          ],
+          "count": 175,
+          "minimum": 0.2790192066530815,
+          "maximum": 1.110494057556874,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "1.attention.inverse_sqrt.padded_queries": {
+          "domain": [
+            0.23704575650795504,
+            1.2070054363296931
+          ],
+          "count": 209,
+          "minimum": 0.7753194711040747,
+          "maximum": 0.9824787831892475,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "1.gelu.valid_queries": {
+          "domain": [
+            -16,
+            29
+          ],
+          "count": 537600,
+          "minimum": -12.662444114685059,
+          "maximum": 28.211692810058594,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "1.gelu.padded_queries": {
+          "domain": [
+            -16,
+            29
+          ],
+          "count": 642048,
+          "minimum": -10.032693862915039,
+          "maximum": 6.623159408569336,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "1.mlp.inverse_sqrt.valid_queries": {
+          "domain": [
+            0.946842253815884,
+            31.02299313698311
+          ],
+          "count": 175,
+          "minimum": 1.1550830264396739,
+          "maximum": 28.624027984036616,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "1.mlp.inverse_sqrt.padded_queries": {
+          "domain": [
+            0.946842253815884,
+            31.02299313698311
+          ],
+          "count": 209,
+          "minimum": 3.744288812525387,
+          "maximum": 6.112753744929096,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "2.softmax.centered_scores.valid_queries": {
+          "domain": [
+            -28,
+            27
+          ],
+          "count": 131676,
+          "minimum": -36.8517217237968,
+          "maximum": 35.6885220117867,
+          "below": 12,
+          "above": 110,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 3
+        },
+        "2.softmax.base_exp.valid_queries": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 131676,
+          "minimum": -0.575808151934325,
+          "maximum": 0.5576331564341672,
+          "below": 6,
+          "above": 23,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 3
+        },
+        "2.softmax.centered_scores.padded_queries": {
+          "domain": [
+            -28,
+            27
+          ],
+          "count": 137124,
+          "minimum": -24.249401898433764,
+          "maximum": 21.07002067608091,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "2.softmax.base_exp.padded_queries": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 137124,
+          "minimum": -0.37889690466302756,
+          "maximum": 0.32921907306376424,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "2.attention.inverse_sqrt.valid_queries": {
+          "domain": [
+            0.2408904184695401,
+            1.239186868089599
+          ],
+          "count": 175,
+          "minimum": 0.3076073851186555,
+          "maximum": 1.1238763379933296,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "2.attention.inverse_sqrt.padded_queries": {
+          "domain": [
+            0.2408904184695401,
+            1.239186868089599
+          ],
+          "count": 209,
+          "minimum": 0.3746098627925295,
+          "maximum": 0.48245638457690193,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "2.gelu.valid_queries": {
+          "domain": [
+            -16,
+            26
+          ],
+          "count": 537600,
+          "minimum": -12.801790237426758,
+          "maximum": 20.897336959838867,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "2.gelu.padded_queries": {
+          "domain": [
+            -16,
+            26
+          ],
+          "count": 642048,
+          "minimum": -8.479958534240723,
+          "maximum": 4.3865227699279785,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "2.mlp.inverse_sqrt.valid_queries": {
+          "domain": [
+            1.0374898566454187,
+            37.475938356140304
+          ],
+          "count": 175,
+          "minimum": 1.1582754014747112,
+          "maximum": 28.008224171749823,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "2.mlp.inverse_sqrt.padded_queries": {
+          "domain": [
+            1.0374898566454187,
+            37.475938356140304
+          ],
+          "count": 209,
+          "minimum": 2.7076549753316943,
+          "maximum": 5.04008774021552,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "3.softmax.centered_scores.valid_queries": {
+          "domain": [
+            -19,
+            19
+          ],
+          "count": 131676,
+          "minimum": -18.0539135741336,
+          "maximum": 23.281552779576128,
+          "below": 0,
+          "above": 30,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 3
+        },
+        "3.softmax.base_exp.valid_queries": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 131676,
+          "minimum": -0.2820923995958375,
+          "maximum": 0.363774262180877,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "3.softmax.centered_scores.padded_queries": {
+          "domain": [
+            -19,
+            19
+          ],
+          "count": 137124,
+          "minimum": -14.909750577949342,
+          "maximum": 11.951930406547728,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "3.softmax.base_exp.padded_queries": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 137124,
+          "minimum": -0.23296485278045848,
+          "maximum": 0.18674891260230825,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "3.attention.inverse_sqrt.valid_queries": {
+          "domain": [
+            0.21577013245863302,
+            1.048163458438662
+          ],
+          "count": 175,
+          "minimum": 0.2711757143138677,
+          "maximum": 1.0444283473914564,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "3.attention.inverse_sqrt.padded_queries": {
+          "domain": [
+            0.21577013245863302,
+            1.048163458438662
+          ],
+          "count": 209,
+          "minimum": 0.3897612858721808,
+          "maximum": 0.5163025324504761,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "3.gelu.valid_queries": {
+          "domain": [
+            -29,
+            15
+          ],
+          "count": 537600,
+          "minimum": -24.60955238342285,
+          "maximum": 10.251363754272461,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "3.gelu.padded_queries": {
+          "domain": [
+            -29,
+            15
+          ],
+          "count": 642048,
+          "minimum": -8.966642379760742,
+          "maximum": 4.1178483963012695,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "3.mlp.inverse_sqrt.valid_queries": {
+          "domain": [
+            0.9663793422829697,
+            25.182337581642173
+          ],
+          "count": 175,
+          "minimum": 1.148191585055721,
+          "maximum": 18.764050975614982,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "3.mlp.inverse_sqrt.padded_queries": {
+          "domain": [
+            0.9663793422829697,
+            25.182337581642173
+          ],
+          "count": 209,
+          "minimum": 2.162169839722945,
+          "maximum": 3.405835416372078,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "4.softmax.centered_scores.valid_queries": {
+          "domain": [
+            -10,
+            11
+          ],
+          "count": 131676,
+          "minimum": -12.01627469541771,
+          "maximum": 13.676592033077032,
+          "below": 11,
+          "above": 28,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 3
+        },
+        "4.softmax.base_exp.valid_queries": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 131676,
+          "minimum": -0.37550858423180344,
+          "maximum": 0.42739350103365725,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "4.softmax.centered_scores.padded_queries": {
+          "domain": [
+            -10,
+            11
+          ],
+          "count": 137124,
+          "minimum": -9.225600224339736,
+          "maximum": 8.71820928936913,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "4.softmax.base_exp.padded_queries": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 137124,
+          "minimum": -0.28830000701061675,
+          "maximum": 0.2724440402927853,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "4.attention.inverse_sqrt.valid_queries": {
+          "domain": [
+            0.2321878603422849,
+            1.122139363939497
+          ],
+          "count": 175,
+          "minimum": 0.29123652944451867,
+          "maximum": 1.10280864010294,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "4.attention.inverse_sqrt.padded_queries": {
+          "domain": [
+            0.2321878603422849,
+            1.122139363939497
+          ],
+          "count": 209,
+          "minimum": 0.517563229010898,
+          "maximum": 0.7184829441291627,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "4.gelu.valid_queries": {
+          "domain": [
+            -31,
+            20
+          ],
+          "count": 537600,
+          "minimum": -26.030471801757812,
+          "maximum": 15.358651161193848,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "4.gelu.padded_queries": {
+          "domain": [
+            -31,
+            20
+          ],
+          "count": 642048,
+          "minimum": -8.905708312988281,
+          "maximum": 5.907789707183838,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "4.mlp.inverse_sqrt.valid_queries": {
+          "domain": [
+            1.0351589246783657,
+            28.677804850304458
+          ],
+          "count": 175,
+          "minimum": 1.1573070042995701,
+          "maximum": 23.96213035058122,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "4.mlp.inverse_sqrt.padded_queries": {
+          "domain": [
+            1.0351589246783657,
+            28.677804850304458
+          ],
+          "count": 209,
+          "minimum": 2.0018957819407723,
+          "maximum": 3.0809737860195487,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "5.softmax.centered_scores.valid_queries": {
+          "domain": [
+            -20,
+            18
+          ],
+          "count": 131676,
+          "minimum": -18.846777610621363,
+          "maximum": 23.31238251994803,
+          "below": 0,
+          "above": 32,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 3
+        },
+        "5.softmax.base_exp.valid_queries": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 131676,
+          "minimum": -0.2944809001659588,
+          "maximum": 0.364255976874188,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "5.softmax.centered_scores.padded_queries": {
+          "domain": [
+            -20,
+            18
+          ],
+          "count": 137124,
+          "minimum": -16.17130750659853,
+          "maximum": 16.773567284146946,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "5.softmax.base_exp.padded_queries": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 137124,
+          "minimum": -0.25267667979060204,
+          "maximum": 0.26208698881479603,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "5.attention.inverse_sqrt.valid_queries": {
+          "domain": [
+            0.19703831751078957,
+            1.3904797750997746
+          ],
+          "count": 175,
+          "minimum": 0.24582876312816995,
+          "maximum": 1.2826755228105884,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "5.attention.inverse_sqrt.padded_queries": {
+          "domain": [
+            0.19703831751078957,
+            1.3904797750997746
+          ],
+          "count": 209,
+          "minimum": 0.5667085975705795,
+          "maximum": 0.9731113847307825,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "5.gelu.valid_queries": {
+          "domain": [
+            -33,
+            12
+          ],
+          "count": 537600,
+          "minimum": -28.944997787475586,
+          "maximum": 8.705942153930664,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "5.gelu.padded_queries": {
+          "domain": [
+            -33,
+            12
+          ],
+          "count": 642048,
+          "minimum": -7.841115951538086,
+          "maximum": 4.465185165405273,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "5.mlp.inverse_sqrt.valid_queries": {
+          "domain": [
+            1.0059956393732474,
+            30.303766555402053
+          ],
+          "count": 175,
+          "minimum": 1.1591948758145454,
+          "maximum": 25.509645217621827,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "5.mlp.inverse_sqrt.padded_queries": {
+          "domain": [
+            1.0059956393732474,
+            30.303766555402053
+          ],
+          "count": 209,
+          "minimum": 1.5773974166606204,
+          "maximum": 2.1559138132358613,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "6.softmax.centered_scores.valid_queries": {
+          "domain": [
+            -19,
+            22
+          ],
+          "count": 131676,
+          "minimum": -18.63553557394771,
+          "maximum": 24.362303141783922,
+          "below": 0,
+          "above": 16,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 2
+        },
+        "6.softmax.base_exp.valid_queries": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 131676,
+          "minimum": -0.29118024334293297,
+          "maximum": 0.3806609865903738,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "6.softmax.centered_scores.padded_queries": {
+          "domain": [
+            -19,
+            22
+          ],
+          "count": 137124,
+          "minimum": -19.45578480595723,
+          "maximum": 20.997390335332604,
+          "below": 1,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 1
+        },
+        "6.softmax.base_exp.padded_queries": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 137124,
+          "minimum": -0.3039966375930817,
+          "maximum": 0.32808422398957193,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "6.attention.inverse_sqrt.valid_queries": {
+          "domain": [
+            0.16330028229305768,
+            1.5841269213893792
+          ],
+          "count": 175,
+          "minimum": 0.2035687676094634,
+          "maximum": 1.3905253249449003,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "6.attention.inverse_sqrt.padded_queries": {
+          "domain": [
+            0.16330028229305768,
+            1.5841269213893792
+          ],
+          "count": 209,
+          "minimum": 0.7018942122916458,
+          "maximum": 1.1797838723186107,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "6.gelu.valid_queries": {
+          "domain": [
+            -23,
+            13
+          ],
+          "count": 537600,
+          "minimum": -19.233543395996094,
+          "maximum": 9.874277114868164,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "6.gelu.padded_queries": {
+          "domain": [
+            -23,
+            13
+          ],
+          "count": 642048,
+          "minimum": -8.181070327758789,
+          "maximum": 5.5006561279296875,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "6.mlp.inverse_sqrt.valid_queries": {
+          "domain": [
+            0.9842912066182974,
+            29.544259589468258
+          ],
+          "count": 175,
+          "minimum": 1.1618526983484656,
+          "maximum": 24.51424542462231,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "6.mlp.inverse_sqrt.padded_queries": {
+          "domain": [
+            0.9842912066182974,
+            29.544259589468258
+          ],
+          "count": 209,
+          "minimum": 1.2712767731366181,
+          "maximum": 1.9653329284426515,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "7.softmax.centered_scores.valid_queries": {
+          "domain": [
+            -9,
+            12
+          ],
+          "count": 131676,
+          "minimum": -9.714170627295971,
+          "maximum": 13.556895741040353,
+          "below": 15,
+          "above": 53,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 3
+        },
+        "7.softmax.base_exp.valid_queries": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 131676,
+          "minimum": -0.3035678321029991,
+          "maximum": 0.42365299190751105,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "7.softmax.centered_scores.padded_queries": {
+          "domain": [
+            -9,
+            12
+          ],
+          "count": 137124,
+          "minimum": -9.333438757248222,
+          "maximum": 10.882638886748325,
+          "below": 6,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 2
+        },
+        "7.softmax.base_exp.padded_queries": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 137124,
+          "minimum": -0.29166996116400695,
+          "maximum": 0.34008246521088514,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "7.attention.inverse_sqrt.valid_queries": {
+          "domain": [
+            0.1614954413623032,
+            1.2789712474313717
+          ],
+          "count": 175,
+          "minimum": 0.20178585327434911,
+          "maximum": 1.1814605856499265,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "7.attention.inverse_sqrt.padded_queries": {
+          "domain": [
+            0.1614954413623032,
+            1.2789712474313717
+          ],
+          "count": 209,
+          "minimum": 0.7034730612939222,
+          "maximum": 1.0740442367069247,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "7.gelu.valid_queries": {
+          "domain": [
+            -20,
+            39
+          ],
+          "count": 537600,
+          "minimum": -17.747283935546875,
+          "maximum": 33.616607666015625,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "7.gelu.padded_queries": {
+          "domain": [
+            -20,
+            39
+          ],
+          "count": 642048,
+          "minimum": -15.129449844360352,
+          "maximum": 4.217550277709961,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "7.mlp.inverse_sqrt.valid_queries": {
+          "domain": [
+            0.9599207591841173,
+            54.66482271182408
+          ],
+          "count": 175,
+          "minimum": 1.0762724348484265,
+          "maximum": 45.03454452811395,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "7.mlp.inverse_sqrt.padded_queries": {
+          "domain": [
+            0.9599207591841173,
+            54.66482271182408
+          ],
+          "count": 209,
+          "minimum": 1.1031233684357982,
+          "maximum": 1.4416056137809514,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "8.softmax.centered_scores.valid_queries": {
+          "domain": [
+            -8,
+            9
+          ],
+          "count": 131676,
+          "minimum": -11.319047149631661,
+          "maximum": 12.852434520920118,
+          "below": 39,
+          "above": 98,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 3
+        },
+        "8.softmax.base_exp.valid_queries": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 131676,
+          "minimum": -0.3537202234259894,
+          "maximum": 0.4016385787787537,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "8.softmax.centered_scores.padded_queries": {
+          "domain": [
+            -8,
+            9
+          ],
+          "count": 137124,
+          "minimum": -8.94788748701103,
+          "maximum": 10.986659457309628,
+          "below": 3,
+          "above": 17,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 3
+        },
+        "8.softmax.base_exp.padded_queries": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 137124,
+          "minimum": -0.2796214839690947,
+          "maximum": 0.34333310804092587,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "8.attention.inverse_sqrt.valid_queries": {
+          "domain": [
+            0.14040232210799455,
+            1.4273237334489128
+          ],
+          "count": 175,
+          "minimum": 0.17724872818717732,
+          "maximum": 1.2008394567639433,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "8.attention.inverse_sqrt.padded_queries": {
+          "domain": [
+            0.14040232210799455,
+            1.4273237334489128
+          ],
+          "count": 209,
+          "minimum": 0.7382370883899994,
+          "maximum": 1.1875377597077759,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "8.gelu.valid_queries": {
+          "domain": [
+            -25,
+            42
+          ],
+          "count": 537600,
+          "minimum": -28.278282165527344,
+          "maximum": 34.58525085449219,
+          "below": 2,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 2
+        },
+        "8.gelu.padded_queries": {
+          "domain": [
+            -25,
+            42
+          ],
+          "count": 642048,
+          "minimum": -20.621036529541016,
+          "maximum": 5.185423851013184,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "8.mlp.inverse_sqrt.valid_queries": {
+          "domain": [
+            0.864697748651513,
+            218.39017788539405
+          ],
+          "count": 175,
+          "minimum": 0.9927282387724923,
+          "maximum": 172.299979417883,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "8.mlp.inverse_sqrt.padded_queries": {
+          "domain": [
+            0.864697748651513,
+            218.39017788539405
+          ],
+          "count": 209,
+          "minimum": 1.153972937978175,
+          "maximum": 1.516940834706671,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "9.softmax.centered_scores.valid_queries": {
+          "domain": [
+            -10,
+            11
+          ],
+          "count": 131676,
+          "minimum": -10.012199557333622,
+          "maximum": 13.910410594474524,
+          "below": 1,
+          "above": 85,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 3
+        },
+        "9.softmax.base_exp.valid_queries": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 131676,
+          "minimum": -0.3128812361666757,
+          "maximum": 0.43470033107732886,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "9.softmax.centered_scores.padded_queries": {
+          "domain": [
+            -10,
+            11
+          ],
+          "count": 137124,
+          "minimum": -8.343614567282065,
+          "maximum": 12.549706661476279,
+          "below": 0,
+          "above": 14,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 2
+        },
+        "9.softmax.base_exp.padded_queries": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 137124,
+          "minimum": -0.26073795522756454,
+          "maximum": 0.3921783331711337,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "9.attention.inverse_sqrt.valid_queries": {
+          "domain": [
+            0.20296117046468742,
+            1.7204447231827555
+          ],
+          "count": 175,
+          "minimum": 0.2534469336155556,
+          "maximum": 1.5765416706844302,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "9.attention.inverse_sqrt.padded_queries": {
+          "domain": [
+            0.20296117046468742,
+            1.7204447231827555
+          ],
+          "count": 209,
+          "minimum": 0.8798744938711581,
+          "maximum": 1.3693169465934447,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "9.gelu.valid_queries": {
+          "domain": [
+            -29,
+            39
+          ],
+          "count": 537600,
+          "minimum": -28.57193374633789,
+          "maximum": 32.797332763671875,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "9.gelu.padded_queries": {
+          "domain": [
+            -29,
+            39
+          ],
+          "count": 642048,
+          "minimum": -22.470123291015625,
+          "maximum": 3.3063530921936035,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "9.mlp.inverse_sqrt.valid_queries": {
+          "domain": [
+            0.7852900663501012,
+            267.3959021510363
+          ],
+          "count": 175,
+          "minimum": 0.9257238998998955,
+          "maximum": 206.93524286422576,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "9.mlp.inverse_sqrt.padded_queries": {
+          "domain": [
+            0.7852900663501012,
+            267.3959021510363
+          ],
+          "count": 209,
+          "minimum": 1.0070975454619098,
+          "maximum": 1.2106404807431896,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "10.softmax.centered_scores.valid_queries": {
+          "domain": [
+            -10,
+            13
+          ],
+          "count": 131676,
+          "minimum": -11.491007983122232,
+          "maximum": 15.827324984208593,
+          "below": 12,
+          "above": 54,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 3
+        },
+        "10.softmax.base_exp.valid_queries": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 131676,
+          "minimum": -0.35909399947256976,
+          "maximum": 0.4946039057565185,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "10.softmax.centered_scores.padded_queries": {
+          "domain": [
+            -10,
+            13
+          ],
+          "count": 137124,
+          "minimum": -9.450319262186312,
+          "maximum": 13.032134856817859,
+          "below": 0,
+          "above": 2,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 1
+        },
+        "10.softmax.base_exp.padded_queries": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 137124,
+          "minimum": -0.29532247694332225,
+          "maximum": 0.4072542142755581,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "10.attention.inverse_sqrt.valid_queries": {
+          "domain": [
+            0.16701867557301636,
+            1.3933951927555366
+          ],
+          "count": 175,
+          "minimum": 0.21048635591229528,
+          "maximum": 1.2549426376387158,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "10.attention.inverse_sqrt.padded_queries": {
+          "domain": [
+            0.16701867557301636,
+            1.3933951927555366
+          ],
+          "count": 209,
+          "minimum": 0.9537459544358033,
+          "maximum": 1.4566032464660161,
+          "below": 0,
+          "above": 6,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 1
+        },
+        "10.gelu.valid_queries": {
+          "domain": [
+            -14,
+            37
+          ],
+          "count": 537600,
+          "minimum": -13.019351959228516,
+          "maximum": 32.011436462402344,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "10.gelu.padded_queries": {
+          "domain": [
+            -14,
+            37
+          ],
+          "count": 642048,
+          "minimum": -9.48733139038086,
+          "maximum": 6.40250825881958,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "10.mlp.inverse_sqrt.valid_queries": {
+          "domain": [
+            0.7414986782884628,
+            319.5292435647607
+          ],
+          "count": 175,
+          "minimum": 0.8842997960026205,
+          "maximum": 262.16975456151175,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "10.mlp.inverse_sqrt.padded_queries": {
+          "domain": [
+            0.7414986782884628,
+            319.5292435647607
+          ],
+          "count": 209,
+          "minimum": 0.8553781647202027,
+          "maximum": 1.209238888703415,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "11.softmax.centered_scores.valid_queries": {
+          "domain": [
+            -8,
+            11
+          ],
+          "count": 131676,
+          "minimum": -10.55778590491358,
+          "maximum": 13.436854979395866,
+          "below": 46,
+          "above": 136,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 3
+        },
+        "11.softmax.base_exp.valid_queries": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 131676,
+          "minimum": -0.32993080952854936,
+          "maximum": 0.4199017181061208,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "11.softmax.centered_scores.padded_queries": {
+          "domain": [
+            -8,
+            11
+          ],
+          "count": 137124,
+          "minimum": -7.933137336991868,
+          "maximum": 12.777599096298218,
+          "below": 0,
+          "above": 82,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 3
+        },
+        "11.softmax.base_exp.padded_queries": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 137124,
+          "minimum": -0.24791054178099586,
+          "maximum": 0.3992999717593193,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "11.attention.inverse_sqrt.valid_queries": {
+          "domain": [
+            0.30118013406787913,
+            3.1414759692369336
+          ],
+          "count": 175,
+          "minimum": 0.5061600351740649,
+          "maximum": 3.5719400446601566,
+          "below": 0,
+          "above": 1,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 1
+        },
+        "11.attention.inverse_sqrt.padded_queries": {
+          "domain": [
+            0.30118013406787913,
+            3.1414759692369336
+          ],
+          "count": 209,
+          "minimum": 1.2604294437538321,
+          "maximum": 2.3074485749850995,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "11.gelu.valid_queries": {
+          "domain": [
+            -11,
+            8
+          ],
+          "count": 537600,
+          "minimum": -9.727340698242188,
+          "maximum": 3.559380054473877,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "11.gelu.padded_queries": {
+          "domain": [
+            -11,
+            8
+          ],
+          "count": 642048,
+          "minimum": -7.340025901794434,
+          "maximum": 2.678598403930664,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "11.mlp.inverse_sqrt.valid_queries": {
+          "domain": [
+            1.0746727878966804,
+            5.182371637378334
+          ],
+          "count": 175,
+          "minimum": 1.0455061534841046,
+          "maximum": 2.595892781210088,
+          "below": 1,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 1
+        },
+        "11.mlp.inverse_sqrt.padded_queries": {
+          "domain": [
+            1.0746727878966804,
+            5.182371637378334
+          ],
+          "count": 209,
+          "minimum": 1.7779119965606451,
+          "maximum": 2.2500256687982665,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        },
+        "pooler.tanh": {
+          "domain": [
+            -24,
+            24
+          ],
+          "count": 2304,
+          "minimum": -21.282520294189453,
+          "maximum": 21.320159912109375,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 0
+        }
+      },
+      "violations": {
+        "0.softmax.centered_scores.valid_queries": {
+          "domain": [
+            -9,
+            12
+          ],
+          "count": 131676,
+          "minimum": -11.141212121644639,
+          "maximum": 11.72734335870482,
+          "below": 3,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 2
+        },
+        "0.softmax.centered_scores.padded_queries": {
+          "domain": [
+            -9,
+            12
+          ],
+          "count": 137124,
+          "minimum": -12.672171510208864,
+          "maximum": 13.952699731104076,
+          "below": 126,
+          "above": 128,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 3
+        },
+        "1.softmax.centered_scores.valid_queries": {
+          "domain": [
+            -19,
+            18
+          ],
+          "count": 131676,
+          "minimum": -23.532870057970285,
+          "maximum": 29.801040816027673,
+          "below": 28,
+          "above": 149,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 3
+        },
+        "1.softmax.centered_scores.padded_queries": {
+          "domain": [
+            -19,
+            18
+          ],
+          "count": 137124,
+          "minimum": -25.466498692924123,
+          "maximum": 20.196863918653076,
+          "below": 73,
+          "above": 22,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 3
+        },
+        "2.softmax.centered_scores.valid_queries": {
+          "domain": [
+            -28,
+            27
+          ],
+          "count": 131676,
+          "minimum": -36.8517217237968,
+          "maximum": 35.6885220117867,
+          "below": 12,
+          "above": 110,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 3
+        },
+        "2.softmax.base_exp.valid_queries": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 131676,
+          "minimum": -0.575808151934325,
+          "maximum": 0.5576331564341672,
+          "below": 6,
+          "above": 23,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 3
+        },
+        "3.softmax.centered_scores.valid_queries": {
+          "domain": [
+            -19,
+            19
+          ],
+          "count": 131676,
+          "minimum": -18.0539135741336,
+          "maximum": 23.281552779576128,
+          "below": 0,
+          "above": 30,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 3
+        },
+        "4.softmax.centered_scores.valid_queries": {
+          "domain": [
+            -10,
+            11
+          ],
+          "count": 131676,
+          "minimum": -12.01627469541771,
+          "maximum": 13.676592033077032,
+          "below": 11,
+          "above": 28,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 3
+        },
+        "5.softmax.centered_scores.valid_queries": {
+          "domain": [
+            -20,
+            18
+          ],
+          "count": 131676,
+          "minimum": -18.846777610621363,
+          "maximum": 23.31238251994803,
+          "below": 0,
+          "above": 32,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 3
+        },
+        "6.softmax.centered_scores.valid_queries": {
+          "domain": [
+            -19,
+            22
+          ],
+          "count": 131676,
+          "minimum": -18.63553557394771,
+          "maximum": 24.362303141783922,
+          "below": 0,
+          "above": 16,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 2
+        },
+        "6.softmax.centered_scores.padded_queries": {
+          "domain": [
+            -19,
+            22
+          ],
+          "count": 137124,
+          "minimum": -19.45578480595723,
+          "maximum": 20.997390335332604,
+          "below": 1,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 1
+        },
+        "7.softmax.centered_scores.valid_queries": {
+          "domain": [
+            -9,
+            12
+          ],
+          "count": 131676,
+          "minimum": -9.714170627295971,
+          "maximum": 13.556895741040353,
+          "below": 15,
+          "above": 53,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 3
+        },
+        "7.softmax.centered_scores.padded_queries": {
+          "domain": [
+            -9,
+            12
+          ],
+          "count": 137124,
+          "minimum": -9.333438757248222,
+          "maximum": 10.882638886748325,
+          "below": 6,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 2
+        },
+        "8.softmax.centered_scores.valid_queries": {
+          "domain": [
+            -8,
+            9
+          ],
+          "count": 131676,
+          "minimum": -11.319047149631661,
+          "maximum": 12.852434520920118,
+          "below": 39,
+          "above": 98,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 3
+        },
+        "8.softmax.centered_scores.padded_queries": {
+          "domain": [
+            -8,
+            9
+          ],
+          "count": 137124,
+          "minimum": -8.94788748701103,
+          "maximum": 10.986659457309628,
+          "below": 3,
+          "above": 17,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 3
+        },
+        "8.gelu.valid_queries": {
+          "domain": [
+            -25,
+            42
+          ],
+          "count": 537600,
+          "minimum": -28.278282165527344,
+          "maximum": 34.58525085449219,
+          "below": 2,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 2
+        },
+        "9.softmax.centered_scores.valid_queries": {
+          "domain": [
+            -10,
+            11
+          ],
+          "count": 131676,
+          "minimum": -10.012199557333622,
+          "maximum": 13.910410594474524,
+          "below": 1,
+          "above": 85,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 3
+        },
+        "9.softmax.centered_scores.padded_queries": {
+          "domain": [
+            -10,
+            11
+          ],
+          "count": 137124,
+          "minimum": -8.343614567282065,
+          "maximum": 12.549706661476279,
+          "below": 0,
+          "above": 14,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 2
+        },
+        "10.softmax.centered_scores.valid_queries": {
+          "domain": [
+            -10,
+            13
+          ],
+          "count": 131676,
+          "minimum": -11.491007983122232,
+          "maximum": 15.827324984208593,
+          "below": 12,
+          "above": 54,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 3
+        },
+        "10.softmax.centered_scores.padded_queries": {
+          "domain": [
+            -10,
+            13
+          ],
+          "count": 137124,
+          "minimum": -9.450319262186312,
+          "maximum": 13.032134856817859,
+          "below": 0,
+          "above": 2,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 1
+        },
+        "10.attention.inverse_sqrt.padded_queries": {
+          "domain": [
+            0.16701867557301636,
+            1.3933951927555366
+          ],
+          "count": 209,
+          "minimum": 0.9537459544358033,
+          "maximum": 1.4566032464660161,
+          "below": 0,
+          "above": 6,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 1
+        },
+        "11.softmax.centered_scores.valid_queries": {
+          "domain": [
+            -8,
+            11
+          ],
+          "count": 131676,
+          "minimum": -10.55778590491358,
+          "maximum": 13.436854979395866,
+          "below": 46,
+          "above": 136,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 3
+        },
+        "11.softmax.centered_scores.padded_queries": {
+          "domain": [
+            -8,
+            11
+          ],
+          "count": 137124,
+          "minimum": -7.933137336991868,
+          "maximum": 12.777599096298218,
+          "below": 0,
+          "above": 82,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 3
+        },
+        "11.attention.inverse_sqrt.valid_queries": {
+          "domain": [
+            0.30118013406787913,
+            3.1414759692369336
+          ],
+          "count": 175,
+          "minimum": 0.5061600351740649,
+          "maximum": 3.5719400446601566,
+          "below": 0,
+          "above": 1,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 1
+        },
+        "11.mlp.inverse_sqrt.valid_queries": {
+          "domain": [
+            1.0746727878966804,
+            5.182371637378334
+          ],
+          "count": 175,
+          "minimum": 1.0455061534841046,
+          "maximum": 2.595892781210088,
+          "below": 1,
+          "above": 0,
+          "nonfinite": 0,
+          "examples": 3,
+          "examples_with_violations": 1
+        }
+      },
+      "valid_query_contracts_cover_native_inputs": false,
+      "valid_query_failing_operators": 16,
+      "padded_query_failing_operators": 9,
+      "examples_with_valid_query_domain_violation": 3
+    }
+  },
+  "tokenization_sha256": "161cfa6300c3819cf15da7aad6432891012b1f8ce71593aa1587ae2b10573988",
+  "input_token_counts": {
+    "minimum": 42,
+    "maximum": 80
+  },
+  "per_example": [
+    {
+      "position": 0,
+      "target_idx": 9,
+      "label": 1,
+      "prediction": 1,
+      "correct": true,
+      "valid_tokens": 42,
+      "tokenization_sha256": "9e6ebaaf93739c119ae8872d78cca16de1ddb2e15c7dc868d4b950fb5b0a4061"
+    },
+    {
+      "position": 1,
+      "target_idx": 18,
+      "label": 0,
+      "prediction": 0,
+      "correct": true,
+      "valid_tokens": 53,
+      "tokenization_sha256": "1daa36d7f68b62254e33e255771035e237d7dd8fa5dcbd04da3bf4d2dba13565"
+    },
+    {
+      "position": 2,
+      "target_idx": 25,
+      "label": 0,
+      "prediction": 0,
+      "correct": true,
+      "valid_tokens": 80,
+      "tokenization_sha256": "c86f8bc05d02315da8b3644bb016091b84fdea991473d5af91e98d459f99f470"
+    }
+  ],
+  "audited_all_official_validation_examples": false,
+  "no_jax_imported": true,
+  "source_hashes_after": {
+    "/tmp/bert-mrpc408-domain-audit-20261103/audit.py": "e3bb08cbf1ec0b0c77d9086ed8cbc8da896ffe3f8e98c26e85ce88267c522bfe",
+    "/tmp/bert-mrpc408-domain-audit-20261103/test_audit.py": "d6958824f23aa5f95396d6a2739372e62376250caa6fbf4b1ac18428c915e0a9",
+    "/tmp/bert-mrpc408-domain-audit-20261103/dataset_manifest.json": "87af9e00fbebe9a89cfd065638724def3db2f27a4bcef0ca660647acf3f88642",
+    "/home/jianming_gatech/CROSS/cadathlon/validation/compose_pretrained_bert_arithmetic.json": "20dc8138fcf4cd0d0e24fa7ad97f590019de518749b191e482b51e2909cd703c",
+    "/home/jianming_gatech/CROSS/cadathlon/validation/plan_pretrained_bert_operators.json": "5375b528c861178c1f113a547c7048c49e466b9ac32ca1ad68292adbe219298c",
+    "/home/jianming_gatech/CROSS/cadathlon/validation/compose_pretrained_bert_arithmetic.py": "ae261ea18d3417d5b42d2e97bb71c7ce53c22f1d4c62e7130588f8611b530ce8",
+    "/home/jianming_gatech/CROSS/cadathlon/validation/check_pretrained_bert_domains.py": "d3463f03bdfcb1a0539bf8b6333a22b9fc776231815ed120bf31a29b73f08c40",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/src/stages.py": "957a65289589caa24b139dfef9ae0cc8b91c986890d0a9dfad12c9103bbd62e8",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/src/benchmark.py": "acb6c5679106e00dd1c482dd750ca4620423f13c9b37e7c7bbce1781b8e76aec",
+    "/home/jianming_gatech/BERT_validation/harness/generate_input.py": "634804f0235ca611de32e535d4e55139eda109d7620c20129586b68efc73cfe1",
+    "/home/jianming_gatech/BERT_validation/harness/generate_dataset.py": "4dc6d35336f8d609b9676752fd0a041a40b19c1dcde822b989e44e5e20a30d6d",
+    "/home/jianming_gatech/BERT_validation/harness/params.py": "e1e12436a385e1ca6f59f3c7b4ec0f4a4d3dc38c6ab9669125a66b4df6b9cd3b",
+    "/home/jianming_gatech/BERT_validation/harness/run_submission.py": "997fcf575999c6c0a35fa0561dd1a90d3f5565303bd1b6800c078511139f4590",
+    "/home/jianming_gatech/BERT_validation/harness/utils.py": "e73b7ba164e18da00b57a53f8245a1df29cbfc3fc5424a7e734c0a4c7e2dabae",
+    "/home/jianming_gatech/BERT_validation/harness/mrpc/mrpc.py": "60115e739e420b006c0baf433be0c61ee88fb26fa5c1e3edc038e2ff2d3e4321",
+    "/home/jianming_gatech/BERT_validation/harness/mrpc/model.py": "784685ccd7f09e5267c604ede7cbe21eb5e1d7a4df8eef6bfb77a6bce74b2fb4",
+    "/home/jianming_gatech/BERT_validation/harness/mrpc/test.py": "13ed5c720cada62aaf73d88b5b7afb9de4e6fcd22ed96b0f43324ec8d0e33a24",
+    "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/models/bert/modeling_bert.py": "ef3407eae97090a4c0bfb635b3aafd4435248148e553e4ae307aa2b4aa1efcbc",
+    "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/models/bert/tokenization_bert.py": "2175151678441fe952744a55d309bdade829dcae496bf1ffda90e93e9f8d088f",
+    "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/models/bert/tokenization_bert_fast.py": "b3197237baa874ac770682b1926ae12a7c9236d95cd3815033539c1e9ed2e2c0",
+    "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/tokenization_utils_base.py": "32acd70cda55191fc1e1e659af62b9afce2411ddf21c5b8e2ffaa8ac0463da66",
+    "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/activations.py": "5e45852b518ed3fdfbff4d8a44dc934b74f6606670fd90f2fb6c486172f9792c",
+    "/home/jianming_gatech/cross_validation_assets/bert/f150c1d609d1e50dd5e2e5408661cfac8339277c/config.json": "ec2b6cd6ce741dda6c972aea96f9d1a449cbb4b5349e688c5370a9b2f6872d30",
+    "/home/jianming_gatech/cross_validation_assets/bert/f150c1d609d1e50dd5e2e5408661cfac8339277c/tokenizer.json": "5b3360be30cdf39081153cf9d30bfb0503c011462fc9f77f097127c83ef0f4d9",
+    "/home/jianming_gatech/cross_validation_assets/bert/f150c1d609d1e50dd5e2e5408661cfac8339277c/tokenizer_config.json": "0f6d13e6f4da6f9e24f22ada6bc3be571123d858d7c0c05a8a7cd55a9c23c2e8",
+    "/home/jianming_gatech/cross_validation_assets/bert/f150c1d609d1e50dd5e2e5408661cfac8339277c/vocab.txt": "eeaa9875b23b04b4c54ef759d03db9d1ba1554838f8fb26c5d96fa551df93d02"
+  },
+  "source_files_unchanged": true,
+  "elapsed_s": 3.263510264994693
+}

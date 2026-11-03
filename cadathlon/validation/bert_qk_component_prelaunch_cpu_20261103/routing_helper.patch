@@ -1,0 +1,366 @@
+--- /dev/null
++++ b/cadathlon/common/encrypted_score_routing.py
+@@ -0,0 +1,156 @@
++"""Experimental public routing for full-slot row-packed BERT scores.
++
++This component only masks, rotates and adds ciphertexts. It borrows an initialized
++arithmetic owner and never encrypts, decrypts, generates keys, refreshes or closes
++the context. The fixed layout is 16 query rows at pitch4096, 128 keys and12heads.
++"""
++from collections import Counter
++from dataclasses import dataclass
++import math
++import numbers
++import numpy as np
++
++SLOTS, FEATURES, ROWS, HEADS, HEAD_WIDTH, KEYS, PAD_HEADS = 65536, 4096, 16, 12, 64, 128, 16
++_POSITIONS = np.arange(SLOTS)
++_ROWS = _POSITIONS // FEATURES
++_POSITIONS.setflags(write=False)
++_ROWS.setflags(write=False)
++
++
++@dataclass(frozen=True)
++class FactoredScoreLayout:
++    key_tile: int
++    offset: int
++
++    def __post_init__(self):
++        if (type(self.key_tile) is not int or not 0 <= self.key_tile < 8
++                or type(self.offset) is not int or not 0 <= self.offset < 16):
++            raise ValueError('public tile/offset outside the fixed128-key score layout')
++
++    @property
++    def source_indices(self):
++        return (np.arange(ROWS)[:, None]*FEATURES + np.arange(HEADS)*HEAD_WIDTH).ravel()
++
++    @property
++    def target_indices(self):
++        keys = self.key_tile*ROWS + (np.arange(ROWS)+self.offset) % ROWS
++        return (np.arange(ROWS)[:, None]*FEATURES + keys[:, None]*PAD_HEADS + np.arange(HEADS)).ravel()
++
++    def mask(self, *, inverse=False):
++        result = np.zeros(SLOTS, dtype=np.float64)
++        result[self.target_indices if inverse else self.source_indices] = 1.
++        result.setflags(write=False)
++        return result
++
++    def rotation_indices(self, *, include_inverse=True):
++        forward = [63*(1 << bit) for bit in range(4)]
++        forward += [-16*(1 << bit) for bit in range(4)]
++        forward += [-256*self.key_tile]
++        if include_inverse:
++            forward += [-value for value in forward]
++        return tuple(sorted({value % SLOTS for value in forward if value % SLOTS}))
++
++
++class FactoredScoreRouting:
++    """Nine-level forward or inverse route with explicit public masks.
++
++`forward(..., gain=1/8)` folds a public score scale into its first mask. The
++gain-one route preserves the separately validated standalone routing circuit;
++the fused gain needs its own encrypted component proof. There is no attention
++validity mask here: raw scores for padded keys remain meaningful outputs.
++"""
++    def __init__(self, arithmetic, layout, *, progress=None):
++        if not isinstance(layout, FactoredScoreLayout):
++            raise TypeError('expected FactoredScoreLayout')
++        if progress is not None and not callable(progress):
++            raise TypeError('progress must be callable or None')
++        self.arithmetic, self.layout, self.progress = arithmetic, layout, progress
++        self.counts = Counter()
++        self._guard_context()
++
++    def _guard_context(self):
++        context = self.arithmetic.ctx
++        if context.degree != 2*SLOTS or context.num_slots != SLOTS:
++            raise ValueError('score routing requires the full65536-slot ring')
++        cache = context._param_cache
++        if (context.secret_key is not None or cache.secret_key is not None
++                or context.parameters.get('secret_key') is not None):
++            raise ValueError('score routing requires a keyless context')
++        if cache.batch != 1:
++            raise ValueError('score routing requires batchone')
++
++    def _validate_ciphertext(self, value):
++        self._guard_context()
++        from jaxite_word import Polynomial
++        from support import require_secure_execution
++        if not isinstance(value, Polynomial):
++            raise TypeError('score routing requires a canonical ciphertext')
++        if value.batch != 1 or value.num_elements != 2 or value.degree != 2*SLOTS:
++            raise ValueError('score routing requires a full-slot two-component ciphertext')
++        require_secure_execution(self.arithmetic.ctx, value)
++        if self.arithmetic._level(value) < 9:
++            raise ValueError('score routing requires nine remaining levels')
++
++    def _mask(self, value, weight):
++        result = self.arithmetic.weighted_sum([value], [weight])
++        self.counts['public_multiplications'] += 1
++        self.counts['actual_composite_rescales'] += 1
++        if self.arithmetic._level(result) != self.arithmetic._level(value)-1:
++            raise RuntimeError('routing mask did not consume exactly one level')
++        if (result._ckks_nsd != 1 or not math.isclose(result._ckks_scale,
++                self.arithmetic.scale, rel_tol=1e-12)):
++            raise RuntimeError('routing mask returned noncanonical scale/NSD')
++        return result
++
++    def _rotate(self, value, shift):
++        shift = int(shift) % SLOTS
++        if not shift:
++            return value
++        result = self.arithmetic.rotate(value, shift)
++        self.counts['rotations'] += 1
++        return result
++
++    def _note(self, label, value):
++        if self.progress is not None:
++            self.progress(label, value, dict(self.counts))
++
++    def _route(self, value, selector, shift, label):
++        left = self._mask(value, ~selector)
++        right = self._rotate(self._mask(value, selector), shift)
++        result = self.arithmetic.add(left, right)
++        self.counts['additions'] += 1
++        self.counts['public_multiplication_levels'] += 1
++        self._note(label, result)
++        return result
++
++    def forward(self, value, *, gain=1.):
++        if (isinstance(gain, (bool, np.bool_)) or not isinstance(gain, numbers.Real)
++                or not math.isfinite(float(gain))):
++            raise ValueError('routing gain must be a finite public real scalar')
++        self._validate_ciphertext(value)
++        result = self._mask(value, self.layout.mask()*float(gain))
++        self.counts['public_multiplication_levels'] += 1
++        self._note('forward source mask', result)
++        for bit in range(4):
++            result = self._route(result, (_POSITIONS & (1 << (6+bit))) != 0,
++                                 63*(1 << bit), f'forward head bit {bit}')
++        for bit in range(4):
++            result = self._route(result, (((_ROWS+self.layout.offset) % 16) & (1 << bit)) != 0,
++                                 -16*(1 << bit), f'forward key bit {bit}')
++        result = self._rotate(result, -256*self.layout.key_tile)
++        self._note('forward tile shift', result)
++        return result
++
++    def inverse(self, value):
++        self._validate_ciphertext(value)
++        result = self._mask(value, self.layout.mask(inverse=True))
++        self.counts['public_multiplication_levels'] += 1
++        result = self._rotate(result, 256*self.layout.key_tile)
++        self._note('inverse target mask and tile shift', result)
++        for bit in reversed(range(4)):
++            result = self._route(result, (((_ROWS+self.layout.offset) % 16) & (1 << bit)) != 0,
++                                 16*(1 << bit), f'inverse key bit {bit}')
++        for bit in reversed(range(4)):
++            result = self._route(result, (_POSITIONS & (1 << bit)) != 0,
++                                 -63*(1 << bit), f'inverse head bit {bit}')
++        return result
+--- a/cadathlon/common/package.py
++++ b/cadathlon/common/package.py
+@@ -12,7 +12,7 @@
+     "encrypted_refresh.py", "encrypted_rotation.py", "encrypted_compilation.py",
+     "encrypted_primitives.py", "encrypted_ntt.py", "encrypted_packed_qwen.py", "encrypted_packed_transformer.py",
+     "encrypted_bounded_arithmetic.py", "encrypted_bounded_transformer.py",
+-    "encrypted_streaming_linear.py",
++    "encrypted_streaming_linear.py", "encrypted_score_routing.py",
+ )
+ PUBLIC_RELEASE_EVIDENCE = (
+     "validation/p1_student_suite.json", "validation/p3_compact_baseline.json",
+--- /dev/null
++++ b/cadathlon/tests/test_encrypted_score_routing.py
+@@ -0,0 +1,126 @@
++"""Independent ideal route and contract checks; no encrypted numerical claim."""
++from pathlib import Path
++from types import SimpleNamespace
++import os
++import subprocess
++import sys
++import numpy as np
++import pytest
++
++COMMON = Path(__file__).resolve().parents[1]/'common'
++sys.path.insert(0, str(COMMON))
++from encrypted_score_routing import FactoredScoreLayout, FactoredScoreRouting, SLOTS
++
++
++class Value:
++    def __init__(self, values, level):
++        self.values, self.level = values, level
++        self._ckks_scale, self._ckks_nsd = 1., 1
++
++
++class Arithmetic:
++    scale = 1.
++    def __init__(self):
++        self.ctx = SimpleNamespace(degree=131072, num_slots=SLOTS, secret_key=None,
++            parameters={}, _param_cache=SimpleNamespace(secret_key=None, batch=1))
++        self.rotations = []
++    def _level(self, value):
++        return value.level
++    def weighted_sum(self, values, weights):
++        return Value(sum(v.values*w for v,w in zip(values, weights)), min(v.level for v in values)-1)
++    def rotate(self, value, shift):
++        self.rotations.append(shift)
++        return Value(np.roll(value.values, -shift), value.level)
++    def add(self, left, right):
++        assert left.level == right.level
++        return Value(left.values+right.values, left.level)
++
++
++class IdealRouting(FactoredScoreRouting):
++    def _validate_ciphertext(self, value):
++        self._guard_context()
++        if value.values.shape != (SLOTS,) or value.level < 9:
++            raise ValueError('invalid ideal input')
++
++
++@pytest.mark.parametrize('tile', range(8))
++@pytest.mark.parametrize('offset', range(16))
++def test_fullslot_forward_inverse_against_independent_index_oracle(tile, offset):
++    value = (np.arange(SLOTS, dtype=float)-32768)/1024
++    ops = Arithmetic(); layout = FactoredScoreLayout(tile, offset)
++    router = IdealRouting(ops, layout)
++    forward = router.forward(Value(value, 18))
++    source = np.array([r*4096+h*64 for r in range(16) for h in range(12)])
++    target = np.array([r*4096+(tile*16+(r+offset)%16)*16+h for r in range(16) for h in range(12)])
++    expected = np.zeros(SLOTS); expected[target] = value[source]
++    np.testing.assert_array_equal(forward.values, expected)
++    inverse = router.inverse(forward)
++    expected = np.zeros(SLOTS); expected[source] = value[source]
++    np.testing.assert_array_equal(inverse.values, expected)
++    assert (forward.level, inverse.level) == (9, 0)
++    assert dict(router.counts) == dict(public_multiplications=34, actual_composite_rescales=34,
++        public_multiplication_levels=18, rotations=16+2*bool(tile), additions=16)
++    assert set(ops.rotations) == set(layout.rotation_indices())
++
++
++def test_gain_folds_into_first_mask_and_progress_observes_nine_levels():
++    value = (np.arange(SLOTS, dtype=float)-12345)/32
++    phases = []; layout = FactoredScoreLayout(7, 15); ops = Arithmetic()
++    router = IdealRouting(ops, layout, progress=lambda label, value, counts: phases.append((label, value.level, counts)))
++    result = router.forward(Value(value, 16), gain=1/8)
++    expected = np.zeros(SLOTS); expected[layout.target_indices] = value[layout.source_indices]/8
++    np.testing.assert_array_equal(result.values, expected)
++    assert result.level == 7
++    assert [p[1] for p in phases] == [15,14,13,12,11,10,9,8,7,7]
++    assert router.counts['public_multiplications'] == 17
++    assert set(ops.rotations) == set(layout.rotation_indices(include_inverse=False))
++    # Callback records are snapshots rather than aliases of the live counter.
++    assert phases[0][2]['public_multiplications'] == 1
++
++
++@pytest.mark.parametrize('tile,offset', [(True,0),(-1,0),(8,0),(0,False),(0,-1),(0,16),(1.,0)])
++def test_invalid_public_layout_rejected(tile, offset):
++    with pytest.raises(ValueError): FactoredScoreLayout(tile, offset)
++
++
++@pytest.mark.parametrize('gain', [True, np.bool_(False), float('nan'), float('inf'), 1j, '1'])
++def test_invalid_gain_rejected_before_arithmetic(gain):
++    ops = Arithmetic(); router = IdealRouting(ops, FactoredScoreLayout(0,0))
++    with pytest.raises(ValueError): router.forward(Value(np.ones(SLOTS),9), gain=gain)
++    assert not router.counts and not ops.rotations
++
++
++@pytest.mark.parametrize('location', ['context','cache','parameters'])
++def test_constructor_and_later_calls_reject_retained_secret(location):
++    ops = Arithmetic(); router = IdealRouting(ops, FactoredScoreLayout(0,0))
++    if location == 'context': ops.ctx.secret_key = object()
++    elif location == 'cache': ops.ctx._param_cache.secret_key = object()
++    else: ops.ctx.parameters['secret_key'] = object()
++    with pytest.raises(ValueError, match='keyless'): IdealRouting(ops, FactoredScoreLayout(0,0))
++    with pytest.raises(ValueError, match='keyless'): router.forward(Value(np.ones(SLOTS),9))
++    assert not router.counts
++
++
++@pytest.mark.parametrize('attribute,value', [('degree',65536),('num_slots',32768),('batch',2)])
++def test_wrong_physical_layout_or_batch_rejected(attribute, value):
++    ops = Arithmetic()
++    setattr(ops.ctx._param_cache if attribute == 'batch' else ops.ctx, attribute, value)
++    with pytest.raises(ValueError): IdealRouting(ops, FactoredScoreLayout(0,0))
++
++
++def test_source_target_masks_are_read_only_and_input_is_not_modified():
++    layout = FactoredScoreLayout(7,15)
++    for mask in (layout.mask(), layout.mask(inverse=True)):
++        assert not mask.flags.writeable and np.count_nonzero(mask) == 192
++        with pytest.raises(ValueError): mask[0] = 0
++    value = np.ones(SLOTS); original = value.copy()
++    IdealRouting(Arithmetic(), layout).forward(Value(value,9))
++    np.testing.assert_array_equal(value, original)
++
++
++def test_backend_free_module_import():
++    env = dict(os.environ, PYTHONPATH=str(COMMON), JAX_PLATFORMS='routing_must_not_initialize_backend')
++    result = subprocess.run([sys.executable,'-c',
++        "import sys; import encrypted_score_routing; assert 'jax' not in sys.modules; assert 'jaxite_word' not in sys.modules"],
++        env=env, capture_output=True, text=True)
++    assert result.returncode == 0, result.stderr
+--- a/cadathlon/tests/test_package.py
++++ b/cadathlon/tests/test_package.py
+@@ -31,7 +31,7 @@
+                  "encrypted_polynomial.py", "encrypted_transformer.py", "encrypted_reference.py", "encrypted_refresh.py",
+                  "encrypted_rotation.py", "encrypted_compilation.py", "encrypted_primitives.py", "encrypted_ntt.py",
+                  "encrypted_packed_qwen.py", "encrypted_packed_transformer.py",
+-                 "encrypted_bounded_arithmetic.py", "encrypted_bounded_transformer.py", "encrypted_streaming_linear.py"):
++                 "encrypted_bounded_arithmetic.py", "encrypted_bounded_transformer.py", "encrypted_streaming_linear.py", "encrypted_score_routing.py"):
+         (common / name).write_text("")
+     script = Path(__file__).parents[1] / "common" / "package.py"
+     subprocess.run([sys.executable, str(script), "submit", str(problem)], check=True)
+@@ -50,6 +50,7 @@
+     assert "common/encrypted_bounded_arithmetic.py" in names
+     assert "common/encrypted_bounded_transformer.py" in names
+     assert "common/encrypted_streaming_linear.py" in names
++    assert "common/encrypted_score_routing.py" in names
+     assert "common/encrypted_transformer.py" in names
+     assert "common/encrypted_polynomial.py" in names
+     assert "non_agent_pset/p1_benchmark/src/runner.py" in names
+@@ -130,6 +131,7 @@
+         assert "common/encrypted_bounded_arithmetic.py" in names
+         assert "common/encrypted_bounded_transformer.py" in names
+         assert "common/encrypted_streaming_linear.py" in names
++        assert "common/encrypted_score_routing.py" in names
+         assert "validation/p1_student_suite.json" in names
+         assert "validation/p3_compact_baseline.json" in names
+         assert str((public_calibration/'report.json').relative_to(root)) in names
+--- a/cadathlon/tests/test_bert_staging.py
++++ b/cadathlon/tests/test_bert_staging.py
+@@ -51,7 +51,7 @@
+     names = set(manifest['common_sha256'])
+     assert {'support.py','transformer_runner.py','encrypted_reference.py','encrypted_compilation.py',
+             'encrypted_primitives.py','encrypted_bounded_transformer.py','encrypted_ntt.py',
+-            'encrypted_streaming_linear.py'} <= names
++            'encrypted_streaming_linear.py','encrypted_score_routing.py'} <= names
+     for name, expected in manifest['common_sha256'].items():
+         assert hashlib.sha256((common/name).read_bytes()).hexdigest() == expected
+         assert (common/name).read_bytes() == (ROOT/'cadathlon/common'/name).read_bytes()
+@@ -80,7 +80,7 @@
+         'client_encode_encrypt_input','server_encrypted_compute','client_decrypt_decode'}
+ 
+ 
+-@pytest.mark.parametrize('helper_name', ['encrypted_primitives.py','encrypted_streaming_linear.py'])
++@pytest.mark.parametrize('helper_name', ['encrypted_primitives.py','encrypted_streaming_linear.py','encrypted_score_routing.py'])
+ @pytest.mark.parametrize('damage', ['changed','missing','no-manifest'])
+ def test_staged_provenance_failure_never_falls_back_to_checkout(staging, damage, helper_name):
+     stage, upstream, destination = staging
+@@ -106,9 +106,10 @@
+     (destination/'submissions/bert_he.py').write_text('''import json
+ import encrypted_reference
+ import encrypted_streaming_linear
++import encrypted_score_routing
+ 
+ def server_preprocess_model(paths):
+-    print(json.dumps({'import_only': True, 'helper': encrypted_reference.__file__, 'streaming_helper': encrypted_streaming_linear.__file__, 'paths': sorted(paths)}))
++    print(json.dumps({'import_only': True, 'helper': encrypted_reference.__file__, 'streaming_helper': encrypted_streaming_linear.__file__, 'routing_helper': encrypted_score_routing.__file__, 'paths': sorted(paths)}))
+ ''')
+     env = dict(os.environ, PYTHONPATH='', CROSS_ROOT=str(ROOT), JAX_PLATFORMS='bert_staging_test_no_backend')
+     result = subprocess.run([sys.executable,'submissions/server_preprocess_model.py','0'],
+@@ -118,6 +119,7 @@
+     assert report['import_only'] is True
+     assert Path(report['helper']) == destination/'submissions/_cross_common/encrypted_reference.py'
+     assert Path(report['streaming_helper']) == destination/'submissions/_cross_common/encrypted_streaming_linear.py'
++    assert Path(report['routing_helper']) == destination/'submissions/_cross_common/encrypted_score_routing.py'
+     assert {'client_private','test_input','preprocessed_input','decrypted_results'}.isdisjoint(report['paths'])
+ 
+ 

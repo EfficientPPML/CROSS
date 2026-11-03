@@ -1,0 +1,54 @@
+{
+  "scope": "Real secure CPU batching proof only; no TPU/full-transformer/refresh claim.",
+  "degree": 16384,
+  "q_count": 8,
+  "p_count": 3,
+  "dnum": 3,
+  "qp_secure": true,
+  "extra_rotation_keys": 0,
+  "batches": {
+    "2": {
+      "bit_exact_vs_individual": true,
+      "max_error_vs_public_polynomial": 1.1423108334240872e-08,
+      "shape": [
+        2,
+        2,
+        128,
+        128,
+        2
+      ],
+      "output_level": 0,
+      "scale": 13464729812993.0,
+      "noise_scale_degree": 1
+    },
+    "4": {
+      "bit_exact_vs_individual": true,
+      "max_error_vs_public_polynomial": 1.1423108334240872e-08,
+      "shape": [
+        4,
+        2,
+        128,
+        128,
+        2
+      ],
+      "output_level": 0,
+      "scale": 13464729812993.0,
+      "noise_scale_degree": 1
+    }
+  },
+  "cpu_wall_s": 83.97386279800048,
+  "max_rss_kib": 1393528,
+  "jax_version": "0.12.0.1",
+  "numpy_version": "2.5.4",
+  "backend": "cpu",
+  "source_sha256": {
+    "cadathlon/validation/check_batched_transformer_features.py": "ca68b26e44b3c9661de44cbf46e07011f190cbcf80d5c671432d7bd9ab0cb95c",
+    "cadathlon/common/encrypted_polynomial.py": "ccd2ceb69cabfb9349572b4a6320a8dce4ee16ae2087a37575b41c32f98210c9",
+    "cadathlon/common/support.py": "458111de25dbae4418c474670cf45a2d39e8e6ba40b75c2d17ad8f96cbaaa40f",
+    "jaxite_word/ckks_ctx.py": "d3ed2db0ca47e395a257a9e3da2850c2ad127d0d022d2ee3a575a236b32d5149",
+    "jaxite_word/he_ops.py": "bd0fb682b936a30c3faad9c09aad1337daa61657be744323605e73c875c99650",
+    "jaxite_word/hemul.py": "49a87eed37de76b7b3ab31f1d19dd23a39035f031cfee41c4d9a204064502803",
+    "jaxite_word/polynomial.py": "043e1dcdf9aca02f2df9435ac610c1561859b7d29a7dee1b7254bf9bc3c89a5b"
+  },
+  "source_unchanged": true
+}

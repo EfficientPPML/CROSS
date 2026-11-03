@@ -1,0 +1,18 @@
+--- a/validate_heldout.py
++++ b/validate_heldout.py
+@@ -129,8 +129,13 @@
+         primary=exc;report['passed']=False;report['errors'].append({'type':type(exc).__name__,'message':str(exc)})
+         if not isinstance(exc,(KeyboardInterrupt,SystemExit)):traceback.print_exc()
+     finally:
+-        if model is not None:del model
+-        gc.collect()
++        try:
++            if model is not None:del model
++            gc.collect()
++        except BaseException as exc:
++            report['passed']=False;report['errors'].append({'phase':'model_cleanup','type':type(exc).__name__,'message':str(exc)})
++            if primary is None:primary=exc
++            else:primary.add_note('Model cleanup failed: '+repr(exc))
+         try:
+             after={n:sha(f) for n,f in paths.items()};report['source_hashes_after']=after;report['source_files_unchanged']=bool(before) and before==after
+             report['asset_sha256_after']={n:sha(SNAPSHOT/n) for n in assets};report['assets_unchanged']=bool(assets) and assets==report['asset_sha256_after']

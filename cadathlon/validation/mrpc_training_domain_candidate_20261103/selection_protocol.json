@@ -1,0 +1,37 @@
+{
+  "scope": "Prospective training-only native domain calibration and public analytic-function selection; not certified arbitrary-input bounds.",
+  "training_split": "nyu-mll/glue mrpc train all3668; labels not loaded",
+  "input_contract": "same pinned model/tokenizer; sequence128; padding=max_length; truncation=True; native float32 eager batch1",
+  "domain_rules": {
+    "inverse_sqrt": "[.8 * observed_positive_min, 1.2 * observed_max]",
+    "gelu_centered_scores_tanh": "[floor(min - .1*(max-min)), ceil(max + .1*(max-min))]"
+  },
+  "degree_candidates": [
+    8,
+    12,
+    16,
+    24,
+    32,
+    48,
+    64,
+    96,
+    128,
+    192,
+    256
+  ],
+  "public_analytic_grid_points": 16385,
+  "gelu_max_abs_target": 0.001,
+  "inverse_sqrt_max_relative_target": 1e-05,
+  "inverse_sqrt_newton_ideal_relative_target": 1e-06,
+  "tanh_max_abs_target": 0.0001,
+  "inverse_sqrt_method": "existing power degree<=32 and normalized monomial coefficient L1<=1e8, otherwise fixed Newton schedule from domain endpoints",
+  "gelu_method": "balanced Chebyshev on declared training-derived domain; no monomial conversion execution",
+  "softmax_method": "fixed degree8 exp[-.5,.5], squarings=ceil(log2(max(abs(domain))/.5)); normalize each square with public K-dependent reciprocal Newton count targeting1e-12 analytic relative error",
+  "pooler_method": "existing degree candidates8/12/16 tanh[-1,1] with fixed power-of-two domain reduction and rational doubling; public reciprocal domain[1,2.1]",
+  "validation_policy": "No validation labels or approximate validation outputs used to select domains/degrees/iterations. Freeze candidate bytes first; report every later gate/domain failure without automatic retuning.",
+  "limitations": [
+    "Empirical training ranges with fixed slack are not arbitrary-input guarantees.",
+    "Native ranges do not prove approximate or encrypted trajectory coverage.",
+    "Native audit at float32; planned approximate reference may use float64 and must compare unchanged original harness gates."
+  ]
+}

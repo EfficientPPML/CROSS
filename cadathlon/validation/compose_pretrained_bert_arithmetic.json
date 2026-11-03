@@ -1,0 +1,6361 @@
+{
+  "scope": "Complete approximate plaintext BERT planning on three fixed public pairs.\n\nThe operator manifest is chosen from the prior analytic-function assessment,\nbefore logits are compared. No clipping, private-value stopping rule, labels,\nkey generation, ciphertext execution or MRPC accuracy evaluation is used.\nDomain observations are validation instrumentation, not proposed server code.\n",
+  "model_id": "google-bert/bert-base-cased-finetuned-mrpc",
+  "revision": "f150c1d609d1e50dd5e2e5408661cfac8339277c",
+  "asset_sha256": {
+    "config.json": "ec2b6cd6ce741dda6c972aea96f9d1a449cbb4b5349e688c5370a9b2f6872d30",
+    "model.safetensors": "e1f8085ef673c9eb8a1a93a84270742e8aa0ccbceadef01eef15e26c44b46034",
+    "tokenizer.json": "5b3360be30cdf39081153cf9d30bfb0503c011462fc9f77f097127c83ef0f4d9",
+    "tokenizer_config.json": "0f6d13e6f4da6f9e24f22ada6bc3be571123d858d7c0c05a8a7cd55a9c23c2e8",
+    "vocab.txt": "eeaa9875b23b04b4c54ef759d03db9d1ba1554838f8fb26c5d96fa551df93d02"
+  },
+  "examples": [
+    [
+      "The committee approved the proposal.",
+      "The committee approved the proposal."
+    ],
+    [
+      "A person is playing a guitar.",
+      "Someone is performing music."
+    ],
+    [
+      "The train arrived at noon.",
+      "The weather will be cold tomorrow."
+    ]
+  ],
+  "operator_manifest": {
+    "norms": {
+      "0.attention": {
+        "domain": [
+          0.3175095347982688,
+          1.1853786301897118
+        ],
+        "method": "power",
+        "degree": 12,
+        "iterations": 5
+      },
+      "0.mlp": {
+        "domain": [
+          1.0641702295685478,
+          7.77505592596739
+        ],
+        "method": "power",
+        "degree": 16,
+        "iterations": 6
+      },
+      "1.attention": {
+        "domain": [
+          0.23704575650795504,
+          1.2070054363296931
+        ],
+        "method": "power",
+        "degree": 12,
+        "iterations": 6
+      },
+      "1.mlp": {
+        "domain": [
+          0.946842253815884,
+          31.02299313698311
+        ],
+        "method": "power",
+        "degree": 32,
+        "iterations": 8
+      },
+      "2.attention": {
+        "domain": [
+          0.2408904184695401,
+          1.239186868089599
+        ],
+        "method": "power",
+        "degree": 12,
+        "iterations": 6
+      },
+      "2.mlp": {
+        "domain": [
+          1.0374898566454187,
+          37.475938356140304
+        ],
+        "method": "power",
+        "degree": 32,
+        "iterations": 8
+      },
+      "3.attention": {
+        "domain": [
+          0.21577013245863302,
+          1.048163458438662
+        ],
+        "method": "power",
+        "degree": 12,
+        "iterations": 6
+      },
+      "3.mlp": {
+        "domain": [
+          0.9663793422829697,
+          25.182337581642173
+        ],
+        "method": "power",
+        "degree": 32,
+        "iterations": 8
+      },
+      "4.attention": {
+        "domain": [
+          0.2321878603422849,
+          1.122139363939497
+        ],
+        "method": "power",
+        "degree": 12,
+        "iterations": 6
+      },
+      "4.mlp": {
+        "domain": [
+          1.0351589246783657,
+          28.677804850304458
+        ],
+        "method": "power",
+        "degree": 32,
+        "iterations": 8
+      },
+      "5.attention": {
+        "domain": [
+          0.19703831751078957,
+          1.3904797750997746
+        ],
+        "method": "power",
+        "degree": 16,
+        "iterations": 6
+      },
+      "5.mlp": {
+        "domain": [
+          1.0059956393732474,
+          30.303766555402053
+        ],
+        "method": "power",
+        "degree": 32,
+        "iterations": 8
+      },
+      "6.attention": {
+        "domain": [
+          0.16330028229305768,
+          1.5841269213893792
+        ],
+        "method": "power",
+        "degree": 16,
+        "iterations": 7
+      },
+      "6.mlp": {
+        "domain": [
+          0.9842912066182974,
+          29.544259589468258
+        ],
+        "method": "power",
+        "degree": 32,
+        "iterations": 8
+      },
+      "7.attention": {
+        "domain": [
+          0.1614954413623032,
+          1.2789712474313717
+        ],
+        "method": "power",
+        "degree": 16,
+        "iterations": 6
+      },
+      "7.mlp": {
+        "domain": [
+          0.9599207591841173,
+          54.66482271182408
+        ],
+        "method": "newton",
+        "degree": 48,
+        "iterations": 9
+      },
+      "8.attention": {
+        "domain": [
+          0.14040232210799455,
+          1.4273237334489128
+        ],
+        "method": "power",
+        "degree": 16,
+        "iterations": 7
+      },
+      "8.mlp": {
+        "domain": [
+          0.864697748651513,
+          218.39017788539405
+        ],
+        "method": "newton",
+        "degree": 96,
+        "iterations": 11
+      },
+      "9.attention": {
+        "domain": [
+          0.20296117046468742,
+          1.7204447231827555
+        ],
+        "method": "power",
+        "degree": 16,
+        "iterations": 7
+      },
+      "9.mlp": {
+        "domain": [
+          0.7852900663501012,
+          267.3959021510363
+        ],
+        "method": "newton",
+        "degree": 128,
+        "iterations": 11
+      },
+      "10.attention": {
+        "domain": [
+          0.16701867557301636,
+          1.3933951927555366
+        ],
+        "method": "power",
+        "degree": 16,
+        "iterations": 7
+      },
+      "10.mlp": {
+        "domain": [
+          0.7414986782884628,
+          319.5292435647607
+        ],
+        "method": "newton",
+        "degree": 128,
+        "iterations": 11
+      },
+      "11.attention": {
+        "domain": [
+          0.30118013406787913,
+          3.1414759692369336
+        ],
+        "method": "power",
+        "degree": 16,
+        "iterations": 7
+      },
+      "11.mlp": {
+        "domain": [
+          1.0746727878966804,
+          5.182371637378334
+        ],
+        "method": "power",
+        "degree": 12,
+        "iterations": 6
+      }
+    },
+    "gelu": {
+      "0": {
+        "domain": [
+          -19,
+          11
+        ],
+        "degree": 48,
+        "strategy": "balanced Chebyshev",
+        "rejected_monomial_coefficient_l1": 539124772002771.5
+      },
+      "1": {
+        "domain": [
+          -16,
+          29
+        ],
+        "degree": 96,
+        "strategy": "balanced Chebyshev",
+        "rejected_monomial_coefficient_l1": 1.0961067035648807e+31
+      },
+      "2": {
+        "domain": [
+          -16,
+          26
+        ],
+        "degree": 64,
+        "strategy": "balanced Chebyshev",
+        "rejected_monomial_coefficient_l1": 9.6559016370074e+20
+      },
+      "3": {
+        "domain": [
+          -29,
+          15
+        ],
+        "degree": 96,
+        "strategy": "balanced Chebyshev",
+        "rejected_monomial_coefficient_l1": 5.0605861531781797e+30
+      },
+      "4": {
+        "domain": [
+          -31,
+          20
+        ],
+        "degree": 96,
+        "strategy": "balanced Chebyshev",
+        "rejected_monomial_coefficient_l1": 5.417518033596109e+31
+      },
+      "5": {
+        "domain": [
+          -33,
+          12
+        ],
+        "degree": 64,
+        "strategy": "balanced Chebyshev",
+        "rejected_monomial_coefficient_l1": 7.342187926032704e+20
+      },
+      "6": {
+        "domain": [
+          -23,
+          13
+        ],
+        "degree": 64,
+        "strategy": "balanced Chebyshev",
+        "rejected_monomial_coefficient_l1": 1.0895696518410037e+20
+      },
+      "7": {
+        "domain": [
+          -20,
+          39
+        ],
+        "degree": 96,
+        "strategy": "balanced Chebyshev",
+        "rejected_monomial_coefficient_l1": 4.708694921860412e+32
+      },
+      "8": {
+        "domain": [
+          -25,
+          42
+        ],
+        "degree": 128,
+        "strategy": "balanced Chebyshev",
+        "rejected_monomial_coefficient_l1": 2.2286225579117334e+43
+      },
+      "9": {
+        "domain": [
+          -29,
+          39
+        ],
+        "degree": 128,
+        "strategy": "balanced Chebyshev",
+        "rejected_monomial_coefficient_l1": 1.7715981902138695e+44
+      },
+      "10": {
+        "domain": [
+          -14,
+          37
+        ],
+        "degree": 96,
+        "strategy": "balanced Chebyshev",
+        "rejected_monomial_coefficient_l1": 2.470940212461624e+31
+      },
+      "11": {
+        "domain": [
+          -11,
+          8
+        ],
+        "degree": 32,
+        "strategy": "balanced Chebyshev",
+        "rejected_monomial_coefficient_l1": 215251237.07657006
+      }
+    },
+    "softmax": {
+      "0": {
+        "centered_domain": [
+          -9,
+          12
+        ],
+        "squarings": 5
+      },
+      "1": {
+        "centered_domain": [
+          -19,
+          18
+        ],
+        "squarings": 6
+      },
+      "2": {
+        "centered_domain": [
+          -28,
+          27
+        ],
+        "squarings": 6
+      },
+      "3": {
+        "centered_domain": [
+          -19,
+          19
+        ],
+        "squarings": 6
+      },
+      "4": {
+        "centered_domain": [
+          -10,
+          11
+        ],
+        "squarings": 5
+      },
+      "5": {
+        "centered_domain": [
+          -20,
+          18
+        ],
+        "squarings": 6
+      },
+      "6": {
+        "centered_domain": [
+          -19,
+          22
+        ],
+        "squarings": 6
+      },
+      "7": {
+        "centered_domain": [
+          -9,
+          12
+        ],
+        "squarings": 5
+      },
+      "8": {
+        "centered_domain": [
+          -8,
+          9
+        ],
+        "squarings": 5
+      },
+      "9": {
+        "centered_domain": [
+          -10,
+          11
+        ],
+        "squarings": 5
+      },
+      "10": {
+        "centered_domain": [
+          -10,
+          13
+        ],
+        "squarings": 5
+      },
+      "11": {
+        "centered_domain": [
+          -8,
+          11
+        ],
+        "squarings": 5
+      }
+    },
+    "tanh": {
+      "domain": [
+        -24,
+        24
+      ],
+      "base_degree": 12,
+      "doublings": 5,
+      "reciprocal_iterations": 5
+    },
+    "selection": "Fixed from prior analytic-function domains/targets and power conditioning, before comparing any full-model logits."
+  },
+  "approximate_complete_forward_evaluated": true,
+  "encrypted_execution": false,
+  "mrpc_accuracy_evaluated": false,
+  "input_boundary": "Client computes the complete embedding module including embedding LayerNorm, as permitted by the P2 input contract. The approximate server-side graph covers all 12 encoder layers, pooler and classifier.",
+  "labels_or_logits_fitted": false,
+  "exact_numpy_vs_native_max_abs_error": 8.881784197001252e-16,
+  "cases": [
+    {
+      "example": 0,
+      "valid_tokens": 15,
+      "gates": {
+        "finite": true,
+        "shape_matches": true,
+        "logit_tolerance_pass": true,
+        "binary_tie_rule_pass": true,
+        "max_abs_logit_error": 0.0001590556350006267,
+        "original_logit_tolerance": "abs(approx-clear)<=0.02+0.01*abs(clear)",
+        "original_tie_rule": "class1 iff logit1>=logit0"
+      },
+      "all_original_gates_pass": true,
+      "every_declared_domain_observed": {
+        "0.softmax.centered_scores": {
+          "domain": [
+            -9,
+            12
+          ],
+          "count": 2700,
+          "minimum": -6.550620482683996,
+          "maximum": 10.25436206703855,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "0.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 2700,
+          "minimum": -0.20470689008387488,
+          "maximum": 0.32044881459495467,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "0.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 1.000065710420674,
+          "maximum": 1.0101969218453932,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "0.softmax.round0.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06667543287034892,
+          "maximum": 0.06818181031134378,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "0.softmax.round1.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06670176171407195,
+          "maximum": 0.07377939723725264,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "0.softmax.round2.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06680729021064247,
+          "maximum": 0.10372847581575578,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "0.softmax.round3.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.0672311279150128,
+          "maximum": 0.24508470633150484,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "0.softmax.round4.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06894041001694776,
+          "maximum": 0.4998663999090016,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "0.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.3175095347982688,
+            1.1853786301897118
+          ],
+          "count": 15,
+          "minimum": 0.39688691849088115,
+          "maximum": 0.9749476674289411,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "0.gelu": {
+          "domain": [
+            -19.0,
+            11.0
+          ],
+          "count": 46080,
+          "minimum": -15.747501441265374,
+          "maximum": 7.9327778397582485,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "0.mlp_norm.inverse_sqrt": {
+          "domain": [
+            1.0641702295685478,
+            7.77505592596739
+          ],
+          "count": 15,
+          "minimum": 1.3302964813567746,
+          "maximum": 6.471173805754994,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.softmax.centered_scores": {
+          "domain": [
+            -19,
+            18
+          ],
+          "count": 2700,
+          "minimum": -15.190209897172881,
+          "maximum": 14.575080058059815,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 2700,
+          "minimum": -0.23734702964332627,
+          "maximum": 0.2277356259071846,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 1.0000266899423893,
+          "maximum": 1.0060923494513314,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.softmax.round0.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06667025164516868,
+          "maximum": 0.06747748177961678,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.softmax.round1.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06668116761354333,
+          "maximum": 0.06991640318951985,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.softmax.round2.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06672600034859037,
+          "maximum": 0.07983711803709206,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.softmax.round3.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06691160238050152,
+          "maximum": 0.13780290935954081,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.softmax.round4.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06766558735236942,
+          "maximum": 0.5023392463933987,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.softmax.round5.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.07078917949493513,
+          "maximum": 0.9533822567351391,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.23704575650795504,
+            1.2070054363296931
+          ],
+          "count": 15,
+          "minimum": 0.296316774421934,
+          "maximum": 1.0059128389261283,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.gelu": {
+          "domain": [
+            -16.0,
+            29.0
+          ],
+          "count": 46080,
+          "minimum": -11.990453281014913,
+          "maximum": 24.967335827782343,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.mlp_norm.inverse_sqrt": {
+          "domain": [
+            0.946842253815884,
+            31.02299313698311
+          ],
+          "count": 15,
+          "minimum": 1.5563669604003993,
+          "maximum": 25.853143790037368,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.softmax.centered_scores": {
+          "domain": [
+            -28,
+            27
+          ],
+          "count": 2700,
+          "minimum": -22.658906601547788,
+          "maximum": 21.591734253939983,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 2700,
+          "minimum": -0.3540454156491842,
+          "maximum": 0.33737084771781223,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 1.000030367315251,
+          "maximum": 1.0099631496378692,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.softmax.round0.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06667070764475322,
+          "maximum": 0.0680248783307587,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.softmax.round1.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06668278359644733,
+          "maximum": 0.07237873439664995,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.softmax.round2.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06673076873771999,
+          "maximum": 0.09742871633193795,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.softmax.round3.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06692030971156657,
+          "maximum": 0.27317141269198136,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.softmax.round4.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.0676615628007901,
+          "maximum": 0.8224479581898491,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.softmax.round5.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.07052427701297134,
+          "maximum": 0.9966037476120976,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.2408904184695401,
+            1.239186868089599
+          ],
+          "count": 15,
+          "minimum": 0.3021071787660254,
+          "maximum": 0.9636528763670227,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.gelu": {
+          "domain": [
+            -16.0,
+            26.0
+          ],
+          "count": 46080,
+          "minimum": -12.383748056698217,
+          "maximum": 22.26656290808123,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.mlp_norm.inverse_sqrt": {
+          "domain": [
+            1.0374898566454187,
+            37.475938356140304
+          ],
+          "count": 15,
+          "minimum": 1.4254853108926384,
+          "maximum": 31.22944464634573,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.softmax.centered_scores": {
+          "domain": [
+            -19,
+            19
+          ],
+          "count": 2700,
+          "minimum": -15.237790943907036,
+          "maximum": 15.033319095097443,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 2700,
+          "minimum": -0.23809048349854744,
+          "maximum": 0.23489561086089755,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 1.0000648615124428,
+          "maximum": 1.005166695294665,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.softmax.round0.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06667531990082713,
+          "maximum": 0.06735869716555613,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.softmax.round1.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06670131450803071,
+          "maximum": 0.06951584604781183,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.softmax.round2.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06680558530085844,
+          "maximum": 0.07945949762808331,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.softmax.round3.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06722569376438399,
+          "maximum": 0.1389237452224963,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.softmax.round4.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06894015521927749,
+          "maximum": 0.49136638457225823,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.softmax.round5.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.07618508699121453,
+          "maximum": 0.9524454832566723,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.21577013245863302,
+            1.048163458438662
+          ],
+          "count": 15,
+          "minimum": 0.2697120688014042,
+          "maximum": 0.8734638903116809,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.gelu": {
+          "domain": [
+            -29.0,
+            15.0
+          ],
+          "count": 46080,
+          "minimum": -24.5878818971381,
+          "maximum": 11.17187559196683,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.mlp_norm.inverse_sqrt": {
+          "domain": [
+            0.9663793422829697,
+            25.182337581642173
+          ],
+          "count": 15,
+          "minimum": 1.2765529010196164,
+          "maximum": 20.98427258899733,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.softmax.centered_scores": {
+          "domain": [
+            -10,
+            11
+          ],
+          "count": 2700,
+          "minimum": -7.631730732604512,
+          "maximum": 8.451565827460918,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 2700,
+          "minimum": -0.238491585393891,
+          "maximum": 0.2641114321081537,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 1.0003427028490637,
+          "maximum": 1.0075888101078758,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.softmax.round0.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06671227600691623,
+          "maximum": 0.06765855281045466,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.softmax.round1.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06684877904684962,
+          "maximum": 0.07050196293086253,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.softmax.round2.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.0673945322596912,
+          "maximum": 0.08400830993219582,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.softmax.round3.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06958387732419498,
+          "maximum": 0.16382809000488552,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.softmax.round4.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.07683844840217616,
+          "maximum": 0.5744987043612291,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.2321878603422849,
+            1.122139363939497
+          ],
+          "count": 15,
+          "minimum": 0.291154635784452,
+          "maximum": 0.9349961533933441,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.gelu": {
+          "domain": [
+            -31.0,
+            20.0
+          ],
+          "count": 46080,
+          "minimum": -25.960814383655592,
+          "maximum": 15.2962723650332,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.mlp_norm.inverse_sqrt": {
+          "domain": [
+            1.0351589246783657,
+            28.677804850304458
+          ],
+          "count": 15,
+          "minimum": 1.3154901930104241,
+          "maximum": 23.897964648743166,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.softmax.centered_scores": {
+          "domain": [
+            -20,
+            18
+          ],
+          "count": 2700,
+          "minimum": -15.955409534838738,
+          "maximum": 14.679533150534148,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 2700,
+          "minimum": -0.24930327398185528,
+          "maximum": 0.22936770547709606,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 1.0001314913101953,
+          "maximum": 1.0077357883251685,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.softmax.round0.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06668434352464338,
+          "maximum": 0.06769998175348634,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.softmax.round1.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06673826396127534,
+          "maximum": 0.07081024017378715,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.softmax.round2.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06696040515768278,
+          "maximum": 0.08313387890010013,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.softmax.round3.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06790390489311873,
+          "maximum": 0.1307471821913123,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.softmax.round4.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.07216072673601716,
+          "maximum": 0.3577600791761774,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.softmax.round5.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.09235249460882956,
+          "maximum": 0.8518321541477848,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.19703831751078957,
+            1.3904797750997746
+          ],
+          "count": 15,
+          "minimum": 0.24646656816197315,
+          "maximum": 1.079184194403347,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.gelu": {
+          "domain": [
+            -33.0,
+            12.0
+          ],
+          "count": 46080,
+          "minimum": -28.861744047781468,
+          "maximum": 8.044986603768399,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.mlp_norm.inverse_sqrt": {
+          "domain": [
+            1.0059956393732474,
+            30.303766555402053
+          ],
+          "count": 15,
+          "minimum": 1.291150860547929,
+          "maximum": 25.253077791933926,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.softmax.centered_scores": {
+          "domain": [
+            -19,
+            22
+          ],
+          "count": 2700,
+          "minimum": -15.537638420694492,
+          "maximum": 18.480388316738004,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 2700,
+          "minimum": -0.24277560032335144,
+          "maximum": 0.2887560674490313,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 1.0002627012552479,
+          "maximum": 1.0085082062167998,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.softmax.round0.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.0667025683285006,
+          "maximum": 0.06781962889244142,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.softmax.round1.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06681570693777064,
+          "maximum": 0.07148657208935014,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.softmax.round2.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06730859315740752,
+          "maximum": 0.08871859587578604,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.softmax.round3.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06963578110546997,
+          "maximum": 0.1883396168968141,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.softmax.round4.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.07772401378562074,
+          "maximum": 0.616607815138475,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.softmax.round5.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.0996122326274031,
+          "maximum": 0.9678237855275437,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.16330028229305768,
+            1.5841269213893792
+          ],
+          "count": 15,
+          "minimum": 0.20412869532315409,
+          "maximum": 1.320111063609911,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.gelu": {
+          "domain": [
+            -23.0,
+            13.0
+          ],
+          "count": 46080,
+          "minimum": -19.122801150378994,
+          "maximum": 9.9244196493398,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.mlp_norm.inverse_sqrt": {
+          "domain": [
+            0.9842912066182974,
+            29.544259589468258
+          ],
+          "count": 15,
+          "minimum": 1.2572118087947417,
+          "maximum": 24.62118583104121,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.softmax.centered_scores": {
+          "domain": [
+            -9,
+            12
+          ],
+          "count": 2700,
+          "minimum": -7.158931493718921,
+          "maximum": 9.450838456603849,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 2700,
+          "minimum": -0.22371660917871627,
+          "maximum": 0.2953387017688703,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 1.001240665832321,
+          "maximum": 1.010447951960267,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.softmax.round0.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06683342598165737,
+          "maximum": 0.06815831953112775,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.softmax.round1.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06734221684532395,
+          "maximum": 0.07329760467163172,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.softmax.round2.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06943679658573686,
+          "maximum": 0.10041566340220001,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.softmax.round3.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.07825629820838952,
+          "maximum": 0.2416200998596755,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.softmax.round4.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.1154633884240234,
+          "maximum": 0.5708060503275635,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.1614954413623032,
+            1.2789712474313717
+          ],
+          "count": 15,
+          "minimum": 0.20209186304403995,
+          "maximum": 0.881865253168438,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.gelu": {
+          "domain": [
+            -20.0,
+            39.0
+          ],
+          "count": 46080,
+          "minimum": -14.85931928123814,
+          "maximum": 33.80998904712358,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.mlp_norm.inverse_sqrt": {
+          "domain": [
+            0.9599207591841173,
+            54.66482271182408
+          ],
+          "count": 15,
+          "minimum": 1.1998591869234485,
+          "maximum": 45.54957600921982,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.softmax.centered_scores": {
+          "domain": [
+            -8,
+            9
+          ],
+          "count": 2700,
+          "minimum": -5.563794193974542,
+          "maximum": 7.252213263238471,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 2700,
+          "minimum": -0.17386856856170443,
+          "maximum": 0.22663166447620223,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 1.0003846509216876,
+          "maximum": 1.0058201977495471,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.softmax.round0.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06671778536813745,
+          "maximum": 0.0675010342471511,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.softmax.round1.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06687005674415944,
+          "maximum": 0.07039071664491033,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.softmax.round2.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06746994937351661,
+          "maximum": 0.08484157666377443,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.softmax.round3.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06977417548421859,
+          "maximum": 0.159400583591785,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.softmax.round4.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.07796576337670154,
+          "maximum": 0.403463014321917,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.14040232210799455,
+            1.4273237334489128
+          ],
+          "count": 15,
+          "minimum": 0.17902143456078787,
+          "maximum": 1.189490804246097,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.gelu": {
+          "domain": [
+            -25.0,
+            42.0
+          ],
+          "count": 46080,
+          "minimum": -18.811469589662146,
+          "maximum": 35.48394970792499,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.mlp_norm.inverse_sqrt": {
+          "domain": [
+            0.864697748651513,
+            218.39017788539405
+          ],
+          "count": 15,
+          "minimum": 1.0809119949970054,
+          "maximum": 176.87320547364297,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.softmax.centered_scores": {
+          "domain": [
+            -10,
+            11
+          ],
+          "count": 2700,
+          "minimum": -7.197642289288568,
+          "maximum": 8.802140551440187,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 2700,
+          "minimum": -0.22492632154026776,
+          "maximum": 0.27506689223250586,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 1.000959855533393,
+          "maximum": 1.0113709100125379,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.softmax.round0.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06679675654984964,
+          "maximum": 0.06818321448488984,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.softmax.round1.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06719392115357847,
+          "maximum": 0.07296833970550233,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.softmax.round2.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06884084388298273,
+          "maximum": 0.09759661365135168,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.softmax.round3.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.07601384346733484,
+          "maximum": 0.20213305534743797,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.softmax.round4.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.10631463963187514,
+          "maximum": 0.48155689475250557,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.20296117046468742,
+            1.7204447231827555
+          ],
+          "count": 15,
+          "minimum": 0.2537018155467589,
+          "maximum": 1.2335507755952837,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.gelu": {
+          "domain": [
+            -29.0,
+            39.0
+          ],
+          "count": 46080,
+          "minimum": -22.475949317411423,
+          "maximum": 32.88875937973386,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.mlp_norm.inverse_sqrt": {
+          "domain": [
+            0.7852900663501012,
+            267.3959021510363
+          ],
+          "count": 15,
+          "minimum": 0.981580821024655,
+          "maximum": 222.82791083268566,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.softmax.centered_scores": {
+          "domain": [
+            -10,
+            13
+          ],
+          "count": 2700,
+          "minimum": -6.90967756894025,
+          "maximum": 10.235429072623031,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 2700,
+          "minimum": -0.2159274240293828,
+          "maximum": 0.3198571585194697,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 1.000545856474017,
+          "maximum": 1.0107055890647896,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.softmax.round0.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06673981518724201,
+          "maximum": 0.06816373593663284,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.softmax.round1.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06696154647927012,
+          "maximum": 0.07378346455662291,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.softmax.round2.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06786434186067797,
+          "maximum": 0.10825352570251573,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.softmax.round3.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.07159834178444367,
+          "maximum": 0.28006587943425904,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.softmax.round4.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.08595449296203676,
+          "maximum": 0.4808940080789276,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.16701867557301636,
+            1.3933951927555366
+          ],
+          "count": 15,
+          "minimum": 0.20941960245812258,
+          "maximum": 1.109141848281603,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.gelu": {
+          "domain": [
+            -14.0,
+            37.0
+          ],
+          "count": 46080,
+          "minimum": -9.046331873832738,
+          "maximum": 31.84800263360725,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.mlp_norm.inverse_sqrt": {
+          "domain": [
+            0.7414986782884628,
+            319.5292435647607
+          ],
+          "count": 15,
+          "minimum": 0.9269034631833586,
+          "maximum": 263.2501618688922,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.softmax.centered_scores": {
+          "domain": [
+            -8,
+            11
+          ],
+          "count": 2700,
+          "minimum": -5.045924242580044,
+          "maximum": 7.525150974094546,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 2700,
+          "minimum": -0.15768513258062639,
+          "maximum": 0.23516096794045457,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 1.0000114262696957,
+          "maximum": 1.0051060005282595,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.softmax.round0.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06666818937596214,
+          "maximum": 0.06742307341880904,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.softmax.round1.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06667275269518326,
+          "maximum": 0.07021040115981045,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.softmax.round2.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06669097111069479,
+          "maximum": 0.08557309030558122,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.softmax.round3.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06676354797782318,
+          "maximum": 0.1748826022626701,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.softmax.round4.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06705119861874669,
+          "maximum": 0.4143422359174024,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.30118013406787913,
+            3.1414759692369336
+          ],
+          "count": 15,
+          "minimum": 0.4658814151620966,
+          "maximum": 2.6174739615649356,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.gelu": {
+          "domain": [
+            -11.0,
+            8.0
+          ],
+          "count": 46080,
+          "minimum": -7.538709366871749,
+          "maximum": 6.071520504865676,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.mlp_norm.inverse_sqrt": {
+          "domain": [
+            1.0746727878966804,
+            5.182371637378334
+          ],
+          "count": 15,
+          "minimum": 1.3826826157820797,
+          "maximum": 4.3186942129684605,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "pooler.tanh.input": {
+          "domain": [
+            -24,
+            24
+          ],
+          "count": 768,
+          "minimum": -19.412962904703544,
+          "maximum": 19.488372446603393,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "pooler.tanh.base": {
+          "domain": [
+            -1.0,
+            1.0
+          ],
+          "count": 768,
+          "minimum": -0.6066550907719858,
+          "maximum": 0.609011638956356,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "pooler.tanh.reciprocal0": {
+          "domain": [
+            1.0,
+            2.1
+          ],
+          "count": 768,
+          "minimum": 1.0000026297534257,
+          "maximum": 1.2953170361194626,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "pooler.tanh.reciprocal1": {
+          "domain": [
+            1.0,
+            2.1
+          ],
+          "count": 768,
+          "minimum": 1.0000105189583781,
+          "maximum": 1.704038384172378,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "pooler.tanh.reciprocal2": {
+          "domain": [
+            1.0,
+            2.1
+          ],
+          "count": 768,
+          "minimum": 1.0000420749483385,
+          "maximum": 1.9698343954786717,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "pooler.tanh.reciprocal3": {
+          "domain": [
+            1.0,
+            2.1
+          ],
+          "count": 768,
+          "minimum": 1.000168285631838,
+          "maximum": 1.9997654882361389,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "pooler.tanh.reciprocal4": {
+          "domain": [
+            1.0,
+            2.1
+          ],
+          "count": 768,
+          "minimum": 1.0006729160240981,
+          "maximum": 1.999999986247833,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        }
+      },
+      "propagated_domain_failures": {},
+      "domain_observation_count": 144,
+      "cost": {
+        "critical_level_depth": 3098,
+        "operations": {
+          "public_matrix_maps": 74,
+          "masked_layout_move_stages": 24,
+          "ciphertext_tensor_multiplications": 3128,
+          "elementwise_ciphertext_scalar_products": 51490074,
+          "plaintext_tensor_multiplications": 4031,
+          "masked_reduction_stages": 161,
+          "ciphertext_tensor_additions": 60,
+          "affine_stages": 1921
+        },
+        "by_layer": [
+          {
+            "layer": 0,
+            "critical_depth_increment": 225,
+            "critical_depth_after": 225,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 197,
+              "elementwise_ciphertext_scalar_products": 2624430,
+              "plaintext_tensor_multiplications": 230,
+              "masked_reduction_stages": 13,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 114
+            }
+          },
+          {
+            "layer": 1,
+            "critical_depth_increment": 259,
+            "critical_depth_after": 484,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 281,
+              "elementwise_ciphertext_scalar_products": 4845150,
+              "plaintext_tensor_multiplications": 377,
+              "masked_reduction_stages": 14,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 172
+            }
+          },
+          {
+            "layer": 2,
+            "critical_depth_increment": 257,
+            "critical_depth_after": 741,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 249,
+              "elementwise_ciphertext_scalar_products": 3370590,
+              "plaintext_tensor_multiplications": 297,
+              "masked_reduction_stages": 14,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 140
+            }
+          },
+          {
+            "layer": 3,
+            "critical_depth_increment": 259,
+            "critical_depth_after": 1000,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 281,
+              "elementwise_ciphertext_scalar_products": 4845150,
+              "plaintext_tensor_multiplications": 377,
+              "masked_reduction_stages": 14,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 172
+            }
+          },
+          {
+            "layer": 4,
+            "critical_depth_increment": 228,
+            "critical_depth_after": 1228,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 261,
+              "elementwise_ciphertext_scalar_products": 4836510,
+              "plaintext_tensor_multiplications": 366,
+              "masked_reduction_stages": 13,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 162
+            }
+          },
+          {
+            "layer": 5,
+            "critical_depth_increment": 257,
+            "critical_depth_after": 1485,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 253,
+              "elementwise_ciphertext_scalar_products": 3370650,
+              "plaintext_tensor_multiplications": 301,
+              "masked_reduction_stages": 14,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 140
+            }
+          },
+          {
+            "layer": 6,
+            "critical_depth_increment": 257,
+            "critical_depth_after": 1742,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 253,
+              "elementwise_ciphertext_scalar_products": 3370650,
+              "plaintext_tensor_multiplications": 301,
+              "masked_reduction_stages": 14,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 140
+            }
+          },
+          {
+            "layer": 7,
+            "critical_depth_increment": 254,
+            "critical_depth_after": 1996,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 258,
+              "elementwise_ciphertext_scalar_products": 4836465,
+              "plaintext_tensor_multiplications": 346,
+              "masked_reduction_stages": 13,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 169
+            }
+          },
+          {
+            "layer": 8,
+            "critical_depth_increment": 262,
+            "critical_depth_after": 2258,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 296,
+              "elementwise_ciphertext_scalar_products": 6311115,
+              "plaintext_tensor_multiplications": 428,
+              "masked_reduction_stages": 13,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 203
+            }
+          },
+          {
+            "layer": 9,
+            "critical_depth_increment": 262,
+            "critical_depth_after": 2520,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 296,
+              "elementwise_ciphertext_scalar_products": 6311115,
+              "plaintext_tensor_multiplications": 428,
+              "masked_reduction_stages": 13,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 203
+            }
+          },
+          {
+            "layer": 10,
+            "critical_depth_increment": 262,
+            "critical_depth_after": 2782,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 264,
+              "elementwise_ciphertext_scalar_products": 4836555,
+              "plaintext_tensor_multiplications": 348,
+              "masked_reduction_stages": 13,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 171
+            }
+          },
+          {
+            "layer": 11,
+            "critical_depth_increment": 223,
+            "critical_depth_after": 3005,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 181,
+              "elementwise_ciphertext_scalar_products": 1887150,
+              "plaintext_tensor_multiplications": 190,
+              "masked_reduction_stages": 13,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 98
+            }
+          }
+        ],
+        "observed_tensor_magnitude_peak": {
+          "magnitude": 160165.80524025788,
+          "operation": "9.mlp_norm.square"
+        },
+        "ideal_critical_path_refresh_lower_bound_depth49_output25": 133
+      }
+    },
+    {
+      "example": 1,
+      "valid_tokens": 15,
+      "gates": {
+        "finite": true,
+        "shape_matches": true,
+        "logit_tolerance_pass": true,
+        "binary_tie_rule_pass": true,
+        "max_abs_logit_error": 0.000313276768281856,
+        "original_logit_tolerance": "abs(approx-clear)<=0.02+0.01*abs(clear)",
+        "original_tie_rule": "class1 iff logit1>=logit0"
+      },
+      "all_original_gates_pass": true,
+      "every_declared_domain_observed": {
+        "0.softmax.centered_scores": {
+          "domain": [
+            -9,
+            12
+          ],
+          "count": 2700,
+          "minimum": -6.1628457198012905,
+          "maximum": 10.13738845160268,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "0.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 2700,
+          "minimum": -0.19258892874379033,
+          "maximum": 0.31679338911258376,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "0.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 1.0001052610633863,
+          "maximum": 1.0095074574498273,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "0.softmax.round0.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06668071058254255,
+          "maximum": 0.06808241139474591,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "0.softmax.round1.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06672289794162324,
+          "maximum": 0.07334550232216833,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "0.softmax.round2.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06689200594844377,
+          "maximum": 0.10201296240693628,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "0.softmax.round3.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06757084768126471,
+          "maximum": 0.24347346483051524,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "0.softmax.round4.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.07029818550685456,
+          "maximum": 0.6064517324797202,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "0.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.3175095347982688,
+            1.1853786301897118
+          ],
+          "count": 15,
+          "minimum": 0.43760981487197864,
+          "maximum": 0.9858122163269981,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "0.gelu": {
+          "domain": [
+            -19.0,
+            11.0
+          ],
+          "count": 46080,
+          "minimum": -13.159141857358557,
+          "maximum": 7.320040497862844,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "0.mlp_norm.inverse_sqrt": {
+          "domain": [
+            1.0641702295685478,
+            7.77505592596739
+          ],
+          "count": 15,
+          "minimum": 1.3454526095474328,
+          "maximum": 6.478939041535013,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.softmax.centered_scores": {
+          "domain": [
+            -19,
+            18
+          ],
+          "count": 2700,
+          "minimum": -15.362833508820929,
+          "maximum": 13.942141221681807,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 2700,
+          "minimum": -0.240044273575327,
+          "maximum": 0.21784595658877823,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 1.0000377968022118,
+          "maximum": 1.0055486952056838,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.softmax.round0.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06667170422455468,
+          "maximum": 0.06739526836242171,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.softmax.round1.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06668680567684819,
+          "maximum": 0.0695600683664116,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.softmax.round2.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06674713926106035,
+          "maximum": 0.07857343808175833,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.softmax.round3.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06698798498194516,
+          "maximum": 0.12352473421978855,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.softmax.round4.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06794870001644386,
+          "maximum": 0.37957266848619464,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.softmax.round5.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.07178373721995646,
+          "maximum": 0.8970337753718416,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.23704575650795504,
+            1.2070054363296931
+          ],
+          "count": 15,
+          "minimum": 0.3068277175449171,
+          "maximum": 0.8874564468438128,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.gelu": {
+          "domain": [
+            -16.0,
+            29.0
+          ],
+          "count": 46080,
+          "minimum": -11.937205041712241,
+          "maximum": 25.096142386560672,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.mlp_norm.inverse_sqrt": {
+          "domain": [
+            0.946842253815884,
+            31.02299313698311
+          ],
+          "count": 15,
+          "minimum": 1.3932778994195054,
+          "maximum": 25.03293659924643,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.softmax.centered_scores": {
+          "domain": [
+            -28,
+            27
+          ],
+          "count": 2700,
+          "minimum": -16.285463435150668,
+          "maximum": 19.272002637982318,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 2700,
+          "minimum": -0.2544603661742292,
+          "maximum": 0.3011250412184737,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 1.0000140101550024,
+          "maximum": 1.007982542093152,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.softmax.round0.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06666853627403566,
+          "maximum": 0.06773928318227525,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.softmax.round1.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06667415479231861,
+          "maximum": 0.0710970420275252,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.softmax.round2.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06669669840845112,
+          "maximum": 0.08925810974165546,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.softmax.round3.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06678745398574354,
+          "maximum": 0.21803876454315793,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.softmax.round4.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06715551163840085,
+          "maximum": 0.7455923498045408,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.softmax.round5.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06867381480380919,
+          "maximum": 0.9929276055793607,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.2408904184695401,
+            1.239186868089599
+          ],
+          "count": 15,
+          "minimum": 0.30111345635588616,
+          "maximum": 0.9044319843869993,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.gelu": {
+          "domain": [
+            -16.0,
+            26.0
+          ],
+          "count": 46080,
+          "minimum": -12.301831744743065,
+          "maximum": 21.60997000716165,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.mlp_norm.inverse_sqrt": {
+          "domain": [
+            1.0374898566454187,
+            37.475938356140304
+          ],
+          "count": 15,
+          "minimum": 1.3360473405695565,
+          "maximum": 29.895576018541025,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.softmax.centered_scores": {
+          "domain": [
+            -19,
+            19
+          ],
+          "count": 2700,
+          "minimum": -12.405347665711746,
+          "maximum": 14.99140668009987,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 2700,
+          "minimum": -0.19383355727674603,
+          "maximum": 0.23424072937656046,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 1.000081269872935,
+          "maximum": 1.0044630719622174,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.softmax.round0.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.0666775991305258,
+          "maximum": 0.06728301759655325,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.softmax.round1.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06671098389150151,
+          "maximum": 0.06930667813407308,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.softmax.round2.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06684872542630235,
+          "maximum": 0.07923073124226808,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.softmax.round3.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06743461797406265,
+          "maximum": 0.14136867333647207,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.softmax.round4.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.07007591498896656,
+          "maximum": 0.501827918610907,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.softmax.round5.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.07936607179442837,
+          "maximum": 0.9508206916799335,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.21577013245863302,
+            1.048163458438662
+          ],
+          "count": 15,
+          "minimum": 0.2705049595482224,
+          "maximum": 0.8730370856101533,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.gelu": {
+          "domain": [
+            -29.0,
+            15.0
+          ],
+          "count": 46080,
+          "minimum": -24.536815545056733,
+          "maximum": 10.563389948580507,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.mlp_norm.inverse_sqrt": {
+          "domain": [
+            0.9663793422829697,
+            25.182337581642173
+          ],
+          "count": 15,
+          "minimum": 1.4084699254145303,
+          "maximum": 19.689996589447325,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.softmax.centered_scores": {
+          "domain": [
+            -10,
+            11
+          ],
+          "count": 2700,
+          "minimum": -7.4588055385291625,
+          "maximum": 7.473743620440984,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 2700,
+          "minimum": -0.23308767307903633,
+          "maximum": 0.23355448813878074,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 1.0001549599775317,
+          "maximum": 1.0082168644220382,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.softmax.round0.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06668740468459632,
+          "maximum": 0.06774674013761371,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.softmax.round1.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06675007989215576,
+          "maximum": 0.07087920321997679,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.softmax.round2.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06700392220996126,
+          "maximum": 0.08239066988464437,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.softmax.round3.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06804297309824708,
+          "maximum": 0.14234460181424943,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.softmax.round4.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.0723607461425884,
+          "maximum": 0.39545727805493214,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.2321878603422849,
+            1.122139363939497
+          ],
+          "count": 15,
+          "minimum": 0.2902386933962406,
+          "maximum": 0.8092353958220571,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.gelu": {
+          "domain": [
+            -31.0,
+            20.0
+          ],
+          "count": 46080,
+          "minimum": -25.986691233191827,
+          "maximum": 15.165043367287307,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.mlp_norm.inverse_sqrt": {
+          "domain": [
+            1.0351589246783657,
+            28.677804850304458
+          ],
+          "count": 15,
+          "minimum": 1.4419895925756905,
+          "maximum": 23.682039352934193,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.softmax.centered_scores": {
+          "domain": [
+            -20,
+            18
+          ],
+          "count": 2700,
+          "minimum": -10.841159859124256,
+          "maximum": 12.443339482288719,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 2700,
+          "minimum": -0.1693931227988165,
+          "maximum": 0.19442717941076124,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 1.000109636909239,
+          "maximum": 1.0045355561717875,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.softmax.round0.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06668149399195422,
+          "maximum": 0.06727685019857797,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.softmax.round1.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06672725699302659,
+          "maximum": 0.06914750232407853,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.softmax.round2.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06691959892948894,
+          "maximum": 0.07691790872917549,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.softmax.round3.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06773042359660401,
+          "maximum": 0.11161335257938951,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.softmax.round4.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.07121118075304962,
+          "maximum": 0.30736943247278614,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.softmax.round5.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.08651379736602714,
+          "maximum": 0.8225911357459225,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.19703831751078957,
+            1.3904797750997746
+          ],
+          "count": 15,
+          "minimum": 0.24707077412182815,
+          "maximum": 0.9732326203407539,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.gelu": {
+          "domain": [
+            -33.0,
+            12.0
+          ],
+          "count": 46080,
+          "minimum": -28.86511095412646,
+          "maximum": 8.008830395490595,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.mlp_norm.inverse_sqrt": {
+          "domain": [
+            1.0059956393732474,
+            30.303766555402053
+          ],
+          "count": 15,
+          "minimum": 1.2968930851183962,
+          "maximum": 24.95058248688282,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.softmax.centered_scores": {
+          "domain": [
+            -19,
+            22
+          ],
+          "count": 2700,
+          "minimum": -12.874456699640524,
+          "maximum": 14.728340200069688,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 2700,
+          "minimum": -0.20116338593188318,
+          "maximum": 0.23013031562608888,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 1.0000999912082091,
+          "maximum": 1.007065703951033,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.softmax.round0.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.0666801545032654,
+          "maximum": 0.0676533300348045,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.softmax.round1.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06672157269975144,
+          "maximum": 0.0709128709337475,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.softmax.round2.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06689417600368366,
+          "maximum": 0.08610737711957403,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.softmax.round3.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06764367625331309,
+          "maximum": 0.15738346358373906,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.softmax.round4.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.07116788364974708,
+          "maximum": 0.3933445877720261,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.softmax.round5.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.08999206526231393,
+          "maximum": 0.9291918028794219,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.16330028229305768,
+            1.5841269213893792
+          ],
+          "count": 15,
+          "minimum": 0.20413468810895766,
+          "maximum": 1.1606904749433424,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.gelu": {
+          "domain": [
+            -23.0,
+            13.0
+          ],
+          "count": 46080,
+          "minimum": -19.152386130259746,
+          "maximum": 9.866440725355005,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.mlp_norm.inverse_sqrt": {
+          "domain": [
+            0.9842912066182974,
+            29.544259589468258
+          ],
+          "count": 15,
+          "minimum": 1.336338518188258,
+          "maximum": 24.509514423914645,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.softmax.centered_scores": {
+          "domain": [
+            -9,
+            12
+          ],
+          "count": 2700,
+          "minimum": -6.292847901748527,
+          "maximum": 7.700959710966097,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 2700,
+          "minimum": -0.19665149692964146,
+          "maximum": 0.24065499096769052,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 1.000530285744875,
+          "maximum": 1.0066356789749835,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.softmax.round0.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06673779203802584,
+          "maximum": 0.06760996203368719,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.softmax.round1.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.0669517109282647,
+          "maximum": 0.0708652671686821,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.softmax.round2.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06781246116125916,
+          "maximum": 0.08719501488492086,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.softmax.round3.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.07131373963922182,
+          "maximum": 0.1801641681746194,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.softmax.round4.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.08597115884156026,
+          "maximum": 0.41935063035095216,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.1614954413623032,
+            1.2789712474313717
+          ],
+          "count": 15,
+          "minimum": 0.20190587938866114,
+          "maximum": 1.0657028407161961,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.gelu": {
+          "domain": [
+            -20.0,
+            39.0
+          ],
+          "count": 46080,
+          "minimum": -13.624740102245438,
+          "maximum": 33.59368859647706,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.mlp_norm.inverse_sqrt": {
+          "domain": [
+            0.9599207591841173,
+            54.66482271182408
+          ],
+          "count": 15,
+          "minimum": 1.2546431775772455,
+          "maximum": 44.91628498337496,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.softmax.centered_scores": {
+          "domain": [
+            -8,
+            9
+          ],
+          "count": 2700,
+          "minimum": -5.30949230928399,
+          "maximum": 5.493149158713308,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 2700,
+          "minimum": -0.1659216346651247,
+          "maximum": 0.17166091120979088,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 1.0001403671661035,
+          "maximum": 1.0045521346597155,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.softmax.round0.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06668533607918796,
+          "maximum": 0.06727883036598557,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.softmax.round1.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06674106438636061,
+          "maximum": 0.06913771913035756,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.softmax.round2.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06696190630653273,
+          "maximum": 0.07656173463686425,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.softmax.round3.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06782716508082483,
+          "maximum": 0.1127326951157249,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.softmax.round4.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.07112317637212484,
+          "maximum": 0.2895064903066642,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.14040232210799455,
+            1.4273237334489128
+          ],
+          "count": 15,
+          "minimum": 0.17550181477832869,
+          "maximum": 1.0487493279357176,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.gelu": {
+          "domain": [
+            -25.0,
+            42.0
+          ],
+          "count": 46080,
+          "minimum": -15.30911062101958,
+          "maximum": 36.146783936193,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.mlp_norm.inverse_sqrt": {
+          "domain": [
+            0.864697748651513,
+            218.39017788539405
+          ],
+          "count": 15,
+          "minimum": 1.1999407486236406,
+          "maximum": 181.99347362273204,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.softmax.centered_scores": {
+          "domain": [
+            -10,
+            11
+          ],
+          "count": 2700,
+          "minimum": -7.719463129640372,
+          "maximum": 7.8175920931969465,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 2700,
+          "minimum": -0.24123322280126164,
+          "maximum": 0.24429975291240458,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 1.0003398549145717,
+          "maximum": 1.0158633083351203,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.softmax.round0.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06671182143041943,
+          "maximum": 0.06876876160878109,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.softmax.round1.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06684645092959951,
+          "maximum": 0.07487916714478501,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.softmax.round2.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06738036639724077,
+          "maximum": 0.09581067465002154,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.softmax.round3.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06949798147785659,
+          "maximum": 0.16108656770898483,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.softmax.round4.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.07811269877410833,
+          "maximum": 0.3609882532983293,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.20296117046468742,
+            1.7204447231827555
+          ],
+          "count": 15,
+          "minimum": 0.25487309834289473,
+          "maximum": 1.4336696693032778,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.gelu": {
+          "domain": [
+            -29.0,
+            39.0
+          ],
+          "count": 46080,
+          "minimum": -17.035690089563822,
+          "maximum": 32.72264995974356,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.mlp_norm.inverse_sqrt": {
+          "domain": [
+            0.7852900663501012,
+            267.3959021510363
+          ],
+          "count": 15,
+          "minimum": 1.062373429944858,
+          "maximum": 212.15605480545685,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.softmax.centered_scores": {
+          "domain": [
+            -10,
+            13
+          ],
+          "count": 2700,
+          "minimum": -7.887532520475238,
+          "maximum": 9.496733583270105,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 2700,
+          "minimum": -0.2464853912648512,
+          "maximum": 0.2967729244771908,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 1.000274878178301,
+          "maximum": 1.0084750239537366,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.softmax.round0.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06670328268079413,
+          "maximum": 0.06791697750974643,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.softmax.round1.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06681299598384019,
+          "maximum": 0.07277302139788525,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.softmax.round2.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06725162131910849,
+          "maximum": 0.10090577198233217,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.softmax.round3.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06901531016819147,
+          "maximum": 0.2469016670972089,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.softmax.round4.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.07632088719862397,
+          "maximum": 0.46674120726654184,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.16701867557301636,
+            1.3933951927555366
+          ],
+          "count": 15,
+          "minimum": 0.2117308543731759,
+          "maximum": 1.0916542016064619,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.gelu": {
+          "domain": [
+            -14.0,
+            37.0
+          ],
+          "count": 46080,
+          "minimum": -8.665146002717421,
+          "maximum": 32.19252712609776,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.mlp_norm.inverse_sqrt": {
+          "domain": [
+            0.7414986782884628,
+            319.5292435647607
+          ],
+          "count": 15,
+          "minimum": 0.9630993290050035,
+          "maximum": 266.2757330519866,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.softmax.centered_scores": {
+          "domain": [
+            -8,
+            11
+          ],
+          "count": 2700,
+          "minimum": -4.030687631900156,
+          "maximum": 7.3420822232748,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 2700,
+          "minimum": -0.12595898849687986,
+          "maximum": 0.2294400694773375,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 1.0000175270883878,
+          "maximum": 1.006423027014273,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.softmax.round0.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06666899806839546,
+          "maximum": 0.06757551690889634,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.softmax.round1.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06667595937347884,
+          "maximum": 0.07064851400660345,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.softmax.round2.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06670357809227648,
+          "maximum": 0.08548340999793087,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.softmax.round3.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06681229746095038,
+          "maximum": 0.15914208801417207,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.softmax.round4.reciprocal": {
+          "domain": [
+            0.03333333333333333,
+            2.0
+          ],
+          "count": 180,
+          "minimum": 0.06723401776283378,
+          "maximum": 0.3708610713958308,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.30118013406787913,
+            3.1414759692369336
+          ],
+          "count": 15,
+          "minimum": 0.49178686398561566,
+          "maximum": 2.5434305694327497,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.gelu": {
+          "domain": [
+            -11.0,
+            8.0
+          ],
+          "count": 46080,
+          "minimum": -7.444042347891898,
+          "maximum": 4.178955603237112,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.mlp_norm.inverse_sqrt": {
+          "domain": [
+            1.0746727878966804,
+            5.182371637378334
+          ],
+          "count": 15,
+          "minimum": 1.3433314928556168,
+          "maximum": 3.3599921655380296,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "pooler.tanh.input": {
+          "domain": [
+            -24,
+            24
+          ],
+          "count": 768,
+          "minimum": -15.462184783191606,
+          "maximum": 15.369216273248309,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "pooler.tanh.base": {
+          "domain": [
+            -1.0,
+            1.0
+          ],
+          "count": 768,
+          "minimum": -0.4831932744747377,
+          "maximum": 0.48028800853900966,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "pooler.tanh.reciprocal0": {
+          "domain": [
+            1.0,
+            2.1
+          ],
+          "count": 768,
+          "minimum": 1.0000015398781046,
+          "maximum": 1.2014189998013223,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "pooler.tanh.reciprocal1": {
+          "domain": [
+            1.0,
+            2.1
+          ],
+          "count": 768,
+          "minimum": 1.0000061594934484,
+          "maximum": 1.5581763542760396,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "pooler.tanh.reciprocal2": {
+          "domain": [
+            1.0,
+            2.1
+          ],
+          "count": 768,
+          "minimum": 1.0000246376702813,
+          "maximum": 1.9195984001002002,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "pooler.tanh.reciprocal3": {
+          "domain": [
+            1.0,
+            2.1
+          ],
+          "count": 768,
+          "minimum": 1.000098545825186,
+          "maximum": 1.9982456807737359,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "pooler.tanh.reciprocal4": {
+          "domain": [
+            1.0,
+            2.1
+          ],
+          "count": 768,
+          "minimum": 1.0003941056219898,
+          "maximum": 1.9999992292394462,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        }
+      },
+      "propagated_domain_failures": {},
+      "domain_observation_count": 144,
+      "cost": {
+        "critical_level_depth": 3098,
+        "operations": {
+          "public_matrix_maps": 74,
+          "masked_layout_move_stages": 24,
+          "ciphertext_tensor_multiplications": 3128,
+          "elementwise_ciphertext_scalar_products": 51490074,
+          "plaintext_tensor_multiplications": 4031,
+          "masked_reduction_stages": 161,
+          "ciphertext_tensor_additions": 60,
+          "affine_stages": 1921
+        },
+        "by_layer": [
+          {
+            "layer": 0,
+            "critical_depth_increment": 225,
+            "critical_depth_after": 225,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 197,
+              "elementwise_ciphertext_scalar_products": 2624430,
+              "plaintext_tensor_multiplications": 230,
+              "masked_reduction_stages": 13,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 114
+            }
+          },
+          {
+            "layer": 1,
+            "critical_depth_increment": 259,
+            "critical_depth_after": 484,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 281,
+              "elementwise_ciphertext_scalar_products": 4845150,
+              "plaintext_tensor_multiplications": 377,
+              "masked_reduction_stages": 14,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 172
+            }
+          },
+          {
+            "layer": 2,
+            "critical_depth_increment": 257,
+            "critical_depth_after": 741,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 249,
+              "elementwise_ciphertext_scalar_products": 3370590,
+              "plaintext_tensor_multiplications": 297,
+              "masked_reduction_stages": 14,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 140
+            }
+          },
+          {
+            "layer": 3,
+            "critical_depth_increment": 259,
+            "critical_depth_after": 1000,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 281,
+              "elementwise_ciphertext_scalar_products": 4845150,
+              "plaintext_tensor_multiplications": 377,
+              "masked_reduction_stages": 14,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 172
+            }
+          },
+          {
+            "layer": 4,
+            "critical_depth_increment": 228,
+            "critical_depth_after": 1228,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 261,
+              "elementwise_ciphertext_scalar_products": 4836510,
+              "plaintext_tensor_multiplications": 366,
+              "masked_reduction_stages": 13,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 162
+            }
+          },
+          {
+            "layer": 5,
+            "critical_depth_increment": 257,
+            "critical_depth_after": 1485,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 253,
+              "elementwise_ciphertext_scalar_products": 3370650,
+              "plaintext_tensor_multiplications": 301,
+              "masked_reduction_stages": 14,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 140
+            }
+          },
+          {
+            "layer": 6,
+            "critical_depth_increment": 257,
+            "critical_depth_after": 1742,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 253,
+              "elementwise_ciphertext_scalar_products": 3370650,
+              "plaintext_tensor_multiplications": 301,
+              "masked_reduction_stages": 14,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 140
+            }
+          },
+          {
+            "layer": 7,
+            "critical_depth_increment": 254,
+            "critical_depth_after": 1996,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 258,
+              "elementwise_ciphertext_scalar_products": 4836465,
+              "plaintext_tensor_multiplications": 346,
+              "masked_reduction_stages": 13,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 169
+            }
+          },
+          {
+            "layer": 8,
+            "critical_depth_increment": 262,
+            "critical_depth_after": 2258,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 296,
+              "elementwise_ciphertext_scalar_products": 6311115,
+              "plaintext_tensor_multiplications": 428,
+              "masked_reduction_stages": 13,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 203
+            }
+          },
+          {
+            "layer": 9,
+            "critical_depth_increment": 262,
+            "critical_depth_after": 2520,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 296,
+              "elementwise_ciphertext_scalar_products": 6311115,
+              "plaintext_tensor_multiplications": 428,
+              "masked_reduction_stages": 13,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 203
+            }
+          },
+          {
+            "layer": 10,
+            "critical_depth_increment": 262,
+            "critical_depth_after": 2782,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 264,
+              "elementwise_ciphertext_scalar_products": 4836555,
+              "plaintext_tensor_multiplications": 348,
+              "masked_reduction_stages": 13,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 171
+            }
+          },
+          {
+            "layer": 11,
+            "critical_depth_increment": 223,
+            "critical_depth_after": 3005,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 181,
+              "elementwise_ciphertext_scalar_products": 1887150,
+              "plaintext_tensor_multiplications": 190,
+              "masked_reduction_stages": 13,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 98
+            }
+          }
+        ],
+        "observed_tensor_magnitude_peak": {
+          "magnitude": 152225.20504759566,
+          "operation": "9.mlp_norm.square"
+        },
+        "ideal_critical_path_refresh_lower_bound_depth49_output25": 133
+      }
+    },
+    {
+      "example": 2,
+      "valid_tokens": 16,
+      "gates": {
+        "finite": true,
+        "shape_matches": true,
+        "logit_tolerance_pass": true,
+        "binary_tie_rule_pass": true,
+        "max_abs_logit_error": 8.283379176443617e-05,
+        "original_logit_tolerance": "abs(approx-clear)<=0.02+0.01*abs(clear)",
+        "original_tie_rule": "class1 iff logit1>=logit0"
+      },
+      "all_original_gates_pass": true,
+      "every_declared_domain_observed": {
+        "0.softmax.centered_scores": {
+          "domain": [
+            -9,
+            12
+          ],
+          "count": 3072,
+          "minimum": -6.166182991477028,
+          "maximum": 10.073982526608848,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "0.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 3072,
+          "minimum": -0.1926932184836571,
+          "maximum": 0.3148119539565265,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "0.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 1.0000795432628888,
+          "maximum": 1.009845977533122,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "0.softmax.round0.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06250991294128998,
+          "maximum": 0.0638592904934806,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "0.softmax.round1.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06253947561166678,
+          "maximum": 0.06883278665229584,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "0.softmax.round2.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.0626565210226652,
+          "maximum": 0.09561276908753269,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "0.softmax.round3.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06311549136478894,
+          "maximum": 0.22906296405787913,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "0.softmax.round4.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06488493162327148,
+          "maximum": 0.5673645644847882,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "0.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.3175095347982688,
+            1.1853786301897118
+          ],
+          "count": 16,
+          "minimum": 0.41401052406472527,
+          "maximum": 0.9878155251529269,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "0.gelu": {
+          "domain": [
+            -19.0,
+            11.0
+          ],
+          "count": 49152,
+          "minimum": -12.533951576457714,
+          "maximum": 6.811067467956029,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "0.mlp_norm.inverse_sqrt": {
+          "domain": [
+            1.0641702295685478,
+            7.77505592596739
+          ],
+          "count": 16,
+          "minimum": 1.3950162784368123,
+          "maximum": 6.447853803639646,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.softmax.centered_scores": {
+          "domain": [
+            -19,
+            18
+          ],
+          "count": 3072,
+          "minimum": -13.207150487027354,
+          "maximum": 14.770494001338463,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 3072,
+          "minimum": -0.2063617263598024,
+          "maximum": 0.23078896877091348,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 1.0000472145604509,
+          "maximum": 1.005309976489951,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.softmax.round0.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06250593600893928,
+          "maximum": 0.06317001655722287,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.softmax.round1.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06252395127651171,
+          "maximum": 0.0652449246500799,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.softmax.round2.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06259748352545087,
+          "maximum": 0.07431149796324873,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.softmax.round3.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06290366765947998,
+          "maximum": 0.12935677581885494,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.softmax.round4.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06422862354574754,
+          "maximum": 0.4950906464606586,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.softmax.round5.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.07035789405185097,
+          "maximum": 0.9566682580456102,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.23704575650795504,
+            1.2070054363296931
+          ],
+          "count": 16,
+          "minimum": 0.3003313407949344,
+          "maximum": 0.9622583659342698,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.gelu": {
+          "domain": [
+            -16.0,
+            29.0
+          ],
+          "count": 49152,
+          "minimum": -11.821143451515283,
+          "maximum": 24.623298468444233,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "1.mlp_norm.inverse_sqrt": {
+          "domain": [
+            0.946842253815884,
+            31.02299313698311
+          ],
+          "count": 16,
+          "minimum": 1.1836238615103316,
+          "maximum": 23.744466123440514,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.softmax.centered_scores": {
+          "domain": [
+            -28,
+            27
+          ],
+          "count": 3072,
+          "minimum": -22.767931710833828,
+          "maximum": 21.637961540591498,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 3072,
+          "minimum": -0.35574893298177857,
+          "maximum": 0.33809314907174215,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 1.0000336901176818,
+          "maximum": 1.0100668142985076,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.softmax.round0.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06250420992499654,
+          "maximum": 0.06380894464399733,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.softmax.round1.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06251683233081327,
+          "maximum": 0.06825687324764314,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.softmax.round2.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06256727567746843,
+          "maximum": 0.0913945797732428,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.softmax.round3.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06276876425032386,
+          "maximum": 0.23949351616209644,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.softmax.round4.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06357397738129039,
+          "maximum": 0.776115743962795,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.softmax.round5.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06681831831522003,
+          "maximum": 0.9963414922394078,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.2408904184695401,
+            1.239186868089599
+          ],
+          "count": 16,
+          "minimum": 0.3074398468761954,
+          "maximum": 1.0326420067629045,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.gelu": {
+          "domain": [
+            -16.0,
+            26.0
+          ],
+          "count": 49152,
+          "minimum": -12.375764489635015,
+          "maximum": 21.712572416182073,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "2.mlp_norm.inverse_sqrt": {
+          "domain": [
+            1.0374898566454187,
+            37.475938356140304
+          ],
+          "count": 16,
+          "minimum": 1.296841175307018,
+          "maximum": 29.928896064705878,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.softmax.centered_scores": {
+          "domain": [
+            -19,
+            19
+          ],
+          "count": 3072,
+          "minimum": -12.993809256970298,
+          "maximum": 12.270370752658973,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 3072,
+          "minimum": -0.2030282696401609,
+          "maximum": 0.19172454301029646,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 1.0000766624503687,
+          "maximum": 1.0038641354025741,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.softmax.round0.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06250965099086378,
+          "maximum": 0.06298520250948783,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.softmax.round1.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06253901984779328,
+          "maximum": 0.06446858027207134,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.softmax.round2.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06265947875723685,
+          "maximum": 0.07076271631708618,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.softmax.round3.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06316624200778356,
+          "maximum": 0.10145141739984755,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.softmax.round4.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.0654084002516705,
+          "maximum": 0.28299083984364964,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.softmax.round5.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.07509811725379356,
+          "maximum": 0.8072372684173863,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.21577013245863302,
+            1.048163458438662
+          ],
+          "count": 16,
+          "minimum": 0.27190316078544163,
+          "maximum": 0.8652481993443537,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.gelu": {
+          "domain": [
+            -29.0,
+            15.0
+          ],
+          "count": 49152,
+          "minimum": -24.523272457812443,
+          "maximum": 11.029264031078323,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "3.mlp_norm.inverse_sqrt": {
+          "domain": [
+            0.9663793422829697,
+            25.182337581642173
+          ],
+          "count": 16,
+          "minimum": 1.2079792400979452,
+          "maximum": 20.46317602251414,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.softmax.centered_scores": {
+          "domain": [
+            -10,
+            11
+          ],
+          "count": 3072,
+          "minimum": -6.823914587528906,
+          "maximum": 6.9819966117577765,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 3072,
+          "minimum": -0.2132473308602783,
+          "maximum": 0.21818739411743052,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 1.0002440111077415,
+          "maximum": 1.0072794146946225,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.softmax.round0.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.0625304500467008,
+          "maximum": 0.06339785502567617,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.softmax.round1.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06262151641252375,
+          "maximum": 0.06601045046384062,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.softmax.round2.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06298390136072478,
+          "maximum": 0.076200030320672,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.softmax.round3.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06441963701362657,
+          "maximum": 0.1458732052705234,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.softmax.round4.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.07006010477471464,
+          "maximum": 0.38427409659364087,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.2321878603422849,
+            1.122139363939497
+          ],
+          "count": 16,
+          "minimum": 0.29178992736939485,
+          "maximum": 0.8790877098800003,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.gelu": {
+          "domain": [
+            -31.0,
+            20.0
+          ],
+          "count": 49152,
+          "minimum": -25.94898987796949,
+          "maximum": 15.251743926509683,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "4.mlp_norm.inverse_sqrt": {
+          "domain": [
+            1.0351589246783657,
+            28.677804850304458
+          ],
+          "count": 16,
+          "minimum": 1.2939228123354827,
+          "maximum": 23.7991553315562,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.softmax.centered_scores": {
+          "domain": [
+            -20,
+            18
+          ],
+          "count": 3072,
+          "minimum": -11.116334927619889,
+          "maximum": 12.676737233709616,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 3072,
+          "minimum": -0.17369273324406076,
+          "maximum": 0.19807401927671275,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 1.000177182022705,
+          "maximum": 1.005157822206965,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.softmax.round0.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.0625223849096091,
+          "maximum": 0.06315004476002659,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.softmax.round1.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06259099442552804,
+          "maximum": 0.06513623282019612,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.softmax.round2.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06287593673535456,
+          "maximum": 0.07329390063279778,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.softmax.round3.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06410423421474673,
+          "maximum": 0.10724140562149445,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.softmax.round4.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.0691988284140915,
+          "maximum": 0.25015153127089285,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.softmax.round5.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.08385485937936087,
+          "maximum": 0.752448328852227,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.19703831751078957,
+            1.3904797750997746
+          ],
+          "count": 16,
+          "minimum": 0.24629731431467386,
+          "maximum": 1.158813747961133,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.gelu": {
+          "domain": [
+            -33.0,
+            12.0
+          ],
+          "count": 49152,
+          "minimum": -28.88438040633396,
+          "maximum": 8.057566674744512,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "5.mlp_norm.inverse_sqrt": {
+          "domain": [
+            1.0059956393732474,
+            30.303766555402053
+          ],
+          "count": 16,
+          "minimum": 1.2573603344999253,
+          "maximum": 25.249679602004246,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.softmax.centered_scores": {
+          "domain": [
+            -19,
+            22
+          ],
+          "count": 3072,
+          "minimum": -8.604021811557782,
+          "maximum": 13.32914376303448,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 3072,
+          "minimum": -0.13443784080559035,
+          "maximum": 0.20826787129741375,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 1.0001794046718817,
+          "maximum": 1.004555400619396,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.softmax.round0.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06252268348211076,
+          "maximum": 0.06310236671622413,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.softmax.round1.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06259232199387767,
+          "maximum": 0.06513223396695644,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.softmax.round2.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.0628824375204659,
+          "maximum": 0.0750153375488211,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.softmax.round3.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06414183533641024,
+          "maximum": 0.12765391487531752,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.softmax.round4.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06923350993596657,
+          "maximum": 0.37540605809485833,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.softmax.round5.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.08790096878221836,
+          "maximum": 0.9081494278197204,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.16330028229305768,
+            1.5841269213893792
+          ],
+          "count": 16,
+          "minimum": 0.2043562337260796,
+          "maximum": 1.2083450164054215,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.gelu": {
+          "domain": [
+            -23.0,
+            13.0
+          ],
+          "count": 49152,
+          "minimum": -19.14722204281251,
+          "maximum": 9.878991558260493,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "6.mlp_norm.inverse_sqrt": {
+          "domain": [
+            0.9842912066182974,
+            29.544259589468258
+          ],
+          "count": 16,
+          "minimum": 1.230333378919234,
+          "maximum": 24.57851129163819,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.softmax.centered_scores": {
+          "domain": [
+            -9,
+            12
+          ],
+          "count": 3072,
+          "minimum": -6.17941724591888,
+          "maximum": 7.407661416905734,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 3072,
+          "minimum": -0.193106788934965,
+          "maximum": 0.2314894192783042,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 1.0006932504298467,
+          "maximum": 1.0076756327790795,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.softmax.round0.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06258716330841727,
+          "maximum": 0.06347961801886123,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.softmax.round1.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06285174391817501,
+          "maximum": 0.06653304398884556,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.softmax.round2.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06393033810608295,
+          "maximum": 0.07915530587580202,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.softmax.round3.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06837908514725631,
+          "maximum": 0.15192109854514535,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.softmax.round4.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.08660640909508849,
+          "maximum": 0.3870648399740304,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.1614954413623032,
+            1.2789712474313717
+          ],
+          "count": 16,
+          "minimum": 0.20186845387153932,
+          "maximum": 1.0499983839020617,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.gelu": {
+          "domain": [
+            -20.0,
+            39.0
+          ],
+          "count": 49152,
+          "minimum": -13.924003324307185,
+          "maximum": 33.441554131220904,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "7.mlp_norm.inverse_sqrt": {
+          "domain": [
+            0.9599207591841173,
+            54.66482271182408
+          ],
+          "count": 16,
+          "minimum": 1.2516520871807169,
+          "maximum": 44.525002471596714,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.softmax.centered_scores": {
+          "domain": [
+            -8,
+            9
+          ],
+          "count": 3072,
+          "minimum": -6.087057326049565,
+          "maximum": 6.560410956797614,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 3072,
+          "minimum": -0.1902205414390489,
+          "maximum": 0.20501284239992543,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 1.000177996868625,
+          "maximum": 1.0061678377029675,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.softmax.round0.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06252219628817378,
+          "maximum": 0.06326784986040437,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.softmax.round1.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.0625884546167975,
+          "maximum": 0.06557999570518667,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.softmax.round2.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06285091269657836,
+          "maximum": 0.07607004922266623,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.softmax.round3.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06387643006810935,
+          "maximum": 0.1257609097612814,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.softmax.round4.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06773263268609621,
+          "maximum": 0.2999845419628554,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.14040232210799455,
+            1.4273237334489128
+          ],
+          "count": 16,
+          "minimum": 0.17781565959895515,
+          "maximum": 1.0309314660008242,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.gelu": {
+          "domain": [
+            -25.0,
+            42.0
+          ],
+          "count": 49152,
+          "minimum": -16.059188529603958,
+          "maximum": 36.157668850219885,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "8.mlp_norm.inverse_sqrt": {
+          "domain": [
+            0.864697748651513,
+            218.39017788539405
+          ],
+          "count": 16,
+          "minimum": 1.1504486065991888,
+          "maximum": 181.61592648298415,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.softmax.centered_scores": {
+          "domain": [
+            -10,
+            11
+          ],
+          "count": 3072,
+          "minimum": -7.962194353318811,
+          "maximum": 8.225961340314539,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 3072,
+          "minimum": -0.24881857354121284,
+          "maximum": 0.25706129188482935,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 1.0003013129307314,
+          "maximum": 1.009373898125045,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.softmax.round0.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06253767849060102,
+          "maximum": 0.06361114879471005,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.softmax.round1.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06265079877370561,
+          "maximum": 0.06660116747257101,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.softmax.round2.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.0631035018606649,
+          "maximum": 0.08128995273352431,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.softmax.round3.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06491019840624257,
+          "maximum": 0.15287578052652062,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.softmax.round4.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.07200225803451325,
+          "maximum": 0.5046159680396484,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.20296117046468742,
+            1.7204447231827555
+          ],
+          "count": 16,
+          "minimum": 0.2545901171082613,
+          "maximum": 1.3302272303853329,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.gelu": {
+          "domain": [
+            -29.0,
+            39.0
+          ],
+          "count": 49152,
+          "minimum": -17.411493629551746,
+          "maximum": 33.220523991438924,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "9.mlp_norm.inverse_sqrt": {
+          "domain": [
+            0.7852900663501012,
+            267.3959021510363
+          ],
+          "count": 16,
+          "minimum": 0.9985167584266583,
+          "maximum": 216.5822089215301,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.softmax.centered_scores": {
+          "domain": [
+            -10,
+            13
+          ],
+          "count": 3072,
+          "minimum": -6.373802157071427,
+          "maximum": 9.705027367146538,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 3072,
+          "minimum": -0.1991813174084821,
+          "maximum": 0.3032821052233293,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 1.0002810388802426,
+          "maximum": 1.0093350732429838,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.softmax.round0.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06253589998982483,
+          "maximum": 0.06379628944428921,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.softmax.round1.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06264839961521214,
+          "maximum": 0.06859870505421718,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.softmax.round2.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06313420707607681,
+          "maximum": 0.09501219088062657,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.softmax.round3.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06539628616666661,
+          "maximum": 0.2292575976218756,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.softmax.round4.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.07742181162056498,
+          "maximum": 0.45536950637297335,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.16701867557301636,
+            1.3933951927555366
+          ],
+          "count": 16,
+          "minimum": 0.20877062075372774,
+          "maximum": 1.1611898561532952,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.gelu": {
+          "domain": [
+            -14.0,
+            37.0
+          ],
+          "count": 49152,
+          "minimum": -7.759977148078152,
+          "maximum": 31.96210632399827,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "10.mlp_norm.inverse_sqrt": {
+          "domain": [
+            0.7414986782884628,
+            319.5292435647607
+          ],
+          "count": 16,
+          "minimum": 0.9397760242327252,
+          "maximum": 258.0256903356073,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.softmax.centered_scores": {
+          "domain": [
+            -8,
+            11
+          ],
+          "count": 3072,
+          "minimum": -6.154508543535002,
+          "maximum": 8.610626341997559,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.softmax.base_exp": {
+          "domain": [
+            -0.5,
+            0.5
+          ],
+          "count": 3072,
+          "minimum": -0.1923283919854688,
+          "maximum": 0.2690820731874237,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.softmax.initial_reciprocal": {
+          "domain": [
+            0.5,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 1.0000016155859979,
+          "maximum": 1.0071922011936625,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.softmax.round0.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06250020188264992,
+          "maximum": 0.06348915545661783,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.softmax.round1.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06250080713713295,
+          "maximum": 0.06708484025451242,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.softmax.round2.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06250322539286234,
+          "maximum": 0.08654665223369176,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.softmax.round3.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06251287619983109,
+          "maximum": 0.19297357986991365,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.softmax.round4.reciprocal": {
+          "domain": [
+            0.03125,
+            2.0
+          ],
+          "count": 192,
+          "minimum": 0.06255129982816135,
+          "maximum": 0.4301845957958471,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.attention_norm.inverse_sqrt": {
+          "domain": [
+            0.30118013406787913,
+            3.1414759692369336
+          ],
+          "count": 16,
+          "minimum": 0.37648599570088903,
+          "maximum": 1.7351850868421321,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.gelu": {
+          "domain": [
+            -11.0,
+            8.0
+          ],
+          "count": 49152,
+          "minimum": -8.622776103341929,
+          "maximum": 3.4636578575494505,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "11.mlp_norm.inverse_sqrt": {
+          "domain": [
+            1.0746727878966804,
+            5.182371637378334
+          ],
+          "count": 16,
+          "minimum": 1.395880072117125,
+          "maximum": 3.0510833169971914,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "pooler.tanh.input": {
+          "domain": [
+            -24,
+            24
+          ],
+          "count": 768,
+          "minimum": -3.8888988904560504,
+          "maximum": 3.9520675533131993,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "pooler.tanh.base": {
+          "domain": [
+            -1.0,
+            1.0
+          ],
+          "count": 768,
+          "minimum": -0.12152809032675158,
+          "maximum": 0.12350211104103748,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "pooler.tanh.reciprocal0": {
+          "domain": [
+            1.0,
+            2.1
+          ],
+          "count": 768,
+          "minimum": 1.0000000000407758,
+          "maximum": 1.0150989357970115,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "pooler.tanh.reciprocal1": {
+          "domain": [
+            1.0,
+            2.1
+          ],
+          "count": 768,
+          "minimum": 1.0000000001631033,
+          "maximum": 1.0586124108007557,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "pooler.tanh.reciprocal2": {
+          "domain": [
+            1.0,
+            2.1
+          ],
+          "count": 768,
+          "minimum": 1.0000000006524135,
+          "maximum": 1.2092067119083278,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "pooler.tanh.reciprocal3": {
+          "domain": [
+            1.0,
+            2.1
+          ],
+          "count": 768,
+          "minimum": 1.000000002609654,
+          "maximum": 1.5723141805415843,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        },
+        "pooler.tanh.reciprocal4": {
+          "domain": [
+            1.0,
+            2.1
+          ],
+          "count": 768,
+          "minimum": 1.0000000104386164,
+          "maximum": 1.9260103387337044,
+          "below": 0,
+          "above": 0,
+          "nonfinite": 0
+        }
+      },
+      "propagated_domain_failures": {},
+      "domain_observation_count": 144,
+      "cost": {
+        "critical_level_depth": 3098,
+        "operations": {
+          "public_matrix_maps": 74,
+          "masked_layout_move_stages": 24,
+          "ciphertext_tensor_multiplications": 3128,
+          "elementwise_ciphertext_scalar_products": 55258080,
+          "plaintext_tensor_multiplications": 4031,
+          "masked_reduction_stages": 161,
+          "ciphertext_tensor_additions": 60,
+          "affine_stages": 1921
+        },
+        "by_layer": [
+          {
+            "layer": 0,
+            "critical_depth_increment": 225,
+            "critical_depth_after": 225,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 197,
+              "elementwise_ciphertext_scalar_products": 2827424,
+              "plaintext_tensor_multiplications": 230,
+              "masked_reduction_stages": 13,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 114
+            }
+          },
+          {
+            "layer": 1,
+            "critical_depth_increment": 259,
+            "critical_depth_after": 484,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 281,
+              "elementwise_ciphertext_scalar_products": 5196576,
+              "plaintext_tensor_multiplications": 377,
+              "masked_reduction_stages": 14,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 172
+            }
+          },
+          {
+            "layer": 2,
+            "critical_depth_increment": 257,
+            "critical_depth_after": 741,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 249,
+              "elementwise_ciphertext_scalar_products": 3623712,
+              "plaintext_tensor_multiplications": 297,
+              "masked_reduction_stages": 14,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 140
+            }
+          },
+          {
+            "layer": 3,
+            "critical_depth_increment": 259,
+            "critical_depth_after": 1000,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 281,
+              "elementwise_ciphertext_scalar_products": 5196576,
+              "plaintext_tensor_multiplications": 377,
+              "masked_reduction_stages": 14,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 172
+            }
+          },
+          {
+            "layer": 4,
+            "critical_depth_increment": 228,
+            "critical_depth_after": 1228,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 261,
+              "elementwise_ciphertext_scalar_products": 5186976,
+              "plaintext_tensor_multiplications": 366,
+              "masked_reduction_stages": 13,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 162
+            }
+          },
+          {
+            "layer": 5,
+            "critical_depth_increment": 257,
+            "critical_depth_after": 1485,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 253,
+              "elementwise_ciphertext_scalar_products": 3623776,
+              "plaintext_tensor_multiplications": 301,
+              "masked_reduction_stages": 14,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 140
+            }
+          },
+          {
+            "layer": 6,
+            "critical_depth_increment": 257,
+            "critical_depth_after": 1742,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 253,
+              "elementwise_ciphertext_scalar_products": 3623776,
+              "plaintext_tensor_multiplications": 301,
+              "masked_reduction_stages": 14,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 140
+            }
+          },
+          {
+            "layer": 7,
+            "critical_depth_increment": 254,
+            "critical_depth_after": 1996,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 258,
+              "elementwise_ciphertext_scalar_products": 5186928,
+              "plaintext_tensor_multiplications": 346,
+              "masked_reduction_stages": 13,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 169
+            }
+          },
+          {
+            "layer": 8,
+            "critical_depth_increment": 262,
+            "critical_depth_after": 2258,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 296,
+              "elementwise_ciphertext_scalar_products": 6759888,
+              "plaintext_tensor_multiplications": 428,
+              "masked_reduction_stages": 13,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 203
+            }
+          },
+          {
+            "layer": 9,
+            "critical_depth_increment": 262,
+            "critical_depth_after": 2520,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 296,
+              "elementwise_ciphertext_scalar_products": 6759888,
+              "plaintext_tensor_multiplications": 428,
+              "masked_reduction_stages": 13,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 203
+            }
+          },
+          {
+            "layer": 10,
+            "critical_depth_increment": 262,
+            "critical_depth_after": 2782,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 264,
+              "elementwise_ciphertext_scalar_products": 5187024,
+              "plaintext_tensor_multiplications": 348,
+              "masked_reduction_stages": 13,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 171
+            }
+          },
+          {
+            "layer": 11,
+            "critical_depth_increment": 223,
+            "critical_depth_after": 3005,
+            "operations": {
+              "public_matrix_maps": 6,
+              "masked_layout_move_stages": 2,
+              "ciphertext_tensor_multiplications": 181,
+              "elementwise_ciphertext_scalar_products": 2040992,
+              "plaintext_tensor_multiplications": 190,
+              "masked_reduction_stages": 13,
+              "ciphertext_tensor_additions": 5,
+              "affine_stages": 98
+            }
+          }
+        ],
+        "observed_tensor_magnitude_peak": {
+          "magnitude": 155265.89889547476,
+          "operation": "9.mlp_norm.square"
+        },
+        "ideal_critical_path_refresh_lower_bound_depth49_output25": 133
+      }
+    }
+  ],
+  "all_original_gates_pass": true,
+  "all_observed_domains_pass": true,
+  "cost_model": {
+    "ct_product": "One level per elementwise secret tensor product; counts are tensor calls and scalar elements, not realized ciphertext counts.",
+    "public_maps": "One level per weighted affine stage, public matrix map, masked reduction or key/value layout movement; additions and public reshape views cost zero.",
+    "polynomial": "Actual balanced monomial or Chebyshev algebra is executed. High-degree GELU uses Chebyshev recurrence, not rejected high-conditioning monomials.",
+    "reciprocal": "First fixed Newton update is fused public affine; later iterations use two CT products plus one affine stage.",
+    "inverse_sqrt": "First fixed Newton update is fused public affine; later iterations use three CT products plus one affine stage.",
+    "refresh": "ceil((critical_depth-49)/23) is only a critical-path lower bound for this chosen abstract schedule, assuming initial49 levels, refresh output25 and input reserve2. It is not a lower bound for other optimized circuits. Branches, scheduling, precision and real packing can require more."
+  },
+  "limitations": [
+    "Same three public examples used for empirical function domains; no unseen-input or MRPC guarantee.",
+    "No clipping, secret-dependent candidate selection, or data-dependent iteration stopping is part of the proposed arithmetic.",
+    "Recorded domain checks are host validation only. Their absence of failure does not certify arbitrary inputs or CKKS error.",
+    "No encryption, quantization, rescale error, bootstrap error or ciphertext-noise simulation is included.",
+    "Cost estimates assume an abstract SIMD tensor layout; no complete matrix/rotation/key inventory or concrete full-model FHE packing is implemented.",
+    "Observed tensor magnitudes exclude internal linear-map partial sums and cannot certify refresh scaling bounds.",
+    "Chebyshev coefficient conditioning is improved, but operation count, depth and accumulated encrypted error remain substantial unresolved issues."
+  ],
+  "source_hashes_before": {
+    "cadathlon/validation/compose_pretrained_bert_arithmetic.py": "ae261ea18d3417d5b42d2e97bb71c7ce53c22f1d4c62e7130588f8611b530ce8",
+    "cadathlon/validation/test_pretrained_bert_arithmetic.py": "b896034a06b853747bf7732ae662eef799d72ac90948095d7ba7466776e06338",
+    "cadathlon/validation/plan_pretrained_bert_operators.json": "5375b528c861178c1f113a547c7048c49e466b9ac32ca1ad68292adbe219298c",
+    "cadathlon/validation/check_pretrained_bert_domains.py": "d3463f03bdfcb1a0539bf8b6333a22b9fc776231815ed120bf31a29b73f08c40",
+    "cadathlon/agent_pset/p2_bert/src/reference.py": "6d254c92b70257e773d1701a6f85fb592365e67d037b231b9e5a1589e64e7a04",
+    "cadathlon/agent_pset/p2_bert/src/runner.py": "75178aaa310dcda2d92ea3a94d73c7e7107be0f5167e55ea1f7b24bb8f079abc",
+    "cadathlon/agent_pset/p2_bert/doc/problem.md": "bffe9e084610de62e1193b008d399cb88ba5289973d2badc9e092073ad38a324",
+    "cadathlon/common/encrypted_polynomial.py": "d01cbcf26897c9b190919bb6b279e731716d7dcc4e687bbdfbc4e2e4baf5975e",
+    "cadathlon/common/support.py": "458111de25dbae4418c474670cf45a2d39e8e6ba40b75c2d17ad8f96cbaaa40f"
+  },
+  "source_hashes_after": {
+    "cadathlon/validation/compose_pretrained_bert_arithmetic.py": "ae261ea18d3417d5b42d2e97bb71c7ce53c22f1d4c62e7130588f8611b530ce8",
+    "cadathlon/validation/test_pretrained_bert_arithmetic.py": "b896034a06b853747bf7732ae662eef799d72ac90948095d7ba7466776e06338",
+    "cadathlon/validation/plan_pretrained_bert_operators.json": "5375b528c861178c1f113a547c7048c49e466b9ac32ca1ad68292adbe219298c",
+    "cadathlon/validation/check_pretrained_bert_domains.py": "d3463f03bdfcb1a0539bf8b6333a22b9fc776231815ed120bf31a29b73f08c40",
+    "cadathlon/agent_pset/p2_bert/src/reference.py": "6d254c92b70257e773d1701a6f85fb592365e67d037b231b9e5a1589e64e7a04",
+    "cadathlon/agent_pset/p2_bert/src/runner.py": "75178aaa310dcda2d92ea3a94d73c7e7107be0f5167e55ea1f7b24bb8f079abc",
+    "cadathlon/agent_pset/p2_bert/doc/problem.md": "bffe9e084610de62e1193b008d399cb88ba5289973d2badc9e092073ad38a324",
+    "cadathlon/common/encrypted_polynomial.py": "d01cbcf26897c9b190919bb6b279e731716d7dcc4e687bbdfbc4e2e4baf5975e",
+    "cadathlon/common/support.py": "458111de25dbae4418c474670cf45a2d39e8e6ba40b75c2d17ad8f96cbaaa40f"
+  },
+  "command": [
+    "/tmp/cross-pretrained-validation-env/bin/python",
+    "cadathlon/validation/compose_pretrained_bert_arithmetic.py",
+    "--snapshot",
+    "/home/jianming_gatech/cross_validation_assets/bert/f150c1d609d1e50dd5e2e5408661cfac8339277c"
+  ],
+  "versions": {
+    "numpy": "2.5.4",
+    "torch": "2.15.0+cpu",
+    "transformers": "4.51.3",
+    "safetensors": "0.8.0",
+    "tokenizers": "0.21.4"
+  },
+  "python": "3.13.18",
+  "cpu_affinity": [
+    144,
+    145,
+    146,
+    147
+  ],
+  "elapsed_s": 5.7141798789998575,
+  "source_files_unchanged": true
+}

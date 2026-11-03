@@ -1,0 +1,7 @@
+# Tracked-residual reciprocal public preflight
+
+No keys, encryption or numerical HE execution occurred. The final v2 checkpoint passed77 CPU tests in1.25s and public preflight for the actual N65536/Q32/P9/dnum4 profile (log2QP1231.0332, 128-bit target, verified P coverage). All110 exact source files match before/after, archived bytes and child preflight. Full checkpoint elapsed3.0487s. Version1 preserves the earlier64-test preparation before JSON-safe NaN/Inf/shape/overflow failure reporting was added.
+
+The proposed proof packs all130 unchanged reciprocal rules from manifest SHA2564e2277beea7189aa1d77b168c500c8a175f6c630afa520fcc6b38cb5a179cff9 into32768 slots. It runs13 updates with24 production CT multiplications and one initial public affine, retains every y/e checkpoint, and computes e13 via one separately counted actual diagnostic square. At every checkpoint, the fixed1e-6 gates compare y to the original rounded-affine Newton circuit, e to an independent power oracle, and the residual invariant. At each rule's original declared iteration, true1/x absolute error and true relative residual are also gated. No decoding is allowed until all26 outputs are complete. This is a prepared component experiment, not a composed softmax/model, bootstrap, TPU, or readiness claim.
+
+Exact candidate/helper/collector/test/runtime sources are in each archive; root's helper and tests are included unchanged. The historical v1 report is not evidence for the final v2 collector. No secret keys, ciphertexts, model weights or private examples are included.

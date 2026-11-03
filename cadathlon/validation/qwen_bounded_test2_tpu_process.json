@@ -1,0 +1,53 @@
+{
+  "passed": false,
+  "command": [
+    "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+    "/home/jianming_gatech/CROSS/cadathlon/validation/check_transformer_suite.py",
+    "--child-runner",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/src/runner.py",
+    "--case",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/test/test2.in",
+    "--implementation",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/src/qwen_bounded_reference.py",
+    "--require-tpu",
+    "--warmups",
+    "0",
+    "--repeats",
+    "1"
+  ],
+  "timeout_s": null,
+  "cleanup_grace_s": 30.0,
+  "pid": 612486,
+  "returncode": 0,
+  "result": {
+    "case": "test2.in",
+    "full_qwen_evaluated": false,
+    "mode": "HE-toy-smoke",
+    "total_s": 12125.280089509997,
+    "passed": true,
+    "setup_s": 1114.5512229619999,
+    "implementation": "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/src/qwen_bounded_reference.py",
+    "implementation_status": "experimental-unvalidated",
+    "server_s": 10983.445907309,
+    "end_to_end_s": 10994.037728554998,
+    "samples": [
+      {
+        "server_s": 10983.445907309,
+        "end_to_end_s": 10994.037728554998
+      }
+    ],
+    "warmup_samples": [],
+    "cold_start_included": true,
+    "requested_platforms": [
+      "tpu"
+    ],
+    "requested_device_count": 1,
+    "requested_device_kinds": [
+      "TPU v6 lite"
+    ],
+    "max_abs_error": 0.026662010600219777,
+    "nrmse": 0.01852255622056779,
+    "top1_agreement": 1.0
+  },
+  "process_elapsed_s": 12132.636095724
+}
