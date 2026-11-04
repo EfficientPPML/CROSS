@@ -31,17 +31,17 @@ for i, (layers, length, batch) in enumerate(((1, 1, 1), (1, 2, 1), (2, 4, 1), (2
     _, _, logits = qwen.make_case(case)
     save("agent_pset/p4_qwen", i, case, logits)
 
-cnn = module("non_agent_pset/p3_cnn")
+cnn = module("agent_pset/p3_cnn")
 for i, (name, batch) in enumerate((("lenet", 1), ("lenet", 2), ("lenet", 4),
                                   ("alexnet_tiny", 1), ("alexnet_tiny", 2), ("alexnet_tiny", 4)), 1):
     case = {"purpose": "synthetic-arithmetic-not-trained-accuracy", "model": name,
             "batch": batch, "weight_seed": 7200 + i, "input_seed": 8300 + i,
             "input_kind": "zeros" if i == 2 else "alternating" if i == 5 else "uniform"}
     _, _, _, logits = cnn.make_case(case)
-    save("non_agent_pset/p3_cnn", i, case, logits)
+    save("agent_pset/p3_cnn", i, case, logits)
 print("Generated six numerical input/output pairs per problem.")
 
-bench = module("non_agent_pset/p1_benchmark")
+bench = module("agent_pset/p1_benchmark")
 for i, (batch, devices, kind) in enumerate(((1, 1, "uniform"), (2, 1, "zeros"),
                                             (4, 1, "alternating"), (4, 2, "distinct_lanes"),
                                             (8, 2, "uniform"), (8, 4, "distinct_lanes")), 1):
@@ -50,7 +50,7 @@ for i, (batch, devices, kind) in enumerate(((1, 1, "uniform"), (2, 1, "zeros"),
             "batch": batch, "devices": devices, "hidden": 50,
             "weight_seed": 7300 + i, "input_seed": 8400 + i, "input_kind": kind}
     _, _, _, logits = bench.make_case(case)
-    save("non_agent_pset/p1_benchmark", i, case, logits)
+    save("agent_pset/p1_benchmark", i, case, logits)
 
 from generate_bert_cases import main as generate_bert_cases
 generate_bert_cases()

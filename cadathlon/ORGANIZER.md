@@ -6,12 +6,15 @@ the proposed time/error limits have been demonstrated on contest hardware.
 Students are asked to implement that capability. The CNN reference uses the
 existing real CROSS pipeline.
 
-The four problems are split into two sets. `non_agent_pset` is solved without
-coding agents and holds **P1 (essential, 100 points)** and **P3 (bonus, 20
-points)**, so a team there can reach 120; its total is essential + bonus.
-`agent_pset` holds **P2** and **P4**, both 100 points, with agents allowed.
-Keep the two sets on separate leaderboards, and the two `agent_pset` problems
-on separate leaderboards from each other.
+All four problems live under `agent_pset` and allow coding agents and AI
+assistants for design, implementation, debugging, testing and profiling.
+Require teams to disclose the tools and assisted work in their reports and to
+independently verify generated code and results. Existing correctness, privacy,
+security and scoring requirements apply to all submissions.
+
+**P1 (essential, 100 points)** and **P3 (bonus, 20 points)** retain their combined
+benchmark/CNN leaderboard, with 120 points available as essential + bonus.
+**P2** and **P4**, each worth 100 points, retain separate leaderboards.
 
 ## Format and difficulty
 
@@ -45,7 +48,7 @@ that is the intended behavior, not an edge case. Because the award is binary,
 write the verdict down with the evidence that produced it, and apply the same
 standard to every team.
 
-P3, the `non_agent_pset` bonus problem, optimizes execution of two fixed
+P3, the benchmark/CNN bonus problem, optimizes execution of two fixed
 networks. Unlike the 2019
 pruning template, it does not reward removing parameters or retraining. This
 keeps its score attributable to CROSS/accelerator optimization and makes an
@@ -63,7 +66,7 @@ pinned suite commit, which is the suite's own rule. It does replace
 both and a pure-Python submission has nothing to compile; `suite-check` reports
 this. Confirm it before judging, and confirm no other path outside
 `submissions/mnist/` differs from the pinned commit. P1 is the essential
-problem of `non_agent_pset` and is solved without coding agents.
+problem of the benchmark/CNN track; coding agents are allowed.
 
 Two properties of the pinned harness mean `results-N.json` is not by itself a
 correctness verdict, and a judge must not treat it as one. The single instance
@@ -81,7 +84,7 @@ from the harness's own stdout, and preserve every run's `io/` directory.
 Archiving is also what keeps C1 and C2 apart: the suite keys its output by
 instance alone, so the two cases that share the single instance and differ only
 in chip count would otherwise overwrite each other.
-`make -C non_agent_pset/p1_benchmark/src suite-gates` self-tests the gate arithmetic and needs
+`make -C agent_pset/p1_benchmark/src suite-gates` self-tests the gate arithmetic and needs
 no accelerator or suite checkout.
 
 Two further properties of the pinned harness affect how its numbers may be
@@ -160,15 +163,15 @@ contestant who could edit it could write their own correctness verdict.
    compare the NumPy reference on matching small cases as an independent
    implementation check. Tiny random cases are never full-model goldens.
 6. **Benchmark suite (P1):** clone `fhe-benchmarking/ml-inference` at the
-   commit pinned in `non_agent_pset/p1_benchmark/src/suite/suite_config.json`, verify
-   `harness/` is untouched with `make -C non_agent_pset/p1_benchmark/src suite-check`, and
+   commit pinned in `agent_pset/p1_benchmark/src/suite/suite_config.json`, verify
+   `harness/` is untouched with `make -C agent_pset/p1_benchmark/src suite-check`, and
    provision the MNIST data before the event so download speed is not part of
-   the competition. Freeze `non_agent_pset/p1_benchmark/weights/mlp_784_50_10.pth` and its
+   the competition. Freeze `agent_pset/p1_benchmark/weights/mlp_784_50_10.pth` and its
    hash manifest, or replace it with your own trained weights for the same
    `Linear(784,50) -> x^2 -> Linear(50,10)` architecture and re-hash. Publish
    the image selection: the suite derives it from `--seed`, so record the seed
    and the repeat schedule for ranked batches above 256 images. Measure the
-   judge's own baseline with `make -C non_agent_pset/p1_benchmark/src suite-baseline` on the
+   judge's own baseline with `make -C agent_pset/p1_benchmark/src suite-baseline` on the
    exact hardware and commit the resulting `baseline_manifest.json`; the
    authored one in the package is indicative only.
 7. **Actual encrypted preflight:** run baseline CNN inference on every official
@@ -226,7 +229,7 @@ awarding operator/block credit does not establish full-model completion.
 
 ## Packaging and review
 
-`make release` produces `contestant-release.tar.gz` with the three template-style
+`make release` produces `contestant-release.tar.gz` with all four template-style
 problem directories and shared support. `EXCLUDE` removes `.golden` files and
 hidden/full-reference paths. It is still necessary to inspect archive members
 before distribution. Author-only files (`ORGANIZER.md`, generation and audit

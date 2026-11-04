@@ -1,5 +1,33 @@
 # Author validation
 
+## Coding agents enabled for every problem — 2026-11-04
+
+P1 and P3 now live at `agent_pset/p1_benchmark` and `agent_pset/p3_cnn`.
+All four problems allow coding agents, with tool-use disclosure and independent
+verification in team reports. P1/P3 scoring, workload definitions, reference
+fixtures and encrypted arithmetic are unchanged. Build, test, packaging and
+handout navigation paths follow the new layout.
+
+Validation against the migrated layout:
+
+- `pytest -q cadathlon/tests`: **32 passed**.
+- `make -C cadathlon all reference-test`: **24/24 plaintext reference fixtures**
+  and **14/14 P1 score-gate checks** passed.
+- `make -C cadathlon docs`: all four HTML/PDF handouts rebuilt; local HTML links
+  resolve, and PDF text fits within page boundaries.
+- `make -C cadathlon release`: the 170-member archive contains all four problems
+  under `agent_pset`, with no old-layout paths, golden programs or caches.
+  Every archived file matches the verified source.
+- P1/P3 fixture bytes and historical validation records are unchanged;
+  Python changes only update directory references.
+
+No new encrypted inference or performance measurement was performed for this
+policy and directory migration.
+
+Earlier entries below retain the paths and policies used by their historical
+runs. Those entries do not establish fresh encrypted timings for this move.
+
+
 ## Issue repair validation — 2026-10-31 / 2026-11-01
 
 This repair addresses the standalone P1 key mismatch, actual-ring security

@@ -16,4 +16,4 @@ Measured device/RSS peaks and separately labelled logical estimates:
 
 Reproduction commands, regression checks, failures and limitations:
 
-Declaration that no generative AI or coding agents were used:
+AI tools and coding agents used (or none), assisted tasks, and independent verification of generated code/results:

@@ -25,7 +25,7 @@ def main():
         for required in ("REPORT.md", "cross.patch"):
             if not (directory / required).is_file():
                 raise FileNotFoundError(f"Create {directory / required} before submission")
-        # Preserve the non_agent_pset/agent_pset level: runners resolve common
+        # Preserve the agent_pset level: runners resolve common
         # three parents above src, just as they do in the source checkout.
         root = directory.parents[1]
         candidates = [directory / "REPORT.md", directory / "cross.patch"]
@@ -42,8 +42,8 @@ def main():
         root = directory
         output = root / "contestant-release.tar.gz"
         candidates = []
-        for problem in ("non_agent_pset/p1_benchmark", "agent_pset/p2_bert",
-                        "non_agent_pset/p3_cnn", "agent_pset/p4_qwen"):
+        for problem in ("agent_pset/p1_benchmark", "agent_pset/p2_bert",
+                        "agent_pset/p3_cnn", "agent_pset/p4_qwen"):
             folder = root / problem
             patterns = [line.strip()
                         for line in (folder / "EXCLUDE").read_text().splitlines()

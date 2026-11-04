@@ -10,7 +10,7 @@ import pytest
 
 @pytest.fixture
 def baseline(monkeypatch):
-    path = (Path(__file__).resolve().parents[1] / "non_agent_pset" /
+    path = (Path(__file__).resolve().parents[1] / "agent_pset" /
             "p1_benchmark" / "src" / "baseline.py")
     spec = importlib.util.spec_from_file_location("p1_baseline_keys", path)
     module = importlib.util.module_from_spec(spec)
@@ -81,7 +81,7 @@ def test_release_rebuild_keeps_the_same_identity(baseline):
 def test_release_evicts_client_caches_even_if_mapping_release_fails(monkeypatch, release_fails):
     from jaxite_word import ckks_ctx
 
-    path = (Path(__file__).resolve().parents[1] / "non_agent_pset" /
+    path = (Path(__file__).resolve().parents[1] / "agent_pset" /
             "p1_benchmark" / "src" / "baseline.py")
     spec = importlib.util.spec_from_file_location("p1_baseline_release", path)
     module = importlib.util.module_from_spec(spec)

@@ -1,6 +1,6 @@
 # Problem 1: Higher-throughput encrypted MNIST on eight TPU chips
 
-**CADathlon · `non_agent_pset` · ESSENTIAL problem · 100 points · proposed duration: 8 hours**
+**CADathlon · `agent_pset` · AI agents allowed · ESSENTIAL problem · 100 points · proposed duration: 8 hours**
 
 ## 1. Introduction
 
@@ -28,6 +28,11 @@ Published submissions to the same benchmark reach far lower per-image cost by
 placing the **batch** on the ring axis instead of the feature axis. Closing
 that gap is the core of this problem; it is a packing and scheduling problem,
 not a model problem.
+
+**AI agents are allowed.** You may use coding agents and AI assistants to
+design, implement, debug, test and profile your solution. Disclose the tools
+and assisted work in `REPORT.md`, and independently verify generated code and
+results. All correctness, privacy, security and scoring requirements apply.
 
 ## 2. Problem statement
 
@@ -347,7 +352,7 @@ the pinned CROSS checkout. `CROSS_ROOT` selects another checkout if needed.
 The six public reference tests run without training or downloading.
 
 ```bash
-cd cadathlon/non_agent_pset/p1_benchmark/src
+cd cadathlon/agent_pset/p1_benchmark/src
 make all
 make reference-test      # numerical fixtures only, no encryption
 make baseline-plan       # actual CROSS plan and slot occupancy, no keygen
@@ -361,7 +366,7 @@ The local commands above are for development. The ranked cases run through the
 benchmark suite (section 2.5):
 
 ```bash
-cd cadathlon/non_agent_pset/p1_benchmark
+cd cadathlon/agent_pset/p1_benchmark
 make -C src suite-check                          # pinned checkout, harness intact
 make -C src suite-install
 make -C src suite-baseline SIZE=2 P3_DEVICES=8   # C6 baseline

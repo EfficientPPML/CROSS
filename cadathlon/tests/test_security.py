@@ -131,7 +131,7 @@ def test_suite_stage3_checks_live_lazy_server_and_records_it(monkeypatch, tmp_pa
     monkeypatch.setattr(jax, "devices", lambda: ("cpu",))
     monkeypatch.setattr(jax, "block_until_ready", lambda value: value)
     monkeypatch.syspath_prepend(str(tmp_path))
-    path = (Path(__file__).parents[1] / "non_agent_pset/p1_benchmark/src/suite"
+    path = (Path(__file__).parents[1] / "agent_pset/p1_benchmark/src/suite"
             / "service_daemon.py")
     spec = importlib.util.spec_from_file_location("security_test_daemon", path)
     daemon = importlib.util.module_from_spec(spec)

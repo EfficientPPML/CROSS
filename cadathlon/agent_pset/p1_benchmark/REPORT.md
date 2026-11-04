@@ -19,3 +19,5 @@ Latency cases (C1, C2) versus throughput cases (C3-C6): what helped which:
 Measured device/RSS peaks and separately labelled logical estimates:
 
 Reproduction commands, regression checks, failures and limitations:
+
+AI tools and coding agents used (or none), assisted tasks, and independent verification of generated code/results:

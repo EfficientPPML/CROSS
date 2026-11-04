@@ -65,7 +65,7 @@ def test_cold_request_and_total_wall_time(monkeypatch, problem, warmups):
         config=SimpleNamespace(update=lambda *args: None), devices=lambda: ("device",)))
     # Each runner inserts the shared support path while importing.
     monkeypatch.setattr(sys, "path", list(sys.path))
-    path = (Path(__file__).resolve().parents[1] / "non_agent_pset" /
+    path = (Path(__file__).resolve().parents[1] / "agent_pset" /
             problem / "src" / "runner.py")
     spec = importlib.util.spec_from_file_location(f"timing_{problem}", path)
     runner = importlib.util.module_from_spec(spec)

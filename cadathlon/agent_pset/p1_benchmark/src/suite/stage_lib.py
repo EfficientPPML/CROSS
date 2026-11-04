@@ -15,7 +15,7 @@ import sys
 import numpy as np
 
 SUITE_DIR = Path(__file__).resolve().parent
-PROBLEM_DIR = SUITE_DIR.parent.parent                      # non_agent_pset/p1_benchmark/
+PROBLEM_DIR = SUITE_DIR.parent.parent                      # agent_pset/p1_benchmark/
 SRC_DIR = PROBLEM_DIR / "src"
 CONFIG = json.loads((SUITE_DIR / "suite_config.json").read_text())
 INSTANCE_NAMES = ("single", "small", "medium", "large")

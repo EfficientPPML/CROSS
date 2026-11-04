@@ -7,7 +7,7 @@ import tarfile
 
 def test_submit_includes_shared_security_gate_and_suite_configuration(tmp_path):
     root = tmp_path / "cadathlon"
-    problem = root / "non_agent_pset" / "p1_benchmark"
+    problem = root / "agent_pset" / "p1_benchmark"
     suite = problem / "src" / "suite"
     suite.mkdir(parents=True)
     common = root / "common"
@@ -29,7 +29,7 @@ def test_submit_includes_shared_security_gate_and_suite_configuration(tmp_path):
     with tarfile.open(problem / "submission.tar.gz") as archive:
         names = set(archive.getnames())
     assert "common/support.py" in names
-    assert "non_agent_pset/p1_benchmark/src/runner.py" in names
-    assert "non_agent_pset/p1_benchmark/src/suite/suite_config.json" in names
+    assert "agent_pset/p1_benchmark/src/runner.py" in names
+    assert "agent_pset/p1_benchmark/src/suite/suite_config.json" in names
     assert not any("/run/" in name for name in names)
     assert not any("secret" in name or name.endswith(".npy") for name in names)

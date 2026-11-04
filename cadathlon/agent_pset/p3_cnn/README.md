@@ -1,6 +1,12 @@
-# Problem 2: non-AI track
+# Problem 3: encrypted CNN optimization — agents allowed
 
 Read [the handout](doc/problem.html) or [the PDF](doc/problem.pdf).
+
+**AI agents are allowed.** You may use coding agents and AI assistants to
+design, implement, debug, test and profile your solution. Disclose the tools
+and assisted work in `REPORT.md`, and independently verify generated code and
+results. All correctness, privacy, security and scoring requirements apply.
+
 Implement `src/cnn_opt.py`; `src/baseline.py` is a correct unoptimized CROSS
 starting point. Both LeNet and AlexNetTiny are required.
 

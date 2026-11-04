@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 
 
-ROOT = Path(__file__).resolve().parents[1] / "non_agent_pset" / "p1_benchmark" / "src"
+ROOT = Path(__file__).resolve().parents[1] / "agent_pset" / "p1_benchmark" / "src"
 
 
 def load(path, name):

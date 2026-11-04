@@ -11,9 +11,9 @@ from weasyprint.text.fonts import FontConfiguration
 
 ROOT = Path(__file__).resolve().parents[1]
 COMMON = ROOT / "common"
-PROBLEMS = {"non_agent_pset/p1_benchmark": "MNIST throughput",
+PROBLEMS = {"agent_pset/p1_benchmark": "MNIST throughput",
             "agent_pset/p2_bert": "BERT / MRPC",
-            "non_agent_pset/p3_cnn": "LeNet & AlexNetTiny",
+            "agent_pset/p3_cnn": "LeNet & AlexNetTiny",
             "agent_pset/p4_qwen": "Qwen3-0.6B"}
 
 

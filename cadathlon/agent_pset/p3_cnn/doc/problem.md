@@ -1,6 +1,6 @@
 # Problem 3: Faster encrypted LeNet and AlexNetTiny
 
-**CADathlon · `non_agent_pset` · BONUS problem · 20 points · proposed duration: 8 hours**
+**CADathlon · `agent_pset` · AI agents allowed · BONUS problem · 20 points · proposed duration: 8 hours**
 
 ## 1. Introduction
 
@@ -9,11 +9,10 @@ neural network. CROSS already implements LeNet and AlexNetTiny using CKKS.
 Your task is to improve **the latency and throughput of both encrypted
 networks** while preserving their outputs, weights and cryptographic security.
 
-This track is for teams working without generative AI or coding agents.
-The supplied source, tutorials, conventional editors, profilers, debuggers,
-documentation and deterministic autocomplete are permitted. Organizers provide
-the same offline documentation to all teams. No AI-use requirement applies
-to the resulting model; “non-AI” describes the team's development tools.
+**AI agents are allowed.** You may use coding agents and AI assistants to
+design, implement, debug, test and profile your solution. Disclose the tools
+and assisted work in `REPORT.md`, and independently verify generated code and
+results. All correctness, privacy, security and scoring requirements apply.
 
 This is a compiler and accelerator optimization problem. The trained models
 are fixed. BAT turns suitable high-precision arithmetic into low-precision
@@ -144,7 +143,7 @@ and the pinned CROSS checkout. `CROSS_ROOT` selects another checkout if
 needed. The six public reference tests run without training or downloading.
 
 ```bash
-cd cadathlon/non_agent_pset/p3_cnn/src
+cd cadathlon/agent_pset/p3_cnn/src
 make all
 make reference-test      # numerical fixtures only, no encryption
 make baseline-plan       # inspect both actual CROSS plans without keygen
@@ -189,7 +188,7 @@ hardware does not count as an optimization.
 
 ## 4. How to score
 
-This is the **bonus problem** of `non_agent_pset`. It is worth **20 points on
+This is the **bonus problem** of the benchmark/CNN track. It is worth **20 points on
 top of** the 100 available in Problem 1, which is the essential problem. Attempt
 this one only once Problem 1 is done; a strong result here does not compensate
 for a weak one there.
