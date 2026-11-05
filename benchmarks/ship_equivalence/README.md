@@ -6,6 +6,9 @@ capacity constant across unoptimized Jaxite SHIP, optimized Jaxite SHIP,
 optimized CROSS SHIP, and native CROSS bootstrap. Historical timings do not
 satisfy this contract and must not fill missing benchmark cells.
 
+Current review-fix validation and the matched TPU comparison are recorded in
+[RESULTS.md](RESULTS.md). The earlier checks below explain the baseline patches.
+
 ## Baseline
 
 Unoptimized means pristine `google/jaxite` remote `main`, resolved 2026-11-03:
@@ -27,7 +30,7 @@ pristine variant.
 
 CPU: Python 3.11.16, JAX/JAXlib 0.9.1, NumPy 2.4.6. These are compatibility
 checks at small ring sizes, **not performance measurements or security
-qualifications**. No new TPU latency is claimed.
+qualifications**. This historical section contains no TPU latency measurements.
 
 | Check | Result |
 | --- | --- |
@@ -173,12 +176,15 @@ incomplete comparisons. Device-active and wall latency remain separate metrics.
 
 ## Source reproduction
 
-Apply `cross-cd1-correctness.patch` to CROSS commit
-`262054680759f93fdf841a9f6002351ee6e9d948` in an isolated checkout.
+For current measurements, apply `cross-cd1-correctness.patch` to CROSS commit
+`b6c5e530d2506c28a76879823151aab46c8864d7` in an isolated checkout. The
+historical CPU checks used `262054680759f93fdf841a9f6002351ee6e9d948`.
+The effective git-diff hash changes when rebasing a patch; reports record
+the diff against the actual checked-out revision.
 Apply `jaxite-correctness.patch` to the upstream main revision pinned above.
 The optimized Jaxite variant is commit
 `89797d88374c383a550374c0dfad6e44feced3fb` plus
-`jaxite-pr147-optimized.patch`. Reports record the SHA-256 of each complete
+`jaxite-pr147-optimized.patch` followed by `jaxite-bounded-rescale.patch`. Reports record the SHA-256 of each complete
 tracked-source diff; keep these patches separate from the pristine baseline.
 
 ## TPU allocation
@@ -211,3 +217,54 @@ These partial results do not establish a four-way comparison.
 `cross-cd1-scalar-precision.patch` and its opt-in regression preserve a rejected
 diagnostic experiment; the matrix runner does not apply it. It is not a
 validated remedy for the larger native bootstrap failures.
+
+The shared `dnum=2` is the context/key-switch configuration. Internal schedules
+are algorithm-specific: CROSS SHIP's product tree retains up to eight
+relinearization partitions per level, while Jaxite uses its configured
+partition count. Those choices, and native CROSS's Meta-BTS polynomial
+schedule, are not identical algorithms. The equivalence claim concerns the
+exact ring/modulus/scale boundary contract and the verified application output,
+not bit-identical intermediate arithmetic. All sources use nominal Gaussian
+sigma 3.19 (CROSS's default stores its float32 representation); keys/noise are
+independently sampled, not identical encrypted inputs.
+
+The recorded TPU matrix uses a 64 MiB compiler stack limit consistently for
+all variants. Reproduce from prepared source checkouts on one idle chip:
+
+```sh
+ulimit -s 65536
+unset JAX_COMPILATION_CACHE_DIR
+export JAX_ENABLE_COMPILATION_CACHE=false
+python benchmarks/ship_equivalence/run_matrix.py \
+  --cross /path/to/cross-reviewed-with-cd1-patch \
+  --jaxite-patched /path/to/jaxite-main-with-correctness-patch \
+  --jaxite-optimized /path/to/jaxite-pr147-with-recorded-patch \
+  --manifest benchmarks/ship_equivalence/common-n32-c2.json \
+  --output-dir /path/to/new-results-directory --chip 0 --iterations 3
+```
+
+## Optimized Jaxite compiler compatibility
+
+The initial optimized N32 TPU attempt crashed in XLA
+`InstructionFusion::CanFuseOnAllPaths`, with over 1,000 repeated stack frames,
+even with the common 64 MiB stack limit. Its failed report and log are retained;
+no latency is assigned to that attempt.
+
+`jaxite-bounded-rescale.patch` applies **after** `jaxite-pr147-optimized.patch`.
+It stages the triangular multi-prime recurrence and scaling-constant product as
+`jax.lax.fori_loop` operations instead of unrolling them into one large compiler
+graph. Future dropped limbs are updated in a vector; inactive limbs retain
+their prior values. The arithmetic and modulus chain are unchanged.
+
+`check_jaxite_rescale.py /path/to/original-patched/rescale.py` checks exact
+residues against the original optimized function on CPU for 3, 5 and 24 dropped
+primes. Set `JAX_PLATFORMS=cpu` and put the bounded-rescale Jaxite checkout and
+CROSS's `jaxite_word` directory on `PYTHONPATH`. The isolated N32/24-drop TPU
+rescale compiled and executed in 4.85 seconds; this diagnostic is not bootstrap
+latency. The patched variant passed the full encrypted TPU bootstrap and public-square
+gates before timing; see [RESULTS.md](RESULTS.md).
+
+Barrier-only attempts and a loop around only the scaling-constant product were
+stopped while compiling, before producing correctness or timing results. Their
+logs and patches are retained with the raw artifacts. The successful isolated
+compiler diagnostic uses loops around both recurrences.

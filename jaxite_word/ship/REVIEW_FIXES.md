@@ -60,3 +60,24 @@ runtime is not bootstrap latency.
 
 The separate N16384 low-scale BSGS test also passed on TPU (20.75 seconds
 including setup/compilation), bringing SHIP regression coverage to 41 tests.
+
+## Full-size TPU correctness
+
+At N16384, weight 31, theta 9, gamma 8, Q8/P9, the updated full bootstrap
+passed both known-plaintext gates: ramp maximum error 0.000401648876 and
+random maximum error 0.000387622470, versus `2^-10 = 0.0009765625`.
+The report is `benchmarks/ship_equivalence/results/review-ship-n16384.json`.
+Its single wall sample is a validation observation, not a comparative median
+or active-device measurement. Source: b6c5e53; JAX 0.9.1, libtpu 0.0.35.
+
+The subsequent comparison also exposed an optimized Jaxite XLA fusion crash.
+The separate benchmark-only bounded-rescale patch preserves every rescale
+residue in CPU comparisons with the original function for 3, 5 and 24 drops.
+It does not modify the production CROSS evaluator.
+
+The matched four-way N32 TPU comparison is complete. All four variants passed
+full encrypted bootstrap and public-square gates with identical cryptographic
+boundary parameters and runtime metadata; see
+[comparison results](../../benchmarks/ship_equivalence/RESULTS.md). The optimized
+Jaxite row includes the separately recorded bounded-rescale compiler patch.
+N32 is a toy functional profile, not a security-qualified application.
