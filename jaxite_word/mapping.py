@@ -26,6 +26,7 @@ from contextlib import nullcontext
 from dataclasses import dataclass, field, replace
 import math
 import sys
+import threading
 from typing import Any, ClassVar, Iterator, List, Optional
 
 import jax.numpy as jnp
@@ -57,6 +58,45 @@ _BINARY_KINDS = frozenset(('add', 'sub', 'mul'))
 
 
 _PLAIN_KINDS = frozenset(('add_plain', 'mul_plain'))
+
+
+_cache_clear_lock = threading.RLock()
+_cache_clear_depth = 0
+_cache_clear_pending = False
+
+
+@contextlib.contextmanager
+def defer_cache_clearing():
+  """Delay Mapping cache invalidation while a group of builds is active.
+
+  A caller preparing independent mappings concurrently must join every worker
+  before leaving this scope, including on failure. This prevents a failed
+  constructor or release from clearing process-wide tracing caches while a
+  different constructor is still compiling. Owned buffers are still released
+  immediately; only JAX's process-wide cache clearing is deferred.
+  """
+  global _cache_clear_depth, _cache_clear_pending
+  with _cache_clear_lock:
+    _cache_clear_depth += 1
+  try:
+    yield
+  finally:
+    with _cache_clear_lock:
+      _cache_clear_depth -= 1
+      if not _cache_clear_depth and _cache_clear_pending:
+        import jax
+        _cache_clear_pending = False
+        jax.clear_caches()
+
+
+def _request_cache_clear():
+  global _cache_clear_pending
+  with _cache_clear_lock:
+    if _cache_clear_depth:
+      _cache_clear_pending = True
+    else:
+      import jax
+      jax.clear_caches()
 
 
 _SUPPORTED_KINDS = frozenset((
@@ -1006,6 +1046,7 @@ def _analyze_mapping(mapping, *, perf_test: bool = False) -> None:
           'global_batch': mapping.global_batch,
           'device_count': mapping.device_count,
           'compile_mode': mapping.compile_mode,
+          'dynamic_constants': getattr(mapping, 'dynamic_constants', False),
           'bsgs_n_jobs': mapping.bsgs_n_jobs,
           'bsgs_streaming': mapping.bsgs_streaming,
       })
@@ -1223,6 +1264,9 @@ class Mapping:
   reduces peak memory for large security-parameter profiles at the cost of
   repeated encoding/compilation and more dispatches. ``bsgs_streaming=True``
   further bounds sparse MatVec memory by encoding one giant step at a time.
+  ``dynamic_constants=True`` keeps model/key arrays as resident operands
+  instead of embedding them in HLO. It currently requires whole-program,
+  bootstrap-free execution on one device.
   """
 
 
@@ -1243,6 +1287,7 @@ class Mapping:
       compile_mode: str = 'whole',
       bsgs_n_jobs: int = 1,
       bsgs_streaming: bool = False,
+      dynamic_constants: bool = False,
       perf_test: bool = False,
   ):
     if not isinstance(packing, packing_ir.Packing):
@@ -1360,6 +1405,16 @@ class Mapping:
       raise ValueError('bsgs_n_jobs must be a positive int.')
     if not isinstance(bsgs_streaming, bool):
       raise TypeError('bsgs_streaming must be a bool.')
+    if not isinstance(dynamic_constants, bool):
+      raise TypeError('dynamic_constants must be a bool.')
+    if dynamic_constants and (
+        device_count != 1 or compile_mode != 'whole'
+        or any(_operation_kind(op) == 'bootstrap' for op in packing.operations)
+    ):
+      raise ValueError(
+          'dynamic_constants requires whole-program, bootstrap-free execution '
+          'on exactly one device.'
+      )
     if compile_mode not in ('whole', 'operations'):
       raise ValueError(
           "compile_mode must be either 'whole' or 'operations'."
@@ -1407,6 +1462,7 @@ class Mapping:
     self.compile_mode = compile_mode
     self.bsgs_n_jobs = int(bsgs_n_jobs)
     self.bsgs_streaming = bsgs_streaming
+    self.dynamic_constants = dynamic_constants
     self.ctx = CKKSContext(
         parameters, batch=self.per_device_batch, dnum=dnum
     )
@@ -1857,6 +1913,34 @@ def _raw_program(mapping, bindings):
   return run
 
 
+def _compile_single_device_program(raw_program, input_struct, devices):
+  """Compile with model/key arrays as operands, avoiding enormous HLO literals.
+
+  Tracing freezes the same program once. The resulting closed Jaxpr separates
+  its immutable arrays from its arithmetic; those arrays remain resident and
+  owned by the returned callable. Inlining them into HLO instead can consume
+  tens of gigabytes of host memory and several minutes of constant folding.
+  """
+  import jax
+
+  local_struct = jax.ShapeDtypeStruct(input_struct.shape[1:], input_struct.dtype)
+  closed = jax.make_jaxpr(raw_program)(local_struct)
+  program = closed.jaxpr
+  constants = tuple(jax.device_put(value, devices[0]) for value in closed.consts)
+
+  def evaluate(payload, operands):
+    return jax.core.eval_jaxpr(program, operands, payload)[0]
+
+  compiled = jax.pmap(evaluate, devices=devices, in_axes=(0, None)).lower(
+      input_struct, constants
+  ).compile()
+
+  def execute(payload):
+    return compiled(payload, constants)
+
+  return execute
+
+
 def _region_io(mapping, node_ids):
   """Return live external inputs/outputs for one maximal fused region."""
   region_set = set(node_ids)
@@ -2087,8 +2171,6 @@ def _discard_program_state(ctx, bindings) -> None:
   """
   import gc
 
-  import jax
-
   if ctx is not None:
     try:
       _release_aot_source_state(
@@ -2099,7 +2181,7 @@ def _discard_program_state(ctx, bindings) -> None:
       # operator accessors to clear; the cache eviction below still applies.
       pass
     sys.modules[CKKSContext.__module__].evict_context_caches(ctx)
-  jax.clear_caches()
+  _request_cache_clear()
   gc.collect()
 
 
@@ -2210,9 +2292,14 @@ def _materialize_mapping(mapping) -> None:
       (mapping.device_count,) + mapping.value_specs['input'].payload_shape,
       jnp.uint32,
   )
-  mapping._compiled = jax.pmap(
-      raw_program, devices=mapping.devices
-  ).lower(input_struct).compile()
+  if getattr(mapping, 'dynamic_constants', False):
+    mapping._compiled = _compile_single_device_program(
+        raw_program, input_struct, mapping.devices
+    )
+  else:
+    mapping._compiled = jax.pmap(
+        raw_program, devices=mapping.devices
+    ).lower(input_struct).compile()
   mapping._compiled_regions = None
   mapping._prebuild_templates((mapping.packing.output,))
   _release_aot_source_state(ctx, bindings)

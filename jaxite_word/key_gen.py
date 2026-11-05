@@ -426,7 +426,9 @@ def key_switch_gen(
           else e[part]
       )
     else:
-      base_e = sample_discrete_gaussian(degree, noise_std).tolist()
+      base_e = sample_discrete_gaussian(degree, noise_std)
+      if not use_numpy:
+        base_e = base_e.tolist()
       if use_numpy:
         e_rows = np.empty((size_qp, degree), dtype=np.uint64)
         for i, modulus in enumerate(moduli_list):
@@ -496,7 +498,13 @@ def key_switch_gen(
   # Python integers so unsupported wider moduli cannot be truncated to uint32.
   result_a = a_parts if a is None else a
   result_b = b_parts
-  if pack_uint32:
+  if use_numpy and a is None:
+    # The native sampler already returns canonical residues below 2**32.
+    # Assemble directly in the public storage dtype instead of rebuilding
+    # every limb and two complete uint64 intermediate stacks.
+    result_a = np.asarray(a_parts, dtype=np.uint32)
+    result_b = np.asarray(b_parts, dtype=np.uint32)
+  elif pack_uint32:
     result_a = np.stack([
         np.stack([
             util.uint64_residues_np(part[i], modulus)

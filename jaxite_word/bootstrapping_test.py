@@ -23,6 +23,7 @@ import copy
 import math
 import os
 import types
+from unittest import mock
 
 import jax
 import jax.numpy as jnp
@@ -231,6 +232,39 @@ class BootstrappingFunctionalTest(parameterized.TestCase):
     self.assertEqual(decoded, expected)
     self.assertEqual(expected[0], 351 % modulus)
     self.assertNotEqual(expected[0], (-346) % modulus)
+
+  def test_mod_raise_bulk_transfer_preserves_batch_components_and_exact_lift(self):
+    degree, src, dst = 8, [17, 97], [17, 97, 113, 193]
+    rng = np.random.default_rng(21)
+    coefficients = rng.integers(-math.prod(src), math.prod(src), size=(2, 2, degree))
+    encoded = np.empty((2, 2, degree, len(src)), dtype=np.uint32)
+    expected = np.empty((2, 2, degree, len(dst)), dtype=np.uint32)
+    hats = [math.prod(src) // q for q in src]
+    for batch in range(2):
+      for component in range(2):
+        values = [int(v) for v in coefficients[batch, component]]
+        lifted = []
+        for value in values:
+          total = 0
+          for q, hat in zip(src, hats):
+            digit = (value % q) * pow(hat, -1, q) % q
+            total += (digit - q if digit > q // 2 else digit) * hat
+          lifted.append(total)
+        for tower, q in enumerate(dst):
+          # Existing limbs preserve the original ciphertext exactly; new
+          # limbs use the intentionally unreduced signed-digit CRT lift.
+          residues = values if tower < len(src) else lifted
+          transformed = util.bit_reverse_array(util.ntt_negacyclic_bit_reverse(
+              [value % q for value in residues], q, util.root_of_unity(2 * degree, q)))
+          expected[batch, component, :, tower] = transformed
+          if tower < len(src):
+            encoded[batch, component, :, tower] = transformed
+    payload = jnp.asarray(encoded.reshape(2, 2, 2, 4, len(src)))
+    # The host algorithm must never pull individual JAX scalar residues.
+    with mock.patch.object(type(payload), '__int__', side_effect=AssertionError('scalar device read')):
+      actual = bootstrapping._mod_raise_array(payload, src, dst)
+    self.assertEqual(actual.dtype, payload.dtype)
+    np.testing.assert_array_equal(np.asarray(actual).reshape(expected.shape), expected)
 
   def test_auxiliary_plaintexts_use_recursive_openfhe_scales(self):
     recursive_scales = {0: 101.0, 1: 103.0, 2: 107.0, 3: 109.0}

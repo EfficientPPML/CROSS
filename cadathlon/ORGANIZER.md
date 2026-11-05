@@ -122,6 +122,13 @@ contestant who could edit it could write their own correctness verdict.
 
 ## Assets to freeze before distribution
 
+For P5, follow [the separate TPU-host runbook](agent_pset/p5_wise/TPU_TESTING.md).
+Freeze WISE commit `485655782dc331e6ebb48b159acac8ba924a9933`, its original
+pretrained assets, all six synthetic fixtures, the exact CROSS checkout and
+the native OpenFHE build. Collect fresh CPU and TPU evidence on the judging
+hardware before assigning performance points. TPU calibration and proof of
+speedup remain incomplete; historical CPU results do not supply a TPU baseline.
+
 1. **Environment:** pin the CROSS commit, Python/JAX/jaxlib/libtpu/PyTorch/
    NumPy versions, host CPU/RAM, TPU type, one-chip allocation, thread counts
    and relevant environment variables. Save `pip freeze`, `jax.devices()`,

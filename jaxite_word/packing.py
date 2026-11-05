@@ -2060,6 +2060,10 @@ class PackingPolicy:
   composite_degree: int = DEFAULT_COMPOSITE_DEGREE
   name: Optional[str] = None
   lazy_constants: bool = False
+  # Optional HYBRID key-switch partition count. More digits can reduce the
+  # auxiliary P chain (and hence the secure ring size), at the cost of more
+  # key-switch work. None preserves the existing automatic selection.
+  dnum: Optional[int] = None
 
 
 def _select_dnum(num_q: int) -> int:
@@ -2497,7 +2501,7 @@ def pack(program, policy: Optional[PackingPolicy] = None) -> Packing:
   spec = he_params.ModelSpec(
       name=policy.name or f'packed_{program.digest[:12]}',
       num_q=num_q,
-      dnum=_select_dnum(num_q),
+      dnum=_select_dnum(num_q) if policy.dnum is None else policy.dnum,
       scaling_mod_size=policy.scaling_mod_size,
       first_mod_size=policy.first_mod_size,
       register_word_size=policy.register_word_size,

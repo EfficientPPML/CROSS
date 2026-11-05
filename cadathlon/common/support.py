@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import importlib.machinery
 import importlib.util
+import hashlib
 import json
 import math
 import os
@@ -22,10 +23,25 @@ def cross_root():
 
 
 def load_module(path):
-    loader = importlib.machinery.SourceFileLoader("contest_implementation", str(path))
+    path = Path(path).resolve()
+    # A real import registers the module before executing it. Dataclasses,
+    # postponed annotations and pickling rely on that registration. Give
+    # different submission paths separate identities so one runner cannot
+    # accidentally replace another problem's implementation.
+    name = "contest_implementation_" + hashlib.sha256(str(path).encode()).hexdigest()
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
     spec = importlib.util.spec_from_loader(loader.name, loader)
     module = importlib.util.module_from_spec(spec)
-    loader.exec_module(module)
+    previous = sys.modules.get(name)
+    sys.modules[name] = module
+    try:
+        loader.exec_module(module)
+    except BaseException:
+        if previous is None:
+            sys.modules.pop(name, None)
+        else:
+            sys.modules[name] = previous
+        raise
     return module
 
 
@@ -161,4 +177,12 @@ def require_secure_execution(owner, bundle):
 
 def synchronize(value):
     import jax
-    jax.block_until_ready(value)
+    from jaxite_word import Polynomial
+
+    # Flattening Polynomial wrappers registers their static NTT contexts in
+    # JAX's global auxiliary-state registry. Synchronization needs only the
+    # payloads; retaining those large tables here can defeat session cleanup.
+    payloads = jax.tree_util.tree_map(
+        lambda item: item.polynomial if isinstance(item, Polynomial) else item,
+        value, is_leaf=lambda item: isinstance(item, Polynomial))
+    jax.block_until_ready(payloads)
