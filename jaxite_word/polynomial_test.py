@@ -367,7 +367,7 @@ class PolynomialPrivateArithmeticTest(parameterized.TestCase):
 
 class PolynomialReductionBoundaryTest(parameterized.TestCase):
 
-  @parameterized.parameters(2147352577, 4294967291)
+  @parameterized.parameters(2147352577, 2146826753, 1071513601, 268042241, 4294967291)
   def test_tensor_product_near_modulus_boundary(self, q):
     ff = ff_context.BarrettContext([q])
 

@@ -59,14 +59,21 @@ discrete-Gaussian samplers. The inherited deterministic source is used only
 in tests. Host NTT reference tables are cached for larger key-generation jobs.
 
 SHIP-specific selector keys, binary mux orchestration, online phase encoding,
-and its 2-by-2 BAT key product remain algorithm-specific. Evaluation keys are
+remain algorithm-specific. Selector products use HERot decomposition and key-switch
+cores with raw uint32 keys, one lift/drop per mux step, and a two-step P drop.
+Keys are assembled on the host before the final device transfer. Evaluation keys are
 explicit runtime array operands; controls are ordinary
 CROSS operators captured by the compiled kernels. There is no custom
 ciphertext PyTree or serialized evaluator object in the online path. Private
 host records remain only for trusted key generation and reference decoding.
 CROSS's mutable multiplication workspaces are copied while tracing so calls
-and `vmap` do not retain tracers in evaluator state. Hoisted-transform JIT
-wrappers are reused across requests and evicted with CROSS's low-memory caches.
+and `vmap` do not retain tracers in evaluator state. Noncollapsed hoisted-transform JIT wrappers are reused across requests by
+level and modulus signature, independent of accessor eviction. Collapsed
+transforms still construct their own wrappers. SHIP retains its prepared state.
+Tree relinearization keeps its per-level, up-to-eight-partition keys, and
+conjugation keeps its selector key: substituting context keys would change
+those decomposition schedules. No context-key reuse or corresponding speedup
+is claimed.
 
 The tensor-product and square primitives also reduce cross products before
 adding them: raw two-product sums can exceed Barrett's valid input interval or
@@ -124,3 +131,72 @@ Against the earlier locally patched Jaxite SHIP full-bootstrap result
 chips/VMs and random keys, with matching arithmetic parameters; it is not a
 controlled identical-ciphertext A/B or a comparison with LL13 half-bootstrap.
 Exact parameters and samples are committed in [benchmark_results.json](benchmark_results.json).
+
+## Accuracy, depth, and security contract
+
+SHIP approximates the map `gamma/(2*pi) * sin(2*pi*m/gamma)`. Its supported
+accuracy profile is `gamma=8`, real inputs with `abs(m) <= 0.125`, and a
+maximum absolute error target of `2^-10`. Larger messages are not an identity
+bootstrap: at `m=1`, the sine approximation alone introduces substantial error.
+An evaluator cannot check encrypted message amplitude. `decrypt_slots` checks
+imaginary leakage/conjugate symmetry, not accuracy against the original real
+message. The benchmark's separate comparison with known plaintext is essential.
+
+The planner checks the actual product-tree recurrence `S_next=S*S/q_dropped`
+and final encoder scale, rejecting chains with more than one bit of drift.
+It also requires `log2(P/Q) >= max(20, log2(N)+12)`. These conservative admission
+rules reject the reviewed equal-Q/P and mixed-bit chains; they are not a proof
+that every accepted parameter set meets the error target. Run plaintext-based
+correctness gates on each benchmark profile and random key set.
+
+`plan.multiplication_levels` reports the terminal multiplication budget;
+`plan.multiplication_levels_before_rebootstrap` reserves level 1 for the next
+SHIP input. With weight 31 and eight Q primes, output is level 1: one terminal
+multiplication, **zero multiplications between bootstraps**. Nine Q primes
+leave level 2; ten leave level 3. Increasing Q requires increasing P to retain
+the margin. A second bootstrap also requires the exact `plan.input_scale` and
+noise scale degree 1; level headroom alone does not guarantee this. Public
+rescale updates both scale and noise scale degree. Low-scale public multiply
+uses tensor/relinearize followed by one rescale, rather than rounding its
+operands down to scale one. At higher scales it retains CROSS's legacy
+pre-rescale convention; combinations that cannot fit the tensor product are
+rejected. This does not validate an arbitrary encrypted amplitude.
+
+Public rotations automatically use centered ModDown for tracked Barrett scales
+below `2^40`; low-scale BSGS contexts use it for baby and giant rotations.
+Untracked raw kernels retain the recorded OpenFHE convention. A dedicated test
+checks eight rotation indices at N=16384, where small-ring tests hide the bias.
+
+Default `pack()` / `generate_ring_config()` use composite degree 2 and cannot
+produce this SHIP configuration. SHIP currently requires explicit composite
+degree 1 parameters; `test_only_parameters` bypasses security selection and
+must not be interpreted as a secure deployment configuration.
+
+The historical N=16384 profile has `log2(QP)` about 511 bits, above the 438-bit
+128-bit classical uniform-ternary table limit. It is not security qualified at
+any level: publishing full-chain keys exposes the full QP modulus. Raising N
+to 32768 changes that table limit to 881 bits but does not establish the sparse
+key's security, and materially increases setup and resident memory. The
+internal weight-31 sparse key is also exposed through switching material over
+`q0*p0*p1` (about 91 bits); this secret distribution has no security estimate
+here. Weight is an algorithm parameter, not a security floor. These statements
+identify missing qualification, not a claimed attack.
+
+SHIP does not invoke the native bootstrap stage checkpoints. `LOW_MEM` does
+not automatically evict its constants or keys; inserting such checkpoints
+would move offline setup into online calls. Mapping's logical memory estimate
+includes SHIP keys and transform arrays, but excludes executable copies,
+allocator reservation, and transient buffers.
+
+Plaintext multiplication also has a scale window. For the historical two-limb
+output, encode the multiplier at the next dropped prime's scale (`q[1]`)
+before public rescale. Tiny plaintext scales lose precision; scales such as
+`2^40` can wrap the product modulo the two remaining Q primes even though the
+decoder accepts the real result. Reducing to one Q limb is not a supported
+precision-preserving multiplication route. As with ordinary CKKS, callers
+must bound message magnitudes and test their complete application circuit.
+
+The review also reported executable-cache deserialization failure at Q=10,
+P=11. Its cause is unconfirmed; reproduction runs should disable persistent
+JAX compilation caching, record the runtime versions, and retain setup logs.
+No portable serialized or keyless SHIP setup API is provided in this patch.

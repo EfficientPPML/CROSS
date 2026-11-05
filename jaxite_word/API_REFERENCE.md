@@ -519,7 +519,18 @@ Supported arithmetic is Barrett with `composite_degree=1`, primes below 2^31,
 uint32 limbs, and uint64 intermediates. The functional N=16384 profile is not
 security-qualified.
 
-See [SHIP usage and validation](ship/README.md) for parameters and checks.
+SHIP's supported map is `8/(2*pi)*sin(2*pi*m/8)` for real `abs(m)<=0.125`,
+with an empirical `2^-10` error target. It is not an arbitrary-amplitude identity
+bootstrap. Neither the evaluator nor the decoder's conjugate-symmetry check
+can establish real-message accuracy. The planner rejects insufficient P/Q
+margin and unstable product-tree scales. Default secure Packing parameters
+use composite degree 2 and are incompatible with this implementation.
+
+For weight 31 and eight Q primes, output level 1 permits one terminal multiply
+but no multiply between bootstraps. Inspect `plan.multiplication_levels` and
+`plan.multiplication_levels_before_rebootstrap`, and satisfy the input scale
+and noise scale degree again before refreshing. See
+[SHIP usage and validation](ship/README.md) for precise limits and checks.
 
 ## Levels
 

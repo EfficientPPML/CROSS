@@ -31,6 +31,7 @@ from typing import Any, ClassVar, Iterator, List, Optional
 import jax.numpy as jnp
 import numpy as np
 
+import finite_field
 import key_gen as kg
 import polynomial as poly
 from he_params import HEParameterCache, normalize_noise_scale_degree
@@ -341,11 +342,18 @@ def _multiply_scale(
   if left.scale is None or right.scale is None:
     return None
   divisor = _rescale_divisor(left, ctx, 1)
-  if ctx.composite_degree == 1:
+  if not _multiply_post_rescale(left, right, ctx):
     result = (left.scale / divisor) * (right.scale / divisor)
   else:
     result = (left.scale / divisor) * right.scale
   return _checked_scale(result, step_id, 'multiply')
+
+
+def _multiply_post_rescale(left, right, ctx):
+  from he_ops import _multiply_post_rescale as choose
+  count = (left.level + 1) * ctx.composite_degree
+  return choose(ctx.composite_degree, ctx.degree, ctx.q_towers[:count],
+                left.scale, right.scale, ctx.parameters.get('sigma', 3.19))
 
 
 def _replace_spec(
@@ -558,6 +566,7 @@ def _plan_step(step, inputs, ctx):
       )
     if source.level < 1:
       raise ValueError(f'operator {step_id!r} multiply underflows level 0.')
+    operation_plan = _multiply_post_rescale(inputs[0], inputs[1], ctx)
     return _replace_spec(
         source,
         ctx,
@@ -573,6 +582,7 @@ def _plan_step(step, inputs, ctx):
       )
     if source.level < 1:
       raise ValueError(f'operator {step_id!r} square underflows level 0.')
+    operation_plan = _multiply_post_rescale(source, source, ctx)
     return _replace_spec(
         source,
         ctx,
@@ -1072,16 +1082,19 @@ def _bind_operation(ctx, mapping, operation, bootstrap_target):
     return evaluator._sub_array
   if kind == 'mul':
     evaluator = ctx.he_mul[output_spec.level]
-    return evaluator._mul_array
+    return lambda left, right: evaluator._mul_array(
+        left, right, post_rescale=operation_plan)
   if kind == 'square':
     evaluator = ctx.he_mul[output_spec.level]
-    return evaluator._square_array
+    return lambda value: evaluator._square_array(value, post_rescale=operation_plan)
   if kind == 'rotate':
     index = operation_plan
     if index == 0:
       return lambda value: value
     evaluator = ctx.he_rot[input_spec.level, index]
-    return evaluator._rotate_array
+    centered = (input_spec.scale is not None and input_spec.scale < 2**40
+                and ctx._param_cache.ff_context_cls is finite_field.BarrettContext)
+    return lambda value: evaluator._rotate_array(value, centered=centered)
   if kind == 'rescale':
     evaluator = ctx.he_rescale[input_spec.level, output_spec.level]
     return evaluator._rescale_array
@@ -1524,7 +1537,13 @@ class Mapping:
     )
     rotation_key_count = len(self.required_rotation_indices)
     rotation_keys_bytes = rotation_key_count * evaluation_key_bytes
+    bootstrap_bytes = 0
+    accessor = getattr(self.ctx, '_he_bootstrap', None)
+    engine = getattr(accessor, '_engine', None)
+    if getattr(accessor, '_scheme', None) == 'ship' and engine is not None:
+      bootstrap_bytes = engine.resident_array_bytes()
     total_bytes = sum((
+        bootstrap_bytes,
         ciphertext_in_bytes,
         ciphertext_out_bytes,
         matvec_constants_bytes,
@@ -1540,6 +1559,7 @@ class Mapping:
         'evaluation_key_bytes': evaluation_key_bytes,
         'rotation_keys_bytes': rotation_keys_bytes,
         'rotation_key_count': rotation_key_count,
+        'bootstrap_bytes': bootstrap_bytes,
         'total_bytes': total_bytes,
     }
 

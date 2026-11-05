@@ -430,6 +430,15 @@ class _BSGSMatVecAtLevel:
         (self.level - 1, dummy_giant)
     )
     self.ctx.he_rot.clear()
+    # Low-scale CKKS needs the centered representative at both baby and
+    # post-rescale giant rotations. Preserve high-scale/OpenFHE defaults.
+    if (cache.ff_context_cls is finite_field.BarrettContext
+        and float(self.ctx.parameters['scaling_factor']) < 2**40):
+      if baby_rotation is not None:
+        raw_baby = baby_rotation
+        baby_rotation = lambda *args: raw_baby(*args, centered=True)
+      raw_giant = giant_rotation
+      giant_rotation = lambda *args: raw_giant(*args, centered=True)
 
     # Build one dynamic-operand kernel for eager and memory-bounded execution.
     batch = cache.batch

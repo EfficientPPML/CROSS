@@ -6,6 +6,7 @@ Profiles include only the warmed bootstrap, excluding setup and decryption.
 
 import argparse
 import json
+import time
 from pathlib import Path
 
 import ckks_ctx
@@ -53,6 +54,14 @@ def main():
     parser.error("degree must be a power of two >= 8 and 1 <= weight <= degree")
   if not 1 <= args.theta <= n // 2 or args.iterations < 1:
     parser.error("theta must be in [1,N/2] and iterations must be positive")
+  options = None
+  if args.profile_dir:
+    if jax.default_backend() != "tpu":
+      parser.error("Device profiling requires a TPU backend")
+    options = jax.profiler.ProfileOptions()
+    options.host_tracer_level = 0
+    options.python_tracer_level = 0
+    options.advanced_configuration = {"tpu_trace_mode": "TRACE_ONLY_XLA"}
   q, p = parameters(n, args.weight)
   r = 1 << ((n.bit_length() - 1) // 2)
   print("Preparing CROSS context and SHIP evaluation keys", flush=True)
@@ -87,7 +96,8 @@ def main():
     ct = ctx.encrypt(ctx.encode_at_level(list(values), 1, scale=plan.input_scale))
     out = bs.bootstrap(ct)
     jax.block_until_ready(out.polynomial)
-    # CROSS's decoder validates imaginary leakage before returning reals.
+    # The decoder only checks imaginary leakage. The known plaintext below
+    # is essential: conjugate symmetry alone cannot validate real accuracy.
     decoded = ctx.decrypt_slots(out)
     error = float(np.max(np.abs(decoded - values)))
     if not np.isfinite(error) or error > 2**-10:
@@ -111,17 +121,21 @@ def main():
     "ciphertext_dtype": str(out.polynomial.dtype),
     "security_qualified": False,
     "profiles": [],
+    "warm_wall_ms": [],
   }
+  def save():
+    if args.output:
+      args.output.parent.mkdir(parents=True, exist_ok=True)
+      args.output.write_text(json.dumps(report, indent=2) + "\n")
+  save()  # Keep correctness evidence even if profiling fails.
+  for _ in range(args.iterations):
+    start = time.perf_counter()
+    jax.block_until_ready(bs.bootstrap(ct).polynomial)
+    report["warm_wall_ms"].append((time.perf_counter() - start) * 1000)
+  save()
   if args.profile_dir:
-    if jax.default_backend() != "tpu":
-      raise RuntimeError("Device profiling requires a TPU backend")
     for index in range(args.iterations):
       directory = args.profile_dir / str(index)
-      options = jax.profiler.ProfileOptions()
-      options.host_tracer_level = 0
-      options.python_tracer_level = 0
-      options.device_tracer_level = 1
-      options.advanced_configuration = {"tpu_trace_mode": "TRACE_ONLY_XLA"}
       jax.profiler.start_trace(str(directory), profiler_options=options)
       try:
         out = bs.bootstrap(ct)
@@ -129,6 +143,7 @@ def main():
       finally:
         jax.profiler.stop_trace()
       report["profiles"].append(str(directory))
+      save()
   if args.output:
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + "\n")

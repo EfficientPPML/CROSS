@@ -507,8 +507,7 @@ class Polynomial:
     # 32 bits it can overflow uint64. Sum reduced products instead.
     ff = self.ntt_ctx.ff_ctx
     cross0 = ff.modular_reduction(a0 * b1).astype(jnp.uint64)
-    cross1 = ff.modular_reduction(a1 * b0).astype(jnp.uint64)
-    mul1 = ff.strictify_after_accumulation(cross0 + cross1, 2).astype(
+    mul1 = ff.reduce_scaled_sum(a1, b0, cross0).astype(
         self.modulus_dtype
     )
     return (
@@ -541,9 +540,10 @@ class Polynomial:
     )
     ff = self.ntt_ctx.ff_ctx
     cross = ff.modular_reduction(a0 * a1).astype(jnp.uint64)
-    mul1 = ff.strictify_after_accumulation(cross + cross, 2).astype(
-        self.modulus_dtype
-    )
+    cross = ff.strictify(cross)
+    doubled = cross + cross
+    q = jnp.asarray(self.moduli, jnp.uint64)
+    mul1 = jnp.where(doubled >= q, doubled - q, doubled).astype(self.modulus_dtype)
 
     return (
         jnp.concatenate([mul0[:, None], mul1[:, None]], axis=1),

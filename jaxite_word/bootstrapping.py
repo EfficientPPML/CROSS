@@ -2566,7 +2566,7 @@ class Bootstrap:
     # JIT the shape-stable split primitives.  Rotation keys and maps remain
     # runtime operands, so one executable serves all baby/giant indices.
     kernel_cache = self._hoisted_lt_kernels
-    kernel_key = (int(level), id(sample_op))
+    kernel_key = (int(level), tuple(self._cache.degree_layout), tuple(qp_moduli))
     if kernel_key not in kernel_cache:
       decompose = jax.jit(sample_op._decompose_array)
       extend = jax.jit(
@@ -2605,10 +2605,10 @@ class Bootstrap:
         1, 1, 1, 1, len(q_moduli)
     )
 
+    @jax.jit
     def _mod_add(a, b, moduli):
-      return ((
-          a.astype(jnp.uint64) + b.astype(jnp.uint64)
-      ) % moduli).astype(jnp.uint32)
+      total = a.astype(jnp.uint64) + b.astype(jnp.uint64)
+      return jnp.where(total >= moduli, total - moduli, total).astype(jnp.uint32)
 
     ct_data = ct.polynomial
     digits = decompose(ct_data)
@@ -2800,10 +2800,10 @@ class Bootstrap:
         1, 1, 1, 1, len(q_moduli)
     )
 
+    @jax.jit
     def _mod_add(a, b, moduli):
-      return ((
-          a.astype(jnp.uint64) + b.astype(jnp.uint64)
-      ) % moduli).astype(jnp.uint32)
+      total = a.astype(jnp.uint64) + b.astype(jnp.uint64)
+      return jnp.where(total >= moduli, total - moduli, total).astype(jnp.uint32)
 
     ct_data = ct.polynomial
     digits = decompose(ct_data)

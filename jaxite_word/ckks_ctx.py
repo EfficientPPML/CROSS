@@ -2211,7 +2211,7 @@ class CKKSContext:
         scaling_factor=scale,
         slots=self.num_slots,
         q=big_q,
-        p=self.p,
+        p=self.p if "p" in self.parameters else max(1, math.ceil(math.log2(scale))),
         CKKS_M_FACTOR=self.CKKS_M_FACTOR,
         validate_approximation=validate_approximation,
     )

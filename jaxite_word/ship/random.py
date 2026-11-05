@@ -47,7 +47,7 @@ class SecureRandomSource(RandomSource):
     return np.array(res, dtype=np.uint64).T
 
   def gen_ternary_poly(self, degree: int, moduli: list[int]) -> np.ndarray:
-    coeffs = [self.rng.choice([0, 1]) for _ in range(degree)]
+    coeffs = [self.rng.choice([-1, 0, 1]) for _ in range(degree)]
     res = []
     for q in moduli:
       res.append([c % q for c in coeffs])
@@ -85,12 +85,30 @@ class CrossRandomSource(SecureRandomSource):
     ).astype(np.uint64)
 
   def gen_ternary_poly(self, degree, moduli):
-    # Preserve the upstream ephemeral-secret distribution (binary despite
-    # the historical method name); the external key is CROSS ternary.
-    coefficients = np.frombuffer(secrets.token_bytes(degree), dtype=np.uint8) & 1
-    return np.broadcast_to(coefficients[:, None], (degree, len(moduli))).astype(
-      np.uint64
-    )
+    import key_gen as cross_keys
+    return np.asarray(
+      cross_keys.gen_ternary_uniform_polynomial(degree, moduli).coeffs,
+      dtype=np.uint64,
+    ).T
+
+
+class ConfiguredRandomSource(RandomSource):
+  """Bind all trusted setup noise to the context's declared sigma."""
+
+  def __init__(self, source, sigma):
+    self.source, self.sigma, self.rng = source, sigma, source.rng
+
+  def gen_gaussian_poly(self, degree, moduli, sigma=None):
+    return self.source.gen_gaussian_poly(degree, moduli, sigma=self.sigma)
+
+  def gen_uniform_poly(self, degree, moduli):
+    return self.source.gen_uniform_poly(degree, moduli)
+
+  def gen_ternary_poly(self, degree, moduli):
+    return self.source.gen_ternary_poly(degree, moduli)
+
+  def gen_sparse_binary(self, degree, weight, moduli):
+    return self.source.gen_sparse_binary(degree, weight, moduli)
 
 
 class ZeroNoiseRandomSource(SecureRandomSource):

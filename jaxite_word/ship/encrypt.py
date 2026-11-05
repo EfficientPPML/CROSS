@@ -19,6 +19,20 @@ ABC = abc.ABC
 abstractmethod = abc.abstractmethod
 
 
+def encrypt_symmetric(plaintext, secret_key, random_source):
+  """Encrypt a trusted setup plaintext directly under the destination key."""
+  moduli = [int(q) for q in plaintext.moduli]
+  degree = plaintext.data.shape[0]
+  a = ntt_cpu.ntt_negacyclic_poly(
+    random_source.gen_uniform_poly(degree, moduli), moduli)
+  e = ntt_cpu.ntt_negacyclic_poly(
+    random_source.gen_gaussian_poly(degree, moduli), moduli)
+  q = np.asarray(moduli, np.uint64)
+  product = (a * np.asarray(secret_key.data, np.uint64)) % q
+  b = (np.asarray(plaintext.data, np.uint64) + e + q - product) % q
+  return Ciphertext(np.stack([b, a]).astype(np.uint32), np.asarray(moduli, np.uint32))
+
+
 class EncryptBase(ABC):
   """Abstract base class for encryption kernels."""
 

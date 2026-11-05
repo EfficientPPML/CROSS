@@ -66,6 +66,34 @@ def _validate_additive_metadata(left, right, operation: str) -> None:
 jax.config.update("jax_enable_x64", True)
 
 
+def _multiply_post_rescale(cd, degree, q_input, left_scale, right_scale, sigma=3.19):
+  """Choose a multiply schedule before executing any ciphertext arithmetic.
+
+  Preserve the high-scale legacy schedule, but do not round one-prime-scale
+  operands down to scale one. Reserve six sigma per coefficient at the 2^-10
+  integration error target; this is a conservative routing rule, not a bound
+  on arbitrary encrypted message amplitudes or a security qualification.
+  """
+  if cd >= 2:
+    return True
+  if left_scale is None or right_scale is None:
+    return False
+  if any(not math.isfinite(float(s)) or s <= 0 for s in (left_scale, right_scale)):
+    raise ValueError('multiply requires positive finite operand scales')
+  divisor = math.prod(q_input[-cd:])
+  floor = 6 * degree * sigma / (2**-10)
+  use_post = min(left_scale, right_scale) / divisor < floor
+  if use_post and (
+      math.log2(left_scale) + math.log2(right_scale)
+      > sum(math.log2(q) for q in q_input)
+  ):
+    raise ValueError(
+        'multiply: pre-rescale would lose precision and the tensor-first '
+        'product needs more active Q limbs; use a larger input level'
+    )
+  return use_post
+
+
 class _HEMulAtLevel:
   """HEMul configured for one exact output level.
 
@@ -119,21 +147,20 @@ class _HEMulAtLevel:
     self._num_q_output = num_q_input - self._cd
     self._use_skip_rescale = use_skip_rescale
 
-    # For cd>=2: pre-create post-rescale operator
-    if use_skip_rescale and self._cd >= 2:
-      self._post_rescale = rescale._HERescaleKernel(
-          batch=cache.batch,
-          num_elements=2,
-          moduli=q_input,
-          r=cache.r,
-          c=cache.c,
-          degree_layout=cache.degree_layout,
-          finite_field_context=cache.ff_context_cls,
-      )
-      self._post_rescale.control_gen(
-          composite_degree=self._cd,
-          perf_test=cache.perf_test,
-      )
+    # Both schedules share the same one-level post-rescale controls.
+    self._post_rescale = rescale._HERescaleKernel(
+        batch=cache.batch,
+        num_elements=2,
+        moduli=q_input,
+        r=cache.r,
+        c=cache.c,
+        degree_layout=cache.degree_layout,
+        finite_field_context=cache.ff_context_cls,
+    )
+    self._post_rescale.control_gen(
+        composite_degree=self._cd,
+        perf_test=cache.perf_test,
+    )
 
     self._input_level = input_level
 
@@ -148,22 +175,26 @@ class _HEMulAtLevel:
   def mul(self, ct1: Polynomial, ct2: Polynomial) -> Polynomial:
     """Multiply, relinearize, and return exactly this operator's level.
 
-    Inputs must be at ``level + 1``. For composite degree one the private
-    multiply kernel performs the rescale. For larger composite degrees this
-    facade applies its prebuilt composite post-rescale to the relinearized
-    result. Thus the public result always drops one logical level.
+    Inputs must be at ``level + 1``. One-prime-scale operands tensor first
+    and rescale once, preserving precision. High-scale degree-one operands
+    retain the legacy pre-rescale schedule. Composite degrees use post-rescale. Thus the public result always drops one logical level.
     """
     combined = self._combine_inputs_array(ct1, ct2)
-    result = self._hemul._mul_array_to_polynomial_unchecked(combined)
-    if self._use_skip_rescale:
-      result = self._post_rescale.rescale(result)
     left_scale = getattr(ct1, '_ckks_scale', None)
     right_scale = getattr(ct2, '_ckks_scale', None)
+    use_post = _multiply_post_rescale(
+        self._cd, self.cache.degree, self._q_input, left_scale, right_scale,
+        self.cache.noise_std,
+    )
+    operator = self._no_relin_operator if use_post else self._hemul
+    result = operator._mul_array_to_polynomial_unchecked(combined)
+    if use_post:
+      result = self._post_rescale.rescale(result)
     if left_scale is not None and right_scale is not None:
       divisor = 1
       for modulus in self._q_input[-self._cd:]:
         divisor *= int(modulus)
-      if self._use_skip_rescale:
+      if use_post:
         # cd >= 2 tensors at the input scale and then performs one composite
         # post-rescale.
         result._ckks_scale = (left_scale * right_scale) / divisor
@@ -173,6 +204,10 @@ class _HEMulAtLevel:
         result._ckks_scale = (
             (left_scale / divisor) * (right_scale / divisor)
         )
+    result._ckks_nsd = max(
+        1, getattr(ct1, '_ckks_nsd', 1) + getattr(ct2, '_ckks_nsd', 1)
+        - (1 if use_post else 2),
+    )
     return result
 
   def hemul_no_relin(
@@ -204,7 +239,7 @@ class _HEMulAtLevel:
     """Number of Q moduli expected by the configured low-level multiply."""
     return self._hemul.overall_sizeQ_in
 
-  def _square_array(self, ct_data):
+  def _square_array(self, ct_data, *, post_rescale=False):
     """Private fused square from ``level + 1`` to exactly ``level``."""
     finite_field.check_rank5_array(
         ct_data,
@@ -214,14 +249,15 @@ class _HEMulAtLevel:
         degree_layout=self.cache.degree_layout,
         num_moduli=len(self._q_input),
     )
-    result = self._hemul._mul_array_to_polynomial_unchecked(
+    operator = self._no_relin_operator if post_rescale else self._hemul
+    result = operator._mul_array_to_polynomial_unchecked(
         jnp.concatenate([ct_data, ct_data], axis=1)
     )
-    if self._use_skip_rescale:
+    if self._use_skip_rescale or post_rescale:
       return self._post_rescale._rescale_array_unchecked(result.polynomial)
     return result.polynomial
 
-  def _mul_array(self, left_data, right_data):
+  def _mul_array(self, left_data, right_data, *, post_rescale=False):
     """Private fused binary multiply from ``level + 1`` to ``level``."""
     for name, value in (('left_data', left_data), ('right_data', right_data)):
       finite_field.check_rank5_array(
@@ -237,10 +273,11 @@ class _HEMulAtLevel:
           '_HEMulAtLevel._mul_array operands must have identical shapes; '
           f'got {left_data.shape} and {right_data.shape}.'
       )
-    result = self._hemul._mul_array_to_polynomial_unchecked(
+    operator = self._no_relin_operator if post_rescale else self._hemul
+    result = operator._mul_array_to_polynomial_unchecked(
         jnp.concatenate([left_data, right_data], axis=1).astype(jnp.uint32)
     )
-    if self._use_skip_rescale:
+    if self._use_skip_rescale or post_rescale:
       return self._post_rescale._rescale_array_unchecked(result.polynomial)
     return result.polynomial
 
@@ -340,7 +377,14 @@ class _HERotAtLevel:
     )
 
   def rotate(self, ct_in: Polynomial) -> Polynomial:
-    result = self._herot.rotate(ct_in)
+    scale = getattr(ct_in, '_ckks_scale', None)
+    centered = (scale is not None and float(scale) < 2**40
+                and self.cache.ff_context_cls is finite_field.BarrettContext)
+    if centered:
+      result = ct_in._clone_with_payload(
+        self._herot._rotate_array(ct_in.polynomial, centered=True))
+    else:
+      result = self._herot.rotate(ct_in)
     # Rotation does not change CKKS scale/depth metadata.  The private kernel
     # returns a clone of its reusable template rather than of ``ct_in``, so
     # preserve the operand metadata explicitly at the facade boundary.
@@ -353,10 +397,10 @@ class _HERotAtLevel:
     """Return computation-format keys and map for a fused rotation scan."""
     return self._herot._rotation_state()
 
-  def _rotate_array(self, ct_data, eval_a=None, eval_b=None, coef_map=None):
+  def _rotate_array(self, ct_data, eval_a=None, eval_b=None, coef_map=None, *, centered=False):
     """Private raw-array rotate hook for a fused composition region."""
     return self._herot._rotate_array(
-        ct_data, eval_a=eval_a, eval_b=eval_b, coef_map=coef_map
+        ct_data, eval_a=eval_a, eval_b=eval_b, coef_map=coef_map, centered=centered
     )
 
   def _take_explicit_rotation_fn(self):
@@ -459,6 +503,8 @@ class _HERescaleAtLevels:
       for modulus in self._q_at_src[-self._he_rescale.composite_degree:]:
         divisor *= int(modulus)
       result._ckks_scale = tracked_scale / divisor
+    if hasattr(ct_in, '_ckks_nsd'):
+      result._ckks_nsd = max(1, ct_in._ckks_nsd - self.num_steps)
     return result
 
   def _rescale_array(self, ct_data):
@@ -1028,9 +1074,18 @@ class _HEBootstrapAccessor:
     """Bind configured bootstrap constants and keys to this context."""
     self._require_configured()
     if self._is_setup:
+      if random_source is not None:
+        raise ValueError('setup already completed; random_source would not replace existing keys')
       return self
     if self._scheme == 'ship':
-      self._engine.setup_key(random_source=random_source)
+      try:
+        self._engine.setup_key(random_source=random_source)
+      except Exception:
+        self._engine = None
+        self._configured = False
+        self._configuration = None
+        self._input_specs = None
+        raise
       self._is_setup = True
       return self
     if random_source is not None:

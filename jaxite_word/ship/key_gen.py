@@ -346,9 +346,6 @@ def gen_hmuxrot_key(
     moduli=ksk.moduli,
   )
 
-  # a secret key, we perform direct symmetric encryption inline.
-  pk_ext, _ = keygen(degree, all_moduli, random_source, sk=dest_sk_ext)
-  encryptor = encrypt.Encrypt(pk_ext)
   target1_data = (
     np.ones((degree, len(all_moduli)), dtype=np.uint64) * scaled_val0
   ) % all_moduli_u64
@@ -356,7 +353,7 @@ def gen_hmuxrot_key(
     data=jnp.array(target1_data, dtype=jnp.uint32),
     moduli=jnp.array(all_moduli, dtype=jnp.uint32),
   )
-  key1 = encryptor.encrypt(plain_target1, random_source)
+  key1 = encrypt.encrypt_symmetric(plain_target1, dest_sk_ext, random_source)
 
   return types.HMuxRotKey(key0, key1)
 
@@ -519,8 +516,6 @@ def gen_hybrid_key(
   all_zeroes = [complex(0)] * num_slots
   plain_0 = encoder_pq.encode(all_zeroes)
 
-  pk_ext, _ = keygen(degree, all_moduli, random_source, sk=sk_ext)
-  encryptor = encrypt.Encrypt(pk_ext)
 
   cmkey_hybrid = []
   for k in range(4):
@@ -533,7 +528,7 @@ def gen_hybrid_key(
       else:
         target = plain_0
 
-      ct = encryptor.encrypt(target, random_source)
+      ct = encrypt.encrypt_symmetric(target, sk_ext, random_source)
       cmkey_hybrid_k.append(ct)
     cmkey_hybrid.append(cmkey_hybrid_k)
 

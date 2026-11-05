@@ -10,6 +10,7 @@ import copy
 import bconv
 import finite_field
 import hemul
+import herot
 import jax
 import jax.numpy as jnp
 import ntt_mm
@@ -44,58 +45,55 @@ def _working_mul(kernel):
   return result
 
 
+class _SelectorDrop:
+  """Approximate P[1:] ModDown followed by one exact, centered P[0] drop.
+
+  The last exact drop attenuates approximate basis-conversion error; using
+  ApproxModDown alone does not meet SHIP's low-scale accuracy contract.
+  """
+
+  def __init__(self, q, p, r, c):
+    self.approx = herot._HERotKernel(r, c, 1, q + p[:1], p[1:])
+    self.approx.control_gen(keygen_sizeQ=len(q) + 1)
+    self.exact = _rescale(q + p[:1], 1, r, c)
+
+  def _rescale_array(self, ct):
+    return self.exact._rescale_array(self.approx._mod_down_array(ct))
+
+
 class _BATSwitch:
-  """SHIP's encrypted two-component selector product, using CROSS controls."""
+  """Two encrypted selector columns using CROSS's raw HERot key switch.
+
+  The historical name is retained internally; keys are uint32 residues,
+  without the former sixteen-byte BAT expansion per residue.
+  """
 
   def __init__(self, q, p, r, c):
     self.q, self.p = list(q), list(p)
     self.r, self.c, self.degree = r, c, r * c
-    self.ntt_q, self.ntt_p = _ntt(q, r, c), _ntt(p, r, c)
-    self.ff = finite_field.BarrettContext(q + p)
-    self.bc = bconv.BConvBarrett(q + p)
-    self.bc.control_gen([[list(range(len(q))), list(range(len(q), len(q) + len(p)))]])
-    self.drop = _rescale(q + p, len(p), r, c)
-    self.block = min(128, self.degree)
+    self.op = herot._HERotKernel(r, c, 1, self.q, self.p)
+    self.op.control_gen(keygen_sizeQ=len(q))
+    self.drop = _SelectorDrop(self.q, self.p, r, c)
 
   def format_key(self, key0, key1):
-    """Trusted setup: convert two encrypted selector columns to BAT bytes."""
-    data = jnp.stack([key0, key1], axis=1).transpose(2, 3, 0, 1).astype(jnp.uint64)
-    shifted = jnp.stack([data << (8 * i) for i in range(4)])
-    reduced = (
-      shifted % jnp.asarray(self.q + self.p, jnp.uint64).reshape(1, 1, -1, 1, 1)
-    ).astype(jnp.uint32)
-    bat = jax.lax.bitcast_convert_type(reduced, jnp.uint8).transpose(1, 2, 3, 4, 0, 5)
-    return bat.reshape(
-      self.degree // self.block, self.block, len(self.q + self.p), 2, 2, 4, 4
+    # Host assembly prevents retaining both stacked and unstacked device keys.
+    return np.stack([np.asarray(key0), np.asarray(key1)]).astype(np.uint32).reshape(
+      2, 2, self.r, self.c, len(self.q + self.p)
     )
 
+  def decompose(self, ct):
+    return (self.op._decompose_array(ct),
+            self.op._decompose_array(ct[:, ::-1]))
+
+  def product(self, digits, key):
+    left = self.op._key_switch_core_array(digits[0], key[0, 1][None], key[0, 0][None])
+    right = self.op._key_switch_core_array(digits[1], key[1, 1][None], key[1, 0][None])
+    total = left.astype(jnp.uint64) + right.astype(jnp.uint64)
+    q = jnp.asarray(self.q + self.p, jnp.uint64)
+    return jnp.where(total >= q, total - q, total).astype(jnp.uint32)
+
   def apply_array(self, ct, key):
-    finite_field.check_rank5_array(
-      ct,
-      "SHIP selector switch",
-      batch=1,
-      num_elements=2,
-      degree_layout=(self.r, self.c),
-      num_moduli=len(self.q),
-    )
-    coeffs = self.ntt_q.intt(ct.reshape(2, self.r, self.c, len(self.q)))
-    lifted = self.bc.basis_change(coeffs.reshape(2, self.degree, len(self.q)))
-    p_ntt = self.ntt_p.ntt(lifted.reshape(2, self.r, self.c, len(self.p)))
-    qp = jnp.concatenate([ct, p_ntt[None]], axis=-1)
-    vector = jnp.moveaxis(qp[:, jnp.array([1, 0])], 1, -1).reshape(
-      self.degree // self.block, self.block, len(self.q + self.p), 2
-    )
-    digits = jax.lax.bitcast_convert_type(vector, jnp.uint8)
-    product = jnp.einsum(
-      "ikjvq,ikjuvqp->ikjup", digits, key, preferred_element_type=jnp.uint32
-    )
-    wide = jnp.sum(
-      product.astype(jnp.uint64) << jnp.array([0, 8, 16, 24], jnp.uint32), axis=-1
-    )
-    wide = jnp.moveaxis(wide.reshape(self.r, self.c, len(self.q + self.p), 2), -1, 0)[
-      None
-    ]
-    return self.drop._rescale_array(self.ff.modular_reduction(wide))
+    return self.drop._rescale_array(self.product(self.decompose(ct), key))
 
 
 class _SHIPKernel:
@@ -162,7 +160,7 @@ class _SHIPKernel:
         rng,
       )
       cm_keys.append(
-        jnp.stack([jnp.stack([ct.data for ct in row]) for row in cm]).astype(jnp.uint32)
+        np.stack([np.stack([np.asarray(ct.data) for ct in row]) for row in cm]).astype(np.uint32)
       )
       mux_keys.append(
         tuple(
@@ -183,24 +181,25 @@ class _SHIPKernel:
     conj = key_gen.gen_conjugate_key(sk, self.output_q, self.p, 1, rng)
     one = key_gen.gen_key1(sk, self.output_q, self.p, rng)
     return {
-      "cm": jnp.stack(cm_keys).reshape(
+      "cm": jnp.asarray(np.stack(cm_keys).reshape(
         self.weight, 4, self.theta, 2, self.r, self.c, -1
-      ),
+      )),
       "mux": tuple(
-        (jnp.stack([k[i][0] for k in mux_keys]), jnp.stack([k[i][1] for k in mux_keys]))
+        (jnp.asarray(np.stack([k[i][0] for k in mux_keys])),
+         jnp.asarray(np.stack([k[i][1] for k in mux_keys])))
         for i in range(len(self.mux_maps))
       ),
       "relin": tuple(relin),
-      "conjugate": self.conjugate.format_key(
-        jnp.stack([conj.b[0], conj.a[0]]), one.data
-      ),
+      "conjugate": jnp.asarray(self.conjugate.format_key(
+        np.stack([conj.b[0], conj.a[0]]), one.data
+      )),
     }
 
   def _encode_array(self, slots, scale, ntt):
     values = self.fft(slots)
     coefficients = jnp.concatenate([values.real, values.imag])
     moduli = jnp.asarray(ntt.moduli, jnp.uint32)
-    poly = (jnp.round(coefficients * scale)[:, None] % moduli).astype(jnp.uint32)
+    poly = (jnp.floor(coefficients * scale + 0.5)[:, None] % moduli).astype(jnp.uint32)
     return ntt.ntt(poly.reshape(1, self.r, self.c, len(ntt.moduli)))[0]
 
   def _blind_rotate_array(self, plaintexts, cm, mux):
@@ -219,13 +218,16 @@ class _SHIPKernel:
     current = self.selector.drop._rescale_array(current)
     q = jnp.asarray(self.q, jnp.uint32)
     for i, permutation in enumerate(self.mux_maps):
-      rotated = jnp.take(
-        current.reshape(1, 2, self.degree, -1), permutation, axis=2
-      ).reshape(current.shape)
-      left = self.selector.apply_array(rotated, mux[i][0])
-      right = self.selector.apply_array(current, mux[i][1])
-      total = left + right
-      current = jnp.where(total >= q, total - q, total)
+      digits = self.selector.decompose(current)
+      rotated = tuple(jnp.take(d.reshape(1, 1, 1, self.degree, -1),
+                               permutation, axis=3).reshape(d.shape)
+                      for d in digits)
+      left = self.selector.product(rotated, mux[i][0])
+      right = self.selector.product(digits, mux[i][1])
+      total = left.astype(jnp.uint64) + right.astype(jnp.uint64)
+      qp = jnp.asarray(self.q + self.p, jnp.uint64)
+      current = self.selector.drop._rescale_array(
+        jnp.where(total >= qp, total - qp, total).astype(jnp.uint32))
     return current
 
   def apply_array(self, ciphertext, keys):

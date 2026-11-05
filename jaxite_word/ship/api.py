@@ -101,10 +101,36 @@ class _SHIPBootstrap:
     self.output_level = self.plan.expected_output_level
     self.layout = tuple(cache.degree_layout)
 
+  def resident_array_bytes(self):
+    """Logical array storage, including private transform keys/plaintexts.
+
+    Shared Python array objects are counted once. Compiler copies, allocator
+    reservations and temporary buffers are not measurable from this estimate.
+    """
+    seen = set()
+    def size(value):
+      if id(value) in seen:
+        return 0
+      seen.add(id(value))
+      if isinstance(value, (np.ndarray, jax.Array)):
+        return value.size * value.dtype.itemsize
+      if isinstance(value, dict):
+        return sum(size(v) for v in value.values())
+      if isinstance(value, (list, tuple)):
+        return sum(size(v) for v in value)
+      return 0
+    total = sum(size(v) for v in vars(self).values())
+    if hasattr(self, 'transform'):
+      total += sum(size(v) for v in vars(self.transform).values())
+      total += sum(size(v) for v in vars(self.input_context._param_cache).values())
+    return total
+
   def setup_key(self, random_source=None):
     if self.plan is None:
       raise RuntimeError("Configure SHIP before setup")
     if self._is_setup:
+      if random_source is not None:
+        raise ValueError("SHIP setup already completed; cannot replace its random source")
       return
     ctx = self.ctx
     if ctx.secret_key is None or ctx.public_key is None:
@@ -113,7 +139,8 @@ class _SHIPBootstrap:
     n = ctx.degree
     config = self.plan.config
     r, c = self.layout
-    rng = random_source or random.CrossRandomSource()
+    rng = random.ConfiguredRandomSource(
+      random_source or random.CrossRandomSource(), ctx._param_cache.noise_std)
     sparse = np.zeros(n, dtype=np.int64)
     support = rng.rng.sample(range(n), config.weight)
     sparse[support] = 1
@@ -154,6 +181,23 @@ class _SHIPBootstrap:
       self.input_context, q[1] / config.input_scale_factor
     )
     self.transform._all_rot_indices = list(self.plan.input_rotation_indices)
+    # Materialize the private context's rotation keys from the same source as
+    # every other SHIP key. No global sampler changes or seeded OS keygen.
+    import key_gen as cross_keys
+    iq, ip = q[:2], p[:3]
+    moduli = iq + ip
+    for rotation in (*self.plan.input_rotation_indices, 2*n-1):
+      a = np.stack([rng.gen_uniform_poly(n, moduli).T for _ in range(2)])
+      e = np.stack([
+        ntt_cpu.ntt_negacyclic_poly(rng.gen_gaussian_poly(n, moduli), moduli).T
+        for _ in range(2)
+      ])
+      self.input_context._param_cache.raw_rotation_keys[rotation] = (
+        cross_keys.gen_rotation_key(
+          self.input_context.secret_key, iq, ip, rotation, dnum=2,
+          noise_std=rng.sigma, a=a, e=e,
+        )[rotation]
+      )
     self.transform.setup_key()
     rows = np.arange(n // 2, dtype=np.int64)
     roots = np.asarray([pow(5, i, 2 * n) for i in range(n // 2)], np.int64)
@@ -199,6 +243,9 @@ class _SHIPBootstrap:
     transformed = self.transform._eval_linear_transform_hoisted(warm, self.diagonals, 1)
     transformed = self.transform._he_op_rescale(1, 0, transformed)
     jax.block_until_ready(transformed.polynomial)
+    self.input_context.secret_key = None
+    self.input_context.parameters.pop("secret_key", None)
+    self.input_context._param_cache.secret_key = None
     self._is_setup = True
 
   def bootstrap(self, ciphertext):

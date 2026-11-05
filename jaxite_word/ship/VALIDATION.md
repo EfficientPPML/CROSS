@@ -1,5 +1,8 @@
 # SHIP bootstrap validation and performance
 
+The timings below describe historical revisions. They do not measure the
+current PR-review fixes; a fresh matched comparison is required.
+
 ## Matched-parameter comparison status — 2026-11-03
 
 The historical native CROSS Meta-BTS and CROSS SHIP measurements use different
@@ -99,7 +102,7 @@ This refactor does not add composite-scale or Montgomery support.
 N=16384, 8192 real slots, weight=31, theta=9, gamma=8, Q=[31,30,30,30,30,30,30,30]
 bits and nine 30-bit P primes. The exact primes match the first integration.
 Two output Q limbs remain. Both noisy encrypted fixtures passed the 2^-10
-maximum real-slot error gate using CROSS's validating `decrypt_slots`:
+maximum real-slot error gate by comparing decoded slots with known plaintext:
 
 | Fixture | Maximum real-slot absolute error |
 | --- | ---: |
@@ -164,8 +167,8 @@ with noise and bootstrapped under the same independently generated key setup.
 | Ramp | 0.000549852178 |
 | Random, plaintext seed 42 | 0.000489316856 |
 
-These errors use CROSS's real-valued `decrypt_slots` with its approximation
-validation enabled. The gate was 2^-10 = 0.0009765625. Two Q limbs remain.
+These errors compare CROSS's real-valued `decrypt_slots` output with the known
+plaintext. Its internal conjugate-symmetry check alone cannot establish accuracy. The gate was 2^-10 = 0.0009765625. Two Q limbs remain.
 This full-size run does not establish an arbitrary-input failure probability
 or security qualification.
 

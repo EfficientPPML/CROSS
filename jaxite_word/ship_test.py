@@ -341,8 +341,175 @@ assert SHIPConfig is Flat is Qualified is Root
 """
   root = Path(__file__).resolve().parent.parent
   env = dict(
-    os.environ, PYTHONPATH=os.pathsep.join((str(root), str(root / "jaxite_word")))
+    os.environ, PYTHONPATH=os.pathsep.join((str(root), str(root / "jaxite_word"))),
+    JAX_PLATFORMS="cpu",
   )
   subprocess.run(
     [sys.executable, "-c", source], env=env, check=True, capture_output=True, text=True
   )
+
+
+def _review_context(n=32, q_count=6, p_count=7, rotations=()):
+  import ckks_ctx
+  import key_gen as cross_keys
+  q, p = primes(n, q_count, p_count)
+  ctx = ckks_ctx.CKKSContext(dict(
+    degree=n, num_slots=n//2, q_towers=q, p_towers=p,
+    scaling_factor=q[-1], output_scale=q[-1], p=30, CKKS_M_FACTOR=1,
+    max_bits_in_word=31, composite_degree=1, noise_scale_degree=1,
+    **cross_keys.gen_pke_pair(q, p, n)))
+  r = 1 << ((n.bit_length()-1)//2)
+  ctx.program_initialization(total_rotation_indices=list(rotations),
+                             dnum=2, r=r, c=n//r, batch=1)
+  return ctx
+
+
+def test_low_scale_rotation_full_ring():
+  # Small rings hide the systematic ApproxModDown bias. This needs no SHIP setup.
+  indices = (1, 2, 3, 7, 16, 31, 64, 127)
+  ctx = _review_context(16384, 8, 9, indices)
+  values = np.random.default_rng(127).uniform(-.125, .125, ctx.num_slots)
+  ct = ctx.encrypt(ctx.encode_at_level(values.tolist(), 1, scale=ctx.q_towers[-1]))
+  for index in indices:
+    out = ctx.he_rot[1, index].rotate(ct)
+    np.testing.assert_allclose(ctx.decrypt_slots(out), np.roll(values, -index),
+                               atol=2**-10, rtol=0)
+
+
+def test_public_multiply_after_ship_and_rescale_metadata():
+  from ship import SHIPConfig
+  ctx = _review_context()
+  cfg = SHIPConfig(weight=5, theta=4)
+  bs = ctx.he_bootstrap.configure(scheme='ship', ship_config=cfg).setup(
+    random_source=random.TestRandomSource(71))
+  engine = bs._engine
+  assert engine.input_context.secret_key is None
+  assert 'secret_key' not in engine.input_context.parameters
+  assert engine.input_context._param_cache.secret_key is None
+  with pytest.raises(ValueError, match='random_source'):
+    bs.setup(random_source=random.TestRandomSource(72))
+  values = np.linspace(-.125, .125, ctx.num_slots)
+  ct = ctx.encrypt(ctx.encode_at_level(values.tolist(), 1, scale=cfg.plan(ctx).input_scale))
+  out = bs.bootstrap(ct)
+  product = ctx.he_mul[0].mul(out, out)
+  assert product._ckks_nsd == 1
+  np.testing.assert_allclose(ctx.decrypt_slots(product), values**2, atol=2**-10, rtol=0)
+  split = ctx.he_mul[0].relinearize(ctx.he_mul[0].hemul_no_relin(out, out))
+  split = ctx.he_rescale[1, 0].rescale(split)
+  assert split._ckks_nsd == 1
+  np.testing.assert_allclose(ctx.decrypt_slots(split), values**2, atol=2**-10, rtol=0)
+  np.testing.assert_allclose(ctx.decrypt_slots(ctx.he_add[1].add(out,out)), 2*values,
+                            atol=2**-10, rtol=0)
+  np.testing.assert_allclose(ctx.decrypt_slots(ctx.he_sub[1].sub(out,out)), 0,
+                            atol=2**-10, rtol=0)
+
+
+@pytest.mark.parametrize('case', ['p_margin', 'scale_high', 'scale_low', 'gamma'])
+def test_reject_unsafe_ship_parameter_profiles(case):
+  from types import SimpleNamespace
+  from ship import SHIPConfig
+  n = 1024
+  q,p = primes(n, 8, 9)
+  cfg = SHIPConfig()
+  if case == 'p_margin':
+    p = p[:-1]
+  elif case.startswith('scale'):
+    bits = 29 if case == 'scale_high' else 31
+    candidate = (1 << bits) // (2*n) * (2*n) + 1
+    while candidate in q+p or not ship_math.is_prime(candidate):
+      candidate -= 2*n
+    q[-2] = candidate
+  else:
+    cfg = SHIPConfig(gamma=16)
+  ctx = SimpleNamespace(degree=n,num_slots=n//2,q_towers=q,p_towers=p,composite_degree=1)
+  with pytest.raises(ValueError):
+    cfg.plan(ctx)
+
+
+def test_public_ship_multiply_refresh_cycle():
+  from ship import SHIPConfig
+  ctx = _review_context(q_count=8, p_count=9)
+  config = SHIPConfig(weight=5, theta=4)
+  plan = config.plan(ctx)
+  assert plan.multiplication_levels == 3
+  assert plan.multiplication_levels_before_rebootstrap == 2
+  bs = ctx.he_bootstrap.configure(scheme='ship', ship_config=config).setup(
+    random_source=random.TestRandomSource(93))
+  values = np.linspace(-.125, .125, ctx.num_slots)
+  ct = ctx.encrypt(ctx.encode_at_level(values.tolist(), 1, scale=plan.input_scale))
+  out = bs.bootstrap(ct)
+  squared = ctx.he_mul[2].mul(out, out)
+  # Align to the next bootstrap via an encoded one and public rescale only.
+  scale = plan.input_scale * ctx.q_towers[2] / squared._ckks_scale
+  one = ctx.encode_at_level([1.] * ctx.num_slots, 2, scale=scale)
+  lifted = ctx.ptct_mul[2].mul(squared, one)
+  normalized = ctx.he_rescale[2,1].rescale(lifted)
+  assert normalized._ckks_nsd == 1
+  np.testing.assert_allclose(ctx.decrypt_slots(normalized), values**2, atol=2**-10, rtol=0)
+  again = bs.bootstrap(normalized)
+  np.testing.assert_allclose(ctx.decrypt_slots(again), values**2, atol=2**-10, rtol=0)
+
+
+@pytest.mark.parametrize('kind', ['mul', 'square'])
+@pytest.mark.parametrize('mode', ['whole', 'operations'])
+def test_mapping_multiply_after_ship(kind, mode):
+  from types import SimpleNamespace
+  import mapping
+  import packing
+  from ship import SHIPConfig
+  ctx = _review_context()
+  cfg = SHIPConfig(weight=5, theta=4)
+  op_inputs = ('refresh', 'refresh') if kind == 'mul' else ('refresh',)
+  program = packing.Packing(
+    operations=(('consume', 'level_reduce', ('input',), len(ctx.q_towers)-2),
+                ('refresh', 'bootstrap', ('consume',), cfg),
+                ('product', kind, op_inputs, None)),
+    ring_config=SimpleNamespace(degree=32, num_slots=16, dnum=2),
+    input_shape=(16,), input_packing='slots', logical_input_shape=(16,),
+    logical_output_shape=(16,), input_coordinate_map=tuple(range(16)),
+    output_coordinate_map=tuple(range(16)), layer_shapes=(),output='product',
+    num_slots=16, depth=1)
+  compiled = mapping.Mapping(program, packing.test_only_parameters(ctx.parameters),
+                             input_scale=cfg.plan(ctx).input_scale, compile_mode=mode)
+  values = np.linspace(-.125,.125,16)
+  out = compiled.execute(compiled.encrypt_input(values))
+  assert out._ckks_nsd == 1
+  np.testing.assert_allclose(compiled.decrypt_output(out), values**2, atol=2**-10, rtol=0)
+  assert compiled.estimate_live_memory()['bootstrap_bytes'] > 0
+
+
+def test_decode_without_legacy_p_parameter():
+  ctx = _review_context()
+  ctx.parameters.pop('p')
+  ctx.p = 0  # Historical default when ring_runtime_parameters omitted p.
+  values = np.linspace(-.125, .125, ctx.num_slots)
+  ct = ctx.encrypt(ctx.encode_at_level(values.tolist(), 1, scale=ctx.q_towers[-1]))
+  np.testing.assert_allclose(np.real(ctx.decode(ctx.decrypt(ct))), values,
+                            atol=2**-10, rtol=0)
+
+
+def test_seed_covers_private_rotation_keys_and_setup_can_retry(monkeypatch):
+  from ship import SHIPConfig
+  ctx = _review_context()
+  cfg = SHIPConfig(weight=5, theta=4)
+  accessor = ctx.he_bootstrap.configure(scheme='ship', ship_config=cfg)
+  with monkeypatch.context() as patch:
+    def fail(*args, **kwargs):
+      raise RuntimeError('simulated setup failure')
+    patch.setattr(accessor._engine, 'setup_key', fail)
+    with pytest.raises(RuntimeError, match='simulated'):
+      accessor.setup()
+  accessor.configure(scheme='ship', ship_config=cfg).setup(
+    random_source=random.TestRandomSource(19))
+  original = accessor._engine
+  import ckks_ctx
+  other = ckks_ctx.CKKSContext(dict(ctx.parameters))
+  other.program_initialization(total_rotation_indices=[],dnum=2,r=4,c=8,batch=1)
+  repeated = other.he_bootstrap.configure(scheme='ship',ship_config=cfg).setup(
+    random_source=random.TestRandomSource(19))._engine
+  for left, right in zip(jax.tree.leaves(original.keys), jax.tree.leaves(repeated.keys)):
+    np.testing.assert_array_equal(left,right)
+  original_keys = original.input_context._param_cache.raw_rotation_keys
+  repeated_keys = repeated.input_context._param_cache.raw_rotation_keys
+  for left, right in zip(jax.tree.leaves(original_keys), jax.tree.leaves(repeated_keys)):
+    np.testing.assert_array_equal(left,right)
