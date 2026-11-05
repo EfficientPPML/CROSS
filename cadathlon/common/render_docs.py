@@ -14,7 +14,8 @@ COMMON = ROOT / "common"
 PROBLEMS = {"agent_pset/p1_benchmark": "MNIST throughput",
             "agent_pset/p2_bert": "BERT / MRPC",
             "agent_pset/p3_cnn": "LeNet & AlexNetTiny",
-            "agent_pset/p4_qwen": "Qwen3-0.6B"}
+            "agent_pset/p4_qwen": "Qwen3-0.6B",
+            "agent_pset/p5_wise": "WISE scheduling"}
 
 
 def font_styles():
@@ -117,6 +118,7 @@ def render(problem, fonts):
 </body></html>'''
     licenses = "\n\n".join((COMMON / "fonts" / f"{family}-OFL.txt").read_text() for family in ("Inter", "Outfit"))
     html += "\n<!-- Embedded font license notices:\n" + licenses.replace("--", "—") + "\n-->\n"
+    html = "\n".join(line.rstrip() for line in html.splitlines()) + "\n"
     source.with_suffix(".html").write_text(html)
     HTML(string=html, base_url=str(source.parent)).write_pdf(
         source.with_suffix(".pdf"), font_config=FontConfiguration())

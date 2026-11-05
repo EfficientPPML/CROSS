@@ -1,13 +1,13 @@
 # CROSS CADathlon problem set
 
-All four problems allow coding agents and live under `agent_pset`, each following
+All five problems allow coding agents and live under `agent_pset`, each following
 the supplied CADathlon template:
 introduction, problem statement, compile/run instructions, scoring, references,
 `doc/`, `src/`, `test/`, `oneliner`, and `EXCLUDE`.
 
 ## Coding-agent policy
 
-Students may use coding agents and AI assistants for all four problems,
+Students may use coding agents and AI assistants for all five problems,
 including design, implementation, debugging, testing and profiling. Disclose
 the tools and assisted work in the team report, and independently verify the
 generated code and results. Each problem's correctness, privacy, security and
@@ -49,8 +49,21 @@ scores zero bonus points, as does a fast one that cannot be shown correct.
 | [P2 · BERT / MRPC](agent_pset/p2_bert/doc/problem.md) — use or improve CROSS to enable encrypted BERT on TPUs, then optimize performance and score using the [FHE BERT benchmark](https://github.com/fhe-benchmarking/BERT) | 100 | [HTML](agent_pset/p2_bert/doc/problem.html) · [PDF](agent_pset/p2_bert/doc/problem.pdf) |
 | [P4 · Qwen3-0.6B](agent_pset/p4_qwen/doc/problem.md) — enable full Qwen3-0.6B inference under CKKS, with staged credit for operators and decoder blocks | 100 | [HTML](agent_pset/p4_qwen/doc/problem.html) · [PDF](agent_pset/p4_qwen/doc/problem.pdf) |
 
+## WISE scheduling track — P5
+
+[P5 · WISE scheduling](agent_pset/p5_wise/doc/problem.md) adds six fixed MLP/CNN
+workloads, native Winograd layouts and the complete pretrained WISE MNIST CNN.
+Generate schedules with the pinned upstream WISE planner, execute them with
+CROSS CKKS, and optimize measured TPU performance against matched CROSS CPU
+and tuned native OpenFHE controls. The track has 100 points. See the
+[README](agent_pset/p5_wise/README.md), [HTML](agent_pset/p5_wise/doc/problem.html),
+[PDF](agent_pset/p5_wise/doc/problem.pdf), and
+[instructions for another TPU host](agent_pset/p5_wise/TPU_TESTING.md).
+Install the external WISE planner before running the combined reference checks.
+TPU calibration and proof of speedup remain incomplete.
+
 The proposed format is an eight-hour contest. P1 and P3 share the benchmark/CNN
-leaderboard; P2 and P4 each retain a separate leaderboard. Coding agents are
+leaderboard; P2, P4 and P5 each retain a separate leaderboard. Coding agents are
 allowed in every track. Duration, hardware, and resource limits below are
 proposed contest rules, not historical results.
 
@@ -80,7 +93,7 @@ From this directory:
 
 ```bash
 make all                 # syntax and package checks; does not solve the TODOs
-make reference-test      # 24 public numerical-reference checks; CPU
+make reference-test      # 30 public numerical-reference checks; CPU, requires WISE_ROOT
 make docs                # rebuild HTML/PDF (requirements-docs.txt)
 make release             # create contestant archive, applying EXCLUDE
 ```
