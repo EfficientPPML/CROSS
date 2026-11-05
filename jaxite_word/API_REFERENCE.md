@@ -459,8 +459,8 @@ operator.
 
 ### Bootstrap
 
-Mapping-owned bootstrap execution delegates to the repository's single private
-engine through its context.
+Mapping-owned bootstrap execution delegates to the CKKS bootstrap engine
+through its context.
 
 There is currently no way to request one from the public pipeline. A model is
 a `torch.nn.Module`, which has no notion of a bootstrap, and `packing.pack`
@@ -480,7 +480,57 @@ refinement.
 
 For an advanced standalone call, configure and set up the context's same
 bootstrap accessor with a precomputed bootstrap configuration, then call its
-`bootstrap` method. There is no second bootstrap engine.
+`bootstrap` method.
+
+### SHIP bootstrap
+
+SHIP uses the same `ctx.he_bootstrap` lifecycle as ordinary CKKS bootstrap,
+with CROSS NTT, Barrett reduction, basis conversion, rescale, and multiplication.
+
+```python
+from jaxite_word.ship import SHIPConfig
+
+config = SHIPConfig(weight=31, theta=9, gamma=8)
+plan = config.plan(ctx)
+ctx.he_bootstrap.configure(scheme="ship", ship_config=config).setup()
+ciphertext = ctx.encrypt(ctx.encode_at_level(values, 1, scale=plan.input_scale))
+refreshed = ctx.he_bootstrap.bootstrap(ciphertext)
+decoded = ctx.decrypt_slots(refreshed)
+```
+
+Setup requires the trusted key pair and prepares the evaluation keys, encoded
+constants, and kernels. Online input/output are native CROSS `Polynomial`
+objects; compiled regions use canonical rank-five uint32 arrays. Evaluation
+keys are runtime operands. `SHIPBootstrap(ctx, ...)` remains a compatibility
+wrapper around this facade.
+
+Mapping accepts a `SHIPConfig` as the argument of an explicit bootstrap PP-op:
+`('refresh', 'bootstrap', ('source',), config)`. It validates input metadata,
+prepares the same engine, and uses the operation as a fusion barrier. No
+frontend automatic bootstrap insertion is provided. Input-transform keys are
+prepared in SHIP's private two-limb context, rather than advertised as full-Q
+rotation keys. Meta-BTS is supported only by the ordinary CKKS engine.
+
+SHIP requires batch one, N/2 real slots, two input Q limbs, noise scale degree
+1, and `plan.input_scale`. The full encrypted path performs slot-to-coefficient
+conversion, dense-to-sparse key switching, then half-bootstrap back to the
+original key. Output metadata records the actual scale and remaining level.
+Supported arithmetic is Barrett with `composite_degree=1`, primes below 2^31,
+uint32 limbs, and uint64 intermediates. The functional N=16384 profile is not
+security-qualified.
+
+SHIP's supported map is `8/(2*pi)*sin(2*pi*m/8)` for real `abs(m)<=0.125`,
+with an empirical `2^-10` error target. It is not an arbitrary-amplitude identity
+bootstrap. Neither the evaluator nor the decoder's conjugate-symmetry check
+can establish real-message accuracy. The planner rejects insufficient P/Q
+margin and unstable product-tree scales. Default secure Packing parameters
+use composite degree 2 and are incompatible with this implementation.
+
+For weight 31 and eight Q primes, output level 1 permits one terminal multiply
+but no multiply between bootstraps. Inspect `plan.multiplication_levels` and
+`plan.multiplication_levels_before_rebootstrap`, and satisfy the input scale
+and noise scale degree again before refreshing. See
+[SHIP usage and validation](ship/README.md) for precise limits and checks.
 
 ## Levels
 

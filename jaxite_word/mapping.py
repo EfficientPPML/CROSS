@@ -31,6 +31,7 @@ from typing import Any, ClassVar, Iterator, List, Optional
 import jax.numpy as jnp
 import numpy as np
 
+import finite_field
 import key_gen as kg
 import polynomial as poly
 from he_params import HEParameterCache, normalize_noise_scale_degree
@@ -341,11 +342,18 @@ def _multiply_scale(
   if left.scale is None or right.scale is None:
     return None
   divisor = _rescale_divisor(left, ctx, 1)
-  if ctx.composite_degree == 1:
+  if not _multiply_post_rescale(left, right, ctx):
     result = (left.scale / divisor) * (right.scale / divisor)
   else:
     result = (left.scale / divisor) * right.scale
   return _checked_scale(result, step_id, 'multiply')
+
+
+def _multiply_post_rescale(left, right, ctx):
+  from he_ops import _multiply_post_rescale as choose
+  count = (left.level + 1) * ctx.composite_degree
+  return choose(ctx.composite_degree, ctx.degree, ctx.q_towers[:count],
+                left.scale, right.scale, ctx.parameters.get('sigma', 3.19))
 
 
 def _replace_spec(
@@ -494,6 +502,10 @@ def _plan_bsgs(constant, options, dimension, default_pt_scale):
 
 def _plan_bootstrap(ctx, argument):
   import bootstrapping
+  from ship.plan import SHIPConfig
+
+  if isinstance(argument, SHIPConfig):
+    return argument.plan(ctx)
 
   level_budget, secret_key_dist, _, _ = argument
   level_budget = tuple(level_budget)
@@ -524,6 +536,14 @@ def _plan_bootstrap(ctx, argument):
   )
 
 
+def _bootstrap_configuration(argument):
+  """Stable configuration key for either context-owned bootstrap engine."""
+  from ship.plan import SHIPConfig
+  if isinstance(argument, SHIPConfig):
+    return ('ship', argument)
+  return (tuple(argument[0]), argument[1])
+
+
 def _plan_step(step, inputs, ctx):
   source = inputs[0]
   step_id = _operation_id(step)
@@ -546,6 +566,7 @@ def _plan_step(step, inputs, ctx):
       )
     if source.level < 1:
       raise ValueError(f'operator {step_id!r} multiply underflows level 0.')
+    operation_plan = _multiply_post_rescale(inputs[0], inputs[1], ctx)
     return _replace_spec(
         source,
         ctx,
@@ -561,6 +582,7 @@ def _plan_step(step, inputs, ctx):
       )
     if source.level < 1:
       raise ValueError(f'operator {step_id!r} square underflows level 0.')
+    operation_plan = _multiply_post_rescale(source, source, ctx)
     return _replace_spec(
         source,
         ctx,
@@ -711,7 +733,12 @@ def _plan_step(step, inputs, ctx):
         nsd=source.nsd,
     ), operation_plan, rotations
   if kind == 'bootstrap':
-    level_budget, _, mode, precision = argument
+    from ship.plan import SHIPConfig
+    ship = isinstance(argument, SHIPConfig)
+    if ship:
+      mode, precision = 'single', None
+    else:
+      _, _, mode, precision = argument
     if source.scale is None:
       raise ValueError(
           f'operator {step_id!r} bootstrap requires a known input scale.'
@@ -723,6 +750,10 @@ def _plan_step(step, inputs, ctx):
           'operations.'
       )
     operation_plan = _plan_bootstrap(ctx, argument)
+    if ship:
+      if source.batch != 1:
+        raise ValueError('SHIP requires one ciphertext per request')
+      operation_plan.validate_input(source.level, source.scale, source.nsd)
     output_level = operation_plan.expected_output_level
     if output_level < 0:
       raise ValueError(
@@ -975,7 +1006,7 @@ def _analyze_mapping(mapping, *, perf_test: bool = False) -> None:
     # modulo the slot count.
     rotations.extend(int(index) for index in operation_rotations)
   bootstrap_configurations = {
-      (_operation_argument(operation)[0], _operation_argument(operation)[1])
+      _bootstrap_configuration(_operation_argument(operation))
       for operation in packing.operations
       if _operation_kind(operation) == 'bootstrap'
   }
@@ -1051,16 +1082,19 @@ def _bind_operation(ctx, mapping, operation, bootstrap_target):
     return evaluator._sub_array
   if kind == 'mul':
     evaluator = ctx.he_mul[output_spec.level]
-    return evaluator._mul_array
+    return lambda left, right: evaluator._mul_array(
+        left, right, post_rescale=operation_plan)
   if kind == 'square':
     evaluator = ctx.he_mul[output_spec.level]
-    return evaluator._square_array
+    return lambda value: evaluator._square_array(value, post_rescale=operation_plan)
   if kind == 'rotate':
     index = operation_plan
     if index == 0:
       return lambda value: value
     evaluator = ctx.he_rot[input_spec.level, index]
-    return evaluator._rotate_array
+    centered = (input_spec.scale is not None and input_spec.scale < 2**40
+                and ctx._param_cache.ff_context_cls is finite_field.BarrettContext)
+    return lambda value: evaluator._rotate_array(value, centered=centered)
   if kind == 'rescale':
     evaluator = ctx.he_rescale[input_spec.level, output_spec.level]
     return evaluator._rescale_array
@@ -1126,6 +1160,9 @@ def _bind_operation(ctx, mapping, operation, bootstrap_target):
         else evaluator._matvec_array
     )
   if kind == 'bootstrap':
+    from ship.plan import SHIPConfig
+    if isinstance(argument, SHIPConfig):
+      return bootstrap_target.bootstrap
     _, _, mode, precision = argument
     if mode == 'single':
       return bootstrap_target.bootstrap
@@ -1144,13 +1181,13 @@ def _prepare_bindings(ctx, mapping):
     if _operation_kind(operation) != 'bootstrap':
       continue
     operation_id = _operation_id(operation)
-    level_budget, secret_key_dist, _, _ = _operation_argument(operation)
+    argument = _operation_argument(operation)
     spec = mapping.value_specs[_operation_inputs(operation)[0]]
     if spec.scale is None or spec.nsd is None:
       raise ValueError(
           f'bootstrap operator {operation_id!r} requires known scale and nsd.'
       )
-    configuration = (level_budget, secret_key_dist)
+    configuration = _bootstrap_configuration(argument)
     bootstrap_groups.setdefault(configuration, []).append(operation)
   if len(bootstrap_groups) > 1:
     raise ValueError(
@@ -1160,7 +1197,7 @@ def _prepare_bindings(ctx, mapping):
   bootstrap_target = None
   if bootstrap_groups:
     configuration, operations = next(iter(bootstrap_groups.items()))
-    level_budget, secret_key_dist = configuration
+    ship = configuration[0] == 'ship'
     bootstrap_plan = mapping.operation_plans[_operation_id(operations[0])]
     if any(
         mapping.operation_plans[_operation_id(operation)] != bootstrap_plan
@@ -1178,9 +1215,7 @@ def _prepare_bindings(ctx, mapping):
     facade = ctx.he_bootstrap
     if getattr(facade, '_configured', False):
       if (
-          facade._configuration != (
-              tuple(level_budget), secret_key_dist
-          )
+          facade._configuration != configuration
           or facade._input_specs != input_specs
       ):
         raise RuntimeError(
@@ -1189,11 +1224,17 @@ def _prepare_bindings(ctx, mapping):
       if not facade._is_setup:
         facade.setup()
     else:
-      facade.configure(
-          level_budget=list(level_budget),
-          secret_key_dist=secret_key_dist,
-          input_specs=input_specs,
-      ).setup()
+      if ship:
+        facade.configure(
+            scheme='ship', ship_config=configuration[1], input_specs=input_specs,
+        ).setup()
+      else:
+        level_budget, secret_key_dist = configuration
+        facade.configure(
+            level_budget=list(level_budget),
+            secret_key_dist=secret_key_dist,
+            input_specs=input_specs,
+        ).setup()
     bootstrap_target = getattr(facade, '_engine', facade)
 
   for operation in mapping.packing.operations:
@@ -1496,7 +1537,13 @@ class Mapping:
     )
     rotation_key_count = len(self.required_rotation_indices)
     rotation_keys_bytes = rotation_key_count * evaluation_key_bytes
+    bootstrap_bytes = 0
+    accessor = getattr(self.ctx, '_he_bootstrap', None)
+    engine = getattr(accessor, '_engine', None)
+    if getattr(accessor, '_scheme', None) == 'ship' and engine is not None:
+      bootstrap_bytes = engine.resident_array_bytes()
     total_bytes = sum((
+        bootstrap_bytes,
         ciphertext_in_bytes,
         ciphertext_out_bytes,
         matvec_constants_bytes,
@@ -1512,6 +1559,7 @@ class Mapping:
         'evaluation_key_bytes': evaluation_key_bytes,
         'rotation_keys_bytes': rotation_keys_bytes,
         'rotation_key_count': rotation_key_count,
+        'bootstrap_bytes': bootstrap_bytes,
         'total_bytes': total_bytes,
     }
 

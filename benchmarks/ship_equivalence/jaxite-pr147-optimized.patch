@@ -1,0 +1,375 @@
+diff --git a/jaxite/jaxite_ckks/blind_rotate.py b/jaxite/jaxite_ckks/blind_rotate.py
+index 7ed59da..802459c 100644
+--- a/jaxite/jaxite_ckks/blind_rotate.py
++++ b/jaxite/jaxite_ckks/blind_rotate.py
+@@ -295,45 +295,25 @@ class BlindRotation:
+     ])
+ 
+     num_moduli = pts[0].data.shape[-1]
+-    total_terms = len(pts) * theta
+-
+-    if total_terms <= 16:
+-      summed_data = jnp.zeros((2, degree, num_moduli), dtype=jnp.uint64)
+-      for k, pt in enumerate(pts):
+-        pt_data_u64 = pt.data.astype(jnp.uint64)
+-        for t in range(theta):
+-          pt_rot = blind_rotate_utils.apply_automorphism_ntt(pt_data_u64, gs[t])  # pyrefly: ignore[bad-argument-type]
+-          summed_data += (
+-              stacked_cmkey_data[k, t].astype(jnp.uint64)
+-              * pt_rot[jnp.newaxis, :, :]
+-          )
+-      reduced_data = barrett.modular_reduction(
+-          summed_data, self.mul_kernel.barrett_constants
+-      )
+-    else:
+-      summed_data = jnp.zeros((2, degree, num_moduli), dtype=jnp.uint64)
+-      for k, pt in enumerate(pts):
+-        pt_data_u64 = pt.data.astype(jnp.uint64)
+-        inner_reduced_sum = jnp.zeros((2, degree, num_moduli), dtype=jnp.uint64)
+-        for t_chunk in range(0, theta, 16):
+-          chunk_sum = jnp.zeros((2, degree, num_moduli), dtype=jnp.uint64)
+-          for t in range(t_chunk, min(t_chunk + 16, theta)):
+-            pt_rot = blind_rotate_utils.apply_automorphism_ntt(
+-                pt_data_u64, gs[t]  # pyrefly: ignore[bad-argument-type]
+-            )
+-            chunk_sum += (
+-                stacked_cmkey_data[k, t].astype(jnp.uint64)
+-                * pt_rot[jnp.newaxis, :, :]
+-            )
+-          chunk_reduced = barrett.modular_reduction(
+-              chunk_sum, self.mul_kernel.barrett_constants
+-          )
+-          inner_reduced_sum += chunk_reduced.astype(jnp.uint64)
+-        summed_data += inner_reduced_sum
+-
+-      reduced_data = barrett.modular_reduction(
+-          summed_data, self.mul_kernel.barrett_constants
+-      )
++    # Barrett reduction expects one product, not an unbounded sum of products.
++    # Reducing each term also prevents overflow for 31-bit primes; the sum of
++    # two canonical residues is below 2**32.
++    reduced_data = jnp.zeros((2, degree, num_moduli), dtype=jnp.uint32)
++    for k, pt in enumerate(pts):
++      pt_data_u64 = pt.data.astype(jnp.uint64)
++      for t in range(theta):
++        pt_rot = blind_rotate_utils.apply_automorphism_ntt(pt_data_u64, gs[t])
++        product = (
++            stacked_cmkey_data[k, t].astype(jnp.uint64)
++            * pt_rot[jnp.newaxis, :, :]
++        )
++        term = barrett.modular_reduction(
++            product, self.mul_kernel.barrett_constants
++        )
++        total = reduced_data + term
++        reduced_data = jnp.where(
++            total >= self.all_moduli, total - self.all_moduli, total
++        )
+ 
+     ct_giant = types.Ciphertext(
+         data=reduced_data.astype(jnp.uint32), moduli=self.all_moduli
+diff --git a/jaxite/jaxite_ckks/blind_rotate_test.py b/jaxite/jaxite_ckks/blind_rotate_test.py
+index ce60d4a..d75a017 100644
+--- a/jaxite/jaxite_ckks/blind_rotate_test.py
++++ b/jaxite/jaxite_ckks/blind_rotate_test.py
+@@ -14,6 +14,8 @@
+ 
+ """Tests for blind rotation kernels."""
+ 
++from unittest import mock
++
+ import hypothesis
+ from hypothesis import strategies as st
+ import jax
+@@ -40,6 +42,26 @@ def _cyclic_roll(arr: np.ndarray, shift: int) -> np.ndarray:
+ 
+ class BlindRotateTest(parameterized.TestCase):
+ 
++  def test_hybrid_accumulator_31_bit_products(self):
++    # 32 products of (q-1)^2 exceed uint64 and the single-product Barrett bound.
++    degree, theta = 16, 8
++    q = 2013265921
++    moduli = jnp.array([q], dtype=jnp.uint32)
++    pt = types.Plaintext(jnp.full((degree, 1), q - 1, jnp.uint32), moduli)
++    key = types.Ciphertext(jnp.full((2, degree, 1), q - 1, jnp.uint32), moduli)
++    kernel = blind_rotate.BlindRotation()
++    kernel.all_moduli = moduli
++    kernel.mul_kernel.precompute_constants([q])
++    # Isolate the giant-step sum before modulus-down and mux rotation.
++    kernel.rescale_kernel = mock.Mock()
++    kernel.rescale_kernel.rescale.side_effect = lambda ct: ct
++    kernel.brot_mux = mock.Mock(side_effect=lambda **kwargs: kwargs["ct_in"])
++    result = kernel.brot_hybrid(
++        (pt,) * 4, [[key] * theta for _ in range(4)], [], [], theta
++    )
++    np.testing.assert_array_equal(result.data, np.full((2, degree, 1), 32))
++    self.assertEqual(result.data.dtype, jnp.uint32)
++
+   @parameterized.named_parameters(
+       ("standard", 4, 2),
+       ("secret_idx_0", 4, 0),
+diff --git a/jaxite/jaxite_ckks/bootstrapping.py b/jaxite/jaxite_ckks/bootstrapping.py
+index bccc8d9..a01290f 100644
+--- a/jaxite/jaxite_ckks/bootstrapping.py
++++ b/jaxite/jaxite_ckks/bootstrapping.py
+@@ -100,7 +100,6 @@ class SHIP:
+     self.final_ntt: ntt.NTTBarrett = ntt.NTTBarrett()
+     self.brot_kernel: blind_rotate.BlindRotation = blind_rotate.BlindRotation()
+     self.online_encoder: boot_utils.OnlineEncoder = boot_utils.OnlineEncoder()
+-    self.nonzero_idx: jax.Array = np.array([], dtype=np.uint32)  # pyrefly: ignore[bad-assignment]
+ 
+     self.batched_cmkeys: types.Ciphertext = types.Ciphertext(
+         jnp.empty((0,)), jnp.empty((0,))
+@@ -132,7 +131,6 @@ class SHIP:
+         self.final_rescale,
+         self.final_ntt,
+         self.brot_kernel,
+-        self.nonzero_idx,
+         self.batched_cmkeys,
+         self.batched_mmkeys,
+         self.bat_switcher,
+@@ -170,7 +168,6 @@ class SHIP:
+         obj.final_rescale,
+         obj.final_ntt,
+         obj.brot_kernel,
+-        obj.nonzero_idx,
+         obj.batched_cmkeys,
+         obj.batched_mmkeys,
+         obj.bat_switcher,
+@@ -200,8 +197,14 @@ class SHIP:
+       sk: types.SecretKey,
+       theta: int,
+       random_source: random.RandomSource,
++      output_sk: types.SecretKey | None = None,
+   ):
+-    """Precomputes the NTT and tree constants needed for half-bootstrapping."""
++    """Precomputes half-bootstrap keys on the trusted key-generation host.
++
++    sk is the sparse input secret. If supplied, output_sk is the independent
++    output secret under Q; all evaluation keys are encrypted under this key.
++    Neither secret nor the input secret's support is retained in the kernel.
++    """
+     self.degree = degree
+     self.num_slots = degree // 2
+ 
+@@ -220,6 +223,20 @@ class SHIP:
+     s_coeffs_flat = s_coeffs.flatten()
+     nonzero_idx = np.flatnonzero(s_coeffs_flat).tolist()
+     h = len(nonzero_idx)
++    q0 = int(sk.moduli[0])
++    if not np.all(np.isin(s_coeffs_flat, [0, 1, q0 - 1])):
++      raise ValueError("SHIP requires a binary or ternary input secret")
++    if h == 0 or len(q_limbs) < (h - 1).bit_length() + 2:
++      raise ValueError("SHIP needs a nonzero secret and enough Q limbs for its tree")
++    if not 1 <= theta <= self.num_slots:
++      raise ValueError("theta must be between 1 and degree // 2")
++    if any(q >= 2**31 or (q - 1) % (2 * degree) for q in q_limbs + p_limbs):
++      raise ValueError("SHIP requires NTT primes below 2**31")
++    # Keep the input support local: binary support reveals the complete key.
++    if output_sk is not None:
++      sk = output_sk
++    if sk.data.shape != (degree, len(q_limbs)) or not np.array_equal(sk.moduli, q_limbs):
++      raise ValueError("The output secret must use the full Q basis")
+     pq_limbs = q_limbs + p_limbs
+     q0_limbs = [q_limbs[0]]
+ 
+@@ -307,7 +324,7 @@ class SHIP:
+     self.mul_kernel_lvl.precompute_constants(ext_moduli_lvl)
+ 
+     self.rescale_kernel_lvl.precompute_constants(
+-        ext_moduli_lvl, num_rescales=1, r=r, c=c
++        ext_moduli_lvl, num_rescales=len(p_limbs), r=r, c=c
+     )
+ 
+     self.add_kernel.precompute_constants(curr_moduli)
+@@ -377,7 +394,6 @@ class SHIP:
+         start_control_index=1,
+     )
+ 
+-    self.nonzero_idx = jnp.array(nonzero_idx, dtype=jnp.uint32)
+     cmkeys_list = []
+     mmkeys_list = []
+     for idx in nonzero_idx:
+@@ -385,7 +401,7 @@ class SHIP:
+           sk=sk,
+           j=idx,
+           idx=idx,
+-          s_j=1,
++          s_j=1 if s_coeffs_flat[idx] == 1 else -1,
+           theta=theta,
+           q_limbs=q_limbs,
+           p_limbs=p_limbs,
+diff --git a/jaxite/jaxite_ckks/bootstrapping_test.py b/jaxite/jaxite_ckks/bootstrapping_test.py
+index f305e9f..ddc14a3 100644
+--- a/jaxite/jaxite_ckks/bootstrapping_test.py
++++ b/jaxite/jaxite_ckks/bootstrapping_test.py
+@@ -68,6 +68,52 @@ def get_phase_shifts(degree, j):
+ 
+ class BootstrappingTest(absltest.TestCase):
+ 
++  def test_noisy_signed_input_independent_output_key_two_aux_primes(self):
++    degree = 16
++    q_limbs = TEST_PRIMES[:2]
++    p_limbs = TEST_PRIMES[2:4]
++    scale = float(q_limbs[-1])
++    source = random.TestRandomSource(2026)
++    # The last baby-step group is partial: ceil(8 / 3) needs two mux bits.
++    input_coeffs = np.zeros((degree, 1), dtype=np.uint64)
++    input_coeffs[7, 0] = q_limbs[0] - 1
++    input_sk = types.SecretKey(
++        ntt_cpu.ntt_negacyclic_poly(input_coeffs, q_limbs[:1]),
++        np.array(q_limbs[:1], dtype=np.uint32),
++    )
++    output_coeffs = np.resize(np.array([-1, 0, 1]), degree)
++    output_residues = np.column_stack([
++        output_coeffs % q for q in q_limbs
++    ]).astype(np.uint64)
++    output_sk = types.SecretKey(
++        ntt_cpu.ntt_negacyclic_poly(output_residues, q_limbs),
++        np.array(q_limbs, dtype=np.uint32),
++    )
++    pk, _ = key_gen.keygen(
++        degree, q_limbs[:1], random_source=source, sk=input_sk
++    )
++    ship = bootstrapping.SHIP()
++    ship.precompute_constants(
++        q_limbs, p_limbs, degree, 1, input_sk, 3, source,
++        output_sk=output_sk,
++    )
++    self.assertFalse(hasattr(ship, "nonzero_idx"))
++    # Ensure a pytree round-trip does not reintroduce the private support.
++    leaves, structure = jax.tree.flatten(ship)
++    restored = jax.tree.unflatten(structure, leaves)
++    self.assertFalse(hasattr(restored, "nonzero_idx"))
++    mu = np.linspace(-0.1, 0.1, degree // 2)
++    pt = encode_coeffs(mu, degree, q_limbs[0], q_limbs[:1])
++    ct = encrypt.Encrypt(pk).encrypt(pt, random_source=source)
++    out = jax.jit(lambda k, c: k.half_bootstrap(c, 3, scale))(restored, ct)
++    self.assertEqual(out.data.shape, (2, degree, 1))
++    self.assertEqual(out.data.dtype, jax.numpy.uint32)
++    decoded = encode.Decode(scale, degree // 2).decode(
++        encrypt.Decrypt(output_sk).decrypt(out)
++    )
++    expected = np.sin(2 * np.pi * mu) / (2 * np.pi)
++    np.testing.assert_allclose(decoded, expected, atol=1e-4, rtol=0)
++
+   def test_half_bootstrap_hw1(self):
+     degree = 16
+     q_limbs = TEST_PRIMES[:-1]
+diff --git a/jaxite/jaxite_ckks/key_gen.py b/jaxite/jaxite_ckks/key_gen.py
+index 7be8d87..25fb3a3 100644
+--- a/jaxite/jaxite_ckks/key_gen.py
++++ b/jaxite/jaxite_ckks/key_gen.py
+@@ -71,10 +71,17 @@ def extend_secret_key(
+     raise ValueError("target_moduli must start with secret_key.moduli")
+ 
+   s_coeffs = ntt_cpu.intt_negacyclic_poly(secret_key.data, current_moduli)
+-  s_coeffs_single = s_coeffs[:, 0]
+-  s_coeffs_extended = np.tile(
+-      s_coeffs_single[:, np.newaxis], (1, len(target_moduli))
++  # Center before extending: q0 - 1 represents -1, not a positive integer
++  # that can be copied unchanged into every other modulus.
++  s_coeffs_single = s_coeffs[:, 0].astype(np.int64)
++  s_coeffs_single = np.where(
++      s_coeffs_single > current_moduli[0] // 2,
++      s_coeffs_single - current_moduli[0],
++      s_coeffs_single,
+   )
++  s_coeffs_extended = np.column_stack([
++      s_coeffs_single % q for q in target_moduli
++  ]).astype(np.uint64)
+   s_ext_slots = ntt_cpu.ntt_negacyclic_poly(s_coeffs_extended, target_moduli)
+   return SecretKey(s_ext_slots, np.array(target_moduli, dtype=np.uint64))
+ 
+@@ -326,7 +333,9 @@ def gen_hmuxrot_key(
+     dest_sk_ext = sk_ext
+ 
+   p_val = math.prod(p_limbs)
+-  scaled_val0 = (p_val * beta) % all_moduli_u64
++  scaled_val0 = np.array(
++      [(p_val * beta) % q for q in all_moduli], dtype=np.uint64
++  ).reshape(1, -1)
+ 
+   # key0 is a key-switching key from beta * sk(X^{5^{-j}}) to sk.
+   g = pow(5, -j, 2 * degree)
+@@ -460,7 +469,7 @@ def gen_hybrid_key(
+   random_source = random_source or random.SecureRandomSource()
+   degree = sk.data.shape[0]
+   num_slots = degree // 2
+-  num_giant_steps = num_slots // theta
++  num_giant_steps = (num_slots + theta - 1) // theta
+   all_moduli = q_limbs + p_limbs
+ 
+   sk_ext = extend_secret_key(sk, all_moduli)
+diff --git a/jaxite/jaxite_ckks/key_gen_test.py b/jaxite/jaxite_ckks/key_gen_test.py
+index 281a1a3..cc35249 100644
+--- a/jaxite/jaxite_ckks/key_gen_test.py
++++ b/jaxite/jaxite_ckks/key_gen_test.py
+@@ -3,7 +3,9 @@
+ from jaxite.jaxite_ckks import encode
+ from jaxite.jaxite_ckks import encrypt
+ from jaxite.jaxite_ckks import key_gen
++from jaxite.jaxite_ckks import math as ckks_math
+ from jaxite.jaxite_ckks import ntt_cpu
++from jaxite.jaxite_ckks import types
+ import numpy as np
+ 
+ from absl.testing import absltest
+@@ -18,6 +20,35 @@ TEST_PRIMES = (
+ 
+ class KeyGenTest(absltest.TestCase):
+ 
++  def test_cpu_ntt_31_bit_modulus_matches_integer_reference(self):
++    degree = 16
++    modulus = 2013265921
++    coefficients = np.array(
++        [modulus - 1, modulus - 2, 0, 1] * 4, dtype=np.uint64
++    )
++    psi = ckks_math.root_of_unity(2 * degree, modulus)
++    reference = ntt_cpu.ntt_negacyclic_bit_reverse(
++        coefficients, modulus, psi, dtype=object
++    )[ntt_cpu._get_bit_reversal_perm(degree)]
++    actual = ntt_cpu.ntt_negacyclic_poly(coefficients[:, None], [modulus])
++    np.testing.assert_array_equal(actual[:, 0], reference.astype(np.uint64))
++    recovered = ntt_cpu.intt_negacyclic_poly(actual, [modulus])
++    np.testing.assert_array_equal(recovered[:, 0], coefficients)
++
++  def test_extend_signed_secret(self):
++    coefficients = np.array([-1, 0, 1, -1], dtype=np.int64)
++    moduli = list(TEST_PRIMES)
++    original = types.SecretKey(
++        ntt_cpu.ntt_negacyclic_poly(
++            (coefficients[:, None] % moduli[0]).astype(np.uint64), moduli[:1]
++        ),
++        np.array(moduli[:1], dtype=np.uint64),
++    )
++    extended = key_gen.extend_secret_key(original, moduli)
++    actual = ntt_cpu.intt_negacyclic_poly(extended.data, moduli)
++    expected = np.column_stack([coefficients % q for q in moduli])
++    np.testing.assert_array_equal(actual, expected)
++
+   def test_keygen_with_hamming_weight(self):
+     degree = 4
+     moduli = [TEST_PRIMES[0]]
+diff --git a/jaxite/jaxite_ckks/ntt_cpu.py b/jaxite/jaxite_ckks/ntt_cpu.py
+index 26da660..05a2cb5 100644
+--- a/jaxite/jaxite_ckks/ntt_cpu.py
++++ b/jaxite/jaxite_ckks/ntt_cpu.py
+@@ -122,7 +122,8 @@ def ntt_negacyclic_poly(poly: np.ndarray, moduli: list[int]) -> np.ndarray:
+   res = np.zeros((degree, num_moduli), dtype=np.uint64)
+   perm = _get_bit_reversal_perm(degree)
+   for i, q in enumerate(moduli):
+-    dtype = np.uint64 if q < 2**30 else object
++    # Even an unreduced butterfly product is below 2*q**2.
++    dtype = np.uint64 if q < 2**31 else object
+     psi = ckks_math.root_of_unity(2 * degree, q)
+     coeffs = poly[:, i]
+     ntt_res = ntt_negacyclic_bit_reverse(coeffs, q, psi, dtype=dtype)
+@@ -137,7 +138,7 @@ def intt_negacyclic_poly(poly: np.ndarray, moduli: list[int]) -> np.ndarray:
+   res = np.zeros((degree, num_moduli), dtype=np.uint64)
+   perm = _get_bit_reversal_perm(degree)
+   for i, q in enumerate(moduli):
+-    dtype = np.uint64 if q < 2**30 else object
++    dtype = np.uint64 if q < 2**31 else object
+     psi = ckks_math.root_of_unity(2 * degree, q)
+     coeffs = poly[:, i]
+     coeffs_rev = coeffs[perm]

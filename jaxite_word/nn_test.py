@@ -114,6 +114,8 @@ class PackageBoundaryTest(absltest.TestCase):
             'Mapping',
             'Packing',
             'Polynomial',
+            'SHIPBootstrap',
+            'SHIPConfig',
             'vectorize',
             'pack',
             'mapping',

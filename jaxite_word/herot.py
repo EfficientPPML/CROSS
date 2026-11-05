@@ -320,7 +320,7 @@ class _HERotKernel:
     )
 
   def _rotate_array(
-      self, ct_data, eval_a=None, eval_b=None, coef_map=None
+      self, ct_data, eval_a=None, eval_b=None, coef_map=None, *, centered=False
   ):
     """Rotate a canonical rank-5 payload through the HYBRID steps.
 
@@ -343,12 +343,12 @@ class _HERotKernel:
     # fused streaming implementation: uint32 add/sub is wrap-safe there and
     # keeping the two key-switch components separate avoids materializing a
     # full two-component QP temporary before ModDown.
-    if self.ff_context_cls is BarrettContext and all(
+    if not centered and self.ff_context_cls is BarrettContext and all(
         modulus < 1 << 31 for modulus in self.overall_moduli
     ):
       return self._rotate_barrett_fused(ct_data, eval_a, eval_b, coef_map)
     switched_qp = self._key_switch_array(ct_data, eval_a, eval_b)
-    switched_q = self._mod_down_array(switched_qp)
+    switched_q = self._mod_down_array(switched_qp, centered=centered)
     with_first = self._add_first_component_array(switched_q, ct_data)
     return self._automorphism_array(with_first, coef_map)
 
@@ -772,7 +772,7 @@ class _HERotKernel:
     )
     return ff_full.strictify(result).astype(jnp.uint32)
 
-  def _mod_down_array(self, qp_data):
+  def _mod_down_array(self, qp_data, *, centered=False):
     """ApproxModDown one or more QP components into the active Ql basis."""
     self._require_controls()
     qp_data = jnp.asarray(qp_data, dtype=jnp.uint32)
@@ -808,9 +808,26 @@ class _HERotKernel:
       p_coeffs = self.ct_approx.ntt_ctx.intt(
           p_part.reshape(-1, self.r, self.c, p_shape[-1])
       ).reshape(p_shape)
+      # Center the approximate CRT representative around zero. Keep the
+      # recorded OpenFHE convention unchanged unless explicitly selected.
+      if centered:
+        if self.ff_context_cls is not BarrettContext:
+          raise ValueError("Centered ModDown currently requires Barrett residues")
+        p_product = math.prod(self.extend_moduli)
+        k = len(self.extend_moduli)
+        offset = p_product // 2 if k % 2 else 0
+        correction = offset + (k // 2) * p_product
+        p_moduli = jnp.asarray(self.extend_moduli, jnp.uint64)
+        shift = jnp.asarray([offset % p for p in self.extend_moduli], jnp.uint64)
+        p_coeffs = ((p_coeffs.astype(jnp.uint64) + shift) % p_moduli).astype(jnp.uint32)
       q_from_p = self.bconv.basis_change_bat(
           p_coeffs, control_index=self.numPartQl
       ).astype(jnp.uint32)
+      if centered:
+        correction_q = jnp.asarray(
+          [correction % q for q in self.overall_moduli[:self.sizeQl]], jnp.uint64)
+        q_from_p = ((q_from_p.astype(jnp.uint64) + q_moduli - correction_q)
+                    % q_moduli).astype(jnp.uint32)
       q_shape = q_from_p.shape
       q_from_p_ntt = self.ct_in.ntt_ctx.ntt(
           q_from_p.reshape(-1, self.r, self.c, self.sizeQl)
