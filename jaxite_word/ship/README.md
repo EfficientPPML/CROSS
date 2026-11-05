@@ -58,7 +58,7 @@ Default trusted setup also uses CROSS's vectorized OS-random uniform and
 discrete-Gaussian samplers. The inherited deterministic source is used only
 in tests. Host NTT reference tables are cached for larger key-generation jobs.
 
-SHIP-specific selector keys, binary mux orchestration, online phase encoding,
+SHIP-specific selector keys, binary mux orchestration, and online phase encoding
 remain algorithm-specific. Selector products use HERot decomposition and key-switch
 cores with raw uint32 keys, one lift/drop per mux step, and a two-step P drop.
 Keys are assembled on the host before the final device transfer. Evaluation keys are

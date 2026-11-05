@@ -27,6 +27,8 @@ parser.add_argument('--q0-bits', type=int, default=30)
 parser.add_argument('--upstream-fixture', action='store_true',
                     help='Use upstream hw1 test constants and zero noise as a control')
 parser.add_argument('--output', type=Path, required=True)
+parser.add_argument('--expected-patch', type=Path,
+                    help='Allow only this exact tracked diff; label the result as patched')
 args = parser.parse_args()
 if args.degree < 8 or args.degree & (args.degree - 1):
     parser.error('degree must be a power of two >= 8')
@@ -41,7 +43,11 @@ root = source.parents[2]
 sha = subprocess.check_output(['git', '-C', str(root), 'rev-parse', 'HEAD'], text=True).strip()
 if sha != '1c35ddd29179e946ab7d08515053cefd7e76c46e':
     raise RuntimeError(f'Unexpected upstream revision: {sha}')
-if subprocess.check_output(['git', '-C', str(root), 'status', '--porcelain', '--untracked-files=no'], text=True).strip():
+diff = subprocess.check_output(['git', '-C', str(root), 'diff', 'HEAD', '--'], text=True)
+if args.expected_patch:
+    if diff != args.expected_patch.read_text():
+        raise RuntimeError('Baseline diff does not match the specified correctness patch')
+elif diff:
     raise RuntimeError('Baseline checkout has tracked modifications')
 used = set()
 def primes(bits, count):
@@ -66,6 +72,8 @@ if args.upstream_fixture:
 scale = float(2**30 if args.upstream_fixture else q[-1])
 gamma = 1.0 if args.upstream_fixture else 8.0
 report = dict(source_commit=sha, source_sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
+              variant='correctness-patched upstream' if args.expected_patch else 'pristine upstream',
+              patch_sha256=hashlib.sha256(diff.encode()).hexdigest() if diff else None,
               degree=args.degree, q=q, p=p, weight=args.weight, theta=args.theta,
               backend=jax.default_backend(), jax_version=jax.__version__,
               scope='coefficient-to-slot compatibility probe, not a full-bootstrap benchmark',

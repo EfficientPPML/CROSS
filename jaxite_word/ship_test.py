@@ -407,6 +407,7 @@ def test_public_multiply_after_ship_and_rescale_metadata():
 @pytest.mark.parametrize('case', ['p_margin', 'scale_high', 'scale_low', 'gamma'])
 def test_reject_unsafe_ship_parameter_profiles(case):
   from types import SimpleNamespace
+
   from ship import SHIPConfig
   n = 1024
   q,p = primes(n, 8, 9)
@@ -454,6 +455,7 @@ def test_public_ship_multiply_refresh_cycle():
 @pytest.mark.parametrize('mode', ['whole', 'operations'])
 def test_mapping_multiply_after_ship(kind, mode):
   from types import SimpleNamespace
+
   import mapping
   import packing
   from ship import SHIPConfig
@@ -513,3 +515,14 @@ def test_seed_covers_private_rotation_keys_and_setup_can_retry(monkeypatch):
   repeated_keys = repeated.input_context._param_cache.raw_rotation_keys
   for left, right in zip(jax.tree.leaves(original_keys), jax.tree.leaves(repeated_keys)):
     np.testing.assert_array_equal(left,right)
+
+
+def test_low_scale_bsgs_full_ring_baby_and_giant_steps():
+  ctx = _review_context(16384, 8, 9, (1,64,128))
+  values = np.random.default_rng(181).uniform(-.125,.125,ctx.num_slots)
+  ct = ctx.encrypt(ctx.encode_at_level(values.tolist(),1,scale=ctx.q_towers[-1]))
+  op = ctx.bsgs_matvec[1,ctx.num_slots,64,128]
+  op.preprocess({1: np.full(ctx.num_slots,.5),128: np.full(ctx.num_slots,.5)})
+  out = op.matvec(ct)
+  expected = .5*np.roll(values,-1)+.5*np.roll(values,-128)
+  np.testing.assert_allclose(ctx.decrypt_slots(out),expected,atol=2**-10,rtol=0)

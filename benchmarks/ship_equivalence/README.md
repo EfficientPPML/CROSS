@@ -1,4 +1,4 @@
-# Pristine SHIP compatibility checks
+# Matched bootstrap comparison and compatibility checks
 
 The requested comparison holds ring degree, slot count, Q/P prime lists,
 input/output active Q subsets, input/output scales, and retained application
@@ -10,8 +10,8 @@ satisfy this contract and must not fill missing benchmark cells.
 
 Unoptimized means pristine `google/jaxite` remote `main`, resolved 2026-11-03:
 `1c35ddd29179e946ab7d08515053cefd7e76c46e`.
-The probe checks that exact HEAD and rejects tracked modifications. It does
-not monkeypatch or modify upstream code. The locally modified PR147 checkout
+The probe checks that exact HEAD and rejects tracked modifications unless
+`--expected-patch` names the exact reviewed diff. The locally modified PR147 checkout
 is not this baseline. The historical 1724.291 ms result is not a measurement
 of this baseline.
 
@@ -100,11 +100,114 @@ runtime version, scales, fixture/noise information, stage, and pass/fail.
 Failed operations include a traceback. One process per invocation avoids
 cross-case reuse of upstream mutable kernel defaults.
 
-## Remaining benchmark work
+## Authorized lightweight repairs and full-bootstrap checks
 
-The pristine row currently has no valid common-profile latency. Correctness
-repairs, if made, belong to a separately named patched/optimized Jaxite
-variant. Pin its patch/source hash and distinguish correctness repairs from
-performance optimizations. The other implementations still need a validated
-common profile, equal output capacity verified with a subsequent multiplication,
-and fresh complete TPU traces before publishing comparative latency numbers.
+`jaxite-correctness.patch` applies to the pinned upstream main revision. It
+removes the complete P basis during conjugation, reduces large key constants
+before NumPy conversion, supports signed sparse keys and a separate dense output
+key, includes a partial final rotation block, and reduces modular products before
+accumulation. This variant is **correctness-patched upstream main**, not pristine
+main and not the optimized PR147 variant. `test_jaxite_patch.py` covers signed
+secret-key extension and accumulation near the supported modulus boundary.
+
+`cross-cd1-correctness.patch` is an **experimental**
+native CROSS patch. It repairs degree-1 multiplication level selection,
+sub-resolution scalar handling, and degree-1 transform scaling constants.
+It has only been applied in an isolated checkout; the production kernel has
+not been changed. Passing execution alone is insufficient for publication.
+
+`run_common.py` runs complete encrypted slot-to-slot bootstraps. The Jaxite
+variants use the same CROSS encrypted input adapter as CROSS SHIP and their
+respective Jaxite half-bootstrap kernels. Adapter work and output normalization
+are included in timing; setup and compilation are excluded. This must be
+described as Jaxite SHIP **with a common CROSS input adapter**, not an entirely
+upstream end-to-end implementation.
+
+`common-n32.json` is the exact **CPU correctness-only** candidate: N=32,
+16 slots, composite degree 1, 23 Q primes, 24 P primes, input/output scale
+1,073,741,441 (approximately 2^30), input/output Q subset equal to the first
+two primes. The error gate is 2^-10 for both bootstrap and a subsequent square
+followed by rescaling. It is not a secure application profile. Larger-ring
+TPU runs require a separately validated common manifest.
+
+The initial native CROSS configurations failed the accuracy gate, including a correction-factor-7,
+Meta-BTS-precision-4 diagnostic (maximum ramp error about 0.00796). Reports in
+`results/` preserve source hashes, exact parameters, and failures. The final
+Jaxite patch passed the full recheck after the accumulator-boundary repair;
+both targeted regression tests also passed. Raising native Meta-BTS precision
+to 8 at correction factor 7 still failed (ramp error about 0.01281).
+
+The subsequent `common-n32-c2.json` candidate uses native correction factor 2
+and Meta-BTS precision 4. It passes all four variants' CPU checks without
+changing the shared Q/P lists, boundary scales, plaintext range, or error gate.
+Native-only tuning fields do not affect SHIP execution; its existing reports
+therefore remain applicable to this candidate. The strict correctness comparison
+checks all shared fields and the SHIP tuning fields separately.
+
+| Variant | Maximum bootstrap error | Maximum subsequent-square error |
+| --- | ---: | ---: |
+| Native CROSS with degree-1 patch and correction factor 2 | 0.000479942 | 0.000046806 |
+| CROSS SHIP | 0.000200730 | 0.000050142 |
+| Correctness-patched Jaxite main + common input adapter | 0.000200641 | 0.000050117 |
+| Optimized Jaxite + common input adapter | 0.000200678 | 0.000050133 |
+
+This establishes a small correctness case, not a latency or security claim.
+`make_manifest.py` generates larger-ring candidates for independent validation.
+`compare.py --correctness-only <four reports>` checks equivalence and errors
+without accepting or presenting timing data.
+
+For each variant, select the isolated source checkout with `PYTHONPATH`:
+
+```sh
+JAX_PLATFORMS=cpu python benchmarks/ship_equivalence/run_common.py \
+  --manifest benchmarks/ship_equivalence/common-n32.json \
+  --variant cross-ship --output /tmp/cross-ship-common.json
+```
+
+On an idle TPU, use at least `--iterations 3 --profile-dir <fresh-directory>`
+using the included `device_profile.py` and `raw_xplane.py` helpers.
+`compare.py` requires all four variants to pass, matching
+cryptographic boundary parameters and runtime/device metadata, and at least
+three wall and device-active timing samples. It refuses CPU timings and
+incomplete comparisons. Device-active and wall latency remain separate metrics.
+
+## Source reproduction
+
+Apply `cross-cd1-correctness.patch` to CROSS commit
+`262054680759f93fdf841a9f6002351ee6e9d948` in an isolated checkout.
+Apply `jaxite-correctness.patch` to the upstream main revision pinned above.
+The optimized Jaxite variant is commit
+`89797d88374c383a550374c0dfad6e44feced3fb` plus
+`jaxite-pr147-optimized.patch`. Reports record the SHA-256 of each complete
+tracked-source diff; keep these patches separate from the pristine baseline.
+
+## TPU allocation
+
+The comparison uses an authorized seven-day Flex-start v6e-8 VM in
+`europe-west4-a`, runtime `v2-alpha-tpuv6e`. Resource provisioning alone does
+not establish benchmark correctness or supply latency results.
+
+## PR-review revision
+
+New runs use CROSS `b6c5e530d2506c28a76879823151aab46c8864d7` (rebased on
+upstream main) plus the explicit native degree-1 comparison patch. The patch
+applies to this revision without changing the production SHIP source. All four
+variants use that same CROSS checkout and encrypted input adapter. The
+post-bootstrap square now calls public `ctx.he_mul[0].mul`; earlier split-only
+checks do not substitute for this gate. Reports include exact source/diff and
+harness hashes, libtpu/JAX versions, chip, stack limit, and XLA flags. Persistent
+compilation caching is disabled in the matrix runner following the review's
+cache-reload failure report. The historical correctness table above predates
+these fixes and is not a timing result for this revision.
+
+## Rejected larger candidates
+
+The saved pre-review N1024 native runs failed the `2^-10` gate: maximum ramp
+errors 0.0953268181 and 0.0554859896 for the two recorded parameter choices,
+although CROSS SHIP passed its N1024 case. N128 native and CROSS SHIP passed
+separate correctness runs, but the optimized Jaxite TPU compilation failed.
+These partial results do not establish a four-way comparison.
+
+`cross-cd1-scalar-precision.patch` and its opt-in regression preserve a rejected
+diagnostic experiment; the matrix runner does not apply it. It is not a
+validated remedy for the larger native bootstrap failures.

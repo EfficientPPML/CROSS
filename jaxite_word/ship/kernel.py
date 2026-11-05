@@ -7,7 +7,6 @@ array arguments to compiled kernels, never fields in an opaque kernel PyTree.
 
 import copy
 
-import bconv
 import finite_field
 import hemul
 import herot
@@ -216,7 +215,6 @@ class _SHIPKernel:
         total = current + self.ff_qp.modular_reduction(product)[None]
         current = jnp.where(total >= moduli, total - moduli, total)
     current = self.selector.drop._rescale_array(current)
-    q = jnp.asarray(self.q, jnp.uint32)
     for i, permutation in enumerate(self.mux_maps):
       digits = self.selector.decompose(current)
       rotated = tuple(jnp.take(d.reshape(1, 1, 1, self.degree, -1),
