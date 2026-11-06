@@ -1,0 +1,64 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+____ test_replaced_acquired_output_keeps_foreign_receipt_untouched[collect] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-609/test_replaced_acquired_output_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7dd6c197aea0>
+module = <module 'collect' from '/tmp/bert-toy4-component-review-20261104/response-gate-negative-v1/sources/collect.py'>
+
+    @pytest.mark.parametrize('module',[collector,worker])
+    def test_replaced_acquired_output_keeps_foreign_receipt_untouched(tmp_path,monkeypatch,module):
+     out=tmp_path/'owned';retired=tmp_path/'retained';sentinel=b'{"foreign":true}\n';primary=RuntimeError('body failure after output replacement')
+     def body(*args):
+      out.rename(retired);out.mkdir(mode=0o700);(out/'report.json').write_bytes(sentinel)
+      raise primary
+     monkeypatch.setattr(module,'collect'if module is collector else 'run',body)
+     args=['command','--output',str(out)]
+     if module is worker:
+      config=tmp_path/'config';config.write_text('{}');source=tmp_path/'source';source.write_text('{}')
+      monkeypatch.setattr(p,'require_ready',lambda:None)
+      args+=['--execute','--config',str(config),'--config-sha256',p.sha(config.read_bytes()),'--source-manifest',str(source)]
+     monkeypatch.setattr(sys,'argv',args)
+     with pytest.raises(RuntimeError)as caught:module.main()
+     assert caught.value is primary
+>    assert(out/'report.json').read_bytes()==sentinel,'foreign replacement directory was republished into'
+E    AssertionError: foreign replacement directory was republished into
+E    assert b'{"error":{"...ted":false}\n' == b'{"foreign":true}\n'
+E      
+E      At index 2 diff: b'e' != b'f'
+E      Use -v to get more diff
+
+test_output_ownership.py:25: AssertionError
+_ test_replaced_acquired_output_keeps_foreign_receipt_untouched[component_worker] _
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-609/test_replaced_acquired_output_1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7dd6c19782b0>
+module = <module 'component_worker' from '/tmp/bert-toy4-component-review-20261104/response-gate-negative-v1/sources/component_worker.py'>
+
+    @pytest.mark.parametrize('module',[collector,worker])
+    def test_replaced_acquired_output_keeps_foreign_receipt_untouched(tmp_path,monkeypatch,module):
+     out=tmp_path/'owned';retired=tmp_path/'retained';sentinel=b'{"foreign":true}\n';primary=RuntimeError('body failure after output replacement')
+     def body(*args):
+      out.rename(retired);out.mkdir(mode=0o700);(out/'report.json').write_bytes(sentinel)
+      raise primary
+     monkeypatch.setattr(module,'collect'if module is collector else 'run',body)
+     args=['command','--output',str(out)]
+     if module is worker:
+      config=tmp_path/'config';config.write_text('{}');source=tmp_path/'source';source.write_text('{}')
+      monkeypatch.setattr(p,'require_ready',lambda:None)
+      args+=['--execute','--config',str(config),'--config-sha256',p.sha(config.read_bytes()),'--source-manifest',str(source)]
+     monkeypatch.setattr(sys,'argv',args)
+     with pytest.raises(RuntimeError)as caught:module.main()
+     assert caught.value is primary
+>    assert(out/'report.json').read_bytes()==sentinel,'foreign replacement directory was republished into'
+E    AssertionError: foreign replacement directory was republished into
+E    assert b'{"error":{"...ted":false}\n' == b'{"foreign":true}\n'
+E      
+E      At index 2 diff: b'e' != b'f'
+E      Use -v to get more diff
+
+test_output_ownership.py:25: AssertionError
+=========================== short test summary info ============================
+FAILED test_output_ownership.py::test_replaced_acquired_output_keeps_foreign_receipt_untouched[collect]
+FAILED test_output_ownership.py::test_replaced_acquired_output_keeps_foreign_receipt_untouched[component_worker]
+2 failed in 0.07s

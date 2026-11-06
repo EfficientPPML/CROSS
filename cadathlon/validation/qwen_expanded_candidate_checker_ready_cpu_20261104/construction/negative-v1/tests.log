@@ -1,0 +1,45 @@
+test_keyboardinterrupt_construct (__main__.Tests.test_keyboardinterrupt_construct) ... FAIL
+test_memoryerror_construct (__main__.Tests.test_memoryerror_construct) ... FAIL
+test_normal_control (__main__.Tests.test_normal_control) ... ok
+test_systemexit_construct (__main__.Tests.test_systemexit_construct) ... FAIL
+
+======================================================================
+FAIL: test_keyboardinterrupt_construct (__main__.Tests.test_keyboardinterrupt_construct)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/qwen-checker-shield-construction-review-20261104/negative-v1/source/probe.py", line 53, in test_keyboardinterrupt_construct
+    def test_keyboardinterrupt_construct(self):self.check(KeyboardInterrupt)
+                                               ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/tmp/qwen-checker-shield-construction-review-20261104/negative-v1/source/probe.py", line 45, in check
+    self.assertEqual(events.count('resource_cleanup'),1,events)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 != 1 : ['publish', 'publication_close']
+
+======================================================================
+FAIL: test_memoryerror_construct (__main__.Tests.test_memoryerror_construct)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/qwen-checker-shield-construction-review-20261104/negative-v1/source/probe.py", line 52, in test_memoryerror_construct
+    def test_memoryerror_construct(self):self.check(MemoryError)
+                                         ~~~~~~~~~~^^^^^^^^^^^^^
+  File "/tmp/qwen-checker-shield-construction-review-20261104/negative-v1/source/probe.py", line 45, in check
+    self.assertEqual(events.count('resource_cleanup'),1,events)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 != 1 : ['publish', 'publication_close']
+
+======================================================================
+FAIL: test_systemexit_construct (__main__.Tests.test_systemexit_construct)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/qwen-checker-shield-construction-review-20261104/negative-v1/source/probe.py", line 54, in test_systemexit_construct
+    def test_systemexit_construct(self):self.check(SystemExit)
+                                        ~~~~~~~~~~^^^^^^^^^^^^
+  File "/tmp/qwen-checker-shield-construction-review-20261104/negative-v1/source/probe.py", line 45, in check
+    self.assertEqual(events.count('resource_cleanup'),1,events)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 != 1 : ['publish', 'publication_close']
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.027s
+
+FAILED (failures=3)

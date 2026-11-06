@@ -1,0 +1,205 @@
+........................................................................ [ 72%]
+.............F........FFFFFF                                             [100%]
+=================================== FAILURES ===================================
+_ test_actual_entry_mock_order_all_asset_postchecks_cleanup_and_native_accounting _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7efcc2339130>
+
+    def test_actual_entry_mock_order_all_asset_postchecks_cleanup_and_native_accounting(monkeypatch):
+        blobs,reader,sink,progress,events=execute_fixture(monkeypatch)
+>       result=r.execute_candidate(blobs,reader,sink,progress.append)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_checker_runtime.py:248: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+checker_runtime.py:228: in execute_candidate
+    report=adapters.run(rows)
+           ^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_checker_runtime.execute_fixture.<locals>.Adapter object at 0x7efcbf7f1160>
+rows = {'decode_seeds': [{'id': 'fixture0', 'prompt_ordinal': 0, 'seed_ordinal': 0, 'token_ids': [1000, 1001, 1002, 1003, 100...': 5, ...}, {'id': 'fixture0', 'original_prefill_member': False, 'prompt_ordinal': 0, 'sequence_length': 6, ...}, ...]}
+
+    def run(self,rows):
+>       events.append('dispatch');assert len(rows['sequences'])==96
+                                             ^^^^^^^^^^^^^^^^^
+E       KeyError: 'sequences'
+
+test_checker_runtime.py:238: KeyError
+________ test_actual_entry_body_identity_survives_all_cleanup[failure0] ________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7efcbfeb9980>
+failure = ValueError('body')
+
+    @pytest.mark.parametrize('failure',[ValueError('body'),KeyboardInterrupt('body'),SystemExit(9)])
+    def test_actual_entry_body_identity_survives_all_cleanup(monkeypatch,failure):
+        blobs,reader,sink,progress,events=execute_fixture(monkeypatch,body_error=failure,asset_error=OSError('postcheck'),gc_error=KeyboardInterrupt('gc'))
+>       with pytest.raises(type(failure))as got:r.execute_candidate(blobs,reader,sink,progress.append)
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_checker_runtime.py:265: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+checker_runtime.py:228: in execute_candidate
+    report=adapters.run(rows)
+           ^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_checker_runtime.execute_fixture.<locals>.Adapter object at 0x7efcbf7f1fd0>
+rows = {'decode_seeds': [{'id': 'fixture0', 'prompt_ordinal': 0, 'seed_ordinal': 0, 'token_ids': [1000, 1001, 1002, 1003, 100...': 5, ...}, {'id': 'fixture0', 'original_prefill_member': False, 'prompt_ordinal': 0, 'sequence_length': 6, ...}, ...]}
+
+    def run(self,rows):
+>       events.append('dispatch');assert len(rows['sequences'])==96
+                                             ^^^^^^^^^^^^^^^^^
+E       KeyError: 'sequences'
+E       synthetic asset cleanup: OSError
+E       candidate model cleanup: KeyboardInterrupt
+
+test_checker_runtime.py:238: KeyError
+________ test_actual_entry_body_identity_survives_all_cleanup[failure1] ________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7efcbd1cf7d0>
+failure = KeyboardInterrupt('body')
+
+    @pytest.mark.parametrize('failure',[ValueError('body'),KeyboardInterrupt('body'),SystemExit(9)])
+    def test_actual_entry_body_identity_survives_all_cleanup(monkeypatch,failure):
+        blobs,reader,sink,progress,events=execute_fixture(monkeypatch,body_error=failure,asset_error=OSError('postcheck'),gc_error=KeyboardInterrupt('gc'))
+>       with pytest.raises(type(failure))as got:r.execute_candidate(blobs,reader,sink,progress.append)
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_checker_runtime.py:265: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+checker_runtime.py:228: in execute_candidate
+    report=adapters.run(rows)
+           ^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_checker_runtime.execute_fixture.<locals>.Adapter object at 0x7efcbf7f2120>
+rows = {'decode_seeds': [{'id': 'fixture0', 'prompt_ordinal': 0, 'seed_ordinal': 0, 'token_ids': [1000, 1001, 1002, 1003, 100...': 5, ...}, {'id': 'fixture0', 'original_prefill_member': False, 'prompt_ordinal': 0, 'sequence_length': 6, ...}, ...]}
+
+    def run(self,rows):
+>       events.append('dispatch');assert len(rows['sequences'])==96
+                                             ^^^^^^^^^^^^^^^^^
+E       KeyError: 'sequences'
+E       synthetic asset cleanup: OSError
+E       candidate model cleanup: KeyboardInterrupt
+
+test_checker_runtime.py:238: KeyError
+________ test_actual_entry_body_identity_survives_all_cleanup[failure2] ________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7efcbc6ffe90>
+failure = SystemExit(9)
+
+    @pytest.mark.parametrize('failure',[ValueError('body'),KeyboardInterrupt('body'),SystemExit(9)])
+    def test_actual_entry_body_identity_survives_all_cleanup(monkeypatch,failure):
+        blobs,reader,sink,progress,events=execute_fixture(monkeypatch,body_error=failure,asset_error=OSError('postcheck'),gc_error=KeyboardInterrupt('gc'))
+>       with pytest.raises(type(failure))as got:r.execute_candidate(blobs,reader,sink,progress.append)
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_checker_runtime.py:265: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+checker_runtime.py:228: in execute_candidate
+    report=adapters.run(rows)
+           ^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_checker_runtime.execute_fixture.<locals>.Adapter object at 0x7efcbf7f2270>
+rows = {'decode_seeds': [{'id': 'fixture0', 'prompt_ordinal': 0, 'seed_ordinal': 0, 'token_ids': [1000, 1001, 1002, 1003, 100...': 5, ...}, {'id': 'fixture0', 'original_prefill_member': False, 'prompt_ordinal': 0, 'sequence_length': 6, ...}, ...]}
+
+    def run(self,rows):
+>       events.append('dispatch');assert len(rows['sequences'])==96
+                                             ^^^^^^^^^^^^^^^^^
+E       KeyError: 'sequences'
+E       synthetic asset cleanup: OSError
+E       candidate model cleanup: KeyboardInterrupt
+
+test_checker_runtime.py:238: KeyError
+___ test_actual_entry_cleanup_only_cancellation_outranks_ordinary_postcheck ____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7efcbfec4f70>
+
+    def test_actual_entry_cleanup_only_cancellation_outranks_ordinary_postcheck(monkeypatch):
+        failure=KeyboardInterrupt('gc');blobs,reader,sink,progress,events=execute_fixture(monkeypatch,asset_error=OSError('postcheck'),gc_error=failure)
+>       with pytest.raises(KeyboardInterrupt)as got:r.execute_candidate(blobs,reader,sink,progress.append)
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_checker_runtime.py:270: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+checker_runtime.py:228: in execute_candidate
+    report=adapters.run(rows)
+           ^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_checker_runtime.execute_fixture.<locals>.Adapter object at 0x7efcbf7f23c0>
+rows = {'decode_seeds': [{'id': 'fixture0', 'prompt_ordinal': 0, 'seed_ordinal': 0, 'token_ids': [1000, 1001, 1002, 1003, 100...': 5, ...}, {'id': 'fixture0', 'original_prefill_member': False, 'prompt_ordinal': 0, 'sequence_length': 6, ...}, ...]}
+
+    def run(self,rows):
+>       events.append('dispatch');assert len(rows['sequences'])==96
+                                             ^^^^^^^^^^^^^^^^^
+E       KeyError: 'sequences'
+E       synthetic asset cleanup: OSError
+E       candidate model cleanup: KeyboardInterrupt
+
+test_checker_runtime.py:238: KeyError
+_ test_actual_entry_incomplete_native_or_restoration_cannot_pass[native_count] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7efcbfec5650>
+fault = 'native_count'
+
+    @pytest.mark.parametrize('fault',['native_count','capture_cleanup'])
+    def test_actual_entry_incomplete_native_or_restoration_cannot_pass(monkeypatch,fault):
+        blobs,reader,sink,progress,events=execute_fixture(monkeypatch,call_count=3231 if fault=='native_count' else 3232,cleanup=fault!='capture_cleanup')
+>       with pytest.raises(StructuralFailure):r.execute_candidate(blobs,reader,sink,progress.append)
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_checker_runtime.py:276: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+checker_runtime.py:228: in execute_candidate
+    report=adapters.run(rows)
+           ^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_checker_runtime.execute_fixture.<locals>.Adapter object at 0x7efcbf7f2120>
+rows = {'decode_seeds': [{'id': 'fixture0', 'prompt_ordinal': 0, 'seed_ordinal': 0, 'token_ids': [1000, 1001, 1002, 1003, 100...': 5, ...}, {'id': 'fixture0', 'original_prefill_member': False, 'prompt_ordinal': 0, 'sequence_length': 6, ...}, ...]}
+
+    def run(self,rows):
+>       events.append('dispatch');assert len(rows['sequences'])==96
+                                             ^^^^^^^^^^^^^^^^^
+E       KeyError: 'sequences'
+
+test_checker_runtime.py:238: KeyError
+_ test_actual_entry_incomplete_native_or_restoration_cannot_pass[capture_cleanup] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7efcbd127b10>
+fault = 'capture_cleanup'
+
+    @pytest.mark.parametrize('fault',['native_count','capture_cleanup'])
+    def test_actual_entry_incomplete_native_or_restoration_cannot_pass(monkeypatch,fault):
+        blobs,reader,sink,progress,events=execute_fixture(monkeypatch,call_count=3231 if fault=='native_count' else 3232,cleanup=fault!='capture_cleanup')
+>       with pytest.raises(StructuralFailure):r.execute_candidate(blobs,reader,sink,progress.append)
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_checker_runtime.py:276: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+checker_runtime.py:228: in execute_candidate
+    report=adapters.run(rows)
+           ^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_checker_runtime.execute_fixture.<locals>.Adapter object at 0x7efcbf7f23c0>
+rows = {'decode_seeds': [{'id': 'fixture0', 'prompt_ordinal': 0, 'seed_ordinal': 0, 'token_ids': [1000, 1001, 1002, 1003, 100...': 5, ...}, {'id': 'fixture0', 'original_prefill_member': False, 'prompt_ordinal': 0, 'sequence_length': 6, ...}, ...]}
+
+    def run(self,rows):
+>       events.append('dispatch');assert len(rows['sequences'])==96
+                                             ^^^^^^^^^^^^^^^^^
+E       KeyError: 'sequences'
+
+test_checker_runtime.py:238: KeyError
+=========================== short test summary info ============================
+FAILED test_checker_runtime.py::test_actual_entry_mock_order_all_asset_postchecks_cleanup_and_native_accounting
+FAILED test_checker_runtime.py::test_actual_entry_body_identity_survives_all_cleanup[failure0]
+FAILED test_checker_runtime.py::test_actual_entry_body_identity_survives_all_cleanup[failure1]
+FAILED test_checker_runtime.py::test_actual_entry_body_identity_survives_all_cleanup[failure2]
+FAILED test_checker_runtime.py::test_actual_entry_cleanup_only_cancellation_outranks_ordinary_postcheck
+FAILED test_checker_runtime.py::test_actual_entry_incomplete_native_or_restoration_cannot_pass[native_count]
+FAILED test_checker_runtime.py::test_actual_entry_incomplete_native_or_restoration_cannot_pass[capture_cleanup]
+7 failed, 93 passed in 7.65s

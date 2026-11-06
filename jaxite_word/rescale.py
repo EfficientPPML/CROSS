@@ -41,7 +41,7 @@ class _HERescaleKernel:
   """
 
   def __init__(self, batch, num_elements, moduli, r, c, degree_layout=None,
-               finite_field_context=BarrettContext):
+               finite_field_context=BarrettContext, polynomial_factory=None):
     """Initialize the private rescale kernel.
 
     Args:
@@ -55,7 +55,10 @@ class _HERescaleKernel:
         MontgomeryContext). With MontgomeryContext, ciphertext data is expected
         and produced in Montgomery computation format (x * 2^32 mod q), and all
         internal modular reductions are Montgomery reductions.
+      polynomial_factory: Optional context-scoped public table factory. The
+        default constructs ordinary Polynomial controls; arithmetic is unchanged.
     """
+    self._polynomial_factory = Polynomial if polynomial_factory is None else polynomial_factory
     self.batch = batch
     self.num_elements = num_elements
     self.moduli = list(moduli)
@@ -200,7 +203,7 @@ class _HERescaleKernel:
         'c': self.c,
     }
     self.ct_last_list = [
-        Polynomial(
+        self._polynomial_factory(
             ct_last_shapes,
             {
                 **ct_last_params_base,
@@ -229,7 +232,7 @@ class _HERescaleKernel:
           'r': self.r,
           'c': self.c,
       }
-      self.ct_work_list.append(Polynomial(work_shapes, work_params))
+      self.ct_work_list.append(self._polynomial_factory(work_shapes, work_params))
 
   def _rescale_array(self, in_ciphertext_data):
     """Privately perform composite rescaling on a raw ciphertext array.

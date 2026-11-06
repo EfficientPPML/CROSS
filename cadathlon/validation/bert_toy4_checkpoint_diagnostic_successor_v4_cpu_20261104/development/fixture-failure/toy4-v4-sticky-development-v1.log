@@ -1,0 +1,48 @@
+........................F.F........................................      [100%]
+=================================== FAILURES ===================================
+_ test_loader_sticky_transfers_preserve_body_and_quarantine[KeyboardInterrupt-False] _
+
+fake_loader = namespace(public=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-623/test_loader_sticky_transfers_p0/public'), privat...ake_loader.<locals>.original at 0x744eaf3b7740>)}, original=<function fake_loader.<locals>.original at 0x744eaf3b7740>)
+server = False, kind = <class 'KeyboardInterrupt'>
+
+    @pytest.mark.parametrize('server',[False,True])
+    @pytest.mark.parametrize('kind',[KeyboardInterrupt,SystemExit])
+    def test_loader_sticky_transfers_preserve_body_and_quarantine(fake_loader,server,kind):
+     c=fake_loader;first=ValueError('body');later=kind('second barrier');events=[]
+     class Pending:
+      def __init__(self,error):self.error=error
+      def block_until_ready(self):events.append(self.error);raise self.error
+     cm=loaders.load_server(c.public,profile_bytes=b'',plan_bytes=b'')if server else loaders.load_client(c.public,c.private,profile_bytes=b'',plan_bytes=b'')
+     with pytest.raises(ValueError)as actual:
+      with cm as handle:
+>      handle.ctx._param_cache._formatted_rotation_keys={'a':Pending(first),'b':Pending(later)}
+       ^^^^^^^^^^^^^^^^^^^^^^^
+E      AttributeError: 'Context' object has no attribute '_param_cache'
+E      cleanup incomplete: failed entered client stage; key mappings and context quarantined until process exit
+
+test_sticky_cleanup.py:97: AttributeError
+_ test_loader_sticky_transfers_preserve_body_and_quarantine[SystemExit-False] __
+
+fake_loader = namespace(public=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-623/test_loader_sticky_transfers_p2/public'), privat...ake_loader.<locals>.original at 0x744eaf3b6700>)}, original=<function fake_loader.<locals>.original at 0x744eaf3b6700>)
+server = False, kind = <class 'SystemExit'>
+
+    @pytest.mark.parametrize('server',[False,True])
+    @pytest.mark.parametrize('kind',[KeyboardInterrupt,SystemExit])
+    def test_loader_sticky_transfers_preserve_body_and_quarantine(fake_loader,server,kind):
+     c=fake_loader;first=ValueError('body');later=kind('second barrier');events=[]
+     class Pending:
+      def __init__(self,error):self.error=error
+      def block_until_ready(self):events.append(self.error);raise self.error
+     cm=loaders.load_server(c.public,profile_bytes=b'',plan_bytes=b'')if server else loaders.load_client(c.public,c.private,profile_bytes=b'',plan_bytes=b'')
+     with pytest.raises(ValueError)as actual:
+      with cm as handle:
+>      handle.ctx._param_cache._formatted_rotation_keys={'a':Pending(first),'b':Pending(later)}
+       ^^^^^^^^^^^^^^^^^^^^^^^
+E      AttributeError: 'Context' object has no attribute '_param_cache'
+E      cleanup incomplete: failed entered client stage; key mappings and context quarantined until process exit
+
+test_sticky_cleanup.py:97: AttributeError
+=========================== short test summary info ============================
+FAILED test_sticky_cleanup.py::test_loader_sticky_transfers_preserve_body_and_quarantine[KeyboardInterrupt-False]
+FAILED test_sticky_cleanup.py::test_loader_sticky_transfers_preserve_body_and_quarantine[SystemExit-False]
+2 failed, 65 passed in 0.22s

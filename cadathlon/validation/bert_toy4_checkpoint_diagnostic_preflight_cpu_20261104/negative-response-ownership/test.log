@@ -1,0 +1,50 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______ test_all96_current_ciphertexts_authenticated_before_private_open _______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x74d8b46dde00>
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-606/test_all96_current_ciphertexts0')
+
+    def test_all96_current_ciphertexts_authenticated_before_private_open(monkeypatch,tmp_path):
+     plan=contract.numerical_plan();request=contract.make_contract('a'*64,'b'*32);authenticated=[];events=[]
+     artifacts=[dict(index=i,manifest_sha256='c'*64,metadata={k:r[k]for k in('index','kind','label','stack','level','scale','nsd')})for i,r in enumerate(plan['checkpoints'])]
+     setup=dict(request_contract=request,input_digest='d'*64);server=dict(artifacts=artifacts,all96_server_outputs_verified=True,arithmetic={'refresh_scales':[plan['profile']['scale']]*5})
+     monkeypatch.setattr(scale_replay,'client_replay',lambda scales:{'trace':plan['checkpoints']})
+     monkeypatch.setattr(fixture_assets,'prepare_client_reference',lambda:({},[np.zeros(65536)]*96))
+     def authenticate(*a,**kw):authenticated.append(kw['tile_index']);return np.zeros(1),1.,{},{}
+     monkeypatch.setattr(transport,'validate_ciphertext',authenticate)
+     @contextmanager
+     def private(*a,**kw):
+      events.append('private-loader-entered')
+      assert authenticated==list(range(96)),'private loader entered before complete96 current response authentication'
+      yield SimpleNamespace(public_manifest={'context_id':'a'*64},ctx=SimpleNamespace(decrypt_slots=lambda value:np.zeros(65536)))
+     monkeypatch.setattr(key_contexts,'load_client',private)
+>    w.validate(dict(workspace=str(tmp_path)),{},lambda:None,dict(setup=setup,server=server))
+
+test_response_gate.py:28: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+sources/component_worker.py:134: in validate
+    with key_contexts.load_client(workspace/'public_keys',workspace/'client_private',profile_bytes=profile,plan_bytes=plan)as handle:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/contextlib.py:141: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+a = (PosixPath('/tmp/pytest-of-jianming_gatech/pytest-606/test_all96_current_ciphertexts0/public_keys'), PosixPath('/tmp/pytest-of-jianming_gatech/pytest-606/test_all96_current_ciphertexts0/client_private'))
+kw = {'profile_bytes': b'{"P_covers_actual_partitions":true,"chain_depth":49,"composite_degree":2,"degree":131072,"degree_l... "Dedicated owner group/direct wait/cleanup quarantine; resources preflight on available accelerator lease"\n  ]\n}\n'}
+
+    @contextmanager
+    def private(*a,**kw):
+     events.append('private-loader-entered')
+>    assert authenticated==list(range(96)),'private loader entered before complete96 current response authentication'
+E    AssertionError: private loader entered before complete96 current response authentication
+E    assert [] == [0, 1, 2, 3, 4, 5, ...]
+E      
+E      Right contains 96 more items, first extra item: 0
+E      Use -v to get more diff
+
+test_response_gate.py:25: AssertionError
+=========================== short test summary info ============================
+FAILED test_response_gate.py::test_all96_current_ciphertexts_authenticated_before_private_open
+1 failed in 0.38s

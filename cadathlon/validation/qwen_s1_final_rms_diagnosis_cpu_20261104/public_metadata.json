@@ -1,0 +1,388 @@
+{
+  "schema": "qwen-fixed-row0-diagnosis-metadata-v1",
+  "sources": {
+    "original_inputs": {
+      "path": "/tmp/qwen-calibration-candidate1-20261103/selection_inputs.json",
+      "sha256": "abc268720ffe105b96ef9eaa9189bd95477da1f750aaa5075a33eadbe89c899d"
+    },
+    "original_origin": {
+      "path": "/tmp/qwen-calibration-candidate1-20261103/input_origin.json",
+      "sha256": "9b6572ca3df0e39dded6875c85b767137b08137fe040390830976a510ba6215f"
+    },
+    "original_protocol": {
+      "path": "/tmp/qwen-calibration-candidate1-20261103/protocol.json",
+      "sha256": "606e97a2957004845bd172820755e7d4005c38bd3f87f51d9534f6f8a3cadf23"
+    },
+    "native_exact_report": {
+      "path": "/tmp/qwen-native-calibration-20261103/native-exact-v1/report.json",
+      "sha256": "106cb1ffd9bd0cf51d88438bf163cdf7480a1276eddfb058b4c628664d6c782c"
+    },
+    "candidate2": {
+      "path": "/tmp/qwen-calibration-candidate2-20261103/candidate-v2/manifest.json",
+      "sha256": "0af45a8fc6d13b9d429ee1af2311b2cb6ac0aa4cde02eca56478472762482489"
+    },
+    "candidate3": {
+      "path": "/tmp/qwen-candidate3-calibration-20261103/candidate-v3/manifest.json",
+      "sha256": "7f6478a6bc710f3d2a370198e075e6ba8b0e55c144d981bca0eed59eaf176333"
+    },
+    "candidate3_protocol": {
+      "path": "/tmp/qwen-candidate3-calibration-20261103/selection/protocol.json",
+      "sha256": "428f4747359467737c5932f08c13b7376f3c4e6051f5eed5bb736a0c0ed5ccd9"
+    },
+    "completed_calibration": {
+      "path": "/tmp/qwen-candidate3-calibration-20261103/full-v1/report.json",
+      "sha256": "1e827000cc0368853f2e8932ec17ee5f318e973e3c80f67652790491fcf7c628"
+    },
+    "historical_S1": {
+      "path": "/tmp/qwen-full-model-trajectory-v2-20261104/actual-v1/S1/report.json",
+      "sha256": "8752e971fc39ffb7aab1e42428a19ea86e2661dbf1453084852968d7f14844de"
+    }
+  },
+  "original_union": {
+    "minimum": 149.4474104818254,
+    "maximum": 609.1325073242188,
+    "native_count": 416,
+    "exact_count": 416
+  },
+  "original_origin": {
+    "source": "qwen_native_calibration_cpu_20261103/native-exact-v1/report.json",
+    "sha256": "106cb1ffd9bd0cf51d88438bf163cdf7480a1276eddfb058b4c628664d6c782c",
+    "selection_fields_only": [
+      "observed_native_ranges",
+      "observed_exact_ranges"
+    ],
+    "no_validation_inputs_or_outputs": true,
+    "site_count": 169
+  },
+  "original_native_range": {
+    "domain": null,
+    "minimum": 149.44749450683594,
+    "maximum": 609.1325073242188,
+    "count": 416,
+    "below": 0,
+    "above": 0,
+    "nonfinite": 0
+  },
+  "original_exact_range": {
+    "domain": null,
+    "minimum": 149.4474104818254,
+    "maximum": 609.1324350448391,
+    "count": 416,
+    "below": 0,
+    "above": 0,
+    "nonfinite": 0
+  },
+  "original_domain_rule": "[0.8*minimum,1.2*maximum]; fail if nonpositive/nonfinite",
+  "calibration_workload": {
+    "topics": 32,
+    "framing_variants": 3,
+    "distinct_prompts_per_bucket": 96,
+    "buckets": [
+      8,
+      16,
+      32
+    ],
+    "prefill_contexts": 288,
+    "decode_seeds": 16,
+    "decode_steps": 4,
+    "decode_seed_length": 16
+  },
+  "original_acceptance_gates": {
+    "exact_oracle_vs_native_max_abs": 0.001,
+    "exact_oracle_vs_native_nrmse": 1e-05,
+    "exact_oracle_vs_native_top1": true,
+    "approximate_operator_block_nrmse": 0.05,
+    "approximate_full_logit_nrmse": 0.1,
+    "nrmse_floor": 0.01,
+    "prefill_top1_aggregate_minimum": 0.9,
+    "teacher_forced_top1_minimum": 0.9,
+    "validation_complete_free_sequences_minimum": "6 of8",
+    "calibration_complete_free_sequences_minimum": "12 of16",
+    "all_propagated_domains_required_for_coverage": true,
+    "HE_gates": "Untested and not inferred; original HE-versus-approximate0.01 nRMSE/0.10 maxabs remain separate.",
+    "prefill_top1_aggregation": "Aggregate across S8/S16/S32; report each bucket separately without silently imposing a different per-bucket top1 gate.",
+    "teacher_forced_required_matches": "ceil(0.9*number_of_decisions); calibration64 decisions requires58, fixed validation32 requires29."
+  },
+  "maximum_original_candidates": 3,
+  "successor_policy": "Once validation is measured, do not feed its ranges/logits/token choices into candidate selection. Any subsequent design is separately labeled as informed by this validation and needs a new untouched validation set.",
+  "candidate2_final_rule": {
+    "kind": "inverse_sqrt",
+    "domain": [
+      119.55792838546031,
+      730.9590087890625
+    ],
+    "method": "polynomial",
+    "degree": 16,
+    "strategy": "power",
+    "chebyshev_coefficients": [
+      0.055314786497949124,
+      -0.024038103744394846,
+      0.007709187682518117,
+      -0.0027358766721975805,
+      0.0010177758971828125,
+      -0.00038911437583863314,
+      0.00015144705066266374,
+      -5.9691939488046225e-05,
+      2.3748576337768553e-05,
+      -9.517039167365356e-06,
+      3.83589260183e-06,
+      -1.5533257812118244e-06,
+      6.314080822714834e-07,
+      -2.573586430522648e-07,
+      1.0483864840713083e-07,
+      -4.195283370682443e-08,
+      1.4736473945971568e-08
+    ],
+    "evaluation_coefficients": [
+      0.048492381651594904,
+      -0.01742948516934598,
+      0.009396981823739855,
+      -0.005633469795935804,
+      0.0035437713493380444,
+      -0.0022336939789151396,
+      0.0014693320944052079,
+      -0.0013514078852477432,
+      0.0009210423553244687,
+      0.00060883504561772,
+      -0.0004381016509750877,
+      -0.0020310204980700988,
+      0.0014259410840631191,
+      0.0015234411010052165,
+      -0.0010727009052951698,
+      -0.0006873552274526115,
+      0.00048288477826159633
+    ],
+    "depth": 6
+  },
+  "candidate3_final_rule": {
+    "kind": "inverse_sqrt",
+    "method": "polynomial",
+    "domain": [
+      29.88948209636508,
+      2923.83603515625
+    ],
+    "degree": 64,
+    "strategy": "chebyshev",
+    "chebyshev_coefficients": [
+      0.043382181478944834,
+      -0.04020114462863585,
+      0.02578729468958898,
+      -0.01799126737208255,
+      0.013059769445661618,
+      -0.009703750768759043,
+      0.007322364678437848,
+      -0.005586585353608161,
+      0.004297655865957322,
+      -0.003327470575672497,
+      0.0025896430402485636,
+      -0.002023976417049155,
+      0.0015874794422926226,
+      -0.0012488625877702462,
+      0.0009850119554424169,
+      -0.0007786485862465027,
+      0.00061672968632762,
+      -0.0004893309820724128,
+      0.00038885039396607,
+      -0.000309431628685329,
+      0.000246541418915918,
+      -0.00019665599246384587,
+      0.00015702634759933793,
+      -0.00012550110578824137,
+      0.00010039188866082748,
+      -8.037039563493107e-05,
+      6.438930513024472e-05,
+      -5.162120597250013e-05,
+      4.141125863284712e-05,
+      -3.324036830146988e-05,
+      2.6696444533000504e-05,
+      -2.1451908123248595e-05,
+      1.7246042454856092e-05,
+      -1.3871114185232133e-05,
+      1.1161435616225284e-05,
+      -8.984729061556156e-06,
+      7.235297055483721e-06,
+      -5.82861233536589e-06,
+      4.697026324052815e-06,
+      -3.7863603935853977e-06,
+      3.053195038719149e-06,
+      -2.4627116609540662e-06,
+      1.9869725288728273e-06,
+      -1.603548637252819e-06,
+      1.29442411396296e-06,
+      -1.0451207076172134e-06,
+      8.43997592835289e-07,
+      -6.816909734729462e-07,
+      5.506652517729456e-07,
+      -4.448533108015415e-07,
+      3.593680222904451e-07,
+      -2.902707251630467e-07,
+      2.3438529375081704e-07,
+      -1.8914870979965111e-07,
+      1.5249086667096865e-07,
+      -1.2273779228852214e-07,
+      9.853362246566215e-08,
+      -7.877758676064582e-08,
+      6.257299120150634e-08,
+      -4.9185775700725554e-08,
+      3.8010676763632255e-08,
+      -2.854340368832814e-08,
+      2.035751341664013e-08,
+      -1.3084906939270283e-08,
+      6.399029460623382e-09
+    ],
+    "evaluation_coefficients": [
+      0.043382181478944834,
+      -0.04020114462863585,
+      0.02578729468958898,
+      -0.01799126737208255,
+      0.013059769445661618,
+      -0.009703750768759043,
+      0.007322364678437848,
+      -0.005586585353608161,
+      0.004297655865957322,
+      -0.003327470575672497,
+      0.0025896430402485636,
+      -0.002023976417049155,
+      0.0015874794422926226,
+      -0.0012488625877702462,
+      0.0009850119554424169,
+      -0.0007786485862465027,
+      0.00061672968632762,
+      -0.0004893309820724128,
+      0.00038885039396607,
+      -0.000309431628685329,
+      0.000246541418915918,
+      -0.00019665599246384587,
+      0.00015702634759933793,
+      -0.00012550110578824137,
+      0.00010039188866082748,
+      -8.037039563493107e-05,
+      6.438930513024472e-05,
+      -5.162120597250013e-05,
+      4.141125863284712e-05,
+      -3.324036830146988e-05,
+      2.6696444533000504e-05,
+      -2.1451908123248595e-05,
+      1.7246042454856092e-05,
+      -1.3871114185232133e-05,
+      1.1161435616225284e-05,
+      -8.984729061556156e-06,
+      7.235297055483721e-06,
+      -5.82861233536589e-06,
+      4.697026324052815e-06,
+      -3.7863603935853977e-06,
+      3.053195038719149e-06,
+      -2.4627116609540662e-06,
+      1.9869725288728273e-06,
+      -1.603548637252819e-06,
+      1.29442411396296e-06,
+      -1.0451207076172134e-06,
+      8.43997592835289e-07,
+      -6.816909734729462e-07,
+      5.506652517729456e-07,
+      -4.448533108015415e-07,
+      3.593680222904451e-07,
+      -2.902707251630467e-07,
+      2.3438529375081704e-07,
+      -1.8914870979965111e-07,
+      1.5249086667096865e-07,
+      -1.2273779228852214e-07,
+      9.853362246566215e-08,
+      -7.877758676064582e-08,
+      6.257299120150634e-08,
+      -4.9185775700725554e-08,
+      3.8010676763632255e-08,
+      -2.854340368832814e-08,
+      2.035751341664013e-08,
+      -1.3084906939270283e-08,
+      6.399029460623382e-09
+    ],
+    "depth": 14
+  },
+  "candidate3_selection_protocol": {
+    "schema": "qwen-candidate3-uniform-polynomial-selection-v1",
+    "status": "frozen_before_selection",
+    "allowed_changes": "All113 normalization rules under the same selection ladder; candidate/provenance/depth metadata only. All28 SiLU and allsoftmax rules unchanged.",
+    "domain_policy": "Exactly the prior all-site factor4 intervals: [max(pinned epsilon, original lo/4),original hi*4]; no per-site exceptions or observed validation extrema.",
+    "degree_ladder": [
+      16,
+      32,
+      64,
+      128,
+      256,
+      512
+    ],
+    "strategy": "Balanced Chebyshev for every polynomial candidate; no monomial conversion.",
+    "coefficient_algorithm": "Pinned numeric.coefficients inverse_sqrt interpolation and32*binary64epsilon pruning. Actual stored coefficients and rounded affine map enter the certificate.",
+    "uniform_relative_target": 1e-06,
+    "uniform_certificate": "Exact rational H(t)=((t-B)/A)*P(t)^2-1; endpoint extent M and monotone Chebyshev envelope ||H||1*Tdeg(H)(M). Require delta<1, mapped interval contains0, P(0)>0, and delta/(2-delta)<=1e-6.",
+    "binary64_diagnostic": "Deduplicated2049 linear +2049 geometric points and actual endpoints, evaluated by unchanged explicit balanced circuit; require finite values and maxrelative<=1e-6. Compare independent Clenshaw diagnostically. These sampled checks do not prove floating/CKKS accuracy.",
+    "selection": "First ladder candidate passing both uniform certificate and fixed binary64 gate; else unchanged certified factor4 staticNewton fallback. Preserve every unsuccessful candidate assessment.",
+    "protected_downstream": "Recompute28 conditional public SiLU radius implications; if any exceeds unchanged SiLU domain, mark complete candidate unsupported rather than silently changing another rule.",
+    "process": "Freeze all113 rules/fullmanifest before any original-calibration trajectory run. No model run is authorized by this selection tool. Fresh56 inputs remain unread; historical nine failed stops stay failed.",
+    "limits": "Uniform ideal-real polynomial/initial-affine proofs exclude subsequent floating/CKKS/refresh error and depend on actual variance staying inside each proposed domain; factor4 is an engineering coverage policy.",
+    "inputs": {
+      "inputs/candidate2_manifest.json": "0af45a8fc6d13b9d429ee1af2311b2cb6ac0aa4cde02eca56478472762482489",
+      "inputs/factor4_fallback_report.json": "2e9de6c41bafbb89f17b2eec06cb19c06a2ec16d9f85aa6ae8ac89dd3a474d46",
+      "inputs/norm_multipliers.json": "761a07e232e0bba981ba014eb6d202cce96a9471616743594fecdc6a57d67840",
+      "inputs/qwen_config.json": "660db3b73d788119c04535e48cf9be5f55bc3100841a718637ae695b442f27dd",
+      "numeric.py": "5a3a39324133ae52cf4990d9fa48a6e593920e83e6114179b2d9be622bf8b6ce",
+      "old_selection.py": "78b7e56cd9296460115640be93e57fe5229fa9ba66f558319ef91f95e8124edd"
+    }
+  },
+  "completed_calibration_final": {
+    "domain": [
+      29.88948209636508,
+      2923.83603515625
+    ],
+    "count": 416,
+    "minimum": 149.43849346066588,
+    "maximum": 609.1382373665814,
+    "below": 0,
+    "above": 0,
+    "nonfinite": 0
+  },
+  "completed_calibration_flags": {
+    "passed": true,
+    "complete": true,
+    "all_workload_entries_accounted": 416,
+    "candidate_manifest_sha256": "7f6478a6bc710f3d2a370198e075e6ba8b0e55c144d981bca0eed59eaf176333"
+  },
+  "historical_S1": {
+    "passed": false,
+    "complete": false,
+    "fixture": {
+      "name": "checkpoint_embedding_row0_S1",
+      "sequence": 1,
+      "selector": "embedding_row0",
+      "positions": [
+        0
+      ]
+    },
+    "embedding_sha256": "21cc9a2ebe321c5fd7b048bcc1a26495bd6abf4291dfa3e667d241b124482d11",
+    "token_vector_sha256": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+    "failure_detail": {
+      "type": "DomainFailure",
+      "message": "independent declared domain failure: final.inverse_sqrt",
+      "notes": [],
+      "label": "final.inverse_sqrt",
+      "record": {
+        "domain": [
+          29.88948209636508,
+          2923.83603515625
+        ],
+        "count": 1,
+        "minimum": 3391.698360993511,
+        "maximum": 3391.698360993511,
+        "below": 0,
+        "above": 1,
+        "nonfinite": 0
+      }
+    },
+    "source_files_unchanged": true,
+    "assets_unchanged": true,
+    "cleanup_completed": true,
+    "terminal_scope_completed": false,
+    "termination_scope_completed": false
+  }
+}

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="9" time="1.628" timestamp="2026-11-03T03:43:18.103880+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_launch" name="test_snapshot_exact_bytes_readonly_and_detects_drift" time="0.014"><failure message="FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-141/test_snapshot_exact_bytes_read0/snapshot/demos'">prepared = (PosixPath('/tmp/pytest-of-jianming_gatech/pytest-141/test_snapshot_exact_bytes_read0/source'), PosixPath('/tmp/pytest-of-jianming_gatech/pytest-141/test_snapshot_exact_bytes_read0/snapshot'))
+
+    def test_snapshot_exact_bytes_readonly_and_detects_drift(prepared):
+        source,snapshot=prepared;manifest,raw=launch.verified_sources(snapshot)
+        assert all(not (p.stat().st_mode &amp; 0o222) for p in snapshot.rglob('*'))
+        assert manifest['instrumentation_sha256']==launch.sha(raw[launch.PINNED_WRAPPER])
+&gt;       changed=snapshot/'demos/extra.py';changed.parent.chmod(0o755);changed.write_text('# new unreviewed dependency\n')
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/transformer-sweep-launch-20261103/test_launch.py:69: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-141/test_snapshot_exact_bytes_read0/snapshot/demos')
+mode = 493, follow_symlinks = True
+
+    def chmod(self, mode, *, follow_symlinks=True):
+        """
+        Change the permissions of the path, like os.chmod().
+        """
+&gt;       os.chmod(self, mode, follow_symlinks=follow_symlinks)
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-141/test_snapshot_exact_bytes_read0/snapshot/demos'
+
+miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py:738: FileNotFoundError</failure></testcase><testcase classname="test_launch" name="test_all_twelve_fake_children_archive_gate_devices_resources_and_cleanup" time="1.420" /><testcase classname="test_launch" name="test_unknown_child_cleanup_retains_owned_parent[missing]" time="0.027" /><testcase classname="test_launch" name="test_unknown_child_cleanup_retains_owned_parent[corrupt]" time="0.027" /><testcase classname="test_launch" name="test_unknown_child_cleanup_retains_owned_parent[incomplete]" time="0.027" /><testcase classname="test_launch" name="test_initial_source_failure_records_failure_without_key_parent" time="0.010"><failure message="FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-141/test_initial_source_failure_re0/snapshot/demos'">prepared = (PosixPath('/tmp/pytest-of-jianming_gatech/pytest-141/test_initial_source_failure_re0/source'), PosixPath('/tmp/pytest-of-jianming_gatech/pytest-141/test_initial_source_failure_re0/snapshot'))
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-141/test_initial_source_failure_re0')
+
+    def test_initial_source_failure_records_failure_without_key_parent(prepared,tmp_path):
+        _,snapshot=prepared;arguments=args(tmp_path,snapshot)
+&gt;       path=snapshot/'demos/new.py';path.parent.chmod(0o755);path.write_text('# drift\n')
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/transformer-sweep-launch-20261103/test_launch.py:115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-141/test_initial_source_failure_re0/snapshot/demos')
+mode = 493, follow_symlinks = True
+
+    def chmod(self, mode, *, follow_symlinks=True):
+        """
+        Change the permissions of the path, like os.chmod().
+        """
+&gt;       os.chmod(self, mode, follow_symlinks=follow_symlinks)
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-141/test_initial_source_failure_re0/snapshot/demos'
+
+miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py:738: FileNotFoundError</failure></testcase><testcase classname="test_launch" name="test_process_tree_selection_keeps_group_and_nested_children_only" time="0.000" /><testcase classname="test_launch" name="test_source_failure_and_final_publication_preserve_cancellation" time="0.026" /><testcase classname="test_launch" name="test_existing_key_parent_is_never_removed" time="0.021" /></testsuite></testsuites>

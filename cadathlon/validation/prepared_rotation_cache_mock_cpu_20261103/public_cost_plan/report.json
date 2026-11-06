@@ -1,0 +1,150 @@
+{
+  "scope": "Public formula/source analysis; no new model/HE/backend execution or timing claim",
+  "source_hashes": {
+    "/tmp/bert-server-compute-stage4-successor-v2-20261103/joined/checkout/cadathlon/common/encrypted_rotation.py": "e83c7314a99b761efcde360283ce98ca4a2c1bf28cbbdc0cc26ffcfecf56c9f3",
+    "/tmp/bert-server-compute-stage4-successor-v2-20261103/joined/checkout/cadathlon/common/encrypted_polynomial.py": "912283bab82fff445671fc97fb4e49be16204d75c3132203092bc7eca7fb059a",
+    "/tmp/bert-server-compute-stage4-successor-v2-20261103/joined/checkout/cadathlon/common/encrypted_packed_qwen.py": "e2739e2e7ff36d208095fd52b3e393157bc251549fe550495f6e8d6197edd58f",
+    "/tmp/bert-server-compute-stage4-successor-v2-20261103/joined/checkout/cadathlon/common/encrypted_packed_transformer.py": "5745ffdd852314887fa29fabd4edeb87d3d6e99560c451d6a19617515a2ed5be",
+    "/tmp/bert-server-compute-stage4-successor-v2-20261103/joined/checkout/cadathlon/common/encrypted_chained_streaming_linear.py": "8ec6bd4bd30dfd18ebd052dae88776fb63a81d7f0a4d21daa71d8ab42a53062b",
+    "/tmp/bert-server-compute-stage4-successor-v2-20261103/joined/checkout/cadathlon/common/encrypted_shallow_score_routing.py": "0958e6f1d7ed5ded9d54c3a8db0e6ef37eec03a807fe844cda29148a60582988",
+    "/tmp/bert-server-compute-stage4-successor-v2-20261103/joined/checkout/cadathlon/common/encrypted_factored_score_routing.py": "354453e45a47ab32f39385615169555d598ccaeb9c7f74597635f2b7e0696ead",
+    "/tmp/bert-server-compute-stage4-successor-v2-20261103/joined/checkout/cadathlon/common/encrypted_bert_attention_tile.py": "45ade908036d3d603aeee076c518c12109e5ef945af00c0f0cda95a958025f0c",
+    "/tmp/bert-server-compute-stage4-successor-v2-20261103/joined/checkout/cadathlon/common/encrypted_compilation.py": "4518d5f1cebba64fd1f5e1fb162da95fa7dde10936b01f274b0cdc6a31486fb2",
+    "/tmp/bert-server-compute-stage4-successor-v2-20261103/joined/checkout/cadathlon/common/encrypted_ntt.py": "5825e90fc778988528f2a7e1d5cc6033426b55f912c5c94ef41ef9b45fe324bb",
+    "/tmp/bert-server-compute-stage4-successor-v2-20261103/runtime/jaxite_word/he_params.py": "b34f2a938598ef9fd1f9de157db3400c48befcb60866751449742917e2e3fccc",
+    "/tmp/bert-server-compute-stage4-successor-v2-20261103/runtime/stage/key_contexts.py": "7eb793deeccae8cd5a1e09f368f2465d39bfed21b379aefca46474bf6532c205",
+    "/tmp/bert-server-compute-stage4-successor-v2-20261103/joined/encrypted_bert_layer_attention.py": "fdb34b3fc8fc89b8b777f75f1bebe8a691fa8ccc318e997ed692b6f27be6d8ba",
+    "/tmp/bert-full-model-immutable-masks-20261103/source-bound-v1/report.json": "e7f5cadba5dfbfa464b7891ea0fc84306727f055bc3dd39ade204d3de72c60c5",
+    "/tmp/bert-full-model-immutable-masks-20261103/test_full_model_owner.py": "d8cf17ef265cee4855552f1e166b7ee96214d34573e8e2316d80e5763f5b4a58"
+  },
+  "baseline_K128_rotations": 906829,
+  "attention_rotations": 830976,
+  "attention_fraction": 0.9163535793407578,
+  "routing_internal_rotations": 638976,
+  "routing_fraction": 0.7046267818960356,
+  "attention_one_query_tile": {
+    "score_rotations": 4328,
+    "value_mix_rotations": 4328,
+    "ciphertext_products": 256,
+    "routing_plaintext_terms": 7168,
+    "route_maps_per_direction": 128,
+    "route_internal_rotations_per_map": 26
+  },
+  "dense": {
+    "square_768": {
+      "diagonals": 1535,
+      "giant_groups": 24,
+      "rotations": 86
+    },
+    "rectangular_768_3072": {
+      "diagonals": 3839,
+      "giant_groups": 60,
+      "rotations": 122
+    },
+    "chained_key_union": [
+      1,
+      64,
+      61760,
+      64064
+    ]
+  },
+  "bounded_cache": {
+    "max_entries": 2,
+    "suggested_byte_budget": 2147483648,
+    "full_Q100_pair_and_map_bytes": 956825600,
+    "scope": "Reuses completed explicit key operands only; no rotation/rescale/order change",
+    "repeated_dense_baby_calls": 63,
+    "repeated_dense_baby_key": 1,
+    "caveat": "A single direct QK projection mostly uses distinct keys; this does not explain its wall time"
+  },
+  "qkv_shared_babies": {
+    "saved_rotations_per_layer": 1008,
+    "saved_rotations_all_layers": 12096,
+    "fraction": 0.0133387882390175,
+    "extra_retained_Q_bytes_layer0": 822083584,
+    "extra_retained_Q_bytes_later": 419430400,
+    "one_max_level_64_ciphertext_baby_bank_bytes": 6710886400
+  },
+  "reused_key_value_alignments": {
+    "saved_rotations_per_layer": 1680,
+    "saved_rotations_all_layers": 20160,
+    "fraction": 0.02223131373169583,
+    "full_aligned_cache_bytes_layer0": 24662507520,
+    "full_aligned_cache_bytes_later": 12582912000
+  },
+  "separate_exact_order_hoisting_proposal": {
+    "saved_decompositions": 589824,
+    "rotation_count_unchanged": 906829,
+    "warning": "Existing QP hoisted API cannot be substituted without checking ModDown placement and exact residue parity"
+  },
+  "levels": [
+    {
+      "q": 100,
+      "ciphertext_bytes": 104857600,
+      "prepared_pair_and_map_bytes": 956825600,
+      "two_entry_cache_bytes": 1913651200,
+      "hoisted_digits_bytes": 478150656
+    },
+    {
+      "q": 98,
+      "ciphertext_bytes": 102760448,
+      "prepared_pair_and_map_bytes": 940048384,
+      "two_entry_cache_bytes": 1880096768,
+      "hoisted_digits_bytes": 469762048
+    },
+    {
+      "q": 96,
+      "ciphertext_bytes": 100663296,
+      "prepared_pair_and_map_bytes": 923271168,
+      "two_entry_cache_bytes": 1846542336,
+      "hoisted_digits_bytes": 461373440
+    },
+    {
+      "q": 94,
+      "ciphertext_bytes": 98566144,
+      "prepared_pair_and_map_bytes": 906493952,
+      "two_entry_cache_bytes": 1812987904,
+      "hoisted_digits_bytes": 452984832
+    },
+    {
+      "q": 50,
+      "ciphertext_bytes": 52428800,
+      "prepared_pair_and_map_bytes": 268959744,
+      "two_entry_cache_bytes": 537919488,
+      "hoisted_digits_bytes": 134217728
+    },
+    {
+      "q": 48,
+      "ciphertext_bytes": 50331648,
+      "prepared_pair_and_map_bytes": 260571136,
+      "two_entry_cache_bytes": 521142272,
+      "hoisted_digits_bytes": 130023424
+    }
+  ],
+  "notes": [
+    "Counts exclude bootstrap internals; baseline used identity refresh in its ideal test.",
+    "Device transfer, public encoding, NTT construction and JAX tracing costs are not measured here.",
+    "Prepared cache byte budget excludes transient conversions, controls, ciphertexts and compiler buffers.",
+    "Mutable key backing cannot use an identity-only content cache. Authenticated readonly mapping lifecycle must be bound.",
+    "One-level weighted sums encode every non-scalar diagonal; caching all square-map plaintexts at Q100 costs about75GiB."
+  ],
+  "source_hashes_after": {
+    "/tmp/bert-server-compute-stage4-successor-v2-20261103/joined/checkout/cadathlon/common/encrypted_rotation.py": "e83c7314a99b761efcde360283ce98ca4a2c1bf28cbbdc0cc26ffcfecf56c9f3",
+    "/tmp/bert-server-compute-stage4-successor-v2-20261103/joined/checkout/cadathlon/common/encrypted_polynomial.py": "912283bab82fff445671fc97fb4e49be16204d75c3132203092bc7eca7fb059a",
+    "/tmp/bert-server-compute-stage4-successor-v2-20261103/joined/checkout/cadathlon/common/encrypted_packed_qwen.py": "e2739e2e7ff36d208095fd52b3e393157bc251549fe550495f6e8d6197edd58f",
+    "/tmp/bert-server-compute-stage4-successor-v2-20261103/joined/checkout/cadathlon/common/encrypted_packed_transformer.py": "5745ffdd852314887fa29fabd4edeb87d3d6e99560c451d6a19617515a2ed5be",
+    "/tmp/bert-server-compute-stage4-successor-v2-20261103/joined/checkout/cadathlon/common/encrypted_chained_streaming_linear.py": "8ec6bd4bd30dfd18ebd052dae88776fb63a81d7f0a4d21daa71d8ab42a53062b",
+    "/tmp/bert-server-compute-stage4-successor-v2-20261103/joined/checkout/cadathlon/common/encrypted_shallow_score_routing.py": "0958e6f1d7ed5ded9d54c3a8db0e6ef37eec03a807fe844cda29148a60582988",
+    "/tmp/bert-server-compute-stage4-successor-v2-20261103/joined/checkout/cadathlon/common/encrypted_factored_score_routing.py": "354453e45a47ab32f39385615169555d598ccaeb9c7f74597635f2b7e0696ead",
+    "/tmp/bert-server-compute-stage4-successor-v2-20261103/joined/checkout/cadathlon/common/encrypted_bert_attention_tile.py": "45ade908036d3d603aeee076c518c12109e5ef945af00c0f0cda95a958025f0c",
+    "/tmp/bert-server-compute-stage4-successor-v2-20261103/joined/checkout/cadathlon/common/encrypted_compilation.py": "4518d5f1cebba64fd1f5e1fb162da95fa7dde10936b01f274b0cdc6a31486fb2",
+    "/tmp/bert-server-compute-stage4-successor-v2-20261103/joined/checkout/cadathlon/common/encrypted_ntt.py": "5825e90fc778988528f2a7e1d5cc6033426b55f912c5c94ef41ef9b45fe324bb",
+    "/tmp/bert-server-compute-stage4-successor-v2-20261103/runtime/jaxite_word/he_params.py": "b34f2a938598ef9fd1f9de157db3400c48befcb60866751449742917e2e3fccc",
+    "/tmp/bert-server-compute-stage4-successor-v2-20261103/runtime/stage/key_contexts.py": "7eb793deeccae8cd5a1e09f368f2465d39bfed21b379aefca46474bf6532c205",
+    "/tmp/bert-server-compute-stage4-successor-v2-20261103/joined/encrypted_bert_layer_attention.py": "fdb34b3fc8fc89b8b777f75f1bebe8a691fa8ccc318e997ed692b6f27be6d8ba",
+    "/tmp/bert-full-model-immutable-masks-20261103/source-bound-v1/report.json": "e7f5cadba5dfbfa464b7891ea0fc84306727f055bc3dd39ade204d3de72c60c5",
+    "/tmp/bert-full-model-immutable-masks-20261103/test_full_model_owner.py": "d8cf17ef265cee4855552f1e166b7ee96214d34573e8e2316d80e5763f5b4a58"
+  },
+  "source_files_unchanged": true,
+  "passed": true
+}

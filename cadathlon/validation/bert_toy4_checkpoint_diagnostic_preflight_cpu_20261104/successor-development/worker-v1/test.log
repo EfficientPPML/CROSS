@@ -1,0 +1,45 @@
+...........F..............                                               [100%]
+=================================== FAILURES ===================================
+________ test_output_collision_preserves_old_receipt[component_worker] _________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-610/test_output_collision_preserve1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c76327bf450>
+module = <module 'component_worker' from '/tmp/bert-toy4-checkpoint-component-v2-20261104/component_worker.py'>
+
+    @pytest.mark.parametrize('module',[collector,w])
+    def test_output_collision_preserves_old_receipt(tmp_path,monkeypatch,module):
+        out=tmp_path/'old';out.mkdir();old=b'{"old":true}\n';(out/'report.json').write_bytes(old)
+        source=tmp_path/'sources';source.write_text('{}');monkeypatch.setattr(module,'_BOOTSTRAP',({},{}))
+        args=['command','--output',str(out),'--source-manifest',str(source),'--source-manifest-sha256',p.sha(source.read_bytes())]
+        if module is w:
+            config=tmp_path/'config';config.write_text('{}');source=tmp_path/'sources';source.write_text('{}')
+            monkeypatch.setattr(p,'require_ready',lambda:None);monkeypatch.setattr(w,'config_check',lambda c:c)
+            monkeypatch.setattr(w,'separate',lambda *a:None)
+            args+=['--execute','--config',str(config),'--config-sha256',p.sha(config.read_bytes()),'--source-manifest',str(source)]
+        monkeypatch.setattr(sys,'argv',args)
+>       with pytest.raises(FileExistsError):module.main()
+                                            ^^^^^^^^^^^^^
+
+test_worker_protocol.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def main():
+        if _BOOTSTRAP is None:raise ValueError('fresh authenticated isolated script entry required')
+        parser=argparse.ArgumentParser()
+        for name in('config','source-manifest','output'):parser.add_argument('--'+name,type=Path,required=True)
+        parser.add_argument('--source-manifest-sha256',required=True)
+        parser.add_argument('--config-sha256',required=True);parser.add_argument('--execute',action='store_true');args=parser.parse_args()
+        if not args.execute:raise ValueError('explicit actual role execution required')
+        protocol.require_ready();raw=protocol.read(args.config)
+        if protocol.sha(raw)!=args.config_sha256:raise ValueError('external worker configuration hash differs')
+        config=protocol.parse(raw);config_check(config);expected=_BOOTSTRAP[0]
+        if protocol.sha(protocol.read(args.source_manifest))!=args.source_manifest_sha256:raise ValueError('source manifest changed after admission')
+        args.output=args.output.absolute()
+>       separate(args.output,[HERE,args.config,args.source_manifest,config['workspace'],config['setup_receipt'],config['server_receipt'],config['server_root_review']])
+                                                                    ^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'workspace'
+
+component_worker.py:267: KeyError
+=========================== short test summary info ============================
+FAILED test_worker_protocol.py::test_output_collision_preserves_old_receipt[component_worker]
+1 failed, 25 passed in 1.87s

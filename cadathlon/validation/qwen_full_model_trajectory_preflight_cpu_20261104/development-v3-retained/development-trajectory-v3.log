@@ -1,0 +1,773 @@
+...................................FFFFFFF..FFFF......FF................ [ 97%]
+..                                                                       [100%]
+=================================== FAILURES ===================================
+___________________ test_collector_complete_and_group_gates ____________________
+
+fake_collection = namespace(mode='healthy', owners=[], primary=None, close_error=None, out=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-507/test_collector_complete_and_gr0/lab/out'), report=<function fake_collection.<locals>.<lambda> at 0x74d4cac94400>)
+
+    def test_collector_complete_and_group_gates(fake_collection):
+>       assert c.main()==0;r=fake_collection.report();assert r['passed'] and r['termination_scope_completed'] and r['terminal_scope_completed']
+               ^^^^^^^^
+
+test_trajectory_lifecycle.py:41: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+collect_trajectory.py:111: in main
+    report=finish(args.output/'report.json',lambda:collect(args.output,execute=args.execute),write,lambda p:p.read_bytes(),termination=termination_signals,shield=cleanup_signals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+finish.py:8: in finish
+    with termination():report=call()
+                              ^^^^^^
+collect_trajectory.py:111: in <lambda>
+    report=finish(args.output/'report.json',lambda:collect(args.output,execute=args.execute),write,lambda p:p.read_bytes(),termination=termination_signals,shield=cleanup_signals)
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:104: in collect
+    raise primary
+collect_trajectory.py:58: in collect
+    execution=execution_tree(out,before);report['execution_source_hashes_before']=source_hashes(execution)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:36: in execution_tree
+    if source_hashes(root)!=before:raise ValueError('execution tree differs from archive')
+       ^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:15: in source_hashes
+    return {n:sha(root/n) for n in json.loads((root/'trajectory_inventory.json').read_bytes())['sources']}
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-507/test_collector_complete_and_gr0/lab/out/execution/trajectory_inventory.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-507/test_collector_complete_and_gr0/lab/out/execution/trajectory_inventory.json'
+
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+_____ test_collector_child_failures_preserve_false_and_primary[surviving] ______
+
+fake_collection = namespace(mode='surviving', owners=[], primary=None, close_error=None, out=PosixPath('/tmp/pytest-of-jianming_gatech/p...t-507/test_collector_child_failures_0/lab/out'), report=<function fake_collection.<locals>.<lambda> at 0x74d4ca53c720>)
+mode = 'surviving'
+
+    @pytest.mark.parametrize('mode',['surviving','missing','wait','cancel','launch'])
+    def test_collector_child_failures_preserve_false_and_primary(fake_collection,mode):
+        fake_collection.mode=mode
+        expected=KeyboardInterrupt if mode=='cancel'else ValueError if mode=='wait'else RuntimeError
+>       with pytest.raises(expected)as found:c.main()
+                                             ^^^^^^^^
+
+test_trajectory_lifecycle.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+collect_trajectory.py:111: in main
+    report=finish(args.output/'report.json',lambda:collect(args.output,execute=args.execute),write,lambda p:p.read_bytes(),termination=termination_signals,shield=cleanup_signals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+finish.py:8: in finish
+    with termination():report=call()
+                              ^^^^^^
+collect_trajectory.py:111: in <lambda>
+    report=finish(args.output/'report.json',lambda:collect(args.output,execute=args.execute),write,lambda p:p.read_bytes(),termination=termination_signals,shield=cleanup_signals)
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:104: in collect
+    raise primary
+collect_trajectory.py:58: in collect
+    execution=execution_tree(out,before);report['execution_source_hashes_before']=source_hashes(execution)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:36: in execution_tree
+    if source_hashes(root)!=before:raise ValueError('execution tree differs from archive')
+       ^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:15: in source_hashes
+    return {n:sha(root/n) for n in json.loads((root/'trajectory_inventory.json').read_bytes())['sources']}
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-507/test_collector_child_failures_0/lab/out/execution/trajectory_inventory.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-507/test_collector_child_failures_0/lab/out/execution/trajectory_inventory.json'
+
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+______ test_collector_child_failures_preserve_false_and_primary[missing] _______
+
+fake_collection = namespace(mode='missing', owners=[], primary=None, close_error=None, out=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-507/test_collector_child_failures_1/lab/out'), report=<function fake_collection.<locals>.<lambda> at 0x74d4ca53d080>)
+mode = 'missing'
+
+    @pytest.mark.parametrize('mode',['surviving','missing','wait','cancel','launch'])
+    def test_collector_child_failures_preserve_false_and_primary(fake_collection,mode):
+        fake_collection.mode=mode
+        expected=KeyboardInterrupt if mode=='cancel'else ValueError if mode=='wait'else RuntimeError
+>       with pytest.raises(expected)as found:c.main()
+                                             ^^^^^^^^
+
+test_trajectory_lifecycle.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+collect_trajectory.py:111: in main
+    report=finish(args.output/'report.json',lambda:collect(args.output,execute=args.execute),write,lambda p:p.read_bytes(),termination=termination_signals,shield=cleanup_signals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+finish.py:8: in finish
+    with termination():report=call()
+                              ^^^^^^
+collect_trajectory.py:111: in <lambda>
+    report=finish(args.output/'report.json',lambda:collect(args.output,execute=args.execute),write,lambda p:p.read_bytes(),termination=termination_signals,shield=cleanup_signals)
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:104: in collect
+    raise primary
+collect_trajectory.py:58: in collect
+    execution=execution_tree(out,before);report['execution_source_hashes_before']=source_hashes(execution)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:36: in execution_tree
+    if source_hashes(root)!=before:raise ValueError('execution tree differs from archive')
+       ^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:15: in source_hashes
+    return {n:sha(root/n) for n in json.loads((root/'trajectory_inventory.json').read_bytes())['sources']}
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-507/test_collector_child_failures_1/lab/out/execution/trajectory_inventory.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-507/test_collector_child_failures_1/lab/out/execution/trajectory_inventory.json'
+
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+________ test_collector_child_failures_preserve_false_and_primary[wait] ________
+
+fake_collection = namespace(mode='wait', owners=[], primary=None, close_error=None, out=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-507/test_collector_child_failures_2/lab/out'), report=<function fake_collection.<locals>.<lambda> at 0x74d4ca53dd00>)
+mode = 'wait'
+
+    @pytest.mark.parametrize('mode',['surviving','missing','wait','cancel','launch'])
+    def test_collector_child_failures_preserve_false_and_primary(fake_collection,mode):
+        fake_collection.mode=mode
+        expected=KeyboardInterrupt if mode=='cancel'else ValueError if mode=='wait'else RuntimeError
+>       with pytest.raises(expected)as found:c.main()
+                                             ^^^^^^^^
+
+test_trajectory_lifecycle.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+collect_trajectory.py:111: in main
+    report=finish(args.output/'report.json',lambda:collect(args.output,execute=args.execute),write,lambda p:p.read_bytes(),termination=termination_signals,shield=cleanup_signals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+finish.py:8: in finish
+    with termination():report=call()
+                              ^^^^^^
+collect_trajectory.py:111: in <lambda>
+    report=finish(args.output/'report.json',lambda:collect(args.output,execute=args.execute),write,lambda p:p.read_bytes(),termination=termination_signals,shield=cleanup_signals)
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:104: in collect
+    raise primary
+collect_trajectory.py:58: in collect
+    execution=execution_tree(out,before);report['execution_source_hashes_before']=source_hashes(execution)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:36: in execution_tree
+    if source_hashes(root)!=before:raise ValueError('execution tree differs from archive')
+       ^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:15: in source_hashes
+    return {n:sha(root/n) for n in json.loads((root/'trajectory_inventory.json').read_bytes())['sources']}
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-507/test_collector_child_failures_2/lab/out/execution/trajectory_inventory.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-507/test_collector_child_failures_2/lab/out/execution/trajectory_inventory.json'
+
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+_______ test_collector_child_failures_preserve_false_and_primary[cancel] _______
+
+fake_collection = namespace(mode='cancel', owners=[], primary=None, close_error=None, out=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-507/test_collector_child_failures_3/lab/out'), report=<function fake_collection.<locals>.<lambda> at 0x74d4ca53c860>)
+mode = 'cancel'
+
+    @pytest.mark.parametrize('mode',['surviving','missing','wait','cancel','launch'])
+    def test_collector_child_failures_preserve_false_and_primary(fake_collection,mode):
+        fake_collection.mode=mode
+        expected=KeyboardInterrupt if mode=='cancel'else ValueError if mode=='wait'else RuntimeError
+>       with pytest.raises(expected)as found:c.main()
+                                             ^^^^^^^^
+
+test_trajectory_lifecycle.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+collect_trajectory.py:111: in main
+    report=finish(args.output/'report.json',lambda:collect(args.output,execute=args.execute),write,lambda p:p.read_bytes(),termination=termination_signals,shield=cleanup_signals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+finish.py:8: in finish
+    with termination():report=call()
+                              ^^^^^^
+collect_trajectory.py:111: in <lambda>
+    report=finish(args.output/'report.json',lambda:collect(args.output,execute=args.execute),write,lambda p:p.read_bytes(),termination=termination_signals,shield=cleanup_signals)
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:104: in collect
+    raise primary
+collect_trajectory.py:58: in collect
+    execution=execution_tree(out,before);report['execution_source_hashes_before']=source_hashes(execution)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:36: in execution_tree
+    if source_hashes(root)!=before:raise ValueError('execution tree differs from archive')
+       ^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:15: in source_hashes
+    return {n:sha(root/n) for n in json.loads((root/'trajectory_inventory.json').read_bytes())['sources']}
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-507/test_collector_child_failures_3/lab/out/execution/trajectory_inventory.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-507/test_collector_child_failures_3/lab/out/execution/trajectory_inventory.json'
+
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+_______ test_collector_child_failures_preserve_false_and_primary[launch] _______
+
+fake_collection = namespace(mode='launch', owners=[], primary=None, close_error=None, out=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-507/test_collector_child_failures_4/lab/out'), report=<function fake_collection.<locals>.<lambda> at 0x74d4ca53df80>)
+mode = 'launch'
+
+    @pytest.mark.parametrize('mode',['surviving','missing','wait','cancel','launch'])
+    def test_collector_child_failures_preserve_false_and_primary(fake_collection,mode):
+        fake_collection.mode=mode
+        expected=KeyboardInterrupt if mode=='cancel'else ValueError if mode=='wait'else RuntimeError
+>       with pytest.raises(expected)as found:c.main()
+                                             ^^^^^^^^
+
+test_trajectory_lifecycle.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+collect_trajectory.py:111: in main
+    report=finish(args.output/'report.json',lambda:collect(args.output,execute=args.execute),write,lambda p:p.read_bytes(),termination=termination_signals,shield=cleanup_signals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+finish.py:8: in finish
+    with termination():report=call()
+                              ^^^^^^
+collect_trajectory.py:111: in <lambda>
+    report=finish(args.output/'report.json',lambda:collect(args.output,execute=args.execute),write,lambda p:p.read_bytes(),termination=termination_signals,shield=cleanup_signals)
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:104: in collect
+    raise primary
+collect_trajectory.py:58: in collect
+    execution=execution_tree(out,before);report['execution_source_hashes_before']=source_hashes(execution)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:36: in execution_tree
+    if source_hashes(root)!=before:raise ValueError('execution tree differs from archive')
+       ^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:15: in source_hashes
+    return {n:sha(root/n) for n in json.loads((root/'trajectory_inventory.json').read_bytes())['sources']}
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-507/test_collector_child_failures_4/lab/out/execution/trajectory_inventory.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-507/test_collector_child_failures_4/lab/out/execution/trajectory_inventory.json'
+
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+____________________ test_cancel_survives_secondary_cleanup ____________________
+
+fake_collection = namespace(mode='cancel', owners=[], primary=None, close_error=OSError('secondary'), out=PosixPath('/tmp/pytest-of-jian...t-507/test_cancel_survives_secondary0/lab/out'), report=<function fake_collection.<locals>.<lambda> at 0x74d4ca53efc0>)
+
+    def test_cancel_survives_secondary_cleanup(fake_collection):
+        fake_collection.mode='cancel';fake_collection.close_error=OSError('secondary')
+>       with pytest.raises(KeyboardInterrupt)as found:c.main()
+                                                      ^^^^^^^^
+
+test_trajectory_lifecycle.py:54: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+collect_trajectory.py:111: in main
+    report=finish(args.output/'report.json',lambda:collect(args.output,execute=args.execute),write,lambda p:p.read_bytes(),termination=termination_signals,shield=cleanup_signals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+finish.py:8: in finish
+    with termination():report=call()
+                              ^^^^^^
+collect_trajectory.py:111: in <lambda>
+    report=finish(args.output/'report.json',lambda:collect(args.output,execute=args.execute),write,lambda p:p.read_bytes(),termination=termination_signals,shield=cleanup_signals)
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:104: in collect
+    raise primary
+collect_trajectory.py:58: in collect
+    execution=execution_tree(out,before);report['execution_source_hashes_before']=source_hashes(execution)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:36: in execution_tree
+    if source_hashes(root)!=before:raise ValueError('execution tree differs from archive')
+       ^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:15: in source_hashes
+    return {n:sha(root/n) for n in json.loads((root/'trajectory_inventory.json').read_bytes())['sources']}
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-507/test_cancel_survives_secondary0/lab/out/execution/trajectory_inventory.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-507/test_cancel_survives_secondary0/lab/out/execution/trajectory_inventory.json'
+
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+__ test_terminal_failures_republish_false[KeyboardInterrupt-cleanup_signals] ___
+
+    @contextmanager
+>   def broken():yield;raise kind('restoration')
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyboardInterrupt: restoration
+
+test_trajectory_lifecycle.py:62: KeyboardInterrupt
+
+During handling of the above exception, another exception occurred:
+
+fake_collection = namespace(mode='healthy', owners=[], primary=None, close_error=None, out=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-507/test_terminal_failures_republi2/lab/out'), report=<function fake_collection.<locals>.<lambda> at 0x74d4ca510c20>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x74d4ca510550>
+scope = 'cleanup_signals', kind = <class 'KeyboardInterrupt'>
+
+    @pytest.mark.parametrize('scope',['cleanup_signals','termination_signals'])
+    @pytest.mark.parametrize('kind',[OSError,KeyboardInterrupt,SystemExit])
+    def test_terminal_failures_republish_false(fake_collection,monkeypatch,scope,kind):
+        @contextmanager
+        def broken():yield;raise kind('restoration')
+        monkeypatch.setattr(c,scope,broken)
+>       with pytest.raises(kind):c.main()
+                                 ^^^^^^^^
+
+test_trajectory_lifecycle.py:64: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+collect_trajectory.py:111: in main
+    report=finish(args.output/'report.json',lambda:collect(args.output,execute=args.execute),write,lambda p:p.read_bytes(),termination=termination_signals,shield=cleanup_signals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+finish.py:8: in finish
+    with termination():report=call()
+                              ^^^^^^
+collect_trajectory.py:111: in <lambda>
+    report=finish(args.output/'report.json',lambda:collect(args.output,execute=args.execute),write,lambda p:p.read_bytes(),termination=termination_signals,shield=cleanup_signals)
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:82: in collect
+    with terminal_scope(report,out/'report.json',write,cleanup_signals,lambda:(primary,cleanup_error)):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/contextlib.py:148: in __exit__
+    next(self.gen)
+validation_terminal.py:37: in terminal_scope
+    raise chosen
+collect_trajectory.py:58: in collect
+    execution=execution_tree(out,before);report['execution_source_hashes_before']=source_hashes(execution)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:36: in execution_tree
+    if source_hashes(root)!=before:raise ValueError('execution tree differs from archive')
+       ^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:15: in source_hashes
+    return {n:sha(root/n) for n in json.loads((root/'trajectory_inventory.json').read_bytes())['sources']}
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-507/test_terminal_failures_republi2/lab/out/execution/trajectory_inventory.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-507/test_terminal_failures_republi2/lab/out/execution/trajectory_inventory.json'
+E       cleanup scope: KeyboardInterrupt('restoration')
+E       failed terminal republication: KeyboardInterrupt('restoration')
+E       terminal failed republication: KeyboardInterrupt
+
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+_ test_terminal_failures_republish_false[KeyboardInterrupt-termination_signals] _
+
+fake_collection = namespace(mode='healthy', owners=[], primary=None, close_error=None, out=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-507/test_terminal_failures_republi3/lab/out'), report=<function fake_collection.<locals>.<lambda> at 0x74d4ca53e520>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x74d4ca582330>
+scope = 'termination_signals', kind = <class 'KeyboardInterrupt'>
+
+    @pytest.mark.parametrize('scope',['cleanup_signals','termination_signals'])
+    @pytest.mark.parametrize('kind',[OSError,KeyboardInterrupt,SystemExit])
+    def test_terminal_failures_republish_false(fake_collection,monkeypatch,scope,kind):
+        @contextmanager
+        def broken():yield;raise kind('restoration')
+        monkeypatch.setattr(c,scope,broken)
+>       with pytest.raises(kind):c.main()
+                                 ^^^^^^^^
+
+test_trajectory_lifecycle.py:64: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+collect_trajectory.py:111: in main
+    report=finish(args.output/'report.json',lambda:collect(args.output,execute=args.execute),write,lambda p:p.read_bytes(),termination=termination_signals,shield=cleanup_signals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+finish.py:8: in finish
+    with termination():report=call()
+                              ^^^^^^
+collect_trajectory.py:111: in <lambda>
+    report=finish(args.output/'report.json',lambda:collect(args.output,execute=args.execute),write,lambda p:p.read_bytes(),termination=termination_signals,shield=cleanup_signals)
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:104: in collect
+    raise primary
+collect_trajectory.py:58: in collect
+    execution=execution_tree(out,before);report['execution_source_hashes_before']=source_hashes(execution)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:36: in execution_tree
+    if source_hashes(root)!=before:raise ValueError('execution tree differs from archive')
+       ^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:15: in source_hashes
+    return {n:sha(root/n) for n in json.loads((root/'trajectory_inventory.json').read_bytes())['sources']}
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-507/test_terminal_failures_republi3/lab/out/execution/trajectory_inventory.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-507/test_terminal_failures_republi3/lab/out/execution/trajectory_inventory.json'
+
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+______ test_terminal_failures_republish_false[SystemExit-cleanup_signals] ______
+
+    @contextmanager
+>   def broken():yield;raise kind('restoration')
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   SystemExit: restoration
+
+test_trajectory_lifecycle.py:62: SystemExit
+
+During handling of the above exception, another exception occurred:
+
+fake_collection = namespace(mode='healthy', owners=[], primary=None, close_error=None, out=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-507/test_terminal_failures_republi4/lab/out'), report=<function fake_collection.<locals>.<lambda> at 0x74d4ca53cea0>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x74d4ca49ce50>
+scope = 'cleanup_signals', kind = <class 'SystemExit'>
+
+    @pytest.mark.parametrize('scope',['cleanup_signals','termination_signals'])
+    @pytest.mark.parametrize('kind',[OSError,KeyboardInterrupt,SystemExit])
+    def test_terminal_failures_republish_false(fake_collection,monkeypatch,scope,kind):
+        @contextmanager
+        def broken():yield;raise kind('restoration')
+        monkeypatch.setattr(c,scope,broken)
+>       with pytest.raises(kind):c.main()
+                                 ^^^^^^^^
+
+test_trajectory_lifecycle.py:64: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+collect_trajectory.py:111: in main
+    report=finish(args.output/'report.json',lambda:collect(args.output,execute=args.execute),write,lambda p:p.read_bytes(),termination=termination_signals,shield=cleanup_signals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+finish.py:8: in finish
+    with termination():report=call()
+                              ^^^^^^
+collect_trajectory.py:111: in <lambda>
+    report=finish(args.output/'report.json',lambda:collect(args.output,execute=args.execute),write,lambda p:p.read_bytes(),termination=termination_signals,shield=cleanup_signals)
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:82: in collect
+    with terminal_scope(report,out/'report.json',write,cleanup_signals,lambda:(primary,cleanup_error)):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/contextlib.py:148: in __exit__
+    next(self.gen)
+validation_terminal.py:37: in terminal_scope
+    raise chosen
+collect_trajectory.py:58: in collect
+    execution=execution_tree(out,before);report['execution_source_hashes_before']=source_hashes(execution)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:36: in execution_tree
+    if source_hashes(root)!=before:raise ValueError('execution tree differs from archive')
+       ^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:15: in source_hashes
+    return {n:sha(root/n) for n in json.loads((root/'trajectory_inventory.json').read_bytes())['sources']}
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-507/test_terminal_failures_republi4/lab/out/execution/trajectory_inventory.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-507/test_terminal_failures_republi4/lab/out/execution/trajectory_inventory.json'
+E       cleanup scope: SystemExit('restoration')
+E       failed terminal republication: SystemExit('restoration')
+E       terminal failed republication: SystemExit
+
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+____ test_terminal_failures_republish_false[SystemExit-termination_signals] ____
+
+fake_collection = namespace(mode='healthy', owners=[], primary=None, close_error=None, out=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-507/test_terminal_failures_republi5/lab/out'), report=<function fake_collection.<locals>.<lambda> at 0x74d4ca5114e0>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x74d4ca48c7d0>
+scope = 'termination_signals', kind = <class 'SystemExit'>
+
+    @pytest.mark.parametrize('scope',['cleanup_signals','termination_signals'])
+    @pytest.mark.parametrize('kind',[OSError,KeyboardInterrupt,SystemExit])
+    def test_terminal_failures_republish_false(fake_collection,monkeypatch,scope,kind):
+        @contextmanager
+        def broken():yield;raise kind('restoration')
+        monkeypatch.setattr(c,scope,broken)
+>       with pytest.raises(kind):c.main()
+                                 ^^^^^^^^
+
+test_trajectory_lifecycle.py:64: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+collect_trajectory.py:111: in main
+    report=finish(args.output/'report.json',lambda:collect(args.output,execute=args.execute),write,lambda p:p.read_bytes(),termination=termination_signals,shield=cleanup_signals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+finish.py:8: in finish
+    with termination():report=call()
+                              ^^^^^^
+collect_trajectory.py:111: in <lambda>
+    report=finish(args.output/'report.json',lambda:collect(args.output,execute=args.execute),write,lambda p:p.read_bytes(),termination=termination_signals,shield=cleanup_signals)
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:104: in collect
+    raise primary
+collect_trajectory.py:58: in collect
+    execution=execution_tree(out,before);report['execution_source_hashes_before']=source_hashes(execution)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:36: in execution_tree
+    if source_hashes(root)!=before:raise ValueError('execution tree differs from archive')
+       ^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:15: in source_hashes
+    return {n:sha(root/n) for n in json.loads((root/'trajectory_inventory.json').read_bytes())['sources']}
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-507/test_terminal_failures_republi5/lab/out/execution/trajectory_inventory.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-507/test_terminal_failures_republi5/lab/out/execution/trajectory_inventory.json'
+
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+_________ test_collector_runs_verified_execution_tree_without_bytecode _________
+
+fake_collection = namespace(mode='healthy', owners=[], primary=None, close_error=None, out=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-507/test_collector_runs_verified_e0/lab/out'), report=<function fake_collection.<locals>.<lambda> at 0x74d4ca34d120>)
+
+    def test_collector_runs_verified_execution_tree_without_bytecode(fake_collection):
+>       assert c.main()==0;r=fake_collection.report()
+               ^^^^^^^^
+
+test_trajectory_lifecycle.py:120: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+collect_trajectory.py:111: in main
+    report=finish(args.output/'report.json',lambda:collect(args.output,execute=args.execute),write,lambda p:p.read_bytes(),termination=termination_signals,shield=cleanup_signals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+finish.py:8: in finish
+    with termination():report=call()
+                              ^^^^^^
+collect_trajectory.py:111: in <lambda>
+    report=finish(args.output/'report.json',lambda:collect(args.output,execute=args.execute),write,lambda p:p.read_bytes(),termination=termination_signals,shield=cleanup_signals)
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:104: in collect
+    raise primary
+collect_trajectory.py:58: in collect
+    execution=execution_tree(out,before);report['execution_source_hashes_before']=source_hashes(execution)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:36: in execution_tree
+    if source_hashes(root)!=before:raise ValueError('execution tree differs from archive')
+       ^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:15: in source_hashes
+    return {n:sha(root/n) for n in json.loads((root/'trajectory_inventory.json').read_bytes())['sources']}
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-507/test_collector_runs_verified_e0/lab/out/execution/trajectory_inventory.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-507/test_collector_runs_verified_e0/lab/out/execution/trajectory_inventory.json'
+
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+_________________ test_execution_copy_drift_fails_before_child _________________
+
+fake_collection = namespace(mode='healthy', owners=[], primary=None, close_error=None, out=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-507/test_execution_copy_drift_fail0/lab/out'), report=<function fake_collection.<locals>.<lambda> at 0x74d4ca512340>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x74d4ca5e2eb0>
+
+    def test_execution_copy_drift_fails_before_child(fake_collection,monkeypatch):
+        original=c.execution_tree
+        def corrupt(out,before):
+            root=original(out,before);(root/'source.py').write_text('changed');return root
+        monkeypatch.setattr(c,'execution_tree',corrupt)
+        # A copy changed after verification cannot produce a passing terminal report.
+>       assert c.main()==1
+               ^^^^^^^^
+
+test_trajectory_lifecycle.py:131: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+collect_trajectory.py:111: in main
+    report=finish(args.output/'report.json',lambda:collect(args.output,execute=args.execute),write,lambda p:p.read_bytes(),termination=termination_signals,shield=cleanup_signals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+finish.py:8: in finish
+    with termination():report=call()
+                              ^^^^^^
+collect_trajectory.py:111: in <lambda>
+    report=finish(args.output/'report.json',lambda:collect(args.output,execute=args.execute),write,lambda p:p.read_bytes(),termination=termination_signals,shield=cleanup_signals)
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:104: in collect
+    raise primary
+collect_trajectory.py:58: in collect
+    execution=execution_tree(out,before);report['execution_source_hashes_before']=source_hashes(execution)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+test_trajectory_lifecycle.py:128: in corrupt
+    root=original(out,before);(root/'source.py').write_text('changed');return root
+         ^^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:36: in execution_tree
+    if source_hashes(root)!=before:raise ValueError('execution tree differs from archive')
+       ^^^^^^^^^^^^^^^^^^^
+collect_trajectory.py:15: in source_hashes
+    return {n:sha(root/n) for n in json.loads((root/'trajectory_inventory.json').read_bytes())['sources']}
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-507/test_execution_copy_drift_fail0/lab/out/execution/trajectory_inventory.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-507/test_execution_copy_drift_fail0/lab/out/execution/trajectory_inventory.json'
+
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+=========================== short test summary info ============================
+FAILED test_trajectory_lifecycle.py::test_collector_complete_and_group_gates
+FAILED test_trajectory_lifecycle.py::test_collector_child_failures_preserve_false_and_primary[surviving]
+FAILED test_trajectory_lifecycle.py::test_collector_child_failures_preserve_false_and_primary[missing]
+FAILED test_trajectory_lifecycle.py::test_collector_child_failures_preserve_false_and_primary[wait]
+FAILED test_trajectory_lifecycle.py::test_collector_child_failures_preserve_false_and_primary[cancel]
+FAILED test_trajectory_lifecycle.py::test_collector_child_failures_preserve_false_and_primary[launch]
+FAILED test_trajectory_lifecycle.py::test_cancel_survives_secondary_cleanup
+FAILED test_trajectory_lifecycle.py::test_terminal_failures_republish_false[KeyboardInterrupt-cleanup_signals]
+FAILED test_trajectory_lifecycle.py::test_terminal_failures_republish_false[KeyboardInterrupt-termination_signals]
+FAILED test_trajectory_lifecycle.py::test_terminal_failures_republish_false[SystemExit-cleanup_signals]
+FAILED test_trajectory_lifecycle.py::test_terminal_failures_republish_false[SystemExit-termination_signals]
+FAILED test_trajectory_lifecycle.py::test_collector_runs_verified_execution_tree_without_bytecode
+FAILED test_trajectory_lifecycle.py::test_execution_copy_drift_fails_before_child
+13 failed, 61 passed in 1.08s

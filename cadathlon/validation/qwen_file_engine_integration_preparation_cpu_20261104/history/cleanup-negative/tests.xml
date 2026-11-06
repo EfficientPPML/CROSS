@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="5" time="0.028" timestamp="2026-11-04T11:39:25.679974+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_alignment" name="test_marked_incoming_cleanup_yields_to_later_cancellation[KeyboardInterrupt]" time="0.000"><failure message="OSError: publisher close&#10;later: KeyboardInterrupt('later cleanup')">cancel = &lt;class 'KeyboardInterrupt'&gt;
+
+    @pytest.mark.parametrize("cancel",[KeyboardInterrupt,SystemExit])
+    def test_marked_incoming_cleanup_yields_to_later_cancellation(cancel):
+        ordinary=policy["mark"](OSError("publisher close"));later=cancel("later cleanup")
+        final=Finalizer({},ordinary);final.attempt("later",lambda:fail(later))
+&gt;       with pytest.raises(cancel)as caught:final.raise_if_failed()
+                                            ^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/qwen-cleanup-alignment-negative-20261104/test_alignment.py:13: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;Finalizer object at 0x700d27044980&gt;
+
+&gt;   ???
+E   OSError: publisher close
+E   later: KeyboardInterrupt('later cleanup')
+
+exact-Finalizer-AST:136: OSError</failure></testcase><testcase classname="test_alignment" name="test_marked_incoming_cleanup_yields_to_later_cancellation[SystemExit]" time="0.000"><failure message="OSError: publisher close&#10;later: SystemExit('later cleanup')">cancel = &lt;class 'SystemExit'&gt;
+
+    @pytest.mark.parametrize("cancel",[KeyboardInterrupt,SystemExit])
+    def test_marked_incoming_cleanup_yields_to_later_cancellation(cancel):
+        ordinary=policy["mark"](OSError("publisher close"));later=cancel("later cleanup")
+        final=Finalizer({},ordinary);final.attempt("later",lambda:fail(later))
+&gt;       with pytest.raises(cancel)as caught:final.raise_if_failed()
+                                            ^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/qwen-cleanup-alignment-negative-20261104/test_alignment.py:13: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;Finalizer object at 0x700d271fb750&gt;
+
+&gt;   ???
+E   OSError: publisher close
+E   later: SystemExit('later cleanup')
+
+exact-Finalizer-AST:136: OSError</failure></testcase><testcase classname="test_alignment" name="test_genuine_body_wins" time="0.000" /><testcase classname="test_alignment" name="test_sticky_same_body_rethrow_keeps_origin" time="0.000" /><testcase classname="test_alignment" name="test_no_incoming_cleanup_cancellation_control" time="0.000" /></testsuite></testsuites>

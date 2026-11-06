@@ -1,0 +1,85 @@
+{
+  "suite": {
+    "repository": "https://github.com/fhe-benchmarking/ml-inference",
+    "commit": "739378698fc1f668aff7246724b45cff76f04a98",
+    "dataset": "mnist",
+    "model_name": "mlp",
+    "submission_subdir": "submissions/mnist",
+    "note": "The harness directory must stay byte-identical to this commit. install_suite.py verifies that and refuses to proceed otherwise."
+  },
+  "cases": [
+    {
+      "id": "C1",
+      "instance": 0,
+      "batch": 1,
+      "devices": 1
+    },
+    {
+      "id": "C2",
+      "instance": 0,
+      "batch": 1,
+      "devices": 8
+    },
+    {
+      "id": "C3",
+      "instance": 1,
+      "batch": 100,
+      "devices": 1
+    },
+    {
+      "id": "C4",
+      "instance": 1,
+      "batch": 100,
+      "devices": 8
+    },
+    {
+      "id": "C5",
+      "instance": 2,
+      "batch": 1000,
+      "devices": 1
+    },
+    {
+      "id": "C6",
+      "instance": 2,
+      "batch": 1000,
+      "devices": 8
+    }
+  ],
+  "determinism": {
+    "seed": 3,
+    "num_runs": 3,
+    "statistic": "median",
+    "note": "harness/run_submission.py re-creates the RNG from this base seed inside the run loop, so all num_runs runs derive the SAME generate_input seed (3 -> 1742692731) and evaluate the SAME images. The runs are repeat timings on identical input, not independent samples; that makes the image set and the ground-truth labels reproducible, but run-to-run spread measures only machine noise.",
+    "setup_measured_once": "Stages 1, 2.2 and 3 run once outside the run loop, so every results-N.json repeats the same 'Key Generation' and 'Encrypted model preprocessing' values and every 'Total' carries that one-time setup. Only stages 4-10, including 'Encrypted computation', are measured per run."
+  },
+  "gates": {
+    "logit_abs": 0.02,
+    "logit_rel": 0.01,
+    "min_top1_agreement": 0.99,
+    "max_accuracy_drop_pp": 1.0,
+    "max_setup_s": 1800,
+    "max_batch_s": 300,
+    "security_bits": 128,
+    "_note": "logit_abs/logit_rel apply to the local runner, which sees cleartext logits; the suite publishes labels only, so the suite path gates on min_top1_agreement and the accuracy drop."
+  },
+  "evaluation_profiles": {
+    "legacy": {
+      "case_ids": [
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+        "C6"
+      ],
+      "note": "Original six ranked workloads."
+    },
+    "student": {
+      "case_ids": [
+        "C3",
+        "C4"
+      ],
+      "note": "100 images on one and eight chips. Explicit shorter competition schedule; requires separate student-ring calibration."
+    }
+  }
+}

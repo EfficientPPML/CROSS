@@ -1,0 +1,44 @@
+--- held387/q5_actual_process.py
++++ successor/q5_actual_process.py
+@@ -62,6 +62,7 @@
+         self.backend=backend;self.handle=handle;self.ctx=handle.ctx;self.slots=slots;self.value=None;self.closed=False
+         _INPUTS[id(self)]=dict(owner=self,fixed=(backend,handle,self.ctx,slots,backend.encrypt_slots),
+             owned=[],barriers=[],ntt_owners=[],ntt_edges=[],returned_bindings=None,ntt_context=None,ntt_captured=False,
++            table_roots=(),table_dicts=(),table_held=(),table_snapshot=None,
+             value=None,state=None,entered=False,closed=False,failure=None)
+     def _record(self):
+         if self in _INPUTS_CLOSED:raise ValueError('encrypted input already retired')
+@@ -92,12 +93,21 @@
+         for ntt,ff in r['ntt_edges']:
+             if getattr(ntt,'ff_ctx',None)is not ff:
+                 raise ValueError('original returned/attached finite-field owner changed')
++        if r['table_snapshot']is not None:
++            from q5_checkpoint_arithmetic import working_snapshot
++            for owner,fields in r['table_dicts']:
++                if vars(owner)is not fields:raise ValueError('original setup NTT/field dictionary changed')
++            if working_snapshot(r['table_roots'])[1]!=r['table_snapshot']:
++                raise ValueError('original setup NTT/field table or control changed')
+ 
+     def _retain_returned(self,r):
+         # Original encrypt may attach its NTT context and then raise before
+         # returning a ciphertext. Retain that context as well as returned NTT/ff
+         # objects; no new table/context is constructed or injected here.
+         self._check_retained(r)
++        # Once the returned/attached graph is captured, it is immutable here.
++        # Never add replacement arrays or foreign waits on a later close.
++        if r['table_snapshot']is not None:return
+         ctx=r['fixed'][2];value=r['value'];attached=getattr(ctx,'_polynomial_ntt_ctx',None)
+         if r['ntt_captured']and attached is not r['ntt_context']:
+             raise ValueError('original attached setup NTT context changed')
+@@ -124,6 +134,11 @@
+                 if owner is not None and all(owner is not old for old in r['ntt_owners']):
+                     r['ntt_owners'].append(owner);r['owned'].append(owner)
+         for owner in tuple(r['ntt_owners']):visit(vars(owner))
++        from q5_checkpoint_arithmetic import working_snapshot
++        r['table_roots']=tuple(r['ntt_owners'])
++        r['table_dicts']=tuple((owner,vars(owner))for owner in r['table_roots'])
++        r['table_held'],r['table_snapshot']=working_snapshot(r['table_roots'])
++        self._check_retained(r)
+ 
+     def load(self):
+         r=self.check(loaded=False)

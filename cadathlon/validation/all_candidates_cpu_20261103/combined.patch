@@ -1,0 +1,2294 @@
+--- /dev/null
++++ b/cadathlon/agent_pset/p2_bert/src/bert_optimized_reference.py
+@@ -0,0 +1,20 @@
++"""Explicit experimental packed toy reference with reviewed optional controls.
++
++Enables scoped public NTT reuse and guarded dispatch-cache retention. Default
++adapters and ring profiles are unchanged. Bootstrap still clears its own stage
++caches. This adapter is unvalidated as a complete encrypted model, full-model
++file-stage implementation, accelerator-memory result or calibrated baseline.
++"""
++from pathlib import Path
++import sys
++sys.path.insert(0, str(Path(__file__).resolve().parent))
++from p2_runtime import install_common_path
++install_common_path(__file__)
++from encrypted_reference import create_toy_session
++
++IMPLEMENTATION_STATUS = 'experimental-unvalidated'
++
++def create_session(config, weights, *, batch, sequence_length, devices):
++    return create_toy_session('bert', config, weights, batch=batch,
++        sequence_length=sequence_length, devices=devices, packed_pairs=True, bounded_refresh=True,
++        ntt_subsets=True, preserve_dispatch_cache=True)
+--- /dev/null
++++ b/cadathlon/agent_pset/p4_qwen/src/qwen_optimized_reference.py
+@@ -0,0 +1,18 @@
++"""Explicit experimental packed toy reference with reviewed optional controls.
++
++Enables scoped public NTT reuse and guarded dispatch-cache retention. Default
++adapters and ring profiles are unchanged. Bootstrap still clears its own stage
++caches. This adapter is unvalidated as a complete encrypted model, full-model
++file-stage implementation, accelerator-memory result or calibrated baseline.
++"""
++from pathlib import Path
++import sys
++sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'common'))
++from encrypted_reference import create_toy_session
++
++IMPLEMENTATION_STATUS = 'experimental-unvalidated'
++
++def create_session(config, weights, *, batch, sequence_length, devices):
++    return create_toy_session('qwen', config, weights, batch=batch,
++        sequence_length=sequence_length, devices=devices, packed_pairs=True, bounded_refresh=True,
++        ntt_subsets=True, preserve_dispatch_cache=True)
+--- a/cadathlon/common/encrypted_bounded_arithmetic.py
++++ b/cadathlon/common/encrypted_bounded_arithmetic.py
+@@ -155,11 +155,12 @@
+     _relations = ('_public_row_l2_bound', '_public_head_l2_bounds',
+                   '_public_normalization_affine')
+ 
+-    def __init__(self, context, refresher=None, *, low_memory=True):
++    def __init__(self, context, refresher=None, *, low_memory=True, preserve_dispatch_cache=False):
+         from encrypted_refresh import BoundedSecureRefresh
+         if refresher is not None and (not isinstance(refresher, BoundedSecureRefresh) or refresher.ctx is not context):
+             raise TypeError('bounded arithmetic requires BoundedSecureRefresh on the same context')
+-        super().__init__(context, low_memory=low_memory)
++        super().__init__(context, low_memory=low_memory,
++            preserve_dispatch_cache=preserve_dispatch_cache)
+         self.refresher = refresher
+         self.refresh_events = []
+ 
+--- a/cadathlon/common/encrypted_bounded_transformer.py
++++ b/cadathlon/common/encrypted_bounded_transformer.py
+@@ -83,9 +83,11 @@
+ 
+ 
+ class BoundedPackedTransformer(PackedTransformer):
+-    def __init__(self, context, layout, refresher, *, low_memory=True):
+-        super().__init__(context, layout, low_memory=low_memory)
+-        self.arithmetic = BoundedArithmetic(context, refresher, low_memory=low_memory)
++    def __init__(self, context, layout, refresher, *, low_memory=True, preserve_dispatch_cache=False):
++        super().__init__(context, layout, low_memory=low_memory,
++            preserve_dispatch_cache=preserve_dispatch_cache)
++        self.arithmetic = BoundedArithmetic(context, refresher, low_memory=low_memory,
++            preserve_dispatch_cache=preserve_dispatch_cache)
+         self._head_contract = None
+ 
+     def contract(self, value, bound, reason):
+--- /dev/null
++++ b/cadathlon/common/encrypted_ntt.py
+@@ -0,0 +1,264 @@
++"""Isolated public-only NTT subset provider; no global dispatch/cache mutation.
++
++Owner and derived contexts are weakly referenced. This is a candidate injection
++seam, not a live runtime feature. Only canonical standard Barrett, uint32
++polynomial layouts, and one physical device are supported. Unsupported inputs
++return None so the ordinary constructor retains its existing behavior.
++"""
++from collections import Counter, OrderedDict
++import importlib
++from numbers import Integral
++import weakref
++
++import jax
++import jax.numpy as jnp
++import numpy as np
++
++FIELDS = ('ntt_bat_tf_step1', 'ntt_tf_step2', 'ntt_bat_tf_step3',
++          'intt_bat_tf_step1', 'intt_tf_step2', 'intt_bat_tf_step3')
++
++
++def _ints(values):
++    if not isinstance(values, (list, tuple)) or not values:
++        return None
++    if any(isinstance(x, bool) or not isinstance(x, Integral) for x in values):
++        return None
++    return tuple(int(x) for x in values)
++
++
++def _devices(array):
++    if not isinstance(array, jax.Array):
++        return None
++    devices = array.devices()
++    return next(iter(devices)) if len(devices) == 1 else None
++
++
++def _field_signature(field, moduli, device):
++    # These are small public arrays; checking them prevents an altered field
++    # object from borrowing tables under a stale type/moduli-only identity.
++    import math
++    s = tuple(2 * math.ceil(math.log2(q)) for q in moduli)
++    w = tuple(min(x, 32) for x in s)
++    sw = tuple(a - b for a, b in zip(s, w))
++    m = tuple(math.floor(2 ** bits / q) for bits, q in zip(s, moduli))
++    specs = [('barrett_s', s), ('barrett_w', w), ('barrett_s_w', sw), ('barrett_m', m)]
++    if any(tuple(getattr(field, name, ())) != expected for name, expected in specs):
++        return None
++    for name, expected, dtype in [('m', m, 'uint64'), ('moduli_reduction', moduli, 'uint64'),
++                                  ('w', w, 'uint16'), ('s_w', sw, 'uint16')]:
++        array = getattr(field, name, None)
++        if _devices(array) != device or str(array.dtype) != dtype or array.shape != (len(moduli),):
++            return None
++        if not np.array_equal(np.asarray(array), np.asarray(expected, dtype=dtype)):
++            return None
++    return (type(field), moduli, s, w, sw, m, device)
++
++
++class ScopedNTTSubsets:
++    """One owner, bounded weak bindings, and no secret/key references."""
++    def __init__(self, owner, *, max_entries=16):
++        if type(max_entries) is not int or max_entries < 1:
++            raise ValueError('max_entries must be a positive integer')
++        self._owner = weakref.ref(owner)
++        self.max_entries = max_entries
++        self._entries = OrderedDict()
++        self.stats = Counter()
++        self._closed = False
++        q, p = owner.ntt_q_max, owner.ntt_p
++        self._source_refs = (weakref.ref(q), weakref.ref(p))
++        self._source_type = type(q)
++        module = importlib.import_module(type(q).__module__)
++        self._supported_type = module.NTTCiphertextBarrettContext
++        self._field_type = module.ff_context.BarrettContext
++        self._layout = (owner.r, owner.c)
++        self._degree = owner.degree
++        self._moduli = (_ints(owner.q_towers), _ints(owner.p_towers))
++        self._source_identity = tuple(self._identity(x) for x in (q, p))
++        self._device = _devices(q.ntt_tf_step2)
++
++    @staticmethod
++    def _identity(source):
++        return (id(source), tuple(source.moduli), source.r, source.c,
++                source.transform_length, tuple(id(getattr(source, name)) for name in FIELDS))
++
++    def _fallback(self, reason):
++        self.stats['fallback'] += 1
++        self.stats['fallback_' + reason] += 1
++        return None
++
++    def close(self):
++        """Drop provider bookkeeping. Existing caller-owned contexts stay valid."""
++        owner = self._owner()
++        for name in ('rotation_polynomial_factory', 'multiplication_polynomial_factory'):
++            factory = getattr(owner, name, None)
++            if getattr(factory, '__self__', None) is self:
++                setattr(owner, name, None)
++        self._entries.clear()
++        self._source_refs = ()
++        self._owner = lambda: None
++        self._closed = True
++
++    def clear(self):
++        """Release weak lookup entries; neither masters nor caller arrays owned."""
++        self._entries.clear()
++
++    @property
++    def live_entries(self):
++        return sum(ref() is not None for ref, _ in self._entries.values())
++
++    def _sources(self, device):
++        owner = self._owner()
++        if owner is None or self._closed or bool(getattr(owner, 'perf_test', False)):
++            return None
++        if ((owner.r, owner.c) != self._layout or owner.degree != self._degree
++                or (_ints(owner.q_towers), _ints(owner.p_towers)) != self._moduli
++                or owner.ff_context_cls is not self._field_type):
++            return None
++        sources = tuple(ref() for ref in self._source_refs)
++        if len(sources) != 2 or any(source is None for source in sources):
++            return None
++        if sources != (owner.ntt_q_max, owner.ntt_p):
++            return None
++        r, c = self._layout
++        shapes = ((r, 4, r, 4), (r, c), (c, 4, c, 4),
++                  (c, 4, c, 4), (r, c), (r, 4, r, 4))
++        for source, moduli, identity in zip(sources, self._moduli, self._source_identity):
++            if (type(source) is not self._supported_type or self._identity(source) != identity
++                    or _ints(source.moduli) != moduli or len(set(moduli)) != len(moduli)
++                    or type(source.ff_ctx) is not self._field_type
++                    or not source.ff_ctx.computation_format_is_standard
++                    or _ints(source.ff_ctx.moduli) != moduli
++                    or _field_signature(source.ff_ctx, moduli, device) is None):
++                return None
++            for name, leading in zip(FIELDS, shapes):
++                array = getattr(source, name)
++                dtype = 'uint64' if 'tf_step2' in name else 'uint8'
++                if (array.shape != (*leading, len(moduli)) or str(array.dtype) != dtype
++                        or (isinstance(array, jax.Array) and _devices(array) != device)
++                        or not isinstance(array, (jax.Array, np.ndarray))):
++                    return None
++        return sources
++
++    def get(self, moduli, parameters, *, precision=32, device=None):
++        """Return a borrowed-table context, or None to use ordinary dispatch."""
++        if self._closed:
++            return self._fallback('closed')
++        requested = _ints(moduli)
++        if requested is None or len(set(requested)) != len(requested):
++            return self._fallback('moduli')
++        if (type(precision) is not int or precision != 32 or not isinstance(parameters, dict)
++                or set(parameters) != {'r', 'c', 'finite_field_context'}
++                or any(type(parameters[k]) is not int for k in ('r', 'c'))
++                or (parameters['r'], parameters['c']) != self._layout
++                or self._layout[0] * self._layout[1] != self._degree):
++            return self._fallback('layout_precision_parameters')
++        if device is None or device != self._device:
++            return self._fallback('device')
++        field = parameters['finite_field_context']
++        if (type(field) is not self._field_type or not field.computation_format_is_standard
++                or _ints(field.moduli) != requested
++                or _field_signature(field, requested, device) is None):
++            return self._fallback('field')
++        sources = self._sources(device)
++        if sources is None:
++            return self._fallback('owner_or_sources')
++        lookup = {q: (source, i) for source in sources for i, q in enumerate(source.moduli)}
++        if len(lookup) != sum(len(source.moduli) for source in sources) or any(q not in lookup for q in requested):
++            return self._fallback('unknown_modulus')
++        key = (requested, self._layout, self._degree, precision, self._field_type, device)
++        entry = self._entries.get(key)
++        if entry is not None:
++            previous, identity = entry[0](), entry[1]
++            if previous is not None and self._identity(previous) == identity:
++                # A context retains its own field; verify that a caller did not
++                # mutate it between weak-cache hits.
++                if (type(previous.ff_ctx) is self._field_type
++                        and previous.ff_ctx.computation_format_is_standard
++                        and _ints(previous.ff_ctx.moduli) == requested
++                        and _field_signature(previous.ff_ctx, requested, device) is not None):
++                    self._entries.move_to_end(key); self.stats['hits'] += 1
++                    return previous
++            self._entries.pop(key, None)
++        spans = []
++        for q in requested:
++            source, index = lookup[q]
++            if spans and spans[-1][0] is source and spans[-1][2] == index:
++                spans[-1][2] += 1
++            else:
++                spans.append([source, index, index + 1])
++        result = object.__new__(self._supported_type)
++        result.ff_ctx = field
++        result.r, result.c = self._layout
++        result.transform_length = self._degree
++        result.moduli = list(requested)
++        result.num_bytes = 4
++        result.parameters = dict(parameters)
++        result.psi_list = [lookup[q][0].psi_list[lookup[q][1]] for q in requested]
++        result.omega_list = [lookup[q][0].omega_list[lookup[q][1]] for q in requested]
++        with jax.default_device(device):
++            for name in FIELDS:
++                arrays = [getattr(source, name)[..., lo:hi] for source, lo, hi in spans]
++                join = np.concatenate if all(isinstance(array, np.ndarray) for array in arrays) else jnp.concatenate
++                setattr(result, name, arrays[0] if len(arrays) == 1 else join(arrays, axis=-1))
++        # A barrier gives a clear lifetime boundary before an owning kernel is
++        # permitted to release prior controls. The array payloads can still be
++        # copied/materialized; this provider makes no zero-copy/HBM claim.
++        jax.block_until_ready([getattr(result, name) for name in FIELDS])
++        self._entries[key] = (weakref.ref(result), self._identity(result))
++        while len(self._entries) > self.max_entries:
++            self._entries.popitem(last=False)
++        self.stats['builds'] += 1
++        return result
++
++    def polynomial_factory(self, shapes, parameters=None, *, payload=None):
++        """Explicit isolated-kernel injection; fallback preserves constructor."""
++        module = importlib.import_module('polynomial')
++        original = module.Polynomial
++        if parameters is None or 'ntt_ctx' in parameters or 'moduli' not in parameters:
++            return original(shapes, parameters, payload=payload)
++        factory = parameters.get('finite_field_context', self._field_type)
++        if factory is not self._field_type:
++            return original(shapes, parameters, payload=payload)
++        # Device choice matches ordinary uncommitted construction. If caller
++        # enters another default-device scope, get() refuses master reuse.
++        field = factory(moduli=parameters['moduli'])
++        device = _devices(field.m)
++        layout = tuple(shapes.get('degree_layout', ()))
++        if len(layout) != 2 or shapes.get('degree') != self._degree:
++            return original(shapes, parameters, payload=payload)
++        selected = self.get(parameters['moduli'],
++            {'r': layout[0], 'c': layout[1], 'finite_field_context': field},
++            precision=shapes.get('precision'), device=device)
++        if selected is None:
++            return original(shapes, parameters, payload=payload)
++        return original(shapes, dict(parameters, ntt_ctx=selected), payload=payload)
++
++
++def enable_scoped_ntt_subsets(context, *, max_entries=16):
++    """Opt in one initialized keyless evaluator; returns its closeable owner.
++
++    This affects only future HERot and HEMul control construction for this context.
++    Rescale controls and the tensor-only compiled helper keep their own paths.
++    Existing controls remain valid, and unrelated contexts retain ordinary
++    construction. Disable before context teardown by calling close().
++    """
++    from encrypted_polynomial import EncryptedPolynomialEvaluator
++    EncryptedPolynomialEvaluator(context)
++    # No ciphertext exists at opt-in time. Match the execution gate's public
++    # noise/distribution assumptions here; each actual operation still checks
++    # its real ciphertext with require_secure_execution.
++    import math
++    from jaxite_word import he_params
++    noise = float(context.parameters.get('sigma', he_params.DEFAULT_SIGMA))
++    if not math.isfinite(noise) or noise < he_params.DEFAULT_SIGMA:
++        raise ValueError('context noise sigma is below the security table assumption')
++    if context.parameters.get('secret_distribution', he_params.SECRET_DISTRIBUTION) != he_params.SECRET_DISTRIBUTION:
++        raise ValueError('security table requires uniform_ternary secrets')
++    cache = context._param_cache
++    for name in ('rotation_polynomial_factory', 'multiplication_polynomial_factory'):
++        if getattr(cache, name) is not None:
++            raise ValueError(f'this context already owns a {name}')
++    provider = ScopedNTTSubsets(cache, max_entries=max_entries)
++    cache.rotation_polynomial_factory = provider.polynomial_factory
++    cache.multiplication_polynomial_factory = provider.polynomial_factory
++    return provider
+--- a/cadathlon/common/encrypted_packed_qwen.py
++++ b/cadathlon/common/encrypted_packed_qwen.py
+@@ -96,9 +96,10 @@
+ 
+ class CompiledArithmetic(EncryptedPolynomialEvaluator):
+     """Reviewed compiled linear/multiplication primitives plus rotations."""
+-    def __init__(self, context, *, low_memory=False):
++    def __init__(self, context, *, low_memory=False, preserve_dispatch_cache=False):
+         super().__init__(context, strategy='power', compiled_multiply=True,
+-                         compiled_linear=True, low_memory=low_memory)
++                         compiled_linear=True, low_memory=low_memory,
++                         preserve_dispatch_cache=preserve_dispatch_cache)
+         self.rotation = CompiledRotation(context)
+ 
+     def rotate(self, value, shift):
+@@ -118,12 +119,13 @@
+ 
+ 
+ class PackedQwen1:
+-    def __init__(self, context, *, low_memory=False):
++    def __init__(self, context, *, low_memory=False, preserve_dispatch_cache=False):
+         self.ctx = context
+         self.features = 32
+         if context.num_slots < 2 * self.features or context.num_slots % self.features:
+             raise ValueError('F32 packing requires divisible slot count')
+-        self.arithmetic = CompiledArithmetic(context, low_memory=low_memory)
++        self.arithmetic = CompiledArithmetic(context, low_memory=low_memory,
++            preserve_dispatch_cache=preserve_dispatch_cache)
+         self.phase_results = []
+ 
+     def public_feature(self, values):
+--- a/cadathlon/common/encrypted_packed_transformer.py
++++ b/cadathlon/common/encrypted_packed_transformer.py
+@@ -6,10 +6,79 @@
+ Full encrypted graph validation is required before any reference claim.
+ """
+ from dataclasses import dataclass
++from collections import deque
++from contextlib import closing
+ import math
+ import numpy as np
+ 
+ from encrypted_packed_qwen import CompiledArithmetic, MatrixDiagonals
++
++
++DEFAULT_EXTRA_PAYLOAD_BYTES = 256 * 1024**2
++DEFAULT_MAX_PENDING = 8
++
++
++def pending_limit(output_payload_bytes, groups, *, extra_payload_bytes=DEFAULT_EXTRA_PAYLOAD_BYTES,
++                  max_pending=DEFAULT_MAX_PENDING):
++    """Count one existing singleton payload plus a bounded extra live queue."""
++    for name, value in [('groups', groups), ('max_pending', max_pending)]:
++        if type(value) is not int or value < 1:
++            raise ValueError(name + ' must be a positive integer')
++    if type(extra_payload_bytes) is not int or extra_payload_bytes < 0:
++        raise ValueError('extra payload budget must be a nonnegative integer')
++    if output_payload_bytes is None:
++        # Symbolic plaintext/depth planners have no physical ciphertext shape.
++        return 1
++    if type(output_payload_bytes) is not int or output_payload_bytes < 1:
++        raise ValueError('output payload size must be a positive integer')
++    return min(groups, max_pending, 1 + extra_payload_bytes // output_payload_bytes)
++
++
++def output_payload_bytes(graph, value):
++    """Exact public shape/dtype size after the weighted sum's one rescale."""
++    payload = getattr(value, 'polynomial', None)
++    cache = getattr(graph.ctx, '_param_cache', None)
++    if payload is None or cache is None:
++        return None
++    level = graph.arithmetic._level(value)
++    if level < 1:
++        raise ValueError('insufficient packed-linear level')
++    shape = tuple(payload.shape)
++    if len(shape) < 2 or any(type(n) is not int or n < 1 for n in shape):
++        raise ValueError('invalid public ciphertext payload shape')
++    output_limbs = cache.num_q_at_level(level - 1)
++    if type(output_limbs) is not int or output_limbs < 1:
++        raise ValueError('invalid output modulus count')
++    return math.prod(shape[:-1]) * output_limbs * np.dtype(payload.dtype).itemsize
++
++
++def giant_chunks(groups, make_inner, limit):
++    """Yield in original order, releasing consumed queued wrappers promptly."""
++    if type(limit) is not int or limit < 1:
++        raise ValueError('positive pending limit required')
++    iterator = iter(groups)
++    while True:
++        pending = deque()
++        item = None
++        try:
++            for _ in range(limit):
++                try:
++                    giant, indices = next(iterator)
++                except StopIteration:
++                    break
++                pending.append((giant, make_inner(giant, indices)))
++            if not pending:
++                return
++            while pending:
++                item = pending.popleft()
++                yield item
++                # The consumer also releases its inner/contribution locals.
++                # Neither side may pin the preceding chunk during a new fill.
++                item = None
++        finally:
++            item = None
++            pending.clear()
++
+ 
+ 
+ def _power_two(n):
+@@ -102,11 +171,12 @@
+ 
+ 
+ class PackedTransformer:
+-    def __init__(self, context, layout, *, low_memory=False):
++    def __init__(self, context, layout, *, low_memory=False, preserve_dispatch_cache=False):
+         if context.num_slots != layout.slots:
+             raise ValueError('packed layout differs from initialized context slots')
+         self.ctx, self.layout, self.features = context, layout, layout.features
+-        self.arithmetic = CompiledArithmetic(context, low_memory=low_memory)
++        self.arithmetic = CompiledArithmetic(context, low_memory=low_memory,
++            preserve_dispatch_cache=preserve_dispatch_cache)
+ 
+     def linear(self, value, weight, bias=None, *, input_mask=None):
+         """One-level sparse BSGS with one active rotation key at a time."""
+@@ -121,6 +191,7 @@
+         if not source.active:
+             return self.arithmetic.weighted_sum([value], [0.], bias=bias_slots)
+         (value,) = self.arithmetic._ensure_capacity((value,), 1)
++        count_bytes = output_payload_bytes(self, value)
+         babies = {0: value}
+         for index in sorted({d % source.n1 for d in source.active} - {0}):
+             babies[index] = self.arithmetic.rotate(value, index)
+@@ -128,8 +199,11 @@
+         for diagonal in source.active:
+             giant = diagonal // source.n1 * source.n1
+             groups.setdefault(giant, []).append(diagonal)
+-        result = None
+-        for giant, indices in groups.items():
++        limit = pending_limit(count_bytes, len(groups),
++            extra_payload_bytes=getattr(self, 'linear_extra_payload_bytes', DEFAULT_EXTRA_PAYLOAD_BYTES),
++            max_pending=getattr(self, 'linear_max_pending', DEFAULT_MAX_PENDING))
++
++        def make_inner(giant, indices):
+             diagonals = source.materialize_diagonals(indices)
+             values, weights = [], []
+             for index in indices:
+@@ -140,15 +214,22 @@
+                     diagonal = diagonal * np.roll(input_mask, -index)
+                 values.append(babies[index % source.n1])
+                 weights.append(np.roll(diagonal, giant))
+-            inner = self.arithmetic.weighted_sum(values, weights)
+-            contribution = self.arithmetic.rotate(inner, giant)
+-            result = contribution if result is None else self.arithmetic.add(result, contribution)
++            return self.arithmetic.weighted_sum(values, weights)
++
++        result = None
++        with closing(giant_chunks(groups.items(), make_inner, limit)) as chunks:
++            for giant, inner in chunks:
++                contribution = self.arithmetic.rotate(inner, giant)
++                del inner
++                result = contribution if result is None else self.arithmetic.add(result, contribution)
++                del contribution
+         if bias is not None:
+             level = self.arithmetic._level(result)
+             self.arithmetic._prepare(level)
+             constant = self.arithmetic._encode_public(bias_slots, level, result._ckks_scale)
+             result = self.ctx.he_add[level].add_plain(result, constant)
+         return self.arithmetic._finish(result)
++
+ 
+     def segmented_sum(self, value, length, stride, *, factor=1., bias=0.):
+         if _power_two(length) != length or type(stride) is not int or stride < 1 or self.layout.slots % (length*stride):
+--- a/cadathlon/common/encrypted_polynomial.py
++++ b/cadathlon/common/encrypted_polynomial.py
+@@ -80,9 +80,14 @@
+     """
+ 
+     def __init__(self, context, *, strategy="chebyshev", low_memory=False, progress=None, refresher=None,
+-                 compiled_multiply=False, compiled_linear=False):
++                 compiled_multiply=False, compiled_linear=False, preserve_dispatch_cache=False):
+         if strategy not in ("chebyshev", "power"):
+             raise ValueError("polynomial strategy must be chebyshev or power")
++        if type(preserve_dispatch_cache) is not bool:
++            raise TypeError('preserve_dispatch_cache must be an explicit boolean')
++        if preserve_dispatch_cache and not low_memory:
++            raise ValueError('dispatch cache preservation requires dedicated low_memory execution')
++        self.preserve_dispatch_cache = preserve_dispatch_cache
+         self.strategy = strategy
+         self.low_memory = bool(low_memory)
+         self.progress = progress
+@@ -181,9 +186,13 @@
+         self._constant_cache.clear()
+         self.ctx._param_cache._formatted_rotation_keys.clear()
+         self.ctx._param_cache.level_params.clear()
+-        jax.clear_caches()
+-        # Compiled pytrees have been discarded. Live ciphertexts retain their
+-        # own context, and register again when passed to a new JAX transform.
++        # The optional policy is for a dedicated, serial, explicit-array
++        # evaluator. Cached Polynomial output treedefs require registry entries;
++        # if any exist, retain the ordinary full-clear-before-registry behavior.
++        if not self.preserve_dispatch_cache or polynomial._POLYNOMIAL_REGISTRY:
++            jax.clear_caches()
++        # Live ciphertexts retain their own contexts and register again when
++        # passed to a new JAX transform. The default always clears JAX caches.
+         polynomial._POLYNOMIAL_REGISTRY.clear()
+         ntt_module._barrett_ntt_context_cache.clear()
+         gc.collect()
+--- a/cadathlon/common/encrypted_reference.py
++++ b/cadathlon/common/encrypted_reference.py
+@@ -49,7 +49,7 @@
+ 
+ 
+ class ToyReferenceSession:
+-    def __init__(self, model, config, weights, *, batch, sequence_length, devices, packed=False, packed_pairs=False, bounded_refresh=False):
++    def __init__(self, model, config, weights, *, batch, sequence_length, devices, packed=False, packed_pairs=False, bounded_refresh=False, ntt_subsets=False, preserve_dispatch_cache=False):
+         from jaxite_word import CKKSContext, he_params, key_gen, util
+         from jaxite_word.composite_prime_gen import composite_prime_gen
+         import jax
+@@ -62,6 +62,12 @@
+         if bounded_refresh and not packed_pairs:
+             raise ValueError('bounded refresh is supported only by the experimental packed-pair layout')
+         self.bounded_refresh = bounded_refresh
++        if type(ntt_subsets) is not bool:
++            raise TypeError('ntt_subsets must be an explicit boolean')
++        if type(preserve_dispatch_cache) is not bool:
++            raise TypeError('preserve_dispatch_cache must be an explicit boolean')
++        self.preserve_dispatch_cache = preserve_dispatch_cache
++        self.ntt_subsets = None
+         self.closed = False
+         if packed and packed_pairs:
+             raise ValueError('select one experimental packed layout')
+@@ -142,6 +148,9 @@
+             self.ctx = CKKSContext(evaluator_params)
+             self.ctx.program_initialization(list(rotations), dnum=dnum, r=256, c=512,
+                                             batch=1, pregenerated_rotation_keys=self.key_store.keys)
++            if ntt_subsets:
++                from encrypted_ntt import enable_scoped_ntt_subsets
++                self.ntt_subsets = enable_scoped_ntt_subsets(self.ctx)
+         # Ciphertext wrappers need public NTT tables, not a second copy of the
+         # full large-ring table in the client's codec. Sharing this immutable
+         # public object does not expose the client's secret to the evaluator.
+@@ -157,24 +166,29 @@
+             from encrypted_refresh import BoundedSecureRefresh
+             self.refresher = BoundedSecureRefresh(self.ctx, period=self.layout.period,
+                 level_budget=refresh_contract['level_budget'], low_memory=True,
+-                compiled=True, meta_precision=10)
++                compiled=True, meta_precision=10,
++                preserve_dispatch_cache=preserve_dispatch_cache)
+         if packed_pairs:
+             if needs_refresh:
+                 from encrypted_bounded_transformer import BoundedPackedTransformer
+-                self.ops = BoundedPackedTransformer(self.ctx, self.layout, self.refresher, low_memory=True)
++                self.ops = BoundedPackedTransformer(self.ctx, self.layout, self.refresher, low_memory=True,
++                    preserve_dispatch_cache=preserve_dispatch_cache)
+             else:
+                 from encrypted_packed_transformer import PackedTransformer
+-                self.ops = PackedTransformer(self.ctx, self.layout, low_memory=True)
++                self.ops = PackedTransformer(self.ctx, self.layout, low_memory=True,
++                    preserve_dispatch_cache=preserve_dispatch_cache)
+             self.evaluator = self.ops.arithmetic
+             self.evaluator.progress = report
+         elif packed:
+             from encrypted_packed_qwen import PackedQwen1
+-            self.ops = PackedQwen1(self.ctx, low_memory=True)
++            self.ops = PackedQwen1(self.ctx, low_memory=True,
++                preserve_dispatch_cache=preserve_dispatch_cache)
+             self.evaluator = self.ops.arithmetic
+             self.evaluator.progress = report
+         else:
+             self.evaluator = EncryptedPolynomialEvaluator(self.ctx, strategy='power', low_memory=True,
+-                progress=report, refresher=self.refresher, compiled_multiply=True, compiled_linear=True)
++                progress=report, refresher=self.refresher, compiled_multiply=True, compiled_linear=True,
++                preserve_dispatch_cache=preserve_dispatch_cache)
+             self.ops = EncryptedTensorOps(self.evaluator, self.layout)
+         print(f'[experimental-{model}] setup completed in {time.perf_counter()-started:.1f}s', file=sys.stderr, flush=True)
+ 
+@@ -220,6 +234,8 @@
+                     (getattr(self, 'client', None), getattr(self, 'ctx', None))
+                     if context is not None}
+         key_store = getattr(self, 'key_store', None)
++        ntt_subsets = getattr(self, 'ntt_subsets', None)
++        self.ntt_subsets = None
+         self.client = self.ctx = self.evaluator = self.ops = self.refresher = None
+         self.key_store = None
+         self.closed = True
+@@ -232,6 +248,8 @@
+                 error.add_note(f'While closing experimental transformer {label}')
+                 errors.append(error)
+ 
++        if ntt_subsets is not None:
++            attempt('public NTT subsets', ntt_subsets.close)
+         for context in contexts.values():
+             attempt('context', ckks_ctx.evict_context_caches, context)
+         if contexts:
+@@ -249,13 +267,14 @@
+             raise errors[0]
+ 
+ 
+-def create_toy_session(model, config, weights, *, batch, sequence_length, devices, packed=False, packed_pairs=False, bounded_refresh=False):
++def create_toy_session(model, config, weights, *, batch, sequence_length, devices, packed=False, packed_pairs=False, bounded_refresh=False, ntt_subsets=False, preserve_dispatch_cache=False):
+     # Preserve a partially initialized owner so setup failures can release any
+     # already-created device contexts as well as normal close() paths.
+     session = object.__new__(ToyReferenceSession)
+     try:
+         session.__init__(model, config, weights, batch=batch, sequence_length=sequence_length, devices=devices,
+-                         packed=packed, packed_pairs=packed_pairs, bounded_refresh=bounded_refresh)
++                         packed=packed, packed_pairs=packed_pairs, bounded_refresh=bounded_refresh, ntt_subsets=ntt_subsets,
++                         preserve_dispatch_cache=preserve_dispatch_cache)
+         return session
+     except BaseException as error:
+         try:
+--- a/cadathlon/common/encrypted_refresh.py
++++ b/cadathlon/common/encrypted_refresh.py
+@@ -157,14 +157,16 @@
+ 
+     input_level = 1
+ 
+-    def __init__(self, context, *, period, level_budget=(2, 2), low_memory=True, compiled=False):
++    def __init__(self, context, *, period, level_budget=(2, 2), low_memory=True, compiled=False,
++                 preserve_dispatch_cache=False):
+         from encrypted_polynomial import EncryptedPolynomialEvaluator
+         from jaxite_word.bootstrapping import Bootstrap
+ 
+         # Reuse the strict real-context, Q/P-security and secret-key checks.
+         self.evaluator = EncryptedPolynomialEvaluator(
+             context, strategy='power', low_memory=low_memory,
+-            compiled_multiply=compiled, compiled_linear=compiled)
++            compiled_multiply=compiled, compiled_linear=compiled,
++            preserve_dispatch_cache=preserve_dispatch_cache)
+         self.ctx = context
+         cache = context._param_cache
+         if context.num_slots != context.degree // 2:
+@@ -330,12 +332,14 @@
+     """
+     input_level = 2
+ 
+-    def __init__(self, context, *, public_bound=1., meta_precision=None, compiled=True, **kwargs):
++    def __init__(self, context, *, public_bound=1., meta_precision=None, compiled=True,
++                 preserve_dispatch_cache=False, **kwargs):
+         self.public_bound = self._bound(public_bound)
+         if meta_precision is not None and (type(meta_precision) is not int or not 1 <= meta_precision <= 62):
+             raise ValueError('meta_precision must be an integer in [1, 62] or None')
+         self.meta_precision = meta_precision
+-        super().__init__(context, compiled=compiled, **kwargs)
++        super().__init__(context, compiled=compiled,
++            preserve_dispatch_cache=preserve_dispatch_cache, **kwargs)
+ 
+     @staticmethod
+     def _bound(value):
+--- a/cadathlon/common/package.py
++++ b/cadathlon/common/package.py
+@@ -10,7 +10,7 @@
+     "support.py", "Makefile.problem", "package.py", "transformer_runner.py",
+     "encrypted_polynomial.py", "encrypted_transformer.py", "encrypted_reference.py",
+     "encrypted_refresh.py", "encrypted_rotation.py", "encrypted_compilation.py",
+-    "encrypted_primitives.py", "encrypted_packed_qwen.py", "encrypted_packed_transformer.py",
++    "encrypted_primitives.py", "encrypted_ntt.py", "encrypted_packed_qwen.py", "encrypted_packed_transformer.py",
+     "encrypted_bounded_arithmetic.py", "encrypted_bounded_transformer.py",
+ )
+ PUBLIC_RELEASE_EVIDENCE = (
+--- a/cadathlon/tests/test_bert_staging.py
++++ b/cadathlon/tests/test_bert_staging.py
+@@ -50,7 +50,7 @@
+     common = destination/manifest['common_directory']
+     names = set(manifest['common_sha256'])
+     assert {'support.py','transformer_runner.py','encrypted_reference.py','encrypted_compilation.py',
+-            'encrypted_primitives.py','encrypted_bounded_transformer.py'} <= names
++            'encrypted_primitives.py','encrypted_bounded_transformer.py','encrypted_ntt.py'} <= names
+     for name, expected in manifest['common_sha256'].items():
+         assert hashlib.sha256((common/name).read_bytes()).hexdigest() == expected
+         assert (common/name).read_bytes() == (ROOT/'cadathlon/common'/name).read_bytes()
+@@ -65,7 +65,7 @@
+     assert 'p2_runtime.py' in manifest['starter_sha256']
+ 
+ 
+-@pytest.mark.parametrize('adapter', ['bert_reference.py','bert_packed_reference.py','bert_bounded_reference.py'])
++@pytest.mark.parametrize('adapter', ['bert_reference.py','bert_packed_reference.py','bert_bounded_reference.py','bert_optimized_reference.py'])
+ def test_staged_adapters_import_but_do_not_claim_missing_full_stages(staging, adapter):
+     stage, upstream, destination = staging
+     stage.stage(upstream, destination)
+--- a/cadathlon/tests/test_bounded_qwen2_proof.py
++++ b/cadathlon/tests/test_bounded_qwen2_proof.py
+@@ -138,3 +138,116 @@
+     result=subprocess.run([sys.executable,str(wrapper.with_name('check_transformer_suite.py')),
+                            '--child-runner',str(unknown)],capture_output=True,text=True,timeout=10)
+     assert result.returncode!=0 and not marker.exists()
++
++
++def test_nested_wrapper_retains_replaced_child_directory(tree):
++    root,wrapper,runner,keys,output=tree
++    foreign=root/'unrelated-directory';foreign.mkdir();(foreign/'sentinel').write_text('must survive')
++    code=runner_source(root,'success')
++    needle="(keydir/'public-dummy-key').write_text('dummy public bytes')"
++    code=code.replace(needle,"keydir.rmdir()\n(ROOT/'unrelated-directory').rename(keydir)\n"+needle)
++    runner.write_text(code)
++    process=subprocess.run(command(tree),capture_output=True,text=True,timeout=15)
++    report=json.loads((output/'report.json').read_text())
++    assert process.returncode==1 and not report['passed']
++    assert report['process_reaped'] and not report['public_key_store_removed']
++    assert report['owned_directory_handle_closed']
++    assert not report['case']['public_key_store_removed']
++    retained=Path(report['case']['owned_public_key_directory'])
++    assert (retained/'sentinel').read_text()=='must survive'
++    assert 'child cleanup incomplete' in report['cleanup_error']
++    assert Path(report['owned_public_key_directory']).is_dir()
++
++
++def test_wrapper_launch_failure_without_child_can_remove_outer_parent(tree,monkeypatch):
++    import importlib.util
++    from types import SimpleNamespace
++    root,wrapper,runner,keys,output=tree
++    runner.write_text(runner_source(root,'success'))
++    monkeypatch.syspath_prepend(str(wrapper.parent))
++    suite_spec=importlib.util.spec_from_file_location('check_transformer_suite',wrapper.with_name('check_transformer_suite.py'))
++    owned_suite=importlib.util.module_from_spec(suite_spec);suite_spec.loader.exec_module(owned_suite)
++    monkeypatch.setitem(sys.modules,'check_transformer_suite',owned_suite)
++    spec=importlib.util.spec_from_file_location('launch_failure_wrapper',wrapper)
++    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
++    def missing(*args,**kwargs):raise FileNotFoundError('simulated launch failure')
++    monkeypatch.setattr(module.suite.subprocess,'Popen',missing)
++    assert module.run(SimpleNamespace(output=output,key_directory=keys,cleanup_grace_s=.1))==1
++    report=json.loads((output/'report.json').read_text())
++    assert not report['passed'] and not report['process_reaped']
++    assert report['case']['process_reaped'] and report['case']['public_key_store_removed']
++    assert 'pid' not in report['case']
++    assert report['public_key_store_removed'] and report['owned_directory_handle_closed']
++    assert not list(keys.iterdir())
++
++
++def load_wrapper_for_faults(tree,monkeypatch):
++    import importlib.util
++    root,wrapper,runner,keys,output=tree
++    runner.write_text(runner_source(root,'success'))
++    monkeypatch.syspath_prepend(str(wrapper.parent))
++    suite_spec=importlib.util.spec_from_file_location('check_transformer_suite',wrapper.with_name('check_transformer_suite.py'))
++    owned_suite=importlib.util.module_from_spec(suite_spec);suite_spec.loader.exec_module(owned_suite)
++    monkeypatch.setitem(sys.modules,'check_transformer_suite',owned_suite)
++    spec=importlib.util.spec_from_file_location('fault_wrapper',wrapper)
++    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
++    return module
++
++
++@pytest.mark.parametrize('mode',['missing','corrupt','incomplete'])
++def test_unknown_child_cleanup_retains_wrapper_parent(tree,monkeypatch,mode):
++    from types import SimpleNamespace
++    root,wrapper,runner,keys,output=tree
++    module=load_wrapper_for_faults(tree,monkeypatch)
++    def incomplete(*args,**kwargs):
++        owned=Path(os.environ['CROSS_PUBLIC_KEY_DIRECTORY'])
++        (owned/'sentinel').write_text('unknown child state; keep')
++        if mode=='corrupt':(output/'test2/process.json').write_text('{')
++        if mode=='incomplete':return {'returncode':1,'process_reaped':True,'public_key_store_removed':True}
++        raise RuntimeError('collector did not return durable cleanup metadata')
++    monkeypatch.setattr(module.suite,'run_case',incomplete)
++    assert module.run(SimpleNamespace(output=output,key_directory=keys,cleanup_grace_s=.1))==1
++    report=json.loads((output/'report.json').read_text())
++    assert not report['passed'] and report['case_collector_entered']
++    assert not report['public_key_store_removed'] and report['owned_directory_handle_closed']
++    assert (Path(report['owned_public_key_directory'])/'sentinel').read_text()=='unknown child state; keep'
++    assert 'incomplete or unknown' in report['cleanup_error']
++
++
++def test_failure_before_case_collector_can_remove_owned_parent(tree,monkeypatch):
++    from types import SimpleNamespace
++    root,wrapper,runner,keys,output=tree
++    module=load_wrapper_for_faults(tree,monkeypatch)
++    def fail(*args,**kwargs):raise RuntimeError('command construction failed')
++    monkeypatch.setattr(module.suite,'runner_command',fail)
++    assert module.run(SimpleNamespace(output=output,key_directory=keys,cleanup_grace_s=.1))==1
++    report=json.loads((output/'report.json').read_text())
++    assert not report['passed'] and not report['case_collector_entered']
++    assert report['public_key_store_removed'] and report['owned_directory_handle_closed']
++    assert not list(keys.iterdir())
++
++
++@pytest.mark.parametrize('error_type',[KeyboardInterrupt,SystemExit])
++def test_final_wrapper_evidence_failure_preserves_primary_cancellation(tree,monkeypatch,error_type):
++    from types import SimpleNamespace
++    root,wrapper,runner,keys,output=tree
++    module=load_wrapper_for_faults(tree,monkeypatch)
++    original_write=module.suite.write_json;primary=error_type('primary cancellation')
++    def cancelled(*args,**kwargs):
++        original_write(output/'test2/process.json',{'passed':False,'process_reaped':True,
++            'public_key_store_removed':True,'owned_directory_handle_closed':True})
++        raise primary
++    report_writes=0
++    def write(path,record):
++        nonlocal report_writes
++        if path==output/'report.json':
++            report_writes+=1
++            if report_writes==2:raise OSError('final evidence unavailable')
++        original_write(path,record)
++    monkeypatch.setattr(module.suite,'run_case',cancelled);monkeypatch.setattr(module.suite,'write_json',write)
++    with pytest.raises(error_type) as caught:
++        module.run(SimpleNamespace(output=output,key_directory=keys,cleanup_grace_s=.1))
++    assert caught.value is primary and report_writes==2
++    assert any('final evidence unavailable' in note for note in primary.__notes__)
++    assert not list(keys.iterdir())
++    assert json.loads((output/'report.json').read_text())['passed'] is False
+--- /dev/null
++++ b/cadathlon/tests/test_dispatch_cache_policy.py
+@@ -0,0 +1,71 @@
++"""Cache policy mechanics on tiny public arrays; not a security profile proof."""
++from pathlib import Path
++import sys
++from types import SimpleNamespace
++import numpy as np
++import pytest
++sys.path[:0]=[str(Path(__file__).resolve().parents[2]),str(Path(__file__).resolve().parents[1]/'common')]
++import jax
++from jaxite_word import Polynomial
++from encrypted_polynomial import EncryptedPolynomialEvaluator
++import polynomial
++jax.config.update('jax_enable_x64',True)
++
++@pytest.fixture
++def primitive():
++    shape=dict(batch=1,num_elements=2,degree=256,num_moduli=2,precision=32,degree_layout=(16,16))
++    source=Polynomial(shape,{'moduli':[12289,40961]})
++    source.polynomial=jax.numpy.ones(source.shape,dtype='uint32')
++    output=Polynomial(dict(shape,num_moduli=1),{'moduli':[12289]})
++    yield source,output
++    jax.clear_caches();polynomial._POLYNOMIAL_REGISTRY.clear()
++
++
++def evaluator(source,preserve):
++    # The real secure constructor and full array path are exercised separately.
++    # This object isolates the policy's effect on JAX's actual compilation cache.
++    value=object.__new__(EncryptedPolynomialEvaluator)
++    cache=SimpleNamespace(ntt_q_max=source.ntt_ctx,_formatted_rotation_keys={},level_params={})
++    value.ctx=SimpleNamespace(_param_cache=cache)
++    value._multiplication_bindings={};value._plaintext_multiply=value._rescale=None
++    value._constant_cache={};value.preserve_dispatch_cache=preserve
++    return value
++
++
++@pytest.mark.parametrize('output_kind',['different_level','different_scale'])
++def test_registered_polynomial_output_retraces_safely(primitive,output_kind):
++    source,output=primitive;traces=[]
++    if output_kind=='different_scale':
++        output=source._clone_with_payload(source.polynomial)
++        source._ckks_scale=2.;output._ckks_scale=4.
++    def operation(value):
++        traces.append(True)
++        return output._clone_with_payload(value.polynomial[...,:output.num_moduli])
++    compiled=jax.jit(operation)
++    first=compiled(source);jax.block_until_ready(first.polynomial)
++    assert polynomial._POLYNOMIAL_REGISTRY and len(traces)==1
++    evaluator(source,True)._clear_working_caches()
++    assert not polynomial._POLYNOMIAL_REGISTRY
++    second=compiled(source);jax.block_until_ready(second.polynomial)
++    np.testing.assert_array_equal(second.polynomial,first.polynomial)
++    assert len(traces)==2
++    if output_kind=='different_scale':assert second._ckks_scale==4.
++
++
++@pytest.mark.parametrize('preserve',[False,True])
++def test_empty_registry_policy_preserves_array_dispatch_only_when_opted_in(primitive,preserve):
++    source,_=primitive;traces=[]
++    def operation(value):traces.append(True);return value+1
++    compiled=jax.jit(operation)
++    np.testing.assert_array_equal(compiled(jax.numpy.array([2])),[3])
++    assert len(traces)==1 and not polynomial._POLYNOMIAL_REGISTRY
++    evaluator(source,preserve)._clear_working_caches()
++    np.testing.assert_array_equal(compiled(jax.numpy.array([3])),[4])
++    assert len(traces)==(1 if preserve else 2)
++
++
++def test_option_requires_explicit_low_memory_contract():
++    with pytest.raises(TypeError,match='explicit boolean'):
++        EncryptedPolynomialEvaluator(None,preserve_dispatch_cache='yes')
++    with pytest.raises(ValueError,match='dedicated low_memory'):
++        EncryptedPolynomialEvaluator(None,preserve_dispatch_cache=True)
+--- /dev/null
++++ b/cadathlon/tests/test_linear_queue.py
+@@ -0,0 +1,86 @@
++"""Isolated scheduling contracts; execute only after CPU calibration release."""
++from pathlib import Path
++from types import SimpleNamespace
++import gc
++import sys
++import weakref
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path[:0] = [str(ROOT), str(ROOT/'cadathlon/common')]
++import numpy as np
++import pytest
++from encrypted_packed_transformer import (pending_limit, output_payload_bytes, giant_chunks,
++    PackedTransformer as ChunkedPackedTransformer, PackedPairLayout)
++
++
++@pytest.mark.parametrize('size,groups,budget,maximum,expected', [
++    (512*1024**2, 16, 256*1024**2, 8, 1),
++    (256*1024**2, 16, 256*1024**2, 8, 2),
++    (85*1024**2, 16, 256*1024**2, 8, 4),
++    (16*1024**2, 16, 256*1024**2, 8, 8),
++    (16*1024**2, 3, 256*1024**2, 8, 3),
++    (16, 3, 0, 8, 1), (16, 3, 500, 1, 1), (None, 3, 500, 8, 1),
++])
++def test_payload_cap(size, groups, budget, maximum, expected):
++    count = pending_limit(size, groups, extra_payload_bytes=budget, max_pending=maximum)
++    assert count == expected
++    if size is not None:
++        assert (count-1)*size <= budget
++
++
++@pytest.mark.parametrize('size,groups,budget,maximum', [
++    (0, 3, 5, 2), (True, 3, 5, 2), (1, 0, 5, 2), (1, True, 5, 2),
++    (1, 3, -1, 2), (1, 3, True, 2), (1, 3, 5, 0), (1, 3, 5, True),
++])
++def test_invalid_payload_caps(size, groups, budget, maximum):
++    with pytest.raises(ValueError):
++        pending_limit(size, groups, extra_payload_bytes=budget, max_pending=maximum)
++
++
++@pytest.mark.parametrize('batch,level', [(1, 1), (2, 25), (1, 49)])
++def test_output_bytes_include_batch_components_degree_remaining_limbs_and_dtype(batch, level):
++    value = SimpleNamespace(polynomial=SimpleNamespace(shape=(batch, 2, 256, 512, 2*(level+1)), dtype='uint32'))
++    graph = SimpleNamespace(ctx=SimpleNamespace(_param_cache=SimpleNamespace(num_q_at_level=lambda n: 2*(n+1))),
++                            arithmetic=SimpleNamespace(_level=lambda _: level))
++    assert output_payload_bytes(graph, value) == batch*2*131072*(2*level)*4
++
++
++@pytest.mark.parametrize('limit', [1, 2, 3, 8])
++def test_queue_peak_and_consumed_reference_retirement(limit):
++    alive = weakref.WeakSet()
++    made, consumed, peak = [], [], 0
++    class Token: pass
++    def make(giant, indices):
++        nonlocal peak
++        token = Token()
++        token._public_absolute_bound = giant + 1
++        alive.add(token)
++        peak = max(peak, len(alive))
++        made.append(giant)
++        return token
++    for giant, token in giant_chunks([(n, [n]) for n in range(19)], make, limit):
++        assert token._public_absolute_bound == giant + 1
++        consumed.append(giant)
++        del token
++    assert made == consumed == list(range(19))
++    assert peak <= limit
++    assert not alive
++
++
++def test_queue_releases_unconsumed_items_on_failure_and_generator_close():
++    alive = weakref.WeakSet()
++    class Token: pass
++    def make(giant, indices):
++        if giant == 2:
++            raise RuntimeError('inner failure')
++        item = Token(); alive.add(item); return item
++    with pytest.raises(RuntimeError, match='inner failure'):
++        next(giant_chunks([(n, [n]) for n in range(4)], make, 4))
++    gc.collect()
++    assert not alive
++    iterator = giant_chunks([(0, []), (1, [])], make, 2)
++    giant, token = next(iterator)
++    del token
++    iterator.close()
++    gc.collect()
++    assert not alive
+--- /dev/null
++++ b/cadathlon/tests/test_optimized_transformer_wiring.py
+@@ -0,0 +1,131 @@
++"""Optional control wiring and lifecycle only; no encrypted-model claim."""
++from contextlib import nullcontext
++import importlib
++import json
++from pathlib import Path
++import sys
++from types import SimpleNamespace
++import pytest
++
++ROOT=Path(__file__).resolve().parents[2]
++sys.path[:0]=[str(ROOT),str(ROOT/'cadathlon/common')]
++from support import load_module
++import encrypted_reference as reference
++from encrypted_polynomial import EncryptedPolynomialEvaluator
++from encrypted_packed_transformer import PackedTransformer, PackedPairLayout
++from encrypted_bounded_transformer import BoundedPackedTransformer
++from encrypted_bounded_arithmetic import BoundedArithmetic
++from encrypted_packed_qwen import CompiledArithmetic, PackedQwen1
++from encrypted_refresh import SecureRefresh, BoundedSecureRefresh
++
++CONSTRUCTORS={
++ 'arithmetic':lambda context,**kw:CompiledArithmetic(context,**kw),
++ 'bounded_arithmetic':lambda context,**kw:BoundedArithmetic(context,**kw),
++ 'packed':lambda context,**kw:PackedTransformer(context,PackedPairLayout(1,1,32,64),**kw),
++ 'bounded_packed':lambda context,**kw:BoundedPackedTransformer(context,PackedPairLayout(1,1,32,64),None,**kw),
++ 'single_token':lambda context,**kw:PackedQwen1(context,**kw),
++ 'refresh':lambda context,**kw:SecureRefresh(context,period=4,**kw),
++ 'bounded_refresh':lambda context,**kw:BoundedSecureRefresh(context,period=4,**kw),
++}
++
++@pytest.mark.parametrize('kind',CONSTRUCTORS)
++@pytest.mark.parametrize('bad',[None,1,'yes'])
++def test_strict_flag_reaches_validator_before_context_use(kind,bad):
++ with pytest.raises(TypeError,match='explicit boolean'):
++  CONSTRUCTORS[kind](SimpleNamespace(num_slots=64),low_memory=True,preserve_dispatch_cache=bad)
++
++@pytest.mark.parametrize('kind',CONSTRUCTORS)
++def test_opt_in_requires_low_memory_at_every_entry(kind):
++ with pytest.raises(ValueError,match='low_memory'):
++  CONSTRUCTORS[kind](SimpleNamespace(num_slots=64),low_memory=False,preserve_dispatch_cache=True)
++
++@pytest.mark.parametrize('kind',CONSTRUCTORS)
++@pytest.mark.parametrize('selected',[False,True])
++def test_constructor_forwards_default_or_explicit_policy(monkeypatch,kind,selected):
++ observed=[]
++ class Boundary(Exception):pass
++ def validate(self,context,**kwargs):
++  observed.append(kwargs);raise Boundary
++ monkeypatch.setattr(EncryptedPolynomialEvaluator,'__init__',validate)
++ options={'preserve_dispatch_cache':True} if selected else {}
++ with pytest.raises(Boundary):CONSTRUCTORS[kind](SimpleNamespace(num_slots=64),low_memory=True,**options)
++ assert observed[0]['preserve_dispatch_cache'] is selected
++
++@pytest.mark.parametrize('bad',[None,1,'yes'])
++def test_session_rejects_bad_flag_before_any_key_generation(monkeypatch,bad):
++ from jaxite_word import key_gen
++ def forbidden(*a,**k):pytest.fail('key generation reached with invalid option')
++ monkeypatch.setattr(key_gen,'gen_pke_pair',forbidden)
++ with pytest.raises(TypeError,match='preserve_dispatch_cache'):
++  reference.create_toy_session('qwen',{}, {},batch=1,sequence_length=1,devices=[],preserve_dispatch_cache=bad)
++
++@pytest.mark.parametrize('model,number,packed,packed_pairs',[
++ ('bert',1,False,True),('qwen',2,False,True),('qwen',1,True,False),('qwen',1,False,False)])
++@pytest.mark.parametrize('selected',[False,True])
++def test_session_wires_ops_refresh_and_cleans_owned_provider(monkeypatch,model,number,packed,packed_pairs,selected):
++ """Fake keys/contexts isolate factory control flow; the public ring remains real."""
++ import jax
++ from jaxite_word import key_gen,ckks_ctx
++ import jaxite_word
++ import encrypted_ntt, encrypted_refresh
++ folder=ROOT/'cadathlon/agent_pset'/('p2_bert' if model=='bert' else 'p4_qwen')
++ case=json.loads((folder/f'test/test{number}.in').read_text())
++ weights,embeddings,*_=load_module(folder/'src/reference.py').make_case(case)
++ if packed_pairs:
++  import encrypted_packed_transformer as packed_module
++  actual_plan=packed_module.plan_packed_transformer(model,case['config'],weights,
++      batch=embeddings.shape[0],sequence=embeddings.shape[1])
++  monkeypatch.setattr(packed_module,'plan_packed_transformer',lambda *a,**kw:actual_plan)
++ events=[];observed={}
++ class Context:
++  def __init__(self,params):
++   self.parameters=params;self.degree=params['degree'];self.num_slots=params['num_slots']
++   self._param_cache=SimpleNamespace(ntt_q_max=object())
++  def program_initialization(self,*args,**kwargs):pass
++ monkeypatch.setattr(jaxite_word,'CKKSContext',Context)
++ monkeypatch.setattr(jax,'default_device',lambda device:nullcontext())
++ monkeypatch.setattr(jax.numpy,'asarray',lambda *a,**k:SimpleNamespace(transpose=lambda *x:object()))
++ monkeypatch.setattr(key_gen,'gen_pke_pair',lambda *args,**kw:{'secret_key':object(),'public_key':object()})
++ monkeypatch.setattr(key_gen,'gen_evaluation_key',lambda *a,**kw:{'a':[0],'b':[0]})
++ owner=SimpleNamespace(keys={},close=lambda:events.append('keys'))
++ monkeypatch.setattr(encrypted_refresh.ClientRotationKeyStore,'generate',lambda *a,**kw:owner)
++ provider=SimpleNamespace(close=lambda:events.append('ntt'))
++ monkeypatch.setattr(encrypted_ntt,'enable_scoped_ntt_subsets',lambda context:provider)
++ def refresh(context,**kwargs):
++  observed['refresh']=kwargs;return SimpleNamespace(ctx=context)
++ monkeypatch.setattr(encrypted_refresh,'BoundedSecureRefresh',refresh)
++ def graph(context,*args,**kwargs):
++  observed['graph']=kwargs;return SimpleNamespace(arithmetic=SimpleNamespace(ctx=context))
++ for module,name in [('encrypted_packed_transformer','PackedTransformer'),('encrypted_bounded_transformer','BoundedPackedTransformer'),('encrypted_packed_qwen','PackedQwen1')]:
++  monkeypatch.setattr(importlib.import_module(module),name,graph)
++ def evaluator(context,**kwargs):
++  observed['evaluator']=kwargs;return SimpleNamespace(ctx=context)
++ monkeypatch.setattr(reference,'EncryptedPolynomialEvaluator',evaluator)
++ monkeypatch.setattr(reference,'EncryptedTensorOps',lambda evaluator,layout:object())
++ monkeypatch.setattr(ckks_ctx,'evict_context_caches',lambda context:events.append('context'))
++ monkeypatch.setattr(jax,'clear_caches',lambda:events.append('jax'))
++ monkeypatch.setattr(reference.gc,'collect',lambda:events.append('gc'))
++ monkeypatch.delenv('CROSS_SKIP_TOPLEVEL_ROTKEYS',raising=False)
++ options={'preserve_dispatch_cache':True,'ntt_subsets':True} if selected else {}
++ session=reference.create_toy_session(model,case['config'],weights,batch=embeddings.shape[0],sequence_length=embeddings.shape[1],devices=[SimpleNamespace(memory_stats=lambda:{})],packed=packed,packed_pairs=packed_pairs,bounded_refresh=packed_pairs,**options)
++ assert session.preserve_dispatch_cache is selected
++ for kwargs in observed.values():assert kwargs['preserve_dispatch_cache'] is selected
++ assert ('refresh' in observed)==(model=='qwen' and number==2)
++ assert session.ntt_subsets is (provider if selected else None)
++ session.close();session.close()
++ assert events==(['ntt'] if selected else [])+['context','context','jax','gc','keys']
++
++@pytest.mark.parametrize('model,problem',[('bert','p2_bert'),('qwen','p4_qwen')])
++def test_optimized_adapter_explicitly_opts_in_and_default_adapter_does_not(monkeypatch,model,problem):
++ captured=[]
++ def create(*args,**kwargs):captured.append((args,kwargs));return object()
++ monkeypatch.setattr(reference,'create_toy_session',create)
++ folder=ROOT/'cadathlon/agent_pset'/problem/'src'
++ for name in (f'{model}_bounded_reference.py',f'{model}_optimized_reference.py'):
++  module=load_module(folder/name)
++  assert module.IMPLEMENTATION_STATUS=='experimental-unvalidated'
++  module.create_session({}, {},batch=1,sequence_length=2,devices=[])
++ old,new=[row[1] for row in captured]
++ assert 'preserve_dispatch_cache' not in old and 'ntt_subsets' not in old
++ assert new['preserve_dispatch_cache'] is True and new['ntt_subsets'] is True
++ assert new['packed_pairs'] is True and new['bounded_refresh'] is True
+--- a/cadathlon/tests/test_package.py
++++ b/cadathlon/tests/test_package.py
+@@ -29,7 +29,7 @@
+     (suite / "private.npy").write_bytes(b"private")
+     for name in ("support.py", "Makefile.problem", "package.py", "transformer_runner.py",
+                  "encrypted_polynomial.py", "encrypted_transformer.py", "encrypted_reference.py", "encrypted_refresh.py",
+-                 "encrypted_rotation.py", "encrypted_compilation.py", "encrypted_primitives.py",
++                 "encrypted_rotation.py", "encrypted_compilation.py", "encrypted_primitives.py", "encrypted_ntt.py",
+                  "encrypted_packed_qwen.py", "encrypted_packed_transformer.py",
+                  "encrypted_bounded_arithmetic.py", "encrypted_bounded_transformer.py"):
+         (common / name).write_text("")
+@@ -44,6 +44,7 @@
+     assert "common/encrypted_rotation.py" in names
+     assert "common/encrypted_compilation.py" in names
+     assert "common/encrypted_primitives.py" in names
++    assert "common/encrypted_ntt.py" in names
+     assert "common/encrypted_packed_qwen.py" in names
+     assert "common/encrypted_packed_transformer.py" in names
+     assert "common/encrypted_bounded_arithmetic.py" in names
+@@ -122,6 +123,7 @@
+         assert "common/encrypted_rotation.py" in names
+         assert "common/encrypted_compilation.py" in names
+         assert "common/encrypted_primitives.py" in names
++        assert "common/encrypted_ntt.py" in names
+         assert "common/encrypted_packed_qwen.py" in names
+         assert "common/encrypted_packed_transformer.py" in names
+         assert "common/encrypted_bounded_arithmetic.py" in names
+@@ -146,10 +148,12 @@
+         assert json.loads(result.stdout)["mode"] == "plaintext-reference"
+     for problem, reference in ((problems[1], "bert_reference.py"), (problems[1], "bert_packed_reference.py"),
+                                (problems[1], "bert_bounded_reference.py"),
++                               (problems[1], "bert_optimized_reference.py"),
+                                (problems[3], "qwen_reference.py"),
+                                (problems[3], "qwen_packed_reference.py"),
+                                (problems[3], "qwen_packed_pair_reference.py"),
+-                               (problems[3], "qwen_bounded_reference.py")):
++                               (problems[3], "qwen_bounded_reference.py"),
++                               (problems[3], "qwen_optimized_reference.py")):
+         src = extracted / problem / "src"
+         result = subprocess.run([sys.executable, "runner.py", "--preflight", "--implementation", reference],
+                                 cwd=src, env=env, text=True, capture_output=True)
+--- /dev/null
++++ b/cadathlon/tests/test_scoped_mul_ntt.py
+@@ -0,0 +1,226 @@
++"""Optional HEMul control reuse: exact public tables and secure helper parity."""
++from pathlib import Path
++import gc
++import sys
++import weakref
++import pytest
++import numpy as np
++
++ROOT=Path(__file__).resolve().parents[2]
++sys.path[:0]=[str(ROOT),str(ROOT/'cadathlon/common')]
++import jax
++from jaxite_word import he_params,ckks_ctx
++import hemul,polynomial,ntt_mm
++from encrypted_ntt import FIELDS,ScopedNTTSubsets,enable_scoped_ntt_subsets
++from encrypted_primitives import CompiledTensorOnly,CompiledRelinearization
++from encrypted_compilation import CompiledTensorProduct
++from test_scoped_ntt import make_owner
++from test_encrypted_tensor_only import ring,server_for,bootstrap_shell,assert_same
++from encrypted_refresh import _install_compiled_primitives
++from encrypted_polynomial import EncryptedPolynomialEvaluator
++jax.config.update('jax_enable_x64',True)
++RECORDS=[]
++
++
++def polynomials(kernel):
++    names=('ct_obj','ct_single','ct_no_relin_out','ct_extend','ks_ct_drop_last_extend')
++    return [(name,getattr(kernel,name)) for name in names]+[(f'ks_ct_parts[{i}]',x) for i,x in enumerate(kernel.ks_ct_parts)]
++
++
++def tables_equal(actual,expected):
++    checks=0
++    for (name,a),(other,b) in zip(polynomials(actual),polynomials(expected)):
++        assert name==other and a.moduli==b.moduli
++        if name=='ct_no_relin_out':
++            # This deliberately supplied finite-field context must not become
++            # an NTT wrapper, even with the optional factory installed.
++            assert type(a.ntt_ctx) is type(b.ntt_ctx) is expected.ff_context_cls
++            continue
++        for field in FIELDS:
++            np.testing.assert_array_equal(getattr(a.ntt_ctx,field),getattr(b.ntt_ctx,field))
++            checks+=1
++    return checks
++
++
++@pytest.mark.parametrize('cd',[1,2])
++@pytest.mark.parametrize('skip',[False,True])
++def test_every_hemul_ntt_table_is_exact(cd,skip):
++    owner=make_owner();provider=ScopedNTTSubsets(owner)
++    args=dict(batch=2,r=16,c=16,dnum=2,num_eval_mult=1,original_moduli=owner.q_towers,
++              extend_moduli=owner.p_towers,composite_degree=cd)
++    expected=hemul._HEMulKernel(**args)
++    actual=hemul._HEMulKernel(**args,polynomial_factory=provider.polynomial_factory)
++    for kernel in (expected,actual):kernel.control_gen(degree_layout=(16,16),keygen_sizeQ=4,skip_rescale=skip)
++    assert expected._polynomial_factory is hemul.Polynomial
++    checks=tables_equal(actual,expected)
++    assert checks>=30 and provider.stats['builds']>0
++    RECORDS.append(dict(kind='six_field_table_parity',composite_degree=cd,skip_rescale=skip,field_checks=checks,stats=dict(provider.stats)))
++    provider.close()
++    # Retained kernel-owned arrays remain valid after provider retirement.
++    assert tables_equal(actual,expected)==checks
++
++
++def test_close_resets_only_factories_owned_by_this_provider():
++    owner=make_owner();provider=ScopedNTTSubsets(owner)
++    owner.rotation_polynomial_factory=provider.polynomial_factory
++    owner.multiplication_polynomial_factory=provider.polynomial_factory
++    provider.close();provider.close()
++    assert owner.rotation_polynomial_factory is None and owner.multiplication_polynomial_factory is None
++    provider=ScopedNTTSubsets(owner);replacement=lambda *args:None
++    owner.rotation_polynomial_factory=replacement
++    owner.multiplication_polynomial_factory=provider.polynomial_factory
++    provider.close()
++    assert owner.rotation_polynomial_factory is replacement and owner.multiplication_polynomial_factory is None
++
++
++@pytest.mark.parametrize('cd',[1,2])
++def test_both_facade_kernels_receive_owner_factory(cd):
++    # Arithmetic-only small ring: test constructor routing, not security.
++    from types import SimpleNamespace
++    import he_ops
++    owner=make_owner();provider=ScopedNTTSubsets(owner)
++    cache=SimpleNamespace(max_level=(len(owner.q_towers)-1)//cd,composite_degree=cd,
++        batch=1,r=16,c=16,dnum=2,q_towers=owner.q_towers,p_towers=owner.p_towers,
++        degree_layout=(16,16),perf_test=False,ff_context_cls=he_params.BarrettContext,
++        multiplication_polynomial_factory=provider.polynomial_factory,
++        num_q_at_level=lambda level:(level+1)*cd)
++    # Key controls only: zero evaluation arrays do not claim encryption.
++    cache.get_eval_key=lambda level:tuple(jax.numpy.zeros((2,256,(level+1)*cd+2),dtype='uint32') for _ in range(2))
++    operation=he_ops._HEMulAtLevel(cache,0)
++    assert operation._hemul._polynomial_factory.__self__ is provider
++    assert operation._no_relin_operator._polynomial_factory.__self__ is provider
++    assert (operation._hemul is operation._no_relin_operator)==(cd==2)
++    provider.close()
++
++
++def test_secure_helpers_use_scoped_controls_and_release_owners(ring):
++    client=ring[0]
++    def execute():
++        ordinary=server_for(ring,2);server=server_for(ring,2)
++        assert server.secret_key is None and server._param_cache.secret_key is None
++        assert server._param_cache.multiplication_polynomial_factory is None
++        occupied=lambda *args:None
++        server._param_cache.multiplication_polynomial_factory=occupied
++        with pytest.raises(ValueError,match='already owns'):enable_scoped_ntt_subsets(server)
++        assert server._param_cache.rotation_polynomial_factory is None
++        assert server._param_cache.multiplication_polynomial_factory is occupied
++        server._param_cache.multiplication_polynomial_factory=None
++        provider=enable_scoped_ntt_subsets(server,max_entries=16)
++        assert server._param_cache.multiplication_polynomial_factory.__self__ is provider
++        with pytest.raises(ValueError,match='already owns'):enable_scoped_ntt_subsets(server)
++        evaluator=EncryptedPolynomialEvaluator(server)
++        tensor=CompiledTensorOnly(server);relin=CompiledRelinearization(server)
++        combined=CompiledTensorProduct(server)
++        eager=bootstrap_shell(ordinary);compiled=bootstrap_shell(server)
++        helpers=_install_compiled_primitives(compiled,server)
++        values=np.stack([np.linspace(-.3,.3,client.num_slots),.2*np.sin(np.arange(client.num_slots)/17)])
++        left=client.encrypt_slots_batch(values,scale=float(1<<40))
++        right=client.encrypt_slots_batch(-.7*values,scale=float(1<<39))
++        pt=server.encode_at_level(np.full(client.num_slots,.5),2,scale=float(1<<40))
++        left2=server.ptct_mul[2].mul(left,pt)
++        right2=server.ptct_mul[2].mul(right,pt)
++        for level in (2,1):
++            a=left if level==2 else evaluator._lower(left,1)
++            b=right if level==2 else evaluator._lower(right,1)
++            expected_op=ordinary.he_mul[level-1]
++            actual_op=server.he_mul[level-1]
++            assert actual_op._hemul._polynomial_factory.__self__ is provider
++            fields=tables_equal(actual_op._hemul,expected_op._hemul)
++            expected_tensor=expected_op.hemul_no_relin(a,b)
++            actual_tensor=actual_op.hemul_no_relin(a,b)
++            assert_same(actual_tensor,expected_tensor)
++            expected_relin=expected_op.relinearize(expected_tensor)
++            assert_same(actual_op.relinearize(actual_tensor),expected_relin)
++            expected_mul=expected_op.mul(a,b);actual_mul=actual_op.mul(a,b)
++            np.testing.assert_array_equal(actual_mul.polynomial,expected_mul.polynomial)
++            assert actual_mul._ckks_scale==expected_mul._ckks_scale
++            assert getattr(actual_mul,'_ckks_nsd',None)==getattr(expected_mul,'_ckks_nsd',None)
++            err=float(np.max(np.abs(client.decrypt_slots_batch(actual_mul)-values*(-.7*values))))
++            assert err<2e-6,err
++            # Actual compiled tensor-only helper must build no HEMul controls.
++            server.he_mul._instances.clear();before=dict(provider.stats)
++            assert_same(tensor.multiply(a,b),expected_tensor)
++            assert not server.he_mul._instances and dict(provider.stats)==before
++            assert_same(relin.relinearize(expected_tensor),expected_relin)
++            assert not server.he_mul._instances
++            assert_same(combined.multiply(a,b),expected_relin)
++            assert not server.he_mul._instances
++            count=relin.compiler.compile_count
++            relin.clear();provider.clear();jax.clear_caches()
++            assert_same(relin.relinearize(expected_tensor),expected_relin)
++            assert relin.compiler.compile_count==count
++            RECORDS.append(dict(kind='secure_core_and_compiled_helpers',batch=2,level=level,
++                six_field_checks=fields,payload_metadata_exact=True,max_abs_error=err,
++                tensor_helper_constructed_no_hemul=True,relinearization_executable_reused=True))
++        for level,a,b,truth in [(2,left,right,values*(-.7*values)),
++             (1,left2,right,(.5*values)*(-.7*values)),
++             (1,left2,right2,(.5*values)*(-.35*values))]:
++            expected=eager._he_op_mul(level,a,b)
++            actual=compiled._he_op_mul(level,a,b)
++            assert_same(actual,expected)
++            assert actual._ckks_nsd==2
++            err=float(np.max(np.abs(client.decrypt_slots_batch(actual)-truth)))
++            assert err<2e-6,err
++            RECORDS.append(dict(kind='actual_bootstrap_mul_dispatch',batch=2,level=level,
++                input_nsds=[getattr(x,'_ckks_nsd',1) for x in (a,b)],
++                payload_metadata_exact=True,max_abs_error=err))
++        stats=dict(provider.stats);assert stats['builds']>0
++        compiler=relin.compiler
++        control_refs=[weakref.ref(x) for x in relin.binding[1].controls]
++        refs=[weakref.ref(server),weakref.ref(server._param_cache)]
++        for helper in (*helpers,tensor,relin):helper.clear()
++        combined.clear()
++        provider.close()
++        assert server._param_cache.multiplication_polynomial_factory is None
++        assert server._param_cache.rotation_polynomial_factory is None
++        server.he_mul._instances.clear()
++        assert server.he_mul[0]._hemul._polynomial_factory is hemul.Polynomial
++        ckks_ctx.evict_context_caches(server);ckks_ctx.evict_context_caches(ordinary)
++        return refs,control_refs,compiler,provider,stats
++    refs,control_refs,compiler,provider,stats=execute()
++    jax.clear_caches();polynomial._POLYNOMIAL_REGISTRY.clear();ntt_mm._barrett_ntt_context_cache.clear();gc.collect()
++    assert compiler._executables
++    assert all(ref() is None for ref in refs)
++    assert all(ref() is None for ref in control_refs)
++    RECORDS.append(dict(kind='retirement',owners_and_controls_collected=True,
++                        executable_retained=True,stats=stats))
++
++
++def test_montgomery_hemul_keeps_ordinary_backend():
++    from finite_field import MontgomeryContext
++    owner=make_owner();provider=ScopedNTTSubsets(owner)
++    args=dict(batch=1,r=16,c=16,dnum=2,num_eval_mult=1,original_moduli=owner.q_towers,
++              extend_moduli=owner.p_towers,composite_degree=2,finite_field_context=MontgomeryContext)
++    expected=hemul._HEMulKernel(**args)
++    actual=hemul._HEMulKernel(**args,polynomial_factory=provider.polynomial_factory)
++    for kernel in (expected,actual):kernel.control_gen(degree_layout=(16,16),keygen_sizeQ=4,skip_rescale=True)
++    assert tables_equal(actual,expected)==36
++    assert provider.stats['builds']==0
++    for _,value in polynomials(actual):
++        assert type(value.ntt_ctx.ff_ctx) is MontgomeryContext
++        assert not value.ntt_ctx.ff_ctx.computation_format_is_standard
++    provider.close()
++
++
++@pytest.mark.parametrize('precision,layout',[(64,(16,16)),(32,(8,32))])
++def test_factory_unsupported_precision_or_layout_keeps_ordinary_constructor(precision,layout):
++    owner=make_owner();provider=ScopedNTTSubsets(owner)
++    shapes=dict(batch=1,num_elements=2,degree=256,num_moduli=2,precision=precision,degree_layout=layout)
++    parameters=dict(moduli=owner.q_towers[:2],finite_field_context=owner.ff_context_cls)
++    expected=polynomial.Polynomial(shapes,parameters)
++    actual=provider.polynomial_factory(shapes,parameters)
++    assert actual.precision==expected.precision and actual.degree_layout==expected.degree_layout
++    for field in FIELDS:np.testing.assert_array_equal(getattr(actual.ntt_ctx,field),getattr(expected.ntt_ctx,field))
++    assert provider.stats['builds']==0 and provider.stats['fallback']==1
++    provider.close()
++
++
++def test_installed_factories_do_not_retain_owner_without_close():
++    owner=make_owner();provider=ScopedNTTSubsets(owner)
++    owner.rotation_polynomial_factory=provider.polynomial_factory
++    owner.multiplication_polynomial_factory=provider.polynomial_factory
++    ref=weakref.ref(owner)
++    del owner
++    gc.collect()
++    assert ref() is None
++    provider.close();provider.close()
+--- /dev/null
++++ b/cadathlon/tests/test_scoped_ntt.py
+@@ -0,0 +1,142 @@
++"""Owner-scoped NTT subset contracts; second-device guard is explicitly opt-in."""
++from pathlib import Path
++import gc, importlib, sys, weakref
++import numpy as np
++import pytest
++ROOT=Path(__file__).resolve().parents[2]
++sys.path[:0]=[str(ROOT),str(ROOT/'cadathlon/common')]
++import jax
++from jaxite_word import he_params
++from encrypted_ntt import FIELDS,ScopedNTTSubsets
++jax.config.update('jax_enable_x64',True)
++ntt=he_params.ntt_mm
++class Owner:pass
++
++def make_owner():
++    owner=Owner();owner.q_towers=[12289,40961,65537,114689];owner.p_towers=[147457,163841]
++    owner.r=16;owner.c=16;owner.degree=256;owner.ff_context_cls=he_params.BarrettContext;owner.perf_test=False
++    for attr,moduli in [('ntt_q_max',owner.q_towers),('ntt_p',owner.p_towers)]:
++        field=owner.ff_context_cls(moduli)
++        setattr(owner,attr,ntt.NTTCiphertextBarrettContext(moduli,{'r':16,'c':16,'finite_field_context':field}))
++    return owner
++
++def params(owner,moduli):
++    return {'r':owner.r,'c':owner.c,'finite_field_context':owner.ff_context_cls(moduli)}
++
++def test_ordered_subsets_exact_and_lifecycle():
++    owner=make_owner();provider=ScopedNTTSubsets(owner,max_entries=2);device=jax.devices()[0]
++    choices=[owner.q_towers[:-1],owner.q_towers[1:]+owner.p_towers,
++             [owner.p_towers[1],owner.q_towers[2],owner.q_towers[0],owner.p_towers[0]]]
++    retained=[]
++    for moduli in choices:
++        p=params(owner,moduli);actual=provider.get(moduli,p,device=device)
++        assert actual is not None
++        expected=ntt.NTTCiphertextBarrettContext(moduli,p)
++        for name in FIELDS:np.testing.assert_array_equal(getattr(actual,name),getattr(expected,name))
++        assert provider.get(moduli,params(owner,moduli),device=device) is actual
++        retained.append(actual)
++        jax.clear_caches();ntt._barrett_ntt_context_cache.clear();gc.collect()
++    assert provider.live_entries==2 and len(provider._entries)==2
++    refs=[weakref.ref(x) for x in retained]
++    del actual,expected,retained
++    jax.clear_caches();gc.collect()
++    assert all(ref() is None for ref in refs)
++    assert provider.live_entries==0
++    moduli=choices[-1];actual=provider.get(moduli,params(owner,moduli),device=device)
++    baseline=np.asarray(actual.ntt_tf_step2).copy()
++    provider.close();np.testing.assert_array_equal(actual.ntt_tf_step2,baseline)
++    assert provider.get(moduli,params(owner,moduli),device=device) is None
++
++def test_owner_not_retained_and_replacement_falls_back():
++    owner=make_owner();provider=ScopedNTTSubsets(owner);device=jax.devices()[0]
++    moduli=owner.q_towers[:2]
++    actual=provider.get(moduli,params(owner,moduli),device=device)
++    owner_ref=weakref.ref(owner);master_ref=weakref.ref(owner.ntt_q_max)
++    del owner
++    jax.clear_caches();ntt._barrett_ntt_context_cache.clear();gc.collect()
++    assert owner_ref() is None and master_ref() is None
++    assert provider.get(moduli,{'r':16,'c':16,'finite_field_context':he_params.BarrettContext(moduli)},device=device) is None
++    assert actual.ntt_tf_step2.shape[-1]==2
++
++@pytest.mark.parametrize('case',['duplicate','unknown','floatmodulus','layout','precision','extra_parameter','wrong_ff_moduli','changed_field_array','changed_field_metadata','changed_source_array','changed_source_moduli','changed_owner_degree','changed_owner_field','perf_test','nonstandard_field','other_device'])
++def test_guards_fall_back(case):
++    owner=make_owner();provider=ScopedNTTSubsets(owner);device=jax.devices()[0];moduli=owner.q_towers[:2];p=params(owner,moduli);precision=32
++    if case=='duplicate':moduli=[moduli[0]]*2
++    elif case=='unknown':moduli=[12289,786433];p=params(owner,moduli)
++    elif case=='floatmodulus':moduli=[float(x) for x in moduli]
++    elif case=='layout':p['r'],p['c']=8,32
++    elif case=='precision':precision=64
++    elif case=='extra_parameter':p['perf_test']=False
++    elif case=='wrong_ff_moduli':p['finite_field_context']=owner.ff_context_cls(owner.q_towers[1:3])
++    elif case=='changed_field_array':p['finite_field_context'].m=jax.numpy.zeros_like(p['finite_field_context'].m)
++    elif case=='changed_field_metadata':p['finite_field_context'].barrett_m=[0,0]
++    elif case=='changed_source_array':owner.ntt_q_max.ntt_tf_step2=jax.numpy.zeros_like(owner.ntt_q_max.ntt_tf_step2)
++    elif case=='changed_source_moduli':owner.ntt_q_max.moduli=list(reversed(owner.q_towers))
++    elif case=='changed_owner_degree':owner.degree=512
++    elif case=='changed_owner_field':owner.ff_context_cls=type('OtherBarrett',(owner.ff_context_cls,),{})
++    elif case=='perf_test':owner.perf_test=True
++    elif case=='nonstandard_field':p['finite_field_context'].computation_format_is_standard=False
++    elif case=='other_device':
++        if len(jax.devices()) < 2:
++            pytest.skip('requires two logical CPU devices; run with --xla_force_host_platform_device_count=2')
++        device=jax.devices()[1]
++        with jax.default_device(device):p=params(owner,moduli)
++    assert provider.get(moduli,p,precision=precision,device=device) is None
++
++def test_mutated_cached_field_is_not_reused():
++    owner=make_owner();provider=ScopedNTTSubsets(owner);device=jax.devices()[0];moduli=owner.q_towers[:2]
++    actual=provider.get(moduli,params(owner,moduli),device=device)
++    actual.ff_ctx.m=jax.numpy.zeros_like(actual.ff_ctx.m)
++    rebuilt=provider.get(moduli,params(owner,moduli),device=device)
++    assert rebuilt is not actual
++    np.testing.assert_array_equal(rebuilt.ff_ctx.m,he_params.BarrettContext(moduli).m)
++
++
++def test_contiguous_view_keeps_backing_until_last_holder_drops():
++    owner=make_owner();provider=ScopedNTTSubsets(owner);device=jax.devices()[0]
++    moduli=owner.q_towers[:2]
++    actual=provider.get(moduli,params(owner,moduli),device=device)
++    master=owner.ntt_q_max.ntt_bat_tf_step1
++    view=actual.ntt_bat_tf_step1
++    assert isinstance(master,np.ndarray) and isinstance(view,np.ndarray)
++    assert np.shares_memory(master,view)
++    assert view.nbytes < master.nbytes
++    backing=master
++    while isinstance(backing.base,np.ndarray):backing=backing.base
++    backing_ref=weakref.ref(backing);wrapper_ref=weakref.ref(owner.ntt_q_max)
++    del owner,master,backing,view
++    jax.clear_caches();gc.collect()
++    assert wrapper_ref() is None and backing_ref() is not None
++    del actual
++    provider.clear();jax.clear_caches();gc.collect()
++    assert backing_ref() is None
++
++@pytest.mark.parametrize('failure',[None,RuntimeError,KeyboardInterrupt,SystemExit])
++def test_reference_session_releases_provider_even_if_cleanup_fails(monkeypatch,failure):
++    import encrypted_reference as reference
++    from types import SimpleNamespace
++    from jaxite_word import ckks_ctx
++    events=[]
++    def release():
++        events.append('ntt')
++        if failure:raise failure('ntt cleanup')
++    monkeypatch.setattr(ckks_ctx,'evict_context_caches',lambda value:events.append(value))
++    monkeypatch.setattr(jax,'clear_caches',lambda:events.append('jax'))
++    monkeypatch.setattr(reference.gc,'collect',lambda:events.append('gc'))
++    session=object.__new__(reference.ToyReferenceSession)
++    session.client='client';session.ctx='server';session.ntt_subsets=SimpleNamespace(close=release)
++    session.key_store=SimpleNamespace(close=lambda:events.append('keys'))
++    if failure:
++        with pytest.raises(failure,match='ntt cleanup'):session.close()
++    else:session.close()
++    assert events==['ntt','client','server','jax','gc','keys']
++    assert session.ntt_subsets is None and session.closed
++    session.close();assert len(events)==6
++
++def test_reference_option_is_explicit_before_keygen(monkeypatch):
++    import encrypted_reference as reference
++    from jaxite_word import key_gen
++    def forbidden(*args,**kwargs):raise AssertionError('keygen happened before opt-in validation')
++    monkeypatch.setattr(key_gen,'gen_pke_pair',forbidden)
++    with pytest.raises(TypeError,match='ntt_subsets must be an explicit boolean'):
++        reference.create_toy_session('bert',{}, {},batch=1,sequence_length=1,devices=[],ntt_subsets='yes')
+--- /dev/null
++++ b/cadathlon/tests/test_transformer_owned_keys.py
+@@ -0,0 +1,230 @@
++"""Owned directory lifetime across real child success, termination and failures."""
++import importlib.util
++import json
++import os
++from pathlib import Path
++import shutil
++import sys
++
++import pytest
++
++SCRIPT = Path(__file__).resolve().parents[1] / 'validation/check_transformer_suite.py'
++spec = importlib.util.spec_from_file_location('owned_keys_suite', SCRIPT)
++suite = importlib.util.module_from_spec(spec)
++spec.loader.exec_module(suite)
++
++
++def parent(monkeypatch, tmp_path):
++    shared = tmp_path / 'shared'
++    shared.mkdir()
++    (shared / 'unrelated.key').write_bytes(b'leave alone')
++    monkeypatch.setenv('CROSS_PUBLIC_KEY_DIRECTORY', str(shared))
++    return shared
++
++
++def assert_parent(shared):
++    assert (shared / 'unrelated.key').read_bytes() == b'leave alone'
++    assert os.environ['CROSS_PUBLIC_KEY_DIRECTORY'] == str(shared)
++
++
++KEY_CODE = ("import json,os; from pathlib import Path; "
++    "p=Path(os.environ['CROSS_PUBLIC_KEY_DIRECTORY']); "
++    "(p/'nested').mkdir(); (p/'nested'/'public-key.bin').write_bytes(b'public'); ")
++
++
++def test_normal_exit_removes_only_owned_child_keys(monkeypatch, tmp_path):
++    shared = parent(monkeypatch, tmp_path)
++    code = KEY_CODE + "print(json.dumps({'directory':str(p)}))"
++    record = suite.run_case([sys.executable, '-c', code], tmp_path, timeout=None)
++    assert not record.get('error') and record['returncode'] == 0
++    assert record['process_reaped'] and record['public_key_store_removed']
++    owned = Path(record['result']['directory'])
++    assert owned.parent == shared and owned != shared and not owned.exists()
++    assert_parent(shared)
++
++
++def test_forced_kill_removes_orphaned_key_files(monkeypatch, tmp_path):
++    shared = parent(monkeypatch, tmp_path)
++    code = KEY_CODE + 'import signal,time; signal.signal(signal.SIGTERM,signal.SIG_IGN); time.sleep(60)'
++    record = suite.run_case([sys.executable, '-c', code], tmp_path, timeout=.5, cleanup_grace_s=.1)
++    assert record['returncode'] == -9
++    assert record['process_reaped'] and record['public_key_store_removed']
++    assert not Path(record['owned_public_key_directory']).exists()
++    assert 'deadline' in record['error']
++    assert_parent(shared)
++
++
++def test_launch_failure_still_records_and_removes_owned_directory(monkeypatch, tmp_path):
++    shared = parent(monkeypatch, tmp_path)
++    with pytest.raises(FileNotFoundError):
++        suite.run_case(['/definitely-missing-owned-key-test'], tmp_path, timeout=None)
++    record = json.loads((tmp_path / 'process.json').read_text())
++    assert record['process_reaped'] and record['public_key_store_removed']
++    assert not Path(record['owned_public_key_directory']).exists()
++    assert 'FileNotFoundError' in record['error']
++    assert_parent(shared)
++
++
++@pytest.mark.parametrize('primary_failure', [False, True])
++@pytest.mark.parametrize('cancel_cleanup', [False, True])
++def test_cleanup_failure_prevents_pass_and_preserves_primary(monkeypatch, tmp_path, primary_failure, cancel_cleanup):
++    shared = parent(monkeypatch, tmp_path)
++    original = shutil.rmtree
++    def fail_cleanup(path):
++        raise (KeyboardInterrupt if cancel_cleanup else RuntimeError)('simulated cleanup failure')
++    monkeypatch.setattr(suite.shutil, 'rmtree', fail_cleanup)
++    if primary_failure:
++        with pytest.raises(FileNotFoundError):
++            suite.run_case(['/definitely-missing-owned-key-test'], tmp_path, timeout=None)
++        record = json.loads((tmp_path / 'process.json').read_text())
++        assert 'FileNotFoundError' in record['error']
++    elif cancel_cleanup:
++        with pytest.raises(KeyboardInterrupt, match='simulated cleanup failure'):
++            suite.run_case([sys.executable, '-c', 'print("{}")'], tmp_path, timeout=None)
++        record = json.loads((tmp_path / 'process.json').read_text())
++    else:
++        record = suite.run_case([sys.executable, '-c', 'print("{}")'], tmp_path, timeout=None)
++        assert record['error'] == 'owned public key directory cleanup failed'
++    assert not record['passed'] and not record['public_key_store_removed']
++    assert ('KeyboardInterrupt' if cancel_cleanup else 'RuntimeError') in record['key_cleanup_error']
++    original(record['owned_public_key_directory'])
++    assert_parent(shared)
++
++
++def test_process_stop_failure_does_not_replace_primary_cancellation(monkeypatch, tmp_path):
++    shared = parent(monkeypatch, tmp_path)
++    class FakeProcess:
++        pid = 99999999
++        returncode = None
++        def wait(self, **kwargs):
++            raise KeyboardInterrupt('primary cancellation')
++        def poll(self):
++            return None
++    monkeypatch.setattr(suite.subprocess, 'Popen', lambda *a, **kw: FakeProcess())
++    def failed_stop(*a, **kw):
++        raise RuntimeError('secondary stop failure')
++    monkeypatch.setattr(suite, 'stop_process_group', failed_stop)
++    with pytest.raises(KeyboardInterrupt, match='primary cancellation'):
++        suite.run_case(['fake-never-launched'], tmp_path, timeout=None)
++    record = json.loads((tmp_path / 'process.json').read_text())
++    assert not record['process_reaped'] and not record['public_key_store_removed']
++    assert 'secondary stop failure' in record['process_cleanup_error']
++    shutil.rmtree(record['owned_public_key_directory'])
++    assert_parent(shared)
++
++
++def test_live_group_retains_key_files(monkeypatch, tmp_path):
++    shared = parent(monkeypatch, tmp_path)
++    monkeypatch.setattr(suite, 'process_group_alive', lambda pid: True)
++    monkeypatch.setattr(suite, 'stop_process_group', lambda *a, **kw: None)
++    record = suite.run_case([sys.executable, '-c', KEY_CODE + 'print("{}")'], tmp_path, timeout=None)
++    assert not record['process_reaped'] and not record['public_key_store_removed']
++    owned = Path(record['owned_public_key_directory'])
++    assert (owned / 'nested/public-key.bin').read_bytes() == b'public'
++    assert 'still present' in record['key_cleanup_error']
++    shutil.rmtree(owned)
++    assert_parent(shared)
++
++
++def test_replaced_directory_cannot_redirect_cleanup(monkeypatch, tmp_path):
++    shared = parent(monkeypatch, tmp_path)
++    code = ("import json,os; from pathlib import Path; "
++            "p=Path(os.environ['CROSS_PUBLIC_KEY_DIRECTORY']); "
++            "p.rmdir(); p.symlink_to(p.parent, target_is_directory=True); print('{}')")
++    record = suite.run_case([sys.executable, '-c', code], tmp_path, timeout=None)
++    assert record['process_reaped'] and not record['public_key_store_removed']
++    assert 'symlink' in record['key_cleanup_error']
++    Path(record['owned_public_key_directory']).unlink()
++    assert_parent(shared)
++
++
++@pytest.mark.parametrize('mode', ['primary', 'cleanup', 'none'])
++def test_final_artifact_failure_preserves_existing_cancellation(monkeypatch, tmp_path, mode):
++    shared = parent(monkeypatch, tmp_path)
++    original_write, original_remove = suite.write_json, shutil.rmtree
++    writes = 0
++    def write(path, record):
++        nonlocal writes
++        writes += 1
++        if writes == 3:
++            raise OSError('final evidence unavailable')
++        original_write(path, record)
++    monkeypatch.setattr(suite, 'write_json', write)
++    if mode == 'primary':
++        class FakeProcess:
++            pid = 99999999
++            returncode = 0
++            def wait(self, **kwargs):
++                raise KeyboardInterrupt('primary cancellation')
++            def poll(self):
++                return 0
++        monkeypatch.setattr(suite.subprocess, 'Popen', lambda *a, **kw: FakeProcess())
++        monkeypatch.setattr(suite, 'process_group_alive', lambda pid: False)
++    elif mode == 'cleanup':
++        def cancel_cleanup(path):
++            raise KeyboardInterrupt('cleanup cancellation')
++        monkeypatch.setattr(suite.shutil, 'rmtree', cancel_cleanup)
++    expected = OSError if mode == 'none' else KeyboardInterrupt
++    with pytest.raises(expected) as error:
++        suite.run_case([sys.executable, '-c', 'print("{}")'], tmp_path, timeout=None)
++    assert writes == 3
++    if mode != 'none':
++        assert any('final evidence unavailable' in note for note in error.value.__notes__)
++    record = json.loads((tmp_path / 'process.json').read_text())
++    owned = Path(record['owned_public_key_directory'])
++    if owned.exists():
++        original_remove(owned)
++    assert_parent(shared)
++
++
++def test_replaced_real_directory_is_retained_by_inode(monkeypatch,tmp_path):
++    shared=parent(monkeypatch,tmp_path)
++    foreign=shared/'unrelated-directory';foreign.mkdir();(foreign/'sentinel').write_text('keep')
++    expected_inode=foreign.stat().st_ino
++    code=("import os; from pathlib import Path; p=Path(os.environ['CROSS_PUBLIC_KEY_DIRECTORY']); "
++          "p.rmdir(); (p.parent/'unrelated-directory').rename(p); print('{}')")
++    record=suite.run_case([sys.executable,'-c',code],tmp_path,timeout=None)
++    replacement=Path(record['owned_public_key_directory'])
++    assert record['process_reaped'] and not record['public_key_store_removed']
++    assert record['owned_directory_handle_closed']
++    assert record['owned_public_key_directory_identity']['inode']!=expected_inode
++    assert replacement.stat().st_ino==expected_inode and (replacement/'sentinel').read_text()=='keep'
++    assert 'identity was replaced' in record['key_cleanup_error']
++    shutil.rmtree(replacement);assert_parent(shared)
++
++
++def test_moved_original_directory_is_not_reported_removed(monkeypatch,tmp_path):
++    shared=parent(monkeypatch,tmp_path)
++    code=KEY_CODE+"p.rename(p.with_name(p.name+'.moved')); print('{}')"
++    record=suite.run_case([sys.executable,'-c',code],tmp_path,timeout=None)
++    original=Path(record['owned_public_key_directory']);moved=original.with_name(original.name+'.moved')
++    assert record['process_reaped'] and not record['public_key_store_removed']
++    assert record['owned_directory_handle_closed'] and not original.exists()
++    assert moved.stat().st_ino==record['owned_public_key_directory_identity']['inode']
++    assert (moved/'nested/public-key.bin').read_bytes()==b'public'
++    assert 'was moved' in record['key_cleanup_error']
++    shutil.rmtree(moved);assert_parent(shared)
++
++
++def test_child_removing_original_empty_directory_is_complete(monkeypatch,tmp_path):
++    shared=parent(monkeypatch,tmp_path)
++    code="import os; from pathlib import Path; Path(os.environ['CROSS_PUBLIC_KEY_DIRECTORY']).rmdir(); print('{}')"
++    record=suite.run_case([sys.executable,'-c',code],tmp_path,timeout=None)
++    assert not record.get('error') and record['process_reaped'] and record['public_key_store_removed']
++    assert record['owned_directory_handle_closed'];assert_parent(shared)
++
++
++@pytest.mark.parametrize('error_type',[OSError,KeyboardInterrupt])
++def test_directory_identity_acquisition_failure_closes_descriptor(monkeypatch,tmp_path,error_type):
++    directory=tmp_path/'owned';directory.mkdir()
++    original_open,original_fstat=os.open,os.fstat
++    captured=[]
++    def opened(*args,**kwargs):
++        descriptor=original_open(*args,**kwargs);captured.append(descriptor);return descriptor
++    def failed(*args,**kwargs):raise error_type('identity interrupted')
++    with monkeypatch.context() as patch:
++        patch.setattr(suite.os,'open',opened);patch.setattr(suite.os,'fstat',failed)
++        with pytest.raises(error_type,match='identity interrupted'):suite.open_owned_directory(directory)
++    assert len(captured)==1
++    with pytest.raises(OSError):original_fstat(captured[0])
++    assert directory.is_dir()
+--- a/cadathlon/tests/test_transformer_suite.py
++++ b/cadathlon/tests/test_transformer_suite.py
+@@ -105,7 +105,8 @@
+     monkeypatch.setattr(suite, "source_manifest", sources or (lambda *args: {"source.py": "unchanged"}))
+     def child(command, directory, *, timeout, cleanup_grace_s=30.):
+         case = Path(command[command.index("--case") + 1]).name
+-        return dict(passed=False, returncode=0, result=result(case=case, implementation=implementation))
++        return dict(passed=False, returncode=0, process_reaped=True, public_key_store_removed=True,
++                    result=result(case=case, implementation=implementation))
+     monkeypatch.setattr(suite, "run_case", child)
+     return args
+ 
+@@ -119,6 +120,24 @@
+     assert not report["scoring_calibrated"]
+     with pytest.raises(FileExistsError):
+         suite.evaluate(args)
++
++
++@pytest.mark.parametrize('process_reaped,keys_removed', [(False, True), (True, False), (False, False)])
++def test_incomplete_cleanup_prevents_later_case_launch(monkeypatch, tmp_path, process_reaped, keys_removed):
++    args = prepare_evaluation(monkeypatch, tmp_path)
++    run = suite.run_case
++    launched = []
++    def child(*arguments, **kwargs):
++        launched.append(arguments[0])
++        record = run(*arguments, **kwargs)
++        record.update(process_reaped=process_reaped, public_key_store_removed=keys_removed)
++        return record
++    monkeypatch.setattr(suite, 'run_case', child)
++    assert suite.evaluate(args) == 1
++    report = json.loads((args.output / 'report.json').read_text())
++    assert len(launched) == 1 and list(report['cases']) == ['test1.in']
++    assert report['stopped_for_incomplete_cleanup'] and not report['passed']
++    assert report['cases']['test1.in']['passed'] is False
+ 
+ 
+ @pytest.mark.parametrize("missing", [False, True])
+--- a/cadathlon/validation/check_transformer_suite.py
++++ b/cadathlon/validation/check_transformer_suite.py
+@@ -17,10 +17,13 @@
+ from pathlib import Path
+ import platform
+ import runpy
++import shutil
+ import signal
+ import statistics
++import stat
+ import subprocess
+ import sys
++import tempfile
+ import time
+ 
+ ROOT = Path(__file__).resolve().parents[2]
+@@ -151,6 +154,50 @@
+     return True
+ 
+ 
++def open_owned_directory(path):
++    """Pin the just-created directory inode until cleanup completes.
++
++    This detects path replacement and prevents inode reuse. It is not an OS
++    sandbox against a same-user child moving other entries into its own tree.
++    """
++    descriptor = os.open(path, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
++    try:
++        status = os.fstat(descriptor)
++        return descriptor, {'device': status.st_dev, 'inode': status.st_ino}
++    except BaseException as error:
++        try:
++            os.close(descriptor)
++        except BaseException as cleanup_error:
++            error.add_note(f'Directory handle cleanup also failed: {cleanup_error}')
++        raise
++
++
++def remove_owned_directory(path, descriptor, identity):
++    """Remove only the still-identical directory; retain moved/replaced paths.
++
++    The identity check is a concurrency guard, not an atomic defense against
++    arbitrary same-user directory manipulation during recursive deletion.
++    """
++    if descriptor is None or identity is None:
++        raise RuntimeError('owned directory identity was not acquired; retained')
++    held = os.fstat(descriptor)
++    if {'device': held.st_dev, 'inode': held.st_ino} != identity:
++        raise RuntimeError('owned directory descriptor identity changed; retained')
++    try:
++        current = path.lstat()
++    except FileNotFoundError:
++        if held.st_nlink == 0:
++            return True  # The actual original directory was already removed.
++        raise RuntimeError('owned directory was moved; original files retained')
++    if stat.S_ISLNK(current.st_mode):
++        raise RuntimeError('owned directory was replaced by a symlink; retained')
++    if (not stat.S_ISDIR(current.st_mode)
++            or {'device': current.st_dev, 'inode': current.st_ino} != identity):
++        raise RuntimeError('owned directory identity was replaced; retained')
++    shutil.rmtree(path)
++    return not path.exists() and not path.is_symlink()
++
++
+ def child_environment_overrides():
+     # support.cross_root() honors this variable. Bind it to the checkout whose
+     # sources we hash rather than inheriting an unrelated developer checkout.
+@@ -199,21 +246,32 @@
+     record = {"passed": False, "command": command, "timeout_s": timeout,
+               "cleanup_grace_s": cleanup_grace_s}
+     process = None
+-    try:
++    owned_keys = None
++    owned_keys_fd = None
++    owned_keys_identity = None
++    caught = None
++    try:
++        # Override only the child's environment. The configured parent can be
++        # shared with other jobs and must never itself be removed here.
++        owned_keys = Path(tempfile.mkdtemp(prefix='cross-transformer-case-',
++            dir=os.environ.get('CROSS_PUBLIC_KEY_DIRECTORY')))
++        record['owned_public_key_directory'] = str(owned_keys)
++        owned_keys_fd, owned_keys_identity = open_owned_directory(owned_keys)
++        record['owned_public_key_directory_identity'] = owned_keys_identity
++        write_json(directory / 'process.json', record)
++        child_environment = dict(os.environ, **child_environment_overrides())
++        child_environment['CROSS_PUBLIC_KEY_DIRECTORY'] = str(owned_keys)
+         with (directory / "stdout.json").open("w") as output, (directory / "stderr.log").open("w") as log:
+             process = subprocess.Popen(command, cwd=ROOT, stdout=output, stderr=log,
+                                        start_new_session=True,
+-                                       env=dict(os.environ, **child_environment_overrides()))
++                                       env=child_environment)
+             record["pid"] = process.pid
++            write_json(directory / 'process.json', record)
+             try:
+                 record["returncode"] = process.wait(timeout=timeout)
+             except subprocess.TimeoutExpired:
+                 record["error"] = "explicit per-case deadline exceeded"
+-                stop_process_group(process, grace_s=cleanup_grace_s)
+-                record["returncode"] = process.returncode
+             except BaseException:
+-                stop_process_group(process, grace_s=cleanup_grace_s)
+-                record["returncode"] = process.returncode
+                 record["error"] = "case interrupted; owned process group stopped"
+                 raise
+         if record.get("error") is None:
+@@ -223,15 +281,60 @@
+                 record["error"] = f"invalid runner output: {error}"
+         if record.get("returncode") != 0:
+             record.setdefault("error", f"runner exited {record.get('returncode')}; see stderr.log")
++    except BaseException as error:
++        caught = error
++        record.setdefault('error', f'{type(error).__name__}: {error}')
++        raise
+     finally:
+-        if process is not None and (process.poll() is None or process_group_alive(process.pid)):
+-            leader_completed = process.poll() is not None
+-            stop_process_group(process, grace_s=cleanup_grace_s)
+-            record["returncode"] = process.returncode
+-            record.setdefault("error", "runner left descendant processes; owned group stopped" if leader_completed
+-                              else "case interrupted; owned process group stopped")
++        cleanup_cancellation = None
++        try:
++            if process is not None and (process.poll() is None or process_group_alive(process.pid)):
++                leader_completed = process.poll() is not None
++                stop_process_group(process, grace_s=cleanup_grace_s)
++                record["returncode"] = process.returncode
++                record.setdefault("error", "runner left descendant processes; owned group stopped" if leader_completed
++                                  else "case interrupted; owned process group stopped")
++        except BaseException as error:
++            record['process_cleanup_error'] = f'{type(error).__name__}: {error}'
++            record.setdefault('error', 'owned process group cleanup failed')
++            if not isinstance(error, Exception):
++                cleanup_cancellation = error
++        record['process_reaped'] = (process is None or
++            (process.poll() is not None and not process_group_alive(process.pid)))
++        record['public_key_store_removed'] = owned_keys is None
++        if owned_keys is not None:
++            try:
++                if not record['process_reaped']:
++                    raise RuntimeError('owned process group is still present; key files retained')
++                record['public_key_store_removed'] = remove_owned_directory(
++                    owned_keys, owned_keys_fd, owned_keys_identity)
++            except BaseException as error:
++                record['key_cleanup_error'] = f'{type(error).__name__}: {error}'
++                record.setdefault('error', 'owned public key directory cleanup failed')
++                if not isinstance(error, Exception) and cleanup_cancellation is None:
++                    cleanup_cancellation = error
++        record['owned_directory_handle_closed'] = owned_keys_fd is None
++        if owned_keys_fd is not None:
++            try:
++                os.close(owned_keys_fd)
++                record['owned_directory_handle_closed'] = True
++            except BaseException as error:
++                record['directory_handle_cleanup_error'] = f'{type(error).__name__}: {error}'
++                record.setdefault('error', 'owned directory handle cleanup failed')
++                if not isinstance(error, Exception) and cleanup_cancellation is None:
++                    cleanup_cancellation = error
+         record["process_elapsed_s"] = time.monotonic() - started
+-        write_json(directory / "process.json", record)
++        try:
++            write_json(directory / "process.json", record)
++        except BaseException as error:
++            primary = caught if caught is not None else cleanup_cancellation
++            if primary is None:
++                raise
++            primary.add_note(f'Final process evidence write failed: {type(error).__name__}: {error}')
++        # Preserve an existing failure. A cancellation first received during
++        # cleanup must still leave the sweep after its evidence is written.
++        if caught is None and cleanup_cancellation is not None:
++            raise cleanup_cancellation
+     return record
+ 
+ 
+@@ -280,6 +383,12 @@
+             record["source_files_unchanged"] = current == initial
+             if not record["source_files_unchanged"]:
+                 record["error"] = "source or fixture changed during sweep"
++            cleanup_incomplete = (record.get('process_reaped') is not True
++                or record.get('public_key_store_removed') is not True
++                or record.get('owned_directory_handle_closed') is False)
++            if cleanup_incomplete:
++                record.setdefault('error', 'case cleanup incomplete; sweep stopped')
++                report['stopped_for_incomplete_cleanup'] = True
+             if "error" not in record:
+                 try:
+                     validate_result(record.get("result"), model=args.model, case=case,
+@@ -289,7 +398,7 @@
+                     record["error"] = str(error)
+             report["cases"][case] = record
+             write_json(directory / "process.json", record)
+-            if not record["source_files_unchanged"]:
++            if not record["source_files_unchanged"] or cleanup_incomplete:
+                 break
+     except BaseException as error:
+         report["error"] = f"{type(error).__name__}: {error}"
+--- a/cadathlon/validation/run_bounded_qwen2_proof.py
++++ b/cadathlon/validation/run_bounded_qwen2_proof.py
+@@ -115,7 +115,10 @@
+               'public_key_filesystem_before':filesystem(args.key_directory)}
+     caught = None
+     owned_keys = None
++    owned_keys_fd = None
++    owned_keys_identity = None
+     child = None
++    case_entered = False
+     case_directory = args.output/'test2'
+     case_directory.mkdir()
+     problem, implementation, runner = paths()
+@@ -126,6 +129,8 @@
+         record['source_archive_sha256'] = suite.sha256(source_archive)
+         owned_keys = Path(tempfile.mkdtemp(prefix='cross-bounded-qwen2-',dir=args.key_directory))
+         record['owned_public_key_directory'] = str(owned_keys)
++        owned_keys_fd, owned_keys_identity = suite.open_owned_directory(owned_keys)
++        record['owned_public_key_directory_identity'] = owned_keys_identity
+         command = suite.runner_command(runner, ['--case',str(problem/'test/test2.in'),
+             '--implementation',str(implementation),'--require-tpu','--warmups','0','--repeats','1'])
+         record['command'] = command
+@@ -134,6 +139,8 @@
+             record['child_environment_overrides'] = suite.child_environment_overrides()
+             suite.write_json(args.output/'report.json',record)
+             print(f'Starting bounded Qwen2; wrapper PID {os.getpid()}; raw output {case_directory}',flush=True)
++            case_entered = True
++            record['case_collector_entered'] = True
+             child = suite.run_case(command,case_directory,timeout=None,
+                                    cleanup_grace_s=args.cleanup_grace_s)
+         record['case'] = child
+@@ -157,10 +164,22 @@
+             try:
+                 if pid is not None and not record['process_reaped']:
+                     raise RuntimeError('owned process group is still present; key files retained')
+-                shutil.rmtree(owned_keys)
+-                record['public_key_store_removed'] = not owned_keys.exists()
++                if case_entered and (not isinstance(child, dict) or any(
++                        child.get(field) is not True for field in ('process_reaped',
++                            'public_key_store_removed', 'owned_directory_handle_closed'))):
++                    raise RuntimeError('child cleanup incomplete or unknown; wrapper key parent retained')
++                record['public_key_store_removed'] = suite.remove_owned_directory(
++                    owned_keys, owned_keys_fd, owned_keys_identity)
+             except BaseException as error:
+                 record['cleanup_error'] = f'{type(error).__name__}: {error}'
++                if caught is None:caught=error
++        record['owned_directory_handle_closed'] = owned_keys_fd is None
++        if owned_keys_fd is not None:
++            try:
++                os.close(owned_keys_fd)
++                record['owned_directory_handle_closed'] = True
++            except BaseException as error:
++                record['directory_handle_cleanup_error'] = f'{type(error).__name__}: {error}'
+                 if caught is None:caught=error
+         try:
+             record['source_hashes_end'] = manifest()
+@@ -179,8 +198,14 @@
+         record['elapsed_s'] = time.monotonic()-started
+         record['passed'] = (caught is None and record.get('case_gate_passed') is True
+             and record['process_reaped'] and record['public_key_store_removed']
+-            and record['source_files_unchanged'])
+-        suite.write_json(args.output/'report.json',record)
++            and record['source_files_unchanged'] and record['owned_directory_handle_closed'])
++        record['case_collector_entered'] = case_entered
++        try:
++            suite.write_json(args.output/'report.json',record)
++        except BaseException as error:
++            if caught is None:
++                raise
++            caught.add_note(f'Final proof evidence write failed: {type(error).__name__}: {error}')
+     print(json.dumps({key:record[key] for key in ('passed','elapsed_s','process_reaped','public_key_store_removed')}
+                      | {'error':record.get('error'),'report':str(args.output/'report.json')}),flush=True)
+     if caught is not None and not isinstance(caught,Exception):raise caught
+--- a/jaxite_word/he_ops.py
++++ b/jaxite_word/he_ops.py
+@@ -104,6 +104,7 @@
+         extend_moduli=cache.p_towers,
+         composite_degree=cache.composite_degree,
+         finite_field_context=cache.ff_context_cls,
++        polynomial_factory=cache.multiplication_polynomial_factory,
+     )
+     self._hemul.control_gen(
+         degree_layout=cache.degree_layout,
+@@ -267,6 +268,7 @@
+         extend_moduli=self.cache.p_towers,
+         composite_degree=self.cache.composite_degree,
+         finite_field_context=self.cache.ff_context_cls,
++        polynomial_factory=self.cache.multiplication_polynomial_factory,
+     )
+     op.control_gen(
+         degree_layout=self.cache.degree_layout,
+@@ -325,6 +327,7 @@
+     self._herot = herot._HERotKernel(
+         cache.r, cache.c, cache.dnum, q_at_level, cache.p_towers,
+         finite_field_context=cache.ff_context_cls,
++        polynomial_factory=cache.rotation_polynomial_factory,
+     )
+ 
+     self._herot.control_gen(
+--- a/jaxite_word/he_params.py
++++ b/jaxite_word/he_params.py
+@@ -155,6 +155,9 @@
+     self.rotation_key_noise_scale = self.noise_scale_degree
+     self.key_generation_version: int = int(kg.KEY_GENERATION_VERSION)
+     self.cache_rotation_keys: bool = bool(cache_rotation_keys)
++    # Explicit owner-scoped experimental control construction; default unchanged.
++    self.rotation_polynomial_factory = None
++    self.multiplication_polynomial_factory = None
+     self.level_params: Dict[int, LevelParams] = {}
+ 
+     # Reduction backend (a FiniteFieldContextBase subclass). The paired NTT
+--- a/jaxite_word/hemul.py
++++ b/jaxite_word/hemul.py
+@@ -35,6 +35,7 @@
+       extend_moduli,
+       composite_degree=1,
+       finite_field_context=BarrettContext,
++      polynomial_factory=None,
+   ):
+     self.batch = batch
+     self.r = r
+@@ -45,6 +46,8 @@
+     self.composite_degree = composite_degree
+     self.extend_moduli = extend_moduli
+     self.ff_context_cls = finite_field_context
++    # Optional owner-scoped control construction; ordinary dispatch is default.
++    self._polynomial_factory = Polynomial if polynomial_factory is None else polynomial_factory
+     self.last_tower_moduli = original_moduli[-1]
+     self.evalkey_a_vector = jnp.zeros((dnum, 0), dtype=jnp.uint64)
+     self.evalkey_b_vector = jnp.zeros((dnum, 0), dtype=jnp.uint64)
+@@ -214,7 +217,7 @@
+         'precision': 32,
+         'degree_layout': self.degree_layout,
+     }
+-    self.ct_obj = Polynomial(
++    self.ct_obj = self._polynomial_factory(
+         ct_shapes,
+         parameters={
+             'moduli': self.drop_last_moduli,
+@@ -225,7 +228,7 @@
+     )
+     ct_single_shapes = dict(ct_shapes)
+     ct_single_shapes['num_elements'] = 1
+-    self.ct_single = Polynomial(
++    self.ct_single = self._polynomial_factory(
+         ct_single_shapes,
+         parameters={
+             'moduli': self.drop_last_moduli,
+@@ -238,7 +241,7 @@
+     # Pre-build the 3-element hemul_no_relin output container once (compile
+     # time); the per-call path only sets its .polynomial. ntt_ctx = ff_ctx keeps
+     # it mod-reduce-only (relinearize never NTTs it).
+-    self.ct_no_relin_out = Polynomial(
++    self.ct_no_relin_out = self._polynomial_factory(
+         {
+             'batch': self.batch,
+             'num_elements': 3,
+@@ -265,7 +268,7 @@
+         'num_moduli': overall_sizeP_in,
+         'degree_layout': self.degree_layout,
+     }
+-    self.ct_extend = Polynomial(
++    self.ct_extend = self._polynomial_factory(
+         ct_extend_shapes,
+         parameters={
+             'moduli': self.extend_moduli,
+@@ -388,14 +391,14 @@
+       shapes_part['num_moduli'] = len(target_moduli)
+       params_part = ct_params_common.copy()
+       params_part['moduli'] = target_moduli
+-      self.ks_ct_parts.append(Polynomial(shapes_part, params_part))
++      self.ks_ct_parts.append(self._polynomial_factory(shapes_part, params_part))
+ 
+     # CT for KS result (drop_last + extend moduli)
+     shapes_dle = ct_shapes_common.copy()
+     shapes_dle['num_moduli'] = len(drop_last_extend_moduli)
+     params_dle = ct_params_common.copy()
+     params_dle['moduli'] = drop_last_extend_moduli
+-    self.ks_ct_drop_last_extend = Polynomial(shapes_dle, params_dle)
++    self.ks_ct_drop_last_extend = self._polynomial_factory(shapes_dle, params_dle)
+ 
+     # ==========================================================================
+     # 5. Parameter Reshape
+--- a/jaxite_word/herot.py
++++ b/jaxite_word/herot.py
+@@ -42,7 +42,8 @@
+   # ---------------------------------------------------------------------------
+ 
+   def __init__(self, r, c, dnum, rotate_in_ciphertext_moduli, extend_moduli,
+-               finite_field_context=BarrettContext):
++               finite_field_context=BarrettContext, polynomial_factory=None):
++    self._polynomial_factory = polynomial_factory or Polynomial
+     self.r = r
+     self.c = c
+     self.dnum = dnum
+@@ -183,7 +184,7 @@
+         'num_moduli': sizeQl_in,
+         'degree_layout': degree_layout,
+     }
+-    self.ct_in = Polynomial(
++    self.ct_in = self._polynomial_factory(
+         ct_in_shapes,
+         parameters={
+             'moduli': overall_moduli[:sizeQl_in],
+@@ -192,7 +193,7 @@
+     )
+     ct_single_shapes = dict(ct_in_shapes)
+     ct_single_shapes['num_elements'] = 1
+-    self.ct_single = Polynomial(
++    self.ct_single = self._polynomial_factory(
+         ct_single_shapes,
+         parameters={
+             'moduli': overall_moduli[:sizeQl_in],
+@@ -214,7 +215,7 @@
+           'degree_layout': degree_layout,
+       }
+       self.ct_parts.append(
+-          Polynomial(
++          self._polynomial_factory(
+               ct_part_shapes,
+               parameters={
+                   'moduli': _target_moduli_list,
+@@ -231,7 +232,7 @@
+         'num_moduli': sizeQlP_in,
+         'degree_layout': degree_layout,
+     }
+-    self.ct_full = Polynomial(
++    self.ct_full = self._polynomial_factory(
+         ct_full_shapes,
+         parameters={
+             'moduli': self.overall_moduli,
+@@ -247,7 +248,7 @@
+         'num_moduli': sizeQlP_in - sizeQl_in,
+         'degree_layout': degree_layout,
+     }
+-    self.ct_approx = Polynomial(
++    self.ct_approx = self._polynomial_factory(
+         ct_approx_shapes,
+         parameters={
+             'moduli': self.extend_moduli,
+--- a/jaxite_word/key_gen.py
++++ b/jaxite_word/key_gen.py
+@@ -426,7 +426,9 @@
+           else e[part]
+       )
+     else:
+-      base_e = sample_discrete_gaussian(degree, noise_std).tolist()
++      base_e = sample_discrete_gaussian(degree, noise_std)
++      if not use_numpy:
++        base_e = base_e.tolist()
+       if use_numpy:
+         e_rows = np.empty((size_qp, degree), dtype=np.uint64)
+         for i, modulus in enumerate(moduli_list):
+@@ -496,7 +498,13 @@
+   # Python integers so unsupported wider moduli cannot be truncated to uint32.
+   result_a = a_parts if a is None else a
+   result_b = b_parts
+-  if pack_uint32:
++  if use_numpy and a is None:
++    # The native sampler already returns canonical residues below 2**32.
++    # Assemble directly in the public storage dtype instead of rebuilding
++    # every limb and two complete uint64 intermediate stacks.
++    result_a = np.asarray(a_parts, dtype=np.uint32)
++    result_b = np.asarray(b_parts, dtype=np.uint32)
++  elif pack_uint32:
+     result_a = np.stack([
+         np.stack([
+             util.uint64_residues_np(part[i], modulus)

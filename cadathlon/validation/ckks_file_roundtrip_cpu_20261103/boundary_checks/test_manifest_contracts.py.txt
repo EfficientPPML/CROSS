@@ -1,0 +1,85 @@
+"""Public/private manifest rejection tests; fake arrays are not crypto proof."""
+import copy
+import json
+from pathlib import Path
+
+import numpy as np
+import pytest
+import driver
+
+
+def rewrite_public(folder, manifest):
+    body={key:value for key,value in manifest.items() if key!='context_id'}
+    manifest['context_id']=driver.sha_bytes(driver.canonical(body))
+    driver.write_json(folder/'public_manifest.json',manifest)
+
+
+@pytest.fixture
+def public_files(tmp_path):
+    folder=tmp_path/'public';folder.mkdir();params=driver.parameters()
+    names=['public_key.npy','relin_a.npy','relin_b.npy']+[f'rot_{index}_{part}.npy' for index in (3,4091) for part in ('a','b')]
+    descriptors={}
+    for number,name in enumerate(names):
+        shape,_,_=driver.array_contract(name,params)
+        descriptors[name]=driver.store_array(folder,name,np.full(shape,number,dtype=np.uint32))
+    manifest=dict(schema='public-ckks-v1',parameters=params,rotations=[3,4091],arrays=descriptors,
+        representation='standard-ntt-residues/digit-modulus-degree',keygen_source_sha256=driver.sha(driver.ROOT/'jaxite_word/key_gen.py'))
+    rewrite_public(folder,manifest)
+    return folder,manifest
+
+
+def test_public_schema_round_trip_has_only_declared_public_arrays(public_files):
+    folder,expected=public_files
+    actual,arrays=driver.read_public(folder)
+    assert actual==expected and set(arrays)==set(expected['arrays'])
+    assert all(value.dtype==np.uint32 for value in arrays.values())
+
+
+@pytest.mark.parametrize('damage',['extra_top','private_parameter','extra_descriptor','missing_key','extra_file','wrong_q','wrong_layout','wrong_sigma','wrong_source','wrong_rotation','raw_file_swap','symlink_manifest'])
+def test_public_manifest_rejects_wrong_roles_and_identity_even_with_rehashed_body(damage,public_files,tmp_path):
+    folder,manifest=public_files
+    if damage=='extra_top':manifest['sample_ids']=[1,2]
+    elif damage=='private_parameter':manifest['parameters']['secret_key']='forbidden'
+    elif damage=='extra_descriptor':manifest['arrays']['relin_a.npy']['embeddings']=[.1]
+    elif damage=='missing_key':manifest['arrays'].pop('rot_3_a.npy')
+    elif damage=='extra_file':(folder/'client.npy').write_bytes(b'not allowed')
+    elif damage=='wrong_q':manifest['parameters']['q_towers'][0]=manifest['parameters']['q_towers'][1]
+    elif damage=='wrong_layout':manifest['parameters']['degree_layout']=[128,64]
+    elif damage=='wrong_sigma':manifest['parameters']['sigma']=1.
+    elif damage=='wrong_source':manifest['keygen_source_sha256']='0'*64
+    elif damage=='wrong_rotation':manifest['rotations']=[3,-5]
+    elif damage=='raw_file_swap':(folder/'relin_a.npy').write_bytes((folder/'rot_3_a.npy').read_bytes())
+    elif damage=='symlink_manifest':
+        outside=tmp_path/'outside.json';outside.write_bytes((folder/'public_manifest.json').read_bytes())
+        (folder/'public_manifest.json').unlink();(folder/'public_manifest.json').symlink_to(outside)
+    if damage!='symlink_manifest':rewrite_public(folder,manifest)
+    with pytest.raises((ValueError,FileNotFoundError)):
+        driver.read_public(folder)
+
+
+@pytest.fixture
+def private_files(public_files,tmp_path):
+    _,public=public_files;folder=tmp_path/'private';folder.mkdir()
+    q=public['parameters']['q_towers'];n=public['parameters']['degree']
+    desc=driver.store_array(folder,'secret.npy',np.zeros((len(q),n),dtype=np.uint32))
+    np.save(folder/'client_inputs.npy',np.zeros((2,n//2),dtype=np.float64),allow_pickle=False)
+    manifest=dict(schema='private-ckks-v1',context_id=public['context_id'],secret=desc,
+        input_sha256=driver.sha(folder/'client_inputs.npy'),request_id='opaque-request',request_digest='a'*64,sample_ids=[9017,42])
+    driver.write_json(folder/'private_manifest.json',manifest)
+    return folder,manifest,public
+
+
+@pytest.mark.parametrize('damage',['wrong_context','wrong_request','secret_swap','duplicate_ids','boolean_ids','extra_field','symlink_secret'])
+def test_private_identity_is_client_owned_and_fail_closed(damage,private_files,tmp_path):
+    folder,manifest,public=private_files
+    if damage=='wrong_context':manifest['context_id']='b'*64
+    elif damage=='wrong_request':manifest['request_id']='other-request'
+    elif damage=='secret_swap':np.save(folder/'secret.npy',np.ones((8,8192),dtype=np.uint32),allow_pickle=False)
+    elif damage=='duplicate_ids':manifest['sample_ids']=[1,1]
+    elif damage=='boolean_ids':manifest['sample_ids']=[True,42]
+    elif damage=='extra_field':manifest['extra']='not in schema'
+    else:
+        outside=tmp_path/'other-secret.npy';outside.write_bytes((folder/'secret.npy').read_bytes())
+        (folder/'secret.npy').unlink();(folder/'secret.npy').symlink_to(outside)
+    driver.write_json(folder/'private_manifest.json',manifest)
+    with pytest.raises(ValueError):driver.read_private(folder,public,'opaque-request')

@@ -1,0 +1,26 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+__________ test_softmax_rejects_final_callback_modulus_count_mutation __________
+
+    def test_softmax_rejects_final_callback_modulus_count_mutation():
+        owner, arithmetic, refresh, source = setup(corrupt_final)
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+/tmp/qwen-causal-softmax-review-20261103/test_callback_metadata.py:13: Failed
+_______ test_direct_value_rejects_final_callback_modulus_count_mutation ________
+
+    def test_direct_value_rejects_final_callback_modulus_count_mutation():
+        softmax, arithmetic, refresh, unused = setup(positions=(7,))
+        result = softmax.evaluate_tile(None, query_tile=0)
+        pv = pv_setup(arithmetic, (7,), corrupt_final)
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+/tmp/qwen-causal-softmax-review-20261103/test_callback_metadata.py:21: Failed
+=========================== short test summary info ============================
+FAILED ../../tmp/qwen-causal-softmax-review-20261103/test_callback_metadata.py::test_softmax_rejects_final_callback_modulus_count_mutation
+FAILED ../../tmp/qwen-causal-softmax-review-20261103/test_callback_metadata.py::test_direct_value_rejects_final_callback_modulus_count_mutation
+2 failed in 0.51s

@@ -1,0 +1,48 @@
+"""Independent synthetic cleanup scope-entry fault; no actual input bodies."""
+from contextlib import contextmanager
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
+import hashlib,json,os,sys,tempfile,unittest
+ROOT=Path(__file__).resolve().parent
+sys.path.insert(0,str(ROOT/'source'))
+import selection_process as process
+from test_selection_process import arrange
+
+class Cleanup(unittest.TestCase):
+    def case(self,failure):
+        with tempfile.TemporaryDirectory(prefix='synthetic-',dir=ROOT)as directory:
+            row=arrange(Path(directory));args=SimpleNamespace(execute=True,manifest=str(row['manifest']),
+                manifest_sha256=process.digest(row['manifest'].read_bytes()),grant=str(row['grant']),
+                grant_sha256=process.digest(row['grant'].read_bytes()),output=str(row['output']))
+            expected=process.parse(row['manifest'].read_bytes());seen=[];closed=[];body=ValueError('synthetic selection body')
+            Original=process.Output
+            class Tracked(Original):
+                def __init__(self,*a,**k):super().__init__(*a,**k);seen.append(self)
+                def close(self,primary=None):
+                    if seen and self is seen[0]:closed.append(self)
+                    return super().close(primary)
+            @contextmanager
+            def signal_scope(state=None,shield=False):
+                if shield and failure is not None:raise failure
+                try:yield
+                finally:
+                    if state is not None:state['restored']=True
+            try:
+                with patch.object(process,'Output',Tracked),patch.object(process,'signals',signal_scope),patch.object(process,'install_audit',return_value=[]),patch.object(process,'loaded_origins',return_value={}),patch.object(process,'select_actual',side_effect=body):
+                    with self.assertRaises(ValueError)as caught:process.run(args,row['manifest'].read_bytes(),expected,row['files'],{},row['source'])
+                self.assertIs(caught.exception,body)
+                self.assertEqual(len(closed),1,'cleanup shield entry prevented owned output close')
+                self.assertIsNone(seen[0].fd)
+            finally:
+                for owner in seen:
+                    if owner.fd is not None:Original.close(owner)
+    def test_shield_entry_oserror(self):self.case(OSError('shield entry'))
+    def test_shield_entry_keyboardinterrupt(self):self.case(KeyboardInterrupt('shield entry'))
+    def test_shield_entry_systemexit(self):self.case(SystemExit('shield entry'))
+    def test_no_fault_control(self):self.case(None)
+
+if __name__=='__main__':
+    result=unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(Cleanup))
+    (ROOT/'test_counts.json').write_text(json.dumps(dict(tests=result.testsRun,failures=len(result.failures),errors=len(result.errors),pid=os.getpid(),pgid=os.getpgrp(),scope='Synthetic source-only run; actual audit disabled only in test, injected body and shield errors, no actual model/token/ranges read'),indent=2)+'\n')
+    raise SystemExit(0 if result.wasSuccessful()else 1)

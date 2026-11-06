@@ -1,0 +1,104 @@
+{
+  "actual_client_authorized": false,
+  "borrowed_root_identities": {
+    "borrowed_upload": {
+      "identity": [
+        66305,
+        2383744
+      ],
+      "path": "/tmp/cross-bert-input-encryption-7b255c2357c94060b73e474a1f8ef5fa/upload"
+    },
+    "key_root": {
+      "identity": [
+        24,
+        1563
+      ],
+      "path": "/dev/shm/cross-full-bert-keys-143b3f5c1573427d841760a3c9d5d33d"
+    },
+    "model_root": {
+      "identity": [
+        66305,
+        2383041
+      ],
+      "path": "/tmp/cross-bert-public-model-b51668856dab42a3846ba1b7c7a71d53"
+    },
+    "original_io": {
+      "identity": [
+        66305,
+        2383254
+      ],
+      "path": "/tmp/cross-bert-input-encryption-7b255c2357c94060b73e474a1f8ef5fa"
+    }
+  },
+  "client_cleanup_successor_required": true,
+  "client_issue": "Inherited receipt _observe duplicated descriptor handoff failure; separate successor repair and new source-bound review required before any client launch.",
+  "client_preparation_report_sha256": "c695723f88ced9e66a1dc134bc0277e7e50e4f07de463659bfb6f278814637b2",
+  "client_preparation_sources": 115,
+  "command": [
+    "env",
+    "-i",
+    "PATH=/usr/local/bin:/usr/bin:/bin",
+    "HOME=/home/jianming_gatech",
+    "LANG=C.UTF-8",
+    "JAX_PLATFORMS=cpu",
+    "OMP_NUM_THREADS=4",
+    "OPENBLAS_NUM_THREADS=4",
+    "MKL_NUM_THREADS=4",
+    "NUMEXPR_NUM_THREADS=4",
+    "VECLIB_MAXIMUM_THREADS=4",
+    "PYTHONUNBUFFERED=1",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "HF_HUB_OFFLINE=1",
+    "TRANSFORMERS_OFFLINE=1",
+    "taskset",
+    "-c",
+    "100-103",
+    "/tmp/cross-pretrained-validation-env/bin/python",
+    "/tmp/bert-prepared-bsgs-server-component-20261104/combined_collect.py",
+    "--execute",
+    "--output",
+    "/tmp/bert-prepared-bsgs-server-actual-v1-20261104",
+    "--response-root",
+    "/tmp/cross-bert-prepared-bsgs-response-20261104-v1",
+    "--worker-python",
+    "/tmp/cross-pretrained-validation-env/bin/python",
+    "--key-workspace",
+    "/dev/shm/cross-full-bert-keys-143b3f5c1573427d841760a3c9d5d33d",
+    "--model-workspace",
+    "/tmp/cross-bert-public-model-b51668856dab42a3846ba1b7c7a71d53",
+    "--io-workspace",
+    "/tmp/cross-bert-input-encryption-7b255c2357c94060b73e474a1f8ef5fa",
+    "--key-evidence",
+    "/tmp/bert-full-key-generation-component-20261103/actual-v1",
+    "--key-report-sha256",
+    "022cbdf687273e765668184f32cb7cd501d371c4220916e1c8f02574cf3a7f08",
+    "--model-evidence",
+    "/tmp/bert-public-model-stage2-v2-component-20261103/actual-v2",
+    "--model-report-sha256",
+    "5b9589b51828d066706c4c46a6404d8c52fcd67a2c9aa9f3f57c73df8caeefe0",
+    "--stage3-evidence",
+    "/tmp/bert-input-encryption-stage3-component-v3-20261103/actual-v3",
+    "--stage3-report-sha256",
+    "add5e6a3143be3931ad29c018cdee40bdf059497b8bfa987114f39baeb88631e"
+  ],
+  "current_manifest_reverified": true,
+  "mem_available_observation": "720792368 kB",
+  "new_outputs_absent": true,
+  "no_frozen_source_edit": true,
+  "no_healthy_deadline": true,
+  "original_ordinary_run_untouched": true,
+  "passed": true,
+  "peak_memory_bound_established": false,
+  "prerequisites_rehashed": true,
+  "proposal_sha256": "c0b25c5437de3fcba5a3a2fdeb00bc27223b5915137d6e9cbd07bd992f0b1cfe",
+  "schema": "root-combined-server-launch-grant-v1",
+  "scope": "Genuine combined size0 server only; client/numeric acceptance requires completed server receipt and repaired client proof.",
+  "server_launch_authorized": true,
+  "server_preflight_archive_sha256": "fd46274e075565bcec545cca13f03470d4b9506b6327ffd7f403a756acbcaa94",
+  "server_preflight_report_sha256": "31f9120534e1d23843b3f7a5ec7e68c77963ac7456e5e0b492557aedd26b4315",
+  "source_count": 286,
+  "stdout_stderr_log": "/tmp/bert-prepared-bsgs-server-actual-v1-20261104.log",
+  "time_utc": "2026-11-04T01:30:34.850616+00:00",
+  "tmp_free_bytes": 50394157056,
+  "working_directory": "/tmp/bert-prepared-bsgs-server-component-20261104"
+}

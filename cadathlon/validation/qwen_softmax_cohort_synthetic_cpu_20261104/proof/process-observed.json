@@ -1,0 +1,27 @@
+{
+  "child_pgid": 3175385,
+  "child_pid": 3175385,
+  "collector_pgid": 3175372,
+  "collector_pid": 3175372,
+  "command": [
+    "taskset",
+    "-c",
+    "108-111",
+    "/tmp/cross-pretrained-validation-env/bin/python",
+    "-I",
+    "-B",
+    "-m",
+    "pytest",
+    "--rootdir=/tmp/qwen-causal-softmax-cohort-public-proof-20261104/development-v1/execution_source",
+    "--confcutdir=/tmp/qwen-causal-softmax-cohort-public-proof-20261104/development-v1/execution_source",
+    "-p",
+    "no:cacheprovider",
+    "-q",
+    "test_softmax_cohorts.py",
+    "test_cohort_binding_review.py",
+    "test_binding_call_order.py",
+    "--junitxml=/tmp/qwen-causal-softmax-cohort-public-proof-20261104/development-v1/tests.xml"
+  ],
+  "wrapper_pgid": 16918,
+  "wrapper_pid": 16918
+}

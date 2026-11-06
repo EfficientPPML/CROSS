@@ -1,0 +1,6060 @@
+{
+  "HE": false,
+  "acceptance_requires_independent_exit_and_exact_report_hash": true,
+  "affinity": [
+    108,
+    109,
+    110,
+    111
+  ],
+  "audit_denials": [],
+  "backend_modules": [],
+  "diagnostic": {
+    "HE": false,
+    "actual_model": false,
+    "all_literal_domains_satisfied": true,
+    "all_refresh_magnitudes_satisfied": true,
+    "backend_context": false,
+    "coefficients": {
+      "exp": {
+        "chebyshev_coefficients": [
+          11.30192195203536,
+          19.518930306479145,
+          12.844378742652722,
+          6.674551492605834,
+          2.832550925632106,
+          1.0094452342661864,
+          0.30890641232539745,
+          0.08251731054651437,
+          0.01881227731064529
+        ],
+        "domain": [
+          -4.0,
+          4.0
+        ],
+        "input_power_basis": false,
+        "polynomial_depth": 5,
+        "power_coefficients": [
+          0.9999999999999929,
+          3.9648808261669757,
+          7.986672628165101,
+          11.13027067570441,
+          10.842863983141012,
+          6.909184967049375,
+          5.069062202887527,
+          5.28110787497692,
+          2.407971495762597
+        ]
+      },
+      "gelu": {
+        "chebyshev_coefficients": [
+          0.8951931472368967,
+          1.5,
+          0.7091537351064183,
+          0.0,
+          -0.1380968761502116,
+          0.0,
+          0.03728653109292528,
+          0.0,
+          -0.010656004887342085
+        ],
+        "domain": [
+          -3.0,
+          3.0
+        ],
+        "input_power_basis": false,
+        "polynomial_depth": 5,
+        "power_coefficients": [
+          -5.551115123125783e-16,
+          1.5,
+          3.5352321954821315,
+          0.0,
+          -4.59948928363684,
+          0.0,
+          3.921106246133183,
+          0.0,
+          -1.363968625579787
+        ]
+      },
+      "inverse_sqrt": {
+        "chebyshev_coefficients": [
+          3.7853023108086727,
+          -3.32899440076303,
+          2.043562268516358,
+          -1.3668012883099947,
+          0.9509966368231193,
+          -0.6762286529418764,
+          0.4866248821044837,
+          -0.3517181122451364,
+          0.25320869405189744,
+          -0.1793409680409763,
+          0.12214483822053938,
+          -0.07593020934642768,
+          0.036387663545400545
+        ],
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "input_power_basis": false,
+        "polynomial_depth": 6,
+        "power_coefficients": [
+          2.373563316387709,
+          -0.9265434243845556,
+          0.62305124642588,
+          -6.822576271427021,
+          6.4710718917940335,
+          44.64348984548239,
+          -42.86059678965371,
+          -133.02903111162672,
+          127.57685034216104,
+          167.9081817010504,
+          -161.0276476540248,
+          -77.75253437074194,
+          74.52193494098032
+        ]
+      },
+      "reciprocal": {
+        "chebyshev_coefficients": [
+          0.4998984503567088,
+          -0.5997698208085402,
+          0.35968135978593996,
+          -0.21550792803959043,
+          0.1288032771037984,
+          -0.07644616672901927,
+          0.04447470081531205,
+          -0.02436315511902142,
+          0.010748450787803105
+        ],
+        "domain": [
+          0.5,
+          8.0
+        ],
+        "input_power_basis": false,
+        "polynomial_depth": 5,
+        "power_coefficients": [
+          0.23529411764705832,
+          -0.16493478450171545,
+          0.1455306922074102,
+          -0.6974450642431756,
+          0.6153927037439058,
+          1.5055347056660904,
+          -1.3284129755876095,
+          -1.5592419276173708,
+          1.3758017008387975
+        ]
+      },
+      "silu": {
+        "chebyshev_coefficients": [
+          0.4037693947103607,
+          0.9999999999999999,
+          0.4037693947103606
+        ],
+        "domain": [
+          -2.0,
+          2.0
+        ],
+        "input_power_basis": true,
+        "polynomial_depth": 2,
+        "power_coefficients": [
+          1.1102230246251565e-16,
+          0.49999999999999994,
+          0.2018846973551803
+        ]
+      },
+      "tanh": {
+        "chebyshev_coefficients": [
+          0.0,
+          1.1179361516973907,
+          0.0,
+          -0.1887112390550966,
+          0.0,
+          0.042871488598435446,
+          0.0,
+          -0.009543034592729585,
+          0.0
+        ],
+        "domain": [
+          -2.0,
+          2.0
+        ],
+        "input_power_basis": false,
+        "polynomial_depth": 5,
+        "power_coefficients": [
+          0.0,
+          1.965228554003965,
+          0.0,
+          -2.1466846653819522,
+          0.0,
+          1.7547636919606806,
+          0.0,
+          -0.6107542139346934
+        ]
+      }
+    },
+    "compared_semantic_records": 140,
+    "complete": true,
+    "dense_complete": true,
+    "dense_domain_checks": [
+      {
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "label": "0:inverse_sqrt",
+        "maximum": 0.04277749401324249,
+        "minimum": 0.01372273500767846,
+        "passed": true
+      },
+      {
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "label": "1:inverse_sqrt",
+        "maximum": 0.22757911880390144,
+        "minimum": 0.022514937197071445,
+        "passed": true
+      },
+      {
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "label": "2:inverse_sqrt",
+        "maximum": 0.20176650013155398,
+        "minimum": 0.025763002779354633,
+        "passed": true
+      },
+      {
+        "domain": [
+          -4.0,
+          4.0
+        ],
+        "label": "3:exp",
+        "maximum": 2.108032333363145,
+        "minimum": -1.8670498157046422,
+        "passed": true
+      },
+      {
+        "domain": [
+          0.5,
+          8.0
+        ],
+        "label": "4:reciprocal",
+        "maximum": 2.669359534847247,
+        "minimum": 0.9999999999999929,
+        "passed": true
+      },
+      {
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "label": "5:inverse_sqrt",
+        "maximum": 0.05531886859283501,
+        "minimum": 0.012135818816400195,
+        "passed": true
+      },
+      {
+        "domain": [
+          -2.0,
+          2.0
+        ],
+        "label": "6:silu",
+        "maximum": 0.7114813009505573,
+        "minimum": -0.8075344433003531,
+        "passed": true
+      },
+      {
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "label": "7:inverse_sqrt",
+        "maximum": 0.06155816470735638,
+        "minimum": 0.012783580205163255,
+        "passed": true
+      },
+      {
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "label": "8:inverse_sqrt",
+        "maximum": 0.18484233737509015,
+        "minimum": 0.02175448595836145,
+        "passed": true
+      },
+      {
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "label": "9:inverse_sqrt",
+        "maximum": 0.1893362000461862,
+        "minimum": 0.027715963890361378,
+        "passed": true
+      },
+      {
+        "domain": [
+          -4.0,
+          4.0
+        ],
+        "label": "10:exp",
+        "maximum": 2.083947980845834,
+        "minimum": -2.0007159462779125,
+        "passed": true
+      },
+      {
+        "domain": [
+          0.5,
+          8.0
+        ],
+        "label": "11:reciprocal",
+        "maximum": 2.330918295197426,
+        "minimum": 0.9999999999999929,
+        "passed": true
+      },
+      {
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "label": "12:inverse_sqrt",
+        "maximum": 0.099961418305256,
+        "minimum": 0.03676916479786445,
+        "passed": true
+      },
+      {
+        "domain": [
+          -2.0,
+          2.0
+        ],
+        "label": "13:silu",
+        "maximum": 0.846831922444119,
+        "minimum": -0.6823116176399494,
+        "passed": true
+      },
+      {
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "label": "14:inverse_sqrt",
+        "maximum": 0.10114141501292466,
+        "minimum": 0.039669263000876545,
+        "passed": true
+      },
+      {
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "label": "15:inverse_sqrt",
+        "maximum": 0.23263263762520944,
+        "minimum": 0.014847099237876332,
+        "passed": true
+      },
+      {
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "label": "16:inverse_sqrt",
+        "maximum": 0.167649662728426,
+        "minimum": 0.03327810544771717,
+        "passed": true
+      },
+      {
+        "domain": [
+          -4.0,
+          4.0
+        ],
+        "label": "17:exp",
+        "maximum": 2.1857102883062653,
+        "minimum": -1.2616995379858253,
+        "passed": true
+      },
+      {
+        "domain": [
+          0.5,
+          8.0
+        ],
+        "label": "18:reciprocal",
+        "maximum": 2.6394024347630984,
+        "minimum": 0.9999999999999929,
+        "passed": true
+      },
+      {
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "label": "19:inverse_sqrt",
+        "maximum": 0.11319825458852618,
+        "minimum": 0.038365540374617674,
+        "passed": true
+      },
+      {
+        "domain": [
+          -2.0,
+          2.0
+        ],
+        "label": "20:silu",
+        "maximum": 0.7082519801981749,
+        "minimum": -0.9725508171714033,
+        "passed": true
+      },
+      {
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "label": "21:inverse_sqrt",
+        "maximum": 0.1113493444563196,
+        "minimum": 0.0397698908723601,
+        "passed": true
+      }
+    ],
+    "dense_error_type": null,
+    "dense_first_nonfinite": null,
+    "dense_semantic_counts": {
+      "attention": 3,
+      "linear": 22,
+      "normalize": 7,
+      "normalize_heads": 6,
+      "polynomial": 22,
+      "rope": 6
+    },
+    "derived_expected_semantic_counts": {
+      "attention": 3,
+      "linear": 22,
+      "normalize": 7,
+      "normalize_heads": 6,
+      "polynomial": 22,
+      "rope": 6
+    },
+    "derived_expected_semantic_records": 140,
+    "derived_refresh_capacity": 25,
+    "diagnostic_complete": true,
+    "error_type": null,
+    "final_metadata": {
+      "level": 5,
+      "nsd": 1,
+      "scale": 6.89940115708969e+16
+    },
+    "fixed_original_numeric_gate": true,
+    "fixed_original_numeric_metrics": {
+      "max_abs_error": 0.03932663214209575,
+      "nrmse": 0.018298373289114767,
+      "top1_agreement": 1.0
+    },
+    "key_generation": false,
+    "limitations": [
+      "No encoding, modular reduction, RNS, key switching, bootstrap approximation or CKKS noise.",
+      "Domain failure invalidates bound-based refresh justification even if continuation is finite.",
+      "Dense dot products and literal BSGS have distinct binary64 summation order.",
+      "No first encrypted corruption site follows from this replay or from completed progress messages.",
+      "No change to original coefficients, domains, decoder, acceptance thresholds or TPU queue."
+    ],
+    "literal_domain_checks": [
+      {
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "label": "0:inverse_sqrt",
+        "maximum": 0.04277749401324249,
+        "minimum": 0.01372273500767846,
+        "passed": true
+      },
+      {
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "label": "1:inverse_sqrt",
+        "maximum": 0.22757911880390144,
+        "minimum": 0.02251493719707144,
+        "passed": true
+      },
+      {
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "label": "2:inverse_sqrt",
+        "maximum": 0.20176650013155398,
+        "minimum": 0.025763002779354637,
+        "passed": true
+      },
+      {
+        "domain": [
+          -4.0,
+          4.0
+        ],
+        "label": "3:exp",
+        "maximum": 2.108032333363145,
+        "minimum": -1.8670498157046431,
+        "passed": true
+      },
+      {
+        "domain": [
+          0.5,
+          8.0
+        ],
+        "label": "4:reciprocal",
+        "maximum": 2.669359534847247,
+        "minimum": 0.9999999999999929,
+        "passed": true
+      },
+      {
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "label": "5:inverse_sqrt",
+        "maximum": 0.05531886859283501,
+        "minimum": 0.012135818816400199,
+        "passed": true
+      },
+      {
+        "domain": [
+          -2.0,
+          2.0
+        ],
+        "label": "6:silu",
+        "maximum": 0.7114813009505573,
+        "minimum": -0.8075344433003532,
+        "passed": true
+      },
+      {
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "label": "7:inverse_sqrt",
+        "maximum": 0.061558164707356394,
+        "minimum": 0.012783580205163259,
+        "passed": true
+      },
+      {
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "label": "8:inverse_sqrt",
+        "maximum": 0.18484233737508987,
+        "minimum": 0.021754485958361453,
+        "passed": true
+      },
+      {
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "label": "9:inverse_sqrt",
+        "maximum": 0.1893362000461871,
+        "minimum": 0.027715963890361368,
+        "passed": true
+      },
+      {
+        "domain": [
+          -4.0,
+          4.0
+        ],
+        "label": "10:exp",
+        "maximum": 2.0839479808458377,
+        "minimum": -2.0007159462779116,
+        "passed": true
+      },
+      {
+        "domain": [
+          0.5,
+          8.0
+        ],
+        "label": "11:reciprocal",
+        "maximum": 2.3309182951974274,
+        "minimum": 0.9999999999999929,
+        "passed": true
+      },
+      {
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "label": "12:inverse_sqrt",
+        "maximum": 0.09996141830525604,
+        "minimum": 0.03676916479786451,
+        "passed": true
+      },
+      {
+        "domain": [
+          -2.0,
+          2.0
+        ],
+        "label": "13:silu",
+        "maximum": 0.8468319224441191,
+        "minimum": -0.6823116176399494,
+        "passed": true
+      },
+      {
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "label": "14:inverse_sqrt",
+        "maximum": 0.10114141501292467,
+        "minimum": 0.039669263000876615,
+        "passed": true
+      },
+      {
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "label": "15:inverse_sqrt",
+        "maximum": 0.23263263762520955,
+        "minimum": 0.014847099237876278,
+        "passed": true
+      },
+      {
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "label": "16:inverse_sqrt",
+        "maximum": 0.16764966272842588,
+        "minimum": 0.03327810544771714,
+        "passed": true
+      },
+      {
+        "domain": [
+          -4.0,
+          4.0
+        ],
+        "label": "17:exp",
+        "maximum": 2.185710288306266,
+        "minimum": -1.261699537985822,
+        "passed": true
+      },
+      {
+        "domain": [
+          0.5,
+          8.0
+        ],
+        "label": "18:reciprocal",
+        "maximum": 2.6394024347630993,
+        "minimum": 0.9999999999999929,
+        "passed": true
+      },
+      {
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "label": "19:inverse_sqrt",
+        "maximum": 0.11319825458852623,
+        "minimum": 0.038365540374617674,
+        "passed": true
+      },
+      {
+        "domain": [
+          -2.0,
+          2.0
+        ],
+        "label": "20:silu",
+        "maximum": 0.7082519801981747,
+        "minimum": -0.972550817171403,
+        "passed": true
+      },
+      {
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "label": "21:inverse_sqrt",
+        "maximum": 0.11134934445631962,
+        "minimum": 0.039769890872360145,
+        "passed": true
+      }
+    ],
+    "literal_first_nonfinite": null,
+    "literal_matches_independent_dense_at_1e_10": true,
+    "maximum_periodicity_absolute_error": 0.0,
+    "maximum_semantic_absolute_error": 2.6645352591003757e-14,
+    "minimal_checkpoints": [
+      {
+        "array_sha256": "6486d4dcb225e08567b64de408f1ac5f9055ac9a43179cb5bf47838d1e29a5c5",
+        "ciphertext_payload_bytes": 104857600,
+        "independent_dense_max_error": 0.0,
+        "index": 0,
+        "kind": "input",
+        "label": "original_embeddings",
+        "level": 49,
+        "maximum": 0.41059063997156187,
+        "minimum": -0.4492345573490559,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "d685b109adf80efa0a64f7c1b86f4fe2ddf33fa68d19a69fb7903774e72e6d4d",
+        "ciphertext_payload_bytes": 18874368,
+        "independent_dense_max_error": 1.1102230246251565e-16,
+        "index": 31,
+        "kind": "phase",
+        "label": "packed Qwen layer 0: attention ready",
+        "level": 8,
+        "maximum": 0.44727723637309325,
+        "minimum": -0.5366086362787541,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "94293c772dbb86db135a32b9ad02451ca0d8533ad1a0791ed3cf0ba04a9d5c97",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": null,
+        "index": 35,
+        "kind": "refresh_before",
+        "label": "0",
+        "level": 6,
+        "maximum": 0.05531886859283501,
+        "minimum": 0.012135818816400199,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize:1",
+          "polynomial:5:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "94293c772dbb86db135a32b9ad02451ca0d8533ad1a0791ed3cf0ba04a9d5c97",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 36,
+        "kind": "refresh_after",
+        "label": "0",
+        "level": 25,
+        "maximum": 0.05531886859283501,
+        "minimum": 0.012135818816400199,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize:1",
+          "polynomial:5:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "f002ab21893d7e6fbe4eb930096ac364275e86c18360c2bc67ade872f1e26803",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": null,
+        "index": 48,
+        "kind": "refresh_before",
+        "label": "1",
+        "level": 2,
+        "maximum": 0.3809080204202638,
+        "minimum": -0.23762571028021434,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 4.0,
+        "scale": 3.1911935151940154e+17,
+        "stack": [
+          "linear:6"
+        ]
+      },
+      {
+        "array_sha256": "f002ab21893d7e6fbe4eb930096ac364275e86c18360c2bc67ade872f1e26803",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 49,
+        "kind": "refresh_after",
+        "label": "1",
+        "level": 25,
+        "maximum": 0.3809080204202638,
+        "minimum": -0.23762571028021434,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 4.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "linear:6"
+        ]
+      },
+      {
+        "array_sha256": "166a01d407c3f024881983daf636eb62b24b50a58861d2ecdee83cb1b96160ce",
+        "ciphertext_payload_bytes": 18874368,
+        "independent_dense_max_error": 1.6653345369377348e-16,
+        "index": 52,
+        "kind": "phase",
+        "label": "packed Qwen layer 0: MLP ready",
+        "level": 8,
+        "maximum": 0.43515105703381013,
+        "minimum": -0.5269945246838345,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "8b7e5d991b6285dc4cc6ca97a2e35d8aaaf1c80a28e1f125cf09fc260f32f170",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": null,
+        "index": 56,
+        "kind": "refresh_before",
+        "label": "2",
+        "level": 6,
+        "maximum": 0.061558164707356394,
+        "minimum": 0.012783580205163259,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize:2",
+          "polynomial:7:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "8b7e5d991b6285dc4cc6ca97a2e35d8aaaf1c80a28e1f125cf09fc260f32f170",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 57,
+        "kind": "refresh_after",
+        "label": "2",
+        "level": 25,
+        "maximum": 0.061558164707356394,
+        "minimum": 0.012783580205163259,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize:2",
+          "polynomial:7:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "0fcf2e3673b6d7729451360e2fbd8bcc620c38608a231cd90595ee069d8da80f",
+        "ciphertext_payload_bytes": 8388608,
+        "independent_dense_max_error": null,
+        "index": 70,
+        "kind": "refresh_before",
+        "label": "3",
+        "level": 3,
+        "maximum": 0.18484233737508987,
+        "minimum": 0.021754485958361453,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:2",
+          "polynomial:8:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "0fcf2e3673b6d7729451360e2fbd8bcc620c38608a231cd90595ee069d8da80f",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 71,
+        "kind": "refresh_after",
+        "label": "3",
+        "level": 25,
+        "maximum": 0.18484233737508987,
+        "minimum": 0.021754485958361453,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:2",
+          "polynomial:8:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "3db269c665fa5a492b96ea7c81f18cdd87d170c85e724edc0069e5e7f8c72343",
+        "ciphertext_payload_bytes": 8388608,
+        "independent_dense_max_error": null,
+        "index": 80,
+        "kind": "refresh_before",
+        "label": "4",
+        "level": 3,
+        "maximum": 0.1893362000461871,
+        "minimum": 0.027715963890361368,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:3",
+          "polynomial:9:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "3db269c665fa5a492b96ea7c81f18cdd87d170c85e724edc0069e5e7f8c72343",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 81,
+        "kind": "refresh_after",
+        "label": "4",
+        "level": 25,
+        "maximum": 0.1893362000461871,
+        "minimum": 0.027715963890361368,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:3",
+          "polynomial:9:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "c935f5683f9a55bfb45320622f4e397118cb840313adebc6442dbdb4d98ca41d",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": null,
+        "index": 89,
+        "kind": "refresh_before",
+        "label": "5",
+        "level": 2,
+        "maximum": 2.3941119617689512,
+        "minimum": -2.23892171489635,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 4.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "attention:1"
+        ]
+      },
+      {
+        "array_sha256": "c935f5683f9a55bfb45320622f4e397118cb840313adebc6442dbdb4d98ca41d",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 90,
+        "kind": "refresh_after",
+        "label": "5",
+        "level": 25,
+        "maximum": 2.3941119617689512,
+        "minimum": -2.23892171489635,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 4.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "attention:1"
+        ]
+      },
+      {
+        "array_sha256": "78a55af1fe15386af1bc9d566ab040b3138630689625f49ad8d8e3d337c19e38",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": null,
+        "index": 93,
+        "kind": "refresh_before",
+        "label": "6",
+        "level": 2,
+        "maximum": 2.1499637521382344,
+        "minimum": -2.3846605431989567,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 4.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "attention:1"
+        ]
+      },
+      {
+        "array_sha256": "78a55af1fe15386af1bc9d566ab040b3138630689625f49ad8d8e3d337c19e38",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 94,
+        "kind": "refresh_after",
+        "label": "6",
+        "level": 25,
+        "maximum": 2.1499637521382344,
+        "minimum": -2.3846605431989567,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 4.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "attention:1"
+        ]
+      },
+      {
+        "array_sha256": "54134824cda46d6e1dd349a5fbf5dca4a65c8d55fd9b587a54a742b77aed0612",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": null,
+        "index": 103,
+        "kind": "refresh_before",
+        "label": "7",
+        "level": 2,
+        "maximum": 0.6737067530023106,
+        "minimum": -0.5015718174817241,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 2.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "linear:10"
+        ]
+      },
+      {
+        "array_sha256": "54134824cda46d6e1dd349a5fbf5dca4a65c8d55fd9b587a54a742b77aed0612",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 104,
+        "kind": "refresh_after",
+        "label": "7",
+        "level": 25,
+        "maximum": 0.6737067530023106,
+        "minimum": -0.5015718174817241,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 2.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "linear:10"
+        ]
+      },
+      {
+        "array_sha256": "08b5a4ad8503f0e8a420b7fd145e0aaaf967b536503c3c96b59f5f78fecd6c4c",
+        "ciphertext_payload_bytes": 18874368,
+        "independent_dense_max_error": 1.1379786002407855e-15,
+        "index": 107,
+        "kind": "phase",
+        "label": "packed Qwen layer 1: attention ready",
+        "level": 8,
+        "maximum": 0.5366168490099564,
+        "minimum": -0.7170838066498579,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "a688ff8e302b22348dcebfca7331505e5625cb3d76d45854aeb0647b7d70234d",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": null,
+        "index": 111,
+        "kind": "refresh_before",
+        "label": "8",
+        "level": 6,
+        "maximum": 0.09996141830525604,
+        "minimum": 0.03676916479786451,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize:3",
+          "polynomial:12:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "a688ff8e302b22348dcebfca7331505e5625cb3d76d45854aeb0647b7d70234d",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 112,
+        "kind": "refresh_after",
+        "label": "8",
+        "level": 25,
+        "maximum": 0.09996141830525604,
+        "minimum": 0.03676916479786451,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize:3",
+          "polynomial:12:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "181db0c7859440981ed65234775429455a4ddcf3569fe0f5902dcd9c3dd89c6e",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": null,
+        "index": 124,
+        "kind": "refresh_before",
+        "label": "9",
+        "level": 2,
+        "maximum": 0.14082801580930387,
+        "minimum": -0.12514032995757882,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 4.0,
+        "scale": 3.1911935151940154e+17,
+        "stack": [
+          "linear:13"
+        ]
+      },
+      {
+        "array_sha256": "181db0c7859440981ed65234775429455a4ddcf3569fe0f5902dcd9c3dd89c6e",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 125,
+        "kind": "refresh_after",
+        "label": "9",
+        "level": 25,
+        "maximum": 0.14082801580930387,
+        "minimum": -0.12514032995757882,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 4.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "linear:13"
+        ]
+      },
+      {
+        "array_sha256": "81a170ad489ca9bd3fb534edf4ec3558b13bfa3a397b5efff4a5f82292b219e5",
+        "ciphertext_payload_bytes": 18874368,
+        "independent_dense_max_error": 1.124100812432971e-15,
+        "index": 128,
+        "kind": "phase",
+        "label": "packed Qwen layer 1: MLP ready",
+        "level": 8,
+        "maximum": 0.5387333853803928,
+        "minimum": -0.7408542588760574,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "9008b05d03b30c5ef37460bdc5053984fba04ce33f1d0ad884805a3fb97601e4",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": null,
+        "index": 132,
+        "kind": "refresh_before",
+        "label": "10",
+        "level": 6,
+        "maximum": 0.10114141501292467,
+        "minimum": 0.039669263000876615,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize:4",
+          "polynomial:14:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "9008b05d03b30c5ef37460bdc5053984fba04ce33f1d0ad884805a3fb97601e4",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 133,
+        "kind": "refresh_after",
+        "label": "10",
+        "level": 25,
+        "maximum": 0.10114141501292467,
+        "minimum": 0.039669263000876615,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize:4",
+          "polynomial:14:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "8cbebaad2419ae3a8f857c3efa1f475137789e78a59c791c42e12e5d1cad0cc2",
+        "ciphertext_payload_bytes": 8388608,
+        "independent_dense_max_error": null,
+        "index": 146,
+        "kind": "refresh_before",
+        "label": "11",
+        "level": 3,
+        "maximum": 0.23263263762520955,
+        "minimum": 0.014847099237876278,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:4",
+          "polynomial:15:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "8cbebaad2419ae3a8f857c3efa1f475137789e78a59c791c42e12e5d1cad0cc2",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 147,
+        "kind": "refresh_after",
+        "label": "11",
+        "level": 25,
+        "maximum": 0.23263263762520955,
+        "minimum": 0.014847099237876278,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:4",
+          "polynomial:15:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "60a861639f83c63171790155c59b81f72bb0f894cc8b8dbb7a16261dc4e3b793",
+        "ciphertext_payload_bytes": 8388608,
+        "independent_dense_max_error": null,
+        "index": 156,
+        "kind": "refresh_before",
+        "label": "12",
+        "level": 3,
+        "maximum": 0.16764966272842588,
+        "minimum": 0.03327810544771714,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:5",
+          "polynomial:16:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "60a861639f83c63171790155c59b81f72bb0f894cc8b8dbb7a16261dc4e3b793",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 157,
+        "kind": "refresh_after",
+        "label": "12",
+        "level": 25,
+        "maximum": 0.16764966272842588,
+        "minimum": 0.03327810544771714,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:5",
+          "polynomial:16:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "ce62997abbfcec89f6b7d66d59266933a1bf463024e05096e814209ec4910874",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": null,
+        "index": 165,
+        "kind": "refresh_before",
+        "label": "13",
+        "level": 2,
+        "maximum": 2.0626651517332957,
+        "minimum": -2.2704217953599195,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 4.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "attention:2"
+        ]
+      },
+      {
+        "array_sha256": "ce62997abbfcec89f6b7d66d59266933a1bf463024e05096e814209ec4910874",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 166,
+        "kind": "refresh_after",
+        "label": "13",
+        "level": 25,
+        "maximum": 2.0626651517332957,
+        "minimum": -2.2704217953599195,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 4.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "attention:2"
+        ]
+      },
+      {
+        "array_sha256": "a44145fc4c17d80a340a783d925649fba22c657bec506cc3101da4cf4987dfca",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": null,
+        "index": 169,
+        "kind": "refresh_before",
+        "label": "14",
+        "level": 2,
+        "maximum": 2.353529461926826,
+        "minimum": -2.025087369898349,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 4.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "attention:2"
+        ]
+      },
+      {
+        "array_sha256": "a44145fc4c17d80a340a783d925649fba22c657bec506cc3101da4cf4987dfca",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 170,
+        "kind": "refresh_after",
+        "label": "14",
+        "level": 25,
+        "maximum": 2.353529461926826,
+        "minimum": -2.025087369898349,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 4.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "attention:2"
+        ]
+      },
+      {
+        "array_sha256": "bab8318ab5cedf0f97242fb2f3b5fc1a3f83a6c090d1e1a7611920356ffff69a",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": null,
+        "index": 179,
+        "kind": "refresh_before",
+        "label": "15",
+        "level": 2,
+        "maximum": 0.8200236493199975,
+        "minimum": -0.7008985371333292,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 2.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "linear:17"
+        ]
+      },
+      {
+        "array_sha256": "bab8318ab5cedf0f97242fb2f3b5fc1a3f83a6c090d1e1a7611920356ffff69a",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 180,
+        "kind": "refresh_after",
+        "label": "15",
+        "level": 25,
+        "maximum": 0.8200236493199975,
+        "minimum": -0.7008985371333292,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 2.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "linear:17"
+        ]
+      },
+      {
+        "array_sha256": "16f660a55e6ee4b8a276798928e135e7bce127bbdda520ef86bb19073a2308f8",
+        "ciphertext_payload_bytes": 18874368,
+        "independent_dense_max_error": 1.7208456881689926e-15,
+        "index": 183,
+        "kind": "phase",
+        "label": "packed Qwen layer 2: attention ready",
+        "level": 8,
+        "maximum": 0.6803080503364475,
+        "minimum": -0.6094386095937062,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "e3e408671e6a1e0ce4ae8d3fe7e2ed8a7b8af6b1e2c7e4ab97c814c2946c30f1",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": null,
+        "index": 187,
+        "kind": "refresh_before",
+        "label": "16",
+        "level": 6,
+        "maximum": 0.11319825458852623,
+        "minimum": 0.038365540374617674,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize:5",
+          "polynomial:19:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "e3e408671e6a1e0ce4ae8d3fe7e2ed8a7b8af6b1e2c7e4ab97c814c2946c30f1",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 188,
+        "kind": "refresh_after",
+        "label": "16",
+        "level": 25,
+        "maximum": 0.11319825458852623,
+        "minimum": 0.038365540374617674,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize:5",
+          "polynomial:19:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "28d75e4307a38239d04fdbe9f55c4c9d19833bdad2fe0d17673431cc5e035fa1",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": null,
+        "index": 200,
+        "kind": "refresh_before",
+        "label": "17",
+        "level": 2,
+        "maximum": 0.1829351684135131,
+        "minimum": -0.13027214289170685,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 4.0,
+        "scale": 3.1911935151940154e+17,
+        "stack": [
+          "linear:20"
+        ]
+      },
+      {
+        "array_sha256": "28d75e4307a38239d04fdbe9f55c4c9d19833bdad2fe0d17673431cc5e035fa1",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 201,
+        "kind": "refresh_after",
+        "label": "17",
+        "level": 25,
+        "maximum": 0.1829351684135131,
+        "minimum": -0.13027214289170685,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 4.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "linear:20"
+        ]
+      },
+      {
+        "array_sha256": "45f33b1a7f1a2e663c028479b0201436aa319b0ac480cbe8d929574e7fc4e1cc",
+        "ciphertext_payload_bytes": 18874368,
+        "independent_dense_max_error": 1.797173521111972e-15,
+        "index": 204,
+        "kind": "phase",
+        "label": "packed Qwen layer 2: MLP ready",
+        "level": 8,
+        "maximum": 0.6884620420542572,
+        "minimum": -0.5889589958326761,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "2edfb192acf261f47b9e1e2e911050d20ee83a2578cd983267a4d520dcd56523",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": null,
+        "index": 208,
+        "kind": "refresh_before",
+        "label": "18",
+        "level": 6,
+        "maximum": 0.11134934445631962,
+        "minimum": 0.039769890872360145,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize:6",
+          "polynomial:21:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "2edfb192acf261f47b9e1e2e911050d20ee83a2578cd983267a4d520dcd56523",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 209,
+        "kind": "refresh_after",
+        "label": "18",
+        "level": 25,
+        "maximum": 0.11134934445631962,
+        "minimum": 0.039769890872360145,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize:6",
+          "polynomial:21:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "bfe0d7d578dc93988f9f9adb39a73cff996ea92cf943f2a5ff44afbe40066856",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": 8.298917109073045e-15,
+        "index": 212,
+        "kind": "normalize_after",
+        "label": "6",
+        "level": 6,
+        "maximum": 2.3457834545594043,
+        "minimum": -2.380045433130706,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "deed8a0b2f0e4a2d59386c438d24b45d42ef920465dc738ab0a4e6715e555474",
+        "ciphertext_payload_bytes": 12582912,
+        "independent_dense_max_error": 5.9396931817445875e-15,
+        "index": 215,
+        "kind": "output",
+        "label": "logits",
+        "level": 5,
+        "maximum": 2.549424125901867,
+        "minimum": -1.451974063497092,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      }
+    ],
+    "native_fixture_matches": true,
+    "native_fixture_metrics": {
+      "max_abs_error": 0.0,
+      "nrmse": 0.0,
+      "top1_agreement": 1.0
+    },
+    "numeric_gate_scope": "clear original-polynomial diagnostic only; never an encrypted acceptance result",
+    "packed_period": 1024,
+    "physical_slots": 65536,
+    "primitive_counts": {
+      "add": 270,
+      "multiply": 226,
+      "weighted": 214
+    },
+    "public_embedding_sha256": "2c996f96a2353ff70f1cbaf5eeea0aed3b47a74ac4c63a6f6c95163d35489ef4",
+    "public_fixed_case_only": true,
+    "public_weight_hashes": {
+      "model.embed_tokens.weight": {
+        "dtype": "float64",
+        "sha256": "0bfb3ecf20cb7e8328e644172fdfab789f4a454cb4003f4dfa8a24ade639c49f",
+        "shape": [
+          32,
+          16
+        ]
+      },
+      "model.layers.0.input_layernorm.weight": {
+        "dtype": "float64",
+        "sha256": "60b983d0721ae68f2a95d9e982d7c85a6ba7cad5adec4d288dca6d271a116de1",
+        "shape": [
+          16
+        ]
+      },
+      "model.layers.0.mlp.down_proj.weight": {
+        "dtype": "float64",
+        "sha256": "d4ce0b0e71658e38b1f6a0c4810359582110323fad12c20ca3998cbdbcd84d7e",
+        "shape": [
+          16,
+          24
+        ]
+      },
+      "model.layers.0.mlp.gate_proj.weight": {
+        "dtype": "float64",
+        "sha256": "20a7b852ed6d9c96c0dc4d9c43c25230f2920a62fcd523787a3dc58720bad5e6",
+        "shape": [
+          24,
+          16
+        ]
+      },
+      "model.layers.0.mlp.up_proj.weight": {
+        "dtype": "float64",
+        "sha256": "a40fb98aea5aaf99723920907bf3c9af8f8fb34f2176512701271cb8ee4de6f5",
+        "shape": [
+          24,
+          16
+        ]
+      },
+      "model.layers.0.post_attention_layernorm.weight": {
+        "dtype": "float64",
+        "sha256": "15c6f31125190ec1c690e708fa13fd359fa4a187a9e60abadde2802160a2a04b",
+        "shape": [
+          16
+        ]
+      },
+      "model.layers.0.self_attn.k_norm.weight": {
+        "dtype": "float64",
+        "sha256": "de695415c4a4610fa81d3945e2ce4e725bc7476a104b5916c423a96a1c77f4d8",
+        "shape": [
+          8
+        ]
+      },
+      "model.layers.0.self_attn.k_proj.weight": {
+        "dtype": "float64",
+        "sha256": "8fb086817d30faadf87c859cc7eaff9b3e1f5da4f0e4cdd7c1b17df851b1bedd",
+        "shape": [
+          16,
+          16
+        ]
+      },
+      "model.layers.0.self_attn.o_proj.weight": {
+        "dtype": "float64",
+        "sha256": "e1d443bc7c28312bafcd9afd389803c310fa4d25f27174c23839ae300d2bb6bb",
+        "shape": [
+          16,
+          32
+        ]
+      },
+      "model.layers.0.self_attn.q_norm.weight": {
+        "dtype": "float64",
+        "sha256": "877f2e8c951814429f3e47c581caf5304d0af35566fa783117c92718fd1afe38",
+        "shape": [
+          8
+        ]
+      },
+      "model.layers.0.self_attn.q_proj.weight": {
+        "dtype": "float64",
+        "sha256": "92a14b7daba8af25b38389c9c37b5bbcafc626ddd6c0f871a846d87ab45b30ad",
+        "shape": [
+          32,
+          16
+        ]
+      },
+      "model.layers.0.self_attn.v_proj.weight": {
+        "dtype": "float64",
+        "sha256": "62565a540556ab487410a6ae53466b45671562f7d56b15921ccfc3efc65594ae",
+        "shape": [
+          16,
+          16
+        ]
+      },
+      "model.layers.1.input_layernorm.weight": {
+        "dtype": "float64",
+        "sha256": "246b7cae21bb30f8a969ddb72120fa842ef654ee0324f0cb612e4e2007516294",
+        "shape": [
+          16
+        ]
+      },
+      "model.layers.1.mlp.down_proj.weight": {
+        "dtype": "float64",
+        "sha256": "6d0dc5f8561e1828e7cd871edde8de5fbde9d6194cbcd99d54156362ad4b531b",
+        "shape": [
+          16,
+          24
+        ]
+      },
+      "model.layers.1.mlp.gate_proj.weight": {
+        "dtype": "float64",
+        "sha256": "82c8ae7edae4dbb3257ff5b5b156546409f4ee05bd1051452b89ad3d916cd0ff",
+        "shape": [
+          24,
+          16
+        ]
+      },
+      "model.layers.1.mlp.up_proj.weight": {
+        "dtype": "float64",
+        "sha256": "055781d74b53a3213945a2e4ba8893ef7380e9b0914aa6fe1bb1da0aa97acf39",
+        "shape": [
+          24,
+          16
+        ]
+      },
+      "model.layers.1.post_attention_layernorm.weight": {
+        "dtype": "float64",
+        "sha256": "bd1c1ba4d359829fa67207090bb6f76f6923a4690657f9594b77fa991bb95739",
+        "shape": [
+          16
+        ]
+      },
+      "model.layers.1.self_attn.k_norm.weight": {
+        "dtype": "float64",
+        "sha256": "9e12cee3cdaafa2fce09a711b910dd7a3d8668f248a15f2eaccbd692eca28f0b",
+        "shape": [
+          8
+        ]
+      },
+      "model.layers.1.self_attn.k_proj.weight": {
+        "dtype": "float64",
+        "sha256": "bc9df235e61399a2dde321bb005638d04b3ad59630ca749efe9b76982d0d9056",
+        "shape": [
+          16,
+          16
+        ]
+      },
+      "model.layers.1.self_attn.o_proj.weight": {
+        "dtype": "float64",
+        "sha256": "423229bdafe2d82bb3bb346d82f74a48f85c48bd21bd14c12f004b2f88095a25",
+        "shape": [
+          16,
+          32
+        ]
+      },
+      "model.layers.1.self_attn.q_norm.weight": {
+        "dtype": "float64",
+        "sha256": "215f53971d1532f2bdfdf2b345142d0a0acba42a688e49a91b32268282505dbe",
+        "shape": [
+          8
+        ]
+      },
+      "model.layers.1.self_attn.q_proj.weight": {
+        "dtype": "float64",
+        "sha256": "654f3c19786803172773ea30c747d9ab8e97f6009ef9135fe611e3978551cb49",
+        "shape": [
+          32,
+          16
+        ]
+      },
+      "model.layers.1.self_attn.v_proj.weight": {
+        "dtype": "float64",
+        "sha256": "2b7072e71c773b54c6ba499b8d7641158d3798526f6b0d37916396ce21f7887f",
+        "shape": [
+          16,
+          16
+        ]
+      },
+      "model.layers.2.input_layernorm.weight": {
+        "dtype": "float64",
+        "sha256": "9f3f243d338f68aca2352d7d71e1f9e5f31733bc1b626d7187d843a5b9a63dfa",
+        "shape": [
+          16
+        ]
+      },
+      "model.layers.2.mlp.down_proj.weight": {
+        "dtype": "float64",
+        "sha256": "35162ee7086acd47855be6cfee0971963f851d155cec93d2e2624155823574e1",
+        "shape": [
+          16,
+          24
+        ]
+      },
+      "model.layers.2.mlp.gate_proj.weight": {
+        "dtype": "float64",
+        "sha256": "9b00b60aa165493ae0c1de2b3dc2bc67a2537aee4bd96c9be0ea8bd660cdcb48",
+        "shape": [
+          24,
+          16
+        ]
+      },
+      "model.layers.2.mlp.up_proj.weight": {
+        "dtype": "float64",
+        "sha256": "22e01c39b1474224796004ca9903e7e3985a2914b852a9342a67ed34546ce31d",
+        "shape": [
+          24,
+          16
+        ]
+      },
+      "model.layers.2.post_attention_layernorm.weight": {
+        "dtype": "float64",
+        "sha256": "a1c54a0780fb5ddf03bedb68b24078dbf857f128217d9b2506c1091fdca7cdb4",
+        "shape": [
+          16
+        ]
+      },
+      "model.layers.2.self_attn.k_norm.weight": {
+        "dtype": "float64",
+        "sha256": "52b62e6f09e5f03891a139fea2430775769ee155015ad457b6ff86e03d430cba",
+        "shape": [
+          8
+        ]
+      },
+      "model.layers.2.self_attn.k_proj.weight": {
+        "dtype": "float64",
+        "sha256": "ff568d7fe20c5ffc3d841747f211bc0962e0923acf1bb1604887325234d5f6e5",
+        "shape": [
+          16,
+          16
+        ]
+      },
+      "model.layers.2.self_attn.o_proj.weight": {
+        "dtype": "float64",
+        "sha256": "9d83690819144ef92f298da95eb46aeb77c1ca9ee467464a65ca1a84d65ed87a",
+        "shape": [
+          16,
+          32
+        ]
+      },
+      "model.layers.2.self_attn.q_norm.weight": {
+        "dtype": "float64",
+        "sha256": "31f48c28aedf4042dacfa6c61af5271778f63f16cf2d113a3a7e0b91662ad7b4",
+        "shape": [
+          8
+        ]
+      },
+      "model.layers.2.self_attn.q_proj.weight": {
+        "dtype": "float64",
+        "sha256": "ad4068ad7ad8c7dcf6eda8abc369879f4f70459d8e010f175faf3ee262966ca7",
+        "shape": [
+          32,
+          16
+        ]
+      },
+      "model.layers.2.self_attn.v_proj.weight": {
+        "dtype": "float64",
+        "sha256": "9a0d3e7c87a0b550e6be671f7bdf439a3d335a06b54b995965c665f7c1610967",
+        "shape": [
+          16,
+          16
+        ]
+      },
+      "model.norm.weight": {
+        "dtype": "float64",
+        "sha256": "3d1e0e93b5b0c051e1016c01d43b4828c378eaac92efc13e9f96b8192193397d",
+        "shape": [
+          16
+        ]
+      }
+    },
+    "refresh_events": [
+      {
+        "circuit_bound": 0.35,
+        "input_level": 6,
+        "output_level": 25,
+        "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)",
+        "public_bound": 0.5,
+        "required": 6
+      },
+      {
+        "circuit_bound": 3.152048386941972,
+        "input_level": 2,
+        "output_level": 25,
+        "provenance": "product of public operand bounds",
+        "public_bound": 4.0,
+        "required": 1
+      },
+      {
+        "circuit_bound": 0.35,
+        "input_level": 6,
+        "output_level": 25,
+        "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)",
+        "public_bound": 0.5,
+        "required": 6
+      },
+      {
+        "circuit_bound": 0.35,
+        "input_level": 3,
+        "output_level": 25,
+        "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)",
+        "public_bound": 0.5,
+        "required": 6
+      },
+      {
+        "circuit_bound": 0.35,
+        "input_level": 3,
+        "output_level": 25,
+        "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)",
+        "public_bound": 0.5,
+        "required": 6
+      },
+      {
+        "circuit_bound": 3.1845511430158004,
+        "input_level": 2,
+        "output_level": 25,
+        "provenance": "public rotary coefficient operator-norm bound",
+        "public_bound": 4.0,
+        "required": 1
+      },
+      {
+        "circuit_bound": 3.1295086032800405,
+        "input_level": 2,
+        "output_level": 25,
+        "provenance": "public rotary coefficient operator-norm bound",
+        "public_bound": 4.0,
+        "required": 1
+      },
+      {
+        "circuit_bound": 1.7081735603952708,
+        "input_level": 2,
+        "output_level": 25,
+        "provenance": "softmax row-L1 envelope times public value bound",
+        "public_bound": 2.0,
+        "required": 1
+      },
+      {
+        "circuit_bound": 0.35,
+        "input_level": 6,
+        "output_level": 25,
+        "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)",
+        "public_bound": 0.5,
+        "required": 6
+      },
+      {
+        "circuit_bound": 3.301874838242891,
+        "input_level": 2,
+        "output_level": 25,
+        "provenance": "product of public operand bounds",
+        "public_bound": 4.0,
+        "required": 1
+      },
+      {
+        "circuit_bound": 0.35,
+        "input_level": 6,
+        "output_level": 25,
+        "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)",
+        "public_bound": 0.5,
+        "required": 6
+      },
+      {
+        "circuit_bound": 0.35,
+        "input_level": 3,
+        "output_level": 25,
+        "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)",
+        "public_bound": 0.5,
+        "required": 6
+      },
+      {
+        "circuit_bound": 0.35,
+        "input_level": 3,
+        "output_level": 25,
+        "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)",
+        "public_bound": 0.5,
+        "required": 6
+      },
+      {
+        "circuit_bound": 3.1856162086211297,
+        "input_level": 2,
+        "output_level": 25,
+        "provenance": "public rotary coefficient operator-norm bound",
+        "public_bound": 4.0,
+        "required": 1
+      },
+      {
+        "circuit_bound": 3.185331977518974,
+        "input_level": 2,
+        "output_level": 25,
+        "provenance": "public rotary coefficient operator-norm bound",
+        "public_bound": 4.0,
+        "required": 1
+      },
+      {
+        "circuit_bound": 1.65653602267573,
+        "input_level": 2,
+        "output_level": 25,
+        "provenance": "softmax row-L1 envelope times public value bound",
+        "public_bound": 2.0,
+        "required": 1
+      },
+      {
+        "circuit_bound": 0.35,
+        "input_level": 6,
+        "output_level": 25,
+        "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)",
+        "public_bound": 0.5,
+        "required": 6
+      },
+      {
+        "circuit_bound": 3.3142821674939738,
+        "input_level": 2,
+        "output_level": 25,
+        "provenance": "product of public operand bounds",
+        "public_bound": 4.0,
+        "required": 1
+      },
+      {
+        "circuit_bound": 0.35,
+        "input_level": 6,
+        "output_level": 25,
+        "provenance": "inverse_sqrt: declared input domain (0.005, 0.35)",
+        "public_bound": 0.5,
+        "required": 6
+      }
+    ],
+    "refresh_magnitude_checks": [
+      {
+        "index": 0,
+        "magnitude": 0.05531886859283501,
+        "passed": true,
+        "public_bound": 0.5
+      },
+      {
+        "index": 1,
+        "magnitude": 0.3809080204202638,
+        "passed": true,
+        "public_bound": 4.0
+      },
+      {
+        "index": 2,
+        "magnitude": 0.061558164707356394,
+        "passed": true,
+        "public_bound": 0.5
+      },
+      {
+        "index": 3,
+        "magnitude": 0.18484233737508987,
+        "passed": true,
+        "public_bound": 0.5
+      },
+      {
+        "index": 4,
+        "magnitude": 0.1893362000461871,
+        "passed": true,
+        "public_bound": 0.5
+      },
+      {
+        "index": 5,
+        "magnitude": 2.3941119617689512,
+        "passed": true,
+        "public_bound": 4.0
+      },
+      {
+        "index": 6,
+        "magnitude": 2.3846605431989567,
+        "passed": true,
+        "public_bound": 4.0
+      },
+      {
+        "index": 7,
+        "magnitude": 0.6737067530023106,
+        "passed": true,
+        "public_bound": 2.0
+      },
+      {
+        "index": 8,
+        "magnitude": 0.09996141830525604,
+        "passed": true,
+        "public_bound": 0.5
+      },
+      {
+        "index": 9,
+        "magnitude": 0.14082801580930387,
+        "passed": true,
+        "public_bound": 4.0
+      },
+      {
+        "index": 10,
+        "magnitude": 0.10114141501292467,
+        "passed": true,
+        "public_bound": 0.5
+      },
+      {
+        "index": 11,
+        "magnitude": 0.23263263762520955,
+        "passed": true,
+        "public_bound": 0.5
+      },
+      {
+        "index": 12,
+        "magnitude": 0.16764966272842588,
+        "passed": true,
+        "public_bound": 0.5
+      },
+      {
+        "index": 13,
+        "magnitude": 2.2704217953599195,
+        "passed": true,
+        "public_bound": 4.0
+      },
+      {
+        "index": 14,
+        "magnitude": 2.353529461926826,
+        "passed": true,
+        "public_bound": 4.0
+      },
+      {
+        "index": 15,
+        "magnitude": 0.8200236493199975,
+        "passed": true,
+        "public_bound": 2.0
+      },
+      {
+        "index": 16,
+        "magnitude": 0.11319825458852623,
+        "passed": true,
+        "public_bound": 0.5
+      },
+      {
+        "index": 17,
+        "magnitude": 0.1829351684135131,
+        "passed": true,
+        "public_bound": 4.0
+      },
+      {
+        "index": 18,
+        "magnitude": 0.11134934445631962,
+        "passed": true,
+        "public_bound": 0.5
+      }
+    ],
+    "refresh_model": "identity on plaintext; nominal scale and derived capacity only",
+    "replicas": 64,
+    "rotations": {
+      "bootstrap": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        16,
+        24,
+        32,
+        40,
+        48,
+        56,
+        64,
+        128,
+        192,
+        256,
+        320,
+        384,
+        448,
+        512,
+        640,
+        768,
+        896,
+        912,
+        928,
+        944,
+        960,
+        976,
+        992,
+        1008,
+        1010,
+        1012,
+        1014,
+        1016,
+        1018,
+        1020,
+        1022,
+        1023,
+        1024,
+        1025,
+        1026,
+        1028,
+        1030,
+        1032,
+        1034,
+        1036,
+        1038,
+        1040,
+        1056,
+        1072,
+        1088,
+        1104,
+        1120,
+        1136,
+        1152,
+        1280,
+        1408,
+        1536,
+        1600,
+        1664,
+        1728,
+        1792,
+        1856,
+        1920,
+        1984,
+        1992,
+        2000,
+        2008,
+        2016,
+        2024,
+        2032,
+        2040,
+        2041,
+        2042,
+        2043,
+        2044,
+        2045,
+        2046,
+        2047,
+        2048,
+        4096,
+        8192,
+        16384,
+        32768
+      ],
+      "complete_graph_inventory": true,
+      "conjugation": 262143,
+      "fold": [
+        1024,
+        2048,
+        4096,
+        8192,
+        16384,
+        32768
+      ],
+      "graph": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        16,
+        24,
+        32,
+        64,
+        96,
+        192,
+        288,
+        65248,
+        65344,
+        65440,
+        65472,
+        65504,
+        65512,
+        65520,
+        65528,
+        65532,
+        65534,
+        65535
+      ],
+      "not_actual_keygen_or_capacity_proof": true,
+      "union": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        16,
+        24,
+        32,
+        40,
+        48,
+        56,
+        64,
+        96,
+        128,
+        192,
+        256,
+        288,
+        320,
+        384,
+        448,
+        512,
+        640,
+        768,
+        896,
+        912,
+        928,
+        944,
+        960,
+        976,
+        992,
+        1008,
+        1010,
+        1012,
+        1014,
+        1016,
+        1018,
+        1020,
+        1022,
+        1023,
+        1024,
+        1025,
+        1026,
+        1028,
+        1030,
+        1032,
+        1034,
+        1036,
+        1038,
+        1040,
+        1056,
+        1072,
+        1088,
+        1104,
+        1120,
+        1136,
+        1152,
+        1280,
+        1408,
+        1536,
+        1600,
+        1664,
+        1728,
+        1792,
+        1856,
+        1920,
+        1984,
+        1992,
+        2000,
+        2008,
+        2016,
+        2024,
+        2032,
+        2040,
+        2041,
+        2042,
+        2043,
+        2044,
+        2045,
+        2046,
+        2047,
+        2048,
+        4096,
+        8192,
+        16384,
+        32768,
+        65248,
+        65344,
+        65440,
+        65472,
+        65504,
+        65512,
+        65520,
+        65528,
+        65532,
+        65534,
+        65535,
+        262143
+      ],
+      "union_count": 100
+    },
+    "schedule": {
+      "checkpoint_count": 47,
+      "complete_graph_expected_formula": "1 input + 6 layer phase ends + 2*R refresh boundaries + 1 final RMS + 1 output = 9+2R",
+      "derived_refresh_count": 19,
+      "formula_holds": true,
+      "matches_observed_count": true,
+      "observed_TPU_refresh_count": 19,
+      "observed_count_used_to_construct_schedule": false
+    },
+    "schedule_is_conditional_on_public_domains": true,
+    "schema": "qwen-toy5-public-polynomial-replay-v1",
+    "semantic_count_agreement": true,
+    "semantic_counts": {
+      "attention": 3,
+      "linear": 22,
+      "normalize": 7,
+      "normalize_heads": 6,
+      "polynomial": 22,
+      "rope": 6
+    },
+    "source_case_sha256": "df67a2c4e59030d923b019c9d57a2eedd96d11ad1e4eb31bbbddee69d460c018",
+    "trace": [
+      {
+        "array_sha256": "6486d4dcb225e08567b64de408f1ac5f9055ac9a43179cb5bf47838d1e29a5c5",
+        "ciphertext_payload_bytes": 104857600,
+        "independent_dense_max_error": 0.0,
+        "index": 0,
+        "kind": "input",
+        "label": "original_embeddings",
+        "level": 49,
+        "maximum": 0.41059063997156187,
+        "minimum": -0.4492345573490559,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "6486d4dcb225e08567b64de408f1ac5f9055ac9a43179cb5bf47838d1e29a5c5",
+        "ciphertext_payload_bytes": 104857600,
+        "independent_dense_max_error": 0.0,
+        "index": 1,
+        "kind": "normalize_before",
+        "label": "0",
+        "level": 49,
+        "maximum": 0.41059063997156187,
+        "minimum": -0.4492345573490559,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "a0e4a41e7df0346a5d6e925c0e7c04f2521f25cad728d4a3af654240053c189c",
+        "ciphertext_payload_bytes": 100663296,
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "independent_dense_max_error": 3.469446951953614e-18,
+        "index": 2,
+        "kind": "polynomial_before",
+        "label": "0:inverse_sqrt",
+        "level": 47,
+        "maximum": 0.04277749401324249,
+        "minimum": 0.01372273500767846,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize:0"
+        ]
+      },
+      {
+        "array_sha256": "28b57030f19168419146071181e3f94c4e109799031740482684035abf323a21",
+        "ciphertext_payload_bytes": 88080384,
+        "independent_dense_max_error": 0.0,
+        "index": 3,
+        "kind": "polynomial_after",
+        "label": "0:inverse_sqrt",
+        "level": 41,
+        "maximum": 8.643611698556867,
+        "minimum": 4.890277720515859,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.899401157089689e+16,
+        "stack": [
+          "normalize:0"
+        ]
+      },
+      {
+        "array_sha256": "dde35d00002e7662ce1af0b70aa8aa29993f8c8968563073421b3c20390e01a7",
+        "ciphertext_payload_bytes": 83886080,
+        "independent_dense_max_error": 0.0,
+        "index": 4,
+        "kind": "normalize_after",
+        "label": "0",
+        "level": 39,
+        "maximum": 2.1565833537317327,
+        "minimum": -2.150830014120429,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "dde35d00002e7662ce1af0b70aa8aa29993f8c8968563073421b3c20390e01a7",
+        "ciphertext_payload_bytes": 83886080,
+        "independent_dense_max_error": 0.0,
+        "index": 5,
+        "kind": "linear_before",
+        "label": "0",
+        "level": 39,
+        "maximum": 2.1565833537317327,
+        "minimum": -2.150830014120429,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "e844d43d49cfa61b761078be531a7a283862847d95a7bad83043254305b2d714",
+        "ciphertext_payload_bytes": 81788928,
+        "independent_dense_max_error": 2.220446049250313e-16,
+        "index": 6,
+        "kind": "linear_after",
+        "label": "0",
+        "level": 38,
+        "maximum": 0.7728475664378667,
+        "minimum": -0.7729478731484709,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "dde35d00002e7662ce1af0b70aa8aa29993f8c8968563073421b3c20390e01a7",
+        "ciphertext_payload_bytes": 83886080,
+        "independent_dense_max_error": 0.0,
+        "index": 7,
+        "kind": "linear_before",
+        "label": "1",
+        "level": 39,
+        "maximum": 2.1565833537317327,
+        "minimum": -2.150830014120429,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "f0b6bd323b0eb979eedf761ed34ee7ec9d9fc5e06e47cf08fec4b1112ffcc6e0",
+        "ciphertext_payload_bytes": 81788928,
+        "independent_dense_max_error": 3.3306690738754696e-16,
+        "index": 8,
+        "kind": "linear_after",
+        "label": "1",
+        "level": 38,
+        "maximum": 0.7650588462527703,
+        "minimum": -0.7466214899626378,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "dde35d00002e7662ce1af0b70aa8aa29993f8c8968563073421b3c20390e01a7",
+        "ciphertext_payload_bytes": 83886080,
+        "independent_dense_max_error": 0.0,
+        "index": 9,
+        "kind": "linear_before",
+        "label": "2",
+        "level": 39,
+        "maximum": 2.1565833537317327,
+        "minimum": -2.150830014120429,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "9976d9fd53c01a60fcec7a21ea6437e8ab54ebbea2a966bc9d37c8986cdb743d",
+        "ciphertext_payload_bytes": 81788928,
+        "independent_dense_max_error": 1.1102230246251565e-16,
+        "index": 10,
+        "kind": "linear_after",
+        "label": "2",
+        "level": 38,
+        "maximum": 0.7058943023597798,
+        "minimum": -0.8310558004354348,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "f0b6bd323b0eb979eedf761ed34ee7ec9d9fc5e06e47cf08fec4b1112ffcc6e0",
+        "ciphertext_payload_bytes": 81788928,
+        "independent_dense_max_error": 3.3306690738754696e-16,
+        "index": 11,
+        "kind": "normalize_heads_before",
+        "label": "0",
+        "level": 38,
+        "maximum": 0.7650588462527703,
+        "minimum": -0.7466214899626378,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "bbdc6786b710d2f3f0da5cc18ba5e06cfda048621f91b8bd462d4b1434f45802",
+        "ciphertext_payload_bytes": 77594624,
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "independent_dense_max_error": 8.326672684688674e-17,
+        "index": 12,
+        "kind": "polynomial_before",
+        "label": "1:inverse_sqrt",
+        "level": 36,
+        "maximum": 0.22757911880390144,
+        "minimum": 0.02251493719707144,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:0"
+        ]
+      },
+      {
+        "array_sha256": "18527ae55633a287f020b27a157a44b32112c7bcfc5c399c66113b4fa6909df0",
+        "ciphertext_payload_bytes": 65011712,
+        "independent_dense_max_error": 5.329070518200751e-15,
+        "index": 13,
+        "kind": "polynomial_after",
+        "label": "1:inverse_sqrt",
+        "level": 30,
+        "maximum": 6.545364032696447,
+        "minimum": 2.087543910236529,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:0"
+        ]
+      },
+      {
+        "array_sha256": "fe339f0d87e8aff10d39da2bf0e465becfcd369f01ebecdf840691f2b4689b8c",
+        "ciphertext_payload_bytes": 60817408,
+        "independent_dense_max_error": 1.9984014443252818e-15,
+        "index": 14,
+        "kind": "normalize_heads_after",
+        "label": "0",
+        "level": 28,
+        "maximum": 2.4453503955694833,
+        "minimum": -2.4284359085387117,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "fe339f0d87e8aff10d39da2bf0e465becfcd369f01ebecdf840691f2b4689b8c",
+        "ciphertext_payload_bytes": 60817408,
+        "independent_dense_max_error": 1.9984014443252818e-15,
+        "index": 15,
+        "kind": "rope_before",
+        "label": "0",
+        "level": 28,
+        "maximum": 2.4453503955694833,
+        "minimum": -2.4284359085387117,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "8a6e8259251fe1e3f9f9b853a1eb4a43ae5e040e9983d36dcc36d71d016cf7f8",
+        "ciphertext_payload_bytes": 58720256,
+        "independent_dense_max_error": 1.9984014443252818e-15,
+        "index": 16,
+        "kind": "rope_after",
+        "label": "0",
+        "level": 27,
+        "maximum": 2.4696397941119685,
+        "minimum": -2.4284234846220905,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "9976d9fd53c01a60fcec7a21ea6437e8ab54ebbea2a966bc9d37c8986cdb743d",
+        "ciphertext_payload_bytes": 81788928,
+        "independent_dense_max_error": 1.1102230246251565e-16,
+        "index": 17,
+        "kind": "normalize_heads_before",
+        "label": "1",
+        "level": 38,
+        "maximum": 0.7058943023597798,
+        "minimum": -0.8310558004354348,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "196c9d615ca4f6f1ed6f0173d4a1b100ac77abdd1a2b138c0e9b75d94a036ae8",
+        "ciphertext_payload_bytes": 77594624,
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "independent_dense_max_error": 2.7755575615628914e-17,
+        "index": 18,
+        "kind": "polynomial_before",
+        "label": "2:inverse_sqrt",
+        "level": 36,
+        "maximum": 0.20176650013155398,
+        "minimum": 0.025763002779354637,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:1"
+        ]
+      },
+      {
+        "array_sha256": "b444d5e7e93cbb312d317adeb22a7f1a806b6b46e0dfacb075de41ca2813e491",
+        "ciphertext_payload_bytes": 65011712,
+        "independent_dense_max_error": 2.220446049250313e-15,
+        "index": 19,
+        "kind": "polynomial_after",
+        "label": "2:inverse_sqrt",
+        "level": 30,
+        "maximum": 6.118828900678499,
+        "minimum": 2.2410972151192916,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:1"
+        ]
+      },
+      {
+        "array_sha256": "b4c5eb2fd5e3a796c950a0691f03fd104cef9c5abb642ec81038dfd2076dd541",
+        "ciphertext_payload_bytes": 60817408,
+        "independent_dense_max_error": 6.661338147750939e-16,
+        "index": 20,
+        "kind": "normalize_heads_after",
+        "label": "1",
+        "level": 28,
+        "maximum": 1.9779985174164552,
+        "minimum": -2.2359031991024123,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "b4c5eb2fd5e3a796c950a0691f03fd104cef9c5abb642ec81038dfd2076dd541",
+        "ciphertext_payload_bytes": 60817408,
+        "independent_dense_max_error": 6.661338147750939e-16,
+        "index": 21,
+        "kind": "rope_before",
+        "label": "1",
+        "level": 28,
+        "maximum": 1.9779985174164552,
+        "minimum": -2.2359031991024123,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "29d8128470a3ba4378691413f484eb4d0ef33444f6fd595109902151c645d2d3",
+        "ciphertext_payload_bytes": 58720256,
+        "independent_dense_max_error": 6.661338147750939e-16,
+        "index": 22,
+        "kind": "rope_after",
+        "label": "1",
+        "level": 27,
+        "maximum": 1.972970734437103,
+        "minimum": -2.2359152586502473,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "8a6e8259251fe1e3f9f9b853a1eb4a43ae5e040e9983d36dcc36d71d016cf7f8",
+        "ciphertext_payload_bytes": 58720256,
+        "independent_dense_max_error": 1.9984014443252818e-15,
+        "index": 23,
+        "kind": "attention_before",
+        "label": "0",
+        "level": 27,
+        "maximum": 2.4696397941119685,
+        "minimum": -2.4284234846220905,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "65c6cc74fb71a0225497d35398847865be8f3955a05bc3ac8ef6d531a2cd08e6",
+        "ciphertext_payload_bytes": 50331648,
+        "domain": [
+          -4.0,
+          4.0
+        ],
+        "independent_dense_max_error": 1.5543122344752192e-15,
+        "index": 24,
+        "kind": "polynomial_before",
+        "label": "3:exp",
+        "level": 23,
+        "maximum": 2.108032333363145,
+        "minimum": -1.8670498157046431,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "attention:0"
+        ]
+      },
+      {
+        "array_sha256": "5fdabf8a168db60439fd68cc816044531f347d9a2e4a33d0a25145e43788e6b5",
+        "ciphertext_payload_bytes": 39845888,
+        "independent_dense_max_error": 1.7763568394002505e-15,
+        "index": 25,
+        "kind": "polynomial_after",
+        "label": "3:exp",
+        "level": 18,
+        "maximum": 8.23668893512218,
+        "minimum": 0.0,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "attention:0"
+        ]
+      },
+      {
+        "array_sha256": "a17645fa539f9b096168936d4735690e7d1662f06b6df8e2475ef538188a19b1",
+        "ciphertext_payload_bytes": 37748736,
+        "domain": [
+          0.5,
+          8.0
+        ],
+        "independent_dense_max_error": 4.440892098500626e-16,
+        "index": 26,
+        "kind": "polynomial_before",
+        "label": "4:reciprocal",
+        "level": 17,
+        "maximum": 2.669359534847247,
+        "minimum": 0.9999999999999929,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "attention:0"
+        ]
+      },
+      {
+        "array_sha256": "317d5788aaf769f2aa680f3cdb59e9d3d82d4b3775005536c7026e3c64d35536",
+        "ciphertext_payload_bytes": 27262976,
+        "independent_dense_max_error": 3.885780586188048e-16,
+        "index": 27,
+        "kind": "polynomial_after",
+        "label": "4:reciprocal",
+        "level": 12,
+        "maximum": 1.0002328784934358,
+        "minimum": 0.09497522388537613,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "attention:0"
+        ]
+      },
+      {
+        "array_sha256": "c971601dcaa32e75714a66b71270ec1ec59ee19237eaf4709ab384d296f8be19",
+        "ciphertext_payload_bytes": 20971520,
+        "independent_dense_max_error": 3.3306690738754696e-16,
+        "index": 28,
+        "kind": "attention_after",
+        "label": "0",
+        "level": 9,
+        "maximum": 0.7013399251689054,
+        "minimum": -0.5125715160167003,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "c971601dcaa32e75714a66b71270ec1ec59ee19237eaf4709ab384d296f8be19",
+        "ciphertext_payload_bytes": 20971520,
+        "independent_dense_max_error": 3.3306690738754696e-16,
+        "index": 29,
+        "kind": "linear_before",
+        "label": "3",
+        "level": 9,
+        "maximum": 0.7013399251689054,
+        "minimum": -0.5125715160167003,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "80c7105a58cbed51003a3ca101f2424a1d2e74d1992e7d60fca6c10c3b857223",
+        "ciphertext_payload_bytes": 18874368,
+        "independent_dense_max_error": 1.3877787807814457e-16,
+        "index": 30,
+        "kind": "linear_after",
+        "label": "3",
+        "level": 8,
+        "maximum": 0.18913883390139455,
+        "minimum": -0.33184174683813883,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "d685b109adf80efa0a64f7c1b86f4fe2ddf33fa68d19a69fb7903774e72e6d4d",
+        "ciphertext_payload_bytes": 18874368,
+        "independent_dense_max_error": 1.1102230246251565e-16,
+        "index": 31,
+        "kind": "phase",
+        "label": "packed Qwen layer 0: attention ready",
+        "level": 8,
+        "maximum": 0.44727723637309325,
+        "minimum": -0.5366086362787541,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "d685b109adf80efa0a64f7c1b86f4fe2ddf33fa68d19a69fb7903774e72e6d4d",
+        "ciphertext_payload_bytes": 18874368,
+        "independent_dense_max_error": 1.1102230246251565e-16,
+        "index": 32,
+        "kind": "normalize_before",
+        "label": "1",
+        "level": 8,
+        "maximum": 0.44727723637309325,
+        "minimum": -0.5366086362787541,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "94293c772dbb86db135a32b9ad02451ca0d8533ad1a0791ed3cf0ba04a9d5c97",
+        "ciphertext_payload_bytes": 14680064,
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "independent_dense_max_error": 1.3877787807814457e-17,
+        "index": 33,
+        "kind": "polynomial_before",
+        "label": "5:inverse_sqrt",
+        "level": 6,
+        "maximum": 0.05531886859283501,
+        "minimum": 0.012135818816400199,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize:1"
+        ]
+      },
+      {
+        "array_sha256": "94293c772dbb86db135a32b9ad02451ca0d8533ad1a0791ed3cf0ba04a9d5c97",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": null,
+        "index": 34,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh starting",
+        "level": 6,
+        "maximum": 0.05531886859283501,
+        "minimum": 0.012135818816400199,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize:1",
+          "polynomial:5:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "94293c772dbb86db135a32b9ad02451ca0d8533ad1a0791ed3cf0ba04a9d5c97",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": null,
+        "index": 35,
+        "kind": "refresh_before",
+        "label": "0",
+        "level": 6,
+        "maximum": 0.05531886859283501,
+        "minimum": 0.012135818816400199,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize:1",
+          "polynomial:5:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "94293c772dbb86db135a32b9ad02451ca0d8533ad1a0791ed3cf0ba04a9d5c97",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 36,
+        "kind": "refresh_after",
+        "label": "0",
+        "level": 25,
+        "maximum": 0.05531886859283501,
+        "minimum": 0.012135818816400199,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize:1",
+          "polynomial:5:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "94293c772dbb86db135a32b9ad02451ca0d8533ad1a0791ed3cf0ba04a9d5c97",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 37,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh complete",
+        "level": 25,
+        "maximum": 0.05531886859283501,
+        "minimum": 0.012135818816400199,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize:1",
+          "polynomial:5:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "9e716af30dc68c3127f0ba2ad74bda3c897ae8f31847e24df254de0087a7c57c",
+        "ciphertext_payload_bytes": 41943040,
+        "independent_dense_max_error": 1.2434497875801753e-14,
+        "index": 38,
+        "kind": "polynomial_after",
+        "label": "5:inverse_sqrt",
+        "level": 19,
+        "maximum": 9.261827607297064,
+        "minimum": 4.291102057199166,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize:1"
+        ]
+      },
+      {
+        "array_sha256": "0248628e141d5fbe1a8f95308ea6a691a2fe7c6fc527fd93d7a6f219afa15feb",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": 6.661338147750939e-15,
+        "index": 39,
+        "kind": "normalize_after",
+        "label": "1",
+        "level": 6,
+        "maximum": 2.552341562942549,
+        "minimum": -2.776203901535846,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "0248628e141d5fbe1a8f95308ea6a691a2fe7c6fc527fd93d7a6f219afa15feb",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": 6.661338147750939e-15,
+        "index": 40,
+        "kind": "linear_before",
+        "label": "4",
+        "level": 6,
+        "maximum": 2.552341562942549,
+        "minimum": -2.776203901535846,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "68703b00c8207665b5caf946bafdbf486984a0534f003731f1909cc3becac2bf",
+        "ciphertext_payload_bytes": 12582912,
+        "independent_dense_max_error": 1.5543122344752192e-15,
+        "index": 41,
+        "kind": "linear_after",
+        "label": "4",
+        "level": 5,
+        "maximum": 0.7114813009505573,
+        "minimum": -0.8075344433003532,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "68703b00c8207665b5caf946bafdbf486984a0534f003731f1909cc3becac2bf",
+        "ciphertext_payload_bytes": 12582912,
+        "domain": [
+          -2.0,
+          2.0
+        ],
+        "independent_dense_max_error": 1.5543122344752192e-15,
+        "index": 42,
+        "kind": "polynomial_before",
+        "label": "6:silu",
+        "level": 5,
+        "maximum": 0.7114813009505573,
+        "minimum": -0.8075344433003532,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "b19afad7ba30a5efd616926730a660c54d1af75c9bc57cabce203ff14147d7b1",
+        "ciphertext_payload_bytes": 8388608,
+        "independent_dense_max_error": 8.326672684688674e-16,
+        "index": 43,
+        "kind": "polynomial_after",
+        "label": "6:silu",
+        "level": 3,
+        "maximum": 0.4579358232296434,
+        "minimum": -0.2721158126968112,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "0248628e141d5fbe1a8f95308ea6a691a2fe7c6fc527fd93d7a6f219afa15feb",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": 6.661338147750939e-15,
+        "index": 44,
+        "kind": "linear_before",
+        "label": "5",
+        "level": 6,
+        "maximum": 2.552341562942549,
+        "minimum": -2.776203901535846,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "0030b054524512eaef19abcf91e6767457c4d8595c3f25c44673f9d33636dd4f",
+        "ciphertext_payload_bytes": 12582912,
+        "independent_dense_max_error": 2.55351295663786e-15,
+        "index": 45,
+        "kind": "linear_after",
+        "label": "5",
+        "level": 5,
+        "maximum": 0.986266396679973,
+        "minimum": -0.7591924489291175,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "f002ab21893d7e6fbe4eb930096ac364275e86c18360c2bc67ade872f1e26803",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": 5.273559366969494e-16,
+        "index": 46,
+        "kind": "linear_before",
+        "label": "6",
+        "level": 2,
+        "maximum": 0.3809080204202638,
+        "minimum": -0.23762571028021434,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 3.1911935151940154e+17,
+        "stack": []
+      },
+      {
+        "array_sha256": "f002ab21893d7e6fbe4eb930096ac364275e86c18360c2bc67ade872f1e26803",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": null,
+        "index": 47,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh starting",
+        "level": 2,
+        "maximum": 0.3809080204202638,
+        "minimum": -0.23762571028021434,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 3.1911935151940154e+17,
+        "stack": [
+          "linear:6"
+        ]
+      },
+      {
+        "array_sha256": "f002ab21893d7e6fbe4eb930096ac364275e86c18360c2bc67ade872f1e26803",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": null,
+        "index": 48,
+        "kind": "refresh_before",
+        "label": "1",
+        "level": 2,
+        "maximum": 0.3809080204202638,
+        "minimum": -0.23762571028021434,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 4.0,
+        "scale": 3.1911935151940154e+17,
+        "stack": [
+          "linear:6"
+        ]
+      },
+      {
+        "array_sha256": "f002ab21893d7e6fbe4eb930096ac364275e86c18360c2bc67ade872f1e26803",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 49,
+        "kind": "refresh_after",
+        "label": "1",
+        "level": 25,
+        "maximum": 0.3809080204202638,
+        "minimum": -0.23762571028021434,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 4.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "linear:6"
+        ]
+      },
+      {
+        "array_sha256": "f002ab21893d7e6fbe4eb930096ac364275e86c18360c2bc67ade872f1e26803",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 50,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh complete",
+        "level": 25,
+        "maximum": 0.3809080204202638,
+        "minimum": -0.23762571028021434,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "linear:6"
+        ]
+      },
+      {
+        "array_sha256": "663c8bd1c02e9cb91d69baa992f604565649b8695abbefff640cf778a227fc34",
+        "ciphertext_payload_bytes": 52428800,
+        "independent_dense_max_error": 1.249000902703301e-16,
+        "index": 51,
+        "kind": "linear_after",
+        "label": "6",
+        "level": 24,
+        "maximum": 0.05965418234738554,
+        "minimum": -0.0849813131976266,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "166a01d407c3f024881983daf636eb62b24b50a58861d2ecdee83cb1b96160ce",
+        "ciphertext_payload_bytes": 18874368,
+        "independent_dense_max_error": 1.6653345369377348e-16,
+        "index": 52,
+        "kind": "phase",
+        "label": "packed Qwen layer 0: MLP ready",
+        "level": 8,
+        "maximum": 0.43515105703381013,
+        "minimum": -0.5269945246838345,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "166a01d407c3f024881983daf636eb62b24b50a58861d2ecdee83cb1b96160ce",
+        "ciphertext_payload_bytes": 18874368,
+        "independent_dense_max_error": 1.6653345369377348e-16,
+        "index": 53,
+        "kind": "normalize_before",
+        "label": "2",
+        "level": 8,
+        "maximum": 0.43515105703381013,
+        "minimum": -0.5269945246838345,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "8b7e5d991b6285dc4cc6ca97a2e35d8aaaf1c80a28e1f125cf09fc260f32f170",
+        "ciphertext_payload_bytes": 14680064,
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "independent_dense_max_error": 2.7755575615628914e-17,
+        "index": 54,
+        "kind": "polynomial_before",
+        "label": "7:inverse_sqrt",
+        "level": 6,
+        "maximum": 0.061558164707356394,
+        "minimum": 0.012783580205163259,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize:2"
+        ]
+      },
+      {
+        "array_sha256": "8b7e5d991b6285dc4cc6ca97a2e35d8aaaf1c80a28e1f125cf09fc260f32f170",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": null,
+        "index": 55,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh starting",
+        "level": 6,
+        "maximum": 0.061558164707356394,
+        "minimum": 0.012783580205163259,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize:2",
+          "polynomial:7:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "8b7e5d991b6285dc4cc6ca97a2e35d8aaaf1c80a28e1f125cf09fc260f32f170",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": null,
+        "index": 56,
+        "kind": "refresh_before",
+        "label": "2",
+        "level": 6,
+        "maximum": 0.061558164707356394,
+        "minimum": 0.012783580205163259,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize:2",
+          "polynomial:7:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "8b7e5d991b6285dc4cc6ca97a2e35d8aaaf1c80a28e1f125cf09fc260f32f170",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 57,
+        "kind": "refresh_after",
+        "label": "2",
+        "level": 25,
+        "maximum": 0.061558164707356394,
+        "minimum": 0.012783580205163259,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize:2",
+          "polynomial:7:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "8b7e5d991b6285dc4cc6ca97a2e35d8aaaf1c80a28e1f125cf09fc260f32f170",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 58,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh complete",
+        "level": 25,
+        "maximum": 0.061558164707356394,
+        "minimum": 0.012783580205163259,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize:2",
+          "polynomial:7:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "d6f0894e8c26f85f383ea590b78fcf0a1db786debe8246df1e6817e066a3a4ed",
+        "ciphertext_payload_bytes": 41943040,
+        "independent_dense_max_error": 2.042810365310288e-14,
+        "index": 59,
+        "kind": "polynomial_after",
+        "label": "7:inverse_sqrt",
+        "level": 19,
+        "maximum": 8.997403279126274,
+        "minimum": 4.038184699070066,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize:2"
+        ]
+      },
+      {
+        "array_sha256": "858732c2579fab4c1a3cf18c1784e2c97b8de4b1b8ba8d0c42eb62aed1618ba7",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": 1.2434497875801753e-14,
+        "index": 60,
+        "kind": "normalize_after",
+        "label": "2",
+        "level": 6,
+        "maximum": 2.4060082435450574,
+        "minimum": -2.937082074272606,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "858732c2579fab4c1a3cf18c1784e2c97b8de4b1b8ba8d0c42eb62aed1618ba7",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": 1.2434497875801753e-14,
+        "index": 61,
+        "kind": "linear_before",
+        "label": "7",
+        "level": 6,
+        "maximum": 2.4060082435450574,
+        "minimum": -2.937082074272606,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "3764e2b9e8623843bb712fb6512dd66071c49b97d08d483b8e2787f3ec4f5d7a",
+        "ciphertext_payload_bytes": 12582912,
+        "independent_dense_max_error": 2.220446049250313e-15,
+        "index": 62,
+        "kind": "linear_after",
+        "label": "7",
+        "level": 5,
+        "maximum": 0.785052648409426,
+        "minimum": -0.6151818381176707,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "858732c2579fab4c1a3cf18c1784e2c97b8de4b1b8ba8d0c42eb62aed1618ba7",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": 1.2434497875801753e-14,
+        "index": 63,
+        "kind": "linear_before",
+        "label": "8",
+        "level": 6,
+        "maximum": 2.4060082435450574,
+        "minimum": -2.937082074272606,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "2865a952fbd058744f4f8af6a9d3ff8b5c3c4fcf8a9928b655a9bbebda8e76cb",
+        "ciphertext_payload_bytes": 12582912,
+        "independent_dense_max_error": 1.7208456881689926e-15,
+        "index": 64,
+        "kind": "linear_after",
+        "label": "8",
+        "level": 5,
+        "maximum": 0.7070223009331777,
+        "minimum": -0.9332725692761681,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "858732c2579fab4c1a3cf18c1784e2c97b8de4b1b8ba8d0c42eb62aed1618ba7",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": 1.2434497875801753e-14,
+        "index": 65,
+        "kind": "linear_before",
+        "label": "9",
+        "level": 6,
+        "maximum": 2.4060082435450574,
+        "minimum": -2.937082074272606,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "41a8486638577a3c808ba3acf06a566cf64d32b027e92cb5d217ef3e4d618054",
+        "ciphertext_payload_bytes": 12582912,
+        "independent_dense_max_error": 3.4416913763379853e-15,
+        "index": 66,
+        "kind": "linear_after",
+        "label": "9",
+        "level": 5,
+        "maximum": 0.9549352188144876,
+        "minimum": -0.7684584400314076,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "2865a952fbd058744f4f8af6a9d3ff8b5c3c4fcf8a9928b655a9bbebda8e76cb",
+        "ciphertext_payload_bytes": 12582912,
+        "independent_dense_max_error": 1.7208456881689926e-15,
+        "index": 67,
+        "kind": "normalize_heads_before",
+        "label": "2",
+        "level": 5,
+        "maximum": 0.7070223009331777,
+        "minimum": -0.9332725692761681,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "0fcf2e3673b6d7729451360e2fbd8bcc620c38608a231cd90595ee069d8da80f",
+        "ciphertext_payload_bytes": 8388608,
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "independent_dense_max_error": 6.106226635438361e-16,
+        "index": 68,
+        "kind": "polynomial_before",
+        "label": "8:inverse_sqrt",
+        "level": 3,
+        "maximum": 0.18484233737508987,
+        "minimum": 0.021754485958361453,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:2"
+        ]
+      },
+      {
+        "array_sha256": "0fcf2e3673b6d7729451360e2fbd8bcc620c38608a231cd90595ee069d8da80f",
+        "ciphertext_payload_bytes": 8388608,
+        "independent_dense_max_error": null,
+        "index": 69,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh starting",
+        "level": 3,
+        "maximum": 0.18484233737508987,
+        "minimum": 0.021754485958361453,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:2",
+          "polynomial:8:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "0fcf2e3673b6d7729451360e2fbd8bcc620c38608a231cd90595ee069d8da80f",
+        "ciphertext_payload_bytes": 8388608,
+        "independent_dense_max_error": null,
+        "index": 70,
+        "kind": "refresh_before",
+        "label": "3",
+        "level": 3,
+        "maximum": 0.18484233737508987,
+        "minimum": 0.021754485958361453,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:2",
+          "polynomial:8:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "0fcf2e3673b6d7729451360e2fbd8bcc620c38608a231cd90595ee069d8da80f",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 71,
+        "kind": "refresh_after",
+        "label": "3",
+        "level": 25,
+        "maximum": 0.18484233737508987,
+        "minimum": 0.021754485958361453,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:2",
+          "polynomial:8:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "0fcf2e3673b6d7729451360e2fbd8bcc620c38608a231cd90595ee069d8da80f",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 72,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh complete",
+        "level": 25,
+        "maximum": 0.18484233737508987,
+        "minimum": 0.021754485958361453,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:2",
+          "polynomial:8:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "02022e160a49c9c462c1baee3c7a8890a7eef101685458da6b8833845af4ff12",
+        "ciphertext_payload_bytes": 41943040,
+        "independent_dense_max_error": 2.6645352591003757e-14,
+        "index": 73,
+        "kind": "polynomial_after",
+        "label": "8:inverse_sqrt",
+        "level": 19,
+        "maximum": 6.66440042261621,
+        "minimum": 2.3347555314429345,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize_heads:2"
+        ]
+      },
+      {
+        "array_sha256": "d7652b18d1fa96d1d57e0da06de4112ede3547dc0629a464d573a9d0b9fde17e",
+        "ciphertext_payload_bytes": 8388608,
+        "independent_dense_max_error": 7.549516567451064e-15,
+        "index": 74,
+        "kind": "normalize_heads_after",
+        "label": "2",
+        "level": 3,
+        "maximum": 2.1485482059104464,
+        "minimum": -2.3846605431989567,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "d7652b18d1fa96d1d57e0da06de4112ede3547dc0629a464d573a9d0b9fde17e",
+        "ciphertext_payload_bytes": 8388608,
+        "independent_dense_max_error": 7.549516567451064e-15,
+        "index": 75,
+        "kind": "rope_before",
+        "label": "2",
+        "level": 3,
+        "maximum": 2.1485482059104464,
+        "minimum": -2.3846605431989567,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "78a55af1fe15386af1bc9d566ab040b3138630689625f49ad8d8e3d337c19e38",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": 7.549516567451064e-15,
+        "index": 76,
+        "kind": "rope_after",
+        "label": "2",
+        "level": 2,
+        "maximum": 2.1499637521382344,
+        "minimum": -2.3846605431989567,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "41a8486638577a3c808ba3acf06a566cf64d32b027e92cb5d217ef3e4d618054",
+        "ciphertext_payload_bytes": 12582912,
+        "independent_dense_max_error": 3.4416913763379853e-15,
+        "index": 77,
+        "kind": "normalize_heads_before",
+        "label": "3",
+        "level": 5,
+        "maximum": 0.9549352188144876,
+        "minimum": -0.7684584400314076,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "3db269c665fa5a492b96ea7c81f18cdd87d170c85e724edc0069e5e7f8c72343",
+        "ciphertext_payload_bytes": 8388608,
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "independent_dense_max_error": 1.27675647831893e-15,
+        "index": 78,
+        "kind": "polynomial_before",
+        "label": "9:inverse_sqrt",
+        "level": 3,
+        "maximum": 0.1893362000461871,
+        "minimum": 0.027715963890361368,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:3"
+        ]
+      },
+      {
+        "array_sha256": "3db269c665fa5a492b96ea7c81f18cdd87d170c85e724edc0069e5e7f8c72343",
+        "ciphertext_payload_bytes": 8388608,
+        "independent_dense_max_error": null,
+        "index": 79,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh starting",
+        "level": 3,
+        "maximum": 0.1893362000461871,
+        "minimum": 0.027715963890361368,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:3",
+          "polynomial:9:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "3db269c665fa5a492b96ea7c81f18cdd87d170c85e724edc0069e5e7f8c72343",
+        "ciphertext_payload_bytes": 8388608,
+        "independent_dense_max_error": null,
+        "index": 80,
+        "kind": "refresh_before",
+        "label": "4",
+        "level": 3,
+        "maximum": 0.1893362000461871,
+        "minimum": 0.027715963890361368,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:3",
+          "polynomial:9:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "3db269c665fa5a492b96ea7c81f18cdd87d170c85e724edc0069e5e7f8c72343",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 81,
+        "kind": "refresh_after",
+        "label": "4",
+        "level": 25,
+        "maximum": 0.1893362000461871,
+        "minimum": 0.027715963890361368,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:3",
+          "polynomial:9:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "3db269c665fa5a492b96ea7c81f18cdd87d170c85e724edc0069e5e7f8c72343",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 82,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh complete",
+        "level": 25,
+        "maximum": 0.1893362000461871,
+        "minimum": 0.027715963890361368,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:3",
+          "polynomial:9:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "af607d15d2d3a2e17e8901239fa0548c14cbb8f4b29bb2a48168766718ea15e5",
+        "ciphertext_payload_bytes": 41943040,
+        "independent_dense_max_error": 2.220446049250313e-14,
+        "index": 83,
+        "kind": "polynomial_after",
+        "label": "9:inverse_sqrt",
+        "level": 19,
+        "maximum": 5.912467363121993,
+        "minimum": 2.3109232773744655,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize_heads:3"
+        ]
+      },
+      {
+        "array_sha256": "497272f080aaa09885d8d5e5b2e17a57b7a9c5c386c5e8291e931c09ff1c56a7",
+        "ciphertext_payload_bytes": 8388608,
+        "independent_dense_max_error": 6.439293542825908e-15,
+        "index": 84,
+        "kind": "normalize_heads_after",
+        "label": "3",
+        "level": 3,
+        "maximum": 2.3941119617689512,
+        "minimum": -2.23892171489635,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "497272f080aaa09885d8d5e5b2e17a57b7a9c5c386c5e8291e931c09ff1c56a7",
+        "ciphertext_payload_bytes": 8388608,
+        "independent_dense_max_error": 6.439293542825908e-15,
+        "index": 85,
+        "kind": "rope_before",
+        "label": "3",
+        "level": 3,
+        "maximum": 2.3941119617689512,
+        "minimum": -2.23892171489635,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "c935f5683f9a55bfb45320622f4e397118cb840313adebc6442dbdb4d98ca41d",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": 7.105427357601002e-15,
+        "index": 86,
+        "kind": "rope_after",
+        "label": "3",
+        "level": 2,
+        "maximum": 2.3941119617689512,
+        "minimum": -2.23892171489635,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "78a55af1fe15386af1bc9d566ab040b3138630689625f49ad8d8e3d337c19e38",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": 7.549516567451064e-15,
+        "index": 87,
+        "kind": "attention_before",
+        "label": "1",
+        "level": 2,
+        "maximum": 2.1499637521382344,
+        "minimum": -2.3846605431989567,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "c935f5683f9a55bfb45320622f4e397118cb840313adebc6442dbdb4d98ca41d",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": null,
+        "index": 88,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh starting",
+        "level": 2,
+        "maximum": 2.3941119617689512,
+        "minimum": -2.23892171489635,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "attention:1"
+        ]
+      },
+      {
+        "array_sha256": "c935f5683f9a55bfb45320622f4e397118cb840313adebc6442dbdb4d98ca41d",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": null,
+        "index": 89,
+        "kind": "refresh_before",
+        "label": "5",
+        "level": 2,
+        "maximum": 2.3941119617689512,
+        "minimum": -2.23892171489635,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 4.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "attention:1"
+        ]
+      },
+      {
+        "array_sha256": "c935f5683f9a55bfb45320622f4e397118cb840313adebc6442dbdb4d98ca41d",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 90,
+        "kind": "refresh_after",
+        "label": "5",
+        "level": 25,
+        "maximum": 2.3941119617689512,
+        "minimum": -2.23892171489635,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 4.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "attention:1"
+        ]
+      },
+      {
+        "array_sha256": "c935f5683f9a55bfb45320622f4e397118cb840313adebc6442dbdb4d98ca41d",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 91,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh complete",
+        "level": 25,
+        "maximum": 2.3941119617689512,
+        "minimum": -2.23892171489635,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "attention:1"
+        ]
+      },
+      {
+        "array_sha256": "78a55af1fe15386af1bc9d566ab040b3138630689625f49ad8d8e3d337c19e38",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": null,
+        "index": 92,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh starting",
+        "level": 2,
+        "maximum": 2.1499637521382344,
+        "minimum": -2.3846605431989567,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "attention:1"
+        ]
+      },
+      {
+        "array_sha256": "78a55af1fe15386af1bc9d566ab040b3138630689625f49ad8d8e3d337c19e38",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": null,
+        "index": 93,
+        "kind": "refresh_before",
+        "label": "6",
+        "level": 2,
+        "maximum": 2.1499637521382344,
+        "minimum": -2.3846605431989567,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 4.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "attention:1"
+        ]
+      },
+      {
+        "array_sha256": "78a55af1fe15386af1bc9d566ab040b3138630689625f49ad8d8e3d337c19e38",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 94,
+        "kind": "refresh_after",
+        "label": "6",
+        "level": 25,
+        "maximum": 2.1499637521382344,
+        "minimum": -2.3846605431989567,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 4.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "attention:1"
+        ]
+      },
+      {
+        "array_sha256": "78a55af1fe15386af1bc9d566ab040b3138630689625f49ad8d8e3d337c19e38",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 95,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh complete",
+        "level": 25,
+        "maximum": 2.1499637521382344,
+        "minimum": -2.3846605431989567,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "attention:1"
+        ]
+      },
+      {
+        "array_sha256": "72715c430eed488eb692e416c19774ea23386ae2b5079221231cc4324a21bf56",
+        "ciphertext_payload_bytes": 46137344,
+        "domain": [
+          -4.0,
+          4.0
+        ],
+        "independent_dense_max_error": 5.773159728050814e-15,
+        "index": 96,
+        "kind": "polynomial_before",
+        "label": "10:exp",
+        "level": 21,
+        "maximum": 2.0839479808458377,
+        "minimum": -2.0007159462779116,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.899401157089689e+16,
+        "stack": [
+          "attention:1"
+        ]
+      },
+      {
+        "array_sha256": "7337e03c4eed702d843f98efeb1a8c9e6c3abbb12672634990748db44711cea2",
+        "ciphertext_payload_bytes": 35651584,
+        "independent_dense_max_error": 2.042810365310288e-14,
+        "index": 97,
+        "kind": "polynomial_after",
+        "label": "10:exp",
+        "level": 16,
+        "maximum": 7.515285768940151,
+        "minimum": 0.0,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "attention:1"
+        ]
+      },
+      {
+        "array_sha256": "ec3cf43cd4b736a5a96a25cefbc9f696affb115b6c26b0f8e99b534f0fca7645",
+        "ciphertext_payload_bytes": 33554432,
+        "domain": [
+          0.5,
+          8.0
+        ],
+        "independent_dense_max_error": 4.218847493575595e-15,
+        "index": 98,
+        "kind": "polynomial_before",
+        "label": "11:reciprocal",
+        "level": 15,
+        "maximum": 2.3309182951974274,
+        "minimum": 0.9999999999999929,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.899401157089689e+16,
+        "stack": [
+          "attention:1"
+        ]
+      },
+      {
+        "array_sha256": "0ffa44f8996449cb11ea94dea47812b5dabfcadb73f84c62dbc578872ef5f12d",
+        "ciphertext_payload_bytes": 23068672,
+        "independent_dense_max_error": 6.661338147750939e-16,
+        "index": 99,
+        "kind": "polynomial_after",
+        "label": "11:reciprocal",
+        "level": 10,
+        "maximum": 1.0002328784934358,
+        "minimum": 0.10939915353165183,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "attention:1"
+        ]
+      },
+      {
+        "array_sha256": "54134824cda46d6e1dd349a5fbf5dca4a65c8d55fd9b587a54a742b77aed0612",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": 2.220446049250313e-15,
+        "index": 100,
+        "kind": "attention_after",
+        "label": "1",
+        "level": 2,
+        "maximum": 0.6737067530023106,
+        "minimum": -0.5015718174817241,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "54134824cda46d6e1dd349a5fbf5dca4a65c8d55fd9b587a54a742b77aed0612",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": 2.220446049250313e-15,
+        "index": 101,
+        "kind": "linear_before",
+        "label": "10",
+        "level": 2,
+        "maximum": 0.6737067530023106,
+        "minimum": -0.5015718174817241,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "54134824cda46d6e1dd349a5fbf5dca4a65c8d55fd9b587a54a742b77aed0612",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": null,
+        "index": 102,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh starting",
+        "level": 2,
+        "maximum": 0.6737067530023106,
+        "minimum": -0.5015718174817241,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "linear:10"
+        ]
+      },
+      {
+        "array_sha256": "54134824cda46d6e1dd349a5fbf5dca4a65c8d55fd9b587a54a742b77aed0612",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": null,
+        "index": 103,
+        "kind": "refresh_before",
+        "label": "7",
+        "level": 2,
+        "maximum": 0.6737067530023106,
+        "minimum": -0.5015718174817241,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 2.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "linear:10"
+        ]
+      },
+      {
+        "array_sha256": "54134824cda46d6e1dd349a5fbf5dca4a65c8d55fd9b587a54a742b77aed0612",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 104,
+        "kind": "refresh_after",
+        "label": "7",
+        "level": 25,
+        "maximum": 0.6737067530023106,
+        "minimum": -0.5015718174817241,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 2.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "linear:10"
+        ]
+      },
+      {
+        "array_sha256": "54134824cda46d6e1dd349a5fbf5dca4a65c8d55fd9b587a54a742b77aed0612",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 105,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh complete",
+        "level": 25,
+        "maximum": 0.6737067530023106,
+        "minimum": -0.5015718174817241,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "linear:10"
+        ]
+      },
+      {
+        "array_sha256": "518c64349f67c7360aed41ef58c1bbc0ed2091314704caa78f0878afa62ddcc0",
+        "ciphertext_payload_bytes": 52428800,
+        "independent_dense_max_error": 1.2212453270876722e-15,
+        "index": 106,
+        "kind": "linear_after",
+        "label": "10",
+        "level": 24,
+        "maximum": 0.29550471489149627,
+        "minimum": -0.3271401485682153,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "08b5a4ad8503f0e8a420b7fd145e0aaaf967b536503c3c96b59f5f78fecd6c4c",
+        "ciphertext_payload_bytes": 18874368,
+        "independent_dense_max_error": 1.1379786002407855e-15,
+        "index": 107,
+        "kind": "phase",
+        "label": "packed Qwen layer 1: attention ready",
+        "level": 8,
+        "maximum": 0.5366168490099564,
+        "minimum": -0.7170838066498579,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "08b5a4ad8503f0e8a420b7fd145e0aaaf967b536503c3c96b59f5f78fecd6c4c",
+        "ciphertext_payload_bytes": 18874368,
+        "independent_dense_max_error": 1.1379786002407855e-15,
+        "index": 108,
+        "kind": "normalize_before",
+        "label": "3",
+        "level": 8,
+        "maximum": 0.5366168490099564,
+        "minimum": -0.7170838066498579,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "a688ff8e302b22348dcebfca7331505e5625cb3d76d45854aeb0647b7d70234d",
+        "ciphertext_payload_bytes": 14680064,
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "independent_dense_max_error": 1.0408340855860843e-16,
+        "index": 109,
+        "kind": "polynomial_before",
+        "label": "12:inverse_sqrt",
+        "level": 6,
+        "maximum": 0.09996141830525604,
+        "minimum": 0.03676916479786451,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize:3"
+        ]
+      },
+      {
+        "array_sha256": "a688ff8e302b22348dcebfca7331505e5625cb3d76d45854aeb0647b7d70234d",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": null,
+        "index": 110,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh starting",
+        "level": 6,
+        "maximum": 0.09996141830525604,
+        "minimum": 0.03676916479786451,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize:3",
+          "polynomial:12:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "a688ff8e302b22348dcebfca7331505e5625cb3d76d45854aeb0647b7d70234d",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": null,
+        "index": 111,
+        "kind": "refresh_before",
+        "label": "8",
+        "level": 6,
+        "maximum": 0.09996141830525604,
+        "minimum": 0.03676916479786451,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize:3",
+          "polynomial:12:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "a688ff8e302b22348dcebfca7331505e5625cb3d76d45854aeb0647b7d70234d",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 112,
+        "kind": "refresh_after",
+        "label": "8",
+        "level": 25,
+        "maximum": 0.09996141830525604,
+        "minimum": 0.03676916479786451,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize:3",
+          "polynomial:12:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "a688ff8e302b22348dcebfca7331505e5625cb3d76d45854aeb0647b7d70234d",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 113,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh complete",
+        "level": 25,
+        "maximum": 0.09996141830525604,
+        "minimum": 0.03676916479786451,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize:3",
+          "polynomial:12:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "885fe860ba23628ecfeef6735af57ad428e4a363be107c61c2e36f3c945a4dec",
+        "ciphertext_payload_bytes": 41943040,
+        "independent_dense_max_error": 5.329070518200751e-15,
+        "index": 114,
+        "kind": "polynomial_after",
+        "label": "12:inverse_sqrt",
+        "level": 19,
+        "maximum": 5.228072019984777,
+        "minimum": 3.1696593183385735,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize:3"
+        ]
+      },
+      {
+        "array_sha256": "218b46c5c5f63f9dc8a9aa90752dc7e98debba893eab3569fe3f33d730a858dc",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": 5.10702591327572e-15,
+        "index": 115,
+        "kind": "normalize_after",
+        "label": "3",
+        "level": 6,
+        "maximum": 2.518288533673879,
+        "minimum": -2.767496976393744,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "218b46c5c5f63f9dc8a9aa90752dc7e98debba893eab3569fe3f33d730a858dc",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": 5.10702591327572e-15,
+        "index": 116,
+        "kind": "linear_before",
+        "label": "11",
+        "level": 6,
+        "maximum": 2.518288533673879,
+        "minimum": -2.767496976393744,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "b48831cd5d8c1864fb79504c1d6da96e85418622bd1e1c8203b82974abd6e685",
+        "ciphertext_payload_bytes": 12582912,
+        "independent_dense_max_error": 1.609823385706477e-15,
+        "index": 117,
+        "kind": "linear_after",
+        "label": "11",
+        "level": 5,
+        "maximum": 0.8468319224441191,
+        "minimum": -0.6823116176399494,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "b48831cd5d8c1864fb79504c1d6da96e85418622bd1e1c8203b82974abd6e685",
+        "ciphertext_payload_bytes": 12582912,
+        "domain": [
+          -2.0,
+          2.0
+        ],
+        "independent_dense_max_error": 1.609823385706477e-15,
+        "index": 118,
+        "kind": "polynomial_before",
+        "label": "13:silu",
+        "level": 5,
+        "maximum": 0.8468319224441191,
+        "minimum": -0.6823116176399494,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "721d1b67a64209097481f2ced0ddbf5a8176d15972172a7a5676211cd8f397c5",
+        "ciphertext_payload_bytes": 8388608,
+        "independent_dense_max_error": 9.159339953157541e-16,
+        "index": 119,
+        "kind": "polynomial_after",
+        "label": "13:silu",
+        "level": 3,
+        "maximum": 0.5681923844768649,
+        "minimum": -0.24716856086709948,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "218b46c5c5f63f9dc8a9aa90752dc7e98debba893eab3569fe3f33d730a858dc",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": 5.10702591327572e-15,
+        "index": 120,
+        "kind": "linear_before",
+        "label": "12",
+        "level": 6,
+        "maximum": 2.518288533673879,
+        "minimum": -2.767496976393744,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "a50fc26140747c252d5c380dadb4b74a4a13bae1607547966e7f294ff324f073",
+        "ciphertext_payload_bytes": 12582912,
+        "independent_dense_max_error": 1.4988010832439613e-15,
+        "index": 121,
+        "kind": "linear_after",
+        "label": "12",
+        "level": 5,
+        "maximum": 0.5921230429960525,
+        "minimum": -0.8164207697134813,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "181db0c7859440981ed65234775429455a4ddcf3569fe0f5902dcd9c3dd89c6e",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": 6.661338147750939e-16,
+        "index": 122,
+        "kind": "linear_before",
+        "label": "13",
+        "level": 2,
+        "maximum": 0.14082801580930387,
+        "minimum": -0.12514032995757882,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 3.1911935151940154e+17,
+        "stack": []
+      },
+      {
+        "array_sha256": "181db0c7859440981ed65234775429455a4ddcf3569fe0f5902dcd9c3dd89c6e",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": null,
+        "index": 123,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh starting",
+        "level": 2,
+        "maximum": 0.14082801580930387,
+        "minimum": -0.12514032995757882,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 3.1911935151940154e+17,
+        "stack": [
+          "linear:13"
+        ]
+      },
+      {
+        "array_sha256": "181db0c7859440981ed65234775429455a4ddcf3569fe0f5902dcd9c3dd89c6e",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": null,
+        "index": 124,
+        "kind": "refresh_before",
+        "label": "9",
+        "level": 2,
+        "maximum": 0.14082801580930387,
+        "minimum": -0.12514032995757882,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 4.0,
+        "scale": 3.1911935151940154e+17,
+        "stack": [
+          "linear:13"
+        ]
+      },
+      {
+        "array_sha256": "181db0c7859440981ed65234775429455a4ddcf3569fe0f5902dcd9c3dd89c6e",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 125,
+        "kind": "refresh_after",
+        "label": "9",
+        "level": 25,
+        "maximum": 0.14082801580930387,
+        "minimum": -0.12514032995757882,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 4.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "linear:13"
+        ]
+      },
+      {
+        "array_sha256": "181db0c7859440981ed65234775429455a4ddcf3569fe0f5902dcd9c3dd89c6e",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 126,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh complete",
+        "level": 25,
+        "maximum": 0.14082801580930387,
+        "minimum": -0.12514032995757882,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "linear:13"
+        ]
+      },
+      {
+        "array_sha256": "2a651324a98fa6fde3e91a56be776d2798e4164b3e95a0bd09a209cf4cb082be",
+        "ciphertext_payload_bytes": 52428800,
+        "independent_dense_max_error": 1.0061396160665481e-16,
+        "index": 127,
+        "kind": "linear_after",
+        "label": "13",
+        "level": 24,
+        "maximum": 0.033362762386571126,
+        "minimum": -0.04322228282632234,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "81a170ad489ca9bd3fb534edf4ec3558b13bfa3a397b5efff4a5f82292b219e5",
+        "ciphertext_payload_bytes": 18874368,
+        "independent_dense_max_error": 1.124100812432971e-15,
+        "index": 128,
+        "kind": "phase",
+        "label": "packed Qwen layer 1: MLP ready",
+        "level": 8,
+        "maximum": 0.5387333853803928,
+        "minimum": -0.7408542588760574,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "81a170ad489ca9bd3fb534edf4ec3558b13bfa3a397b5efff4a5f82292b219e5",
+        "ciphertext_payload_bytes": 18874368,
+        "independent_dense_max_error": 1.124100812432971e-15,
+        "index": 129,
+        "kind": "normalize_before",
+        "label": "4",
+        "level": 8,
+        "maximum": 0.5387333853803928,
+        "minimum": -0.7408542588760574,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "9008b05d03b30c5ef37460bdc5053984fba04ce33f1d0ad884805a3fb97601e4",
+        "ciphertext_payload_bytes": 14680064,
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "independent_dense_max_error": 9.71445146547012e-17,
+        "index": 130,
+        "kind": "polynomial_before",
+        "label": "14:inverse_sqrt",
+        "level": 6,
+        "maximum": 0.10114141501292467,
+        "minimum": 0.039669263000876615,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize:4"
+        ]
+      },
+      {
+        "array_sha256": "9008b05d03b30c5ef37460bdc5053984fba04ce33f1d0ad884805a3fb97601e4",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": null,
+        "index": 131,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh starting",
+        "level": 6,
+        "maximum": 0.10114141501292467,
+        "minimum": 0.039669263000876615,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize:4",
+          "polynomial:14:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "9008b05d03b30c5ef37460bdc5053984fba04ce33f1d0ad884805a3fb97601e4",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": null,
+        "index": 132,
+        "kind": "refresh_before",
+        "label": "10",
+        "level": 6,
+        "maximum": 0.10114141501292467,
+        "minimum": 0.039669263000876615,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize:4",
+          "polynomial:14:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "9008b05d03b30c5ef37460bdc5053984fba04ce33f1d0ad884805a3fb97601e4",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 133,
+        "kind": "refresh_after",
+        "label": "10",
+        "level": 25,
+        "maximum": 0.10114141501292467,
+        "minimum": 0.039669263000876615,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize:4",
+          "polynomial:14:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "9008b05d03b30c5ef37460bdc5053984fba04ce33f1d0ad884805a3fb97601e4",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 134,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh complete",
+        "level": 25,
+        "maximum": 0.10114141501292467,
+        "minimum": 0.039669263000876615,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize:4",
+          "polynomial:14:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "d14be123b7c3d62fd0f314619746a0fc844f6aa7896ee559f767047450ba77da",
+        "ciphertext_payload_bytes": 41943040,
+        "independent_dense_max_error": 2.042810365310288e-14,
+        "index": 135,
+        "kind": "polynomial_after",
+        "label": "14:inverse_sqrt",
+        "level": 19,
+        "maximum": 5.058906030333112,
+        "minimum": 3.1539791304464933,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize:4"
+        ]
+      },
+      {
+        "array_sha256": "04aaafc41dadb3ea51c561511d17638a8e4b44d299fb681d2b83f2a82d5de94f",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": 1.1102230246251565e-14,
+        "index": 136,
+        "kind": "normalize_after",
+        "label": "4",
+        "level": 6,
+        "maximum": 2.287708834286905,
+        "minimum": -2.9341929317402218,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "04aaafc41dadb3ea51c561511d17638a8e4b44d299fb681d2b83f2a82d5de94f",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": 1.1102230246251565e-14,
+        "index": 137,
+        "kind": "linear_before",
+        "label": "14",
+        "level": 6,
+        "maximum": 2.287708834286905,
+        "minimum": -2.9341929317402218,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "3603adda67a956c5ba1bb6034f18adb95995c035cd6871146320ad362ec1d851",
+        "ciphertext_payload_bytes": 12582912,
+        "independent_dense_max_error": 2.581268532253489e-15,
+        "index": 138,
+        "kind": "linear_after",
+        "label": "14",
+        "level": 5,
+        "maximum": 0.9205619955764308,
+        "minimum": -0.7753719509857102,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "04aaafc41dadb3ea51c561511d17638a8e4b44d299fb681d2b83f2a82d5de94f",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": 1.1102230246251565e-14,
+        "index": 139,
+        "kind": "linear_before",
+        "label": "15",
+        "level": 6,
+        "maximum": 2.287708834286905,
+        "minimum": -2.9341929317402218,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "0dc7d8e32531dea4d4017a64a50542996ed8d979786782e39d841e1a4e3ff832",
+        "ciphertext_payload_bytes": 12582912,
+        "independent_dense_max_error": 2.55351295663786e-15,
+        "index": 140,
+        "kind": "linear_after",
+        "label": "15",
+        "level": 5,
+        "maximum": 0.8749798095632111,
+        "minimum": -0.8967779831436808,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "04aaafc41dadb3ea51c561511d17638a8e4b44d299fb681d2b83f2a82d5de94f",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": 1.1102230246251565e-14,
+        "index": 141,
+        "kind": "linear_before",
+        "label": "16",
+        "level": 6,
+        "maximum": 2.287708834286905,
+        "minimum": -2.9341929317402218,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "790bb6b3543a796692be91faf70902875415bfdd0d19b640f4c8efc3a57ae0b8",
+        "ciphertext_payload_bytes": 12582912,
+        "independent_dense_max_error": 2.1094237467877974e-15,
+        "index": 142,
+        "kind": "linear_after",
+        "label": "16",
+        "level": 5,
+        "maximum": 0.8435854318480505,
+        "minimum": -0.6759128425588711,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "0dc7d8e32531dea4d4017a64a50542996ed8d979786782e39d841e1a4e3ff832",
+        "ciphertext_payload_bytes": 12582912,
+        "independent_dense_max_error": 2.55351295663786e-15,
+        "index": 143,
+        "kind": "normalize_heads_before",
+        "label": "4",
+        "level": 5,
+        "maximum": 0.8749798095632111,
+        "minimum": -0.8967779831436808,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "8cbebaad2419ae3a8f857c3efa1f475137789e78a59c791c42e12e5d1cad0cc2",
+        "ciphertext_payload_bytes": 8388608,
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "independent_dense_max_error": 1.1379786002407855e-15,
+        "index": 144,
+        "kind": "polynomial_before",
+        "label": "15:inverse_sqrt",
+        "level": 3,
+        "maximum": 0.23263263762520955,
+        "minimum": 0.014847099237876278,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:4"
+        ]
+      },
+      {
+        "array_sha256": "8cbebaad2419ae3a8f857c3efa1f475137789e78a59c791c42e12e5d1cad0cc2",
+        "ciphertext_payload_bytes": 8388608,
+        "independent_dense_max_error": null,
+        "index": 145,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh starting",
+        "level": 3,
+        "maximum": 0.23263263762520955,
+        "minimum": 0.014847099237876278,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:4",
+          "polynomial:15:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "8cbebaad2419ae3a8f857c3efa1f475137789e78a59c791c42e12e5d1cad0cc2",
+        "ciphertext_payload_bytes": 8388608,
+        "independent_dense_max_error": null,
+        "index": 146,
+        "kind": "refresh_before",
+        "label": "11",
+        "level": 3,
+        "maximum": 0.23263263762520955,
+        "minimum": 0.014847099237876278,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:4",
+          "polynomial:15:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "8cbebaad2419ae3a8f857c3efa1f475137789e78a59c791c42e12e5d1cad0cc2",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 147,
+        "kind": "refresh_after",
+        "label": "11",
+        "level": 25,
+        "maximum": 0.23263263762520955,
+        "minimum": 0.014847099237876278,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:4",
+          "polynomial:15:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "8cbebaad2419ae3a8f857c3efa1f475137789e78a59c791c42e12e5d1cad0cc2",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 148,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh complete",
+        "level": 25,
+        "maximum": 0.23263263762520955,
+        "minimum": 0.014847099237876278,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:4",
+          "polynomial:15:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "6c35dea75d8c4893d1fffef7a776ee941c5972ac2ea0e4dbc2e428e87e37c552",
+        "ciphertext_payload_bytes": 41943040,
+        "independent_dense_max_error": 2.1316282072803006e-14,
+        "index": 149,
+        "kind": "polynomial_after",
+        "label": "15:inverse_sqrt",
+        "level": 19,
+        "maximum": 8.262100275492344,
+        "minimum": 2.061488380545196,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize_heads:4"
+        ]
+      },
+      {
+        "array_sha256": "94d7dd02b8497c106c163d13018a5d6bb387b3203cce89085289f6398765a3ac",
+        "ciphertext_payload_bytes": 8388608,
+        "independent_dense_max_error": 5.773159728050814e-15,
+        "index": 150,
+        "kind": "normalize_heads_after",
+        "label": "4",
+        "level": 3,
+        "maximum": 2.3567166275837694,
+        "minimum": -2.0242077277764494,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "94d7dd02b8497c106c163d13018a5d6bb387b3203cce89085289f6398765a3ac",
+        "ciphertext_payload_bytes": 8388608,
+        "independent_dense_max_error": 5.773159728050814e-15,
+        "index": 151,
+        "kind": "rope_before",
+        "label": "4",
+        "level": 3,
+        "maximum": 2.3567166275837694,
+        "minimum": -2.0242077277764494,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "a44145fc4c17d80a340a783d925649fba22c657bec506cc3101da4cf4987dfca",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": 5.2735593669694936e-15,
+        "index": 152,
+        "kind": "rope_after",
+        "label": "4",
+        "level": 2,
+        "maximum": 2.353529461926826,
+        "minimum": -2.025087369898349,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "790bb6b3543a796692be91faf70902875415bfdd0d19b640f4c8efc3a57ae0b8",
+        "ciphertext_payload_bytes": 12582912,
+        "independent_dense_max_error": 2.1094237467877974e-15,
+        "index": 153,
+        "kind": "normalize_heads_before",
+        "label": "5",
+        "level": 5,
+        "maximum": 0.8435854318480505,
+        "minimum": -0.6759128425588711,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "60a861639f83c63171790155c59b81f72bb0f894cc8b8dbb7a16261dc4e3b793",
+        "ciphertext_payload_bytes": 8388608,
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "independent_dense_max_error": 7.494005416219807e-16,
+        "index": 154,
+        "kind": "polynomial_before",
+        "label": "16:inverse_sqrt",
+        "level": 3,
+        "maximum": 0.16764966272842588,
+        "minimum": 0.03327810544771714,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:5"
+        ]
+      },
+      {
+        "array_sha256": "60a861639f83c63171790155c59b81f72bb0f894cc8b8dbb7a16261dc4e3b793",
+        "ciphertext_payload_bytes": 8388608,
+        "independent_dense_max_error": null,
+        "index": 155,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh starting",
+        "level": 3,
+        "maximum": 0.16764966272842588,
+        "minimum": 0.03327810544771714,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:5",
+          "polynomial:16:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "60a861639f83c63171790155c59b81f72bb0f894cc8b8dbb7a16261dc4e3b793",
+        "ciphertext_payload_bytes": 8388608,
+        "independent_dense_max_error": null,
+        "index": 156,
+        "kind": "refresh_before",
+        "label": "12",
+        "level": 3,
+        "maximum": 0.16764966272842588,
+        "minimum": 0.03327810544771714,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:5",
+          "polynomial:16:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "60a861639f83c63171790155c59b81f72bb0f894cc8b8dbb7a16261dc4e3b793",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 157,
+        "kind": "refresh_after",
+        "label": "12",
+        "level": 25,
+        "maximum": 0.16764966272842588,
+        "minimum": 0.03327810544771714,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:5",
+          "polynomial:16:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "60a861639f83c63171790155c59b81f72bb0f894cc8b8dbb7a16261dc4e3b793",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 158,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh complete",
+        "level": 25,
+        "maximum": 0.16764966272842588,
+        "minimum": 0.03327810544771714,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize_heads:5",
+          "polynomial:16:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "4eec10b29a1afff2a6e29f2de9c33a2d99402022207ae191b81c106fc4c08c19",
+        "ciphertext_payload_bytes": 41943040,
+        "independent_dense_max_error": 9.769962616701378e-15,
+        "index": 159,
+        "kind": "polynomial_after",
+        "label": "16:inverse_sqrt",
+        "level": 19,
+        "maximum": 5.455175257827817,
+        "minimum": 2.429814617403557,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize_heads:5"
+        ]
+      },
+      {
+        "array_sha256": "145785dee56ee871f1733d29a0bc925faed0fbc8280030c853ba4f66990e8c0e",
+        "ciphertext_payload_bytes": 8388608,
+        "independent_dense_max_error": 3.941291737419306e-15,
+        "index": 160,
+        "kind": "normalize_heads_after",
+        "label": "5",
+        "level": 3,
+        "maximum": 2.0617424153180304,
+        "minimum": -2.2461671906470615,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "145785dee56ee871f1733d29a0bc925faed0fbc8280030c853ba4f66990e8c0e",
+        "ciphertext_payload_bytes": 8388608,
+        "independent_dense_max_error": 3.941291737419306e-15,
+        "index": 161,
+        "kind": "rope_before",
+        "label": "5",
+        "level": 3,
+        "maximum": 2.0617424153180304,
+        "minimum": -2.2461671906470615,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "ce62997abbfcec89f6b7d66d59266933a1bf463024e05096e814209ec4910874",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": 3.941291737419306e-15,
+        "index": 162,
+        "kind": "rope_after",
+        "label": "5",
+        "level": 2,
+        "maximum": 2.0626651517332957,
+        "minimum": -2.2704217953599195,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "a44145fc4c17d80a340a783d925649fba22c657bec506cc3101da4cf4987dfca",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": 5.2735593669694936e-15,
+        "index": 163,
+        "kind": "attention_before",
+        "label": "2",
+        "level": 2,
+        "maximum": 2.353529461926826,
+        "minimum": -2.025087369898349,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "ce62997abbfcec89f6b7d66d59266933a1bf463024e05096e814209ec4910874",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": null,
+        "index": 164,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh starting",
+        "level": 2,
+        "maximum": 2.0626651517332957,
+        "minimum": -2.2704217953599195,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "attention:2"
+        ]
+      },
+      {
+        "array_sha256": "ce62997abbfcec89f6b7d66d59266933a1bf463024e05096e814209ec4910874",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": null,
+        "index": 165,
+        "kind": "refresh_before",
+        "label": "13",
+        "level": 2,
+        "maximum": 2.0626651517332957,
+        "minimum": -2.2704217953599195,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 4.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "attention:2"
+        ]
+      },
+      {
+        "array_sha256": "ce62997abbfcec89f6b7d66d59266933a1bf463024e05096e814209ec4910874",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 166,
+        "kind": "refresh_after",
+        "label": "13",
+        "level": 25,
+        "maximum": 2.0626651517332957,
+        "minimum": -2.2704217953599195,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 4.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "attention:2"
+        ]
+      },
+      {
+        "array_sha256": "ce62997abbfcec89f6b7d66d59266933a1bf463024e05096e814209ec4910874",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 167,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh complete",
+        "level": 25,
+        "maximum": 2.0626651517332957,
+        "minimum": -2.2704217953599195,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "attention:2"
+        ]
+      },
+      {
+        "array_sha256": "a44145fc4c17d80a340a783d925649fba22c657bec506cc3101da4cf4987dfca",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": null,
+        "index": 168,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh starting",
+        "level": 2,
+        "maximum": 2.353529461926826,
+        "minimum": -2.025087369898349,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "attention:2"
+        ]
+      },
+      {
+        "array_sha256": "a44145fc4c17d80a340a783d925649fba22c657bec506cc3101da4cf4987dfca",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": null,
+        "index": 169,
+        "kind": "refresh_before",
+        "label": "14",
+        "level": 2,
+        "maximum": 2.353529461926826,
+        "minimum": -2.025087369898349,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 4.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "attention:2"
+        ]
+      },
+      {
+        "array_sha256": "a44145fc4c17d80a340a783d925649fba22c657bec506cc3101da4cf4987dfca",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 170,
+        "kind": "refresh_after",
+        "label": "14",
+        "level": 25,
+        "maximum": 2.353529461926826,
+        "minimum": -2.025087369898349,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 4.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "attention:2"
+        ]
+      },
+      {
+        "array_sha256": "a44145fc4c17d80a340a783d925649fba22c657bec506cc3101da4cf4987dfca",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 171,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh complete",
+        "level": 25,
+        "maximum": 2.353529461926826,
+        "minimum": -2.025087369898349,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "attention:2"
+        ]
+      },
+      {
+        "array_sha256": "55805a23f9a04195d74cd80ddd68f70b71923df67041f4f73157ea2304f7569e",
+        "ciphertext_payload_bytes": 46137344,
+        "domain": [
+          -4.0,
+          4.0
+        ],
+        "independent_dense_max_error": 5.218048215738236e-15,
+        "index": 172,
+        "kind": "polynomial_before",
+        "label": "17:exp",
+        "level": 21,
+        "maximum": 2.185710288306266,
+        "minimum": -1.261699537985822,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.899401157089689e+16,
+        "stack": [
+          "attention:2"
+        ]
+      },
+      {
+        "array_sha256": "9e8ac6c64c63a949113525b8c92e508c58afe8bb660ef0e0487e7a9ca8e05cb5",
+        "ciphertext_payload_bytes": 35651584,
+        "independent_dense_max_error": 7.993605777301127e-15,
+        "index": 173,
+        "kind": "polynomial_after",
+        "label": "17:exp",
+        "level": 16,
+        "maximum": 8.901286424254582,
+        "minimum": 0.0,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "attention:2"
+        ]
+      },
+      {
+        "array_sha256": "09c8d86c7497bd891ca403e6c7cb1330ae18b1075937c5acf379205eaa8fa2c8",
+        "ciphertext_payload_bytes": 33554432,
+        "domain": [
+          0.5,
+          8.0
+        ],
+        "independent_dense_max_error": 2.6645352591003757e-15,
+        "index": 174,
+        "kind": "polynomial_before",
+        "label": "18:reciprocal",
+        "level": 15,
+        "maximum": 2.6394024347630993,
+        "minimum": 0.9999999999999929,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.899401157089689e+16,
+        "stack": [
+          "attention:2"
+        ]
+      },
+      {
+        "array_sha256": "ec679ef65c43693fc2d1fcffbe126c03b609242996e99f0b1793594a82cfda85",
+        "ciphertext_payload_bytes": 23068672,
+        "independent_dense_max_error": 2.7755575615628914e-16,
+        "index": 175,
+        "kind": "polynomial_after",
+        "label": "18:reciprocal",
+        "level": 10,
+        "maximum": 1.0002328784934358,
+        "minimum": 0.09615728215250588,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "attention:2"
+        ]
+      },
+      {
+        "array_sha256": "bab8318ab5cedf0f97242fb2f3b5fc1a3f83a6c090d1e1a7611920356ffff69a",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": 2.581268532253489e-15,
+        "index": 176,
+        "kind": "attention_after",
+        "label": "2",
+        "level": 2,
+        "maximum": 0.8200236493199975,
+        "minimum": -0.7008985371333292,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "bab8318ab5cedf0f97242fb2f3b5fc1a3f83a6c090d1e1a7611920356ffff69a",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": 2.581268532253489e-15,
+        "index": 177,
+        "kind": "linear_before",
+        "label": "17",
+        "level": 2,
+        "maximum": 0.8200236493199975,
+        "minimum": -0.7008985371333292,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "bab8318ab5cedf0f97242fb2f3b5fc1a3f83a6c090d1e1a7611920356ffff69a",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": null,
+        "index": 178,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh starting",
+        "level": 2,
+        "maximum": 0.8200236493199975,
+        "minimum": -0.7008985371333292,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "linear:17"
+        ]
+      },
+      {
+        "array_sha256": "bab8318ab5cedf0f97242fb2f3b5fc1a3f83a6c090d1e1a7611920356ffff69a",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": null,
+        "index": 179,
+        "kind": "refresh_before",
+        "label": "15",
+        "level": 2,
+        "maximum": 0.8200236493199975,
+        "minimum": -0.7008985371333292,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 2.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "linear:17"
+        ]
+      },
+      {
+        "array_sha256": "bab8318ab5cedf0f97242fb2f3b5fc1a3f83a6c090d1e1a7611920356ffff69a",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 180,
+        "kind": "refresh_after",
+        "label": "15",
+        "level": 25,
+        "maximum": 0.8200236493199975,
+        "minimum": -0.7008985371333292,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 2.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "linear:17"
+        ]
+      },
+      {
+        "array_sha256": "bab8318ab5cedf0f97242fb2f3b5fc1a3f83a6c090d1e1a7611920356ffff69a",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 181,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh complete",
+        "level": 25,
+        "maximum": 0.8200236493199975,
+        "minimum": -0.7008985371333292,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "linear:17"
+        ]
+      },
+      {
+        "array_sha256": "b253549ac1687479013272ea7b83a6df037f6f6478e807768d793d620d91497a",
+        "ciphertext_payload_bytes": 52428800,
+        "independent_dense_max_error": 1.0547118733938987e-15,
+        "index": 182,
+        "kind": "linear_after",
+        "label": "17",
+        "level": 24,
+        "maximum": 0.2430601486521456,
+        "minimum": -0.23467872180483737,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "16f660a55e6ee4b8a276798928e135e7bce127bbdda520ef86bb19073a2308f8",
+        "ciphertext_payload_bytes": 18874368,
+        "independent_dense_max_error": 1.7208456881689926e-15,
+        "index": 183,
+        "kind": "phase",
+        "label": "packed Qwen layer 2: attention ready",
+        "level": 8,
+        "maximum": 0.6803080503364475,
+        "minimum": -0.6094386095937062,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "16f660a55e6ee4b8a276798928e135e7bce127bbdda520ef86bb19073a2308f8",
+        "ciphertext_payload_bytes": 18874368,
+        "independent_dense_max_error": 1.7208456881689926e-15,
+        "index": 184,
+        "kind": "normalize_before",
+        "label": "5",
+        "level": 8,
+        "maximum": 0.6803080503364475,
+        "minimum": -0.6094386095937062,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "e3e408671e6a1e0ce4ae8d3fe7e2ed8a7b8af6b1e2c7e4ab97c814c2946c30f1",
+        "ciphertext_payload_bytes": 14680064,
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "independent_dense_max_error": 8.326672684688674e-17,
+        "index": 185,
+        "kind": "polynomial_before",
+        "label": "19:inverse_sqrt",
+        "level": 6,
+        "maximum": 0.11319825458852623,
+        "minimum": 0.038365540374617674,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize:5"
+        ]
+      },
+      {
+        "array_sha256": "e3e408671e6a1e0ce4ae8d3fe7e2ed8a7b8af6b1e2c7e4ab97c814c2946c30f1",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": null,
+        "index": 186,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh starting",
+        "level": 6,
+        "maximum": 0.11319825458852623,
+        "minimum": 0.038365540374617674,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize:5",
+          "polynomial:19:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "e3e408671e6a1e0ce4ae8d3fe7e2ed8a7b8af6b1e2c7e4ab97c814c2946c30f1",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": null,
+        "index": 187,
+        "kind": "refresh_before",
+        "label": "16",
+        "level": 6,
+        "maximum": 0.11319825458852623,
+        "minimum": 0.038365540374617674,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize:5",
+          "polynomial:19:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "e3e408671e6a1e0ce4ae8d3fe7e2ed8a7b8af6b1e2c7e4ab97c814c2946c30f1",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 188,
+        "kind": "refresh_after",
+        "label": "16",
+        "level": 25,
+        "maximum": 0.11319825458852623,
+        "minimum": 0.038365540374617674,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize:5",
+          "polynomial:19:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "e3e408671e6a1e0ce4ae8d3fe7e2ed8a7b8af6b1e2c7e4ab97c814c2946c30f1",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 189,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh complete",
+        "level": 25,
+        "maximum": 0.11319825458852623,
+        "minimum": 0.038365540374617674,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize:5",
+          "polynomial:19:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "dab07458881f48044e6e6d784fea68be8fcbda53ceffde322b9e1fbc2be6dcf6",
+        "ciphertext_payload_bytes": 41943040,
+        "independent_dense_max_error": 1.4210854715202004e-14,
+        "index": 190,
+        "kind": "polynomial_after",
+        "label": "19:inverse_sqrt",
+        "level": 19,
+        "maximum": 5.133256607097093,
+        "minimum": 2.9985099422940875,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize:5"
+        ]
+      },
+      {
+        "array_sha256": "b35e18b220de48e81cf3a437ecbf67b8415e3d430747c3e3f04e480699603765",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": 8.021361352916756e-15,
+        "index": 191,
+        "kind": "normalize_after",
+        "label": "5",
+        "level": 6,
+        "maximum": 2.197597194885484,
+        "minimum": -2.518006743570561,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "b35e18b220de48e81cf3a437ecbf67b8415e3d430747c3e3f04e480699603765",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": 8.021361352916756e-15,
+        "index": 192,
+        "kind": "linear_before",
+        "label": "18",
+        "level": 6,
+        "maximum": 2.197597194885484,
+        "minimum": -2.518006743570561,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "7d7d3d78b2e5335fdfb089553c018f9a949403d7ef1ce0ef70a03bf1e32715b0",
+        "ciphertext_payload_bytes": 12582912,
+        "independent_dense_max_error": 2.8033131371785203e-15,
+        "index": 193,
+        "kind": "linear_after",
+        "label": "18",
+        "level": 5,
+        "maximum": 0.7082519801981747,
+        "minimum": -0.972550817171403,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "7d7d3d78b2e5335fdfb089553c018f9a949403d7ef1ce0ef70a03bf1e32715b0",
+        "ciphertext_payload_bytes": 12582912,
+        "domain": [
+          -2.0,
+          2.0
+        ],
+        "independent_dense_max_error": 2.8033131371785203e-15,
+        "index": 194,
+        "kind": "polynomial_before",
+        "label": "20:silu",
+        "level": 5,
+        "maximum": 0.7082519801981747,
+        "minimum": -0.972550817171403,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "a02abf0d76993581ab63a0a6ada58938eceb8dfd0374cbcb7f5a875dabd5ac6b",
+        "ciphertext_payload_bytes": 8388608,
+        "independent_dense_max_error": 1.6653345369377348e-15,
+        "index": 195,
+        "kind": "polynomial_after",
+        "label": "20:silu",
+        "level": 3,
+        "maximum": 0.4553955671122095,
+        "minimum": -0.29532173959930863,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "b35e18b220de48e81cf3a437ecbf67b8415e3d430747c3e3f04e480699603765",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": 8.021361352916756e-15,
+        "index": 196,
+        "kind": "linear_before",
+        "label": "19",
+        "level": 6,
+        "maximum": 2.197597194885484,
+        "minimum": -2.518006743570561,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "c81f02a2e9642823bd00fd72c44d0aba03a26eaa06c058c1e8720bd5408745cb",
+        "ciphertext_payload_bytes": 12582912,
+        "independent_dense_max_error": 3.70536934468646e-15,
+        "index": 197,
+        "kind": "linear_after",
+        "label": "19",
+        "level": 5,
+        "maximum": 0.9278039889341023,
+        "minimum": -0.7311046142541808,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "28d75e4307a38239d04fdbe9f55c4c9d19833bdad2fe0d17673431cc5e035fa1",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": 8.604228440844963e-16,
+        "index": 198,
+        "kind": "linear_before",
+        "label": "20",
+        "level": 2,
+        "maximum": 0.1829351684135131,
+        "minimum": -0.13027214289170685,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 3.1911935151940154e+17,
+        "stack": []
+      },
+      {
+        "array_sha256": "28d75e4307a38239d04fdbe9f55c4c9d19833bdad2fe0d17673431cc5e035fa1",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": null,
+        "index": 199,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh starting",
+        "level": 2,
+        "maximum": 0.1829351684135131,
+        "minimum": -0.13027214289170685,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 3.1911935151940154e+17,
+        "stack": [
+          "linear:20"
+        ]
+      },
+      {
+        "array_sha256": "28d75e4307a38239d04fdbe9f55c4c9d19833bdad2fe0d17673431cc5e035fa1",
+        "ciphertext_payload_bytes": 6291456,
+        "independent_dense_max_error": null,
+        "index": 200,
+        "kind": "refresh_before",
+        "label": "17",
+        "level": 2,
+        "maximum": 0.1829351684135131,
+        "minimum": -0.13027214289170685,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 4.0,
+        "scale": 3.1911935151940154e+17,
+        "stack": [
+          "linear:20"
+        ]
+      },
+      {
+        "array_sha256": "28d75e4307a38239d04fdbe9f55c4c9d19833bdad2fe0d17673431cc5e035fa1",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 201,
+        "kind": "refresh_after",
+        "label": "17",
+        "level": 25,
+        "maximum": 0.1829351684135131,
+        "minimum": -0.13027214289170685,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 4.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "linear:20"
+        ]
+      },
+      {
+        "array_sha256": "28d75e4307a38239d04fdbe9f55c4c9d19833bdad2fe0d17673431cc5e035fa1",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 202,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh complete",
+        "level": 25,
+        "maximum": 0.1829351684135131,
+        "minimum": -0.13027214289170685,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "linear:20"
+        ]
+      },
+      {
+        "array_sha256": "5b8a3bc72dc4089be182dd732e88d5813efa380933678c8d3cd900f780c2d0be",
+        "ciphertext_payload_bytes": 52428800,
+        "independent_dense_max_error": 2.5673907444456745e-16,
+        "index": 203,
+        "kind": "linear_after",
+        "label": "20",
+        "level": 24,
+        "maximum": 0.054844524950581314,
+        "minimum": -0.03430825537177396,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "45f33b1a7f1a2e663c028479b0201436aa319b0ac480cbe8d929574e7fc4e1cc",
+        "ciphertext_payload_bytes": 18874368,
+        "independent_dense_max_error": 1.797173521111972e-15,
+        "index": 204,
+        "kind": "phase",
+        "label": "packed Qwen layer 2: MLP ready",
+        "level": 8,
+        "maximum": 0.6884620420542572,
+        "minimum": -0.5889589958326761,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "45f33b1a7f1a2e663c028479b0201436aa319b0ac480cbe8d929574e7fc4e1cc",
+        "ciphertext_payload_bytes": 18874368,
+        "independent_dense_max_error": 1.797173521111972e-15,
+        "index": 205,
+        "kind": "normalize_before",
+        "label": "6",
+        "level": 8,
+        "maximum": 0.6884620420542572,
+        "minimum": -0.5889589958326761,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "2edfb192acf261f47b9e1e2e911050d20ee83a2578cd983267a4d520dcd56523",
+        "ciphertext_payload_bytes": 14680064,
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "independent_dense_max_error": 8.326672684688674e-17,
+        "index": 206,
+        "kind": "polynomial_before",
+        "label": "21:inverse_sqrt",
+        "level": 6,
+        "maximum": 0.11134934445631962,
+        "minimum": 0.039769890872360145,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize:6"
+        ]
+      },
+      {
+        "array_sha256": "2edfb192acf261f47b9e1e2e911050d20ee83a2578cd983267a4d520dcd56523",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": null,
+        "index": 207,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh starting",
+        "level": 6,
+        "maximum": 0.11134934445631962,
+        "minimum": 0.039769890872360145,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize:6",
+          "polynomial:21:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "2edfb192acf261f47b9e1e2e911050d20ee83a2578cd983267a4d520dcd56523",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": null,
+        "index": 208,
+        "kind": "refresh_before",
+        "label": "18",
+        "level": 6,
+        "maximum": 0.11134934445631962,
+        "minimum": 0.039769890872360145,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize:6",
+          "polynomial:21:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "2edfb192acf261f47b9e1e2e911050d20ee83a2578cd983267a4d520dcd56523",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 209,
+        "kind": "refresh_after",
+        "label": "18",
+        "level": 25,
+        "maximum": 0.11134934445631962,
+        "minimum": 0.039769890872360145,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "public_bound": 0.5,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize:6",
+          "polynomial:21:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "2edfb192acf261f47b9e1e2e911050d20ee83a2578cd983267a4d520dcd56523",
+        "ciphertext_payload_bytes": 54525952,
+        "independent_dense_max_error": null,
+        "index": 210,
+        "kind": "phase",
+        "label": "bounded homomorphic refresh complete",
+        "level": 25,
+        "maximum": 0.11134934445631962,
+        "minimum": 0.039769890872360145,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": [
+          "normalize:6",
+          "polynomial:21:inverse_sqrt"
+        ]
+      },
+      {
+        "array_sha256": "1df37d70f361727621328f8f91d35b6face9a734b8f01e77ec2d2fbe7a136f89",
+        "ciphertext_payload_bytes": 41943040,
+        "independent_dense_max_error": 8.881784197001252e-15,
+        "index": 211,
+        "kind": "polynomial_after",
+        "label": "21:inverse_sqrt",
+        "level": 19,
+        "maximum": 5.053267602250906,
+        "minimum": 3.0221726891367693,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": [
+          "normalize:6"
+        ]
+      },
+      {
+        "array_sha256": "bfe0d7d578dc93988f9f9adb39a73cff996ea92cf943f2a5ff44afbe40066856",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": 8.298917109073045e-15,
+        "index": 212,
+        "kind": "normalize_after",
+        "label": "6",
+        "level": 6,
+        "maximum": 2.3457834545594043,
+        "minimum": -2.380045433130706,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "bfe0d7d578dc93988f9f9adb39a73cff996ea92cf943f2a5ff44afbe40066856",
+        "ciphertext_payload_bytes": 14680064,
+        "independent_dense_max_error": 8.298917109073045e-15,
+        "index": 213,
+        "kind": "linear_before",
+        "label": "21",
+        "level": 6,
+        "maximum": 2.3457834545594043,
+        "minimum": -2.380045433130706,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.8994011570896904e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "deed8a0b2f0e4a2d59386c438d24b45d42ef920465dc738ab0a4e6715e555474",
+        "ciphertext_payload_bytes": 12582912,
+        "independent_dense_max_error": 5.9396931817445875e-15,
+        "index": 214,
+        "kind": "linear_after",
+        "label": "21",
+        "level": 5,
+        "maximum": 2.549424125901867,
+        "minimum": -1.451974063497092,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      },
+      {
+        "array_sha256": "deed8a0b2f0e4a2d59386c438d24b45d42ef920465dc738ab0a4e6715e555474",
+        "ciphertext_payload_bytes": 12582912,
+        "independent_dense_max_error": 5.9396931817445875e-15,
+        "index": 215,
+        "kind": "output",
+        "label": "logits",
+        "level": 5,
+        "maximum": 2.549424125901867,
+        "minimum": -1.451974063497092,
+        "nsd": 1,
+        "periodicity_max_error": 0.0,
+        "scale": 6.89940115708969e+16,
+        "stack": []
+      }
+    ],
+    "unpaired_dense_records": []
+  },
+  "grant_sha256": "bfbbd41e28f433c1ee46a9e8a2798d3bfc4314e7b0e13a33e6d56f8e543481e5",
+  "key_generation": false,
+  "passed": true,
+  "pgid": 86804,
+  "pid": 86804,
+  "pretrained_model": false,
+  "runtime_origins": {
+    "numpy": {
+      "file": "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/numpy/__init__.py",
+      "spec": "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/numpy/__init__.py"
+    }
+  },
+  "runtime_sources_after": {
+    "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/numpy/__init__.py": "09295a80660f17925ae23765ce8cbd7ff7ceae968d5f2f89349f1cb74c0b9e11",
+    "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/numpy/lib/_format_impl.py": "5d7fd66e8c78d0bd9fab82e8893609ba88f7fcd3569eaebb0748f40768e85c16",
+    "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/numpy/lib/_npyio_impl.py": "51eb4572baad1e8198f71b3488a3cbcdb81ac85aa3c15cc2708cd907198a1fb5",
+    "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/numpy/lib/format.py": "9e9274789853eee28d2b96b49423067e226ff91e23c8d86220f7996c970d5c1b"
+  },
+  "runtime_sources_before": {
+    "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/numpy/__init__.py": "09295a80660f17925ae23765ce8cbd7ff7ceae968d5f2f89349f1cb74c0b9e11",
+    "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/numpy/lib/_format_impl.py": "5d7fd66e8c78d0bd9fab82e8893609ba88f7fcd3569eaebb0748f40768e85c16",
+    "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/numpy/lib/_npyio_impl.py": "51eb4572baad1e8198f71b3488a3cbcdb81ac85aa3c15cc2708cd907198a1fb5",
+    "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/numpy/lib/format.py": "9e9274789853eee28d2b96b49423067e226ff91e23c8d86220f7996c970d5c1b"
+  },
+  "schema": "qwen-toy5-replay-outer-v1",
+  "source_after": {
+    "DESIGN.md": "6cc9d1ebbca56cb8e71d0416a5da99d25053bda3eb34ddd5144d2396b8524e93",
+    "ast_selection.json": "fcd9c15d353194bd8837f151e6fe73c770e2529749b0fd57e681dd9657cd47da",
+    "dense_reference.py": "fe7ff137f7fe85c95fd23bd491e7dfae37a365453f2d212fb9c3a9a333e2bc91",
+    "entry.py": "b684fcff348a4d357e881f873cc1e9323e6cb7c8566ef17b71407cb185c5a0b5",
+    "execution_authorization.json": "81abb146787fcf89d5484651f84ce0104d70112809054dd61a62cdf8436355ad",
+    "frozen/cadathlon/agent_pset/p4_qwen/src/reference.py": "667c8483648adcf583212b0f828347614423c1c1401807f4f9512612f74aa147",
+    "frozen/cadathlon/agent_pset/p4_qwen/src/runner.py": "3d68d20d218d8145632eed8623466ad06d86f71502fd9bff64feb5c894b3c661",
+    "frozen/cadathlon/agent_pset/p4_qwen/test/test5.in": "df67a2c4e59030d923b019c9d57a2eedd96d11ad1e4eb31bbbddee69d460c018",
+    "frozen/cadathlon/agent_pset/p4_qwen/test/test5.out": "5fd9d803b97f33233acc6d1172a91981d992c6b623c27db57ac74e3b03266585",
+    "frozen/cadathlon/common/encrypted_bounded_arithmetic.py": "94f535c40983e18a06864aa09d8216b8127187a209cdd0d7117a8eea2c393206",
+    "frozen/cadathlon/common/encrypted_bounded_transformer.py": "d951a84e5536700defe0bbea08f8e0d64b03c8e4d1136763af231255db1249ae",
+    "frozen/cadathlon/common/encrypted_packed_qwen.py": "e2739e2e7ff36d208095fd52b3e393157bc251549fe550495f6e8d6197edd58f",
+    "frozen/cadathlon/common/encrypted_packed_transformer.py": "5745ffdd852314887fa29fabd4edeb87d3d6e99560c451d6a19617515a2ed5be",
+    "frozen/cadathlon/common/encrypted_polynomial.py": "912283bab82fff445671fc97fb4e49be16204d75c3132203092bc7eca7fb059a",
+    "frozen/cadathlon/common/encrypted_refresh.py": "147f9b23615f778966765420dcfd679421831d5c88f2059c94e307bf7859e5b2",
+    "frozen/cadathlon/common/encrypted_transformer.py": "18846a05ad6076997eea70454c775a9a038c46f95b5c97687a08ac682e5501de",
+    "frozen/cadathlon/common/support.py": "458111de25dbae4418c474670cf45a2d39e8e6ba40b75c2d17ad8f96cbaaa40f",
+    "frozen/jaxite_word/bootstrapping.py": "e44f748f5ef51ec68be0f224f4d8ff1068fe6c449f09c04532900a3ac4fcfc49",
+    "frozen/jaxite_word/bsgs.py": "52a1027be9bf704fd3ffd453251d2b3136ab31a3242c12d341ca1374b1b82aed",
+    "literal_graph.py": "1eae9e82ab6c62d8a7c7b451cacd7f94a434a9ad38892d107b9eb8b9019be8d6",
+    "parent199_manifest.json": "1fbca19a43f0830f4beb9ad00659c5b79e01ea10d89aa6466801340373f210bc",
+    "prior_negative.json": "9fd72c48d93dbd651b91178f2ad6c130896a1a5a6c0deffb13e6f3493feec6f6",
+    "profile.json": "bee048004e3f62ed82e9c308841e9bed86dbc65b147374d4ec720db87492e916",
+    "proposed_run.json": "89f15a17112b9c3bf57fea9b5386ee67d2370c1b6e801cd12e6c2af0762f38b6",
+    "replay.py": "3e1079d0f8ecd7bbe01e3f19d6f682035f532f2d451febe5e12f83d4e03d2e4b",
+    "runtime_pins.json": "a696bcc87f4c3be479c56ade4046e8b50e49f5c2100d0e7ca5f1c1929b35972d",
+    "source_refs.json": "0ecd76aa6a156ac05d42b0613720a78c4883b59855b3b0f310eaa5e3343ac3c1"
+  },
+  "source_before": {
+    "DESIGN.md": "6cc9d1ebbca56cb8e71d0416a5da99d25053bda3eb34ddd5144d2396b8524e93",
+    "ast_selection.json": "fcd9c15d353194bd8837f151e6fe73c770e2529749b0fd57e681dd9657cd47da",
+    "dense_reference.py": "fe7ff137f7fe85c95fd23bd491e7dfae37a365453f2d212fb9c3a9a333e2bc91",
+    "entry.py": "b684fcff348a4d357e881f873cc1e9323e6cb7c8566ef17b71407cb185c5a0b5",
+    "execution_authorization.json": "81abb146787fcf89d5484651f84ce0104d70112809054dd61a62cdf8436355ad",
+    "frozen/cadathlon/agent_pset/p4_qwen/src/reference.py": "667c8483648adcf583212b0f828347614423c1c1401807f4f9512612f74aa147",
+    "frozen/cadathlon/agent_pset/p4_qwen/src/runner.py": "3d68d20d218d8145632eed8623466ad06d86f71502fd9bff64feb5c894b3c661",
+    "frozen/cadathlon/agent_pset/p4_qwen/test/test5.in": "df67a2c4e59030d923b019c9d57a2eedd96d11ad1e4eb31bbbddee69d460c018",
+    "frozen/cadathlon/agent_pset/p4_qwen/test/test5.out": "5fd9d803b97f33233acc6d1172a91981d992c6b623c27db57ac74e3b03266585",
+    "frozen/cadathlon/common/encrypted_bounded_arithmetic.py": "94f535c40983e18a06864aa09d8216b8127187a209cdd0d7117a8eea2c393206",
+    "frozen/cadathlon/common/encrypted_bounded_transformer.py": "d951a84e5536700defe0bbea08f8e0d64b03c8e4d1136763af231255db1249ae",
+    "frozen/cadathlon/common/encrypted_packed_qwen.py": "e2739e2e7ff36d208095fd52b3e393157bc251549fe550495f6e8d6197edd58f",
+    "frozen/cadathlon/common/encrypted_packed_transformer.py": "5745ffdd852314887fa29fabd4edeb87d3d6e99560c451d6a19617515a2ed5be",
+    "frozen/cadathlon/common/encrypted_polynomial.py": "912283bab82fff445671fc97fb4e49be16204d75c3132203092bc7eca7fb059a",
+    "frozen/cadathlon/common/encrypted_refresh.py": "147f9b23615f778966765420dcfd679421831d5c88f2059c94e307bf7859e5b2",
+    "frozen/cadathlon/common/encrypted_transformer.py": "18846a05ad6076997eea70454c775a9a038c46f95b5c97687a08ac682e5501de",
+    "frozen/cadathlon/common/support.py": "458111de25dbae4418c474670cf45a2d39e8e6ba40b75c2d17ad8f96cbaaa40f",
+    "frozen/jaxite_word/bootstrapping.py": "e44f748f5ef51ec68be0f224f4d8ff1068fe6c449f09c04532900a3ac4fcfc49",
+    "frozen/jaxite_word/bsgs.py": "52a1027be9bf704fd3ffd453251d2b3136ab31a3242c12d341ca1374b1b82aed",
+    "literal_graph.py": "1eae9e82ab6c62d8a7c7b451cacd7f94a434a9ad38892d107b9eb8b9019be8d6",
+    "parent199_manifest.json": "1fbca19a43f0830f4beb9ad00659c5b79e01ea10d89aa6466801340373f210bc",
+    "prior_negative.json": "9fd72c48d93dbd651b91178f2ad6c130896a1a5a6c0deffb13e6f3493feec6f6",
+    "profile.json": "bee048004e3f62ed82e9c308841e9bed86dbc65b147374d4ec720db87492e916",
+    "proposed_run.json": "89f15a17112b9c3bf57fea9b5386ee67d2370c1b6e801cd12e6c2af0762f38b6",
+    "replay.py": "3e1079d0f8ecd7bbe01e3f19d6f682035f532f2d451febe5e12f83d4e03d2e4b",
+    "runtime_pins.json": "a696bcc87f4c3be479c56ade4046e8b50e49f5c2100d0e7ca5f1c1929b35972d",
+    "source_refs.json": "0ecd76aa6a156ac05d42b0613720a78c4883b59855b3b0f310eaa5e3343ac3c1"
+  },
+  "source_manifest_sha256": "ecd56b237be287c8357788880a29f47426e9dc387487cd61c03b389f30783cba"
+}

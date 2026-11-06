@@ -1,0 +1,74 @@
+FF..                                                                     [100%]
+=================================== FAILURES ===================================
+____ test_callback_wrapper_replacement_rejected_before_invocation[refresh] _____
+
+method = 'refresh'
+
+    @pytest.mark.parametrize('method',['refresh','check'])
+    def test_callback_wrapper_replacement_rejected_before_invocation(method):
+        holder={};calls=[];observed={};payload_refs=[]
+        def callback(label,value,metadata):
+            if label!='K2.normalized_t.refresh':return
+            owner=holder['owner'];binding=owner.refresh_binding
+            observed['replaced_at']=label;observed['refreshes_at_replacement']=len(holder['refresh'].calls)
+            payload_refs.append(weakref.ref(value.polynomial))
+            if method=='refresh':
+                def replacement(source,*,public_bound):
+                    calls.append(dict(method='refresh',bound=public_bound,source_level=source.level))
+                    return value # Valid callback-provided L25 metadata, wrong later mathematical value.
+            else:
+                def replacement():calls.append(dict(method='check'))
+            setattr(binding,method,replacement)
+        a,r,o,source=construct(callback);holder.update(owner=o,refresh=r)
+        source_payload=source.polynomial;original=source_payload.copy();caught=None;result=None
+        try:result=o.evaluate_tile(source,query_tile=0)
+        except BaseException as error:caught=error
+        observed.update(rejected=isinstance(caught,ValueError),error_type=type(caught).__name__ if caught else None,
+            replacement_invocations=len(calls),actual_refresh_calls=len(r.calls),normal_return=result is not None,
+            active_cleared=o._active is False,last_run_clear=o.last_run is None,
+            source_payload_retained=source.polynomial is source_payload,source_unchanged=bool(np.array_equal(source.polynomial,original)))
+        (HERE/f'{method}-observation.json').write_text(json.dumps(observed,indent=2)+'\n')
+>       assert isinstance(caught,ValueError), 'callback wrapper mutation was not rejected by the actual unbatched owner'
+E       AssertionError: callback wrapper mutation was not rejected by the actual unbatched owner
+E       assert False
+E        +  where False = isinstance(None, ValueError)
+
+test_wrapper_callback.py:54: AssertionError
+_____ test_callback_wrapper_replacement_rejected_before_invocation[check] ______
+
+method = 'check'
+
+    @pytest.mark.parametrize('method',['refresh','check'])
+    def test_callback_wrapper_replacement_rejected_before_invocation(method):
+        holder={};calls=[];observed={};payload_refs=[]
+        def callback(label,value,metadata):
+            if label!='K2.normalized_t.refresh':return
+            owner=holder['owner'];binding=owner.refresh_binding
+            observed['replaced_at']=label;observed['refreshes_at_replacement']=len(holder['refresh'].calls)
+            payload_refs.append(weakref.ref(value.polynomial))
+            if method=='refresh':
+                def replacement(source,*,public_bound):
+                    calls.append(dict(method='refresh',bound=public_bound,source_level=source.level))
+                    return value # Valid callback-provided L25 metadata, wrong later mathematical value.
+            else:
+                def replacement():calls.append(dict(method='check'))
+            setattr(binding,method,replacement)
+        a,r,o,source=construct(callback);holder.update(owner=o,refresh=r)
+        source_payload=source.polynomial;original=source_payload.copy();caught=None;result=None
+        try:result=o.evaluate_tile(source,query_tile=0)
+        except BaseException as error:caught=error
+        observed.update(rejected=isinstance(caught,ValueError),error_type=type(caught).__name__ if caught else None,
+            replacement_invocations=len(calls),actual_refresh_calls=len(r.calls),normal_return=result is not None,
+            active_cleared=o._active is False,last_run_clear=o.last_run is None,
+            source_payload_retained=source.polynomial is source_payload,source_unchanged=bool(np.array_equal(source.polynomial,original)))
+        (HERE/f'{method}-observation.json').write_text(json.dumps(observed,indent=2)+'\n')
+>       assert isinstance(caught,ValueError), 'callback wrapper mutation was not rejected by the actual unbatched owner'
+E       AssertionError: callback wrapper mutation was not rejected by the actual unbatched owner
+E       assert False
+E        +  where False = isinstance(None, ValueError)
+
+test_wrapper_callback.py:54: AssertionError
+=========================== short test summary info ============================
+FAILED test_wrapper_callback.py::test_callback_wrapper_replacement_rejected_before_invocation[refresh]
+FAILED test_wrapper_callback.py::test_callback_wrapper_replacement_rejected_before_invocation[check]
+2 failed, 2 passed in 1.39s

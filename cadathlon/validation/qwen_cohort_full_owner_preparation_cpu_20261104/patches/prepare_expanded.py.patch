@@ -1,0 +1,23 @@
+--- parent199/prepare_expanded.py
++++ current208/prepare_expanded.py
+@@ -7,8 +7,9 @@
+ import argparse,hashlib,importlib.abc,importlib.util,json,os,site,stat,sys,sysconfig,time,xml.etree.ElementTree as ET
+ 
+ TESTS=('test_expanded_contract.py','test_expanded_fixture.py','test_full_plan.py','test_full_owner.py',
+-       'test_profile.py','test_setup_scope.py','test_full_callback_negative.py','test_full_returned.py','test_full_entry_failure.py','test_wrapper_callback.py')
+-EXPECTED_TESTS=180
++       'test_profile.py','test_setup_scope.py','test_full_callback_negative.py','test_full_returned.py','test_full_entry_failure.py','test_wrapper_callback.py',
++       'test_softmax_cohorts.py','test_cohort_binding_review.py','test_binding_call_order.py','test_cohort_full_integration.py','test_cohort_full_plan.py')
++EXPECTED_TESTS=330
+ FORBIDDEN=('jax','jaxlib','torch','transformers','safetensors','tokenizers','tensorflow','flax','torch_xla','libtpu')
+ HISTORICAL=('collect_focused','collect_public','collect_tail','verify_public','verify_tail','audit_public','apply_successor')
+ SYNTHETIC=('jaxite_word','jaxite_word.bootstrapping','encrypted_packed_qwen','encrypted_refresh','support')
+@@ -235,7 +236,7 @@
+         code=pytest.main(['-q','-s','-p','no:cacheprovider','--noconftest','--confcutdir='+str(root),'-c','/dev/null','-o','log_file='+str(out/'pytest.log'),*[str(root/n) for n in TESTS],'--rootdir='+str(root),'--junitxml='+str(out/'tests.xml')])
+         report['test_exit_code']=int(code);rows=list(ET.parse(out/'tests.xml').getroot().iter('testcase'))
+         report['tests']=dict(tests=len(rows),failures=sum(x.find('failure')is not None for x in rows),errors=sum(x.find('error')is not None for x in rows),skipped=sum(x.find('skipped')is not None for x in rows))
+-        if int(code)!=0 or report['tests']!=dict(tests=EXPECTED_TESTS,failures=0,errors=0,skipped=0):raise ValueError('all180 selected checks required')
++        if int(code)!=0 or report['tests']!=dict(tests=EXPECTED_TESTS,failures=0,errors=0,skipped=0):raise ValueError('all330 selected checks required')
+         report['synthetic_component_tests_completed']=True
+         import plan_full
+         plan=plan_full.derive();report['public_plan_sha256']=publish('public_plan.json',plan)['sha256'];report['actions_completed']=True

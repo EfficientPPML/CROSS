@@ -1,0 +1,18 @@
+Traceback (most recent call last):
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/owned_child.py", line 111, in <module>
+    try:main()
+        ~~~~^^
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/owned_child.py", line 76, in main
+    detail=importlib.import_module(name).run(fixture,case)
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/cases_process.py", line 270, in run
+    return _evidence_cap(f)
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/cases_process.py", line 47, in _evidence_cap
+    owner.write("report.json", raw)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/runtime/keygen_output.py", line 167, in write
+    fd=os.open(name,os.O_RDWR|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW|os.O_CLOEXEC,0o600,dir_fd=self.fd)
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/owned_child.py", line 35, in audit
+    DENIED.append(['outside_owned_write',path]);raise PermissionError('child writes limited to its own fixture/result root')
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: child writes limited to its own fixture/result root
+final source/origin restoration: AssertionError()

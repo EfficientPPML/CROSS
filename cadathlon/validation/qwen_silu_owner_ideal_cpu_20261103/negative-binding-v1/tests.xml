@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="4" skipped="0" tests="4" time="0.871" timestamp="2026-11-03T18:18:44.818883+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_binding_guard" name="test_binding_accessor_replacement_rejected_before_next_primitive[entry-refresh]" time="0.188"><failure message="Failed: DID NOT RAISE ValueError">name = 'refresh', phase = 'entry'
+
+    @pytest.mark.parametrize('name',['refresh','check'])
+    @pytest.mark.parametrize('phase',['entry','first'])
+    def test_binding_accessor_replacement_rejected_before_next_primitive(name,phase):
+        marks=[]
+        def replace():
+            original=getattr(o.refresh_binding,name)
+            setattr(o.refresh_binding,name,lambda *args,**kwargs:original(*args,**kwargs))
+            marks.append(dict(a.calls))
+        def progress(label,value,metadata):
+            if phase=='first' and label=='map':replace()
+        o,a,r=owner(3,progress=progress)
+        if phase=='entry':replace()
+&gt;       with pytest.raises(ValueError,match='accessor|primitive'):o.evaluate_tile(Value(np.zeros(65536),24),tile=0)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_binding_guard.py:19: Failed</failure></testcase><testcase classname="test_binding_guard" name="test_binding_accessor_replacement_rejected_before_next_primitive[entry-check]" time="0.185"><failure message="Failed: DID NOT RAISE ValueError">name = 'check', phase = 'entry'
+
+    @pytest.mark.parametrize('name',['refresh','check'])
+    @pytest.mark.parametrize('phase',['entry','first'])
+    def test_binding_accessor_replacement_rejected_before_next_primitive(name,phase):
+        marks=[]
+        def replace():
+            original=getattr(o.refresh_binding,name)
+            setattr(o.refresh_binding,name,lambda *args,**kwargs:original(*args,**kwargs))
+            marks.append(dict(a.calls))
+        def progress(label,value,metadata):
+            if phase=='first' and label=='map':replace()
+        o,a,r=owner(3,progress=progress)
+        if phase=='entry':replace()
+&gt;       with pytest.raises(ValueError,match='accessor|primitive'):o.evaluate_tile(Value(np.zeros(65536),24),tile=0)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_binding_guard.py:19: Failed</failure></testcase><testcase classname="test_binding_guard" name="test_binding_accessor_replacement_rejected_before_next_primitive[first-refresh]" time="0.184"><failure message="Failed: DID NOT RAISE ValueError">name = 'refresh', phase = 'first'
+
+    @pytest.mark.parametrize('name',['refresh','check'])
+    @pytest.mark.parametrize('phase',['entry','first'])
+    def test_binding_accessor_replacement_rejected_before_next_primitive(name,phase):
+        marks=[]
+        def replace():
+            original=getattr(o.refresh_binding,name)
+            setattr(o.refresh_binding,name,lambda *args,**kwargs:original(*args,**kwargs))
+            marks.append(dict(a.calls))
+        def progress(label,value,metadata):
+            if phase=='first' and label=='map':replace()
+        o,a,r=owner(3,progress=progress)
+        if phase=='entry':replace()
+&gt;       with pytest.raises(ValueError,match='accessor|primitive'):o.evaluate_tile(Value(np.zeros(65536),24),tile=0)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_binding_guard.py:19: Failed</failure></testcase><testcase classname="test_binding_guard" name="test_binding_accessor_replacement_rejected_before_next_primitive[first-check]" time="0.186"><failure message="Failed: DID NOT RAISE ValueError">name = 'check', phase = 'first'
+
+    @pytest.mark.parametrize('name',['refresh','check'])
+    @pytest.mark.parametrize('phase',['entry','first'])
+    def test_binding_accessor_replacement_rejected_before_next_primitive(name,phase):
+        marks=[]
+        def replace():
+            original=getattr(o.refresh_binding,name)
+            setattr(o.refresh_binding,name,lambda *args,**kwargs:original(*args,**kwargs))
+            marks.append(dict(a.calls))
+        def progress(label,value,metadata):
+            if phase=='first' and label=='map':replace()
+        o,a,r=owner(3,progress=progress)
+        if phase=='entry':replace()
+&gt;       with pytest.raises(ValueError,match='accessor|primitive'):o.evaluate_tile(Value(np.zeros(65536),24),tile=0)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_binding_guard.py:19: Failed</failure></testcase></testsuite></testsuites>

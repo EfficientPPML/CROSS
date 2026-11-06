@@ -1,0 +1,25 @@
+"""Source-bound CPU fake-process tests of the proposed P3 collector only."""
+from pathlib import Path
+import hashlib,io,json,os,subprocess,tarfile,time
+HERE=Path(__file__).resolve().parent
+OUTPUT=HERE/'validation-final'
+OUTPUT.mkdir(exist_ok=False)
+paths=[HERE/n for n in ('check_p3_original_six.py','process_helpers.py','test_collector.py','run_validation.py')]
+raw={p.name:p.read_bytes() for p in paths}
+before={n:hashlib.sha256(v).hexdigest() for n,v in raw.items()}
+with tarfile.open(OUTPUT/'sources.tar.gz','w:gz') as tar:
+ for name,data in raw.items():
+  info=tarfile.TarInfo(name);info.size=len(data);tar.addfile(info,io.BytesIO(data))
+command=['/home/jianming_gatech/miniconda3/envs/jaxite/bin/python','-m','pytest','-q',str(HERE/'test_collector.py'),'--junitxml='+str(OUTPUT/'junit.xml')]
+started=time.monotonic()
+with (OUTPUT/'stdout.log').open('w') as stdout,(OUTPUT/'stderr.log').open('w') as stderr:
+ result=subprocess.run(command,env=dict(os.environ,JAX_PLATFORMS='cpu',OMP_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',MKL_NUM_THREADS='1'),stdout=stdout,stderr=stderr)
+after={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}
+report=dict(scope=__doc__,passed=result.returncode==0 and before==after,returncode=result.returncode,
+ command=command,cpu_affinity=sorted(os.sched_getaffinity(0)),external_elapsed_s=time.monotonic()-started,
+ source_hashes_before=before,source_hashes_after=after,source_files_unchanged=before==after,
+ encrypted_evaluation_executed=False,baseline_calibration_executed=False,
+ reused_live_helper_sha256=hashlib.sha256(Path('/home/jianming_gatech/CROSS/cadathlon/validation/check_transformer_suite.py').read_bytes()).hexdigest())
+(OUTPUT/'report.json').write_text(json.dumps(report,indent=2)+'\n')
+print(json.dumps(report,indent=2))
+raise SystemExit(0 if report['passed'] else 1)

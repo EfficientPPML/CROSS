@@ -1,0 +1,91 @@
+{
+  "passed": true,
+  "scope": "Actual public JAX group completion on canonical residues and synthetic keys, with explicit mocked context/security metadata. No CKKSContext, keygen, encryption, decryption or secure-HE proof.",
+  "fixtures": [
+    {
+      "N": 16,
+      "Q": 14,
+      "P": 14,
+      "checks": [
+        {
+          "group": "head11",
+          "requests": [
+            63,
+            126,
+            189,
+            252,
+            315,
+            378,
+            441,
+            504,
+            567,
+            630,
+            693
+          ],
+          "comparisons": 11,
+          "mode": "digits",
+          "decompositions": 1,
+          "digit_bytes": 3584,
+          "result_bytes": 17920,
+          "equal": true
+        },
+        {
+          "group": "key15",
+          "requests": [
+            -16,
+            -32,
+            -48,
+            -64,
+            -80,
+            -96,
+            -112,
+            -128,
+            -144,
+            -160,
+            -176,
+            -192,
+            -208,
+            -224,
+            -240
+          ],
+          "comparisons": 15,
+          "mode": "digits",
+          "decompositions": 0,
+          "digit_bytes": 0,
+          "result_bytes": 0,
+          "equal": true
+        },
+        {
+          "group": "edges",
+          "requests": [
+            0,
+            -5,
+            3,
+            3,
+            -1
+          ],
+          "comparisons": 5,
+          "mode": "digits",
+          "decompositions": 1,
+          "digit_bytes": 3584,
+          "result_bytes": 7168,
+          "equal": true
+        }
+      ],
+      "input_unchanged": true,
+      "retired": true,
+      "elapsed_s": 3.157432855005027
+    }
+  ],
+  "cpu_affinity": [
+    168,
+    169,
+    170,
+    171
+  ],
+  "elapsed_s": 3.2118649640033254,
+  "total_comparisons": 31,
+  "no_context_keygen_modules_loaded": true,
+  "jax_version": "0.12.0.1",
+  "numpy_version": "2.5.4"
+}

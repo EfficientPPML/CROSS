@@ -1,0 +1,50 @@
+............................F...............                             [100%]
+=================================== FAILURES ===================================
+_______________________ test_genuine_pinned_qkv_one_row ________________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7760605b4180>
+
+    def test_genuine_pinned_qkv_one_row(monkeypatch):
+        owner,a,refresh,w,g=build(monkeypatch);rows,tiles=inputs((0,))
+        expected,domains=dense_reference(rows,w,g,0,(0,));assert all(r['passed'] for r in domains),domains
+        before=[v.polynomial.copy() for v in tiles]
+>       result=owner.evaluate(tiles)
+               ^^^^^^^^^^^^^^^^^^^^^
+
+test_join.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+checkout/cadathlon/common/encrypted_qwen_attention_join.py:243: in evaluate
+    roped=self._call(f'tile{tile}.{kind}.rope',lambda x=normalized,h=heads:self.head.rope(x,tile=tile,heads=h))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_qwen_attention_join.py:205: in _call
+    result=fn();self._join_guard();self._phase_refs={};return result
+           ^^^^
+checkout/cadathlon/common/encrypted_qwen_attention_join.py:243: in <lambda>
+    roped=self._call(f'tile{tile}.{kind}.rope',lambda x=normalized,h=heads:self.head.rope(x,tile=tile,heads=h))
+                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_qwen_head_routing.py:206: in rope
+    return self._execute((value,),1,body)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_qwen_head_routing.py:180: in _execute
+    output=body(rotate,weighted,multiply,add,keep,guard)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_qwen_head_routing.py:205: in body
+    def body(rotate,weighted,*unused):return weighted([value,rotate(value,64),rotate(value,-64)],[cs.ravel(),plus.ravel(),minus.ravel()],'rope')
+                                                             ^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = <ideal_primitives.Value object at 0x77605b547230>, shift = 64
+
+    def rotate(v,shift):
+        guard();shift%=SLOTS
+        if not shift:return v
+        counts['rotations']+=1;out=a.rotate(v,shift)
+>       if self._fingerprint(out)[0:2]!=self._fingerprint(v)[0:2]:raise ValueError('rotation changed metadata')
+                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       ValueError: rotation changed metadata
+E       entered attention failure: borrowed owners/arrays quarantined; outer key loader must also quarantine until process exit
+
+checkout/cadathlon/common/encrypted_qwen_head_routing.py:163: ValueError
+=========================== short test summary info ============================
+FAILED test_join.py::test_genuine_pinned_qkv_one_row - ValueError: rotation c...
+1 failed, 43 passed in 17.70s

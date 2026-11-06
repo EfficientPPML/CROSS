@@ -1,0 +1,128 @@
+--- /tmp/qwen-toy5-actual-checkpoint-runtime-20261104/parent/q5_checkpoint_roles.py
++++ q5_checkpoint_roles.py
+@@ -1,6 +1,6 @@
+-"""Proposed serial role composition with explicit trusted recording seams.
+-
+-No actual role adapter/grant/bootstrap is selected. The pure envelope contract
++"""Q5 serial role composition with source-fixed adapter and explicit recording seams.
++
++Actual entries still deny. The retained owner and pure envelope contract
+ and bodies below are for source review and later focused recording proof only.
+ No constructor or self-consistent bytes here constitute execution authority.
+ """
+@@ -92,45 +92,59 @@
+         _ACTIVE=None
+         return False
+ 
+-def server_recording(np,loader,weights,input_owner_factory,dependencies,publisher_factory,*,admission_check):
+-    """Original graph plus retained export owner; future real factories unselected.
+-
+-    Full setup/source/key/model/input public admission is a required explicit
+-    trusted seam in recording tests. It must precede loader construction.
++def server_bound(np,loader,weight_owner_factory,input_owner_factory,dependencies,publisher_factory,*,admission_check):
++    """Concrete adapters select this ownership body; actual factory remains denied.
++
++    All factories are trusted recording seams unless separately source-selected
++    by the exact runtime. Partial returned owners are retained before accessors.
++    Original cleanup and late guards execute inside the entered key scope.
+     """
+     from q5_checkpoint_arithmetic import exercise
+-    admission_check();captured=(loader,publisher_factory,input_owner_factory,admission_check);primary=None;publisher=None;input_owner=None
++    from qwen_finalizer import Finalizer
++    admission_check();captured=(loader,weight_owner_factory,input_owner_factory,publisher_factory,admission_check)
++    owners=[];methods=[];retired=set();primary=None;result=None;raw=None;weights=None;original_input=None
+     with SerialRole('server'):
+         with loader()as handle:
+             original_ctx=handle.ctx;handle_check=handle.check;handle_check()
+-            pub_close=None;pub_finish=None;pub_checkpoint=None;input_close=None
++            def acquire(owner,names):
++                owners.append(owner);row={};methods.append(row);row['close']=owner.close
++                for name in names:row[name]=getattr(owner,name)
++                if any(not callable(fn)for fn in row.values()):raise TypeError('original owner callbacks required')
++                return row
++            def guard(*,live=True):
++                admission_check();handle_check()
++                if handle.ctx is not original_ctx or not same_accessor(handle.check,handle_check):raise ValueError('original borrowed key context changed')
++                for i,(owner,row)in enumerate(zip(owners,methods)):
++                    for name,method in row.items():
++                        if not same_accessor(getattr(owner,name),method):raise ValueError('original role owner callback changed')
++                    if live and i not in retired and 'check'in row:row['check']()
++                if live and original_input is not None and input_owner.value is not original_input:raise ValueError('original input ciphertext changed')
++                if live and weights is not None and weight_owner.weights is not weights:raise ValueError('original public weight owner changed')
+             try:
+-                input_owner=input_owner_factory(handle);input_close=input_owner.close
+-                input_load=input_owner.load;input_check=input_owner.check;input_load();input_check();original_input=input_owner.value
+-                publisher=publisher_factory();pub_close=publisher.close;pub_finish=publisher.finish;pub_checkpoint=publisher.checkpoint
+-                def check():
+-                    admission_check();handle_check();input_check()
+-                    if input_owner.value is not original_input or not same_accessor(input_owner.close,input_close)or not same_accessor(input_owner.check,input_check)or not same_accessor(input_owner.load,input_load):raise ValueError('original input ciphertext owner changed')
+-                    if handle.ctx is not original_ctx or not same_accessor(handle.check,handle_check):raise ValueError('borrowed key context/check changed')
+-                    for name,fn in [('close',pub_close),('finish',pub_finish),('checkpoint',pub_checkpoint)]:
+-                        if not same_accessor(getattr(publisher,name),fn):raise ValueError('original publisher callback replaced')
+-                def checkpoint(index,value,row):
+-                    check();pub_checkpoint(index,value,row);check()
+-                value=original_input;input_check()
+-                result=exercise(original_ctx,value,weights,checkpoint=checkpoint,dependencies=dependencies)
+-                input_check();check();raw=pub_finish(result);check()
+-                return raw
+-            except BaseException as error:
+-                primary=protect_body(error);_QUARANTINE.append((captured,handle,original_ctx,input_owner,publisher,primary));raise
++                selected_dependencies=dependencies(handle)if callable(dependencies)else dependencies
++                weight_owner=weight_owner_factory(handle);weight_methods=acquire(weight_owner,('load','check'))
++                weights=weight_methods['load']();weight_methods['check']()
++                input_owner=input_owner_factory(handle);input_methods=acquire(input_owner,('load','check'))
++                original_input=input_methods['load']();input_methods['check']()
++                publisher=publisher_factory();pub=acquire(publisher,('check','finish','checkpoint'));guard()
++                def checkpoint(index,value,row):guard();pub['checkpoint'](index,value,row);guard()
++                result=exercise(original_ctx,original_input,weights,checkpoint=checkpoint,dependencies=selected_dependencies)
++                guard();raw=pub['finish'](result);guard()
++            except BaseException as error:primary=protect_body(error)
+             finally:
+-                actions=[]
+-                if pub_close is not None:actions.append(('original exporter close before key scope',lambda:pub_close(primary),publisher))
+-                if input_close is not None:actions.append(('original input consumer close before key scope',lambda:input_close(primary),input_owner))
+-                finish(primary,actions)
+-                # Any failed final close escapes through the ENTERED loader;
+-                #its matching shared cleanup policy retains all key backings.
+-
+-def client_recording(np,public,private_loader,weights,embeddings,rules,reference_root,*,admission_check):
++                originals=tuple(owners);callbacks=tuple(dict(row)for row in methods);final=Finalizer({},primary)
++                final.attempt('original owner binding before cleanup',lambda:guard(live=False))
++                for i in reversed(range(len(callbacks))):
++                    close=callbacks[i].get('close')
++                    if close is not None:final.attempt('original role consumer close',lambda close=close:close(primary))
++                    retired.add(i);final.attempt('original bindings after cleanup',lambda:guard(live=False))
++                error=final.selected()
++                if error is not None:
++                    _QUARANTINE.append((captured,handle,original_ctx,originals,callbacks,weights,original_input,result,raw,error));raise error
++            if raw is None:raise RuntimeError('server did not complete original47 checkpoint manifest')
++            guard(live=False);return raw
++
++def client_bound(np,public,private_loader,weights,embeddings,rules,reference_root,*,admission_check,failure_note=None):
+     """Full public auth before private; fail-fast decoding with whole-owner quarantine.
+ 
+     Expected private-handle API is a source proposal: check(), ctx,
+@@ -178,13 +192,22 @@
+                         results.append(diagnostics(np,snapshot,dense[index],index))
+                     except BaseException as error:
+                         body=protect_body(error)
++                        if failure_note is not None:
++                            finish(body,[('owned public failure checkpoint note',lambda:failure_note(index,type(error).__name__),failure_note)])
+                         _QUARANTINE.append((handle,ctx,decode,factory,tuple(retained),tuple(results),index,body))
+                         # Includes known ApproximationErrorTooHigh: stop, retain,
+                         #and cross the key scope. No continue/normal-failure
+                         #relabeling before an explicit future cleanup policy.
+                         raise
+-                    finally:finish(body,[('original ciphertext retirement before keys',lambda:close(body),owner)])
++                    finally:
++                        def retired_binding():
++                            guard()
++                            if not same_accessor(owner.close,close)or not same_accessor(owner.load,load)or not same_accessor(owner.check,owner_check):raise ValueError('original consumer callback changed during retirement')
++                        finish(body,[('original ciphertext retirement before keys',lambda:close(body),owner),
++                                     ('original bindings after ciphertext retirement',retired_binding,(handle,ctx,owner))])
+                     retained.pop();guard()
++                # A final callback failure must cross the still-entered key loader.
++                guard()
+             gate=original_final_gate(np,reference_root,snapshot)
+             return dict(complete=True,decoded_records=47,metadata_replay=replay,dense=dense_info,diagnostics=results,
+                         original_numeric_gate_evaluated=True,original_final_gate=gate,actual_execution_authorized=False)

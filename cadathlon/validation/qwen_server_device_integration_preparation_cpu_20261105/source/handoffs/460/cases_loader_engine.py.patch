@@ -1,0 +1,39 @@
+--- parent459/cases_loader_engine.py
++++ successor460/cases_loader_engine.py
+@@ -90,6 +90,15 @@
+     env.profile=profile;env.p=profile.parameters;env.rotations=profile.rotations
+     assert len(profile.arrays)==335 and len(env.rotations)==166
+     p=env.p;env.catalog=object()
++    # Actual ServerBackend.parameter_files evaluates this property before the
++    # recorded constructor. The shared model proof is deliberately unadmitted;
++    # retain only an explicit metadata marker, never authenticate model bodies.
++    original_stores=NS(raw=fc.canonical({'recording_model_stores':True}))
++    def model_stores(value):
++        assert value is f.model;return original_stores
++    f.patch(f.model_module.ModelAdmission,'stores',property(model_stores),
++        'L/E model-store metadata property recording before snapshot; no model admission or body reads')
++    env.parameter_owners=[]
+     metadata_names=('inputs/candidate_manifest.json','inputs/config.json','inputs/site_metadata.json',
+         'inputs/certificates.json','inputs/join_plan.json','qkv-export-v1/parameter_manifest.json',
+         'inputs/decoder_parameters.json','inputs/actual_key_plan.json')
+@@ -277,7 +286,10 @@
+         upload.records=tuple(NS(binding=fc.canonical(fc.ciphertext_binding(f.public,request,'request',i)))for i in range(request['input']['input_tile_count']))
+         env.upload=upload;env.events.append(('request','constructed'));return upload
+     def parameter_files(*args,**kwargs):
+-        params=RecordingFiles(env,'parameters');params.catalog=env.catalog;env.parameters=params;return params
++        if env.recording:assert not args and not kwargs
++        else:assert len(args)==2 and args[0]is f.public and args[1]is original_stores and not kwargs
++        params=RecordingFiles(env,'parameters');env.parameter_owners.append(params)
++        params.catalog=env.catalog;env.parameters=params;return params
+     f.patch(lifecycle,'RequestFiles',request_files,'L/E request owner constructor recording, no ciphertext files')
+     f.patch(parameters,'open_identity_bound_parameters',parameter_files,'L/E parameter owner recording; matrix/gamma body access always fails')
+     def publisher_init(self,public_arg,request_arg,role,path,*,expected_parent,input_digest,shield):
+@@ -381,6 +393,8 @@
+     failure=case in('engine_evaluation_callback_replacement','engine_evaluation_callback_failure')
+     assert env.sentinel_calls==0 and len(env.maps)==335 and len(env.transfers)==4
+     assert not env.loader._ACTIVE.locked()and not env.composition._ACTIVE.locked()
++    parameter_owner,=env.parameter_owners
++    assert env.parameters is parameter_owner
+     assert env.upload.closed and env.parameters.closed and env.publisher.closed
+     if failure:
+         assert raw is None and not env.published and not any(x[0]=='evaluate'for x in env.events)

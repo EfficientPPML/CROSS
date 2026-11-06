@@ -1,0 +1,82 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+_ test_primitive_failure_before_owner_retention_quarantines_helpers[failure0] __
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75cba2f50770>
+failure = RuntimeError('pending result')
+
+    @pytest.mark.parametrize('failure', [RuntimeError('pending result'),KeyboardInterrupt('pending cancel'),SystemExit(7)])
+    def test_primitive_failure_before_owner_retention_quarantines_helpers(monkeypatch,failure):
+        ctx=context();x,ones=inputs(ctx);pending=[]
+        def fails_before_return(self, values, weights):
+            # Model a result dispatched by a compiled primitive whose _finish
+            #raises before the wrapper ever reaches Routing._retain. No readiness
+            #failure is injected into the reachable original inputs.
+            result=Value(np.zeros(65536),4,DELTA,ctx.events)
+            pending.append(result)
+            raise failure
+        monkeypatch.setattr(Arithmetic,'weighted_sum',fails_before_return)
+        with pytest.raises(type(failure)) as caught: component.exercise(ctx,x,ones,checkpoint=lambda *args:None)
+        assert caught.value is failure
+        assert pending and ('barrier',id(pending[0].polynomial)) not in ctx.events
+        assert all(('barrier',id(v.polynomial)) in ctx.events for v in (x,ones))
+>       assert not any(e[0] in ('clear','provider_close','working_cleanup') for e in ctx.events)
+E       assert not True
+E        +  where True = any(<generator object test_primitive_failure_before_owner_retention_quarantines_helpers.<locals>.<genexpr> at 0x75cba47ce400>)
+
+test_component_arithmetic.py:283: AssertionError
+_ test_primitive_failure_before_owner_retention_quarantines_helpers[failure1] __
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75cba2f515b0>
+failure = KeyboardInterrupt('pending cancel')
+
+    @pytest.mark.parametrize('failure', [RuntimeError('pending result'),KeyboardInterrupt('pending cancel'),SystemExit(7)])
+    def test_primitive_failure_before_owner_retention_quarantines_helpers(monkeypatch,failure):
+        ctx=context();x,ones=inputs(ctx);pending=[]
+        def fails_before_return(self, values, weights):
+            # Model a result dispatched by a compiled primitive whose _finish
+            #raises before the wrapper ever reaches Routing._retain. No readiness
+            #failure is injected into the reachable original inputs.
+            result=Value(np.zeros(65536),4,DELTA,ctx.events)
+            pending.append(result)
+            raise failure
+        monkeypatch.setattr(Arithmetic,'weighted_sum',fails_before_return)
+        with pytest.raises(type(failure)) as caught: component.exercise(ctx,x,ones,checkpoint=lambda *args:None)
+        assert caught.value is failure
+        assert pending and ('barrier',id(pending[0].polynomial)) not in ctx.events
+        assert all(('barrier',id(v.polynomial)) in ctx.events for v in (x,ones))
+>       assert not any(e[0] in ('clear','provider_close','working_cleanup') for e in ctx.events)
+E       assert not True
+E        +  where True = any(<generator object test_primitive_failure_before_owner_retention_quarantines_helpers.<locals>.<genexpr> at 0x75cba47cf030>)
+
+test_component_arithmetic.py:283: AssertionError
+_ test_primitive_failure_before_owner_retention_quarantines_helpers[failure2] __
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75cba2f428d0>
+failure = SystemExit(7)
+
+    @pytest.mark.parametrize('failure', [RuntimeError('pending result'),KeyboardInterrupt('pending cancel'),SystemExit(7)])
+    def test_primitive_failure_before_owner_retention_quarantines_helpers(monkeypatch,failure):
+        ctx=context();x,ones=inputs(ctx);pending=[]
+        def fails_before_return(self, values, weights):
+            # Model a result dispatched by a compiled primitive whose _finish
+            #raises before the wrapper ever reaches Routing._retain. No readiness
+            #failure is injected into the reachable original inputs.
+            result=Value(np.zeros(65536),4,DELTA,ctx.events)
+            pending.append(result)
+            raise failure
+        monkeypatch.setattr(Arithmetic,'weighted_sum',fails_before_return)
+        with pytest.raises(type(failure)) as caught: component.exercise(ctx,x,ones,checkpoint=lambda *args:None)
+        assert caught.value is failure
+        assert pending and ('barrier',id(pending[0].polynomial)) not in ctx.events
+        assert all(('barrier',id(v.polynomial)) in ctx.events for v in (x,ones))
+>       assert not any(e[0] in ('clear','provider_close','working_cleanup') for e in ctx.events)
+E       assert not True
+E        +  where True = any(<generator object test_primitive_failure_before_owner_retention_quarantines_helpers.<locals>.<genexpr> at 0x75cba47ce5a0>)
+
+test_component_arithmetic.py:283: AssertionError
+=========================== short test summary info ============================
+FAILED test_component_arithmetic.py::test_primitive_failure_before_owner_retention_quarantines_helpers[failure0]
+FAILED test_component_arithmetic.py::test_primitive_failure_before_owner_retention_quarantines_helpers[failure1]
+FAILED test_component_arithmetic.py::test_primitive_failure_before_owner_retention_quarantines_helpers[failure2]
+3 failed, 62 deselected in 0.16s

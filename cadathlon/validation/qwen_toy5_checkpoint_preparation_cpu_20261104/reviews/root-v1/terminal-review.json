@@ -1,0 +1,80 @@
+{
+  "actual_role_execution": false,
+  "backend_imported": false,
+  "capacity_evaluated": false,
+  "counts": {
+    "errors": 0,
+    "failures": 6,
+    "skipped": 0,
+    "tests": 48
+  },
+  "diagnosis": "First assertion shows85 fixture captures versus47 intended; six failures preserved. Source-only fixture semantic-selection diagnosis follows; no candidate/runtime finding inferred yet.",
+  "direct_owner_receipt_sha256": "e819be04bef90815fa8fc98eb08da3b9bcce8dc08f8ed96d659dcf61f7fc7e72",
+  "elapsed_s": 2.482328365003923,
+  "evidence": {
+    "executed_driver.py": "d32615321f455240e3bbd599a29b64c1ac5395f1c02e67f45d6358269b662241",
+    "execution-after.json": "91a4bc8c1715f8900edb49e97cc9c2be696b30a5037b5efd4a136ac088664339",
+    "handoff.json": "f43116c2b628131578c2a1bf38d0770d67b4e8acaaaf943bc22853dfeb74fc4e",
+    "launch-proposal.json": "4298e2f95ada6936a9960bdc6d12e278ed86c67f0e77d2969ce86c973bd285a1",
+    "live-observation.json": "332ab91c97c958229601887e27f0a70cc3fc5ad59f09a5367318006618e6de1f",
+    "owned-pytest-metadata.json": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+    "report.json": "3b8576c1f84298b752a0f3f61aeb43cee228ca6ceba161e347ff0f63e3677d3c",
+    "run_config.json": "c6e5dcc8fe8118f7a2b7751af9ef3cbf1b4b98e4e4b5397f9a25720fe584a14b",
+    "sources-after.json": "91a4bc8c1715f8900edb49e97cc9c2be696b30a5037b5efd4a136ac088664339",
+    "sources-before.json": "91a4bc8c1715f8900edb49e97cc9c2be696b30a5037b5efd4a136ac088664339",
+    "sources.tar.gz": "6d890c097757327e1f4de6a624a1496dd40e466703210e617975bbf64e26e21a",
+    "tests.log": "6677fe86b219143361e20c7c5a6f1a74caaee8bb023bb68e295eaf5ce09945b2",
+    "tests.xml": "42630d41243176ac77e1abb2fd7b44133e06e60b4c14a420c4a26e7420e017f5",
+    "worker-audit.json": "3dee5f203a7187d453325e177a8a450829d2c59edec084d09b6e5b9c39761147",
+    "worker_driver.py": "d2c04361908ba05b84b4b69369dd1cef94091def36454d6863dfe077b67bd8e1"
+  },
+  "evidence_verified": true,
+  "failures": [
+    {
+      "classname": "test_q5_mapping",
+      "message": "assert (0, 31, 34, 35, 36, 37, ...) == (0, 31, 35, 36, 48, 49, ...)\n  \n  At index 2 diff: 34 != 35\n  Left contains 38 more items, first extra item: 133\n  Use -v to get more diff",
+      "name": "test_all47_new_literal_to_independent_dense_mapping"
+    },
+    {
+      "classname": "test_q5_mapping",
+      "message": "ValueError: complete ordered47 required; partial server never admitted",
+      "name": "test_client_replay_consumes_all19_synthetic_observed_return_scales"
+    },
+    {
+      "classname": "test_q5_metadata",
+      "message": "AssertionError: Regex pattern did not match.\n  Expected regex: 'checkpoint contract differs'\n  Actual message: 'complete ordered47 required; partial server never admitted'",
+      "name": "test_complete_order_and_export_metadata_are_required[reordered_rows]"
+    },
+    {
+      "classname": "test_q5_metadata",
+      "message": "AssertionError: Regex pattern did not match.\n  Expected regex: 'complete ordered19'\n  Actual message: 'complete ordered47 required; partial server never admitted'",
+      "name": "test_complete_order_and_export_metadata_are_required[missing19]"
+    },
+    {
+      "classname": "test_q5_metadata",
+      "message": "AssertionError: Regex pattern did not match.\n  Expected regex: 'export/observed refresh metadata differs'\n  Actual message: 'complete ordered47 required; partial server never admitted'",
+      "name": "test_complete_order_and_export_metadata_are_required[export_scale]"
+    },
+    {
+      "classname": "test_q5_metadata",
+      "message": "ValueError: complete ordered47 required; partial server never admitted",
+      "name": "test_later_event_scale_cannot_bypass_actual_scalar_replay"
+    }
+  ],
+  "genuine_numpy_imported": true,
+  "independent_live_observation": false,
+  "ordered_selection_exact": true,
+  "outer_and_worker_pid_and_group_absent": true,
+  "passed": false,
+  "passed_testcases": 42,
+  "root_preexecution_review_sha256": "7648cfeab362fb30de97c81e4d0feeec703d6cd33076705940b0b6bb43e53db4",
+  "root_run_grant_sha256": "e515902df92b28486ef33bf8e890d60753c813a0814dd1e3b7f5c0aa1ab5cedb",
+  "schema": "q5-focused-root-terminal-review-v1",
+  "scope": "Exactly48 new focused Q5 cases:7 newly computed47-checkpoint literal/dense/diagnostic tests,21 binary64 metadata cases consuming19 synthetic actual-return observations,12 metadata-only Ledger state cases,8 immediate-denial/terminal cases. Fixed public seed9105 toy math and genuine NumPy only; refresh slots ideal identity, metadata synthetic. No inherited140 PASS, first encrypted-divergence claim, RNS/transport/loader/backend/context/body/capacity/actual role. All250 runtime files unchanged. No inherited suite.",
+  "script_sha256": "d4751c0fa67d8fac1f86d80c668b452ecfad832b30c2e0696a0d8e9f6e25a112",
+  "source_count": 261,
+  "source_current_execution_before_after_archive_equal": true,
+  "source_manifest_sha256": "91a4bc8c1715f8900edb49e97cc9c2be696b30a5037b5efd4a136ac088664339",
+  "test_outcome": "FAIL",
+  "utc": "2026-11-04T20:13:47.247583+00:00"
+}

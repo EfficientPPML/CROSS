@@ -1,0 +1,34 @@
+--- a/runtime/stage/key_contexts.py
++++ b/runtime/stage/key_contexts.py
+@@ -230,10 +230,14 @@
+         cancellation_signals=(signal.SIGINT,signal.SIGTERM,signal.SIGHUP)
+         if threading.current_thread() is threading.main_thread():
+             def remember_signal(signum,frame):deferred.append(signum)
+-            previous_mask=attempt('cleanup signal block',
+-                lambda:signal.pthread_sigmask(signal.SIG_BLOCK,cancellation_signals))
++            # Query without mutation first: SIG_BLOCK may change the mask and
++            #then raise before returning its previous value.
++            previous_mask=attempt('cleanup original signal mask',
++                lambda:signal.pthread_sigmask(signal.SIG_BLOCK,()))
+             if previous_mask is not None:
+                 try:
++                    attempt('cleanup signal block',
++                        lambda:signal.pthread_sigmask(signal.SIG_BLOCK,cancellation_signals))
+                     for signum in cancellation_signals:
+                         def install(sig=signum):
+                             original=signal.getsignal(sig)
+@@ -292,9 +296,12 @@
+         for module,name,original in reversed(patches):attempt('guard restoration',lambda m=module,n=name,o=original:setattr(m,n,o))
+         _ACTIVE.release()
+         if shield:
+-            previous_mask=attempt('cleanup restoration signal block',
+-                lambda:signal.pthread_sigmask(signal.SIG_BLOCK,cancellation_signals))
++            previous_mask=attempt('cleanup original restoration mask',
++                lambda:signal.pthread_sigmask(signal.SIG_BLOCK,()))
+             try:
++                if previous_mask is not None:
++                    attempt('cleanup restoration signal block',
++                        lambda:signal.pthread_sigmask(signal.SIG_BLOCK,cancellation_signals))
+                 for signum,original in reversed(shield):
+                     attempt('cleanup signal restoration',lambda s=signum,o=original:signal.signal(s,o))
+             finally:

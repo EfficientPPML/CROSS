@@ -1,0 +1,82 @@
+from pathlib import Path
+import json,hashlib,tarfile,math,os,datetime
+ROOT=Path('/tmp/bert-normalized-round-gain4-validator-ready-20261104')
+RUN=Path('/tmp/bert-normalized-round-gain4-validate-actual-v1-20261104')
+OUT=Path(__file__).resolve().parent
+sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+read=lambda p:json.loads(p.read_bytes())
+expected=read(Path('/tmp/gain4-validator-ready-sources-20261104.json'))
+assert len(expected)==187
+for base in (ROOT,RUN/'execution_source'):
+ for name,pin in expected.items():assert sha(base/name)==pin,name
+assert read(RUN/'source_manifest.json')==expected
+assert sha(RUN/'report.json')=='80599a5bdfa1cf531da3c165fa20cd607beb78a05e83127bf7962ce65ded0be2'
+assert sha(RUN/'worker/worker_report.json')=='f8b6ea7a300b8754f3d80e346ca8b6f8af06f4287339f657eefd4b2b2c29bee9'
+assert sha(RUN/'sources.tar.gz')=='9d7d04722112bfda694e680d2ad325f2a909448f0ef8619b19a504382c45b9ee'
+with tarfile.open(RUN/'sources.tar.gz','r:gz')as tar:
+ members=tar.getmembers();assert len(members)==len({m.name for m in members})==187 and all(m.isfile()for m in members)
+ assert {m.name:hashlib.sha256(tar.extractfile(m).read()).hexdigest()for m in members}==expected
+r=read(RUN/'report.json');w=read(RUN/'worker/worker_report.json')
+assert r['schema']=='gain4-validator-successor-terminal-v1'and w['schema']=='gain4-validator-successor-worker-v1'
+assert r['stage']==w['stage']=='validate'and r['execute']is True
+for obj,names in ((r,('passed','worker_reaped','worker_group_empty_verified','all_direct_children_reaped','all_owned_groups_empty','process_cleanup_completed','source_files_unchanged','source_archive_verified','terminal_scope_completed','termination_scope_completed','workspace_retained')),(w,('passed','phase_complete','loader_entered','loader_cleanup_completed','source_files_unchanged','terminal_scope_completed','termination_scope_completed','numeric_validation_complete','all54_authenticated_before_private_read','external_stores_retained'))):
+ for n in names:assert obj[n]is True,n
+ assert obj['source_hashes_start']==obj['source_hashes_end']==expected
+ assert not obj.get('error')
+assert r['cleanup_errors']==[] and w['forbidden_attempts']==[] and type(r['worker_exit_code'])is int and r['worker_exit_code']==0
+assert r['worker_report_sha256']==sha(RUN/'worker/worker_report.json')and r['source_archive_sha256']==sha(RUN/'sources.tar.gz')
+assert r['cpu_affinity']==w['cpu_affinity']==[124,125,126,127]
+assert r['request_contract']==w['request_contract']and r['workspace_identity']==w['workspace_identity']==[66305,3370369]
+assert r['fresh_source_guard']['manifest_sha256']=='e0bfcee1ab85f8750e576de24bdbdf13faf4f0b8abe66ecef55b3403a084cce0'
+assert w['fresh_source_guard']['manifest_sha256']==sha(RUN/'source_manifest.json')
+for obj in (r,w):
+ f=obj['fresh_source_guard'];assert f['passed']is True and f['fresh']is True and f['source_count']==187
+ assert all(name in expected for name in f['loaded'].values())
+ assert all(name in expected for name in f['static_imports'].values())
+for n in ('loaded_local_modules_start','loaded_local_modules_end'):
+ for item in w[n].values():assert item['path']in expected and item['sha256']==expected[item['path']]
+server_path=Path('/tmp/bert-normalized-round-gain4-ready-20261104/actual-server-v1/report.json')
+assert sha(server_path)=='897fa13c99005dff41d10e192d87417a6d31a155995c3e65805922fc5326d68a'
+server=read(server_path)
+assert r['readback']==w['readback']==server['readback']
+assert r['request_contract']==server['request_contract']
+assert r['producer_terminal_pins']==dict(fixture='aca358a292ca8cc867241e09abec18889b20b31ccc4111b4fa66b2830ff271ad',server=sha(server_path))
+plan=read(ROOT/'proof_plan.json');rows=w['numeric_checkpoints'];assert len(rows)==54 and len(plan['checkpoints'])==54
+def metric(row):
+ for n in ('passed','shape_and_finite','error_arithmetic_finite'):assert row[n]is True,n
+ v=row['max_abs_error'];assert type(v)is float and math.isfinite(v)and 0<=v<=1e-6
+ for n in ('decoded_minimum','decoded_maximum'):assert type(row[n])is float and math.isfinite(row[n])
+for i,(row,wanted)in enumerate(zip(rows,plan['checkpoints'])):
+ for n,v in dict(index=i,case=wanted['case'],label=wanted['label'],slots=65536,level=wanted['level'],scale=wanted['scale'],absolute_gate=1e-6).items():assert type(row[n])is type(v)and row[n]==v,(i,n)
+ metric(row)
+assert set(w['derived_checks'])=={'K128_rows16','K15_rows9'}
+count=0;derived_max={}
+for name,updates in (('K128_rows16',13),('K15_rows9',10)):
+ ds=w['derived_checks'][name];keys={f'{prefix}{i:02}'for prefix in ('invariant','true_residual_vs_original')for i in range(1,updates+1)}|{'final_true_inverse','final_true_relative_residual','final_true_normalized_quotient'}
+ assert set(ds)==keys
+ for row in ds.values():metric(row)
+ count+=len(ds);derived_max[name]=max(v['max_abs_error']for v in ds.values())
+assert count==52
+worst=max(rows,key=lambda row:row['max_abs_error'])
+summary=dict(absolute_gate=1e-6,checkpoints=54,maximum_absolute_error=worst['max_abs_error'],passed=True,physical_slots=54*65536)
+assert r['numeric_summary']==w['numeric_summary']==summary
+for name,nrows in (('K128_rows16',16),('K15_rows9',9)):
+ diag=w['final_diagnostics'][name];assert diag['shape_and_finite']is True and diag['reduction_arithmetic_finite']is True and diag['active_head_mass_shape']==[nrows,12]
+ for n in ('maximum_active_mass_defect','maximum_padding_magnitude','maximum_probability','minimum_probability'):assert type(diag[n])is float and math.isfinite(diag[n])
+owner_path=Path('/tmp/bert-normalized-round-gain4-validator-terminal-20261104/owner-terminal.json')
+assert sha(owner_path)=='2cc43ef9c743b400ccab79ffbc31882491c9f012f8163f85c7398ce1c01324e4'
+owner=read(owner_path)
+assert len(r['children'])==1;c=r['children'][0]
+assert c['pid']==c['process_group']==w['pid']==3859522 and c['direct_returncode']==0
+assert c['cleanup_errors']==[]and c['signals_sent']==[]
+for n in ('cleanup_completed','direct_child_reaped','group_empty_verified'):assert c[n]is True
+for pid in (3859416,3859417,3859522):assert not Path('/proc',str(pid)).exists()
+for pgid in (3859416,3859522):
+ try:os.killpg(pgid,0)
+ except ProcessLookupError:pass
+ else:raise AssertionError('group remains')
+for path,identity in ((Path(r['workspace']),[66305,3370369]),(Path('/dev/shm/cross-full-bert-keys-143b3f5c1573427d841760a3c9d5d33d'),[24,1563])):
+ info=path.lstat();assert path.is_dir()and not path.is_symlink()and [info.st_dev,info.st_ino]==identity
+receipt=dict(schema='root-gain4-validator-actual-review-v1',utc=datetime.datetime.now(datetime.timezone.utc).isoformat(),passed=True,scope='Genuine fixed gain4 component validation for two unchanged public fixtures; not full BERT, ranked/calibrated accuracy, refresh or speedup. Root reads public reports/source bytes and retained directory identity only; no additional private/key/ciphertext body read.',source_count=187,source_current_execution_start_end_archive_equal=True,source_manifest_sha256=sha(RUN/'source_manifest.json'),external_manifest_sha256='e0bfcee1ab85f8750e576de24bdbdf13faf4f0b8abe66ecef55b3403a084cce0',report_sha256=sha(RUN/'report.json'),worker_report_sha256=sha(RUN/'worker/worker_report.json'),archive_sha256=sha(RUN/'sources.tar.gz'),owner_terminal_sha256=sha(owner_path),owner_session=32501,owner_tool_chunk='78b876',owner_exit_code=0,owner_reaped=True,observed_absent_pids=[3859416,3859417,3859522],observed_absent_groups=[3859416,3859522],producer_server_report_sha256=sha(server_path),numeric_summary=summary,derived_gates=52,derived_case_counts={'K128_rows16':29,'K15_rows9':23},maximum_derived_errors=derived_max,worst_checkpoint=worst,final_diagnostics=w['final_diagnostics'],worker_elapsed_s=w['elapsed_s'],parent_elapsed_s=r['elapsed_s'],child_maxrss_kib=r['child_maxrss_kib'],memory_scope=r['memory_measurement_scope'],external_stores_retained=True,all54_authenticated_before_private_read=True,loader_cleanup_completed=True,source_and_grants_unchanged=True,retry_performed=False,numerical_gates_changed=False,promotion_authorized=False)
+out=OUT/'review.json';assert not out.exists();out.write_text(json.dumps(receipt,indent=2,sort_keys=True)+'\n')
+print(json.dumps({'receipt':str(out),'sha256':sha(out),'passed':True,'checkpoints':54,'derived_gates':52,'worst_error':worst['max_abs_error'],'worst_case':worst['case'],'worst_label':worst['label']}))

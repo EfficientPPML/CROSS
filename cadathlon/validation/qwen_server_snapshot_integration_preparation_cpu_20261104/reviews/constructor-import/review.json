@@ -1,0 +1,163 @@
+{
+  "actual_authority": false,
+  "backend_or_capacity_probes": false,
+  "borrowed_body_reads": false,
+  "callgraph": [
+    [
+      "ServerBackend.__init__",
+      "qwen_key_readers",
+      "numpy / key_descriptor_io / cleanup_origin / qwen_key_contract"
+    ],
+    [
+      "ServerBackend.__init__",
+      "qwen_backend_composition",
+      "qwen_public_parameters",
+      "numpy / reused_client_io / pure model and file helpers"
+    ],
+    [
+      "qwen_backend_composition._runtime_dependencies",
+      "encrypted_ntt",
+      "encrypted_packed_qwen",
+      "encrypted_chained_streaming_linear",
+      "encrypted_streaming_linear",
+      "encrypted_refresh",
+      "encrypted_qwen_full_model",
+      "full_contract",
+      "support"
+    ],
+    [
+      "encrypted_ntt",
+      "jax / jax.numpy / numpy"
+    ],
+    [
+      "encrypted_packed_qwen",
+      "jaxite_word.bsgs",
+      "jaxite_word.__init__",
+      "eager nn / packing and sys.path/alias mutation"
+    ]
+  ],
+  "candidate_imports": false,
+  "collection": false,
+  "definition_surface": {
+    "key_descriptor_io.py": {
+      "definition_surface_calls": [],
+      "numeric_attributes_evaluated_at_definition": []
+    },
+    "qwen_backend_composition.py": {
+      "definition_surface_calls": [
+        "threading.Lock",
+        "dataclass"
+      ],
+      "numeric_attributes_evaluated_at_definition": []
+    },
+    "qwen_key_readers.py": {
+      "definition_surface_calls": [],
+      "numeric_attributes_evaluated_at_definition": []
+    },
+    "qwen_public_parameters.py": {
+      "definition_surface_calls": [
+        "dataclass"
+      ],
+      "numeric_attributes_evaluated_at_definition": []
+    },
+    "reused_client_io.py": {
+      "definition_surface_calls": [],
+      "numeric_attributes_evaluated_at_definition": []
+    }
+  },
+  "earlier_static_observation": "03994d",
+  "hazards": [
+    "Do not execute genuine _runtime_dependencies: it expands into numeric/native namespaces and the full common-owner import graph.",
+    "Do not call genuine _materialize: it imports jax.numpy and constructs arrays/Polynomial.",
+    "Real NumPy/JAX import is not authorized and may load shared libraries or discover plugins even without an explicit devices call.",
+    "Definition loading includes ordinary dataclass construction and composition threading.Lock; this is not a claim of zero Python execution.",
+    "Further parameter/request/publisher or process orchestration seams require a separate explicit table; no transfer of constructor-only coverage."
+  ],
+  "minimum_recording_seams": [
+    "Use actual selected module definitions with their true file/spec origins; an explicitly source-owned empty numpy ModuleType suffices for the inspected reader/parameter/composition definition surfaces.",
+    "Constructor-only ServerBackend retains jax but calls no jax API; a disclosed owned empty JAX namespace suffices for that scope.",
+    "Replace only qwen_key_readers.map_array and qwen_backend_composition._runtime_dependencies before capture. The latter returns the REAL Dependencies dataclass with ten explicit recording callback fields.",
+    "Keep ReadDirectory class original if only declaring GrantedPublicDirectory; its constructor must not be invoked against borrowed paths.",
+    "Recorded core.load returns objects for he_params/key_gen/ckks_ctx/polynomial, and retain returns declared recording leases, without installing or importing genuine core aliases."
+  ],
+  "schema": "qwen-server-constructor-import-source-review-v1",
+  "source_references": {
+    "cleanup_origin.py": {
+      "bytes": 1711,
+      "path": "/tmp/qwen-server-snapshot-runtime-v2-20261104/cleanup_origin.py",
+      "sha256": "4543b26bf1168e29bc21375c2f80a9aa99648205a9fd9aea6d5a8059c6d18175"
+    },
+    "key_descriptor_io.py": {
+      "bytes": 2809,
+      "path": "/tmp/qwen-server-snapshot-runtime-v2-20261104/key_descriptor_io.py",
+      "sha256": "b6e97e176c1b089ab8891ad1217c83a3b1c686438209ad4f92da7b6c3c2a9352"
+    },
+    "model_admission.py": {
+      "bytes": 14439,
+      "path": "/tmp/qwen-server-snapshot-runtime-v2-20261104/model_admission.py",
+      "sha256": "60bb47d044649625a5c1d9870256aed7b6d7a3bf53c49b5267bcfc4919d098d3"
+    },
+    "qwen_backend_composition.py": {
+      "bytes": 20802,
+      "path": "/tmp/qwen-server-snapshot-runtime-v2-20261104/qwen_backend_composition.py",
+      "sha256": "4922518125324ccef64bf8747e10d804e7887bbae3c211d89856eccda87a13c1"
+    },
+    "qwen_file_contract.py": {
+      "bytes": 10944,
+      "path": "/tmp/qwen-server-snapshot-runtime-v2-20261104/qwen_file_contract.py",
+      "sha256": "25e81bbe50bea14c5f00eebc82165e8d135d515ebc5467c6c19b3f3a211ad004"
+    },
+    "qwen_finalizer.py": {
+      "bytes": 1177,
+      "path": "/tmp/qwen-server-snapshot-runtime-v2-20261104/qwen_finalizer.py",
+      "sha256": "46e6566a275a84b4ae4596e066c592a4aa3a60e41b3afb4ec30bb96b72551240"
+    },
+    "qwen_key_adapter.py": {
+      "bytes": 1970,
+      "path": "/tmp/qwen-server-snapshot-runtime-v2-20261104/qwen_key_adapter.py",
+      "sha256": "a396049c0acd6f105244f23743d765b477c75618db11b5b03de44230f239faf8"
+    },
+    "qwen_key_contract.py": {
+      "bytes": 11666,
+      "path": "/tmp/qwen-server-snapshot-runtime-v2-20261104/qwen_key_contract.py",
+      "sha256": "49c7e502f84b48e461a4588ce490f94f6aea9fa11d90e7cc657ea8238fc15bb5"
+    },
+    "qwen_key_readers.py": {
+      "bytes": 8591,
+      "path": "/tmp/qwen-server-snapshot-runtime-v2-20261104/qwen_key_readers.py",
+      "sha256": "5b83d0a279a89f937dbf524223257780d8cea0d0ec65274632e5c60d44f319dc"
+    },
+    "qwen_public_parameters.py": {
+      "bytes": 21031,
+      "path": "/tmp/qwen-server-snapshot-runtime-v2-20261104/qwen_public_parameters.py",
+      "sha256": "e37b2fec490d75ccbb53058c4c126bd781890224867603871450c8d64892b9f7"
+    },
+    "qwen_server_backend.py": {
+      "bytes": 13009,
+      "path": "/tmp/qwen-server-snapshot-runtime-v2-20261104/qwen_server_backend.py",
+      "sha256": "b7a3ff42847a9daf985d02fd71c5c9a3cd9e23a7b07f434b030b1ccce4129cac"
+    },
+    "reused_client_io.py": {
+      "bytes": 8305,
+      "path": "/tmp/qwen-server-snapshot-runtime-v2-20261104/reused_client_io.py",
+      "sha256": "4e1b2eff2fa084010f52bee4ea93b1384c82519ddaa1c7bac70d8d4fc6a557fc"
+    },
+    "runtime/common/encrypted_ntt.py": {
+      "bytes": 13707,
+      "path": "/tmp/qwen-server-snapshot-runtime-v2-20261104/runtime/common/encrypted_ntt.py",
+      "sha256": "5825e90fc778988528f2a7e1d5cc6033426b55f912c5c94ef41ef9b45fe324bb"
+    },
+    "runtime/common/encrypted_packed_qwen.py": {
+      "bytes": 11792,
+      "path": "/tmp/qwen-server-snapshot-runtime-v2-20261104/runtime/common/encrypted_packed_qwen.py",
+      "sha256": "e2739e2e7ff36d208095fd52b3e393157bc251549fe550495f6e8d6197edd58f"
+    },
+    "runtime/jaxite_word/__init__.py": {
+      "bytes": 3327,
+      "path": "/tmp/qwen-server-snapshot-runtime-v2-20261104/runtime/jaxite_word/__init__.py",
+      "sha256": "fc78b0845c2314a523cb20e490ded0c8ef09c9c05fa50d92eb218ef247533096"
+    }
+  },
+  "source_root": "/tmp/qwen-server-snapshot-runtime-v2-20261104",
+  "tests": false
+}

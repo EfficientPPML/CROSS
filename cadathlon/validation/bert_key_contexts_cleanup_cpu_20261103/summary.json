@@ -1,0 +1,45 @@
+{
+  "schema": "bert-key-contexts-cleanup-successor-v1",
+  "scoped_tests_passed": true,
+  "existing_checks": 104,
+  "deterministic_signal_checks": 10,
+  "actual_loader_wrapper_subprocess_checks": 9,
+  "tests_total": 123,
+  "source_count": 65,
+  "runtime_base_sha256": "ee796798bc20f91d4674ca2e9fd60492fe669a965fbcc91ee522bf7e21f86994",
+  "runtime_candidate_sha256": "0abf32280ab56162f4dfda569d2f16dbe9069dba6a0911e59753ac7293857d16",
+  "single_fire_wrapper_sha256": "1798455cdd88d4bbac5e1769e6b3226676ccb9901e7be6faf383e7ad063c1ef6",
+  "runtime_patch_sha256": "20df7bd8c789bd4ea339cec3963f3a294980cbd6799bd8715775ca09b33c129d",
+  "source_archive_sha256": "0bbaf92207c376c32c4fbcf18fb26e62924bf3e4bdfd002125bc646a17e5b126",
+  "history": {
+    "original_installation_negative": {
+      "returncode": 1,
+      "reaped": true,
+      "failed": 2,
+      "deselected": 8,
+      "module_source": "before/key_contexts.py",
+      "test_source": "before/test_key_contexts_signals.py",
+      "tool_chunk": "0fde9c"
+    },
+    "development_v1": {
+      "returncode": 1,
+      "reaped": true,
+      "passed": 59,
+      "teardown_errors": 1,
+      "module_source": "candidate/key_contexts.py",
+      "test_source": "development-v1-test.py",
+      "session": 89449
+    },
+    "development_v2_process_stress": {
+      "returncode": 2,
+      "reaped": true,
+      "passed_before_interrupt": 52,
+      "module_source": "candidate/key_contexts.py",
+      "test_source": "candidate/process_signal_stress.py",
+      "session": 72895
+    }
+  },
+  "limitation": "Main-thread pthread_sigmask is not a process-wide atomic shield. Worker delivery and a late original-handler cancellation remain demonstrated. No arbitrary delivery-time or primary-identity guarantee outside an entered guard.",
+  "actual_keys_context_ciphertext_model_execution": false,
+  "live_runtime_promoted": false
+}

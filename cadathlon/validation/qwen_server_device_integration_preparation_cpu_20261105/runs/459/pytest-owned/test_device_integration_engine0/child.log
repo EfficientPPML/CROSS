@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/owned_child.py", line 111, in <module>
+    try:main()
+        ~~~~^^
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/owned_child.py", line 76, in main
+    detail=importlib.import_module(name).run(fixture,case)
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/cases_loader_engine.py", line 421, in run
+    return _loader_case(f,case)if case.startswith('loader_')else _engine_case(f,case)
+                                                                 ~~~~~~~~~~~~^^^^^^^^
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/cases_loader_engine.py", line 384, in _engine_case
+    assert env.upload.closed and env.parameters.closed and env.publisher.closed
+                                 ^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'closed'

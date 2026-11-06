@@ -1,0 +1,26 @@
+--- admitted-pure39/worker_driver.py
++++ pure-client53/worker_driver.py
+@@ -11,7 +11,7 @@
+ runtime_expected = config['runtime_source_expectations']
+ runtime_before = {n: hashlib.sha256(Path(n).read_bytes()).hexdigest() for n in runtime_expected}
+ assert runtime_before == runtime_expected
+-assert os.sched_getaffinity(0) == {112, 113, 114, 115}
++assert os.sched_getaffinity(0) == {108, 109, 110, 111}
+ assert sys.flags.isolated and sys.dont_write_bytecode
+ assert os.environ.get('PYTEST_DISABLE_PLUGIN_AUTOLOAD') == '1'
+ forbidden = set(['flax', 'jax', 'jaxite_word', 'jaxlib', 'libtpu', 'numpy', 'safetensors', 'tensorflow', 'tokenizers', 'torch', 'torch_xla', 'transformers'])
+@@ -22,12 +22,12 @@
+ def audit(event, args):
+     if event == 'import' and args and str(args[0]).split('.')[0] in forbidden:
+         denied.append(str(args[0]))
+-        raise PermissionError('backend import disabled in pure key-authority proof')
++        raise PermissionError('backend import disabled in pure client-authority proof')
+ class DenyBackend(importlib.abc.MetaPathFinder):
+     def find_spec(self, fullname, path=None, target=None):
+         if fullname.split('.')[0] in forbidden:
+             denied.append(fullname)
+-            raise PermissionError('backend discovery disabled in pure key-authority proof')
++            raise PermissionError('backend discovery disabled in pure client-authority proof')
+ sys.addaudithook(audit)
+ sys.meta_path.insert(0, DenyBackend())
+ sys.path.insert(0, str(source))

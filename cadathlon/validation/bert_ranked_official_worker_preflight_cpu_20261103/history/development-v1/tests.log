@@ -1,0 +1,130 @@
+FFF.............                                                         [100%]
+=================================== FAILURES ===================================
+________________ test_actual_all_record_handler_worker_chain[1] ________________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-410/test_actual_all_record_handler0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7da98dbaa060>
+case_set = CaseSet(cases=(RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e3...-seed44-references.jsonl', bytes=13719517, sha256='1e2290c8da124793043063bda1209239e489b8afef9903751356ac1a60b9a69a')))
+size = 1
+
+    @pytest.mark.parametrize('size',[1,2,3])
+    def test_actual_all_record_handler_worker_chain(tmp_path,monkeypatch,case_set,size):
+        paths,state,refs=handlers.flow(tmp_path,monkeypatch,size=size)
+        paths['predictions']=tmp_path/'predictions';paths['test_input']=tmp_path/'test_input'
+        for name in ('client_private',):
+            pass
+        raw=paths['preprocessed_input'].read_bytes();paths['test_input'].write_bytes(raw);paths['test_input'].chmod(0o600)
+>       handlers.initialize(paths);paths['preprocessed_input'].unlink()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_workers.py:27: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_handlers.py:116: in initialize
+    def initialize(paths):stages.client_key_generation(paths);stages.server_preprocess_model(server_paths(paths))
+                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+runtime/stage/file_stages.py:94: in server_preprocess_model
+    _paths(paths,server=True);inputs,candidate=_inputs()
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+paths = {'size': 1, 'batch_size': 100, 'model_id': 'google-bert/bert-base-cased-finetuned-mrpc', 'model_revision': 'f150c1d609d1e50dd5e2e5408661cfac8339277c', ...}
+server = True
+
+    def _paths(paths, *, server=False):
+        if type(paths) is not dict or type(paths.get('size')) is not int or not 0<=paths['size']<4:
+            raise ValueError('one fixed benchmark size required')
+        if (type(paths.get('batch_size')) is not int or paths['batch_size']!=BATCH_SIZES[paths['size']]
+                or paths.get('model_id')!=MODEL_ID or paths.get('model_revision')!=REVISION):
+            raise ValueError('fixed benchmark/model identity differs')
+        if server and set(paths)&{'client_private','preprocessed_input','test_input','decrypted_results','predictions'}:
+>           raise ValueError('server handler must receive only public paths')
+E           ValueError: server handler must receive only public paths
+
+runtime/stage/file_stages.py:35: ValueError
+________________ test_actual_all_record_handler_worker_chain[2] ________________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-410/test_actual_all_record_handler1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7da9900d42b0>
+case_set = CaseSet(cases=(RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e3...-seed44-references.jsonl', bytes=13719517, sha256='1e2290c8da124793043063bda1209239e489b8afef9903751356ac1a60b9a69a')))
+size = 2
+
+    @pytest.mark.parametrize('size',[1,2,3])
+    def test_actual_all_record_handler_worker_chain(tmp_path,monkeypatch,case_set,size):
+        paths,state,refs=handlers.flow(tmp_path,monkeypatch,size=size)
+        paths['predictions']=tmp_path/'predictions';paths['test_input']=tmp_path/'test_input'
+        for name in ('client_private',):
+            pass
+        raw=paths['preprocessed_input'].read_bytes();paths['test_input'].write_bytes(raw);paths['test_input'].chmod(0o600)
+>       handlers.initialize(paths);paths['preprocessed_input'].unlink()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_workers.py:27: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_handlers.py:116: in initialize
+    def initialize(paths):stages.client_key_generation(paths);stages.server_preprocess_model(server_paths(paths))
+                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+runtime/stage/file_stages.py:94: in server_preprocess_model
+    _paths(paths,server=True);inputs,candidate=_inputs()
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+paths = {'size': 2, 'batch_size': 200, 'model_id': 'google-bert/bert-base-cased-finetuned-mrpc', 'model_revision': 'f150c1d609d1e50dd5e2e5408661cfac8339277c', ...}
+server = True
+
+    def _paths(paths, *, server=False):
+        if type(paths) is not dict or type(paths.get('size')) is not int or not 0<=paths['size']<4:
+            raise ValueError('one fixed benchmark size required')
+        if (type(paths.get('batch_size')) is not int or paths['batch_size']!=BATCH_SIZES[paths['size']]
+                or paths.get('model_id')!=MODEL_ID or paths.get('model_revision')!=REVISION):
+            raise ValueError('fixed benchmark/model identity differs')
+        if server and set(paths)&{'client_private','preprocessed_input','test_input','decrypted_results','predictions'}:
+>           raise ValueError('server handler must receive only public paths')
+E           ValueError: server handler must receive only public paths
+
+runtime/stage/file_stages.py:35: ValueError
+________________ test_actual_all_record_handler_worker_chain[3] ________________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-410/test_actual_all_record_handler2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7da98dbfe690>
+case_set = CaseSet(cases=(RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e3...-seed44-references.jsonl', bytes=13719517, sha256='1e2290c8da124793043063bda1209239e489b8afef9903751356ac1a60b9a69a')))
+size = 3
+
+    @pytest.mark.parametrize('size',[1,2,3])
+    def test_actual_all_record_handler_worker_chain(tmp_path,monkeypatch,case_set,size):
+        paths,state,refs=handlers.flow(tmp_path,monkeypatch,size=size)
+        paths['predictions']=tmp_path/'predictions';paths['test_input']=tmp_path/'test_input'
+        for name in ('client_private',):
+            pass
+        raw=paths['preprocessed_input'].read_bytes();paths['test_input'].write_bytes(raw);paths['test_input'].chmod(0o600)
+>       handlers.initialize(paths);paths['preprocessed_input'].unlink()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_workers.py:27: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_handlers.py:116: in initialize
+    def initialize(paths):stages.client_key_generation(paths);stages.server_preprocess_model(server_paths(paths))
+                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+runtime/stage/file_stages.py:94: in server_preprocess_model
+    _paths(paths,server=True);inputs,candidate=_inputs()
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+paths = {'size': 3, 'batch_size': 408, 'model_id': 'google-bert/bert-base-cased-finetuned-mrpc', 'model_revision': 'f150c1d609d1e50dd5e2e5408661cfac8339277c', ...}
+server = True
+
+    def _paths(paths, *, server=False):
+        if type(paths) is not dict or type(paths.get('size')) is not int or not 0<=paths['size']<4:
+            raise ValueError('one fixed benchmark size required')
+        if (type(paths.get('batch_size')) is not int or paths['batch_size']!=BATCH_SIZES[paths['size']]
+                or paths.get('model_id')!=MODEL_ID or paths.get('model_revision')!=REVISION):
+            raise ValueError('fixed benchmark/model identity differs')
+        if server and set(paths)&{'client_private','preprocessed_input','test_input','decrypted_results','predictions'}:
+>           raise ValueError('server handler must receive only public paths')
+E           ValueError: server handler must receive only public paths
+
+runtime/stage/file_stages.py:35: ValueError
+=========================== short test summary info ============================
+FAILED test_ranked_workers.py::test_actual_all_record_handler_worker_chain[1]
+FAILED test_ranked_workers.py::test_actual_all_record_handler_worker_chain[2]
+FAILED test_ranked_workers.py::test_actual_all_record_handler_worker_chain[3]
+3 failed, 13 passed in 0.39s

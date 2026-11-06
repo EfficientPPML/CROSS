@@ -1,0 +1,59 @@
+from pathlib import Path
+import ast,datetime,hashlib,json,tarfile,subprocess,xml.etree.ElementTree as ET
+repo=Path('/home/jianming_gatech/CROSS');lab=Path('/tmp/bert-prepared-bsgs-client-component-v2-20261104');out=Path('/tmp/bert-prepared-bsgs-client-v2-preflight-v1-20261104');archive=repo/'cadathlon/validation/bert_prepared_bsgs_client_descriptor_successor_cpu_20261104'
+sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest();read=lambda p:json.loads(p.read_bytes())
+r=read(out/'report.json');i=read(out/'installed.json');t=read(out/'terminal_observation.json');h=r['source_hashes_start']
+assert sha(out/'report.json')=='c5b49a569c48c678aac2152ec576be12d3dd63973241a50b0f1819a0bb314e2f'
+assert sha(out/'sources.tar.gz')=='f9265bea1194dd4d9c35fede0e6aad279e30eb8d3a5b34da2feda9b8fe515bb6'
+assert len(h)==117 and h==r['source_hashes_end']==i['source_hashes_start']==i['source_hashes_end']==read(out/'source_manifest.json')
+with tarfile.open(out/'sources.tar.gz')as tar:
+ members=tar.getmembers();assert len(members)==117 and len({m.name for m in members})==117 and sum(m.size for m in members)==14220641
+ assert all(m.isfile()and not Path(m.name).is_absolute()and '..'not in Path(m.name).parts and m.size<=16<<20 for m in members)
+ assert {m.name:hashlib.sha256(tar.extractfile(m).read()).hexdigest()for m in members}==h
+assert all(sha(lab/n)==v for n,v in h.items())
+for obj in (r,i):
+ for k in ('passed','body_complete','termination_scope_completed','cleanup_completed','source_files_unchanged'):assert obj[k]is True
+assert r['actual_HE']is r['actual_client_decode']is False
+assert r['source_archive_verified']and r['all_started_children_reaped']
+assert sha(out/'installed.json')==r['installed_report_sha256']==t['installed_sha256']
+assert i['all_forbidden_entries_restored']and i['allowed_client_entries_unchanged']and i['optional_completion_api_verified']
+assert all(i[k]is False for k in ('actual_client_decode','actual_contexts','actual_keys','payload_reads','private_reads','native_model'))
+assert len(i['denied_entries'])==len(set(i['denied_entries']))==i['denied_count']==21
+cases=list(ET.parse(out/'tests.xml').iter('testcase'));assert len(cases)==r['test_count']==263 and not any(x.findall(k)for x in cases for k in ('failure','error','skipped'))
+g=i['source_guard_end'];assert len(g['loaded_local_modules'])==40
+assert i['source_guard_start']['fresh']and g['passed']and g['parent_source_count']==89 and g['source_count']==117
+for row in g['loaded_local_modules'].values():assert h[row['path']]==row['sha256']
+parent=read(lab/'client_89_sources.json');overlays=g['overlays'];assert len(parent)==89 and len(overlays)==5
+assert {n for n,v in parent.items()if h[n]!=v}==set(overlays)
+assert all(h[n]==v for n,v in overlays.items())
+old=Path('/tmp/bert-prepared-bsgs-client-component-20261104');oldh=read(Path('/tmp/bert-prepared-bsgs-client-preflight-v2-20261104/report.json'))['source_hashes_start']
+assert len(oldh)==115 and all(sha(old/n)==v for n,v in oldh.items())
+assert set(h)-set(oldh)=={'test_receipt_io.py','test_client_descriptor_io.py'}
+changes={n for n,v in oldh.items()if h[n]!=v};assert changes=={'runtime/stage/request_lifecycle.py','runtime/stage/client_keys.py','runtime/stage/key_contexts.py','runtime/stage/file_stage_io.py','client_source_guard.py','client_preflight.py','test_client_source_guard.py','test_separate_client_readback.py','README_CLIENT.md'}
+allowed={'client_keys.py':{'_CloseState','_stream','_sha_fd','_read'},'key_contexts.py':{'_map_array'},'file_stage_io.py':{'read_manifest','new_file'},'request_lifecycle.py':{'_tree','_observe'}}
+def definitions(p):return {n.name:ast.dump(n,include_attributes=False)for n in ast.parse(p.read_text()).body if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef,ast.ClassDef))}
+actual_definition_changes={}
+for name,expect in allowed.items():
+ a=definitions(old/'runtime/stage'/name);b=definitions(lab/'runtime/stage'/name);changed={k for k in a.keys()|b.keys()if a.get(k)!=b.get(k)};assert changed==expect,(name,changed);actual_definition_changes[name]=sorted(changed)
+assert t['session_id']==56893 and t['observed_exit_code']==0 and t['session_reaped']and t['report_sha256']==sha(out/'report.json')
+pids={r['pid']};groups=set()
+for row in r['children']:
+ p=row['process'];pids.add(p['pid']);groups.add(p['process_group']);assert p['direct_returncode']==0 and not p['cleanup_errors'] and not p['signals_sent']
+ assert all(p[k]is True for k in ('direct_child_reaped','group_empty_verified','cleanup_completed'))
+assert all(not Path('/proc',str(pid)).exists()for pid in pids)
+for p in Path('/proc').iterdir():
+ if not p.name.isdigit():continue
+ try:pg=int((p/'stat').read_text().rsplit(')',1)[1].split()[2])
+ except(OSError,ValueError):continue
+ assert pg not in groups
+for n in ('report.json','installed.json','terminal_observation.json','sources.tar.gz','source_manifest.json','tests.xml','tests.log','installed.log'):assert sha(out/n)==sha(archive/'measured'/n)
+receipt=dict(schema='root-client-descriptor-successor-preparation-review-v1',checked_at_utc=datetime.datetime.now(datetime.timezone.utc).isoformat(),passed=True,sources=117,tests=263,installed_denials=21,loaded_origins=40,report_sha256=sha(out/'report.json'),source_archive_sha256=sha(out/'sources.tar.gz'),source_current_start_end_archive_equal=True,predecessor115_unchanged=True,parent89_unchanged_files=84,overlays=overlays,changed_definitions=actual_definition_changes,outer_session=56893,outer_exit_code=0,outer_reaped_attested_by_owner=True,collector_children_groups_absent=True,actual_client_decode=False,actual_client_launch_authorized=False,scope='Preparation and known active IO failure repairs only; actual decode requires completed independently pinned286-source server evidence and separate concrete launch review.')
+dst=lab/'root-review/preparation.json';dst.parent.mkdir(exist_ok=True);assert not dst.exists();dst.write_text(json.dumps(receipt,indent=2,sort_keys=True)+'\n')
+for name,raw in {'root-review/preparation.json':dst.read_bytes(),'root-review/review-executed.py.txt':Path(__file__).read_bytes()}.items():
+ p=archive/name;p.parent.mkdir(exist_ok=True);assert not p.exists();p.write_bytes(raw)
+m=read(archive/'files.sha256.json')
+for n,v in m.items():assert sha(archive/n)==v,n
+for n in ('root-review/preparation.json','root-review/review-executed.py.txt'):m[n]=sha(archive/n)
+(archive/'files.sha256.json').write_text(json.dumps(m,indent=2,sort_keys=True)+'\n')
+subprocess.run(['git','add','-f','--',*[str(archive/n)for n in ('root-review/preparation.json','root-review/review-executed.py.txt','files.sha256.json')]],cwd=repo,check=True)
+print(json.dumps(receipt,sort_keys=True))

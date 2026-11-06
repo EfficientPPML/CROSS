@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.027" timestamp="2026-11-04T05:38:58.768016+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_legacy_closure" name="test_legacy_multifile_proof_without_helper_source_archive_grant_pins_rejected" time="0.002"><failure message="Failed: DID NOT RAISE ValueError">def test_legacy_multifile_proof_without_helper_source_archive_grant_pins_rejected():
+        bundle=json.loads((Path(__file__).parent/'legacy_bundle.json').read_bytes())
+        blobs={n:base64.b64decode(raw,validate=True)for n,raw in bundle['blobs'].items()}
+&gt;       with pytest.raises(ValueError):f.issue(blobs,bundle['pins'])
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+/tmp/qwen-freeze-issuer-security-review-20261104/corrected-negative-v1/source/test_legacy_closure.py:10: Failed</failure></testcase></testsuite></testsuites>

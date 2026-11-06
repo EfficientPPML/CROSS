@@ -1,0 +1,44 @@
+{
+  "actual_mode": false,
+  "command": [
+    "taskset",
+    "-c",
+    "112-115",
+    "/tmp/cross-pretrained-validation-env/bin/python",
+    "-I",
+    "-B",
+    "/tmp/qwen-cohort-full-owner-combined-preflight-20261104/preflight-v1/execution/prepare_expanded.py",
+    "--source-manifest",
+    "/tmp/qwen-cohort-full-owner-combined-preflight-20261104/preflight-v1/sources.json",
+    "--manifest-sha256",
+    "ff8d902f71497517609f3629c3adfe12f9fffa5b720ec22aa0db61b5b5bd5d5e",
+    "--original-root",
+    "/tmp/qwen-softmax-cohort-full-owner-integration-v2-20261104",
+    "--output",
+    "/tmp/qwen-cohort-full-owner-combined-preflight-20261104/preflight-v1/worker"
+  ],
+  "environment": {
+    "CUDA_VISIBLE_DEVICES": "",
+    "HOME": "/home/jianming_gatech",
+    "JAX_PLATFORMS": "cpu",
+    "LANG": "C.UTF-8",
+    "MKL_NUM_THREADS": "4",
+    "NUMEXPR_NUM_THREADS": "4",
+    "OMP_NUM_THREADS": "4",
+    "OPENBLAS_NUM_THREADS": "4",
+    "PATH": "/usr/bin:/bin",
+    "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "1",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TZ": "UTC"
+  },
+  "explicitly_unset": [
+    "SOFTMAX_REVIEW_SOURCE",
+    "PYTEST_ADDOPTS",
+    "PYTEST_PLUGINS",
+    "PYTHONPATH",
+    "PYTHONHOME"
+  ],
+  "outer_driver_sha256": "e132ad702321d7a108c93293b7d7d4796dc3508ffb0db3b930438abb3383e9d7",
+  "scope": "CPU public/synthetic preparation only",
+  "source_manifest_sha256": "ff8d902f71497517609f3629c3adfe12f9fffa5b720ec22aa0db61b5b5bd5d5e"
+}

@@ -1,0 +1,40 @@
+{
+  "session_id": 15818,
+  "exit_code": 0,
+  "reaped": true,
+  "collector_pid": 1841221,
+  "children": [
+    {
+      "phase": "collector-tests",
+      "pid": 1841222,
+      "command": [
+        "/tmp/cross-pretrained-validation-env/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "test_collector.py",
+        "test_grouped_rotation.py",
+        "test_backing_successor.py",
+        "--junitxml=/tmp/bert-ordinary-rotation-group-v2-20261103/source-bound-v2/tests.xml"
+      ],
+      "reaped": true,
+      "returncode": 0
+    },
+    {
+      "phase": "public-parity",
+      "pid": 1841247,
+      "command": [
+        "/tmp/cross-pretrained-validation-env/bin/python",
+        "/tmp/bert-ordinary-rotation-group-v2-20261103/source-bound-v2/snapshot/check_public_group.py",
+        "--output",
+        "/tmp/bert-ordinary-rotation-group-v2-20261103/source-bound-v2/public-parity"
+      ],
+      "reaped": true,
+      "returncode": 0
+    }
+  ],
+  "numeric_pids_absent": true,
+  "negative_repro_exit_code": 1,
+  "negative_repro_failures": 4,
+  "recorded_utc": "2026-11-03T15:12:26.602711+00:00"
+}

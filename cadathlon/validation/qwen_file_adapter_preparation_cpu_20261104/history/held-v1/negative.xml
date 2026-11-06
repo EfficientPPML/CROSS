@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.064" timestamp="2026-11-04T10:35:43.675897+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_header_negative" name="test_header_length_is_bounded_before_any_large_read" time="0.000"><failure message="AssertionError: [8, 4, 1073741824]&#10;assert 1073741824 &lt;= 16384&#10; +  where 1073741824 = max([8, 4, 1073741824])&#10; +    where [8, 4, 1073741824] = &lt;test_header_negative.test_header_length_is_bounded_before_any_large_read.&lt;locals&gt;.Recording object at 0x743600538540&gt;.requests">def test_header_length_is_bounded_before_any_large_read():
+        class Recording(io.BytesIO):
+            def __init__(self,raw):super().__init__(raw);self.requests=[]
+            def read(self,count=-1):self.requests.append(count);return super().read(count)
+        reader=Recording(b'\x93NUMPY\x02\x00'+struct.pack('&lt;I',1&lt;&lt;30))
+        with pytest.raises(ValueError):_header(reader,(1&lt;&lt;30)+12,[1])
+&gt;       assert max(reader.requests)&lt;=HEADER_LIMIT,reader.requests
+E       AssertionError: [8, 4, 1073741824]
+E       assert 1073741824 &lt;= 16384
+E        +  where 1073741824 = max([8, 4, 1073741824])
+E        +    where [8, 4, 1073741824] = &lt;test_header_negative.test_header_length_is_bounded_before_any_large_read.&lt;locals&gt;.Recording object at 0x743600538540&gt;.requests
+
+/tmp/qwen-organizer-adapter-development-20261104/held-v1/test_header_negative.py:12: AssertionError</failure></testcase></testsuite></testsuites>

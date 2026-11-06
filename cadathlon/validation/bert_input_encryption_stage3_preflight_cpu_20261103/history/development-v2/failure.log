@@ -1,0 +1,22 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____ test_cleanup_only_cancellation_survives_prior_ordinary_restore_failure ____
+test_boundaries.py:75: in test_cleanup_only_cancellation_survives_prior_ordinary_restore_failure
+    with boundaries.encryption_only([]):pass
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/contextlib.py:148: in __exit__
+    next(self.gen)
+boundaries.py:45: in encryption_only
+    if primary is None and failure is not None:raise failure
+                                               ^^^^^^^^^^^^^
+boundaries.py:40: in encryption_only
+    try:setattr(owner,name,original)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+test_boundaries.py:70: in failing_setattr
+    if len(restores)==1:raise ordinary
+                        ^^^^^^^^^^^^^^
+E   OSError: first restore
+E   additional guard restore: KeyboardInterrupt('later cancellation')
+=========================== short test summary info ============================
+FAILED test_boundaries.py::test_cleanup_only_cancellation_survives_prior_ordinary_restore_failure
+1 failed, 6 deselected in 0.03s

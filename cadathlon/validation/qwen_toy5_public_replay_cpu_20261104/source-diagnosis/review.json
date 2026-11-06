@@ -1,0 +1,164 @@
+{
+  "actual_failure": {
+    "error_message": "CKKS decryption failed because the approximation error is too high; estimated stddev=4.099e+48, limit=3.125e-02. Check the ring parameters, scale, and circuit depth.",
+    "error_type": "ApproximationErrorTooHigh",
+    "last_refresh_elapsed_s": 30141.3,
+    "output_Q_product_bits": 330,
+    "output_level_from_CD2": 5,
+    "output_moduli_count": 12,
+    "output_nsd": 1,
+    "output_payload_bytes": 12582912,
+    "output_scale": 6.89940115708969e+16,
+    "output_security_event": true,
+    "output_shape": [
+      1,
+      2,
+      256,
+      512,
+      12
+    ],
+    "owner": "root; this reviewer did not poll/reap the sweep",
+    "pid": 2992744,
+    "recorded_owned_key_store_removed": true,
+    "recorded_process_reaped": true,
+    "refresh_pairs": 19,
+    "returncode": 1
+  },
+  "any_execution_authorized": false,
+  "localization": {
+    "CRT_float_capacity": "12-tower output modulus is330bits; centered coefficients fit binary64 exponent range. Observed ApproximationErrorTooHigh is not integer-to-float OverflowError and is not corrected by merely changing large-CRT conversion.",
+    "failure_candidates_not_established": [
+      "earlier conditional polynomial domain violation or error amplification",
+      "refresh precondition/approximation failure at any of19 refreshes, including period1024 alias projection",
+      "operand level/scale/metadata or earlier arithmetic error exposed only at final decode"
+    ],
+    "first_corrupting_operation": "unknown; no intermediate decode/range records exist",
+    "last_refresh_seam": "after layer2 MLP-ready and within final model.norm plus tied embedding projection; exact operand not identifiable from generic refresh log",
+    "layer_ready_meaning": "synchronized progress only, not numeric or domain acceptance",
+    "observed_detection_boundary": "client decrypt_slots approximation validation, after synchronized server evaluate and output security gate, before feature unpacking/toy metrics"
+  },
+  "new_runtime_or_test_source_written": false,
+  "proposed_diagnostic": {
+    "conditional_next_step": "Separate three-role checkpoint successor from frozen199 plus reviewed Toy4 ownership pattern. Original keygen/client setup, keyless unchanged-operation server saves opaque checkpoints, terminal-authenticated private validation independently decodes all outputs without bypass; no feedback/retry into server.",
+    "disambiguation": "Carry original operation stack and refresh input/output level/scale/public_bound/provenance. If first failing boundary brackets several operations, only then propose narrower instrumentation; do not assume last refresh is cause.",
+    "first_future_step": "Separately authorized CPU-only fixed public toy5 source replay: same seed and original rounded power coefficients, independent dense original-polynomial oracle, per-site input domains, full-slot periodicity, exact refresh/level/scale schedule. No tuning or imported learned artifacts. Not executed here.",
+    "minimal_checkpoint_events": "input + six existing layer attention/MLP boundaries + each refresh before/after + final norm output + final logits.9+2R events,47 only if independent schedule verifies R=19; no claimed frozen47 plan yet.",
+    "must_preserve": [
+      "all original source199 arithmetic,coefficients,domains,Q/P/security/Pcoverage,NTT/cache controls",
+      "strict original decode stddev0.03125 and all65536 slots before trimming",
+      "actual returned scales; no relabeling",
+      "original owner/callback retention, protected-body cleanup, no uncertain-close retry, separate externally pinned role terminals",
+      "every decoder failure; no decode relaxation or numerical acceptance claim"
+    ],
+    "must_rederive_not_copy": [
+      "Qwen13 RMS sites and causal RoPE/GQA/SiLU/reference semantics",
+      "period1024/64replicas sparse geometry and exact rotation union",
+      "19-refresh schedule and actual scale recurrence",
+      "checkpoint ordering/counts/storage/resources",
+      "Qwen final NRMSE0.10/maxabs0.20 gates; do not substitute BERT gates or prediction criterion"
+    ]
+  },
+  "public_failure_files": {
+    "process.json": "58d977a095911d5ec17d5fda8a30cc0703f6cfe13da9513a547204c2dfae6263",
+    "resources.json": "f17ffb955552f5afab44f39556db2418abcd70bce9cd58fea0127a40663b3d93",
+    "security_device.json": "e5a2e5e2184925141fb072cdb64c5553faaec04834450518af71a5bb210d2188",
+    "stderr.log": "33d98229ab8ed665ced213a93172b13e3819585b35630bccc84103bf93be14a4",
+    "stdout.json": "dda4ca0a310509723ca4d796e999c17f3f32fe85d2fc691fbf97b9f27346b044"
+  },
+  "schema": "qwen-toy5-public-source-diagnosis-v1",
+  "scope": "Source/public failure metadata only; no imports, tests, graph replay, backend/context, existing key/ciphertext/model bodies or launch.",
+  "selected11_sources_match_manifest": true,
+  "selected_source_hashes": {
+    "cadathlon/agent_pset/p4_qwen/src/qwen_optimized_reference.py": "d0ba7a24a5a3a13e75bfd31bbee07fd1274ad4300c67ace59820a0289222521b",
+    "cadathlon/agent_pset/p4_qwen/src/runner.py": "3d68d20d218d8145632eed8623466ad06d86f71502fd9bff64feb5c894b3c661",
+    "cadathlon/agent_pset/p4_qwen/test/test5.in": "df67a2c4e59030d923b019c9d57a2eedd96d11ad1e4eb31bbbddee69d460c018",
+    "cadathlon/common/encrypted_bounded_arithmetic.py": "94f535c40983e18a06864aa09d8216b8127187a209cdd0d7117a8eea2c393206",
+    "cadathlon/common/encrypted_bounded_transformer.py": "d951a84e5536700defe0bbea08f8e0d64b03c8e4d1136763af231255db1249ae",
+    "cadathlon/common/encrypted_packed_transformer.py": "5745ffdd852314887fa29fabd4edeb87d3d6e99560c451d6a19617515a2ed5be",
+    "cadathlon/common/encrypted_reference.py": "f487dd1c04203594d9ca696109d4506e4bba66b76294b17393615a178e34d759",
+    "cadathlon/common/encrypted_refresh.py": "147f9b23615f778966765420dcfd679421831d5c88f2059c94e307bf7859e5b2",
+    "cadathlon/common/encrypted_transformer.py": "18846a05ad6076997eea70454c775a9a038c46f95b5c97687a08ac682e5501de",
+    "cadathlon/common/transformer_runner.py": "9d4c6c8c53544d05046651b55224ce5b254d34a3bea445f65484e26e0f49ac55",
+    "jaxite_word/ckks_ctx.py": "bc978cb7412b55416f7ed634a689ae616a263b0f47fd9eef996ba244f2505db6"
+  },
+  "source199_count": 199,
+  "source199_manifest_sha256": "1fbca19a43f0830f4beb9ad00659c5b79e01ea10d89aa6466801340373f210bc",
+  "source_derived": {
+    "case": {
+      "batch": 2,
+      "head_dim": 8,
+      "heads": 4,
+      "hidden": 16,
+      "intermediate": 24,
+      "kv_heads": 2,
+      "layers": 3,
+      "sequence": 4,
+      "vocabulary": 32,
+      "weight_seed": 9105
+    },
+    "original_decoder_stddev_limit": 0.03125,
+    "original_final_qwen_gates": {
+      "max_abs_error_max": 0.2,
+      "nrmse_max": 0.1
+    },
+    "packing": {
+      "features": 32,
+      "period": 1024,
+      "replicas": 64,
+      "slots": 65536
+    },
+    "polynomial_contracts": {
+      "exp": {
+        "degree": 8,
+        "domain": [
+          -4,
+          4
+        ]
+      },
+      "inverse_sqrt": {
+        "degree": 12,
+        "domain": [
+          0.005,
+          0.35
+        ],
+        "uses": 13
+      },
+      "reciprocal": {
+        "degree": 8,
+        "domain": [
+          0.5,
+          8
+        ]
+      },
+      "silu": {
+        "degree": 2,
+        "domain": [
+          -2,
+          2
+        ],
+        "input_power_basis": true
+      }
+    },
+    "profile": {
+      "P": 24,
+      "Q": 100,
+      "composite_degree": 2,
+      "degree": 131072,
+      "dnum": 4,
+      "meta_precision": 10,
+      "sparse_budget": [
+        4,
+        4
+      ]
+    }
+  },
+  "toy4_reuse_sources": {
+    "/tmp/bert-toy4-checkpoint-component-v4-20261104/DESIGN.md": "1d401f4624dc94e0cac8afefb64c42ef4e6acb77132e0a489aa1456524beff5c",
+    "/tmp/bert-toy4-checkpoint-component-v4-20261104/component_arithmetic.py": "d643518baab6ac6491ff89b15cb10496af217cddda808026f779d7e5bc0bb22e",
+    "/tmp/bert-toy4-checkpoint-component-v4-20261104/component_worker.py": "43477f19f827ac4c56224f590cf008b0e53dd177169f06a73fe77950f9ee157a",
+    "/tmp/bert-toy4-checkpoint-component-v4-20261104/public_plan/plan.py": "7f7230c553390c5cad2ab949ecccc7451f7dc23c4296acb33e789814428f3956",
+    "/tmp/bert-toy4-checkpoint-component-v4-20261104/response_admission.py": "442a488eb7cbd1ea9d6b3b9d99f8d655ae4af5859c464c2b36ccd79577f6fd05",
+    "/tmp/bert-toy4-checkpoint-component-v4-20261104/scale_replay.py": "d27816616f972fb570846ca3c30281e4e8aeb756c5b12dc528c6919ca83c009f"
+  },
+  "utc": "2026-11-04T15:27:19.035006+00:00"
+}

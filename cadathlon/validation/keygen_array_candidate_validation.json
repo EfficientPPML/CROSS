@@ -1,0 +1,151 @@
+{
+  "passed": true,
+  "status": "Isolated candidate only; not applied during the Qwen2 TPU source freeze.",
+  "scope": "Two native NumPy allocation changes; exact public deterministic test-key comparisons, not production keys, full model execution or accelerator timing.",
+  "changes": [
+    "Keep sampled Gaussian coefficients as int64 arrays in the native path; scalar path retains its list conversion.",
+    "Assemble native newly sampled canonical a parts directly as uint32; caller-supplied a and scalar/wide fallback normalization remain unchanged."
+  ],
+  "core_tests": {
+    "passed": 18,
+    "subtests_passed": 7,
+    "elapsed_s": 0.74,
+    "junit": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "25",
+      "time": "0.746",
+      "timestamp": "2026-11-03T00:19:25.442041+00:00",
+      "hostname": "t1v-n-a4e6c486-w-0"
+    },
+    "warnings": "Two unknown pytest mark warnings because the isolated checkout omits project pytest configuration."
+  },
+  "comparisons": [
+    {
+      "degree": 8192,
+      "depth": 1,
+      "dnum": 2,
+      "rotation": 1,
+      "q_count": 4,
+      "p_count": 3,
+      "security_parameter_check": true,
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "elapsed_s": {
+        "baseline": 0.10564932899796986,
+        "candidate": 0.03837266999835265
+      },
+      "array_shape": [
+        2,
+        7,
+        8192
+      ],
+      "payload_and_metadata_bit_exact": true,
+      "entropy_call_sequence_identical": true,
+      "entropy_calls": 16,
+      "entropy_bytes": 1049472,
+      "key_generation_version": 3
+    },
+    {
+      "degree": 8192,
+      "depth": 1,
+      "dnum": 2,
+      "rotation": -3,
+      "q_count": 4,
+      "p_count": 3,
+      "security_parameter_check": true,
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "elapsed_s": {
+        "candidate": 0.038305788999423385,
+        "baseline": 0.04213073999926564
+      },
+      "array_shape": [
+        2,
+        7,
+        8192
+      ],
+      "payload_and_metadata_bit_exact": true,
+      "entropy_call_sequence_identical": true,
+      "entropy_calls": 16,
+      "entropy_bytes": 1049472,
+      "key_generation_version": 3
+    },
+    {
+      "degree": 131072,
+      "depth": 49,
+      "dnum": 4,
+      "rotation": 1,
+      "q_count": 100,
+      "p_count": 24,
+      "security_parameter_check": true,
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "elapsed_s": {
+        "baseline": 23.59718171699933,
+        "candidate": 11.618516460002866
+      },
+      "array_shape": [
+        4,
+        124,
+        131072
+      ],
+      "payload_and_metadata_bit_exact": true,
+      "entropy_call_sequence_identical": true,
+      "entropy_calls": 500,
+      "entropy_bytes": 524319744,
+      "key_generation_version": 3
+    },
+    {
+      "degree": 131072,
+      "depth": 49,
+      "dnum": 4,
+      "rotation": -3,
+      "q_count": 100,
+      "p_count": 24,
+      "security_parameter_check": true,
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "elapsed_s": {
+        "candidate": 11.7228114799982,
+        "baseline": 13.685567943000933
+      },
+      "array_shape": [
+        4,
+        124,
+        131072
+      ],
+      "payload_and_metadata_bit_exact": true,
+      "entropy_call_sequence_identical": true,
+      "entropy_calls": 500,
+      "entropy_bytes": 524319744,
+      "key_generation_version": 3
+    }
+  ],
+  "source_file_count": 79,
+  "source_files_unchanged": true,
+  "archive_hashes_verified": true,
+  "key_generation_version_unchanged": true,
+  "noise_parameters_and_entropy_call_sites_unchanged": true,
+  "elapsed_s": 106.43644913300159,
+  "max_rss_kib": 4603384,
+  "timing_limits": "Test entropy replaces the OS source for reproducibility. Observed CPU times include differing cache warmness; they are not a controlled speedup or model/TPU calibration.",
+  "review": "Two independent read-only reviews found no blocker in native residue bounds, signed Gaussian reduction, ownership, RNG ordering or preserved fallback paths.",
+  "artifacts": {
+    "keygen_array_candidate.patch": "3579afc98ac149f5dce6d2662e117c1376623f34930c0cbb35a6378742b594fc",
+    "keygen_array_candidate_cpu.json": "70e873b773e80b84acfa745dbe16f5f755a27c45b06627c92968d9cdc2b939c0",
+    "keygen_array_candidate_cpu.log": "2232511dd3d4de19c286317e0cb7541a248a57d448d34994e7c2f1d701701155",
+    "keygen_array_candidate_sources.tar.gz": "8300227fe85e6d38c4fafbe231410a53dff35501bf92ada30bfc6209d694792e",
+    "keygen_array_candidate_tests.xml": "609f9233d4a0f3ba1c151603730589e8b614a966e9adda631fdfb1968de5c4b5"
+  }
+}

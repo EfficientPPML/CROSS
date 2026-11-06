@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.071" timestamp="2026-11-04T00:34:07.164585+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="review_output_collision.test_existing" name="test_existing_report_must_not_change" time="0.005"><failure message="assert b'{&quot;error&quot;:{&quot;...ted&quot;:false}\n' == b'{&quot;passed&quot;:t...&quot;:&quot;retained&quot;}'&#10;  &#10;  At index 2 diff: b'e' != b'p'&#10;  Use -v to get more diff">tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-506/test_existing_report_must_not_0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x78725632c180&gt;
+
+    def test_existing_report_must_not_change(tmp_path,monkeypatch):
+     out=tmp_path/'existing';out.mkdir();report=out/'report.json';old=b'{"passed":true,"foreign":"retained"}';report.write_bytes(old)
+     monkeypatch.setattr(sys,'argv',['collector','--output',str(out),'--key-evidence',str(tmp_path/'keys-proof'),'--key-workspace',str(tmp_path/'keys')])
+     with pytest.raises(FileExistsError):c.main()
+&gt;    assert report.read_bytes()==old
+E    assert b'{"error":{"...ted":false}\n' == b'{"passed":t...":"retained"}'
+E      
+E      At index 2 diff: b'e' != b'p'
+E      Use -v to get more diff
+
+review_output_collision/test_existing.py:11: AssertionError</failure></testcase></testsuite></testsuites>

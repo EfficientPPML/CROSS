@@ -1,0 +1,59 @@
+"""Source-only review of the heldout terminal-status successor."""
+import ast,hashlib,json
+from pathlib import Path
+OLD=Path('/tmp/qwen-heldout1088-runtime-v2-20261104')
+NEW=Path('/tmp/qwen-heldout1088-runtime-v5-20261104')
+OUT=Path('/tmp/qwen-heldout-runtime-root-review-20261104')
+def sha(b):return hashlib.sha256(b).hexdigest()
+def read(p):return json.loads(p.read_bytes())
+def functions(p):return {n.name:n for n in ast.parse(p.read_bytes()).body if isinstance(n,ast.FunctionDef)}
+def dump(v):return ast.dump(v,include_attributes=False)
+def block(v):return dump(ast.Module(body=v,type_ignores=[]))
+raw=Path('/tmp/qwen-heldout1088-runtime-sources-v5-20261104.json').read_bytes();current=json.loads(raw)
+assert sha(raw)=='9985aad6205af33a429fba3802bac415397973418e568ea3414d61197f03deeb' and len(current)==171
+observed={}
+for p in NEW.rglob('*'):
+    assert not p.is_symlink()
+    if p.is_file():observed[p.relative_to(NEW).as_posix()]=sha(p.read_bytes())
+    else:assert p.is_dir()
+assert current==observed
+previous=read(Path('/tmp/qwen-heldout1088-runtime-sources-v2-20261104.json'))
+assert len(previous)==167 and all(sha((OLD/n).read_bytes())==h for n,h in previous.items())
+changed={n for n,h in previous.items()if current[n]!=h}
+assert changed=={'heldout_entry.py','heldout_preflight_expectations.json','test_heldout_no_grant.py'}
+added=set(current)-set(previous)
+assert added=={'TERMINAL_ENTRY_DESIGN.md','heldout_terminal_origin.json','shared_terminal_exit_probe.py.txt','test_heldout_terminal_exit.py'}
+producer=read(NEW/'parent139_sources.json');assert len(producer)==139
+assert all(current[n]==previous[n]==h for n,h in producer.items())
+a=functions(OLD/'heldout_entry.py');b=functions(NEW/'heldout_entry.py')
+assert set(b)-set(a)=={'terminal_status','authenticated_dispatch'}
+assert all(dump(a[n])==dump(b[n])for n in a if n!='main')
+assert block(a['main'].body[-4:])==block(b['authenticated_dispatch'].body)
+assert block(a['main'].body[:-4])==block(b['main'].body[:-1])
+guard_source=Path('/tmp/qwen-expanded-candidate-checker-terminal-exit-successor-20261104/entry.py')
+assert sha(guard_source.read_bytes())=='ad5bc00c800db5e9df5594d86e1b714a7db7c67ecde5ae89fe1e113660b674bd'
+assert dump(b['terminal_status'])==dump(functions(guard_source)['terminal_status'])
+assert isinstance(b['main'].body[-1],ast.Return) and ast.unparse(b['main'].body[-1])=='return terminal_status(lambda: authenticated_dispatch(args))'
+old_expected=read(OLD/'heldout_preflight_expectations.json');new_expected=read(NEW/'heldout_preflight_expectations.json')
+assert old_expected['synthetic_tests']==478
+assert new_expected==dict(old_expected,synthetic_tests=563,tests=old_expected['tests']+['test_heldout_terminal_exit.py'])
+old_test=(OLD/'test_heldout_no_grant.py').read_text()
+assert (NEW/'test_heldout_no_grant.py').read_text()==old_test.replace(
+    "assert child.returncode!=0 and b'Independent frozen-workflow grant required'in stderr,stderr[-4000:]",
+    "assert child.returncode==70 and b'Candidate infrastructure failure: PermissionError'in stderr,stderr[-4000:]")
+assert read(NEW/'execution_authorization.json')=={'execute':False}
+report=dict(schema='qwen-heldout-terminal-successor-root-source-review-v1',passed=True,ready_for_synthetic_preflight=True,
+    sources=171,source_manifest_sha256=sha(raw),parent167_unchanged=164,parent139_unchanged=True,
+    changed_existing_sources=sorted(changed),new_sources=sorted(added),entry_sha256=current['heldout_entry.py'],
+    guard_source_sha256=sha(guard_source.read_bytes()),authenticated_dispatch_ast_unchanged=True,other_entry_helpers_ast_unchanged=True,
+    guard_same_as_reviewed_candidate_successor=True,scientific_statuses=[0,1],infrastructure_status=70,argparse_statuses=[0,2],
+    diagnostic_failure_cannot_change_caught_status=True,numerical_runtime_protocol_unchanged=True,expected_synthetic_tests=563,
+    scope='Source-only static review; no tests, backend imports, actual input/outcome/body reads or execution grant',
+    old_evidence_not_reclassified=True,actual_execution_grant=False,
+    root_review_development='Draft63dce2 omitted legitimate appended test filename in count metadata; no review receipt was produced and no producer source was changed.',
+    root_draft_script_sha256=sha(Path('/tmp/root_qwen_heldout171_source_review_20261104_draft_v1.py').read_bytes()),
+    owner_document_history_sha256=sha(Path('/tmp/qwen-heldout-terminal-doc-successor-history-20261104.json').read_bytes()),
+    review_script_sha256=sha(Path(__file__).read_bytes()))
+with (OUT/'review-v5.json').open('x')as f:json.dump(report,f,indent=2);f.write('\n')
+with (OUT/'review-v5.py').open('xb')as f:f.write(Path(__file__).read_bytes())
+print(json.dumps(dict(passed=True,review=str(OUT/'review-v5.json'),sha256=sha((OUT/'review-v5.json').read_bytes()),sources=171)))

@@ -1,0 +1,55 @@
+FF.                                                                      [100%]
+=================================== FAILURES ===================================
+__________ test_actual_sparse_engine_cannot_be_relabelled_full_period __________
+
+    def test_actual_sparse_engine_cannot_be_relabelled_full_period():
+        ops = Arithmetic(); refresh = IdentityRefresh(ops)
+        refresh.engine.ctx.num_slots = 128
+        refresh.engine._num_slots = 128
+        refresh.engine._gap = 512
+        refresh.engine._sparse = True
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_softmax_tile.py:232: Failed
+____ test_retained_initial_branch_mutation_stops_at_same_callback[base_exp] ____
+
+retained_name = 'base_exp'
+
+    @pytest.mark.parametrize('retained_name', ['base_exp', 'mean_exp'])
+    def test_retained_initial_branch_mutation_stops_at_same_callback(retained_name):
+        saved = []; calls = []
+        def progress(label, result, counts):
+            if label == 'initial softmax '+retained_name: saved.append(result)
+            if label == 'initial softmax inverse update1':
+                calls.append(len(ops.calls)); saved[0]._ckks_scale *= 2
+        ops, refresh, graph, _ = setup(progress=progress)
+>       with pytest.raises(ValueError): graph.evaluate_tile(Value(np.zeros(SLOTS), 45))
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_softmax_tile.py:245: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+checkout/cadathlon/common/encrypted_bert_softmax_tile.py:163: in evaluate_tile
+    value = self.initial.evaluate_tile(scores)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_bert_initial_softmax.py:212: in evaluate_tile
+    product=note('base_times_inverse',arithmetic.multiply(base,inverse));del base,inverse
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'base_times_inverse'
+result = <test_initial_ideal.Value object at 0x76d226897bf0>
+
+    def note(name,result):
+        guard();self._forget(result)
+        if (arithmetic._level(result)!=plan['levels'][name] or result._ckks_scale!=plan['scales'][name]
+                or type(result._ckks_nsd)is not int or result._ckks_nsd!=1):
+>           raise RuntimeError('initial-softmax primitive depth/NSD differs')
+E           RuntimeError: initial-softmax primitive depth/NSD differs
+
+checkout/cadathlon/common/encrypted_bert_initial_softmax.py:186: RuntimeError
+=========================== short test summary info ============================
+FAILED test_softmax_tile.py::test_actual_sparse_engine_cannot_be_relabelled_full_period
+FAILED test_softmax_tile.py::test_retained_initial_branch_mutation_stops_at_same_callback[base_exp]
+2 failed, 1 passed, 288 deselected in 0.57s

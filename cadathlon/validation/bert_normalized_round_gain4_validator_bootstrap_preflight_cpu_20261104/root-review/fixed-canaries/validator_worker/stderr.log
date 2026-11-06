@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "/tmp/bert-gain4-validator-v2-root-review-20261104/validator_worker/execution/validator_worker.py", line 45, in <module>
+    _BOOTSTRAP=guard0.bootstrap(args0.source_manifest,args0.source_manifest_sha256,root=HERE,entry=__file__)
+  File "/tmp/bert-gain4-validator-v2-root-review-20261104/validator_worker/execution/validator_source_guard.py", line 136, in bootstrap
+    report=check(expected,root,fresh=True,entry=entry);report['manifest_sha256']=pin
+  File "/tmp/bert-gain4-validator-v2-root-review-20261104/validator_worker/execution/validator_source_guard.py", line 80, in check
+    if digest(raw[name])!=h:raise ValueError('source byte identity differs: '+name)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: source byte identity differs: validator_common.py

@@ -1,0 +1,121 @@
+{
+  "all20_calls_exact_output_agreement": true,
+  "benchmark_report_sha256": "88bb46090d6546849cdb1d5d1c6892fc19e0efc7400fa4b186f407b36ff4a3bc",
+  "dataset_bytes": 51905280,
+  "dataset_count": 6,
+  "dataset_readback": true,
+  "live_external_row": "    PID    PPID    PGID     ELAPSED %CPU   RSS COMMAND\n3011310 3011309 3011309       00:08  106 650376 /tmp/cross-pretrained-validation-env/bin/python -B /tmp/ckks-decode-clear-cpu-microbenchmark-20261104/benchmark.py --source-manifest /tmp/ckks-decode-clear-cpu-microbenchmark-20261104/sources-before.json --source-manifest-sha256 8d30d2eb685de9080aba631f3344cfa1104da578cacbc3b55effe3c53df88013 --output /tmp/ckks-decode-clear-cpu-microbenchmark-20261104/run-v1\n",
+  "new_optimization": false,
+  "owner_reap_tool": "41e03a",
+  "owner_reported_exit_code": 0,
+  "owner_reported_reaped": true,
+  "owner_session": 28130,
+  "passed": true,
+  "performance_gate": null,
+  "pgid": 3011309,
+  "pid": 3011310,
+  "pid_group_absent": true,
+  "scope": "clear CPU decoder microbenchmark only",
+  "source_archive_sha256": "cc0bf3e01d80e1d94bdd269098e302aac83062c72f0f6f2548bb50ff9f6c4d26",
+  "source_count": 210,
+  "source_current_archive_start_end_equal": true,
+  "source_manifest_sha256": "8d30d2eb685de9080aba631f3344cfa1104da578cacbc3b55effe3c53df88013",
+  "statistical_speed_claim": false,
+  "summary": [
+    {
+      "candidate_median_seconds": 0.4052244595,
+      "candidate_seconds": [
+        0.407107534,
+        0.405355575,
+        0.402749464,
+        0.405093344
+      ],
+      "exact_outputs_equal": true,
+      "median_observed_paired_ratio": 0.9996217118740975,
+      "name": "Q6_commonp60",
+      "old_median_seconds": 0.40626881950000004,
+      "old_seconds": [
+        0.409267684,
+        0.417213284,
+        0.400895815,
+        0.403269955
+      ],
+      "paired_candidate_over_old_ratios": [
+        0.994721914081054,
+        0.971578783670752,
+        1.0046237673995175,
+        1.004521509667141
+      ],
+      "warmups": [
+        {
+          "decoder": "old",
+          "elapsed_ns": 413563064,
+          "elapsed_seconds": 0.413563064,
+          "exact_binary64_agreement": true,
+          "output_sha256": "dc4d38c37d7097010d169fe2a881a6098a300395d1d820c75823ce79f4cc910f",
+          "pair": null,
+          "phase": "warmup",
+          "sequence": 0
+        },
+        {
+          "decoder": "candidate",
+          "elapsed_ns": 447307864,
+          "elapsed_seconds": 0.447307864,
+          "exact_binary64_agreement": true,
+          "output_sha256": "dc4d38c37d7097010d169fe2a881a6098a300395d1d820c75823ce79f4cc910f",
+          "pair": null,
+          "phase": "warmup",
+          "sequence": 1
+        }
+      ]
+    },
+    {
+      "candidate_median_seconds": 1.276043407,
+      "candidate_seconds": [
+        1.280304342,
+        1.270948723,
+        1.284278162,
+        1.271782472
+      ],
+      "exact_outputs_equal": true,
+      "median_observed_paired_ratio": 1.0022803426557707,
+      "name": "Q40_toy5_public_geometry",
+      "old_median_seconds": 1.2727226219999999,
+      "old_seconds": [
+        1.276880772,
+        1.268564472,
+        1.266138783,
+        1.282702973
+      ],
+      "paired_candidate_over_old_ratios": [
+        1.002681197865199,
+        1.0018794874463424,
+        1.0143265329548001,
+        0.9914863368762146
+      ],
+      "warmups": [
+        {
+          "decoder": "old",
+          "elapsed_ns": 1263969982,
+          "elapsed_seconds": 1.263969982,
+          "exact_binary64_agreement": true,
+          "output_sha256": "7099253a419b02ba463c65937da5f2a517db3ebc78158d7cd53032833c3b2c16",
+          "pair": null,
+          "phase": "warmup",
+          "sequence": 0
+        },
+        {
+          "decoder": "candidate",
+          "elapsed_ns": 1269905373,
+          "elapsed_seconds": 1.269905373,
+          "exact_binary64_agreement": true,
+          "output_sha256": "7099253a419b02ba463c65937da5f2a517db3ebc78158d7cd53032833c3b2c16",
+          "pair": null,
+          "phase": "warmup",
+          "sequence": 1
+        }
+      ]
+    }
+  ],
+  "unchanged_runtime207": true
+}

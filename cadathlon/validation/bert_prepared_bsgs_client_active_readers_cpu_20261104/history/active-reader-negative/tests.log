@@ -1,0 +1,248 @@
+FF......FFFFF                                                            [100%]
+=================================== FAILURES ===================================
+______________ test_actual_readers_need_no_fdopen_handoff[public] ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-581/test_actual_readers_need_no_fd0')
+branch = 'public'
+
+    @pytest.mark.parametrize('branch',['public','private'])
+    def test_actual_readers_need_no_fdopen_handoff(tmp_path,branch):
+     ns,fake=namespace();p=tmp_path/'metadata';raw=b'{"synthetic":true}\n';p.write_bytes(raw);p.chmod(0o600);duplicates=[]
+     def dup(fd):new=os.dup(fd);duplicates.append(new);return new
+     def forbidden(*a,**k):raise RuntimeError('fdopen handoff injection')
+     fake.dup=dup;fake.fdopen=forbidden
+     try:
+>     value=ns['read'](p)if branch=='public'else private_block(ns)(p,{'synthetic':hashlib.sha256(raw).hexdigest()})
+            ^^^^^^^^^^^^^
+
+/tmp/bert-original-stage5-io-successor-20261104/test_prerequisite_readers.py:31: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+<actual prerequisite reader>:22: in read
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+a = (14, 'rb'), k = {}
+
+>   def forbidden(*a,**k):raise RuntimeError('fdopen handoff injection')
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: fdopen handoff injection
+
+/tmp/bert-original-stage5-io-successor-20261104/test_prerequisite_readers.py:28: RuntimeError
+_____________ test_actual_readers_need_no_fdopen_handoff[private] ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-581/test_actual_readers_need_no_fd1')
+branch = 'private'
+
+    @pytest.mark.parametrize('branch',['public','private'])
+    def test_actual_readers_need_no_fdopen_handoff(tmp_path,branch):
+     ns,fake=namespace();p=tmp_path/'metadata';raw=b'{"synthetic":true}\n';p.write_bytes(raw);p.chmod(0o600);duplicates=[]
+     def dup(fd):new=os.dup(fd);duplicates.append(new);return new
+     def forbidden(*a,**k):raise RuntimeError('fdopen handoff injection')
+     fake.dup=dup;fake.fdopen=forbidden
+     try:
+>     value=ns['read'](p)if branch=='public'else private_block(ns)(p,{'synthetic':hashlib.sha256(raw).hexdigest()})
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/bert-original-stage5-io-successor-20261104/test_prerequisite_readers.py:31: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+<actual private gate suffix>:79: in private
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+a = (14, 'rb'), k = {}
+
+>   def forbidden(*a,**k):raise RuntimeError('fdopen handoff injection')
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: fdopen handoff injection
+
+/tmp/bert-original-stage5-io-successor-20261104/test_prerequisite_readers.py:28: RuntimeError
+______________ test_reader_body_survives_final_close[ValueError] _______________
+
+fd = 13
+
+>   def fail(fd):raise primary
+                 ^^^^^^^^^^^^^
+E   ValueError: stat body
+
+/tmp/bert-original-stage5-io-successor-20261104/test_original_transport_io.py:19: ValueError
+
+During handling of the above exception, another exception occurred:
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-581/test_reader_body_survives_fina0')
+kind = <class 'ValueError'>
+
+    @pytest.mark.parametrize('kind',[ValueError,KeyboardInterrupt,SystemExit])
+    def test_reader_body_survives_final_close(tmp_path,kind):
+     ns,fake=env();p=tmp_path/'public';p.write_bytes(b'{}');primary=kind('stat body');closed=[]
+     def fail(fd):raise primary
+     def close(fd):os.close(fd);closed.append(fd);raise OSError('close')
+     fake.fstat=fail;fake.close=close
+>    with pytest.raises(kind)as got:ns['_read_regular'](p,1024)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/bert-original-stage5-io-successor-20261104/test_original_transport_io.py:22: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+<actual transport readers>:62: in _read_regular
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fd = 13
+
+>   def close(fd):os.close(fd);closed.append(fd);raise OSError('close')
+                                                 ^^^^^^^^^^^^^^^^^^^^^^
+E   OSError: close
+
+/tmp/bert-original-stage5-io-successor-20261104/test_original_transport_io.py:20: OSError
+___________ test_reader_body_survives_final_close[KeyboardInterrupt] ___________
+
+fd = 13
+
+>   def fail(fd):raise primary
+                 ^^^^^^^^^^^^^
+E   KeyboardInterrupt: stat body
+
+/tmp/bert-original-stage5-io-successor-20261104/test_original_transport_io.py:19: KeyboardInterrupt
+
+During handling of the above exception, another exception occurred:
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-581/test_reader_body_survives_fina1')
+kind = <class 'KeyboardInterrupt'>
+
+    @pytest.mark.parametrize('kind',[ValueError,KeyboardInterrupt,SystemExit])
+    def test_reader_body_survives_final_close(tmp_path,kind):
+     ns,fake=env();p=tmp_path/'public';p.write_bytes(b'{}');primary=kind('stat body');closed=[]
+     def fail(fd):raise primary
+     def close(fd):os.close(fd);closed.append(fd);raise OSError('close')
+     fake.fstat=fail;fake.close=close
+>    with pytest.raises(kind)as got:ns['_read_regular'](p,1024)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/bert-original-stage5-io-successor-20261104/test_original_transport_io.py:22: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+<actual transport readers>:62: in _read_regular
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fd = 13
+
+>   def close(fd):os.close(fd);closed.append(fd);raise OSError('close')
+                                                 ^^^^^^^^^^^^^^^^^^^^^^
+E   OSError: close
+
+/tmp/bert-original-stage5-io-successor-20261104/test_original_transport_io.py:20: OSError
+______________ test_reader_body_survives_final_close[SystemExit] _______________
+
+fd = 13
+
+>   def fail(fd):raise primary
+                 ^^^^^^^^^^^^^
+E   SystemExit: stat body
+
+/tmp/bert-original-stage5-io-successor-20261104/test_original_transport_io.py:19: SystemExit
+
+During handling of the above exception, another exception occurred:
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-581/test_reader_body_survives_fina2')
+kind = <class 'SystemExit'>
+
+    @pytest.mark.parametrize('kind',[ValueError,KeyboardInterrupt,SystemExit])
+    def test_reader_body_survives_final_close(tmp_path,kind):
+     ns,fake=env();p=tmp_path/'public';p.write_bytes(b'{}');primary=kind('stat body');closed=[]
+     def fail(fd):raise primary
+     def close(fd):os.close(fd);closed.append(fd);raise OSError('close')
+     fake.fstat=fail;fake.close=close
+>    with pytest.raises(kind)as got:ns['_read_regular'](p,1024)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/bert-original-stage5-io-successor-20261104/test_original_transport_io.py:22: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+<actual transport readers>:62: in _read_regular
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fd = 13
+
+>   def close(fd):os.close(fd);closed.append(fd);raise OSError('close')
+                                                 ^^^^^^^^^^^^^^^^^^^^^^
+E   OSError: close
+
+/tmp/bert-original-stage5-io-successor-20261104/test_original_transport_io.py:20: OSError
+__ test_validate_cleanup_only_cancel_crosses_inner_reader[KeyboardInterrupt] ___
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-581/test_validate_cleanup_only_can0')
+kind = <class 'KeyboardInterrupt'>
+
+    @pytest.mark.parametrize('kind',[KeyboardInterrupt,SystemExit])
+    def test_validate_cleanup_only_cancel_crosses_inner_reader(tmp_path,kind):
+     ns,fake=env();d=tmp_path/'public';d.mkdir();(d/'transport.json').write_bytes(b'{}');cancel=kind('outer directory close');seen=[]
+     ns.update(ciphertext_contract=lambda *a:{},FILES={'transport.json'},MAX_JSON_BYTES=1024)
+     def close(fd):
+      is_dir=stat.S_ISDIR(os.fstat(fd).st_mode);os.close(fd);seen.append(is_dir)
+      if is_dir:raise cancel
+      raise OSError('inner file close')
+     fake.close=close
+>    with pytest.raises(kind)as got:ns['validate_ciphertext'](d,contract={},role='response',tile_index=0)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/bert-original-stage5-io-successor-20261104/test_original_transport_io.py:34: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+<actual transport readers>:193: in validate_ciphertext
+    ???
+<actual transport readers>:62: in _read_regular
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fd = 14
+
+    def close(fd):
+     is_dir=stat.S_ISDIR(os.fstat(fd).st_mode);os.close(fd);seen.append(is_dir)
+     if is_dir:raise cancel
+>    raise OSError('inner file close')
+E    OSError: inner file close
+E    Directory handle close also failed: outer directory close
+
+/tmp/bert-original-stage5-io-successor-20261104/test_original_transport_io.py:32: OSError
+______ test_validate_cleanup_only_cancel_crosses_inner_reader[SystemExit] ______
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-581/test_validate_cleanup_only_can1')
+kind = <class 'SystemExit'>
+
+    @pytest.mark.parametrize('kind',[KeyboardInterrupt,SystemExit])
+    def test_validate_cleanup_only_cancel_crosses_inner_reader(tmp_path,kind):
+     ns,fake=env();d=tmp_path/'public';d.mkdir();(d/'transport.json').write_bytes(b'{}');cancel=kind('outer directory close');seen=[]
+     ns.update(ciphertext_contract=lambda *a:{},FILES={'transport.json'},MAX_JSON_BYTES=1024)
+     def close(fd):
+      is_dir=stat.S_ISDIR(os.fstat(fd).st_mode);os.close(fd);seen.append(is_dir)
+      if is_dir:raise cancel
+      raise OSError('inner file close')
+     fake.close=close
+>    with pytest.raises(kind)as got:ns['validate_ciphertext'](d,contract={},role='response',tile_index=0)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/bert-original-stage5-io-successor-20261104/test_original_transport_io.py:34: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+<actual transport readers>:193: in validate_ciphertext
+    ???
+<actual transport readers>:62: in _read_regular
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fd = 14
+
+    def close(fd):
+     is_dir=stat.S_ISDIR(os.fstat(fd).st_mode);os.close(fd);seen.append(is_dir)
+     if is_dir:raise cancel
+>    raise OSError('inner file close')
+E    OSError: inner file close
+E    Directory handle close also failed: outer directory close
+
+/tmp/bert-original-stage5-io-successor-20261104/test_original_transport_io.py:32: OSError
+=========================== short test summary info ============================
+FAILED ../../tmp/bert-original-stage5-io-successor-20261104/test_prerequisite_readers.py::test_actual_readers_need_no_fdopen_handoff[public]
+FAILED ../../tmp/bert-original-stage5-io-successor-20261104/test_prerequisite_readers.py::test_actual_readers_need_no_fdopen_handoff[private]
+FAILED ../../tmp/bert-original-stage5-io-successor-20261104/test_original_transport_io.py::test_reader_body_survives_final_close[ValueError]
+FAILED ../../tmp/bert-original-stage5-io-successor-20261104/test_original_transport_io.py::test_reader_body_survives_final_close[KeyboardInterrupt]
+FAILED ../../tmp/bert-original-stage5-io-successor-20261104/test_original_transport_io.py::test_reader_body_survives_final_close[SystemExit]
+FAILED ../../tmp/bert-original-stage5-io-successor-20261104/test_original_transport_io.py::test_validate_cleanup_only_cancel_crosses_inner_reader[KeyboardInterrupt]
+FAILED ../../tmp/bert-original-stage5-io-successor-20261104/test_original_transport_io.py::test_validate_cleanup_only_cancel_crosses_inner_reader[SystemExit]
+7 failed, 6 passed in 0.21s

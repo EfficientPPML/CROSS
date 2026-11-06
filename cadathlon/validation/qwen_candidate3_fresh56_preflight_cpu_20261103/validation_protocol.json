@@ -1,0 +1,48 @@
+{
+  "schema": "qwen-candidate3-fresh56-validation-protocol-v1",
+  "workload": "fresh",
+  "scope": "Previously frozen unread fresh56 /112-context validation after candidate3 original416 calibration",
+  "candidate_manifest_sha256": "7f6478a6bc710f3d2a370198e075e6ba8b0e55c144d981bca0eed59eaf176333",
+  "input_sha256": "b20f28fc66260d8bd0ec704d6138da9a60ba513a53111d789cfd10f431dd80af",
+  "prefill_buckets": [
+    8,
+    16,
+    32
+  ],
+  "prefill_per_bucket": 16,
+  "decode_seeds": 8,
+  "decode_steps": 4,
+  "context_count": 112,
+  "gates": {
+    "operator_block_nrmse": 0.05,
+    "full_logit_nrmse": 0.1,
+    "nrmse_floor": 0.01,
+    "exact_native_nrmse": 1e-05,
+    "exact_native_max_abs": 0.001,
+    "exact_native_top1": true,
+    "aggregate_prefill_top1_matches": 44,
+    "teacher_top1_matches": 29,
+    "complete_free_sequences": 6,
+    "all_domains_and_numeric_contexts_required": true
+  },
+  "selection_policy": "Coefficients/domains remain frozen; no fitting to either fresh or published validation outputs. Original published regression remains required even if fresh validation fails.",
+  "execution_order": [
+    "successful frozen416 calibration",
+    "fresh112 validation",
+    "original published112 regression"
+  ],
+  "runtime": {
+    "cores": [
+      124,
+      125,
+      126,
+      127
+    ],
+    "threads": 4,
+    "cpu_only": true,
+    "no_jax_or_he": true,
+    "network": false
+  },
+  "model_launch_authorized_by_this_artifact": false,
+  "fresh_freeze_protocol_sha256": "411ce3fd815dc738c3817349c42bb2a10820f2b05fab28579ab8a19c78df9f63"
+}

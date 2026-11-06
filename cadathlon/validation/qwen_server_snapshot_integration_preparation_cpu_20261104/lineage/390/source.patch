@@ -1,0 +1,532 @@
+--- parent387/qwen_server_process.py
++++ successor390/qwen_server_process.py
+@@ -6,7 +6,9 @@
+ """
+ from dataclasses import dataclass
+ import os
++import sys
+ from pathlib import Path
++from types import FunctionType,ModuleType
+ from cleanup import cleanup_signals,termination_signals
+ from cleanup_origin import protect_body
+ from qwen_finalizer import Finalizer
+@@ -19,12 +21,26 @@
+     AccessScope,object_bytes,DEPENDENCY_FIELDS)
+ from qwen_server_resource import check_host_capacity,require_complete_capacity
+ from qwen_server_public_memory import check_public_memory
+-from qwen_key_contract import PublicProfile,authenticate_public
++from qwen_key_contract import ExpectedIds,PublicProfile,authenticate_public
+ from qwen_key_files_admission import bind_files
+ from keygen_output import Output,read,canonical_path,overlap
++import qwen_admission_snapshot as admission_snapshot
++import qwen_server_backend as server_backend_module
+ 
+ _QUARANTINE=[]
+ _ISSUER=object()
++_RUNTIME_CONTROLS={}
++EXPECTED_ID_FIELDS=('context_id','public_manifest_sha256','keygen_source_sha256','model_id',
++    'producer_source_manifest_sha256','consumer_source_manifest_sha256','private_manifest_sha256')
++# Exactly the callback's local source closure. Entry/terminal still check the
++# entire external manifest; hot checks never reread the public proof packet.
++SNAPSHOT_BINDING_SOURCES=(
++    'qwen_admission_snapshot.py','qwen_server_authority_packet.py','qwen_server_admission.py',
++    'qwen_scientific_admission.py','qwen_file_contract.py','model_admission.py','keygen_authority.py',
++    'client_role_common.py','freeze_admission.py','freeze_issuer.py','qwen_key_contract.py',
++    'qwen_public_parse.py','public_source_pins.py','keygen_boundary_pins.py','scientific_source_pins.py',
++    'qwen_server_process.py','qwen_server_backend.py','qwen_server_entry.py',
++    'qwen_server_dependencies.py','keygen_output.py')
+ MODEL_STORAGE_SCOPES=(
+     '/tmp/qwen-qkv-attention-join-20261103/public_qkv_parameters',
+     '/tmp/qwen-decoder-parameters-20261103/actual-v1/public_matrices',
+@@ -33,6 +49,161 @@
+ 
+ def _accessor(value):return(getattr(value,'__self__',None),getattr(value,'__func__',value))
+ def _same_accessor(a,b):return all(x is y for x,y in zip(_accessor(a),_accessor(b)))
++
++
++def _function_binding(fn):
++    if type(fn)is not FunctionType:raise TypeError('original source-fixed Python callback required')
++    kw=fn.__kwdefaults__
++    if kw is not None and type(kw)is not dict:raise TypeError('exact callback keyword defaults required')
++    return(fn,fn.__code__,fn.__defaults__,kw,tuple(kw.items())if kw is not None else(),
++        fn.__globals__,fn.__module__,fn.__name__,fn.__qualname__)
++
++
++def _check_function(saved):
++    fn,code,defaults,kw,items,namespace,module,name,qualname=saved
++    if(fn.__code__ is not code or fn.__defaults__ is not defaults or fn.__kwdefaults__ is not kw
++            or fn.__globals__ is not namespace or fn.__module__!=module or fn.__name__!=name or fn.__qualname__!=qualname):
++        raise ValueError('original source callback code/defaults/origin changed')
++    if kw is not None and(set(kw)!=set(k for k,v in items)or any(kw[k]is not v for k,v in items)):
++        raise ValueError('original callback keyword defaults changed')
++
++
++def _module_binding(module,name,path,*,entry=False):
++    if type(module)is not ModuleType or sys.modules.get(name)is not module or module.__name__!=name:
++        raise ValueError('original selected binding module required')
++    spec=module.__spec__;file=module.__file__
++    if type(file)is not str or file!=path or Path(file).resolve()!=Path(file):raise ValueError('canonical original binding file required')
++    origin=None if entry else getattr(spec,'origin',None)
++    if(entry and spec is not None)or(not entry and(type(origin)is not str or origin!=path)):
++        raise ValueError('original independent binding spec required')
++    exports=[];classes=[];functions=[]
++    for key,value in tuple(module.__dict__.items()):
++        if type(value)is FunctionType:
++            exports.append((key,value));functions.append(_function_binding(value))
++        elif type(value)is type:
++            exports.append((key,value))
++            if value.__module__!=name:continue
++            members=tuple(value.__dict__.items());classes.append((value,members))
++            for _,member in members:
++                if type(member)is FunctionType:functions.append(_function_binding(member))
++                elif type(member)is property:
++                    for fn in(member.fget,member.fset,member.fdel):
++                        if fn is not None:functions.append(_function_binding(fn))
++                elif type(member)in(staticmethod,classmethod):functions.append(_function_binding(member.__func__))
++    return(module,name,spec,file,origin,tuple(exports),tuple(classes),tuple(functions),entry)
++
++
++def _check_module_binding(saved):
++    module,name,spec,file,origin,exports,classes,functions,entry=saved
++    if(sys.modules.get(name)is not module or module.__name__!=name or module.__spec__ is not spec
++            or module.__file__ is not file or(not entry and spec.origin is not origin)):
++        raise ValueError('original binding module/spec/file changed')
++    for key,value in exports:
++        if module.__dict__.get(key)is not value:raise ValueError('original binding module export changed')
++    for cls,members in classes:
++        now=cls.__dict__
++        if set(now)!=set(k for k,v in members)or any(now[k]is not v for k,v in members):
++            raise ValueError('original binding class descriptor changed')
++    for fn in functions:_check_function(fn)
++
++
++def _capture_snapshot(packet,root,expected,blobs,dep,gate,snapshot,origins,retained):
++    """One local graph owner. The callback is nonrecursive and has no body gate."""
++    retained.update(packet=packet,root=root,expected=expected,blobs=blobs,dep=dep,gate=gate,
++        snapshot=snapshot,origins=origins,status='capturing',guard=None)
++    expected_bytes=canonical(expected);dep_bytes=canonical(dep)
++    source_rows=tuple((name,expected[name],blobs[name])for name in SNAPSHOT_BINDING_SOURCES)
++    all_blobs=tuple(blobs.items());retained.update(source_rows=source_rows,all_blobs=all_blobs)
++    if any(type(raw)is not bytes or sha(raw)!=digest for _,digest,raw in source_rows):
++        raise ValueError('selected snapshot binding source differs')
++    callbacks=tuple(_function_binding(fn)for fn in(snapshot,origins,exact_environment,read))
++    # The backend module's top level is stdlib/pure declarations only. Capture
++    # it before any application callback, not lazily after a replacement seam.
++    modules=[]
++    for relative,_,_ in source_rows:
++        name='__main__'if relative=='qwen_server_entry.py'else relative[:-3]
++        modules.append(_module_binding(sys.modules.get(name),name,str(Path(root)/relative),entry=name=='__main__'))
++    modules=tuple(modules);retained.update(modules=modules,callbacks=callbacks)
++    guard_module=admission_snapshot;guard_class=guard_module.AdmissionSnapshot
++    capture=guard_module.capture_admitted;check_method=guard_class.check;retire_method=guard_class.retire
++    retained.update(guard_module=guard_module,guard_class=guard_class,capture=capture,
++        check_method=check_method,retire_method=retire_method)
++    module_checker=_check_module_binding;module_checker_code=module_checker.__code__
++    function_checker=_check_function;function_checker_code=function_checker.__code__
++    callback_identity=None
++    def implementation_bindings():
++        if(_check_module_binding is not module_checker or module_checker.__code__ is not module_checker_code
++                or _check_function is not function_checker or function_checker.__code__ is not function_checker_code):
++            raise ValueError('original local binding checker changed before use')
++        if(admission_snapshot is not guard_module or sys.modules.get('qwen_admission_snapshot')is not guard_module
++                or guard_module.AdmissionSnapshot is not guard_class or guard_module.capture_admitted is not capture
++                or guard_class.check is not check_method or guard_class.retire is not retire_method):
++            raise ValueError('original snapshot module/class/accessor changed')
++        for row in modules:module_checker(row)
++        for row in callbacks:function_checker(row)
++        if callback_identity is not None:function_checker(callback_identity)
++    def check_bindings():
++        implementation_bindings()
++        if canonical(expected)!=expected_bytes or canonical(dep)!=dep_bytes:
++            raise ValueError('original source/environment policy changed')
++        if set(blobs)!=set(n for n,b in all_blobs)or any(blobs[n]is not raw for n,raw in all_blobs):
++            raise ValueError('original authenticated source bytes changed')
++        for name,digest,raw in source_rows:
++            if read(Path(root)/name,limit=8<<20,expected=digest)!=raw:
++                raise ValueError('selected snapshot binding source file changed')
++        origins(expected,core_enabled=gate.core_enabled);exact_environment(dep)
++        implementation_bindings()
++    callback_identity=_function_binding(check_bindings)
++    retained.update(binding_callback=check_bindings,binding_callback_identity=callback_identity)
++    try:
++        check_bindings()
++        guard=capture(packet,check_bindings=check_bindings)
++        retained['guard']=guard
++        implementation_bindings()
++        if type(guard)is not guard_class:raise TypeError('original exact snapshot required')
++        retained['status']='active'
++        def check():
++            try:
++                if retained['status']!='active' or retained['guard']is not guard:
++                    raise PermissionError('original active server snapshot required')
++                implementation_bindings();check_method(guard,packet)
++                implementation_bindings()
++                return packet
++            except BaseException:
++                retained['status']='failed';raise
++        def retire():
++            try:
++                if retained['status']!='active' or retained['guard']is not guard:
++                    raise PermissionError('only a clean original snapshot may retire')
++                implementation_bindings();retire_method(guard,packet)
++                retained['status']='retired'
++            except BaseException:
++                retained['status']='failed';raise
++        retained.update(check=check,retire=retire)
++        check();return check,retire
++    except BaseException:
++        retained['status']='failed';raise
++
++
++def _expected_ids_bytes(value):
++    if type(value)is not ExpectedIds:raise TypeError('exact derived expected IDs required')
++    value.check('server')
++    fields=object.__getattribute__(value,'__dict__')
++    if type(fields)is not dict or set(fields)!=set(EXPECTED_ID_FIELDS):raise ValueError('exact seven expected ID fields required')
++    return canonical({name:fields[name]for name in EXPECTED_ID_FIELDS})
++
++
++def _runtime_action(value,action,arg):
++    row=_RUNTIME_CONTROLS.get(id(value))
++    if type(value)is not RuntimeAdmission or row is None or row[0]is not value:
++        raise PermissionError('original process-owned server runtime required')
++    return row[1](value,action,arg)
++
++
++def require_runtime(value):
++    # Backend calls the source-fixed dispatcher, never a replaceable instance
++    # .check attribute or a newly supplied dataclass _control callable.
++    _runtime_action(value,'check',None);return value
+ 
+ 
+ def resource_pins(phase):
+@@ -119,70 +290,115 @@
+     core:object
+     _issuer:object
+     _control:object
++    _expected_ids_bytes:bytes
++    _input_digest:str
+     def check(self):
+-        if type(self)is not RuntimeAdmission or self._issuer is not _ISSUER:raise PermissionError('original source-fixed server runtime required')
+-        self._control(self,'check',None);return self
+-    def allow_public_key_reads(self):self._control(self,'keys',None)
+-    def admit_server_bodies(self,handle):self._control(self,'bodies',handle)
+-    def require_public_key_read_scope(self):self._control(self,'require_keys',None)
+-    def require_server_body_scope(self):self._control(self,'require_bodies',None)
+-
+-
+-def _runtime(packet,core,audit,audit_methods,source_check,capacity_check,files):
++        return require_runtime(self)
++    def allow_public_key_reads(self):_runtime_action(self,'keys',None)
++    def admit_server_bodies(self,handle):_runtime_action(self,'bodies',handle)
++    def require_public_key_read_scope(self):_runtime_action(self,'require_keys',None)
++    def require_server_body_scope(self):_runtime_action(self,'require_bodies',None)
++    @property
++    def expected_ids_bytes(self):
++        require_runtime(self);return self._expected_ids_bytes
++    @property
++    def input_digest(self):
++        require_runtime(self);return self._input_digest
++
++
++def _runtime(packet,core,audit,audit_methods,source_check,capacity_check,files,guard_check,derived):
+     """Current complete-capacity callback always denies before this is reached.
+ 
+-    The separate immutable admission guard is still under source review. This
+-    draft retains full pure reauthentication until that guard is selected.
++    The retained guard replaces only hot full-proof replay. Original source,
++    live audit/core/read scopes and full transition boundaries remain separate.
+     """
+     capacity_check()
+-    phase=packet.phase;original={};active=True;state=dict(keys=False,bodies=False,pending=None,handle=None,ctx=None)
++    guard_check()
++    control_callbacks=tuple(_function_binding(fn)for fn in(guard_check,source_check,capacity_check))
++    callback_checker=_check_function;callback_checker_code=callback_checker.__code__
++    ids,ids_bytes,input_digest=derived
++    if type(ids_bytes)is not bytes or type(input_digest)is not str or _expected_ids_bytes(ids)!=ids_bytes:
++        raise ValueError('original once-derived immutable runtime metadata required')
++    ids_fields=object.__getattribute__(ids,'__dict__');ids_items=tuple(ids_fields.items())
++    hash_value(input_digest)
++    phase=packet.phase;original={};active=True;state=dict(keys=False,bodies=False,pending=None,transition=None,handle=None,ctx=None,failure=None)
++    def require_active():
++        if not active or state['failure']is not None:raise PermissionError('failed or retired original server runtime')
+     def control(value,action,arg):
+-        if not active or value is not original['runtime']or value.phase is not phase or value.core is not core or value._issuer is not _ISSUER or value._control is not control:
+-            raise ValueError('original server runtime binding changed')
+-        packet.check();core.check()
+-        for name,fn in audit_methods.items():
+-            if not _same_accessor(getattr(audit,name),fn):raise ValueError('original audit transition callback changed')
+-        audit_methods['check']()
+-        if audit.enabled is not True or audit.active is not True:
+-            raise ValueError('original active publication scope changed')
+-        flags=(audit.keys_enabled,audit.bodies_enabled)
+-        if any(type(value)is not bool for value in flags):raise ValueError('exact audit transition flags required')
+-        allowed={(state['keys'],state['bodies'])}
+-        if state['pending']=='keys':allowed={(False,False),(True,False)}
+-        elif state['pending']=='bodies':allowed={(True,False),(True,True)}
+-        if flags not in allowed:
+-            raise ValueError('original server body-read transition changed')
+-        if action=='check':return
+-        if action=='require_keys':
+-            if not state['keys']and state['pending']!='keys':raise PermissionError('server public-key scope not admitted')
+-            return
+-        if action=='require_bodies':
+-            if not state['bodies']and state['pending']!='bodies':raise PermissionError('server model/request scope not admitted')
+-            return
+-        if state['pending']is not None:raise ValueError('nested server read transition forbidden')
+-        if action=='keys':
+-            if state['keys']or state['bodies']:raise ValueError('single public-key transition required')
+-            source_check();capacity_check();state['pending']='keys'
+-            try:audit_methods['enable_public_keys'](value);state['keys']=True
+-            finally:state['pending']=None
+-            value.check();return
+-        if action=='bodies':
+-            if not state['keys']or state['bodies']or state['handle']is not None:raise ValueError('one server body transition after loaded public keys required')
+-            if arg.admission is not files or arg.public is not files.keys.public or arg.ctx is None:raise ValueError('original complete public-key loader handle required')
+-            ctx=arg.ctx
+-            if ctx.secret_key is not None or ctx._param_cache.secret_key is not None or ctx.parameters.get('secret_key')is not None:raise ValueError('keyless original server context required')
+-            if canonical(arg.public_manifest)!=phase.readiness.public_manifest_bytes:raise ValueError('loaded original public manifest differs')
+-            source_check();capacity_check();state['handle']=arg;state['ctx']=ctx;state['pending']='bodies'
+-            try:audit_methods['enable_server_bodies'](value);state['bodies']=True
+-            finally:state['pending']=None
+-            value.check();return
+-        raise ValueError('unselected server runtime transition')
+-    runtime=RuntimeAdmission(phase,core,_ISSUER,control);original['runtime']=runtime
++        nonlocal active
++        try:
++            require_active()
++            if _check_function is not callback_checker or callback_checker.__code__ is not callback_checker_code:
++                raise ValueError('original runtime callback checker changed before use')
++            for callback in control_callbacks:callback_checker(callback)
++            guard_check()  # Checks source/class descriptors before field access.
++            if value is not original['runtime']or object.__getattribute__(value,'__dict__')is not original['dict']:
++                raise ValueError('original server runtime/dictionary changed')
++            fields=object.__getattribute__(value,'__dict__')
++            if set(fields)!=set(original['fields'])or any(fields[n]is not v for n,v in original['fields'].items()):
++                raise ValueError('original server runtime field/derived identity changed')
++            now_ids=object.__getattribute__(ids,'__dict__')
++            if(now_ids is not ids_fields or set(now_ids)!=set(n for n,v in ids_items)
++                    or any(now_ids[n]is not v for n,v in ids_items)or _expected_ids_bytes(ids)!=ids_bytes):
++                raise ValueError('original derived expected IDs changed')
++            core.check()
++            for name,fn in audit_methods.items():
++                if not _same_accessor(getattr(audit,name),fn):raise ValueError('original audit transition callback changed')
++            audit_methods['check']()
++            if audit.enabled is not True or audit.active is not True:
++                raise ValueError('original active publication scope changed')
++            flags=(audit.keys_enabled,audit.bodies_enabled)
++            if any(type(flag)is not bool for flag in flags):raise ValueError('exact audit transition flags required')
++            allowed={(state['keys'],state['bodies'])}
++            if state['pending']=='keys':allowed={(False,False),(True,False)}
++            elif state['pending']=='bodies':allowed={(True,False),(True,True)}
++            if flags not in allowed:raise ValueError('original server body-read transition changed')
++            if action=='check':return
++            if action=='require_keys':
++                if not state['keys']and state['pending']!='keys':raise PermissionError('server public-key scope not admitted')
++                return
++            if action=='require_bodies':
++                if not state['bodies']and state['pending']!='bodies':raise PermissionError('server model/request scope not admitted')
++                return
++            if state['pending']is not None or state['transition']is not None:raise ValueError('nested server read transition forbidden')
++            if action=='keys':
++                if state['keys']or state['bodies']:raise ValueError('single public-key transition required')
++                state['transition']='keys'
++                try:
++                    source_check();require_active();capacity_check();require_active();state['pending']='keys'
++                    try:audit_methods['enable_public_keys'](value);require_active();state['keys']=True
++                    finally:state['pending']=None
++                    require_runtime(value);return
++                finally:state['transition']=None
++            if action=='bodies':
++                if not state['keys']or state['bodies']or state['handle']is not None:raise ValueError('one server body transition after loaded public keys required')
++                if arg.admission is not files or arg.public is not files.keys.public or arg.ctx is None:raise ValueError('original complete public-key loader handle required')
++                ctx=arg.ctx
++                if ctx.secret_key is not None or ctx._param_cache.secret_key is not None or ctx.parameters.get('secret_key')is not None:raise ValueError('keyless original server context required')
++                if canonical(arg.public_manifest)!=phase.readiness.public_manifest_bytes:raise ValueError('loaded original public manifest differs')
++                state['transition']='bodies'
++                try:
++                    source_check();require_active();capacity_check();require_active()
++                    state['handle']=arg;state['ctx']=ctx;state['pending']='bodies'
++                    try:audit_methods['enable_server_bodies'](value);require_active();state['bodies']=True
++                    finally:state['pending']=None
++                    require_runtime(value);return
++                finally:state['transition']=None
++            raise ValueError('unselected server runtime transition')
++        except BaseException as error:
++            active=False
++            if state['failure']is None:state['failure']=error
++            raise
++    runtime=RuntimeAdmission(phase,core,_ISSUER,control,ids_bytes,input_digest)
++    original.update(runtime=runtime,dict=object.__getattribute__(runtime,'__dict__'),
++        fields=dict(object.__getattribute__(runtime,'__dict__')))
++    _RUNTIME_CONTROLS[id(runtime)]=(runtime,control)
+     def retire():
+         nonlocal active
+-        runtime.check()
++        require_runtime(runtime)
+         if state['handle']is not None and state['handle'].ctx is not None:raise ValueError('original loader must retire context before server terminal')
+         active=False
++        del _RUNTIME_CONTROLS[id(runtime)]
+     return runtime,retire
+ 
+ 
+@@ -192,6 +408,8 @@
+     primary=None;audit=None;audit_methods={};audit_original_open=os.open;audit_wrapper=None;publication_enabled=False
+     core=None;runtime=None;retire_runtime=None;evidence=None;methods={};response=None
+     installed_before=None;platforms=None;capacity_observations=[];cleanup_report={}
++    snapshot_retained={};guard_check=None;retire_snapshot=None;derived=None
++    public_records=tuple(records.items());packet_check=type(packet).check
+     complete_capacity=require_complete_capacity
+     def audit_guard():
+         if audit is None:return
+@@ -202,13 +420,17 @@
+         if audit.enabled is not publication_enabled or audit.active is not True:
+             raise ValueError('original server audit publication/active state changed')
+     def source_check():
++        if guard_check is not None:guard_check()
+         if snapshot(expected)!=blobs:raise ValueError('complete server source changed')
+-        origins(expected,core_enabled=gate.core_enabled);packet.check();exact_environment(dep)
++        origins(expected,core_enabled=gate.core_enabled);packet_check(packet);exact_environment(dep)
++        if guard_check is not None:guard_check()
+         if audit is not None:
+             audit_guard();audit_methods['check']()
+-        if runtime is not None:runtime.check()
++        if runtime is not None:require_runtime(runtime)
+         if core is not None:core.check()
+-        for path,(digest,limit,raw)in records.items():
++        if set(records)!=set(path for path,row in public_records)or any(records[path]is not row for path,row in public_records):
++            raise ValueError('original public proof read bindings changed')
++        for path,(digest,limit,raw)in public_records:
+             if read(path,limit=limit,expected=digest)!=raw:raise ValueError('original public proof changed')
+     def capacity_check():
+         # Exact source-selected callback currently raises unconditionally.
+@@ -221,6 +443,11 @@
+                 if not _same_accessor(getattr(owner,name),fn):raise ValueError('original server evidence callback changed')
+     try:
+         exact_environment(dep);source_check()
++        guard_check,retire_snapshot=_capture_snapshot(packet,root,expected,blobs,dep,gate,snapshot,origins,snapshot_retained)
++        guard_check()
++        ids=phase.expected_ids();input_digest=phase.input_digest
++        derived=(ids,_expected_ids_bytes(ids),input_digest);snapshot_retained['derived']=derived
++        hash_value(input_digest);guard_check()
+         audit=AccessScope(root,expected,records,phase,profile,dep,res,protected,always_protected=always_protected)
+         # Retain the original close before any fallible hook installation.
+         audit_methods['close']=audit.close
+@@ -242,9 +469,9 @@
+         destination=grant['outputs']['evidence'];evidence=Output(destination['path'],expected_parent=canonical(destination['parent']))
+         methods['close']=evidence.close
+         for name in('check','write'):methods[name]=getattr(evidence,name)
+-        public_keys=authenticate_public(phase.readiness.public_manifest_bytes,profile,phase.expected_ids(),role='server')
++        public_keys=authenticate_public(phase.readiness.public_manifest_bytes,profile,derived[0],role='server')
+         files=bind_files(phase.public,public_keys,canonical(parse(phase.request_bytes)['public']))
+-        runtime,retire_runtime=_runtime(packet,core,audit,dict(audit_methods),source_check,capacity_check,files)
++        runtime,retire_runtime=_runtime(packet,core,audit,dict(audit_methods),source_check,capacity_check,files,guard_check,derived)
+         runtime.allow_public_key_reads()
+         from qwen_server_backend import ServerBackend
+         backend=ServerBackend(runtime)
+@@ -252,14 +479,14 @@
+         with termination_signals():
+             response=_server_for_stage(files,grant['public_key_store']['path'],parse(phase.request_bytes),
+                 key_dependencies=backend.dependencies,factories=backend.factories)
+-        runtime.check();source_check()
++        require_runtime(runtime);source_check()
+         if type(response)is not bytes or not response:raise ValueError('original complete response manifest bytes required')
+         origins_after=imported_origins(dep,root);same(hash_installed(dep),installed_before,'installed source changed during server stage')
+         report=dict(schema='qwen-actual-server-worker-report-v1',passed=True,complete=True,error_type=None,
+             source_manifest_sha256=sha(raw_map),source_archive_sha256=args.archive_sha256,public_packet_sha256=args.packet_sha256,
+             phase_grant_sha256=sha(phase.grant_bytes),scientific_statement_sha256=sha(phase.scientific.statement_bytes),
+             request_contract_sha256=sha(phase.request_bytes),request_manifest_sha256=sha(phase.request_manifest_bytes),
+-            input_digest=phase.input_digest,response_manifest_sha256=sha(response),response_manifest=response.decode('utf-8'),
++            input_digest=derived[2],response_manifest_sha256=sha(response),response_manifest=response.decode('utf-8'),
+             source_hashes_before=expected,source_hashes_after=expected,policies=phase.expected_pins.check()['policies'],
+             process=dict(pid=os.getpid(),pgid=os.getpgrp()),audit_denials=[],
+             backend=dict(platforms=platforms,jax_enable_x64=True,installed_sources_sha256=sha(canonical(installed_before)),module_origins_sha256=sha(canonical(origins_after))),
+@@ -269,7 +496,9 @@
+                 private_key_reads=False,token_or_calibration_reads=False,key_generation=False,client_codec=False,scientific_acceptance_claimed=False,downstream_execution_authorized=False),
+             outer_terminal_receipt_included=False)
+         owner_guard(evidence,methods);methods['check']();methods['write']('report.json',canonical(report));methods['check']();audit_guard();audit_methods['check']()
+-    except BaseException as error:primary=protect_body(error)
++    except BaseException as error:
++        if snapshot_retained and snapshot_retained['status']!='retired':snapshot_retained['status']='failed'
++        primary=protect_body(error)
+     finally:
+         original=evidence;original_methods=dict(methods);original_runtime=runtime;original_retire=retire_runtime
+         final=Finalizer(cleanup_report,primary)
+@@ -296,7 +525,12 @@
+                     finally:os.open=audit_original_open
+                 final.attempt('original server audit retirement',close_audit)
+         final.shielded(cleanup_signals,retire)
++        # The snapshot remains held through source, original owner, audit and
++        # signal restoration. Failed cleanup never releases or resets it.
++        if final.selected()is None and retire_snapshot is not None:
++            final.attempt('clean original server admission snapshot retirement',retire_snapshot)
+         chosen=final.selected()
+         if chosen is not None:
+-            _QUARANTINE.append((packet,core,audit,original_runtime,original_retire,original,original_methods,response,chosen));raise chosen
++            _QUARANTINE.append((packet,core,audit,original_runtime,original_retire,original,original_methods,response,
++                snapshot_retained,guard_check,retire_snapshot,derived,chosen));raise chosen
+     return 0
+--- parent387/qwen_server_backend.py
++++ successor390/qwen_server_backend.py
+@@ -17,9 +17,9 @@
+ 
+ 
+ def _runtime(value):
+-    from qwen_server_process import RuntimeAdmission
++    from qwen_server_process import RuntimeAdmission,require_runtime
+     if type(value)is not RuntimeAdmission:raise PermissionError('exact source-fixed server runtime required')
+-    value.check()
++    require_runtime(value)
+     return value
+ 
+ 
+@@ -48,9 +48,10 @@
+         phase=self.backend.phase;grant=raw_object(phase.grant_bytes,1<<16,'server phase grant')
+         if client_private is not None or str(public_keys)!=grant['public_key_store']['path']:
+             raise ValueError('exact granted public-only key path required')
++        from qwen_server_process import _expected_ids_bytes
+         if (admission.public_contract is not phase.public
+                 or admission.keys.public.raw!=phase.readiness.public_manifest_bytes
+-                or admission.keys.public.expected!=phase.expected_ids()
++                or _expected_ids_bytes(admission.keys.public.expected)!=self.backend.runtime.expected_ids_bytes
+                 or admission.keys.public.role!='server' or admission.keys.private is not None):
+             raise ValueError('keyless server file admission differs from generated readiness')
+         same(admission.keys.check(),json.loads(phase.request_bytes)['public'],'actual server request identity differs')
+@@ -84,7 +85,7 @@
+         self.runtime=runtime;self.phase=runtime.phase;self.core=runtime.core
+         from qwen_server_admission import ServerPhaseAdmission
+         if type(self.phase)is not ServerPhaseAdmission:raise TypeError('exact complete server phase required')
+-        self.phase.check()
++        _runtime(runtime)
+         modules=self.core.load(('he_params','key_gen','ckks_ctx','polynomial'))
+         self.he_params=modules['he_params'];self.key_gen=modules['key_gen']
+         self.ckks=modules['ckks_ctx'];self.polynomial=modules['polynomial']
+@@ -166,7 +167,7 @@
+ 
+         def publisher(handle,input_digest):
+             backend.check();runtime.require_server_body_scope()
+-            if input_digest!=phase.input_digest:raise ValueError('original admitted server input digest differs')
++            if input_digest!=runtime.input_digest:raise ValueError('original admitted server input digest differs')
+             from qwen_publisher import Publisher
+             output=raw_object(phase.grant_bytes,1<<16,'server phase grant')['outputs']['response']
+             return Publisher(phase.public,json.loads(phase.request_bytes),'response',output['path'],
+@@ -191,7 +192,7 @@
+             self.security_identity,self.context_identity,self.polynomial_identity,self.jax,self.shield,
+             self._base_directory,self._base_map_array,self.engine,self.dependencies,self.factories)
+         if any(a is not b for a,b in zip(current,self._fixed)):raise ValueError('original server backend binding changed')
+-        self.phase.check();self.core.check()
++        self.core.check()
+         for retained in(self.security_identity,self.context_identity,self.polynomial_identity):retained.check()
+         for name,original in zip(('security_check','runtime_factory','directory_factory','map_array'),self._dependency_callbacks):
+             if getattr(self.dependencies,name)is not original:raise ValueError('original actual server key callback changed')
+--- parent387/qwen_server_entry.py
++++ successor390/qwen_server_entry.py
+@@ -120,7 +120,7 @@
+     return blobs
+ 
+ 
+-ROOT_MODULES=frozenset(('qwen_server_entry', 'qwen_server_process', 'qwen_server_dependencies', 'qwen_server_authority_packet', 'qwen_server_resource', 'qwen_server_public_memory', 'qwen_server_admission', 'qwen_scientific_admission', 'scientific_source_pins', 'freeze_issuer', 'freeze_admission', 'qwen_server_backend', 'qwen_backend_identity', 'keygen_output', 'client_role_common', 'client_server_terminal', 'keygen_authority', 'keygen_boundary_pins', 'model_admission', 'public_source_pins', 'qwen_public_parse', 'qwen_file_contract', 'qwen_key_contract', 'qwen_key_adapter', 'qwen_key_files_admission', 'qwen_key_loader', 'qwen_key_readers', 'key_descriptor_io', 'cleanup', 'cleanup_origin', 'qwen_finalizer', 'qwen_public_parameters', 'reused_client_io', 'reused_rns_payload', 'qwen_serialization', 'qwen_layout', 'qwen_file_lifecycle', 'qwen_publisher', 'qwen_backend_composition', 'qwen_stage_composition', 'full_contract'))
++ROOT_MODULES=frozenset(('qwen_admission_snapshot', 'qwen_server_entry', 'qwen_server_process', 'qwen_server_dependencies', 'qwen_server_authority_packet', 'qwen_server_resource', 'qwen_server_public_memory', 'qwen_server_admission', 'qwen_scientific_admission', 'scientific_source_pins', 'freeze_issuer', 'freeze_admission', 'qwen_server_backend', 'qwen_backend_identity', 'keygen_output', 'client_role_common', 'client_server_terminal', 'keygen_authority', 'keygen_boundary_pins', 'model_admission', 'public_source_pins', 'qwen_public_parse', 'qwen_file_contract', 'qwen_key_contract', 'qwen_key_adapter', 'qwen_key_files_admission', 'qwen_key_loader', 'qwen_key_readers', 'key_descriptor_io', 'cleanup', 'cleanup_origin', 'qwen_finalizer', 'qwen_public_parameters', 'reused_client_io', 'reused_rns_payload', 'qwen_serialization', 'qwen_layout', 'qwen_file_lifecycle', 'qwen_publisher', 'qwen_backend_composition', 'qwen_stage_composition', 'full_contract'))
+ COMMON_MODULES=frozenset(('encrypted_chained_streaming_linear', 'encrypted_compilation', 'encrypted_ntt', 'encrypted_packed_qwen', 'encrypted_packed_transformer', 'encrypted_polynomial', 'encrypted_primitives', 'encrypted_qwen_attention_bypass', 'encrypted_qwen_attention_join', 'encrypted_qwen_attention_routing', 'encrypted_qwen_causal_softmax', 'encrypted_qwen_causal_softmax_batched', 'encrypted_qwen_decoder_tail', 'encrypted_qwen_full_model', 'encrypted_qwen_head_routing', 'encrypted_qwen_rms_refresh', 'encrypted_qwen_rmsnorm', 'encrypted_qwen_silu', 'encrypted_refresh', 'encrypted_rotation', 'encrypted_scale_planning', 'encrypted_streaming_linear', 'encrypted_transformer', 'qwen_candidate_bridge', 'qwen_silu_contract', 'support'))
+ 
+ 

@@ -1,0 +1,20 @@
+......................F                                                  [100%]
+=================================== FAILURES ===================================
+______________ test_identity_checked_before_manifest_publication _______________
+test_server_public_model.py:107: in test_identity_checked_before_manifest_publication
+    with pytest.raises(RuntimeError,match='moved or replaced'):public.preprocess(SNAPSHOT,output,context_id=CONTEXT,candidate_bytes=CANDIDATE,profile_bytes=PROFILE)
+                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+server_public_model.py:324: in preprocess
+    records[name]=dict(file=filename,shape=list(shape),dtype='<f4',tensor_sha256=hashlib.sha256(raw).hexdigest(),file_sha256=file_sha(output/filename))
+                                                                                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^
+server_public_model.py:228: in file_sha
+    with Path(path).open('rb') as f:return hashlib.file_digest(f,'sha256').hexdigest()
+         ^^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py:537: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-245/test_identity_checked_before_m0/cache/tensor_195.npy'
+E   Owned public cache cleanup also failed: RuntimeError('owned directory identity was replaced; retained')
+=========================== short test summary info ============================
+FAILED test_server_public_model.py::test_identity_checked_before_manifest_publication
+1 failed, 22 passed in 5.94s

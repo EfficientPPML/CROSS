@@ -1,0 +1,1645 @@
+FFF.FFFFFFFFFFFFFFFFFFFFFFFF                                             [100%]
+=================================== FAILURES ===================================
+___________________ test_complete_ordered_producer_chain[1] ____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_complete_ordered_producer0')
+schedule = CaseSet(cases=(RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e3...-seed44-references.jsonl', bytes=13719517, sha256='1e2290c8da124793043063bda1209239e489b8afef9903751356ac1a60b9a69a')))
+size = 1
+
+    @pytest.mark.parametrize('size',[1,2,3])
+    def test_complete_ordered_producer_chain(tmp_path,schedule,size):
+        case=schedule.case(size,42);previous=None
+>       for stage in (3,4,5):previous=proof(tmp_path,case,stage,previous)
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_stage_gate.py:67: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_stage_gate.py:60: in proof
+    return gate.authenticate(p,sha(raw),stage=stage,case=case,expected_sources=expected,context_id='1'*64,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+evidence = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_complete_ordered_producer0/stage3')
+report_sha256 = 'ee8a85817ccaeb2c245c72e5739f8aa817306c6b9b86fd5006549f07f02f7dc5'
+stage = 3
+case = RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e330ac4b63d7d30e3..., (63, 3), (64, 6), (65, 2), (67, 2), (68, 2), (69, 1), (71, 1), (72, 2), (73, 1), (74, 1), (75, 1), (78, 2), (79, 1)))
+expected_sources = {'tiny.py': '1f88b51487ca890c968f39fbabbae79b4d671be8de3cea5ee1e02259a948eaf4'}
+context_id = '1111111111111111111111111111111111111111111111111111111111111111'
+model_id = '2222222222222222222222222222222222222222222222222222222222222222'
+key_report_sha256 = '3333333333333333333333333333333333333333333333333333333333333333'
+model_report_sha256 = '4444444444444444444444444444444444444444444444444444444444444444'
+previous = None
+
+    def authenticate(evidence,report_sha256,*,stage,case,expected_sources,context_id,model_id,
+                     key_report_sha256,model_report_sha256,previous=None):
+        if type(stage)is not int or stage not in (3,4,5):raise ValueError('one ranked stage3/4/5 required')
+        if (stage==3)!=(previous is None):raise ValueError('exact predecessor stage proof required')
+        if previous is not None and (type(previous)is not dict or previous.get('stage')!=stage-1 or previous.get('case_binding')!=case_binding(case)):
+            raise ValueError('ranked predecessor stage/case differs')
+        if type(expected_sources)is not dict or not expected_sources:raise ValueError('externally reviewed nonempty source inventory required')
+        for name,h in expected_sources.items():
+            if type(name)is not str or Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('relative reviewed source inventory required')
+            key_gate.sha_field(h)
+        for h in (context_id,model_id,key_report_sha256,model_report_sha256):key_gate.sha_field(h)
+        evidence=Path(evidence);raw=key_gate.read(evidence/'report.json',16<<20)
+        if key_gate.digest(raw)!=key_gate.sha_field(report_sha256):raise ValueError('externally pinned ranked terminal report differs')
+        report=key_gate.parse(raw)
+        flags=('passed','execute','actual_execution_attempted','operation_complete','all_processes_reaped',
+            'source_files_unchanged','source_archive_verified','cleanup_completed','terminal_scope_completed','owned_artifacts_retained')
+        if (type(report)is not dict or report.get('schema')!='cross-bert-ranked-stage-proof-v1'
+                or type(report.get('stage'))is not int or report['stage']!=stage
+                or any(report.get(k)is not True for k in flags) or report.get('error') or report.get('cleanup_errors')):
+            raise ValueError('completed successful ranked producer terminal proof required')
+        if any(report.get(k)!=expected_sources for k in ('source_hashes_start','source_hashes_end','execution_source_hashes_end')):
+            raise ValueError('ranked producer reviewed source closure differs')
+        archive=key_gate.read(evidence/'sources.tar.gz',16<<20)
+        if key_gate.digest(archive)!=key_gate.sha_field(report.get('source_archive_sha256')):raise ValueError('ranked producer archive digest differs')
+>       key_gate.verify_source_archive(archive,expected_sources)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'key_gate' has no attribute 'verify_source_archive'
+
+ranked_stage_gate.py:112: AttributeError
+___________________ test_complete_ordered_producer_chain[2] ____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_complete_ordered_producer1')
+schedule = CaseSet(cases=(RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e3...-seed44-references.jsonl', bytes=13719517, sha256='1e2290c8da124793043063bda1209239e489b8afef9903751356ac1a60b9a69a')))
+size = 2
+
+    @pytest.mark.parametrize('size',[1,2,3])
+    def test_complete_ordered_producer_chain(tmp_path,schedule,size):
+        case=schedule.case(size,42);previous=None
+>       for stage in (3,4,5):previous=proof(tmp_path,case,stage,previous)
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_stage_gate.py:67: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_stage_gate.py:60: in proof
+    return gate.authenticate(p,sha(raw),stage=stage,case=case,expected_sources=expected,context_id='1'*64,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+evidence = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_complete_ordered_producer1/stage3')
+report_sha256 = '2fba6dc34735673251f26634ee773c1199ddfb6af4d10378044d29da129fa200'
+stage = 3
+case = RankedCase(size=2, seed=42, count=200, generator_seed=191664963, input_sha256='365eb7ce47111e8948dbaddec723fc97c924452..., (69, 3), (70, 1), (71, 3), (72, 2), (73, 2), (74, 3), (75, 3), (78, 3), (79, 3), (80, 1), (81, 2), (83, 1), (88, 1)))
+expected_sources = {'tiny.py': '1f88b51487ca890c968f39fbabbae79b4d671be8de3cea5ee1e02259a948eaf4'}
+context_id = '1111111111111111111111111111111111111111111111111111111111111111'
+model_id = '2222222222222222222222222222222222222222222222222222222222222222'
+key_report_sha256 = '3333333333333333333333333333333333333333333333333333333333333333'
+model_report_sha256 = '4444444444444444444444444444444444444444444444444444444444444444'
+previous = None
+
+    def authenticate(evidence,report_sha256,*,stage,case,expected_sources,context_id,model_id,
+                     key_report_sha256,model_report_sha256,previous=None):
+        if type(stage)is not int or stage not in (3,4,5):raise ValueError('one ranked stage3/4/5 required')
+        if (stage==3)!=(previous is None):raise ValueError('exact predecessor stage proof required')
+        if previous is not None and (type(previous)is not dict or previous.get('stage')!=stage-1 or previous.get('case_binding')!=case_binding(case)):
+            raise ValueError('ranked predecessor stage/case differs')
+        if type(expected_sources)is not dict or not expected_sources:raise ValueError('externally reviewed nonempty source inventory required')
+        for name,h in expected_sources.items():
+            if type(name)is not str or Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('relative reviewed source inventory required')
+            key_gate.sha_field(h)
+        for h in (context_id,model_id,key_report_sha256,model_report_sha256):key_gate.sha_field(h)
+        evidence=Path(evidence);raw=key_gate.read(evidence/'report.json',16<<20)
+        if key_gate.digest(raw)!=key_gate.sha_field(report_sha256):raise ValueError('externally pinned ranked terminal report differs')
+        report=key_gate.parse(raw)
+        flags=('passed','execute','actual_execution_attempted','operation_complete','all_processes_reaped',
+            'source_files_unchanged','source_archive_verified','cleanup_completed','terminal_scope_completed','owned_artifacts_retained')
+        if (type(report)is not dict or report.get('schema')!='cross-bert-ranked-stage-proof-v1'
+                or type(report.get('stage'))is not int or report['stage']!=stage
+                or any(report.get(k)is not True for k in flags) or report.get('error') or report.get('cleanup_errors')):
+            raise ValueError('completed successful ranked producer terminal proof required')
+        if any(report.get(k)!=expected_sources for k in ('source_hashes_start','source_hashes_end','execution_source_hashes_end')):
+            raise ValueError('ranked producer reviewed source closure differs')
+        archive=key_gate.read(evidence/'sources.tar.gz',16<<20)
+        if key_gate.digest(archive)!=key_gate.sha_field(report.get('source_archive_sha256')):raise ValueError('ranked producer archive digest differs')
+>       key_gate.verify_source_archive(archive,expected_sources)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'key_gate' has no attribute 'verify_source_archive'
+
+ranked_stage_gate.py:112: AttributeError
+___________________ test_complete_ordered_producer_chain[3] ____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_complete_ordered_producer2')
+schedule = CaseSet(cases=(RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e3...-seed44-references.jsonl', bytes=13719517, sha256='1e2290c8da124793043063bda1209239e489b8afef9903751356ac1a60b9a69a')))
+size = 3
+
+    @pytest.mark.parametrize('size',[1,2,3])
+    def test_complete_ordered_producer_chain(tmp_path,schedule,size):
+        case=schedule.case(size,42);previous=None
+>       for stage in (3,4,5):previous=proof(tmp_path,case,stage,previous)
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_stage_gate.py:67: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_stage_gate.py:60: in proof
+    return gate.authenticate(p,sha(raw),stage=stage,case=case,expected_sources=expected,context_id='1'*64,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+evidence = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_complete_ordered_producer2/stage3')
+report_sha256 = '6edd30d3927b0ee12ef98d4564c99fdcc9e27723d375be793dceca9e78883a6f'
+stage = 3
+case = RankedCase(size=3, seed=42, count=408, generator_seed=191664963, input_sha256='63c1a4ca6eb585e86327b16cc062cb6fbd6a2be..., (74, 8), (75, 6), (76, 1), (78, 3), (79, 4), (80, 4), (81, 4), (82, 1), (83, 1), (84, 1), (86, 1), (87, 1), (88, 2)))
+expected_sources = {'tiny.py': '1f88b51487ca890c968f39fbabbae79b4d671be8de3cea5ee1e02259a948eaf4'}
+context_id = '1111111111111111111111111111111111111111111111111111111111111111'
+model_id = '2222222222222222222222222222222222222222222222222222222222222222'
+key_report_sha256 = '3333333333333333333333333333333333333333333333333333333333333333'
+model_report_sha256 = '4444444444444444444444444444444444444444444444444444444444444444'
+previous = None
+
+    def authenticate(evidence,report_sha256,*,stage,case,expected_sources,context_id,model_id,
+                     key_report_sha256,model_report_sha256,previous=None):
+        if type(stage)is not int or stage not in (3,4,5):raise ValueError('one ranked stage3/4/5 required')
+        if (stage==3)!=(previous is None):raise ValueError('exact predecessor stage proof required')
+        if previous is not None and (type(previous)is not dict or previous.get('stage')!=stage-1 or previous.get('case_binding')!=case_binding(case)):
+            raise ValueError('ranked predecessor stage/case differs')
+        if type(expected_sources)is not dict or not expected_sources:raise ValueError('externally reviewed nonempty source inventory required')
+        for name,h in expected_sources.items():
+            if type(name)is not str or Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('relative reviewed source inventory required')
+            key_gate.sha_field(h)
+        for h in (context_id,model_id,key_report_sha256,model_report_sha256):key_gate.sha_field(h)
+        evidence=Path(evidence);raw=key_gate.read(evidence/'report.json',16<<20)
+        if key_gate.digest(raw)!=key_gate.sha_field(report_sha256):raise ValueError('externally pinned ranked terminal report differs')
+        report=key_gate.parse(raw)
+        flags=('passed','execute','actual_execution_attempted','operation_complete','all_processes_reaped',
+            'source_files_unchanged','source_archive_verified','cleanup_completed','terminal_scope_completed','owned_artifacts_retained')
+        if (type(report)is not dict or report.get('schema')!='cross-bert-ranked-stage-proof-v1'
+                or type(report.get('stage'))is not int or report['stage']!=stage
+                or any(report.get(k)is not True for k in flags) or report.get('error') or report.get('cleanup_errors')):
+            raise ValueError('completed successful ranked producer terminal proof required')
+        if any(report.get(k)!=expected_sources for k in ('source_hashes_start','source_hashes_end','execution_source_hashes_end')):
+            raise ValueError('ranked producer reviewed source closure differs')
+        archive=key_gate.read(evidence/'sources.tar.gz',16<<20)
+        if key_gate.digest(archive)!=key_gate.sha_field(report.get('source_archive_sha256')):raise ValueError('ranked producer archive digest differs')
+>       key_gate.verify_source_archive(archive,expected_sources)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'key_gate' has no attribute 'verify_source_archive'
+
+ranked_stage_gate.py:112: AttributeError
+_________ test_public_terminal_source_phase_failures[outer_terminal-4] _________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph1')
+schedule = CaseSet(cases=(RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e3...-seed44-references.jsonl', bytes=13719517, sha256='1e2290c8da124793043063bda1209239e489b8afef9903751356ac1a60b9a69a')))
+stage = 4, fault = 'outer_terminal'
+
+    @pytest.mark.parametrize('stage',[3,4,5])
+    @pytest.mark.parametrize('fault',['outer_terminal','worker_terminal','bool_exit','phase','bindings','source'])
+    def test_public_terminal_source_phase_failures(tmp_path,schedule,stage,fault):
+        case=schedule.case(1,43);previous=None
+>       for earlier in range(3,stage):previous=proof(tmp_path,case,earlier,previous)
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_stage_gate.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_stage_gate.py:60: in proof
+    return gate.authenticate(p,sha(raw),stage=stage,case=case,expected_sources=expected,context_id='1'*64,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+evidence = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph1/stage3')
+report_sha256 = '1c12d5a7200b14c1650ee180c813ff2a444e83ac326d9fd2e80d4184ff49c0e6'
+stage = 3
+case = RankedCase(size=1, seed=43, count=100, generator_seed=1085174816, input_sha256='dd1a5eef911571c7e560a4b66410df27b8909d..., (62, 2), (63, 3), (64, 3), (65, 1), (68, 1), (70, 1), (71, 1), (72, 1), (74, 2), (75, 1), (79, 2), (84, 1), (88, 1)))
+expected_sources = {'tiny.py': '1f88b51487ca890c968f39fbabbae79b4d671be8de3cea5ee1e02259a948eaf4'}
+context_id = '1111111111111111111111111111111111111111111111111111111111111111'
+model_id = '2222222222222222222222222222222222222222222222222222222222222222'
+key_report_sha256 = '3333333333333333333333333333333333333333333333333333333333333333'
+model_report_sha256 = '4444444444444444444444444444444444444444444444444444444444444444'
+previous = None
+
+    def authenticate(evidence,report_sha256,*,stage,case,expected_sources,context_id,model_id,
+                     key_report_sha256,model_report_sha256,previous=None):
+        if type(stage)is not int or stage not in (3,4,5):raise ValueError('one ranked stage3/4/5 required')
+        if (stage==3)!=(previous is None):raise ValueError('exact predecessor stage proof required')
+        if previous is not None and (type(previous)is not dict or previous.get('stage')!=stage-1 or previous.get('case_binding')!=case_binding(case)):
+            raise ValueError('ranked predecessor stage/case differs')
+        if type(expected_sources)is not dict or not expected_sources:raise ValueError('externally reviewed nonempty source inventory required')
+        for name,h in expected_sources.items():
+            if type(name)is not str or Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('relative reviewed source inventory required')
+            key_gate.sha_field(h)
+        for h in (context_id,model_id,key_report_sha256,model_report_sha256):key_gate.sha_field(h)
+        evidence=Path(evidence);raw=key_gate.read(evidence/'report.json',16<<20)
+        if key_gate.digest(raw)!=key_gate.sha_field(report_sha256):raise ValueError('externally pinned ranked terminal report differs')
+        report=key_gate.parse(raw)
+        flags=('passed','execute','actual_execution_attempted','operation_complete','all_processes_reaped',
+            'source_files_unchanged','source_archive_verified','cleanup_completed','terminal_scope_completed','owned_artifacts_retained')
+        if (type(report)is not dict or report.get('schema')!='cross-bert-ranked-stage-proof-v1'
+                or type(report.get('stage'))is not int or report['stage']!=stage
+                or any(report.get(k)is not True for k in flags) or report.get('error') or report.get('cleanup_errors')):
+            raise ValueError('completed successful ranked producer terminal proof required')
+        if any(report.get(k)!=expected_sources for k in ('source_hashes_start','source_hashes_end','execution_source_hashes_end')):
+            raise ValueError('ranked producer reviewed source closure differs')
+        archive=key_gate.read(evidence/'sources.tar.gz',16<<20)
+        if key_gate.digest(archive)!=key_gate.sha_field(report.get('source_archive_sha256')):raise ValueError('ranked producer archive digest differs')
+>       key_gate.verify_source_archive(archive,expected_sources)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'key_gate' has no attribute 'verify_source_archive'
+
+ranked_stage_gate.py:112: AttributeError
+_________ test_public_terminal_source_phase_failures[outer_terminal-5] _________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph2')
+schedule = CaseSet(cases=(RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e3...-seed44-references.jsonl', bytes=13719517, sha256='1e2290c8da124793043063bda1209239e489b8afef9903751356ac1a60b9a69a')))
+stage = 5, fault = 'outer_terminal'
+
+    @pytest.mark.parametrize('stage',[3,4,5])
+    @pytest.mark.parametrize('fault',['outer_terminal','worker_terminal','bool_exit','phase','bindings','source'])
+    def test_public_terminal_source_phase_failures(tmp_path,schedule,stage,fault):
+        case=schedule.case(1,43);previous=None
+>       for earlier in range(3,stage):previous=proof(tmp_path,case,earlier,previous)
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_stage_gate.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_stage_gate.py:60: in proof
+    return gate.authenticate(p,sha(raw),stage=stage,case=case,expected_sources=expected,context_id='1'*64,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+evidence = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph2/stage3')
+report_sha256 = '1c12d5a7200b14c1650ee180c813ff2a444e83ac326d9fd2e80d4184ff49c0e6'
+stage = 3
+case = RankedCase(size=1, seed=43, count=100, generator_seed=1085174816, input_sha256='dd1a5eef911571c7e560a4b66410df27b8909d..., (62, 2), (63, 3), (64, 3), (65, 1), (68, 1), (70, 1), (71, 1), (72, 1), (74, 2), (75, 1), (79, 2), (84, 1), (88, 1)))
+expected_sources = {'tiny.py': '1f88b51487ca890c968f39fbabbae79b4d671be8de3cea5ee1e02259a948eaf4'}
+context_id = '1111111111111111111111111111111111111111111111111111111111111111'
+model_id = '2222222222222222222222222222222222222222222222222222222222222222'
+key_report_sha256 = '3333333333333333333333333333333333333333333333333333333333333333'
+model_report_sha256 = '4444444444444444444444444444444444444444444444444444444444444444'
+previous = None
+
+    def authenticate(evidence,report_sha256,*,stage,case,expected_sources,context_id,model_id,
+                     key_report_sha256,model_report_sha256,previous=None):
+        if type(stage)is not int or stage not in (3,4,5):raise ValueError('one ranked stage3/4/5 required')
+        if (stage==3)!=(previous is None):raise ValueError('exact predecessor stage proof required')
+        if previous is not None and (type(previous)is not dict or previous.get('stage')!=stage-1 or previous.get('case_binding')!=case_binding(case)):
+            raise ValueError('ranked predecessor stage/case differs')
+        if type(expected_sources)is not dict or not expected_sources:raise ValueError('externally reviewed nonempty source inventory required')
+        for name,h in expected_sources.items():
+            if type(name)is not str or Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('relative reviewed source inventory required')
+            key_gate.sha_field(h)
+        for h in (context_id,model_id,key_report_sha256,model_report_sha256):key_gate.sha_field(h)
+        evidence=Path(evidence);raw=key_gate.read(evidence/'report.json',16<<20)
+        if key_gate.digest(raw)!=key_gate.sha_field(report_sha256):raise ValueError('externally pinned ranked terminal report differs')
+        report=key_gate.parse(raw)
+        flags=('passed','execute','actual_execution_attempted','operation_complete','all_processes_reaped',
+            'source_files_unchanged','source_archive_verified','cleanup_completed','terminal_scope_completed','owned_artifacts_retained')
+        if (type(report)is not dict or report.get('schema')!='cross-bert-ranked-stage-proof-v1'
+                or type(report.get('stage'))is not int or report['stage']!=stage
+                or any(report.get(k)is not True for k in flags) or report.get('error') or report.get('cleanup_errors')):
+            raise ValueError('completed successful ranked producer terminal proof required')
+        if any(report.get(k)!=expected_sources for k in ('source_hashes_start','source_hashes_end','execution_source_hashes_end')):
+            raise ValueError('ranked producer reviewed source closure differs')
+        archive=key_gate.read(evidence/'sources.tar.gz',16<<20)
+        if key_gate.digest(archive)!=key_gate.sha_field(report.get('source_archive_sha256')):raise ValueError('ranked producer archive digest differs')
+>       key_gate.verify_source_archive(archive,expected_sources)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'key_gate' has no attribute 'verify_source_archive'
+
+ranked_stage_gate.py:112: AttributeError
+________ test_public_terminal_source_phase_failures[worker_terminal-3] _________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph3')
+schedule = CaseSet(cases=(RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e3...-seed44-references.jsonl', bytes=13719517, sha256='1e2290c8da124793043063bda1209239e489b8afef9903751356ac1a60b9a69a')))
+stage = 3, fault = 'worker_terminal'
+
+    @pytest.mark.parametrize('stage',[3,4,5])
+    @pytest.mark.parametrize('fault',['outer_terminal','worker_terminal','bool_exit','phase','bindings','source'])
+    def test_public_terminal_source_phase_failures(tmp_path,schedule,stage,fault):
+        case=schedule.case(1,43);previous=None
+        for earlier in range(3,stage):previous=proof(tmp_path,case,earlier,previous)
+        def mutate(r,w):
+            if fault=='outer_terminal':r['terminal_scope_completed']=False
+            elif fault=='worker_terminal':w['terminal_scope_completed']=False
+            elif fault=='bool_exit':r['worker_process']['returncode']=False
+            elif fault=='phase':w['phases']['model_forward']=True
+            elif fault=='bindings':w['bindings']=copy.deepcopy(w['bindings']);w['bindings']['case_binding']['seed']=44
+            else:w['source_hashes_end']={}
+>       with pytest.raises(ValueError):proof(tmp_path,case,stage,previous,mutate)
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_stage_gate.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_stage_gate.py:60: in proof
+    return gate.authenticate(p,sha(raw),stage=stage,case=case,expected_sources=expected,context_id='1'*64,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+evidence = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph3/stage3')
+report_sha256 = 'ace0302854e37db050d9beb3e328d65e4fa7e3f35a3800a79111867f812c54a8'
+stage = 3
+case = RankedCase(size=1, seed=43, count=100, generator_seed=1085174816, input_sha256='dd1a5eef911571c7e560a4b66410df27b8909d..., (62, 2), (63, 3), (64, 3), (65, 1), (68, 1), (70, 1), (71, 1), (72, 1), (74, 2), (75, 1), (79, 2), (84, 1), (88, 1)))
+expected_sources = {'tiny.py': '1f88b51487ca890c968f39fbabbae79b4d671be8de3cea5ee1e02259a948eaf4'}
+context_id = '1111111111111111111111111111111111111111111111111111111111111111'
+model_id = '2222222222222222222222222222222222222222222222222222222222222222'
+key_report_sha256 = '3333333333333333333333333333333333333333333333333333333333333333'
+model_report_sha256 = '4444444444444444444444444444444444444444444444444444444444444444'
+previous = None
+
+    def authenticate(evidence,report_sha256,*,stage,case,expected_sources,context_id,model_id,
+                     key_report_sha256,model_report_sha256,previous=None):
+        if type(stage)is not int or stage not in (3,4,5):raise ValueError('one ranked stage3/4/5 required')
+        if (stage==3)!=(previous is None):raise ValueError('exact predecessor stage proof required')
+        if previous is not None and (type(previous)is not dict or previous.get('stage')!=stage-1 or previous.get('case_binding')!=case_binding(case)):
+            raise ValueError('ranked predecessor stage/case differs')
+        if type(expected_sources)is not dict or not expected_sources:raise ValueError('externally reviewed nonempty source inventory required')
+        for name,h in expected_sources.items():
+            if type(name)is not str or Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('relative reviewed source inventory required')
+            key_gate.sha_field(h)
+        for h in (context_id,model_id,key_report_sha256,model_report_sha256):key_gate.sha_field(h)
+        evidence=Path(evidence);raw=key_gate.read(evidence/'report.json',16<<20)
+        if key_gate.digest(raw)!=key_gate.sha_field(report_sha256):raise ValueError('externally pinned ranked terminal report differs')
+        report=key_gate.parse(raw)
+        flags=('passed','execute','actual_execution_attempted','operation_complete','all_processes_reaped',
+            'source_files_unchanged','source_archive_verified','cleanup_completed','terminal_scope_completed','owned_artifacts_retained')
+        if (type(report)is not dict or report.get('schema')!='cross-bert-ranked-stage-proof-v1'
+                or type(report.get('stage'))is not int or report['stage']!=stage
+                or any(report.get(k)is not True for k in flags) or report.get('error') or report.get('cleanup_errors')):
+            raise ValueError('completed successful ranked producer terminal proof required')
+        if any(report.get(k)!=expected_sources for k in ('source_hashes_start','source_hashes_end','execution_source_hashes_end')):
+            raise ValueError('ranked producer reviewed source closure differs')
+        archive=key_gate.read(evidence/'sources.tar.gz',16<<20)
+        if key_gate.digest(archive)!=key_gate.sha_field(report.get('source_archive_sha256')):raise ValueError('ranked producer archive digest differs')
+>       key_gate.verify_source_archive(archive,expected_sources)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'key_gate' has no attribute 'verify_source_archive'
+
+ranked_stage_gate.py:112: AttributeError
+________ test_public_terminal_source_phase_failures[worker_terminal-4] _________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph4')
+schedule = CaseSet(cases=(RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e3...-seed44-references.jsonl', bytes=13719517, sha256='1e2290c8da124793043063bda1209239e489b8afef9903751356ac1a60b9a69a')))
+stage = 4, fault = 'worker_terminal'
+
+    @pytest.mark.parametrize('stage',[3,4,5])
+    @pytest.mark.parametrize('fault',['outer_terminal','worker_terminal','bool_exit','phase','bindings','source'])
+    def test_public_terminal_source_phase_failures(tmp_path,schedule,stage,fault):
+        case=schedule.case(1,43);previous=None
+>       for earlier in range(3,stage):previous=proof(tmp_path,case,earlier,previous)
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_stage_gate.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_stage_gate.py:60: in proof
+    return gate.authenticate(p,sha(raw),stage=stage,case=case,expected_sources=expected,context_id='1'*64,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+evidence = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph4/stage3')
+report_sha256 = '1c12d5a7200b14c1650ee180c813ff2a444e83ac326d9fd2e80d4184ff49c0e6'
+stage = 3
+case = RankedCase(size=1, seed=43, count=100, generator_seed=1085174816, input_sha256='dd1a5eef911571c7e560a4b66410df27b8909d..., (62, 2), (63, 3), (64, 3), (65, 1), (68, 1), (70, 1), (71, 1), (72, 1), (74, 2), (75, 1), (79, 2), (84, 1), (88, 1)))
+expected_sources = {'tiny.py': '1f88b51487ca890c968f39fbabbae79b4d671be8de3cea5ee1e02259a948eaf4'}
+context_id = '1111111111111111111111111111111111111111111111111111111111111111'
+model_id = '2222222222222222222222222222222222222222222222222222222222222222'
+key_report_sha256 = '3333333333333333333333333333333333333333333333333333333333333333'
+model_report_sha256 = '4444444444444444444444444444444444444444444444444444444444444444'
+previous = None
+
+    def authenticate(evidence,report_sha256,*,stage,case,expected_sources,context_id,model_id,
+                     key_report_sha256,model_report_sha256,previous=None):
+        if type(stage)is not int or stage not in (3,4,5):raise ValueError('one ranked stage3/4/5 required')
+        if (stage==3)!=(previous is None):raise ValueError('exact predecessor stage proof required')
+        if previous is not None and (type(previous)is not dict or previous.get('stage')!=stage-1 or previous.get('case_binding')!=case_binding(case)):
+            raise ValueError('ranked predecessor stage/case differs')
+        if type(expected_sources)is not dict or not expected_sources:raise ValueError('externally reviewed nonempty source inventory required')
+        for name,h in expected_sources.items():
+            if type(name)is not str or Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('relative reviewed source inventory required')
+            key_gate.sha_field(h)
+        for h in (context_id,model_id,key_report_sha256,model_report_sha256):key_gate.sha_field(h)
+        evidence=Path(evidence);raw=key_gate.read(evidence/'report.json',16<<20)
+        if key_gate.digest(raw)!=key_gate.sha_field(report_sha256):raise ValueError('externally pinned ranked terminal report differs')
+        report=key_gate.parse(raw)
+        flags=('passed','execute','actual_execution_attempted','operation_complete','all_processes_reaped',
+            'source_files_unchanged','source_archive_verified','cleanup_completed','terminal_scope_completed','owned_artifacts_retained')
+        if (type(report)is not dict or report.get('schema')!='cross-bert-ranked-stage-proof-v1'
+                or type(report.get('stage'))is not int or report['stage']!=stage
+                or any(report.get(k)is not True for k in flags) or report.get('error') or report.get('cleanup_errors')):
+            raise ValueError('completed successful ranked producer terminal proof required')
+        if any(report.get(k)!=expected_sources for k in ('source_hashes_start','source_hashes_end','execution_source_hashes_end')):
+            raise ValueError('ranked producer reviewed source closure differs')
+        archive=key_gate.read(evidence/'sources.tar.gz',16<<20)
+        if key_gate.digest(archive)!=key_gate.sha_field(report.get('source_archive_sha256')):raise ValueError('ranked producer archive digest differs')
+>       key_gate.verify_source_archive(archive,expected_sources)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'key_gate' has no attribute 'verify_source_archive'
+
+ranked_stage_gate.py:112: AttributeError
+________ test_public_terminal_source_phase_failures[worker_terminal-5] _________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph5')
+schedule = CaseSet(cases=(RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e3...-seed44-references.jsonl', bytes=13719517, sha256='1e2290c8da124793043063bda1209239e489b8afef9903751356ac1a60b9a69a')))
+stage = 5, fault = 'worker_terminal'
+
+    @pytest.mark.parametrize('stage',[3,4,5])
+    @pytest.mark.parametrize('fault',['outer_terminal','worker_terminal','bool_exit','phase','bindings','source'])
+    def test_public_terminal_source_phase_failures(tmp_path,schedule,stage,fault):
+        case=schedule.case(1,43);previous=None
+>       for earlier in range(3,stage):previous=proof(tmp_path,case,earlier,previous)
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_stage_gate.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_stage_gate.py:60: in proof
+    return gate.authenticate(p,sha(raw),stage=stage,case=case,expected_sources=expected,context_id='1'*64,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+evidence = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph5/stage3')
+report_sha256 = 'aa4a4cb8a40494bf13e35ec15cfb4ac09e69bd44e849b3919ad405860e2bd5bd'
+stage = 3
+case = RankedCase(size=1, seed=43, count=100, generator_seed=1085174816, input_sha256='dd1a5eef911571c7e560a4b66410df27b8909d..., (62, 2), (63, 3), (64, 3), (65, 1), (68, 1), (70, 1), (71, 1), (72, 1), (74, 2), (75, 1), (79, 2), (84, 1), (88, 1)))
+expected_sources = {'tiny.py': '1f88b51487ca890c968f39fbabbae79b4d671be8de3cea5ee1e02259a948eaf4'}
+context_id = '1111111111111111111111111111111111111111111111111111111111111111'
+model_id = '2222222222222222222222222222222222222222222222222222222222222222'
+key_report_sha256 = '3333333333333333333333333333333333333333333333333333333333333333'
+model_report_sha256 = '4444444444444444444444444444444444444444444444444444444444444444'
+previous = None
+
+    def authenticate(evidence,report_sha256,*,stage,case,expected_sources,context_id,model_id,
+                     key_report_sha256,model_report_sha256,previous=None):
+        if type(stage)is not int or stage not in (3,4,5):raise ValueError('one ranked stage3/4/5 required')
+        if (stage==3)!=(previous is None):raise ValueError('exact predecessor stage proof required')
+        if previous is not None and (type(previous)is not dict or previous.get('stage')!=stage-1 or previous.get('case_binding')!=case_binding(case)):
+            raise ValueError('ranked predecessor stage/case differs')
+        if type(expected_sources)is not dict or not expected_sources:raise ValueError('externally reviewed nonempty source inventory required')
+        for name,h in expected_sources.items():
+            if type(name)is not str or Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('relative reviewed source inventory required')
+            key_gate.sha_field(h)
+        for h in (context_id,model_id,key_report_sha256,model_report_sha256):key_gate.sha_field(h)
+        evidence=Path(evidence);raw=key_gate.read(evidence/'report.json',16<<20)
+        if key_gate.digest(raw)!=key_gate.sha_field(report_sha256):raise ValueError('externally pinned ranked terminal report differs')
+        report=key_gate.parse(raw)
+        flags=('passed','execute','actual_execution_attempted','operation_complete','all_processes_reaped',
+            'source_files_unchanged','source_archive_verified','cleanup_completed','terminal_scope_completed','owned_artifacts_retained')
+        if (type(report)is not dict or report.get('schema')!='cross-bert-ranked-stage-proof-v1'
+                or type(report.get('stage'))is not int or report['stage']!=stage
+                or any(report.get(k)is not True for k in flags) or report.get('error') or report.get('cleanup_errors')):
+            raise ValueError('completed successful ranked producer terminal proof required')
+        if any(report.get(k)!=expected_sources for k in ('source_hashes_start','source_hashes_end','execution_source_hashes_end')):
+            raise ValueError('ranked producer reviewed source closure differs')
+        archive=key_gate.read(evidence/'sources.tar.gz',16<<20)
+        if key_gate.digest(archive)!=key_gate.sha_field(report.get('source_archive_sha256')):raise ValueError('ranked producer archive digest differs')
+>       key_gate.verify_source_archive(archive,expected_sources)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'key_gate' has no attribute 'verify_source_archive'
+
+ranked_stage_gate.py:112: AttributeError
+___________ test_public_terminal_source_phase_failures[bool_exit-3] ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph6')
+schedule = CaseSet(cases=(RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e3...-seed44-references.jsonl', bytes=13719517, sha256='1e2290c8da124793043063bda1209239e489b8afef9903751356ac1a60b9a69a')))
+stage = 3, fault = 'bool_exit'
+
+    @pytest.mark.parametrize('stage',[3,4,5])
+    @pytest.mark.parametrize('fault',['outer_terminal','worker_terminal','bool_exit','phase','bindings','source'])
+    def test_public_terminal_source_phase_failures(tmp_path,schedule,stage,fault):
+        case=schedule.case(1,43);previous=None
+        for earlier in range(3,stage):previous=proof(tmp_path,case,earlier,previous)
+        def mutate(r,w):
+            if fault=='outer_terminal':r['terminal_scope_completed']=False
+            elif fault=='worker_terminal':w['terminal_scope_completed']=False
+            elif fault=='bool_exit':r['worker_process']['returncode']=False
+            elif fault=='phase':w['phases']['model_forward']=True
+            elif fault=='bindings':w['bindings']=copy.deepcopy(w['bindings']);w['bindings']['case_binding']['seed']=44
+            else:w['source_hashes_end']={}
+>       with pytest.raises(ValueError):proof(tmp_path,case,stage,previous,mutate)
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_stage_gate.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_stage_gate.py:60: in proof
+    return gate.authenticate(p,sha(raw),stage=stage,case=case,expected_sources=expected,context_id='1'*64,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+evidence = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph6/stage3')
+report_sha256 = '014234ce71459766fa4411e704f1c0667be15d8cefb7cd7584157dd9cf42538f'
+stage = 3
+case = RankedCase(size=1, seed=43, count=100, generator_seed=1085174816, input_sha256='dd1a5eef911571c7e560a4b66410df27b8909d..., (62, 2), (63, 3), (64, 3), (65, 1), (68, 1), (70, 1), (71, 1), (72, 1), (74, 2), (75, 1), (79, 2), (84, 1), (88, 1)))
+expected_sources = {'tiny.py': '1f88b51487ca890c968f39fbabbae79b4d671be8de3cea5ee1e02259a948eaf4'}
+context_id = '1111111111111111111111111111111111111111111111111111111111111111'
+model_id = '2222222222222222222222222222222222222222222222222222222222222222'
+key_report_sha256 = '3333333333333333333333333333333333333333333333333333333333333333'
+model_report_sha256 = '4444444444444444444444444444444444444444444444444444444444444444'
+previous = None
+
+    def authenticate(evidence,report_sha256,*,stage,case,expected_sources,context_id,model_id,
+                     key_report_sha256,model_report_sha256,previous=None):
+        if type(stage)is not int or stage not in (3,4,5):raise ValueError('one ranked stage3/4/5 required')
+        if (stage==3)!=(previous is None):raise ValueError('exact predecessor stage proof required')
+        if previous is not None and (type(previous)is not dict or previous.get('stage')!=stage-1 or previous.get('case_binding')!=case_binding(case)):
+            raise ValueError('ranked predecessor stage/case differs')
+        if type(expected_sources)is not dict or not expected_sources:raise ValueError('externally reviewed nonempty source inventory required')
+        for name,h in expected_sources.items():
+            if type(name)is not str or Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('relative reviewed source inventory required')
+            key_gate.sha_field(h)
+        for h in (context_id,model_id,key_report_sha256,model_report_sha256):key_gate.sha_field(h)
+        evidence=Path(evidence);raw=key_gate.read(evidence/'report.json',16<<20)
+        if key_gate.digest(raw)!=key_gate.sha_field(report_sha256):raise ValueError('externally pinned ranked terminal report differs')
+        report=key_gate.parse(raw)
+        flags=('passed','execute','actual_execution_attempted','operation_complete','all_processes_reaped',
+            'source_files_unchanged','source_archive_verified','cleanup_completed','terminal_scope_completed','owned_artifacts_retained')
+        if (type(report)is not dict or report.get('schema')!='cross-bert-ranked-stage-proof-v1'
+                or type(report.get('stage'))is not int or report['stage']!=stage
+                or any(report.get(k)is not True for k in flags) or report.get('error') or report.get('cleanup_errors')):
+            raise ValueError('completed successful ranked producer terminal proof required')
+        if any(report.get(k)!=expected_sources for k in ('source_hashes_start','source_hashes_end','execution_source_hashes_end')):
+            raise ValueError('ranked producer reviewed source closure differs')
+        archive=key_gate.read(evidence/'sources.tar.gz',16<<20)
+        if key_gate.digest(archive)!=key_gate.sha_field(report.get('source_archive_sha256')):raise ValueError('ranked producer archive digest differs')
+>       key_gate.verify_source_archive(archive,expected_sources)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'key_gate' has no attribute 'verify_source_archive'
+
+ranked_stage_gate.py:112: AttributeError
+___________ test_public_terminal_source_phase_failures[bool_exit-4] ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph7')
+schedule = CaseSet(cases=(RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e3...-seed44-references.jsonl', bytes=13719517, sha256='1e2290c8da124793043063bda1209239e489b8afef9903751356ac1a60b9a69a')))
+stage = 4, fault = 'bool_exit'
+
+    @pytest.mark.parametrize('stage',[3,4,5])
+    @pytest.mark.parametrize('fault',['outer_terminal','worker_terminal','bool_exit','phase','bindings','source'])
+    def test_public_terminal_source_phase_failures(tmp_path,schedule,stage,fault):
+        case=schedule.case(1,43);previous=None
+>       for earlier in range(3,stage):previous=proof(tmp_path,case,earlier,previous)
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_stage_gate.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_stage_gate.py:60: in proof
+    return gate.authenticate(p,sha(raw),stage=stage,case=case,expected_sources=expected,context_id='1'*64,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+evidence = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph7/stage3')
+report_sha256 = 'aa4a4cb8a40494bf13e35ec15cfb4ac09e69bd44e849b3919ad405860e2bd5bd'
+stage = 3
+case = RankedCase(size=1, seed=43, count=100, generator_seed=1085174816, input_sha256='dd1a5eef911571c7e560a4b66410df27b8909d..., (62, 2), (63, 3), (64, 3), (65, 1), (68, 1), (70, 1), (71, 1), (72, 1), (74, 2), (75, 1), (79, 2), (84, 1), (88, 1)))
+expected_sources = {'tiny.py': '1f88b51487ca890c968f39fbabbae79b4d671be8de3cea5ee1e02259a948eaf4'}
+context_id = '1111111111111111111111111111111111111111111111111111111111111111'
+model_id = '2222222222222222222222222222222222222222222222222222222222222222'
+key_report_sha256 = '3333333333333333333333333333333333333333333333333333333333333333'
+model_report_sha256 = '4444444444444444444444444444444444444444444444444444444444444444'
+previous = None
+
+    def authenticate(evidence,report_sha256,*,stage,case,expected_sources,context_id,model_id,
+                     key_report_sha256,model_report_sha256,previous=None):
+        if type(stage)is not int or stage not in (3,4,5):raise ValueError('one ranked stage3/4/5 required')
+        if (stage==3)!=(previous is None):raise ValueError('exact predecessor stage proof required')
+        if previous is not None and (type(previous)is not dict or previous.get('stage')!=stage-1 or previous.get('case_binding')!=case_binding(case)):
+            raise ValueError('ranked predecessor stage/case differs')
+        if type(expected_sources)is not dict or not expected_sources:raise ValueError('externally reviewed nonempty source inventory required')
+        for name,h in expected_sources.items():
+            if type(name)is not str or Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('relative reviewed source inventory required')
+            key_gate.sha_field(h)
+        for h in (context_id,model_id,key_report_sha256,model_report_sha256):key_gate.sha_field(h)
+        evidence=Path(evidence);raw=key_gate.read(evidence/'report.json',16<<20)
+        if key_gate.digest(raw)!=key_gate.sha_field(report_sha256):raise ValueError('externally pinned ranked terminal report differs')
+        report=key_gate.parse(raw)
+        flags=('passed','execute','actual_execution_attempted','operation_complete','all_processes_reaped',
+            'source_files_unchanged','source_archive_verified','cleanup_completed','terminal_scope_completed','owned_artifacts_retained')
+        if (type(report)is not dict or report.get('schema')!='cross-bert-ranked-stage-proof-v1'
+                or type(report.get('stage'))is not int or report['stage']!=stage
+                or any(report.get(k)is not True for k in flags) or report.get('error') or report.get('cleanup_errors')):
+            raise ValueError('completed successful ranked producer terminal proof required')
+        if any(report.get(k)!=expected_sources for k in ('source_hashes_start','source_hashes_end','execution_source_hashes_end')):
+            raise ValueError('ranked producer reviewed source closure differs')
+        archive=key_gate.read(evidence/'sources.tar.gz',16<<20)
+        if key_gate.digest(archive)!=key_gate.sha_field(report.get('source_archive_sha256')):raise ValueError('ranked producer archive digest differs')
+>       key_gate.verify_source_archive(archive,expected_sources)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'key_gate' has no attribute 'verify_source_archive'
+
+ranked_stage_gate.py:112: AttributeError
+___________ test_public_terminal_source_phase_failures[bool_exit-5] ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph8')
+schedule = CaseSet(cases=(RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e3...-seed44-references.jsonl', bytes=13719517, sha256='1e2290c8da124793043063bda1209239e489b8afef9903751356ac1a60b9a69a')))
+stage = 5, fault = 'bool_exit'
+
+    @pytest.mark.parametrize('stage',[3,4,5])
+    @pytest.mark.parametrize('fault',['outer_terminal','worker_terminal','bool_exit','phase','bindings','source'])
+    def test_public_terminal_source_phase_failures(tmp_path,schedule,stage,fault):
+        case=schedule.case(1,43);previous=None
+>       for earlier in range(3,stage):previous=proof(tmp_path,case,earlier,previous)
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_stage_gate.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_stage_gate.py:60: in proof
+    return gate.authenticate(p,sha(raw),stage=stage,case=case,expected_sources=expected,context_id='1'*64,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+evidence = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph8/stage3')
+report_sha256 = 'aa4a4cb8a40494bf13e35ec15cfb4ac09e69bd44e849b3919ad405860e2bd5bd'
+stage = 3
+case = RankedCase(size=1, seed=43, count=100, generator_seed=1085174816, input_sha256='dd1a5eef911571c7e560a4b66410df27b8909d..., (62, 2), (63, 3), (64, 3), (65, 1), (68, 1), (70, 1), (71, 1), (72, 1), (74, 2), (75, 1), (79, 2), (84, 1), (88, 1)))
+expected_sources = {'tiny.py': '1f88b51487ca890c968f39fbabbae79b4d671be8de3cea5ee1e02259a948eaf4'}
+context_id = '1111111111111111111111111111111111111111111111111111111111111111'
+model_id = '2222222222222222222222222222222222222222222222222222222222222222'
+key_report_sha256 = '3333333333333333333333333333333333333333333333333333333333333333'
+model_report_sha256 = '4444444444444444444444444444444444444444444444444444444444444444'
+previous = None
+
+    def authenticate(evidence,report_sha256,*,stage,case,expected_sources,context_id,model_id,
+                     key_report_sha256,model_report_sha256,previous=None):
+        if type(stage)is not int or stage not in (3,4,5):raise ValueError('one ranked stage3/4/5 required')
+        if (stage==3)!=(previous is None):raise ValueError('exact predecessor stage proof required')
+        if previous is not None and (type(previous)is not dict or previous.get('stage')!=stage-1 or previous.get('case_binding')!=case_binding(case)):
+            raise ValueError('ranked predecessor stage/case differs')
+        if type(expected_sources)is not dict or not expected_sources:raise ValueError('externally reviewed nonempty source inventory required')
+        for name,h in expected_sources.items():
+            if type(name)is not str or Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('relative reviewed source inventory required')
+            key_gate.sha_field(h)
+        for h in (context_id,model_id,key_report_sha256,model_report_sha256):key_gate.sha_field(h)
+        evidence=Path(evidence);raw=key_gate.read(evidence/'report.json',16<<20)
+        if key_gate.digest(raw)!=key_gate.sha_field(report_sha256):raise ValueError('externally pinned ranked terminal report differs')
+        report=key_gate.parse(raw)
+        flags=('passed','execute','actual_execution_attempted','operation_complete','all_processes_reaped',
+            'source_files_unchanged','source_archive_verified','cleanup_completed','terminal_scope_completed','owned_artifacts_retained')
+        if (type(report)is not dict or report.get('schema')!='cross-bert-ranked-stage-proof-v1'
+                or type(report.get('stage'))is not int or report['stage']!=stage
+                or any(report.get(k)is not True for k in flags) or report.get('error') or report.get('cleanup_errors')):
+            raise ValueError('completed successful ranked producer terminal proof required')
+        if any(report.get(k)!=expected_sources for k in ('source_hashes_start','source_hashes_end','execution_source_hashes_end')):
+            raise ValueError('ranked producer reviewed source closure differs')
+        archive=key_gate.read(evidence/'sources.tar.gz',16<<20)
+        if key_gate.digest(archive)!=key_gate.sha_field(report.get('source_archive_sha256')):raise ValueError('ranked producer archive digest differs')
+>       key_gate.verify_source_archive(archive,expected_sources)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'key_gate' has no attribute 'verify_source_archive'
+
+ranked_stage_gate.py:112: AttributeError
+_____________ test_public_terminal_source_phase_failures[phase-3] ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph9')
+schedule = CaseSet(cases=(RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e3...-seed44-references.jsonl', bytes=13719517, sha256='1e2290c8da124793043063bda1209239e489b8afef9903751356ac1a60b9a69a')))
+stage = 3, fault = 'phase'
+
+    @pytest.mark.parametrize('stage',[3,4,5])
+    @pytest.mark.parametrize('fault',['outer_terminal','worker_terminal','bool_exit','phase','bindings','source'])
+    def test_public_terminal_source_phase_failures(tmp_path,schedule,stage,fault):
+        case=schedule.case(1,43);previous=None
+        for earlier in range(3,stage):previous=proof(tmp_path,case,earlier,previous)
+        def mutate(r,w):
+            if fault=='outer_terminal':r['terminal_scope_completed']=False
+            elif fault=='worker_terminal':w['terminal_scope_completed']=False
+            elif fault=='bool_exit':r['worker_process']['returncode']=False
+            elif fault=='phase':w['phases']['model_forward']=True
+            elif fault=='bindings':w['bindings']=copy.deepcopy(w['bindings']);w['bindings']['case_binding']['seed']=44
+            else:w['source_hashes_end']={}
+>       with pytest.raises(ValueError):proof(tmp_path,case,stage,previous,mutate)
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_stage_gate.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_stage_gate.py:60: in proof
+    return gate.authenticate(p,sha(raw),stage=stage,case=case,expected_sources=expected,context_id='1'*64,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+evidence = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph9/stage3')
+report_sha256 = '05f58ea4e80423d9429c72331554690bcb33a138b79db6cd66f33bc51fc25d57'
+stage = 3
+case = RankedCase(size=1, seed=43, count=100, generator_seed=1085174816, input_sha256='dd1a5eef911571c7e560a4b66410df27b8909d..., (62, 2), (63, 3), (64, 3), (65, 1), (68, 1), (70, 1), (71, 1), (72, 1), (74, 2), (75, 1), (79, 2), (84, 1), (88, 1)))
+expected_sources = {'tiny.py': '1f88b51487ca890c968f39fbabbae79b4d671be8de3cea5ee1e02259a948eaf4'}
+context_id = '1111111111111111111111111111111111111111111111111111111111111111'
+model_id = '2222222222222222222222222222222222222222222222222222222222222222'
+key_report_sha256 = '3333333333333333333333333333333333333333333333333333333333333333'
+model_report_sha256 = '4444444444444444444444444444444444444444444444444444444444444444'
+previous = None
+
+    def authenticate(evidence,report_sha256,*,stage,case,expected_sources,context_id,model_id,
+                     key_report_sha256,model_report_sha256,previous=None):
+        if type(stage)is not int or stage not in (3,4,5):raise ValueError('one ranked stage3/4/5 required')
+        if (stage==3)!=(previous is None):raise ValueError('exact predecessor stage proof required')
+        if previous is not None and (type(previous)is not dict or previous.get('stage')!=stage-1 or previous.get('case_binding')!=case_binding(case)):
+            raise ValueError('ranked predecessor stage/case differs')
+        if type(expected_sources)is not dict or not expected_sources:raise ValueError('externally reviewed nonempty source inventory required')
+        for name,h in expected_sources.items():
+            if type(name)is not str or Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('relative reviewed source inventory required')
+            key_gate.sha_field(h)
+        for h in (context_id,model_id,key_report_sha256,model_report_sha256):key_gate.sha_field(h)
+        evidence=Path(evidence);raw=key_gate.read(evidence/'report.json',16<<20)
+        if key_gate.digest(raw)!=key_gate.sha_field(report_sha256):raise ValueError('externally pinned ranked terminal report differs')
+        report=key_gate.parse(raw)
+        flags=('passed','execute','actual_execution_attempted','operation_complete','all_processes_reaped',
+            'source_files_unchanged','source_archive_verified','cleanup_completed','terminal_scope_completed','owned_artifacts_retained')
+        if (type(report)is not dict or report.get('schema')!='cross-bert-ranked-stage-proof-v1'
+                or type(report.get('stage'))is not int or report['stage']!=stage
+                or any(report.get(k)is not True for k in flags) or report.get('error') or report.get('cleanup_errors')):
+            raise ValueError('completed successful ranked producer terminal proof required')
+        if any(report.get(k)!=expected_sources for k in ('source_hashes_start','source_hashes_end','execution_source_hashes_end')):
+            raise ValueError('ranked producer reviewed source closure differs')
+        archive=key_gate.read(evidence/'sources.tar.gz',16<<20)
+        if key_gate.digest(archive)!=key_gate.sha_field(report.get('source_archive_sha256')):raise ValueError('ranked producer archive digest differs')
+>       key_gate.verify_source_archive(archive,expected_sources)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'key_gate' has no attribute 'verify_source_archive'
+
+ranked_stage_gate.py:112: AttributeError
+_____________ test_public_terminal_source_phase_failures[phase-4] ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph10')
+schedule = CaseSet(cases=(RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e3...-seed44-references.jsonl', bytes=13719517, sha256='1e2290c8da124793043063bda1209239e489b8afef9903751356ac1a60b9a69a')))
+stage = 4, fault = 'phase'
+
+    @pytest.mark.parametrize('stage',[3,4,5])
+    @pytest.mark.parametrize('fault',['outer_terminal','worker_terminal','bool_exit','phase','bindings','source'])
+    def test_public_terminal_source_phase_failures(tmp_path,schedule,stage,fault):
+        case=schedule.case(1,43);previous=None
+>       for earlier in range(3,stage):previous=proof(tmp_path,case,earlier,previous)
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_stage_gate.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_stage_gate.py:60: in proof
+    return gate.authenticate(p,sha(raw),stage=stage,case=case,expected_sources=expected,context_id='1'*64,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+evidence = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph10/stage3')
+report_sha256 = 'aa4a4cb8a40494bf13e35ec15cfb4ac09e69bd44e849b3919ad405860e2bd5bd'
+stage = 3
+case = RankedCase(size=1, seed=43, count=100, generator_seed=1085174816, input_sha256='dd1a5eef911571c7e560a4b66410df27b8909d..., (62, 2), (63, 3), (64, 3), (65, 1), (68, 1), (70, 1), (71, 1), (72, 1), (74, 2), (75, 1), (79, 2), (84, 1), (88, 1)))
+expected_sources = {'tiny.py': '1f88b51487ca890c968f39fbabbae79b4d671be8de3cea5ee1e02259a948eaf4'}
+context_id = '1111111111111111111111111111111111111111111111111111111111111111'
+model_id = '2222222222222222222222222222222222222222222222222222222222222222'
+key_report_sha256 = '3333333333333333333333333333333333333333333333333333333333333333'
+model_report_sha256 = '4444444444444444444444444444444444444444444444444444444444444444'
+previous = None
+
+    def authenticate(evidence,report_sha256,*,stage,case,expected_sources,context_id,model_id,
+                     key_report_sha256,model_report_sha256,previous=None):
+        if type(stage)is not int or stage not in (3,4,5):raise ValueError('one ranked stage3/4/5 required')
+        if (stage==3)!=(previous is None):raise ValueError('exact predecessor stage proof required')
+        if previous is not None and (type(previous)is not dict or previous.get('stage')!=stage-1 or previous.get('case_binding')!=case_binding(case)):
+            raise ValueError('ranked predecessor stage/case differs')
+        if type(expected_sources)is not dict or not expected_sources:raise ValueError('externally reviewed nonempty source inventory required')
+        for name,h in expected_sources.items():
+            if type(name)is not str or Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('relative reviewed source inventory required')
+            key_gate.sha_field(h)
+        for h in (context_id,model_id,key_report_sha256,model_report_sha256):key_gate.sha_field(h)
+        evidence=Path(evidence);raw=key_gate.read(evidence/'report.json',16<<20)
+        if key_gate.digest(raw)!=key_gate.sha_field(report_sha256):raise ValueError('externally pinned ranked terminal report differs')
+        report=key_gate.parse(raw)
+        flags=('passed','execute','actual_execution_attempted','operation_complete','all_processes_reaped',
+            'source_files_unchanged','source_archive_verified','cleanup_completed','terminal_scope_completed','owned_artifacts_retained')
+        if (type(report)is not dict or report.get('schema')!='cross-bert-ranked-stage-proof-v1'
+                or type(report.get('stage'))is not int or report['stage']!=stage
+                or any(report.get(k)is not True for k in flags) or report.get('error') or report.get('cleanup_errors')):
+            raise ValueError('completed successful ranked producer terminal proof required')
+        if any(report.get(k)!=expected_sources for k in ('source_hashes_start','source_hashes_end','execution_source_hashes_end')):
+            raise ValueError('ranked producer reviewed source closure differs')
+        archive=key_gate.read(evidence/'sources.tar.gz',16<<20)
+        if key_gate.digest(archive)!=key_gate.sha_field(report.get('source_archive_sha256')):raise ValueError('ranked producer archive digest differs')
+>       key_gate.verify_source_archive(archive,expected_sources)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'key_gate' has no attribute 'verify_source_archive'
+
+ranked_stage_gate.py:112: AttributeError
+_____________ test_public_terminal_source_phase_failures[phase-5] ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph11')
+schedule = CaseSet(cases=(RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e3...-seed44-references.jsonl', bytes=13719517, sha256='1e2290c8da124793043063bda1209239e489b8afef9903751356ac1a60b9a69a')))
+stage = 5, fault = 'phase'
+
+    @pytest.mark.parametrize('stage',[3,4,5])
+    @pytest.mark.parametrize('fault',['outer_terminal','worker_terminal','bool_exit','phase','bindings','source'])
+    def test_public_terminal_source_phase_failures(tmp_path,schedule,stage,fault):
+        case=schedule.case(1,43);previous=None
+>       for earlier in range(3,stage):previous=proof(tmp_path,case,earlier,previous)
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_stage_gate.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_stage_gate.py:60: in proof
+    return gate.authenticate(p,sha(raw),stage=stage,case=case,expected_sources=expected,context_id='1'*64,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+evidence = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph11/stage3')
+report_sha256 = 'aa4a4cb8a40494bf13e35ec15cfb4ac09e69bd44e849b3919ad405860e2bd5bd'
+stage = 3
+case = RankedCase(size=1, seed=43, count=100, generator_seed=1085174816, input_sha256='dd1a5eef911571c7e560a4b66410df27b8909d..., (62, 2), (63, 3), (64, 3), (65, 1), (68, 1), (70, 1), (71, 1), (72, 1), (74, 2), (75, 1), (79, 2), (84, 1), (88, 1)))
+expected_sources = {'tiny.py': '1f88b51487ca890c968f39fbabbae79b4d671be8de3cea5ee1e02259a948eaf4'}
+context_id = '1111111111111111111111111111111111111111111111111111111111111111'
+model_id = '2222222222222222222222222222222222222222222222222222222222222222'
+key_report_sha256 = '3333333333333333333333333333333333333333333333333333333333333333'
+model_report_sha256 = '4444444444444444444444444444444444444444444444444444444444444444'
+previous = None
+
+    def authenticate(evidence,report_sha256,*,stage,case,expected_sources,context_id,model_id,
+                     key_report_sha256,model_report_sha256,previous=None):
+        if type(stage)is not int or stage not in (3,4,5):raise ValueError('one ranked stage3/4/5 required')
+        if (stage==3)!=(previous is None):raise ValueError('exact predecessor stage proof required')
+        if previous is not None and (type(previous)is not dict or previous.get('stage')!=stage-1 or previous.get('case_binding')!=case_binding(case)):
+            raise ValueError('ranked predecessor stage/case differs')
+        if type(expected_sources)is not dict or not expected_sources:raise ValueError('externally reviewed nonempty source inventory required')
+        for name,h in expected_sources.items():
+            if type(name)is not str or Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('relative reviewed source inventory required')
+            key_gate.sha_field(h)
+        for h in (context_id,model_id,key_report_sha256,model_report_sha256):key_gate.sha_field(h)
+        evidence=Path(evidence);raw=key_gate.read(evidence/'report.json',16<<20)
+        if key_gate.digest(raw)!=key_gate.sha_field(report_sha256):raise ValueError('externally pinned ranked terminal report differs')
+        report=key_gate.parse(raw)
+        flags=('passed','execute','actual_execution_attempted','operation_complete','all_processes_reaped',
+            'source_files_unchanged','source_archive_verified','cleanup_completed','terminal_scope_completed','owned_artifacts_retained')
+        if (type(report)is not dict or report.get('schema')!='cross-bert-ranked-stage-proof-v1'
+                or type(report.get('stage'))is not int or report['stage']!=stage
+                or any(report.get(k)is not True for k in flags) or report.get('error') or report.get('cleanup_errors')):
+            raise ValueError('completed successful ranked producer terminal proof required')
+        if any(report.get(k)!=expected_sources for k in ('source_hashes_start','source_hashes_end','execution_source_hashes_end')):
+            raise ValueError('ranked producer reviewed source closure differs')
+        archive=key_gate.read(evidence/'sources.tar.gz',16<<20)
+        if key_gate.digest(archive)!=key_gate.sha_field(report.get('source_archive_sha256')):raise ValueError('ranked producer archive digest differs')
+>       key_gate.verify_source_archive(archive,expected_sources)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'key_gate' has no attribute 'verify_source_archive'
+
+ranked_stage_gate.py:112: AttributeError
+____________ test_public_terminal_source_phase_failures[bindings-3] ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph12')
+schedule = CaseSet(cases=(RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e3...-seed44-references.jsonl', bytes=13719517, sha256='1e2290c8da124793043063bda1209239e489b8afef9903751356ac1a60b9a69a')))
+stage = 3, fault = 'bindings'
+
+    @pytest.mark.parametrize('stage',[3,4,5])
+    @pytest.mark.parametrize('fault',['outer_terminal','worker_terminal','bool_exit','phase','bindings','source'])
+    def test_public_terminal_source_phase_failures(tmp_path,schedule,stage,fault):
+        case=schedule.case(1,43);previous=None
+        for earlier in range(3,stage):previous=proof(tmp_path,case,earlier,previous)
+        def mutate(r,w):
+            if fault=='outer_terminal':r['terminal_scope_completed']=False
+            elif fault=='worker_terminal':w['terminal_scope_completed']=False
+            elif fault=='bool_exit':r['worker_process']['returncode']=False
+            elif fault=='phase':w['phases']['model_forward']=True
+            elif fault=='bindings':w['bindings']=copy.deepcopy(w['bindings']);w['bindings']['case_binding']['seed']=44
+            else:w['source_hashes_end']={}
+>       with pytest.raises(ValueError):proof(tmp_path,case,stage,previous,mutate)
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_stage_gate.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_stage_gate.py:60: in proof
+    return gate.authenticate(p,sha(raw),stage=stage,case=case,expected_sources=expected,context_id='1'*64,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+evidence = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph12/stage3')
+report_sha256 = 'a3b93b272af56c987ed329b4f75105cfb70e122d6c493182f7fa337f000ae992'
+stage = 3
+case = RankedCase(size=1, seed=43, count=100, generator_seed=1085174816, input_sha256='dd1a5eef911571c7e560a4b66410df27b8909d..., (62, 2), (63, 3), (64, 3), (65, 1), (68, 1), (70, 1), (71, 1), (72, 1), (74, 2), (75, 1), (79, 2), (84, 1), (88, 1)))
+expected_sources = {'tiny.py': '1f88b51487ca890c968f39fbabbae79b4d671be8de3cea5ee1e02259a948eaf4'}
+context_id = '1111111111111111111111111111111111111111111111111111111111111111'
+model_id = '2222222222222222222222222222222222222222222222222222222222222222'
+key_report_sha256 = '3333333333333333333333333333333333333333333333333333333333333333'
+model_report_sha256 = '4444444444444444444444444444444444444444444444444444444444444444'
+previous = None
+
+    def authenticate(evidence,report_sha256,*,stage,case,expected_sources,context_id,model_id,
+                     key_report_sha256,model_report_sha256,previous=None):
+        if type(stage)is not int or stage not in (3,4,5):raise ValueError('one ranked stage3/4/5 required')
+        if (stage==3)!=(previous is None):raise ValueError('exact predecessor stage proof required')
+        if previous is not None and (type(previous)is not dict or previous.get('stage')!=stage-1 or previous.get('case_binding')!=case_binding(case)):
+            raise ValueError('ranked predecessor stage/case differs')
+        if type(expected_sources)is not dict or not expected_sources:raise ValueError('externally reviewed nonempty source inventory required')
+        for name,h in expected_sources.items():
+            if type(name)is not str or Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('relative reviewed source inventory required')
+            key_gate.sha_field(h)
+        for h in (context_id,model_id,key_report_sha256,model_report_sha256):key_gate.sha_field(h)
+        evidence=Path(evidence);raw=key_gate.read(evidence/'report.json',16<<20)
+        if key_gate.digest(raw)!=key_gate.sha_field(report_sha256):raise ValueError('externally pinned ranked terminal report differs')
+        report=key_gate.parse(raw)
+        flags=('passed','execute','actual_execution_attempted','operation_complete','all_processes_reaped',
+            'source_files_unchanged','source_archive_verified','cleanup_completed','terminal_scope_completed','owned_artifacts_retained')
+        if (type(report)is not dict or report.get('schema')!='cross-bert-ranked-stage-proof-v1'
+                or type(report.get('stage'))is not int or report['stage']!=stage
+                or any(report.get(k)is not True for k in flags) or report.get('error') or report.get('cleanup_errors')):
+            raise ValueError('completed successful ranked producer terminal proof required')
+        if any(report.get(k)!=expected_sources for k in ('source_hashes_start','source_hashes_end','execution_source_hashes_end')):
+            raise ValueError('ranked producer reviewed source closure differs')
+        archive=key_gate.read(evidence/'sources.tar.gz',16<<20)
+        if key_gate.digest(archive)!=key_gate.sha_field(report.get('source_archive_sha256')):raise ValueError('ranked producer archive digest differs')
+>       key_gate.verify_source_archive(archive,expected_sources)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'key_gate' has no attribute 'verify_source_archive'
+
+ranked_stage_gate.py:112: AttributeError
+____________ test_public_terminal_source_phase_failures[bindings-4] ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph13')
+schedule = CaseSet(cases=(RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e3...-seed44-references.jsonl', bytes=13719517, sha256='1e2290c8da124793043063bda1209239e489b8afef9903751356ac1a60b9a69a')))
+stage = 4, fault = 'bindings'
+
+    @pytest.mark.parametrize('stage',[3,4,5])
+    @pytest.mark.parametrize('fault',['outer_terminal','worker_terminal','bool_exit','phase','bindings','source'])
+    def test_public_terminal_source_phase_failures(tmp_path,schedule,stage,fault):
+        case=schedule.case(1,43);previous=None
+>       for earlier in range(3,stage):previous=proof(tmp_path,case,earlier,previous)
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_stage_gate.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_stage_gate.py:60: in proof
+    return gate.authenticate(p,sha(raw),stage=stage,case=case,expected_sources=expected,context_id='1'*64,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+evidence = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph13/stage3')
+report_sha256 = 'aa4a4cb8a40494bf13e35ec15cfb4ac09e69bd44e849b3919ad405860e2bd5bd'
+stage = 3
+case = RankedCase(size=1, seed=43, count=100, generator_seed=1085174816, input_sha256='dd1a5eef911571c7e560a4b66410df27b8909d..., (62, 2), (63, 3), (64, 3), (65, 1), (68, 1), (70, 1), (71, 1), (72, 1), (74, 2), (75, 1), (79, 2), (84, 1), (88, 1)))
+expected_sources = {'tiny.py': '1f88b51487ca890c968f39fbabbae79b4d671be8de3cea5ee1e02259a948eaf4'}
+context_id = '1111111111111111111111111111111111111111111111111111111111111111'
+model_id = '2222222222222222222222222222222222222222222222222222222222222222'
+key_report_sha256 = '3333333333333333333333333333333333333333333333333333333333333333'
+model_report_sha256 = '4444444444444444444444444444444444444444444444444444444444444444'
+previous = None
+
+    def authenticate(evidence,report_sha256,*,stage,case,expected_sources,context_id,model_id,
+                     key_report_sha256,model_report_sha256,previous=None):
+        if type(stage)is not int or stage not in (3,4,5):raise ValueError('one ranked stage3/4/5 required')
+        if (stage==3)!=(previous is None):raise ValueError('exact predecessor stage proof required')
+        if previous is not None and (type(previous)is not dict or previous.get('stage')!=stage-1 or previous.get('case_binding')!=case_binding(case)):
+            raise ValueError('ranked predecessor stage/case differs')
+        if type(expected_sources)is not dict or not expected_sources:raise ValueError('externally reviewed nonempty source inventory required')
+        for name,h in expected_sources.items():
+            if type(name)is not str or Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('relative reviewed source inventory required')
+            key_gate.sha_field(h)
+        for h in (context_id,model_id,key_report_sha256,model_report_sha256):key_gate.sha_field(h)
+        evidence=Path(evidence);raw=key_gate.read(evidence/'report.json',16<<20)
+        if key_gate.digest(raw)!=key_gate.sha_field(report_sha256):raise ValueError('externally pinned ranked terminal report differs')
+        report=key_gate.parse(raw)
+        flags=('passed','execute','actual_execution_attempted','operation_complete','all_processes_reaped',
+            'source_files_unchanged','source_archive_verified','cleanup_completed','terminal_scope_completed','owned_artifacts_retained')
+        if (type(report)is not dict or report.get('schema')!='cross-bert-ranked-stage-proof-v1'
+                or type(report.get('stage'))is not int or report['stage']!=stage
+                or any(report.get(k)is not True for k in flags) or report.get('error') or report.get('cleanup_errors')):
+            raise ValueError('completed successful ranked producer terminal proof required')
+        if any(report.get(k)!=expected_sources for k in ('source_hashes_start','source_hashes_end','execution_source_hashes_end')):
+            raise ValueError('ranked producer reviewed source closure differs')
+        archive=key_gate.read(evidence/'sources.tar.gz',16<<20)
+        if key_gate.digest(archive)!=key_gate.sha_field(report.get('source_archive_sha256')):raise ValueError('ranked producer archive digest differs')
+>       key_gate.verify_source_archive(archive,expected_sources)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'key_gate' has no attribute 'verify_source_archive'
+
+ranked_stage_gate.py:112: AttributeError
+____________ test_public_terminal_source_phase_failures[bindings-5] ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph14')
+schedule = CaseSet(cases=(RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e3...-seed44-references.jsonl', bytes=13719517, sha256='1e2290c8da124793043063bda1209239e489b8afef9903751356ac1a60b9a69a')))
+stage = 5, fault = 'bindings'
+
+    @pytest.mark.parametrize('stage',[3,4,5])
+    @pytest.mark.parametrize('fault',['outer_terminal','worker_terminal','bool_exit','phase','bindings','source'])
+    def test_public_terminal_source_phase_failures(tmp_path,schedule,stage,fault):
+        case=schedule.case(1,43);previous=None
+>       for earlier in range(3,stage):previous=proof(tmp_path,case,earlier,previous)
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_stage_gate.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_stage_gate.py:60: in proof
+    return gate.authenticate(p,sha(raw),stage=stage,case=case,expected_sources=expected,context_id='1'*64,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+evidence = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph14/stage3')
+report_sha256 = 'aa4a4cb8a40494bf13e35ec15cfb4ac09e69bd44e849b3919ad405860e2bd5bd'
+stage = 3
+case = RankedCase(size=1, seed=43, count=100, generator_seed=1085174816, input_sha256='dd1a5eef911571c7e560a4b66410df27b8909d..., (62, 2), (63, 3), (64, 3), (65, 1), (68, 1), (70, 1), (71, 1), (72, 1), (74, 2), (75, 1), (79, 2), (84, 1), (88, 1)))
+expected_sources = {'tiny.py': '1f88b51487ca890c968f39fbabbae79b4d671be8de3cea5ee1e02259a948eaf4'}
+context_id = '1111111111111111111111111111111111111111111111111111111111111111'
+model_id = '2222222222222222222222222222222222222222222222222222222222222222'
+key_report_sha256 = '3333333333333333333333333333333333333333333333333333333333333333'
+model_report_sha256 = '4444444444444444444444444444444444444444444444444444444444444444'
+previous = None
+
+    def authenticate(evidence,report_sha256,*,stage,case,expected_sources,context_id,model_id,
+                     key_report_sha256,model_report_sha256,previous=None):
+        if type(stage)is not int or stage not in (3,4,5):raise ValueError('one ranked stage3/4/5 required')
+        if (stage==3)!=(previous is None):raise ValueError('exact predecessor stage proof required')
+        if previous is not None and (type(previous)is not dict or previous.get('stage')!=stage-1 or previous.get('case_binding')!=case_binding(case)):
+            raise ValueError('ranked predecessor stage/case differs')
+        if type(expected_sources)is not dict or not expected_sources:raise ValueError('externally reviewed nonempty source inventory required')
+        for name,h in expected_sources.items():
+            if type(name)is not str or Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('relative reviewed source inventory required')
+            key_gate.sha_field(h)
+        for h in (context_id,model_id,key_report_sha256,model_report_sha256):key_gate.sha_field(h)
+        evidence=Path(evidence);raw=key_gate.read(evidence/'report.json',16<<20)
+        if key_gate.digest(raw)!=key_gate.sha_field(report_sha256):raise ValueError('externally pinned ranked terminal report differs')
+        report=key_gate.parse(raw)
+        flags=('passed','execute','actual_execution_attempted','operation_complete','all_processes_reaped',
+            'source_files_unchanged','source_archive_verified','cleanup_completed','terminal_scope_completed','owned_artifacts_retained')
+        if (type(report)is not dict or report.get('schema')!='cross-bert-ranked-stage-proof-v1'
+                or type(report.get('stage'))is not int or report['stage']!=stage
+                or any(report.get(k)is not True for k in flags) or report.get('error') or report.get('cleanup_errors')):
+            raise ValueError('completed successful ranked producer terminal proof required')
+        if any(report.get(k)!=expected_sources for k in ('source_hashes_start','source_hashes_end','execution_source_hashes_end')):
+            raise ValueError('ranked producer reviewed source closure differs')
+        archive=key_gate.read(evidence/'sources.tar.gz',16<<20)
+        if key_gate.digest(archive)!=key_gate.sha_field(report.get('source_archive_sha256')):raise ValueError('ranked producer archive digest differs')
+>       key_gate.verify_source_archive(archive,expected_sources)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'key_gate' has no attribute 'verify_source_archive'
+
+ranked_stage_gate.py:112: AttributeError
+_____________ test_public_terminal_source_phase_failures[source-3] _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph15')
+schedule = CaseSet(cases=(RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e3...-seed44-references.jsonl', bytes=13719517, sha256='1e2290c8da124793043063bda1209239e489b8afef9903751356ac1a60b9a69a')))
+stage = 3, fault = 'source'
+
+    @pytest.mark.parametrize('stage',[3,4,5])
+    @pytest.mark.parametrize('fault',['outer_terminal','worker_terminal','bool_exit','phase','bindings','source'])
+    def test_public_terminal_source_phase_failures(tmp_path,schedule,stage,fault):
+        case=schedule.case(1,43);previous=None
+        for earlier in range(3,stage):previous=proof(tmp_path,case,earlier,previous)
+        def mutate(r,w):
+            if fault=='outer_terminal':r['terminal_scope_completed']=False
+            elif fault=='worker_terminal':w['terminal_scope_completed']=False
+            elif fault=='bool_exit':r['worker_process']['returncode']=False
+            elif fault=='phase':w['phases']['model_forward']=True
+            elif fault=='bindings':w['bindings']=copy.deepcopy(w['bindings']);w['bindings']['case_binding']['seed']=44
+            else:w['source_hashes_end']={}
+>       with pytest.raises(ValueError):proof(tmp_path,case,stage,previous,mutate)
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_stage_gate.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_stage_gate.py:60: in proof
+    return gate.authenticate(p,sha(raw),stage=stage,case=case,expected_sources=expected,context_id='1'*64,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+evidence = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph15/stage3')
+report_sha256 = 'e274fa51a274e70902cc46829da2ba9cecf59bcc9b697f59aa39b2e2d3723dc2'
+stage = 3
+case = RankedCase(size=1, seed=43, count=100, generator_seed=1085174816, input_sha256='dd1a5eef911571c7e560a4b66410df27b8909d..., (62, 2), (63, 3), (64, 3), (65, 1), (68, 1), (70, 1), (71, 1), (72, 1), (74, 2), (75, 1), (79, 2), (84, 1), (88, 1)))
+expected_sources = {'tiny.py': '1f88b51487ca890c968f39fbabbae79b4d671be8de3cea5ee1e02259a948eaf4'}
+context_id = '1111111111111111111111111111111111111111111111111111111111111111'
+model_id = '2222222222222222222222222222222222222222222222222222222222222222'
+key_report_sha256 = '3333333333333333333333333333333333333333333333333333333333333333'
+model_report_sha256 = '4444444444444444444444444444444444444444444444444444444444444444'
+previous = None
+
+    def authenticate(evidence,report_sha256,*,stage,case,expected_sources,context_id,model_id,
+                     key_report_sha256,model_report_sha256,previous=None):
+        if type(stage)is not int or stage not in (3,4,5):raise ValueError('one ranked stage3/4/5 required')
+        if (stage==3)!=(previous is None):raise ValueError('exact predecessor stage proof required')
+        if previous is not None and (type(previous)is not dict or previous.get('stage')!=stage-1 or previous.get('case_binding')!=case_binding(case)):
+            raise ValueError('ranked predecessor stage/case differs')
+        if type(expected_sources)is not dict or not expected_sources:raise ValueError('externally reviewed nonempty source inventory required')
+        for name,h in expected_sources.items():
+            if type(name)is not str or Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('relative reviewed source inventory required')
+            key_gate.sha_field(h)
+        for h in (context_id,model_id,key_report_sha256,model_report_sha256):key_gate.sha_field(h)
+        evidence=Path(evidence);raw=key_gate.read(evidence/'report.json',16<<20)
+        if key_gate.digest(raw)!=key_gate.sha_field(report_sha256):raise ValueError('externally pinned ranked terminal report differs')
+        report=key_gate.parse(raw)
+        flags=('passed','execute','actual_execution_attempted','operation_complete','all_processes_reaped',
+            'source_files_unchanged','source_archive_verified','cleanup_completed','terminal_scope_completed','owned_artifacts_retained')
+        if (type(report)is not dict or report.get('schema')!='cross-bert-ranked-stage-proof-v1'
+                or type(report.get('stage'))is not int or report['stage']!=stage
+                or any(report.get(k)is not True for k in flags) or report.get('error') or report.get('cleanup_errors')):
+            raise ValueError('completed successful ranked producer terminal proof required')
+        if any(report.get(k)!=expected_sources for k in ('source_hashes_start','source_hashes_end','execution_source_hashes_end')):
+            raise ValueError('ranked producer reviewed source closure differs')
+        archive=key_gate.read(evidence/'sources.tar.gz',16<<20)
+        if key_gate.digest(archive)!=key_gate.sha_field(report.get('source_archive_sha256')):raise ValueError('ranked producer archive digest differs')
+>       key_gate.verify_source_archive(archive,expected_sources)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'key_gate' has no attribute 'verify_source_archive'
+
+ranked_stage_gate.py:112: AttributeError
+_____________ test_public_terminal_source_phase_failures[source-4] _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph16')
+schedule = CaseSet(cases=(RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e3...-seed44-references.jsonl', bytes=13719517, sha256='1e2290c8da124793043063bda1209239e489b8afef9903751356ac1a60b9a69a')))
+stage = 4, fault = 'source'
+
+    @pytest.mark.parametrize('stage',[3,4,5])
+    @pytest.mark.parametrize('fault',['outer_terminal','worker_terminal','bool_exit','phase','bindings','source'])
+    def test_public_terminal_source_phase_failures(tmp_path,schedule,stage,fault):
+        case=schedule.case(1,43);previous=None
+>       for earlier in range(3,stage):previous=proof(tmp_path,case,earlier,previous)
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_stage_gate.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_stage_gate.py:60: in proof
+    return gate.authenticate(p,sha(raw),stage=stage,case=case,expected_sources=expected,context_id='1'*64,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+evidence = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph16/stage3')
+report_sha256 = 'aa4a4cb8a40494bf13e35ec15cfb4ac09e69bd44e849b3919ad405860e2bd5bd'
+stage = 3
+case = RankedCase(size=1, seed=43, count=100, generator_seed=1085174816, input_sha256='dd1a5eef911571c7e560a4b66410df27b8909d..., (62, 2), (63, 3), (64, 3), (65, 1), (68, 1), (70, 1), (71, 1), (72, 1), (74, 2), (75, 1), (79, 2), (84, 1), (88, 1)))
+expected_sources = {'tiny.py': '1f88b51487ca890c968f39fbabbae79b4d671be8de3cea5ee1e02259a948eaf4'}
+context_id = '1111111111111111111111111111111111111111111111111111111111111111'
+model_id = '2222222222222222222222222222222222222222222222222222222222222222'
+key_report_sha256 = '3333333333333333333333333333333333333333333333333333333333333333'
+model_report_sha256 = '4444444444444444444444444444444444444444444444444444444444444444'
+previous = None
+
+    def authenticate(evidence,report_sha256,*,stage,case,expected_sources,context_id,model_id,
+                     key_report_sha256,model_report_sha256,previous=None):
+        if type(stage)is not int or stage not in (3,4,5):raise ValueError('one ranked stage3/4/5 required')
+        if (stage==3)!=(previous is None):raise ValueError('exact predecessor stage proof required')
+        if previous is not None and (type(previous)is not dict or previous.get('stage')!=stage-1 or previous.get('case_binding')!=case_binding(case)):
+            raise ValueError('ranked predecessor stage/case differs')
+        if type(expected_sources)is not dict or not expected_sources:raise ValueError('externally reviewed nonempty source inventory required')
+        for name,h in expected_sources.items():
+            if type(name)is not str or Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('relative reviewed source inventory required')
+            key_gate.sha_field(h)
+        for h in (context_id,model_id,key_report_sha256,model_report_sha256):key_gate.sha_field(h)
+        evidence=Path(evidence);raw=key_gate.read(evidence/'report.json',16<<20)
+        if key_gate.digest(raw)!=key_gate.sha_field(report_sha256):raise ValueError('externally pinned ranked terminal report differs')
+        report=key_gate.parse(raw)
+        flags=('passed','execute','actual_execution_attempted','operation_complete','all_processes_reaped',
+            'source_files_unchanged','source_archive_verified','cleanup_completed','terminal_scope_completed','owned_artifacts_retained')
+        if (type(report)is not dict or report.get('schema')!='cross-bert-ranked-stage-proof-v1'
+                or type(report.get('stage'))is not int or report['stage']!=stage
+                or any(report.get(k)is not True for k in flags) or report.get('error') or report.get('cleanup_errors')):
+            raise ValueError('completed successful ranked producer terminal proof required')
+        if any(report.get(k)!=expected_sources for k in ('source_hashes_start','source_hashes_end','execution_source_hashes_end')):
+            raise ValueError('ranked producer reviewed source closure differs')
+        archive=key_gate.read(evidence/'sources.tar.gz',16<<20)
+        if key_gate.digest(archive)!=key_gate.sha_field(report.get('source_archive_sha256')):raise ValueError('ranked producer archive digest differs')
+>       key_gate.verify_source_archive(archive,expected_sources)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'key_gate' has no attribute 'verify_source_archive'
+
+ranked_stage_gate.py:112: AttributeError
+_____________ test_public_terminal_source_phase_failures[source-5] _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph17')
+schedule = CaseSet(cases=(RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e3...-seed44-references.jsonl', bytes=13719517, sha256='1e2290c8da124793043063bda1209239e489b8afef9903751356ac1a60b9a69a')))
+stage = 5, fault = 'source'
+
+    @pytest.mark.parametrize('stage',[3,4,5])
+    @pytest.mark.parametrize('fault',['outer_terminal','worker_terminal','bool_exit','phase','bindings','source'])
+    def test_public_terminal_source_phase_failures(tmp_path,schedule,stage,fault):
+        case=schedule.case(1,43);previous=None
+>       for earlier in range(3,stage):previous=proof(tmp_path,case,earlier,previous)
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_stage_gate.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_stage_gate.py:60: in proof
+    return gate.authenticate(p,sha(raw),stage=stage,case=case,expected_sources=expected,context_id='1'*64,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+evidence = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_public_terminal_source_ph17/stage3')
+report_sha256 = 'aa4a4cb8a40494bf13e35ec15cfb4ac09e69bd44e849b3919ad405860e2bd5bd'
+stage = 3
+case = RankedCase(size=1, seed=43, count=100, generator_seed=1085174816, input_sha256='dd1a5eef911571c7e560a4b66410df27b8909d..., (62, 2), (63, 3), (64, 3), (65, 1), (68, 1), (70, 1), (71, 1), (72, 1), (74, 2), (75, 1), (79, 2), (84, 1), (88, 1)))
+expected_sources = {'tiny.py': '1f88b51487ca890c968f39fbabbae79b4d671be8de3cea5ee1e02259a948eaf4'}
+context_id = '1111111111111111111111111111111111111111111111111111111111111111'
+model_id = '2222222222222222222222222222222222222222222222222222222222222222'
+key_report_sha256 = '3333333333333333333333333333333333333333333333333333333333333333'
+model_report_sha256 = '4444444444444444444444444444444444444444444444444444444444444444'
+previous = None
+
+    def authenticate(evidence,report_sha256,*,stage,case,expected_sources,context_id,model_id,
+                     key_report_sha256,model_report_sha256,previous=None):
+        if type(stage)is not int or stage not in (3,4,5):raise ValueError('one ranked stage3/4/5 required')
+        if (stage==3)!=(previous is None):raise ValueError('exact predecessor stage proof required')
+        if previous is not None and (type(previous)is not dict or previous.get('stage')!=stage-1 or previous.get('case_binding')!=case_binding(case)):
+            raise ValueError('ranked predecessor stage/case differs')
+        if type(expected_sources)is not dict or not expected_sources:raise ValueError('externally reviewed nonempty source inventory required')
+        for name,h in expected_sources.items():
+            if type(name)is not str or Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('relative reviewed source inventory required')
+            key_gate.sha_field(h)
+        for h in (context_id,model_id,key_report_sha256,model_report_sha256):key_gate.sha_field(h)
+        evidence=Path(evidence);raw=key_gate.read(evidence/'report.json',16<<20)
+        if key_gate.digest(raw)!=key_gate.sha_field(report_sha256):raise ValueError('externally pinned ranked terminal report differs')
+        report=key_gate.parse(raw)
+        flags=('passed','execute','actual_execution_attempted','operation_complete','all_processes_reaped',
+            'source_files_unchanged','source_archive_verified','cleanup_completed','terminal_scope_completed','owned_artifacts_retained')
+        if (type(report)is not dict or report.get('schema')!='cross-bert-ranked-stage-proof-v1'
+                or type(report.get('stage'))is not int or report['stage']!=stage
+                or any(report.get(k)is not True for k in flags) or report.get('error') or report.get('cleanup_errors')):
+            raise ValueError('completed successful ranked producer terminal proof required')
+        if any(report.get(k)!=expected_sources for k in ('source_hashes_start','source_hashes_end','execution_source_hashes_end')):
+            raise ValueError('ranked producer reviewed source closure differs')
+        archive=key_gate.read(evidence/'sources.tar.gz',16<<20)
+        if key_gate.digest(archive)!=key_gate.sha_field(report.get('source_archive_sha256')):raise ValueError('ranked producer archive digest differs')
+>       key_gate.verify_source_archive(archive,expected_sources)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'key_gate' has no attribute 'verify_source_archive'
+
+ranked_stage_gate.py:112: AttributeError
+____________ test_bad_last_or_reordered_response_proof[last_scale] _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_bad_last_or_reordered_res0')
+schedule = CaseSet(cases=(RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e3...-seed44-references.jsonl', bytes=13719517, sha256='1e2290c8da124793043063bda1209239e489b8afef9903751356ac1a60b9a69a')))
+fault = 'last_scale'
+
+    @pytest.mark.parametrize('fault',['last_scale','swap','missing','payload','last_input','last_level'])
+    def test_bad_last_or_reordered_response_proof(tmp_path,schedule,fault):
+>       case=schedule.case(3,44);old=proof(tmp_path,case,3)
+                                     ^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_stage_gate.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_stage_gate.py:60: in proof
+    return gate.authenticate(p,sha(raw),stage=stage,case=case,expected_sources=expected,context_id='1'*64,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+evidence = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_bad_last_or_reordered_res0/stage3')
+report_sha256 = '86af866db92eedfeb95be8c692977f16f3ac597fa68205e548db7d9c2b5beba8'
+stage = 3
+case = RankedCase(size=3, seed=44, count=408, generator_seed=1432050490, input_sha256='63c1a4ca6eb585e86327b16cc062cb6fbd6a2b..., (74, 8), (75, 6), (76, 1), (78, 3), (79, 4), (80, 4), (81, 4), (82, 1), (83, 1), (84, 1), (86, 1), (87, 1), (88, 2)))
+expected_sources = {'tiny.py': '1f88b51487ca890c968f39fbabbae79b4d671be8de3cea5ee1e02259a948eaf4'}
+context_id = '1111111111111111111111111111111111111111111111111111111111111111'
+model_id = '2222222222222222222222222222222222222222222222222222222222222222'
+key_report_sha256 = '3333333333333333333333333333333333333333333333333333333333333333'
+model_report_sha256 = '4444444444444444444444444444444444444444444444444444444444444444'
+previous = None
+
+    def authenticate(evidence,report_sha256,*,stage,case,expected_sources,context_id,model_id,
+                     key_report_sha256,model_report_sha256,previous=None):
+        if type(stage)is not int or stage not in (3,4,5):raise ValueError('one ranked stage3/4/5 required')
+        if (stage==3)!=(previous is None):raise ValueError('exact predecessor stage proof required')
+        if previous is not None and (type(previous)is not dict or previous.get('stage')!=stage-1 or previous.get('case_binding')!=case_binding(case)):
+            raise ValueError('ranked predecessor stage/case differs')
+        if type(expected_sources)is not dict or not expected_sources:raise ValueError('externally reviewed nonempty source inventory required')
+        for name,h in expected_sources.items():
+            if type(name)is not str or Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('relative reviewed source inventory required')
+            key_gate.sha_field(h)
+        for h in (context_id,model_id,key_report_sha256,model_report_sha256):key_gate.sha_field(h)
+        evidence=Path(evidence);raw=key_gate.read(evidence/'report.json',16<<20)
+        if key_gate.digest(raw)!=key_gate.sha_field(report_sha256):raise ValueError('externally pinned ranked terminal report differs')
+        report=key_gate.parse(raw)
+        flags=('passed','execute','actual_execution_attempted','operation_complete','all_processes_reaped',
+            'source_files_unchanged','source_archive_verified','cleanup_completed','terminal_scope_completed','owned_artifacts_retained')
+        if (type(report)is not dict or report.get('schema')!='cross-bert-ranked-stage-proof-v1'
+                or type(report.get('stage'))is not int or report['stage']!=stage
+                or any(report.get(k)is not True for k in flags) or report.get('error') or report.get('cleanup_errors')):
+            raise ValueError('completed successful ranked producer terminal proof required')
+        if any(report.get(k)!=expected_sources for k in ('source_hashes_start','source_hashes_end','execution_source_hashes_end')):
+            raise ValueError('ranked producer reviewed source closure differs')
+        archive=key_gate.read(evidence/'sources.tar.gz',16<<20)
+        if key_gate.digest(archive)!=key_gate.sha_field(report.get('source_archive_sha256')):raise ValueError('ranked producer archive digest differs')
+>       key_gate.verify_source_archive(archive,expected_sources)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'key_gate' has no attribute 'verify_source_archive'
+
+ranked_stage_gate.py:112: AttributeError
+_______________ test_bad_last_or_reordered_response_proof[swap] ________________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_bad_last_or_reordered_res1')
+schedule = CaseSet(cases=(RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e3...-seed44-references.jsonl', bytes=13719517, sha256='1e2290c8da124793043063bda1209239e489b8afef9903751356ac1a60b9a69a')))
+fault = 'swap'
+
+    @pytest.mark.parametrize('fault',['last_scale','swap','missing','payload','last_input','last_level'])
+    def test_bad_last_or_reordered_response_proof(tmp_path,schedule,fault):
+>       case=schedule.case(3,44);old=proof(tmp_path,case,3)
+                                     ^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_stage_gate.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_stage_gate.py:60: in proof
+    return gate.authenticate(p,sha(raw),stage=stage,case=case,expected_sources=expected,context_id='1'*64,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+evidence = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_bad_last_or_reordered_res1/stage3')
+report_sha256 = '86af866db92eedfeb95be8c692977f16f3ac597fa68205e548db7d9c2b5beba8'
+stage = 3
+case = RankedCase(size=3, seed=44, count=408, generator_seed=1432050490, input_sha256='63c1a4ca6eb585e86327b16cc062cb6fbd6a2b..., (74, 8), (75, 6), (76, 1), (78, 3), (79, 4), (80, 4), (81, 4), (82, 1), (83, 1), (84, 1), (86, 1), (87, 1), (88, 2)))
+expected_sources = {'tiny.py': '1f88b51487ca890c968f39fbabbae79b4d671be8de3cea5ee1e02259a948eaf4'}
+context_id = '1111111111111111111111111111111111111111111111111111111111111111'
+model_id = '2222222222222222222222222222222222222222222222222222222222222222'
+key_report_sha256 = '3333333333333333333333333333333333333333333333333333333333333333'
+model_report_sha256 = '4444444444444444444444444444444444444444444444444444444444444444'
+previous = None
+
+    def authenticate(evidence,report_sha256,*,stage,case,expected_sources,context_id,model_id,
+                     key_report_sha256,model_report_sha256,previous=None):
+        if type(stage)is not int or stage not in (3,4,5):raise ValueError('one ranked stage3/4/5 required')
+        if (stage==3)!=(previous is None):raise ValueError('exact predecessor stage proof required')
+        if previous is not None and (type(previous)is not dict or previous.get('stage')!=stage-1 or previous.get('case_binding')!=case_binding(case)):
+            raise ValueError('ranked predecessor stage/case differs')
+        if type(expected_sources)is not dict or not expected_sources:raise ValueError('externally reviewed nonempty source inventory required')
+        for name,h in expected_sources.items():
+            if type(name)is not str or Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('relative reviewed source inventory required')
+            key_gate.sha_field(h)
+        for h in (context_id,model_id,key_report_sha256,model_report_sha256):key_gate.sha_field(h)
+        evidence=Path(evidence);raw=key_gate.read(evidence/'report.json',16<<20)
+        if key_gate.digest(raw)!=key_gate.sha_field(report_sha256):raise ValueError('externally pinned ranked terminal report differs')
+        report=key_gate.parse(raw)
+        flags=('passed','execute','actual_execution_attempted','operation_complete','all_processes_reaped',
+            'source_files_unchanged','source_archive_verified','cleanup_completed','terminal_scope_completed','owned_artifacts_retained')
+        if (type(report)is not dict or report.get('schema')!='cross-bert-ranked-stage-proof-v1'
+                or type(report.get('stage'))is not int or report['stage']!=stage
+                or any(report.get(k)is not True for k in flags) or report.get('error') or report.get('cleanup_errors')):
+            raise ValueError('completed successful ranked producer terminal proof required')
+        if any(report.get(k)!=expected_sources for k in ('source_hashes_start','source_hashes_end','execution_source_hashes_end')):
+            raise ValueError('ranked producer reviewed source closure differs')
+        archive=key_gate.read(evidence/'sources.tar.gz',16<<20)
+        if key_gate.digest(archive)!=key_gate.sha_field(report.get('source_archive_sha256')):raise ValueError('ranked producer archive digest differs')
+>       key_gate.verify_source_archive(archive,expected_sources)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'key_gate' has no attribute 'verify_source_archive'
+
+ranked_stage_gate.py:112: AttributeError
+______________ test_bad_last_or_reordered_response_proof[missing] ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_bad_last_or_reordered_res2')
+schedule = CaseSet(cases=(RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e3...-seed44-references.jsonl', bytes=13719517, sha256='1e2290c8da124793043063bda1209239e489b8afef9903751356ac1a60b9a69a')))
+fault = 'missing'
+
+    @pytest.mark.parametrize('fault',['last_scale','swap','missing','payload','last_input','last_level'])
+    def test_bad_last_or_reordered_response_proof(tmp_path,schedule,fault):
+>       case=schedule.case(3,44);old=proof(tmp_path,case,3)
+                                     ^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_stage_gate.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_stage_gate.py:60: in proof
+    return gate.authenticate(p,sha(raw),stage=stage,case=case,expected_sources=expected,context_id='1'*64,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+evidence = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_bad_last_or_reordered_res2/stage3')
+report_sha256 = '86af866db92eedfeb95be8c692977f16f3ac597fa68205e548db7d9c2b5beba8'
+stage = 3
+case = RankedCase(size=3, seed=44, count=408, generator_seed=1432050490, input_sha256='63c1a4ca6eb585e86327b16cc062cb6fbd6a2b..., (74, 8), (75, 6), (76, 1), (78, 3), (79, 4), (80, 4), (81, 4), (82, 1), (83, 1), (84, 1), (86, 1), (87, 1), (88, 2)))
+expected_sources = {'tiny.py': '1f88b51487ca890c968f39fbabbae79b4d671be8de3cea5ee1e02259a948eaf4'}
+context_id = '1111111111111111111111111111111111111111111111111111111111111111'
+model_id = '2222222222222222222222222222222222222222222222222222222222222222'
+key_report_sha256 = '3333333333333333333333333333333333333333333333333333333333333333'
+model_report_sha256 = '4444444444444444444444444444444444444444444444444444444444444444'
+previous = None
+
+    def authenticate(evidence,report_sha256,*,stage,case,expected_sources,context_id,model_id,
+                     key_report_sha256,model_report_sha256,previous=None):
+        if type(stage)is not int or stage not in (3,4,5):raise ValueError('one ranked stage3/4/5 required')
+        if (stage==3)!=(previous is None):raise ValueError('exact predecessor stage proof required')
+        if previous is not None and (type(previous)is not dict or previous.get('stage')!=stage-1 or previous.get('case_binding')!=case_binding(case)):
+            raise ValueError('ranked predecessor stage/case differs')
+        if type(expected_sources)is not dict or not expected_sources:raise ValueError('externally reviewed nonempty source inventory required')
+        for name,h in expected_sources.items():
+            if type(name)is not str or Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('relative reviewed source inventory required')
+            key_gate.sha_field(h)
+        for h in (context_id,model_id,key_report_sha256,model_report_sha256):key_gate.sha_field(h)
+        evidence=Path(evidence);raw=key_gate.read(evidence/'report.json',16<<20)
+        if key_gate.digest(raw)!=key_gate.sha_field(report_sha256):raise ValueError('externally pinned ranked terminal report differs')
+        report=key_gate.parse(raw)
+        flags=('passed','execute','actual_execution_attempted','operation_complete','all_processes_reaped',
+            'source_files_unchanged','source_archive_verified','cleanup_completed','terminal_scope_completed','owned_artifacts_retained')
+        if (type(report)is not dict or report.get('schema')!='cross-bert-ranked-stage-proof-v1'
+                or type(report.get('stage'))is not int or report['stage']!=stage
+                or any(report.get(k)is not True for k in flags) or report.get('error') or report.get('cleanup_errors')):
+            raise ValueError('completed successful ranked producer terminal proof required')
+        if any(report.get(k)!=expected_sources for k in ('source_hashes_start','source_hashes_end','execution_source_hashes_end')):
+            raise ValueError('ranked producer reviewed source closure differs')
+        archive=key_gate.read(evidence/'sources.tar.gz',16<<20)
+        if key_gate.digest(archive)!=key_gate.sha_field(report.get('source_archive_sha256')):raise ValueError('ranked producer archive digest differs')
+>       key_gate.verify_source_archive(archive,expected_sources)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'key_gate' has no attribute 'verify_source_archive'
+
+ranked_stage_gate.py:112: AttributeError
+______________ test_bad_last_or_reordered_response_proof[payload] ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_bad_last_or_reordered_res3')
+schedule = CaseSet(cases=(RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e3...-seed44-references.jsonl', bytes=13719517, sha256='1e2290c8da124793043063bda1209239e489b8afef9903751356ac1a60b9a69a')))
+fault = 'payload'
+
+    @pytest.mark.parametrize('fault',['last_scale','swap','missing','payload','last_input','last_level'])
+    def test_bad_last_or_reordered_response_proof(tmp_path,schedule,fault):
+>       case=schedule.case(3,44);old=proof(tmp_path,case,3)
+                                     ^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_stage_gate.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_stage_gate.py:60: in proof
+    return gate.authenticate(p,sha(raw),stage=stage,case=case,expected_sources=expected,context_id='1'*64,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+evidence = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_bad_last_or_reordered_res3/stage3')
+report_sha256 = '86af866db92eedfeb95be8c692977f16f3ac597fa68205e548db7d9c2b5beba8'
+stage = 3
+case = RankedCase(size=3, seed=44, count=408, generator_seed=1432050490, input_sha256='63c1a4ca6eb585e86327b16cc062cb6fbd6a2b..., (74, 8), (75, 6), (76, 1), (78, 3), (79, 4), (80, 4), (81, 4), (82, 1), (83, 1), (84, 1), (86, 1), (87, 1), (88, 2)))
+expected_sources = {'tiny.py': '1f88b51487ca890c968f39fbabbae79b4d671be8de3cea5ee1e02259a948eaf4'}
+context_id = '1111111111111111111111111111111111111111111111111111111111111111'
+model_id = '2222222222222222222222222222222222222222222222222222222222222222'
+key_report_sha256 = '3333333333333333333333333333333333333333333333333333333333333333'
+model_report_sha256 = '4444444444444444444444444444444444444444444444444444444444444444'
+previous = None
+
+    def authenticate(evidence,report_sha256,*,stage,case,expected_sources,context_id,model_id,
+                     key_report_sha256,model_report_sha256,previous=None):
+        if type(stage)is not int or stage not in (3,4,5):raise ValueError('one ranked stage3/4/5 required')
+        if (stage==3)!=(previous is None):raise ValueError('exact predecessor stage proof required')
+        if previous is not None and (type(previous)is not dict or previous.get('stage')!=stage-1 or previous.get('case_binding')!=case_binding(case)):
+            raise ValueError('ranked predecessor stage/case differs')
+        if type(expected_sources)is not dict or not expected_sources:raise ValueError('externally reviewed nonempty source inventory required')
+        for name,h in expected_sources.items():
+            if type(name)is not str or Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('relative reviewed source inventory required')
+            key_gate.sha_field(h)
+        for h in (context_id,model_id,key_report_sha256,model_report_sha256):key_gate.sha_field(h)
+        evidence=Path(evidence);raw=key_gate.read(evidence/'report.json',16<<20)
+        if key_gate.digest(raw)!=key_gate.sha_field(report_sha256):raise ValueError('externally pinned ranked terminal report differs')
+        report=key_gate.parse(raw)
+        flags=('passed','execute','actual_execution_attempted','operation_complete','all_processes_reaped',
+            'source_files_unchanged','source_archive_verified','cleanup_completed','terminal_scope_completed','owned_artifacts_retained')
+        if (type(report)is not dict or report.get('schema')!='cross-bert-ranked-stage-proof-v1'
+                or type(report.get('stage'))is not int or report['stage']!=stage
+                or any(report.get(k)is not True for k in flags) or report.get('error') or report.get('cleanup_errors')):
+            raise ValueError('completed successful ranked producer terminal proof required')
+        if any(report.get(k)!=expected_sources for k in ('source_hashes_start','source_hashes_end','execution_source_hashes_end')):
+            raise ValueError('ranked producer reviewed source closure differs')
+        archive=key_gate.read(evidence/'sources.tar.gz',16<<20)
+        if key_gate.digest(archive)!=key_gate.sha_field(report.get('source_archive_sha256')):raise ValueError('ranked producer archive digest differs')
+>       key_gate.verify_source_archive(archive,expected_sources)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'key_gate' has no attribute 'verify_source_archive'
+
+ranked_stage_gate.py:112: AttributeError
+____________ test_bad_last_or_reordered_response_proof[last_input] _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_bad_last_or_reordered_res4')
+schedule = CaseSet(cases=(RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e3...-seed44-references.jsonl', bytes=13719517, sha256='1e2290c8da124793043063bda1209239e489b8afef9903751356ac1a60b9a69a')))
+fault = 'last_input'
+
+    @pytest.mark.parametrize('fault',['last_scale','swap','missing','payload','last_input','last_level'])
+    def test_bad_last_or_reordered_response_proof(tmp_path,schedule,fault):
+>       case=schedule.case(3,44);old=proof(tmp_path,case,3)
+                                     ^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_stage_gate.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_stage_gate.py:60: in proof
+    return gate.authenticate(p,sha(raw),stage=stage,case=case,expected_sources=expected,context_id='1'*64,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+evidence = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_bad_last_or_reordered_res4/stage3')
+report_sha256 = '86af866db92eedfeb95be8c692977f16f3ac597fa68205e548db7d9c2b5beba8'
+stage = 3
+case = RankedCase(size=3, seed=44, count=408, generator_seed=1432050490, input_sha256='63c1a4ca6eb585e86327b16cc062cb6fbd6a2b..., (74, 8), (75, 6), (76, 1), (78, 3), (79, 4), (80, 4), (81, 4), (82, 1), (83, 1), (84, 1), (86, 1), (87, 1), (88, 2)))
+expected_sources = {'tiny.py': '1f88b51487ca890c968f39fbabbae79b4d671be8de3cea5ee1e02259a948eaf4'}
+context_id = '1111111111111111111111111111111111111111111111111111111111111111'
+model_id = '2222222222222222222222222222222222222222222222222222222222222222'
+key_report_sha256 = '3333333333333333333333333333333333333333333333333333333333333333'
+model_report_sha256 = '4444444444444444444444444444444444444444444444444444444444444444'
+previous = None
+
+    def authenticate(evidence,report_sha256,*,stage,case,expected_sources,context_id,model_id,
+                     key_report_sha256,model_report_sha256,previous=None):
+        if type(stage)is not int or stage not in (3,4,5):raise ValueError('one ranked stage3/4/5 required')
+        if (stage==3)!=(previous is None):raise ValueError('exact predecessor stage proof required')
+        if previous is not None and (type(previous)is not dict or previous.get('stage')!=stage-1 or previous.get('case_binding')!=case_binding(case)):
+            raise ValueError('ranked predecessor stage/case differs')
+        if type(expected_sources)is not dict or not expected_sources:raise ValueError('externally reviewed nonempty source inventory required')
+        for name,h in expected_sources.items():
+            if type(name)is not str or Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('relative reviewed source inventory required')
+            key_gate.sha_field(h)
+        for h in (context_id,model_id,key_report_sha256,model_report_sha256):key_gate.sha_field(h)
+        evidence=Path(evidence);raw=key_gate.read(evidence/'report.json',16<<20)
+        if key_gate.digest(raw)!=key_gate.sha_field(report_sha256):raise ValueError('externally pinned ranked terminal report differs')
+        report=key_gate.parse(raw)
+        flags=('passed','execute','actual_execution_attempted','operation_complete','all_processes_reaped',
+            'source_files_unchanged','source_archive_verified','cleanup_completed','terminal_scope_completed','owned_artifacts_retained')
+        if (type(report)is not dict or report.get('schema')!='cross-bert-ranked-stage-proof-v1'
+                or type(report.get('stage'))is not int or report['stage']!=stage
+                or any(report.get(k)is not True for k in flags) or report.get('error') or report.get('cleanup_errors')):
+            raise ValueError('completed successful ranked producer terminal proof required')
+        if any(report.get(k)!=expected_sources for k in ('source_hashes_start','source_hashes_end','execution_source_hashes_end')):
+            raise ValueError('ranked producer reviewed source closure differs')
+        archive=key_gate.read(evidence/'sources.tar.gz',16<<20)
+        if key_gate.digest(archive)!=key_gate.sha_field(report.get('source_archive_sha256')):raise ValueError('ranked producer archive digest differs')
+>       key_gate.verify_source_archive(archive,expected_sources)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'key_gate' has no attribute 'verify_source_archive'
+
+ranked_stage_gate.py:112: AttributeError
+____________ test_bad_last_or_reordered_response_proof[last_level] _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_bad_last_or_reordered_res5')
+schedule = CaseSet(cases=(RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e3...-seed44-references.jsonl', bytes=13719517, sha256='1e2290c8da124793043063bda1209239e489b8afef9903751356ac1a60b9a69a')))
+fault = 'last_level'
+
+    @pytest.mark.parametrize('fault',['last_scale','swap','missing','payload','last_input','last_level'])
+    def test_bad_last_or_reordered_response_proof(tmp_path,schedule,fault):
+>       case=schedule.case(3,44);old=proof(tmp_path,case,3)
+                                     ^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_stage_gate.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_stage_gate.py:60: in proof
+    return gate.authenticate(p,sha(raw),stage=stage,case=case,expected_sources=expected,context_id='1'*64,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+evidence = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_bad_last_or_reordered_res5/stage3')
+report_sha256 = '86af866db92eedfeb95be8c692977f16f3ac597fa68205e548db7d9c2b5beba8'
+stage = 3
+case = RankedCase(size=3, seed=44, count=408, generator_seed=1432050490, input_sha256='63c1a4ca6eb585e86327b16cc062cb6fbd6a2b..., (74, 8), (75, 6), (76, 1), (78, 3), (79, 4), (80, 4), (81, 4), (82, 1), (83, 1), (84, 1), (86, 1), (87, 1), (88, 2)))
+expected_sources = {'tiny.py': '1f88b51487ca890c968f39fbabbae79b4d671be8de3cea5ee1e02259a948eaf4'}
+context_id = '1111111111111111111111111111111111111111111111111111111111111111'
+model_id = '2222222222222222222222222222222222222222222222222222222222222222'
+key_report_sha256 = '3333333333333333333333333333333333333333333333333333333333333333'
+model_report_sha256 = '4444444444444444444444444444444444444444444444444444444444444444'
+previous = None
+
+    def authenticate(evidence,report_sha256,*,stage,case,expected_sources,context_id,model_id,
+                     key_report_sha256,model_report_sha256,previous=None):
+        if type(stage)is not int or stage not in (3,4,5):raise ValueError('one ranked stage3/4/5 required')
+        if (stage==3)!=(previous is None):raise ValueError('exact predecessor stage proof required')
+        if previous is not None and (type(previous)is not dict or previous.get('stage')!=stage-1 or previous.get('case_binding')!=case_binding(case)):
+            raise ValueError('ranked predecessor stage/case differs')
+        if type(expected_sources)is not dict or not expected_sources:raise ValueError('externally reviewed nonempty source inventory required')
+        for name,h in expected_sources.items():
+            if type(name)is not str or Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('relative reviewed source inventory required')
+            key_gate.sha_field(h)
+        for h in (context_id,model_id,key_report_sha256,model_report_sha256):key_gate.sha_field(h)
+        evidence=Path(evidence);raw=key_gate.read(evidence/'report.json',16<<20)
+        if key_gate.digest(raw)!=key_gate.sha_field(report_sha256):raise ValueError('externally pinned ranked terminal report differs')
+        report=key_gate.parse(raw)
+        flags=('passed','execute','actual_execution_attempted','operation_complete','all_processes_reaped',
+            'source_files_unchanged','source_archive_verified','cleanup_completed','terminal_scope_completed','owned_artifacts_retained')
+        if (type(report)is not dict or report.get('schema')!='cross-bert-ranked-stage-proof-v1'
+                or type(report.get('stage'))is not int or report['stage']!=stage
+                or any(report.get(k)is not True for k in flags) or report.get('error') or report.get('cleanup_errors')):
+            raise ValueError('completed successful ranked producer terminal proof required')
+        if any(report.get(k)!=expected_sources for k in ('source_hashes_start','source_hashes_end','execution_source_hashes_end')):
+            raise ValueError('ranked producer reviewed source closure differs')
+        archive=key_gate.read(evidence/'sources.tar.gz',16<<20)
+        if key_gate.digest(archive)!=key_gate.sha_field(report.get('source_archive_sha256')):raise ValueError('ranked producer archive digest differs')
+>       key_gate.verify_source_archive(archive,expected_sources)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'key_gate' has no attribute 'verify_source_archive'
+
+ranked_stage_gate.py:112: AttributeError
+________ test_decryption_without_postprocessing_cannot_pass_ranked_gate ________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_decryption_without_postpr0')
+schedule = CaseSet(cases=(RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e3...-seed44-references.jsonl', bytes=13719517, sha256='1e2290c8da124793043063bda1209239e489b8afef9903751356ac1a60b9a69a')))
+
+    def test_decryption_without_postprocessing_cannot_pass_ranked_gate(tmp_path,schedule):
+>       case=schedule.case(1,42);old=proof(tmp_path,case,3);old=proof(tmp_path,case,4,old)
+                                     ^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_stage_gate.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_stage_gate.py:60: in proof
+    return gate.authenticate(p,sha(raw),stage=stage,case=case,expected_sources=expected,context_id='1'*64,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+evidence = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-390/test_decryption_without_postpr0/stage3')
+report_sha256 = '8095693fe8f75651631c8e6b0ec6dce5686916517cce5e345eb66194e4cb4a0c'
+stage = 3
+case = RankedCase(size=1, seed=42, count=100, generator_seed=191664963, input_sha256='6e5c3867e2196491067305e330ac4b63d7d30e3..., (63, 3), (64, 6), (65, 2), (67, 2), (68, 2), (69, 1), (71, 1), (72, 2), (73, 1), (74, 1), (75, 1), (78, 2), (79, 1)))
+expected_sources = {'tiny.py': '1f88b51487ca890c968f39fbabbae79b4d671be8de3cea5ee1e02259a948eaf4'}
+context_id = '1111111111111111111111111111111111111111111111111111111111111111'
+model_id = '2222222222222222222222222222222222222222222222222222222222222222'
+key_report_sha256 = '3333333333333333333333333333333333333333333333333333333333333333'
+model_report_sha256 = '4444444444444444444444444444444444444444444444444444444444444444'
+previous = None
+
+    def authenticate(evidence,report_sha256,*,stage,case,expected_sources,context_id,model_id,
+                     key_report_sha256,model_report_sha256,previous=None):
+        if type(stage)is not int or stage not in (3,4,5):raise ValueError('one ranked stage3/4/5 required')
+        if (stage==3)!=(previous is None):raise ValueError('exact predecessor stage proof required')
+        if previous is not None and (type(previous)is not dict or previous.get('stage')!=stage-1 or previous.get('case_binding')!=case_binding(case)):
+            raise ValueError('ranked predecessor stage/case differs')
+        if type(expected_sources)is not dict or not expected_sources:raise ValueError('externally reviewed nonempty source inventory required')
+        for name,h in expected_sources.items():
+            if type(name)is not str or Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('relative reviewed source inventory required')
+            key_gate.sha_field(h)
+        for h in (context_id,model_id,key_report_sha256,model_report_sha256):key_gate.sha_field(h)
+        evidence=Path(evidence);raw=key_gate.read(evidence/'report.json',16<<20)
+        if key_gate.digest(raw)!=key_gate.sha_field(report_sha256):raise ValueError('externally pinned ranked terminal report differs')
+        report=key_gate.parse(raw)
+        flags=('passed','execute','actual_execution_attempted','operation_complete','all_processes_reaped',
+            'source_files_unchanged','source_archive_verified','cleanup_completed','terminal_scope_completed','owned_artifacts_retained')
+        if (type(report)is not dict or report.get('schema')!='cross-bert-ranked-stage-proof-v1'
+                or type(report.get('stage'))is not int or report['stage']!=stage
+                or any(report.get(k)is not True for k in flags) or report.get('error') or report.get('cleanup_errors')):
+            raise ValueError('completed successful ranked producer terminal proof required')
+        if any(report.get(k)!=expected_sources for k in ('source_hashes_start','source_hashes_end','execution_source_hashes_end')):
+            raise ValueError('ranked producer reviewed source closure differs')
+        archive=key_gate.read(evidence/'sources.tar.gz',16<<20)
+        if key_gate.digest(archive)!=key_gate.sha_field(report.get('source_archive_sha256')):raise ValueError('ranked producer archive digest differs')
+>       key_gate.verify_source_archive(archive,expected_sources)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'key_gate' has no attribute 'verify_source_archive'
+
+ranked_stage_gate.py:112: AttributeError
+=========================== short test summary info ============================
+FAILED test_ranked_stage_gate.py::test_complete_ordered_producer_chain[1] - A...
+FAILED test_ranked_stage_gate.py::test_complete_ordered_producer_chain[2] - A...
+FAILED test_ranked_stage_gate.py::test_complete_ordered_producer_chain[3] - A...
+FAILED test_ranked_stage_gate.py::test_public_terminal_source_phase_failures[outer_terminal-4]
+FAILED test_ranked_stage_gate.py::test_public_terminal_source_phase_failures[outer_terminal-5]
+FAILED test_ranked_stage_gate.py::test_public_terminal_source_phase_failures[worker_terminal-3]
+FAILED test_ranked_stage_gate.py::test_public_terminal_source_phase_failures[worker_terminal-4]
+FAILED test_ranked_stage_gate.py::test_public_terminal_source_phase_failures[worker_terminal-5]
+FAILED test_ranked_stage_gate.py::test_public_terminal_source_phase_failures[bool_exit-3]
+FAILED test_ranked_stage_gate.py::test_public_terminal_source_phase_failures[bool_exit-4]
+FAILED test_ranked_stage_gate.py::test_public_terminal_source_phase_failures[bool_exit-5]
+FAILED test_ranked_stage_gate.py::test_public_terminal_source_phase_failures[phase-3]
+FAILED test_ranked_stage_gate.py::test_public_terminal_source_phase_failures[phase-4]
+FAILED test_ranked_stage_gate.py::test_public_terminal_source_phase_failures[phase-5]
+FAILED test_ranked_stage_gate.py::test_public_terminal_source_phase_failures[bindings-3]
+FAILED test_ranked_stage_gate.py::test_public_terminal_source_phase_failures[bindings-4]
+FAILED test_ranked_stage_gate.py::test_public_terminal_source_phase_failures[bindings-5]
+FAILED test_ranked_stage_gate.py::test_public_terminal_source_phase_failures[source-3]
+FAILED test_ranked_stage_gate.py::test_public_terminal_source_phase_failures[source-4]
+FAILED test_ranked_stage_gate.py::test_public_terminal_source_phase_failures[source-5]
+FAILED test_ranked_stage_gate.py::test_bad_last_or_reordered_response_proof[last_scale]
+FAILED test_ranked_stage_gate.py::test_bad_last_or_reordered_response_proof[swap]
+FAILED test_ranked_stage_gate.py::test_bad_last_or_reordered_response_proof[missing]
+FAILED test_ranked_stage_gate.py::test_bad_last_or_reordered_response_proof[payload]
+FAILED test_ranked_stage_gate.py::test_bad_last_or_reordered_response_proof[last_input]
+FAILED test_ranked_stage_gate.py::test_bad_last_or_reordered_response_proof[last_level]
+FAILED test_ranked_stage_gate.py::test_decryption_without_postprocessing_cannot_pass_ranked_gate
+27 failed, 1 passed in 0.73s

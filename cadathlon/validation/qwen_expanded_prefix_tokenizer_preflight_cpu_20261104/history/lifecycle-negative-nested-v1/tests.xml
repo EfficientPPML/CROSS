@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.029" timestamp="2026-11-04T02:49:00.730990+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_nested" name="test_later_cleanup_cancellation_precedes_earlier_read_close_only_error" time="0.001"><failure message="AssertionError: assert OSError('metadata file close only') is KeyboardInterrupt('directory close only')">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7676a156c8a0&gt;
+
+    def test_later_cleanup_cancellation_precedes_earlier_read_close_only_error(monkeypatch):
+        first=OSError('metadata file close only');cancel=KeyboardInterrupt('directory close only')
+        state=NS(st_mode=stat.S_IFREG|0o600,st_dev=1,st_ino=2,st_size=1,st_mtime_ns=3,st_ctime_ns=4)
+        chunks=iter((b'x',b''));fake=NS(**{n:getattr(io.os,n)for n in dir(io.os)})
+        fake.open=lambda *a,**k:7;fake.fstat=lambda fd:state;fake.stat=lambda *a,**k:state;fake.read=lambda *a:next(chunks)
+        def close(fd):raise first
+        fake.close=close;monkeypatch.setattr(io,'os',fake)
+        class Output:
+            path='synthetic';owner=(3,4)
+            def close(self):pass
+            @classmethod
+            def reopen(cls,*a):return cls()
+            def json(self,*a):pass
+        @contextmanager
+        def signals(state=None,shield=False):
+            yield
+            if state is not None:state['restored']=True
+        monkeypatch.setattr(p,'Output',Output);monkeypatch.setattr(p,'signals',signals);monkeypatch.setattr(p,'source_end',lambda *a:{})
+        def second_close():raise cancel
+        observed=None
+        try:p.supervise(Output(),{'passed':False},lambda:io.read('/synthetic/read'),[second_close],Path('/unused'),{})
+        except BaseException as error:observed=error
+&gt;       assert observed is cancel
+E       AssertionError: assert OSError('metadata file close only') is KeyboardInterrupt('directory close only')
+
+/tmp/qwen-prefix-freeze-lifecycle-review-20261104/negative-nested-v1/test_nested.py:31: AssertionError</failure></testcase></testsuite></testsuites>

@@ -1,0 +1,48 @@
+{
+  "actual_body_or_context_access_by_reviewer": false,
+  "additional_concrete_findings": [],
+  "declared_source_count": 366,
+  "hash_and_lineage_only_files": [
+    "test_stage_boundaries.py",
+    "INTEGRATION_DESIGN.md",
+    "stage_ownership_successor.json"
+  ],
+  "identical_twelve_case_replay": "Pending author run at time of source review; not claimed here",
+  "observations": [
+    "Original upload/parameter close callbacks are captured immediately after factory return; publisher close/finish/write callbacks are captured before engine execution.",
+    "Guards compare bound callback self/function identities and preserve the original context, handle admission/public binding, and public-manifest object/canonical bytes.",
+    "Captured finish is followed by an ownership guard before response acceptance. Each captured original cleanup callback is followed by another guard while the loader yield remains active.",
+    "Shared Finalizer marks late cleanup guard failures, preserves genuine body identity, and allows cleanup-only cancellation priority. The selected error is retained in stage quarantine and raised into the unchanged loader.",
+    "The unchanged loader records failed entered server scope before disposal, retains all public mappings/context/transfer owners, and keeps its attempt-all directory/guard restoration policy.",
+    "Source-only review is limited to the three preserved callback/finish/consumer-cleanup defects and their propagation; it does not claim arbitrary Python mutation resistance.",
+    "Actual role constructors remain disabled and dependency-injected factories remain trusted synthetic seams, not execution capabilities."
+  ],
+  "predecessor_stage_sha256": "48d17162d381e7589706bea6b9f94dceb8bacc0fb52f4d05768c3a41e4e96b89",
+  "reviewed_runtime_files": [
+    "qwen_stage_composition.py",
+    "qwen_finalizer.py",
+    "cleanup_origin.py",
+    "qwen_key_loader.py",
+    "qwen_backend_composition.py"
+  ],
+  "reviewer": "security_review",
+  "runtime_imports_by_reviewer": 0,
+  "schema": "qwen-stage-ownership-source-review-v1",
+  "scope": "Bounded source/API and selected-file hash review only. No actual keys, CT, model, calibration, validation or input bodies; no backend imports, context construction or numerical run.",
+  "scoped_source_review_passed": true,
+  "source_map_sha256": "225cc51ab57696ad69b6f973f2402d8e2851db27b26fc35e66b5c610032e9f5e",
+  "source_pins": {
+    "INTEGRATION_DESIGN.md": "53063a58acb0f71052c9fb523cb0450d6b2ba12c3cef025ded329c632bc68b44",
+    "cleanup_origin.py": "4543b26bf1168e29bc21375c2f80a9aa99648205a9fd9aea6d5a8059c6d18175",
+    "qwen_backend_composition.py": "4922518125324ccef64bf8747e10d804e7887bbae3c211d89856eccda87a13c1",
+    "qwen_finalizer.py": "46e6566a275a84b4ae4596e066c592a4aa3a60e41b3afb4ec30bb96b72551240",
+    "qwen_key_loader.py": "cef368d4016a930fdee7b8e05f19826cde9b67de1e52f6e4fa78d00ec3b19d80",
+    "qwen_stage_composition.py": "67b2899474dd75973a771ed04b5d8f76a54bcc8e61e1efdc0250948122c502a3",
+    "stage_ownership_successor.json": "be1eea1ac2c8d56ceb042c52b8e9004d84bd0e6f2e464b26f88beeb404f6b2ce",
+    "test_stage_boundaries.py": "0a0954ea4986efb4bd1f647fa1e4501b79185f5c1e586e468974a68ee4fea66d"
+  },
+  "source_root": "/tmp/qwen-organizer-file-engine-integration-v2-20261104",
+  "tests_run_by_reviewer": 0,
+  "utc": "2026-11-04T11:58:36.676352+00:00",
+  "whole_source_tree_independently_reverified": false
+}

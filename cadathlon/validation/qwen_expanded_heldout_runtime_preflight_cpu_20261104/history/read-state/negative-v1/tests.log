@@ -1,0 +1,172 @@
+FFF.                                                                     [100%]
+=================================== FAILURES ===================================
+___ test_completed_read_stays_reported_when_later_execution_fails[failure0] ____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7acaf7970640>
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-666/test_completed_read_stays_repo0')
+failure = ValueError('after read')
+
+    @pytest.mark.parametrize('failure',[ValueError('after read'),KeyboardInterrupt('after read'),SystemExit(2)])
+    def test_completed_read_stays_reported_when_later_execution_fails(monkeypatch,tmp_path,failure):
+>       check(monkeypatch,tmp_path,failure,True)
+
+test_read_state.py:19: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7acaf7970640>
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-666/test_completed_read_stays_repo0')
+failure = ValueError('after read'), did_read = True
+
+    def check(monkeypatch,tmp_path,failure,did_read):
+        reports=[];events=[]
+        binding=SimpleNamespace(mode='heldout',manifest_sha256='a'*64,frozen=SimpleNamespace(receipt_sha256='b'*64))
+        args=SimpleNamespace(output=str(tmp_path/'worker'),private_output=str(tmp_path/'private'),manifest_sha256='c'*64,grant_sha256='d'*64)
+        class Output:
+            def __init__(self,path):self.path=path;self.owner=(1,2)
+            @classmethod
+            def reopen(cls,path,owner):return cls(path)
+            def close(self):events.append('private_close'if self.path==args.private_output else'public_close')
+            def json(self,name,row):reports.append(dict(row))
+        class Reader:
+            def __init__(self,*args):self.loaded=False
+            def recheck(self):events.append('input_recheck')
+        @contextmanager
+        def signals(state=None,shield=False):
+            if state is not None:state['restored']=False
+            try:yield
+            finally:
+                if state is not None:state['restored']=True
+        namespace=dict(os=os,json=json,time=time,Output=Output,cleanup_origin=cleanup_origin,protect_body=protect_body,choose=choose,
+            signals=signals,source_end=lambda *a:{},admit=lambda *a:(binding,lambda:events.append('proof_recheck')),
+            install_audit=lambda *a,**k:[],dependencies=lambda *a:{},enable_model_imports=lambda:None,reject_denials=lambda x:None)
+        extract(ROOT/'checker_process.py',('accumulate','supervise'),namespace)
+        extract(ROOT/'heldout_process.py',('worker',),namespace)
+        def execute(blobs,authorization,reader,private,progress):
+            reader.loaded=did_read
+            raise failure
+        monkeypatch.setitem(sys.modules,'heldout_input_gate',SimpleNamespace(ValidationReader=Reader))
+        monkeypatch.setitem(sys.modules,'heldout_runtime',SimpleNamespace(execute_heldout=execute))
+        with pytest.raises(type(failure))as caught:namespace['worker'](args,{}, {},{},tmp_path/'source')
+        assert caught.value is failure
+        assert all(n in events for n in ('input_recheck','proof_recheck','private_close','public_close'))
+        assert reports[-1]['passed'] is False
+        assert reports[-1]['validation_reauthenticated'] is did_read
+>       assert reports[-1]['validation_inputs_read'] is did_read
+E       assert False is True
+
+test_read_state.py:58: AssertionError
+___ test_completed_read_stays_reported_when_later_execution_fails[failure1] ____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7acaf7b5be10>
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-666/test_completed_read_stays_repo1')
+failure = KeyboardInterrupt('after read')
+
+    @pytest.mark.parametrize('failure',[ValueError('after read'),KeyboardInterrupt('after read'),SystemExit(2)])
+    def test_completed_read_stays_reported_when_later_execution_fails(monkeypatch,tmp_path,failure):
+>       check(monkeypatch,tmp_path,failure,True)
+
+test_read_state.py:19: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7acaf7b5be10>
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-666/test_completed_read_stays_repo1')
+failure = KeyboardInterrupt('after read'), did_read = True
+
+    def check(monkeypatch,tmp_path,failure,did_read):
+        reports=[];events=[]
+        binding=SimpleNamespace(mode='heldout',manifest_sha256='a'*64,frozen=SimpleNamespace(receipt_sha256='b'*64))
+        args=SimpleNamespace(output=str(tmp_path/'worker'),private_output=str(tmp_path/'private'),manifest_sha256='c'*64,grant_sha256='d'*64)
+        class Output:
+            def __init__(self,path):self.path=path;self.owner=(1,2)
+            @classmethod
+            def reopen(cls,path,owner):return cls(path)
+            def close(self):events.append('private_close'if self.path==args.private_output else'public_close')
+            def json(self,name,row):reports.append(dict(row))
+        class Reader:
+            def __init__(self,*args):self.loaded=False
+            def recheck(self):events.append('input_recheck')
+        @contextmanager
+        def signals(state=None,shield=False):
+            if state is not None:state['restored']=False
+            try:yield
+            finally:
+                if state is not None:state['restored']=True
+        namespace=dict(os=os,json=json,time=time,Output=Output,cleanup_origin=cleanup_origin,protect_body=protect_body,choose=choose,
+            signals=signals,source_end=lambda *a:{},admit=lambda *a:(binding,lambda:events.append('proof_recheck')),
+            install_audit=lambda *a,**k:[],dependencies=lambda *a:{},enable_model_imports=lambda:None,reject_denials=lambda x:None)
+        extract(ROOT/'checker_process.py',('accumulate','supervise'),namespace)
+        extract(ROOT/'heldout_process.py',('worker',),namespace)
+        def execute(blobs,authorization,reader,private,progress):
+            reader.loaded=did_read
+            raise failure
+        monkeypatch.setitem(sys.modules,'heldout_input_gate',SimpleNamespace(ValidationReader=Reader))
+        monkeypatch.setitem(sys.modules,'heldout_runtime',SimpleNamespace(execute_heldout=execute))
+        with pytest.raises(type(failure))as caught:namespace['worker'](args,{}, {},{},tmp_path/'source')
+        assert caught.value is failure
+        assert all(n in events for n in ('input_recheck','proof_recheck','private_close','public_close'))
+        assert reports[-1]['passed'] is False
+        assert reports[-1]['validation_reauthenticated'] is did_read
+>       assert reports[-1]['validation_inputs_read'] is did_read
+E       assert False is True
+
+test_read_state.py:58: AssertionError
+___ test_completed_read_stays_reported_when_later_execution_fails[failure2] ____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7acaf7ba3770>
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-666/test_completed_read_stays_repo2')
+failure = SystemExit(2)
+
+    @pytest.mark.parametrize('failure',[ValueError('after read'),KeyboardInterrupt('after read'),SystemExit(2)])
+    def test_completed_read_stays_reported_when_later_execution_fails(monkeypatch,tmp_path,failure):
+>       check(monkeypatch,tmp_path,failure,True)
+
+test_read_state.py:19: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7acaf7ba3770>
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-666/test_completed_read_stays_repo2')
+failure = SystemExit(2), did_read = True
+
+    def check(monkeypatch,tmp_path,failure,did_read):
+        reports=[];events=[]
+        binding=SimpleNamespace(mode='heldout',manifest_sha256='a'*64,frozen=SimpleNamespace(receipt_sha256='b'*64))
+        args=SimpleNamespace(output=str(tmp_path/'worker'),private_output=str(tmp_path/'private'),manifest_sha256='c'*64,grant_sha256='d'*64)
+        class Output:
+            def __init__(self,path):self.path=path;self.owner=(1,2)
+            @classmethod
+            def reopen(cls,path,owner):return cls(path)
+            def close(self):events.append('private_close'if self.path==args.private_output else'public_close')
+            def json(self,name,row):reports.append(dict(row))
+        class Reader:
+            def __init__(self,*args):self.loaded=False
+            def recheck(self):events.append('input_recheck')
+        @contextmanager
+        def signals(state=None,shield=False):
+            if state is not None:state['restored']=False
+            try:yield
+            finally:
+                if state is not None:state['restored']=True
+        namespace=dict(os=os,json=json,time=time,Output=Output,cleanup_origin=cleanup_origin,protect_body=protect_body,choose=choose,
+            signals=signals,source_end=lambda *a:{},admit=lambda *a:(binding,lambda:events.append('proof_recheck')),
+            install_audit=lambda *a,**k:[],dependencies=lambda *a:{},enable_model_imports=lambda:None,reject_denials=lambda x:None)
+        extract(ROOT/'checker_process.py',('accumulate','supervise'),namespace)
+        extract(ROOT/'heldout_process.py',('worker',),namespace)
+        def execute(blobs,authorization,reader,private,progress):
+            reader.loaded=did_read
+            raise failure
+        monkeypatch.setitem(sys.modules,'heldout_input_gate',SimpleNamespace(ValidationReader=Reader))
+        monkeypatch.setitem(sys.modules,'heldout_runtime',SimpleNamespace(execute_heldout=execute))
+        with pytest.raises(type(failure))as caught:namespace['worker'](args,{}, {},{},tmp_path/'source')
+        assert caught.value is failure
+        assert all(n in events for n in ('input_recheck','proof_recheck','private_close','public_close'))
+        assert reports[-1]['passed'] is False
+        assert reports[-1]['validation_reauthenticated'] is did_read
+>       assert reports[-1]['validation_inputs_read'] is did_read
+E       assert False is True
+
+test_read_state.py:58: AssertionError
+=========================== short test summary info ============================
+FAILED test_read_state.py::test_completed_read_stays_reported_when_later_execution_fails[failure0]
+FAILED test_read_state.py::test_completed_read_stays_reported_when_later_execution_fails[failure1]
+FAILED test_read_state.py::test_completed_read_stays_reported_when_later_execution_fails[failure2]
+3 failed, 1 passed in 0.07s

@@ -1,0 +1,17 @@
+F..................................                                      [100%]
+=================================== FAILURES ===================================
+__________________________ test_cpu_and_source_origin __________________________
+
+    def test_cpu_and_source_origin():
+        assert jax.default_backend() == 'cpu'
+        assert all(device.platform == 'cpu' for device in jax.devices())
+        assert jax.config.jax_enable_x64 is True
+        assert Path(ckks.__file__).resolve() == ROOT / 'checkout/jaxite_word/ckks_ctx.py'
+>       assert not any(name == 'libtpu' or name.startswith('libtpu.') for name in sys.modules)
+E       assert not True
+E        +  where True = any(<generator object test_cpu_and_source_origin.<locals>.<genexpr> at 0x7755995e6e90>)
+
+/tmp/ckks-scaled-crt-decoder-candidate-20261104/test_real_decode.py:86: AssertionError
+=========================== short test summary info ============================
+FAILED ../../tmp/ckks-scaled-crt-decoder-candidate-20261104/test_real_decode.py::test_cpu_and_source_origin
+1 failed, 34 passed in 4.84s

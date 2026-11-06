@@ -1,0 +1,73 @@
+{
+  "passed": true,
+  "scope": "Complete fixed K15/K128 joined12-layer ideal graph including pooler/classifier; no HE/file-handler/MRPC/ranked readiness claim.",
+  "tests": {
+    "tests": 46,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0
+  },
+  "source_count": 137,
+  "source_archive_sha256": "eadb43c936ee82454e3716ae078e37ae45064483a5994c6235e146f2ff2fb5b1",
+  "parent_archive_sha256": "4b5e11f598d25dce089b97ec87640ef40752bfd390a05d1ec16e2ad4a605cfb4",
+  "changed_sources": [
+    "checkout/cadathlon/common/encrypted_score_reduction.py",
+    "prerequisites.json",
+    "source_origin.json"
+  ],
+  "only_runtime_change": "Immutable bytes-backed public masks and guard metadata caching; legacy mutable/custom backing retains original full-hash checks.",
+  "source_files_unchanged": true,
+  "all_input_connections_are_actual_outputs": true,
+  "private_arrays_archived": false,
+  "observed_session": 58770,
+  "observed_exit_code": 0,
+  "all_recorded_pids_absent": true,
+  "elapsed_s": 2046.6746945760096,
+  "peak_rss_kib": 7475276,
+  "cases": [
+    {
+      "K": 15,
+      "passed": true,
+      "pooler_all_slot_max_abs": 4.32542890393961e-12,
+      "logits_all_slot_max_abs": 2.120970066243899e-12,
+      "native_logit_max_abs": 4.789427890006248e-05,
+      "native_prediction_agrees": true,
+      "physical_stage_slots_checked": 1703936,
+      "output_level": 2,
+      "identity_refresh_calls": 136,
+      "elapsed_s": 219.03930919499544,
+      "primitive_counts": {
+        "rotate": 127925,
+        "multiply": 7008,
+        "pt_products": 517267,
+        "rescales": 22038
+      },
+      "maximum_stage_error": 4.016040833221268e-10,
+      "domain_observations": 302,
+      "all_observed_domains_passed": true
+    },
+    {
+      "K": 128,
+      "passed": true,
+      "pooler_all_slot_max_abs": 2.0628845853742916e-11,
+      "logits_all_slot_max_abs": 4.700240197053063e-12,
+      "native_logit_max_abs": 0.00029357533791951607,
+      "native_prediction_agrees": true,
+      "physical_stage_slots_checked": 12713984,
+      "output_level": 2,
+      "identity_refresh_calls": 1067,
+      "elapsed_s": 1767.6003205820016,
+      "primitive_counts": {
+        "rotate": 906829,
+        "multiply": 59236,
+        "pt_products": 2058877,
+        "rescales": 146821
+      },
+      "maximum_stage_error": 7.795595280413181e-10,
+      "domain_observations": 2346,
+      "all_observed_domains_passed": true
+    }
+  ],
+  "timing_scope": "Observed ideal-only wall time under concurrent jobs; not a matched full-model or HE speedup estimate.",
+  "smoke_scope": "Earlier selected guard/head smoke:44 passing tests, collector exit1/passedFalse/completeFalse by design; not a full-model pass."
+}

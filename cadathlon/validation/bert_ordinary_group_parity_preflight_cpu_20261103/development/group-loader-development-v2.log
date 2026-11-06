@@ -1,0 +1,20 @@
+....F.....                                                               [100%]
+=================================== FAILURES ===================================
+________ test_original_rotation_replacement_cannot_authorize_unmapping _________
+
+group_case = (namespace(m=namespace(public=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-368/test_original_rotation_replace0/pub...epared_rotation.py'>), <module 'grouped_rotation' from '/tmp/bert-ordinary-group-parity-20261103/grouped_rotation.py'>)
+
+    def test_original_rotation_replacement_cannot_authorize_unmapping(group_case):
+        c,e,groups=group_case
+        with pytest.raises(ValueError):
+            with loader(c) as handle:
+                maps=mapped(handle.ctx);owner=handle.grouped_arithmetic();original=owner.rotation
+                owner.rotation=SimpleNamespace(clear=lambda **kwargs:None)
+>       assert original._closed and all(not m._mmap.closed for m in maps)
+E       assert (False)
+E        +  where False = <grouped_rotation.GroupedCompiledRotation object at 0x7c32dabf2c40>._closed
+
+test_grouped_loader.py:94: AssertionError
+=========================== short test summary info ============================
+FAILED test_grouped_loader.py::test_original_rotation_replacement_cannot_authorize_unmapping
+1 failed, 9 passed in 0.45s

@@ -1,0 +1,336 @@
+{
+  "passed": true,
+  "scope": "Source-bound public rational-tanh certificate and tests; no HE or model.",
+  "source_hashes_before": {
+    "verify.py": "611f88e6ab5be8d4ba80e2a0bba1393694db0854c065d5eefb7d260666551e5c",
+    "certificate.py": "31303cbfa8e7081b62e7224b35095efd7906bea217754575aaeef21a1e4f19a4",
+    "test_certificate.py": "7361b152b1f99e6032cbee85eb8b3950fde4cc2fb02393a302c3e4ca66c3f842",
+    "collect.py": "7950c17766691837a5e523af48aff1b45cb50c007db6530fa9239ae317f9ed11",
+    "frozen_approximate.py": "81fdb3b4539a91c65adec107643a36f048fb4822327dd55c86f9055be28e95c5",
+    "candidate_manifest.json": "4e2277beea7189aa1d77b168c500c8a175f6c630afa520fcc6b38cb5a179cff9"
+  },
+  "manifest_sha256": "4e2277beea7189aa1d77b168c500c8a175f6c630afa520fcc6b38cb5a179cff9",
+  "HE_executed": false,
+  "model_evaluated": false,
+  "coefficients_changed": false,
+  "numpy_version": "2.5.4",
+  "cpu_affinity": [
+    124,
+    125,
+    126,
+    127
+  ],
+  "certificate": {
+    "base_degree": 12,
+    "base_actual_power_degree": 11,
+    "input_domain": [
+      -34,
+      34
+    ],
+    "doublings": 6,
+    "base_input_scale": [
+      "1",
+      "64"
+    ],
+    "rounded_map_A": [
+      "1",
+      "1"
+    ],
+    "rounded_map_B": [
+      "0",
+      "1"
+    ],
+    "actual_mapped_endpoints": [
+      [
+        "-17",
+        "32"
+      ],
+      [
+        "17",
+        "32"
+      ]
+    ],
+    "base_coefficient_sha256": "a107f176bf28ea6e8f80af0613687c02ed6478078395b67d94b5e04b077204a7",
+    "actual_power_coefficients": [
+      "0x0.0p+0",
+      "0x1.ffff87344de8cp-1",
+      "0x0.0p+0",
+      "-0x1.553a86dc95ea5p-2",
+      "0x0.0p+0",
+      "0x1.0f548d9fea976p-3",
+      "0x0.0p+0",
+      "-0x1.a0a4d234421d9p-5",
+      "0x0.0p+0",
+      "0x1.062c06eb14121p-6",
+      "0x0.0p+0",
+      "-0x1.6ed58d79dd72fp-9"
+    ],
+    "actual_power_coefficient_sha256": "bb381c6b53f0fc6ea0e67bb16fb5d535b0b6de61ba07e3cead01f7dca1848851",
+    "base_absolute_upper": [
+      "48805969628323020079090480183095423",
+      "83076749736557242056487941267521536"
+    ],
+    "base_absolute_upper_f64": 0.587480489825258,
+    "base_guarded_upper": [
+      "439253726654907180711814321647858807",
+      "664613997892457936451903530140172288"
+    ],
+    "base_refresh_bound": 2,
+    "conditional_refresh_perturbation": {
+      "additive_error_upper": [
+        "1",
+        "32"
+      ],
+      "refreshed_absolute_upper": [
+        "33",
+        "32"
+      ],
+      "next_denominator_upper": [
+        "2113",
+        "1024"
+      ],
+      "measured_or_certified_CKKS_error": false,
+      "premise": "An independently established absolute refresh error<=1/32 around an ideal unit-bounded iterate; subsequent square/numerator share that disturbed value and all arithmetic is exact."
+    },
+    "reciprocal": {
+      "domain": [
+        [
+          "1",
+          "1"
+        ],
+        [
+          "4728779608739021",
+          "2251799813685248"
+        ]
+      ],
+      "first_weight": [
+        "-7498188765653271",
+        "18014398509481984"
+      ],
+      "first_bias": [
+        "5811096293381285",
+        "4503599627370496"
+      ],
+      "candidates": [
+        [
+          "1",
+          "1"
+        ],
+        [
+          "4728779608739021",
+          "2251799813685248"
+        ],
+        [
+          "11622192586762570",
+          "7498188765653271"
+        ]
+      ],
+      "first_residual_absolute_upper": [
+        "11501151022179978888110842250095206210025265327",
+        "91343852333181432387730302044767688728495783936"
+      ],
+      "final_residual_upper": [
+        "93726176293726962766995789408340702135703987799296583034936890696041624442839928447798733967577980253993391317039786573722010202141519694681633230842856727841311348755368156574880474560916558083958223410678053306794170470802342390742475482842939978201641763569384527973270915076232533467085609287748881977720476554250245625839529396189317208196663466622259333231404311346172075707515959485052386063047579426236563930545211316036885731144864535218611280712709601539126867699189397860472982550194612782001716560864263356835149714160076041688439071567768049158783939449891480896949431336952573141286310594544989929709021998522463563969103395536242528860424212044446511391940825622629495700220327723002887856351011763662415588550138926869761",
+        "23489251465925075230210151185774156554233534484953667316032739986389480093646106783483295359541177770856403609345378610019326743209476110353244206935548764779043377707264785134170276029911945739537108069451348761283234327048594723748118692196388373069874679833987628088851559650138408086923852972708720939048286556350479178936410494913928102260013054835364684385236886782689140465031711898877011805774131869116856672071452745074905138254715251402085409674178534961855599102382911398576502357606389999465091626636609540718933529517556938656270023468521046871973095096365652609245365254143454979492037830362034541258168877999888645921834770104841845605159485366141718919743375492982953129423771891434523575876802643592891474867487011021138808288718094336"
+      ],
+      "final_residual_upper_f64": 3.990172970377188e-15,
+      "iterations": 5,
+      "final_inverse_positive": true,
+      "final_inverse_le_reciprocal": true,
+      "scope": "Rounded public first affine followed by exact-real original Newton updates; later floating/encoding/CKKS errors excluded."
+    },
+    "rounds": [
+      {
+        "round": 1,
+        "input_absolute_upper": [
+          "48805969628323020079090480183095423",
+          "83076749736557242056487941267521536"
+        ],
+        "denominator_domain": [
+          [
+            "1",
+            "1"
+          ],
+          [
+            "9283769018151352862157508471608703260451525282837916370432538147348225",
+            "6901746346790563787434755862277025452451108972170386555162524223799296"
+          ]
+        ],
+        "output_absolute_upper": [
+          "1",
+          "1"
+        ],
+        "guarded_output_upper": [
+          "9",
+          "8"
+        ],
+        "refresh_bound": 2,
+        "inverse_iterations": 5,
+        "denominator_inside_original_contract": true
+      },
+      {
+        "round": 2,
+        "input_absolute_upper": [
+          "1",
+          "1"
+        ],
+        "denominator_domain": [
+          [
+            "1",
+            "1"
+          ],
+          [
+            "2",
+            "1"
+          ]
+        ],
+        "output_absolute_upper": [
+          "1",
+          "1"
+        ],
+        "guarded_output_upper": [
+          "9",
+          "8"
+        ],
+        "refresh_bound": 2,
+        "inverse_iterations": 5,
+        "denominator_inside_original_contract": true
+      },
+      {
+        "round": 3,
+        "input_absolute_upper": [
+          "1",
+          "1"
+        ],
+        "denominator_domain": [
+          [
+            "1",
+            "1"
+          ],
+          [
+            "2",
+            "1"
+          ]
+        ],
+        "output_absolute_upper": [
+          "1",
+          "1"
+        ],
+        "guarded_output_upper": [
+          "9",
+          "8"
+        ],
+        "refresh_bound": 2,
+        "inverse_iterations": 5,
+        "denominator_inside_original_contract": true
+      },
+      {
+        "round": 4,
+        "input_absolute_upper": [
+          "1",
+          "1"
+        ],
+        "denominator_domain": [
+          [
+            "1",
+            "1"
+          ],
+          [
+            "2",
+            "1"
+          ]
+        ],
+        "output_absolute_upper": [
+          "1",
+          "1"
+        ],
+        "guarded_output_upper": [
+          "9",
+          "8"
+        ],
+        "refresh_bound": 2,
+        "inverse_iterations": 5,
+        "denominator_inside_original_contract": true
+      },
+      {
+        "round": 5,
+        "input_absolute_upper": [
+          "1",
+          "1"
+        ],
+        "denominator_domain": [
+          [
+            "1",
+            "1"
+          ],
+          [
+            "2",
+            "1"
+          ]
+        ],
+        "output_absolute_upper": [
+          "1",
+          "1"
+        ],
+        "guarded_output_upper": [
+          "9",
+          "8"
+        ],
+        "refresh_bound": 2,
+        "inverse_iterations": 5,
+        "denominator_inside_original_contract": true
+      },
+      {
+        "round": 6,
+        "input_absolute_upper": [
+          "1",
+          "1"
+        ],
+        "denominator_domain": [
+          [
+            "1",
+            "1"
+          ],
+          [
+            "2",
+            "1"
+          ]
+        ],
+        "output_absolute_upper": [
+          "1",
+          "1"
+        ],
+        "guarded_output_upper": [
+          "9",
+          "8"
+        ],
+        "refresh_bound": 2,
+        "inverse_iterations": 5,
+        "denominator_inside_original_contract": true
+      }
+    ],
+    "all_refreshed_iterates_fit_B2_with_9_over_8": true,
+    "original_input_domain_certified": false,
+    "shared_square_required": true,
+    "HE_error_certified": false,
+    "proof": "For base t=A*(x/64)+B, |P(t)|<=sum|a_n|M^n<1. The rounded first reciprocal affine has |r1|<1; after4 original Newton updates0<=r5<=R^16<1. Hence0<inverse<=1/d. For d=1+y\u00b2, |2y*inverse|<=2|y|/(1+y\u00b2)<=1, so next d lies in[1,2] subset of unchanged[1,2.1].",
+    "excludes": [
+      "No claim that pooler dense outputs on arbitrary/approximate/encrypted inputs lie in the original[-34,34] contract.",
+      "Refresh must preserve the bound and shared-square relation within a separately justified error allowance; this proof does not certify that perturbation.",
+      "No actual floating-point, encoding, CKKS, refresh accuracy, sign/relative tanh error or classifier/logit gate is certified.",
+      "No coefficients, method, original five-update stopping count or six doublings are changed."
+    ]
+  },
+  "test_returncode": 0,
+  "source_hashes_after": {
+    "verify.py": "611f88e6ab5be8d4ba80e2a0bba1393694db0854c065d5eefb7d260666551e5c",
+    "certificate.py": "31303cbfa8e7081b62e7224b35095efd7906bea217754575aaeef21a1e4f19a4",
+    "test_certificate.py": "7361b152b1f99e6032cbee85eb8b3950fde4cc2fb02393a302c3e4ca66c3f842",
+    "collect.py": "7950c17766691837a5e523af48aff1b45cb50c007db6530fa9239ae317f9ed11",
+    "frozen_approximate.py": "81fdb3b4539a91c65adec107643a36f048fb4822327dd55c86f9055be28e95c5",
+    "candidate_manifest.json": "4e2277beea7189aa1d77b168c500c8a175f6c630afa520fcc6b38cb5a179cff9"
+  },
+  "source_files_unchanged": true,
+  "source_archive_sha256": "91edf68e3013730a4bb4c601cb4fc11eed81e45a7442d960f28646907edd1e5e",
+  "elapsed_s": 0.2777963959961198
+}

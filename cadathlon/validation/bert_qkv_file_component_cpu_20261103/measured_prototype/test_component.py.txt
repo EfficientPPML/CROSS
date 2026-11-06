@@ -1,0 +1,98 @@
+"""Metadata and distinct-row packing checks; no key generation or encryption."""
+import hashlib,json,os,sys
+from pathlib import Path
+import numpy as np
+import pytest
+ROOT=Path(__file__).resolve().parents[1]/'checkout';sys.path[:0]=[str(ROOT),str(ROOT/'cadathlon/common')]
+from spec import KINDS,parameters
+from contracts import pack_rows,unpack_rows,digest,write,check_parameters
+from transport import _contract,_canonical,validate_ciphertext,manifest_digest,FORMAT
+
+def public():return {'context_id':'a'*64,'parameters':parameters()}
+def artifact(root,role='request',request='nonce',input_digest=None):
+ p=public();c=_contract(p,request,role,input_digest);root.mkdir()
+ np.savez(root/'ct_0.npz',payload=np.zeros(c['shape'],dtype=np.uint32),moduli=np.asarray(c['moduli'],dtype=np.int64),degree_layout=np.asarray(c['layout'],dtype=np.int64),precision=np.int64(32),scale=np.float64(c['scale']),nsd=np.int64(1))
+ (root/'bundle.json').write_text(json.dumps({'count':1,'shape':{'__ct__':0}}))
+ m={'format':FORMAT,'context_id':p['context_id'],'request_id':request,'role':role,'input_digest':input_digest,'level':c['level'],'files':{n:hashlib.sha256((root/n).read_bytes()).hexdigest() for n in ('bundle.json','ct_0.npz')}}
+ (root/'transport.json').write_bytes(_canonical(m));return p,m
+
+def test_actual_secure_parameters_without_key_generation(monkeypatch):
+ from jaxite_word import key_gen
+ for name in ('gen_pke_pair','gen_evaluation_key','gen_rotation_key'):
+  monkeypatch.setattr(key_gen,name,lambda *a,**k:(_ for _ in ()).throw(AssertionError('keygen forbidden')))
+ assert abs(check_parameters(parameters())-206.9965209854861)<1e-10
+
+@pytest.mark.parametrize('field,value',[('degree',8192),('max_level',True),('sigma',3.2),('secret_distribution','gaussian'),('precision',64),('dnum',4)])
+def test_parameter_drift(field,value):
+ p=parameters();p[field]=value
+ with pytest.raises(ValueError):check_parameters(p)
+
+def test_distinct_full_width_rows_and_real_diagonal_layout():
+ from encrypted_packed_qwen import MatrixDiagonals
+ rng=np.random.default_rng(58);rows=rng.normal(size=(2,768));slots=pack_rows(rows)
+ assert not np.array_equal(rows[0],rows[1]);np.testing.assert_array_equal(unpack_rows(slots),rows)
+ # Exercise the actual BSGS diagonal rotations/sums on the full768x768 width.
+ w=rng.normal(scale=.02,size=(768,768));source=MatrixDiagonals(w,8192,4096);babies={i:np.roll(slots,-i) for i in {d%source.n1 for d in source.active}};actual=np.zeros(8192)
+ for giant in sorted({d//source.n1*source.n1 for d in source.active}):
+  indices=[d for d in source.active if d//source.n1*source.n1==giant];diags=source.materialize_diagonals(indices);inner=sum(np.roll(diags[d],giant)*babies[d%source.n1] for d in indices);actual+=np.roll(inner,-giant)
+ expected=pack_rows(rows@w.T);np.testing.assert_allclose(actual,expected,atol=1e-12,rtol=1e-12)
+ assert np.max(np.abs(actual.reshape(2,4096)[:,768:]))==0
+
+@pytest.mark.parametrize('shape',[(1,768),(2,767),(2,4096)])
+def test_reject_bad_rows(shape):
+ with pytest.raises(ValueError):pack_rows(np.zeros(shape))
+
+@pytest.mark.parametrize('role',['request',*KINDS])
+def test_transport_roles(tmp_path,role):
+ prior=None if role=='request' else 'b'*64;p,m=artifact(tmp_path/'ct',role,input_digest=prior)
+ _,_,contract,loaded=validate_ciphertext(tmp_path/'ct',public=p,request_id='nonce',role=role,input_digest=prior)
+ assert contract['level']==(1 if role=='request' else 0);assert loaded==m
+
+@pytest.mark.parametrize('change',['context','request','role','input_digest','scale','nsd','residue','dtype','extra_file','duplicate_json','symlink'])
+def test_strict_transport_mutations(tmp_path,change):
+ directory=tmp_path/'ct';p,m=artifact(directory,'query',input_digest='b'*64);kwargs=dict(public=p,request_id='nonce',role='query',input_digest='b'*64)
+ if change=='context':kwargs['public']={'context_id':'c'*64,'parameters':parameters()}
+ elif change=='request':kwargs['request_id']='other'
+ elif change=='role':kwargs['role']='key'
+ elif change=='input_digest':kwargs['input_digest']='c'*64
+ elif change=='extra_file':(directory/'plaintext.npy').write_bytes(b'unexpected')
+ elif change=='duplicate_json':(directory/'transport.json').write_bytes(b'{"format":1,"format":2}')
+ elif change=='symlink':
+  (directory/'ct_0.npz').rename(tmp_path/'payload');(directory/'ct_0.npz').symlink_to(tmp_path/'payload')
+ else:
+  with np.load(directory/'ct_0.npz',allow_pickle=False) as loaded:arrays={k:loaded[k] for k in loaded.files}
+  if change=='scale':arrays['scale']=np.float64(1.)
+  elif change=='nsd':arrays['nsd']=np.int64(2)
+  elif change=='dtype':arrays['payload']=arrays['payload'].astype(np.int64)
+  elif change=='residue':arrays['payload'][0,0,0,0,0]=arrays['moduli'][0]
+  np.savez(directory/'ct_0.npz',**arrays);m['files']['ct_0.npz']=hashlib.sha256((directory/'ct_0.npz').read_bytes()).hexdigest();(directory/'transport.json').write_bytes(_canonical(m))
+ with pytest.raises((ValueError,OSError)):validate_ciphertext(directory,**kwargs)
+
+@pytest.mark.parametrize('cancel,fail_final_write',[(False,False),(True,False),(True,True)])
+def test_collector_failure_cleanup_and_primary_cancellation(tmp_path,monkeypatch,cancel,fail_final_write):
+ from types import SimpleNamespace
+ import collect
+ original_write=collect.process.write_json
+ def fake_case(command,directory,**kwargs):
+  record={'returncode':1,'passed':False,'error':'injected preprocessor failure','process_reaped':True,'public_key_store_removed':True,'owned_directory_handle_closed':True}
+  original_write(directory/'process.json',record)
+  if cancel:raise KeyboardInterrupt('primary cancellation')
+  return record
+ monkeypatch.setattr(collect.process,'run_case',fake_case)
+ if fail_final_write:
+  def failing_write(path,value):
+   if path.name=='report.json' and 'elapsed_s' in value:raise OSError('secondary final write')
+   return original_write(path,value)
+  monkeypatch.setattr(collect.process,'write_json',failing_write)
+ owned=[];original_mkdtemp=collect.tempfile.mkdtemp
+ def own(*a,**k):
+  result=original_mkdtemp(*a,dir=tmp_path,**k);owned.append(Path(result));return result
+ monkeypatch.setattr(collect.tempfile,'mkdtemp',own)
+ args=SimpleNamespace(output=tmp_path/'evidence',snapshot=tmp_path/'unused',preprocess_python=Path(sys.executable))
+ if cancel:
+  with pytest.raises(KeyboardInterrupt,match='primary cancellation') as captured:collect.run(args)
+  if fail_final_write:assert any('secondary final write' in n for n in captured.value.__notes__)
+ else:assert collect.run(args)==1
+ assert owned and all(not p.exists() for p in owned)
+ if not fail_final_write:
+  r=json.loads((args.output/'report.json').read_text());assert r['passed'] is False and r['owned_component_directory_removed'] and r['all_processes_reaped']

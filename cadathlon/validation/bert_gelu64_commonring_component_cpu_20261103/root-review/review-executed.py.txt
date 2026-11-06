@@ -1,0 +1,51 @@
+from pathlib import Path
+import datetime,hashlib,json,math,os,subprocess,tarfile
+repo=Path('/home/jianming_gatech/CROSS');lab=Path('/tmp/bert-gelu64-commonring-component-20261103');out=lab/'run-v1';archive=repo/'cadathlon/validation/bert_gelu64_commonring_component_cpu_20261103'
+read=lambda p:json.loads(p.read_bytes());sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+r=read(out/'report.json');term=read(archive/'terminal_readback.json');m=r['source_hashes_before']
+assert sha(out/'report.json')=='33848efa29626743c8be5bf9cd2d611101753221ce9882c32623a87298e5b852'
+assert sha(out/'sources.tar.gz')=='b4432a2a9edd7d37799ec820aa0234e8e744047382d76c1ba9e2da41f15d8a49'
+assert len(m)==128 and m==r['source_hashes_after']and all(sha(lab/n)==v for n,v in m.items())
+with tarfile.open(out/'sources.tar.gz')as t:
+ members=t.getmembers();assert len(members)==len({x.name for x in members})==128
+ assert all(x.isfile()and not Path(x.name).is_absolute()and '..'not in Path(x.name).parts and x.size<16<<20 for x in members)
+ assert {x.name:hashlib.sha256(t.extractfile(x).read()).hexdigest()for x in members}==m
+for n in ('report.json','sources.tar.gz'):assert sha(out/n)==sha(archive/'run-v1'/n)
+assert all(r[k]is True for k in ('passed','complete','cleanup_completed','source_archive_verified','source_files_unchanged','input_payload_and_metadata_unchanged','source_closure_verified_before_decode','server_complete_before_any_decode','keyless_server_initialized'))
+assert r['errors']==r['cleanup_errors']==r['collector_cleanup_errors']==[]
+assert all(r[k]is False for k in ('preflight_only','full_attention_evaluated','full_block_evaluated','full_model_evaluated','refresh_performed','calibrated_timing'))
+ring=r['ring'];q=ring['q_towers'];p=ring['p_towers'];qp=math.prod(q+p)
+assert len(q)==100 and len(p)==14 and len(set(q+p))==114 and qp.bit_length()==3403<=3523
+assert math.isclose(math.log2(qp),ring['actual_log2_QP'],rel_tol=0,abs_tol=1e-12)
+assert math.prod(p)>=math.prod(sorted(q)[-math.ceil(len(q)/8):])
+assert (ring['degree'],ring['slots'],ring['depth'],ring['scale_bits'],ring['dnum'])==(131072,65536,49,60,8)
+assert ring['prestage_divisor']==q[2*ring['prestage_level']]*q[2*ring['prestage_level']+1] and ring['prestage_scale']==ring['scale']**2/ring['prestage_divisor']
+assert ring['actual_qp_is_secure_checked']and ring['P_coverage_passed']and ring['rotation_indices']==[]
+assert r['fixed_absolute_error_gate']==1e-6 and len(r['checks'])==9
+assert list(r['checks'])==['prestage','domain map','T2','T4','T8','T16','T32','T64','output']
+for name,row in r['checks'].items():
+ assert all(row[k]is True for k in ('passed','shape_and_finite','metadata_ok'))
+ assert row['slots_checked']==65536 and row['gate']==1e-6 and 0<=row['max_abs_error']<=1e-6
+ assert row['level']==ring['checkpoints'][name]['level']and row['scale']==ring['checkpoints'][name]['scale']and row['nsd']==1
+assert r['checks']['prestage']['domain_diagnostic']['decoded_all_slots_inside']is False
+assert max(x['max_abs_error']for x in r['checks'].values())==4.930477581766013e-9
+assert r['checks']['output']['max_abs_error']==1.964828300060617e-11
+assert len(r['codec_guards'])==7 and len(r['key_generation_guards'])==2
+assert term['session']==35253 and term['exit_code']==0 and term['reaped']is True
+assert term['report_sha256']==sha(out/'report.json')and term['source_archive_sha256']==sha(out/'sources.tar.gz')
+assert not Path('/proc',str(term['worker_pid'])).exists()
+try:os.killpg(term['owned_group'],0)
+except ProcessLookupError:pass
+else:raise AssertionError('group remains')
+subprocess.run([os.sys.executable,'-B',str(archive/'verify.py')],check=True)
+receipt=dict(schema='root-gelu64-genuine-terminal-review-v1',checked_at_utc=datetime.datetime.now(datetime.timezone.utc).isoformat(),passed=True,report_sha256=sha(out/'report.json'),source_archive_sha256=sha(out/'sources.tar.gz'),sources=128,current_start_end_archive_equal=True,checkpoints=9,all_slot_comparisons=9*65536,absolute_error_gate=1e-6,worst_checkpoint_error=4.930477581766013e-9,final_error=1.964828300060617e-11,qp_bit_length=qp.bit_length(),physical_P_coverage_independently_checked=True,noncanonical_prestage_scale=ring['prestage_scale'],prestage_endpoint_domain_diagnostic=False,native_erf_diagnostic=r['native_gelu_diagnostic'],outer_session=35253,outer_exit_code=0,owner_reaped_attestation=True,worker_and_group_absent=True,full_model=False,refresh=False,calibrated_timing=False,scope='Single synthetic GELU64 encrypted component; source/security/metadata/numeric gate and terminal verification, no cryptographic rerun.')
+dst=Path('/tmp/bert-gelu64-root-review-20261104');dst.mkdir();(dst/'review.json').write_text(json.dumps(receipt,indent=2,sort_keys=True)+'\n')
+additions={'root-review/review.json':(dst/'review.json').read_bytes(),'root-review/review-executed.py.txt':Path(__file__).read_bytes()}
+for p in Path('/tmp/bert-gelu64-root-review-draft-history-20261104').iterdir():additions['root-review/history/'+p.name]=p.read_bytes()
+for n,b in additions.items():p=archive/n;p.parent.mkdir(parents=True,exist_ok=True);assert not p.exists();p.write_bytes(b)
+manifest=read(archive/'artifact_hashes.json')
+for n,v in manifest.items():assert sha(archive/n)==v
+for n in additions:manifest[n]=sha(archive/n)
+(archive/'artifact_hashes.json').write_text(json.dumps(manifest,indent=2,sort_keys=True)+'\n')
+subprocess.run(['git','add','-f','--',*[str(archive/n)for n in (*additions,'artifact_hashes.json')]],cwd=repo,check=True)
+print(json.dumps(receipt,sort_keys=True))

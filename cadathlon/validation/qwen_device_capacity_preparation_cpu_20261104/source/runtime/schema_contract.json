@@ -1,0 +1,355 @@
+{
+  "actual_execution_authorized": false,
+  "binding_fields": [
+    "arithmetic_sha256",
+    "candidate_manifest_sha256",
+    "candidate_ordinal",
+    "checkpoint_sha256",
+    "config_sha256",
+    "context_id",
+    "fixed_input",
+    "input_digest",
+    "model_id",
+    "protocol_sha256",
+    "public_manifest_sha256",
+    "reference_sha256",
+    "request_contract_sha256",
+    "request_manifest_sha256",
+    "scientific_model_pins_sha256",
+    "server_source_archive_sha256",
+    "server_source_manifest_sha256"
+  ],
+  "entry_module": "qwen_scientific_admission",
+  "evidence_fields": {
+    "calibration": [
+      "source_manifest_sha256",
+      "source_archive_sha256",
+      "grant_sha256",
+      "parent_report_sha256",
+      "worker_report_sha256",
+      "outer_receipt_sha256",
+      "root_review_sha256",
+      "reconstruction_source_manifest_sha256",
+      "reconstruction_source_archive_sha256",
+      "reconstruction_grant_sha256",
+      "reconstruction_script_sha256",
+      "reconstruction_review_sha256",
+      "reconstruction_outer_receipt_sha256",
+      "reconstruction_root_review_sha256"
+    ],
+    "embedding": [
+      "provenance_receipt_sha256",
+      "producer_source_manifest_sha256",
+      "producer_source_archive_sha256",
+      "producer_outer_receipt_sha256",
+      "root_review_sha256",
+      "request_producer_source_manifest_sha256",
+      "request_producer_source_archive_sha256",
+      "request_producer_conditional_grant_sha256",
+      "request_producer_phase_grant_sha256",
+      "request_producer_report_sha256",
+      "request_producer_outer_sha256",
+      "request_producer_root_review_sha256"
+    ],
+    "freeze": [
+      "receipt_sha256",
+      "issuer_source_manifest_sha256",
+      "issuer_source_archive_sha256",
+      "publication_script_sha256",
+      "publication_outer_receipt_sha256",
+      "root_publication_review_sha256"
+    ],
+    "heldout": [
+      "source_manifest_sha256",
+      "source_archive_sha256",
+      "grant_sha256",
+      "parent_report_sha256",
+      "worker_report_sha256",
+      "outer_receipt_sha256",
+      "root_review_sha256",
+      "validation_input_sha256",
+      "tokenizer_report_sha256",
+      "tokenizer_review_sha256"
+    ],
+    "model": [
+      "manifest_sha256",
+      "report_sha256",
+      "outer_sha256",
+      "root_review_sha256",
+      "expected_pins_sha256",
+      "scientific_export_lineage_review_sha256"
+    ],
+    "row0": [
+      "source_manifest_sha256",
+      "source_archive_sha256",
+      "grant_sha256",
+      "parent_report_sha256",
+      "worker_report_sha256",
+      "outer_receipt_sha256",
+      "root_review_sha256"
+    ]
+  },
+  "expected_pin_fields": [
+    "schema",
+    "statement_sha256",
+    "bindings",
+    "evidence",
+    "server_source_map"
+  ],
+  "expected_pin_schema": "qwen-full28-scientific-expected-pins-v1",
+  "expected_pins_byte_limit": 2097152,
+  "fake_proof_instances_included": false,
+  "nested_request_client_chain_scope": "post-client provenance verifier and independently pinned root attestation; this pure checker does not separately read nested client proof bytes",
+  "new_root_schema_contracts": [
+    {
+      "actual_execution_authorized": false,
+      "checks": [
+        "source_archive_members_verified",
+        "actual_normal_zero_parent_worker_retired",
+        "public_reports_authenticated",
+        "complete3200_pass_verified"
+      ],
+      "links_expression": "{n: c[n] for n in PHASE_EVIDENCE if n != 'root_review_sha256'} | dict(candidate_manifest_sha256=frozen.manifest_sha256)",
+      "passed": true,
+      "schema": "qwen-calibration-pass-root-admission-v1"
+    },
+    {
+      "actual_execution_authorized": false,
+      "checks": [
+        "source_archive_members_verified",
+        "actual_normal_zero_reconstructor_retired",
+        "recorded_statistics_review_verified",
+        "publication_completed"
+      ],
+      "links_expression": "{n: c[n] for n in ('reconstruction_source_manifest_sha256', 'reconstruction_source_archive_sha256', 'reconstruction_grant_sha256', 'reconstruction_script_sha256', 'reconstruction_review_sha256', 'reconstruction_outer_receipt_sha256')} | dict(candidate_manifest_sha256=frozen.manifest_sha256)",
+      "passed": true,
+      "schema": "qwen-calibration-reconstruction-root-admission-v1"
+    },
+    {
+      "actual_execution_authorized": false,
+      "checks": [
+        "issuer_source_archive_members_verified",
+        "complete_calibration_chain_verified",
+        "first_pass_published_once",
+        "publication_outer_verified",
+        "selection_permanently_closed"
+      ],
+      "links_expression": "{n: f[n] for n in f if n != 'root_publication_review_sha256'} | dict(candidate_manifest_sha256=frozen.manifest_sha256)",
+      "passed": true,
+      "schema": "qwen-first-pass-freeze-root-admission-v1"
+    },
+    {
+      "actual_execution_authorized": false,
+      "checks": [
+        "source_archive_members_verified",
+        "actual_normal_zero_parent_worker_retired",
+        "all_public_links_verified",
+        "strict_metric_domain_inventory_source_bound",
+        "complete_pass_counts_and_gates_verified",
+        "same_candidate_model_freeze_verified",
+        "no_feedback_or_revision"
+      ],
+      "links_expression": "links | dict(outer_receipt_sha256=e['outer_receipt_sha256'])",
+      "passed": true,
+      "schema": "qwen-frozen-scientific-phase-root-admission-v1"
+    },
+    {
+      "actual_execution_authorized": false,
+      "checks": [
+        "original_checkpoint_config_matches_scientific_sources",
+        "exact_BF16_float64_export_lineage_verified",
+        "all198_logical_and113_gamma_identity_verified"
+      ],
+      "links_expression": "lineage_links",
+      "passed": true,
+      "schema": "qwen-scientific-model-export-lineage-v1"
+    },
+    {
+      "actual_execution_authorized": false,
+      "checks": [
+        "producer_source_archive_members_verified",
+        "original_embedding_model_row_identity_verified",
+        "exact_granted_input_file_and_request_verified",
+        "request_client_source_archive_and_conditional_role_verified",
+        "request_client_report_outer_root_chain_admitted",
+        "request_client_normal_zero_and_original_owners_retired",
+        "request_client_exact_input_and_upload_verified",
+        "normal_zero_publication_retired"
+      ],
+      "links_expression": "links | dict(producer_outer_receipt_sha256=e['embedding']['producer_outer_receipt_sha256'], request_contract_sha256=b['request_contract_sha256'], request_manifest_sha256=b['request_manifest_sha256'], input_digest=b['input_digest'], request_producer_evidence=request_evidence)",
+      "passed": true,
+      "schema": "qwen-row0-embedding-provenance-root-v1"
+    }
+  ],
+  "proof_byte_limits": {
+    "calibration_outer": 1048576,
+    "calibration_parent": 33554432,
+    "calibration_root": 65536,
+    "calibration_source": 1048576,
+    "calibration_worker": 33554432,
+    "embedding_outer": 65536,
+    "embedding_receipt": 65536,
+    "embedding_root": 65536,
+    "freeze_outer": 65536,
+    "freeze_receipt": 1048576,
+    "freeze_root": 65536,
+    "heldout_outer": 65536,
+    "heldout_parent": 33554432,
+    "heldout_root": 65536,
+    "heldout_source": 1048576,
+    "heldout_worker": 33554432,
+    "model_lineage": 65536,
+    "reconstruction_outer": 1048576,
+    "reconstruction_review": 1048576,
+    "reconstruction_root": 65536,
+    "row0_outer": 65536,
+    "row0_parent": 33554432,
+    "row0_root": 65536,
+    "row0_source": 1048576,
+    "row0_worker": 33554432
+  },
+  "proof_links": {
+    "calibration_outer": [
+      "calibration",
+      "outer_receipt_sha256"
+    ],
+    "calibration_parent": [
+      "calibration",
+      "parent_report_sha256"
+    ],
+    "calibration_root": [
+      "calibration",
+      "root_review_sha256"
+    ],
+    "calibration_source": [
+      "calibration",
+      "source_manifest_sha256"
+    ],
+    "calibration_worker": [
+      "calibration",
+      "worker_report_sha256"
+    ],
+    "embedding_outer": [
+      "embedding",
+      "producer_outer_receipt_sha256"
+    ],
+    "embedding_receipt": [
+      "embedding",
+      "provenance_receipt_sha256"
+    ],
+    "embedding_root": [
+      "embedding",
+      "root_review_sha256"
+    ],
+    "freeze_outer": [
+      "freeze",
+      "publication_outer_receipt_sha256"
+    ],
+    "freeze_receipt": [
+      "freeze",
+      "receipt_sha256"
+    ],
+    "freeze_root": [
+      "freeze",
+      "root_publication_review_sha256"
+    ],
+    "heldout_outer": [
+      "heldout",
+      "outer_receipt_sha256"
+    ],
+    "heldout_parent": [
+      "heldout",
+      "parent_report_sha256"
+    ],
+    "heldout_root": [
+      "heldout",
+      "root_review_sha256"
+    ],
+    "heldout_source": [
+      "heldout",
+      "source_manifest_sha256"
+    ],
+    "heldout_worker": [
+      "heldout",
+      "worker_report_sha256"
+    ],
+    "model_lineage": [
+      "model",
+      "scientific_export_lineage_review_sha256"
+    ],
+    "reconstruction_outer": [
+      "calibration",
+      "reconstruction_outer_receipt_sha256"
+    ],
+    "reconstruction_review": [
+      "calibration",
+      "reconstruction_review_sha256"
+    ],
+    "reconstruction_root": [
+      "calibration",
+      "reconstruction_root_review_sha256"
+    ],
+    "row0_outer": [
+      "row0",
+      "outer_receipt_sha256"
+    ],
+    "row0_parent": [
+      "row0",
+      "parent_report_sha256"
+    ],
+    "row0_root": [
+      "row0",
+      "root_review_sha256"
+    ],
+    "row0_source": [
+      "row0",
+      "source_manifest_sha256"
+    ],
+    "row0_worker": [
+      "row0",
+      "worker_report_sha256"
+    ]
+  },
+  "proof_raw_total_ceiling": 209453056,
+  "request_byte_limit": 1048576,
+  "request_manifest_byte_limit": 1048576,
+  "schema": "qwen-full28-scientific-source-contract-v1",
+  "source_of_truth": "qwen_scientific_admission.py; exact frozen issuer and freeze verifier are unchanged",
+  "statement_byte_limit": 65536,
+  "statement_checks": [
+    "all_external_pins_authenticated",
+    "all_source_archive_and_terminal_closures_verified",
+    "complete3200_calibration_pass_verified",
+    "independent_recorded_statistic_reconstruction_verified",
+    "first_pass_freeze_published_once",
+    "complete1088_heldout_pass_verified",
+    "separate_fixed_row0_pass_verified",
+    "strict_metric_semantic_domain_coverage_verified",
+    "scientific_model_export_identity_bridge_verified",
+    "fixed_row0_embedding_to_request_provenance_verified",
+    "candidate_unchanged_no_feedback_or_revision"
+  ],
+  "statement_fields": [
+    "schema",
+    "binding",
+    "evidence",
+    "checks",
+    "scope"
+  ],
+  "statement_schema": "qwen-full28-scientific-admission-v1",
+  "statement_scope": {
+    "actual_execution_authorized": false,
+    "argmax_recomputed_from_logits": false,
+    "candidate_revision_authorized": false,
+    "client_result_accepted": false,
+    "fresh_array_recomputation": false,
+    "full28_scientific_prerequisites_satisfied": true,
+    "he_precision_accepted": false,
+    "heldout_retry_authorized": false,
+    "invariance_recomputed_from_arrays": false,
+    "selection_authorized": false,
+    "verification_scope": "recorded-statistic-calibration-and-source-bound-heldout-row0"
+  },
+  "status": "source-only-unexecuted-no-proof-instances",
+  "tests_executed": false
+}

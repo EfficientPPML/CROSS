@@ -1,0 +1,34 @@
+--- a/full_model_engine.py
++++ b/full_model_engine.py
+@@ -75,10 +75,14 @@
+         cancellation_signals = (signal.SIGINT, signal.SIGTERM, signal.SIGHUP)
+         if threading.current_thread() is threading.main_thread():
+             def remember_signal(signum, frame): deferred.append(signum)
+-            previous_mask = attempt('engine cleanup signal block',
+-                lambda:signal.pthread_sigmask(signal.SIG_BLOCK, cancellation_signals))
++            # Query before the mutating call: a block operation may change
++            #the mask and then raise without returning the original mask.
++            previous_mask = attempt('engine cleanup signal mask query',
++                lambda:signal.pthread_sigmask(signal.SIG_BLOCK, ()))
+             if previous_mask is not None:
+                 try:
++                    attempt('engine cleanup signal block',
++                        lambda:signal.pthread_sigmask(signal.SIG_BLOCK, cancellation_signals))
+                     for signum in cancellation_signals:
+                         def install(sig=signum):
+                             original=signal.getsignal(sig)
+@@ -115,9 +119,12 @@
+             clear_arithmetic(arithmetic,'arithmetic')
+         if provider is not None:attempt('NTT provider cleanup',lambda:provider.close())
+         if shield:
+-            previous_mask = attempt('engine cleanup restoration signal block',
+-                lambda:signal.pthread_sigmask(signal.SIG_BLOCK, cancellation_signals))
++            previous_mask = attempt('engine cleanup restoration mask query',
++                lambda:signal.pthread_sigmask(signal.SIG_BLOCK, ()))
+             try:
++                if previous_mask is not None:
++                    attempt('engine cleanup restoration signal block',
++                        lambda:signal.pthread_sigmask(signal.SIG_BLOCK, cancellation_signals))
+                 for signum, original in reversed(shield):
+                     attempt('engine cleanup signal restoration', lambda s=signum,o=original:signal.signal(s,o))
+             finally:

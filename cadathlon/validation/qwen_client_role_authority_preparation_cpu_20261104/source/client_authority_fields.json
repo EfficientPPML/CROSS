@@ -1,0 +1,139 @@
+{
+  "authoritative_modules": {
+    "client_role_admission.py": "162b2a5c4058d4c3b0ca7b25a004cad41d95c004edb0c162b24a691ebb5e35ca",
+    "client_role_common.py": "c48e5238941161f511f8e0caa73d4bea4e96ae87af23fec1c1b4e9d013c32ead",
+    "client_server_terminal.py": "29e1a08852fdb1543a86f91dc6a2d95627c6517d0f52e49314260360606d9823"
+  },
+  "conditional_conditions": {
+    "actual_dependency_and_capacity_checks_required": true,
+    "current_owned_store_checks_required": true,
+    "generated_key_readiness_required": true,
+    "phase_instance_grant_required": true
+  },
+  "conditional_scope": {
+    "body_entry_by_this_document_alone": false,
+    "conditional_role_admission": true,
+    "key_generation": false,
+    "model_forward": false,
+    "scientific_acceptance": false
+  },
+  "entries": {
+    "request_producer": "qwen_client_entry.py:produce_request",
+    "response_consumer": "qwen_client_entry.py:consume_response"
+  },
+  "field_sets": {
+    "CONDITIONAL_FIELDS": [
+      "conditions",
+      "entry",
+      "generation_intent_sha256",
+      "generation_source_archive_sha256",
+      "generation_source_manifest_sha256",
+      "model_evidence",
+      "model_id",
+      "policies",
+      "readiness_review_sha256",
+      "role",
+      "schema",
+      "scope",
+      "source_archive_sha256",
+      "source_manifest_sha256",
+      "source_root"
+    ],
+    "CONDITIONAL_PIN_FIELDS": [
+      "conditional_grant_sha256",
+      "generation_intent_sha256",
+      "generation_source_archive_sha256",
+      "generation_source_manifest_sha256",
+      "model_evidence",
+      "policies",
+      "readiness_review_sha256",
+      "role",
+      "schema",
+      "source_archive_sha256",
+      "source_manifest_sha256",
+      "source_map"
+    ],
+    "KEY_EVIDENCE_FIELDS": [
+      "context_id",
+      "expected_pins_sha256",
+      "grant_sha256",
+      "intent_sha256",
+      "outer_sha256",
+      "private_manifest_sha256",
+      "public_manifest_sha256",
+      "report_sha256",
+      "root_review_sha256",
+      "source_archive_sha256",
+      "source_manifest_sha256",
+      "stores_sha256"
+    ],
+    "MODEL_EVIDENCE_FIELDS": [
+      "expected_pins_sha256",
+      "manifest_sha256",
+      "outer_sha256",
+      "report_sha256",
+      "root_review_sha256"
+    ],
+    "PHASE_FIELDS": [
+      "conditional_grant_sha256",
+      "entry",
+      "execute",
+      "input",
+      "key_evidence",
+      "key_stores",
+      "model_evidence",
+      "outputs",
+      "policies",
+      "request_contract_sha256",
+      "role",
+      "schema",
+      "scope",
+      "source_archive_sha256",
+      "source_manifest_sha256"
+    ],
+    "PHASE_PIN_FIELDS": [
+      "conditional_grant_sha256",
+      "key_evidence",
+      "phase_grant_sha256",
+      "request_contract_sha256",
+      "role",
+      "schema"
+    ],
+    "SERVER_PIN_FIELDS": [
+      "envelope_sha256",
+      "inner_outer_sha256",
+      "inner_report_sha256",
+      "input_digest",
+      "key_evidence",
+      "model_evidence",
+      "outer_sha256",
+      "request_contract_sha256",
+      "response_manifest_sha256",
+      "root_review_sha256",
+      "schema",
+      "scientific_authorization_sha256",
+      "server_grant_sha256",
+      "server_role_review_sha256",
+      "server_source_archive_sha256",
+      "server_source_manifest_sha256",
+      "server_source_map"
+    ]
+  },
+  "schema": "qwen-client-role-public-contract-field-inventory-v1",
+  "scope": "Literal closed-field inventory. Function checks also enforce nested schema/types/links; this is not a grant or complete actual source selection.",
+  "server_required_checks": [
+    "source_precheck_completed",
+    "source_postcheck_completed",
+    "model_admission_authenticated",
+    "key_readiness_authenticated",
+    "all335_public_arrays_authenticated",
+    "private_key_absent",
+    "request_payloads_authenticated",
+    "parameters_rechecked",
+    "all38_security_and_barriers_completed",
+    "all38_published",
+    "original_owners_retired",
+    "cleanup_completed",
+    "signals_restored"
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "passed": true,
+  "scope": "Actual JAX arithmetic on public random canonical residues and synthetic key operands only; no context/secret/keygen/encryption/decryption/private inputs, no secure-HE or performance claim.",
+  "fixtures": [
+    {
+      "N": 16,
+      "Q": 12,
+      "P": 14,
+      "dnum": 8,
+      "keygen_Q": 100,
+      "alpha": 13,
+      "effective_parts": 1,
+      "comparisons": [
+        {
+          "group": "edges",
+          "index": 0,
+          "equal": true,
+          "shape": [
+            1,
+            2,
+            4,
+            4,
+            12
+          ],
+          "dtype": "uint32"
+        },
+        {
+          "group": "edges",
+          "index": -5,
+          "equal": true,
+          "shape": [
+            1,
+            2,
+            4,
+            4,
+            12
+          ],
+          "dtype": "uint32"
+        },
+        {
+          "group": "edges",
+          "index": 3,
+          "equal": true,
+          "shape": [
+            1,
+            2,
+            4,
+            4,
+            12
+          ],
+          "dtype": "uint32"
+        },
+        {
+          "group": "edges",
+          "index": 3,
+          "equal": true,
+          "shape": [
+            1,
+            2,
+            4,
+            4,
+            12
+          ],
+          "dtype": "uint32"
+        },
+        {
+          "group": "edges",
+          "index": -1,
+          "equal": true,
+          "shape": [
+            1,
+            2,
+            4,
+            4,
+            12
+          ],
+          "dtype": "uint32"
+        }
+      ],
+      "negative_guards": 8,
+      "source_and_digits_unchanged": true,
+      "keys_unchanged": true,
+      "elapsed_s": 1.3481240600085584
+    }
+  ],
+  "ast": {
+    "all_original_methods_ast_unchanged": true,
+    "completion_body_exact_after_only_decomposition_substitution": true
+  },
+  "cpu_affinity": [
+    168,
+    169,
+    170,
+    171
+  ],
+  "quick": true,
+  "total_comparisons": 5,
+  "total_negative_guards": 8,
+  "elapsed_s": 1.7737134650087683,
+  "no_context_keygen_modules_loaded": true,
+  "versions": {
+    "numpy": "2.5.4",
+    "jax": "0.12.0.1"
+  },
+  "zero_scope": "Raw identity-automorphism key-switch parity. Public rotate(0) bypass/source alias belongs to a future group-owner test."
+}

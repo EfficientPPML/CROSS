@@ -1,0 +1,17 @@
+{
+  "scope": "Complete196-tensor public server preprocessing/cache only; no encryption or model forward",
+  "checkpoint_sha256": "e1f8085ef673c9eb8a1a93a84270742e8aa0ccbceadef01eef15e26c44b46034",
+  "tensor_count": 196,
+  "matrices": 74,
+  "embedding_tensors_excluded": 5,
+  "review_reproducer": "/tmp/review-server-public-model-20261103",
+  "review_findings": [
+    "Original cleanup could replace primary cancellation",
+    "Original pathname cleanup could remove replacement directory"
+  ],
+  "cleanup_helper_source": "/tmp/transformer-collector-ownedkeys-20261103/cadathlon/validation/check_transformer_suite.py",
+  "cleanup_helper_source_sha256": "2a4dc0f849a6a4d3066d1de473bbea4c1fe26d4f43cd559dc01c097b6c377d19",
+  "cleanup_scope": "Pinned held fd/dev+ino with path identity before/afterwrites; concurrency guard, not same-user OS sandbox",
+  "development_v1": "17 passed3.33s/session36715exit0/reaped before independent lifecycle review",
+  "development_v2": "22passed1failed5.94s/session7591exit1/reaped; safe replacement retained but test expected ownership RuntimeError before filehash FileNotFoundError. Added identity check immediately after each write; source/log retained."
+}

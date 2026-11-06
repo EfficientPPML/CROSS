@@ -1,0 +1,751 @@
+{
+  "passed": true,
+  "scope": "All12 full-width actual-loop ideal FFN composition; no encrypted execution.",
+  "layer": 0,
+  "K": 128,
+  "tiles": 8,
+  "physical_slots_checked": 524288,
+  "actual_loop_vs_independent_polynomial_gate": 1e-08,
+  "max_abs_errors": {
+    "middle": 1.2434497875801753e-14,
+    "activated": 8.881784197001252e-15,
+    "dense": 3.019806626980426e-14,
+    "residual": 3.019806626980426e-14,
+    "output": 1.199040866595169e-14
+  },
+  "polynomial_vs_native_function_max_abs": 0.0002748706449349214,
+  "native_function_oracle": "Independent dense matmul/exact-erf GELU/exact LayerNorm; no new native-framework model run.",
+  "domain_observations": {
+    "gelu_input_min": -11.722333925187964,
+    "gelu_input_max": 7.955400779180742,
+    "mlp_variance_min": 1.4613955559458358,
+    "mlp_variance_max": 6.263403754221806,
+    "input_max_abs": 50.740635271644486,
+    "gelu_max_abs": 7.955366553881916
+  },
+  "gelu_padding_polynomial_at_zero": 1.4362408041090902e-05,
+  "original_positions": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62,
+    63,
+    64,
+    65,
+    66,
+    67,
+    68,
+    69,
+    70,
+    71,
+    72,
+    73,
+    74,
+    75,
+    76,
+    77,
+    78,
+    79,
+    80,
+    81,
+    82,
+    83,
+    84,
+    85,
+    86,
+    87,
+    88,
+    89,
+    90,
+    91,
+    92,
+    93,
+    94,
+    95,
+    96,
+    97,
+    98,
+    99,
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    108,
+    109,
+    110,
+    111,
+    112,
+    113,
+    114,
+    115,
+    116,
+    117,
+    118,
+    119,
+    120,
+    121,
+    122,
+    123,
+    124,
+    125,
+    126,
+    127
+  ],
+  "identity_refresh_calls": 16,
+  "actual_primitive_counts": {
+    "rotate": 2288,
+    "weighted_sum": 1520,
+    "add": 1312,
+    "multiply": 640
+  },
+  "public_plaintext_products": 62856,
+  "public_operation_plan": {
+    "matrices": {
+      "intermediate": {
+        "active_diagonals": 3839,
+        "n1": 64,
+        "giant_groups": 60,
+        "rotations": 122,
+        "required_keys": [
+          1,
+          64,
+          61760
+        ]
+      },
+      "output": {
+        "active_diagonals": 3839,
+        "n1": 64,
+        "giant_groups": 60,
+        "rotations": 122,
+        "required_keys": [
+          1,
+          64,
+          61760
+        ]
+      }
+    },
+    "norm_method": "power",
+    "norm_degree": 16,
+    "gelu_degree": 64,
+    "per_tile_primitive_calls": {
+      "rotate": 286,
+      "weighted_sum": 190,
+      "multiply": 80,
+      "add": 164
+    },
+    "per_tile_public_plaintext_terms": 7857,
+    "identity_refresh_calls_per_tile": 2,
+    "full_refresh_cost_included": false
+  },
+  "metadata": [
+    {
+      "actual_metadata": [
+        {
+          "stage": "input B128 refresh",
+          "level": 25,
+          "scale": 1.1467305003699406e+18
+        },
+        {
+          "stage": "intermediate dense",
+          "level": 24,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "GELU",
+          "level": 10,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "GELU refresh",
+          "level": 25,
+          "scale": 1.1467305003699404e+18
+        },
+        {
+          "stage": "output dense",
+          "level": 24,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "residual",
+          "level": 24,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "MLP normalization",
+          "level": 13,
+          "scale": 1.1467305003699405e+18
+        }
+      ],
+      "explicit_refresh_bounds": [
+        128.0,
+        16.0
+      ],
+      "layer": 0,
+      "gelu_degree": 64,
+      "normalization_method": "power",
+      "normalization_degree": 16,
+      "output_level": 13,
+      "original_positions": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "range_verified": false,
+      "encrypted_error_verified": false
+    },
+    {
+      "actual_metadata": [
+        {
+          "stage": "input B128 refresh",
+          "level": 25,
+          "scale": 1.1467305003699406e+18
+        },
+        {
+          "stage": "intermediate dense",
+          "level": 24,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "GELU",
+          "level": 10,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "GELU refresh",
+          "level": 25,
+          "scale": 1.1467305003699404e+18
+        },
+        {
+          "stage": "output dense",
+          "level": 24,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "residual",
+          "level": 24,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "MLP normalization",
+          "level": 13,
+          "scale": 1.1467305003699405e+18
+        }
+      ],
+      "explicit_refresh_bounds": [
+        128.0,
+        16.0
+      ],
+      "layer": 0,
+      "gelu_degree": 64,
+      "normalization_method": "power",
+      "normalization_degree": 16,
+      "output_level": 13,
+      "original_positions": [
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31
+      ],
+      "range_verified": false,
+      "encrypted_error_verified": false
+    },
+    {
+      "actual_metadata": [
+        {
+          "stage": "input B128 refresh",
+          "level": 25,
+          "scale": 1.1467305003699406e+18
+        },
+        {
+          "stage": "intermediate dense",
+          "level": 24,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "GELU",
+          "level": 10,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "GELU refresh",
+          "level": 25,
+          "scale": 1.1467305003699404e+18
+        },
+        {
+          "stage": "output dense",
+          "level": 24,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "residual",
+          "level": 24,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "MLP normalization",
+          "level": 13,
+          "scale": 1.1467305003699405e+18
+        }
+      ],
+      "explicit_refresh_bounds": [
+        128.0,
+        16.0
+      ],
+      "layer": 0,
+      "gelu_degree": 64,
+      "normalization_method": "power",
+      "normalization_degree": 16,
+      "output_level": 13,
+      "original_positions": [
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47
+      ],
+      "range_verified": false,
+      "encrypted_error_verified": false
+    },
+    {
+      "actual_metadata": [
+        {
+          "stage": "input B128 refresh",
+          "level": 25,
+          "scale": 1.1467305003699406e+18
+        },
+        {
+          "stage": "intermediate dense",
+          "level": 24,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "GELU",
+          "level": 10,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "GELU refresh",
+          "level": 25,
+          "scale": 1.1467305003699404e+18
+        },
+        {
+          "stage": "output dense",
+          "level": 24,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "residual",
+          "level": 24,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "MLP normalization",
+          "level": 13,
+          "scale": 1.1467305003699405e+18
+        }
+      ],
+      "explicit_refresh_bounds": [
+        128.0,
+        16.0
+      ],
+      "layer": 0,
+      "gelu_degree": 64,
+      "normalization_method": "power",
+      "normalization_degree": 16,
+      "output_level": 13,
+      "original_positions": [
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63
+      ],
+      "range_verified": false,
+      "encrypted_error_verified": false
+    },
+    {
+      "actual_metadata": [
+        {
+          "stage": "input B128 refresh",
+          "level": 25,
+          "scale": 1.1467305003699406e+18
+        },
+        {
+          "stage": "intermediate dense",
+          "level": 24,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "GELU",
+          "level": 10,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "GELU refresh",
+          "level": 25,
+          "scale": 1.1467305003699404e+18
+        },
+        {
+          "stage": "output dense",
+          "level": 24,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "residual",
+          "level": 24,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "MLP normalization",
+          "level": 13,
+          "scale": 1.1467305003699405e+18
+        }
+      ],
+      "explicit_refresh_bounds": [
+        128.0,
+        16.0
+      ],
+      "layer": 0,
+      "gelu_degree": 64,
+      "normalization_method": "power",
+      "normalization_degree": 16,
+      "output_level": 13,
+      "original_positions": [
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79
+      ],
+      "range_verified": false,
+      "encrypted_error_verified": false
+    },
+    {
+      "actual_metadata": [
+        {
+          "stage": "input B128 refresh",
+          "level": 25,
+          "scale": 1.1467305003699406e+18
+        },
+        {
+          "stage": "intermediate dense",
+          "level": 24,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "GELU",
+          "level": 10,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "GELU refresh",
+          "level": 25,
+          "scale": 1.1467305003699404e+18
+        },
+        {
+          "stage": "output dense",
+          "level": 24,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "residual",
+          "level": 24,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "MLP normalization",
+          "level": 13,
+          "scale": 1.1467305003699405e+18
+        }
+      ],
+      "explicit_refresh_bounds": [
+        128.0,
+        16.0
+      ],
+      "layer": 0,
+      "gelu_degree": 64,
+      "normalization_method": "power",
+      "normalization_degree": 16,
+      "output_level": 13,
+      "original_positions": [
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95
+      ],
+      "range_verified": false,
+      "encrypted_error_verified": false
+    },
+    {
+      "actual_metadata": [
+        {
+          "stage": "input B128 refresh",
+          "level": 25,
+          "scale": 1.1467305003699406e+18
+        },
+        {
+          "stage": "intermediate dense",
+          "level": 24,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "GELU",
+          "level": 10,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "GELU refresh",
+          "level": 25,
+          "scale": 1.1467305003699404e+18
+        },
+        {
+          "stage": "output dense",
+          "level": 24,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "residual",
+          "level": 24,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "MLP normalization",
+          "level": 13,
+          "scale": 1.1467305003699405e+18
+        }
+      ],
+      "explicit_refresh_bounds": [
+        128.0,
+        16.0
+      ],
+      "layer": 0,
+      "gelu_degree": 64,
+      "normalization_method": "power",
+      "normalization_degree": 16,
+      "output_level": 13,
+      "original_positions": [
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111
+      ],
+      "range_verified": false,
+      "encrypted_error_verified": false
+    },
+    {
+      "actual_metadata": [
+        {
+          "stage": "input B128 refresh",
+          "level": 25,
+          "scale": 1.1467305003699406e+18
+        },
+        {
+          "stage": "intermediate dense",
+          "level": 24,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "GELU",
+          "level": 10,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "GELU refresh",
+          "level": 25,
+          "scale": 1.1467305003699404e+18
+        },
+        {
+          "stage": "output dense",
+          "level": 24,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "residual",
+          "level": 24,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "MLP normalization",
+          "level": 13,
+          "scale": 1.1467305003699405e+18
+        }
+      ],
+      "explicit_refresh_bounds": [
+        128.0,
+        16.0
+      ],
+      "layer": 0,
+      "gelu_degree": 64,
+      "normalization_method": "power",
+      "normalization_degree": 16,
+      "output_level": 13,
+      "original_positions": [
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127
+      ],
+      "range_verified": false,
+      "encrypted_error_verified": false
+    }
+  ],
+  "elapsed_s": 19.63836065000214,
+  "encrypted_or_refresh_error_claim": false
+}

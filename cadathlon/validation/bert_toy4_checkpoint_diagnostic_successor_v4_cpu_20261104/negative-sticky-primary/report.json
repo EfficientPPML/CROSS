@@ -1,0 +1,24 @@
+{
+  "scope": "Exact marker source plus extracted Finalizer AST; synthetic same-exception cleanup only",
+  "source_hashes_before": {
+    "cleanup_origin.py": "d6256812509b7acf241ba0ffdf49a740c77e05b5a6410f7041d259946cca1b16",
+    "component_protocol.py": "5d0a249085602fb3d576a50809d6b142dde647921bfdaabadd79f7dcd83ffa05"
+  },
+  "source_hashes_after": {
+    "cleanup_origin.py": "d6256812509b7acf241ba0ffdf49a740c77e05b5a6410f7041d259946cca1b16",
+    "component_protocol.py": "5d0a249085602fb3d576a50809d6b142dde647921bfdaabadd79f7dcd83ffa05"
+  },
+  "unchanged": true,
+  "tests": {
+    "tests": 3,
+    "errors": 0,
+    "failures": 2,
+    "skipped": 0
+  },
+  "authoritative_direct_exec_exit_code": 1,
+  "persistent_session": null,
+  "pid_not_recorded": true,
+  "source_archive_sha256": "fa2d480bd42f0e6e19701507f3575362cdbffc7e0c3f944fde9522ecd1ee4f47",
+  "repro_sha256": "028828086ba7bbfca56805e616c992b247383f1100acdec5cad0cc3e1b8dc9c1",
+  "finding": "Finalizer.attempt marks a repeated genuine body exception as cleanup; later cleanup cancellation masks it"
+}

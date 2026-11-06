@@ -1,0 +1,117 @@
+{
+  "actual_candidate_outcome_read": false,
+  "actual_private_body_read": false,
+  "archive_files": 5,
+  "archive_sha256": "ff60de548fe56684a43d852d15af0d299f005a0630f02ca0bec2b31efaea7161",
+  "direct_exit_code": 1,
+  "direct_tool_chunk": "f42fbf",
+  "expected_requirement_failures": 2,
+  "finding_confirmed": true,
+  "healthy_controls": 2,
+  "model_backend_imported": false,
+  "notes": [
+    "Exact supervise/accept_candidate_worker/failed_revision_coverage/accumulate AST, exact cleanup helper; synthetic output and signal wrappers only.",
+    "Both actual worker and collector return the same supervise; actual entrypoint raises SystemExit(main()).",
+    "Late OSError traceback is observed in the controlled probe, but late SystemExit(1) yields no stderr.",
+    "Report+exit1+empty stderr is therefore insufficient evidence of a normal scientific-failure return.",
+    "No actual candidate77543 failure is inferred."
+  ],
+  "probe_sha256": "1b05a8907fce38bc69b99055f3820845ed2e6d58c8f706ae0876fe4559d223b8",
+  "production_terminal_role_ast": {
+    "collect": {
+      "final_return": "supervise(...)",
+      "line": 718
+    },
+    "entry_main": "raise SystemExit(main())",
+    "worker": {
+      "final_return": "supervise(...)",
+      "line": 244
+    }
+  },
+  "schema": "qwen-candidate-terminal-contract-negative-review-v2",
+  "source_after": {
+    "checker_process.py": "b1fda655ff4c8a933e0ccceed8ff6d4cd0e8c7e9e7f9f86c05a90be35cc79694",
+    "cleanup_origin.py": "d74e991cc17121752e355f6313bb597ed0f6be887aa7b4a2007c7288c6448c75",
+    "entry.py": "175c8884f4753a9a59fdb27e270dc8b7bc089c13511b1329b04a902fec8edbe3",
+    "test_checker_process.py": "d75f095e178e34832a380319d8be3021720b5e970cb3632788d12720dbd9ca53"
+  },
+  "source_before": {
+    "checker_process.py": "b1fda655ff4c8a933e0ccceed8ff6d4cd0e8c7e9e7f9f86c05a90be35cc79694",
+    "cleanup_origin.py": "d74e991cc17121752e355f6313bb597ed0f6be887aa7b4a2007c7288c6448c75",
+    "entry.py": "175c8884f4753a9a59fdb27e270dc8b7bc089c13511b1329b04a902fec8edbe3",
+    "test_checker_process.py": "d75f095e178e34832a380319d8be3021720b5e970cb3632788d12720dbd9ca53"
+  },
+  "source_current": {
+    "checker_process.py": "b1fda655ff4c8a933e0ccceed8ff6d4cd0e8c7e9e7f9f86c05a90be35cc79694",
+    "cleanup_origin.py": "d74e991cc17121752e355f6313bb597ed0f6be887aa7b4a2007c7288c6448c75",
+    "entry.py": "175c8884f4753a9a59fdb27e270dc8b7bc089c13511b1329b04a902fec8edbe3",
+    "test_checker_process.py": "d75f095e178e34832a380319d8be3021720b5e970cb3632788d12720dbd9ca53"
+  },
+  "source_files_unchanged": true,
+  "synthetic_subprocesses": [
+    {
+      "final_close_exception_in_stderr": false,
+      "group_absent": true,
+      "mode": "failed_clean",
+      "pgid": 2965528,
+      "pid": 2965528,
+      "producer_accepts": true,
+      "rejection_type": null,
+      "report_cleanup": true,
+      "report_error_type": null,
+      "report_failed_candidate": true,
+      "report_passed": false,
+      "returncode": 1,
+      "stderr_bytes": 0,
+      "waited": true
+    },
+    {
+      "final_close_exception_in_stderr": true,
+      "group_absent": true,
+      "mode": "failed_late_close",
+      "pgid": 2965529,
+      "pid": 2965529,
+      "producer_accepts": true,
+      "rejection_type": null,
+      "report_cleanup": true,
+      "report_error_type": null,
+      "report_failed_candidate": true,
+      "report_passed": false,
+      "returncode": 1,
+      "stderr_bytes": 870,
+      "waited": true
+    },
+    {
+      "final_close_exception_in_stderr": true,
+      "group_absent": true,
+      "mode": "pass_late_close",
+      "pgid": 2965537,
+      "pid": 2965537,
+      "producer_accepts": false,
+      "rejection_type": "ValueError",
+      "report_cleanup": true,
+      "report_error_type": null,
+      "report_failed_candidate": false,
+      "report_passed": true,
+      "returncode": 1,
+      "stderr_bytes": 870,
+      "waited": true
+    },
+    {
+      "final_close_exception_in_stderr": false,
+      "group_absent": true,
+      "mode": "failed_late_systemexit1",
+      "pgid": 2965545,
+      "pid": 2965545,
+      "producer_accepts": true,
+      "rejection_type": null,
+      "report_cleanup": true,
+      "report_error_type": null,
+      "report_failed_candidate": true,
+      "report_passed": false,
+      "returncode": 1,
+      "stderr_bytes": 0,
+      "waited": true
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="3" time="0.453" timestamp="2026-11-04T09:15:36.353151+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_binding_call_order" name="test_substituted_check_never_invoked[before]" time="0.080"><failure message="AssertionError: assert ['invoked'] == []&#10;  &#10;  Left contains one more item: 'invoked'&#10;  Use -v to get more diff">when = 'before'
+
+    @pytest.mark.parametrize('when',['before','callback'])
+    def test_substituted_check_never_invoked(when):
+        calls=[];holder={}
+        def replace():holder['owner'].refresh_binding.check=lambda:calls.append('invoked')
+        def callback(label,value,metadata):
+            if when=='callback'and label.endswith('normalized_t.refresh'):replace()
+        _,_,owner=helper.make(2,callback=callback);holder['owner']=owner
+        if when=='before':replace()
+        with pytest.raises(ValueError):owner.evaluate_tile(helper.Value(helper.scores(2,0),21),query_tile=0)
+&gt;       assert calls==[]
+E       AssertionError: assert ['invoked'] == []
+E         
+E         Left contains one more item: 'invoked'
+E         Use -v to get more diff
+
+test_binding_call_order.py:15: AssertionError</failure></testcase><testcase classname="test_binding_call_order" name="test_substituted_check_never_invoked[callback]" time="0.108"><failure message="AssertionError: assert ['invoked'] == []&#10;  &#10;  Left contains one more item: 'invoked'&#10;  Use -v to get more diff">when = 'callback'
+
+    @pytest.mark.parametrize('when',['before','callback'])
+    def test_substituted_check_never_invoked(when):
+        calls=[];holder={}
+        def replace():holder['owner'].refresh_binding.check=lambda:calls.append('invoked')
+        def callback(label,value,metadata):
+            if when=='callback'and label.endswith('normalized_t.refresh'):replace()
+        _,_,owner=helper.make(2,callback=callback);holder['owner']=owner
+        if when=='before':replace()
+        with pytest.raises(ValueError):owner.evaluate_tile(helper.Value(helper.scores(2,0),21),query_tile=0)
+&gt;       assert calls==[]
+E       AssertionError: assert ['invoked'] == []
+E         
+E         Left contains one more item: 'invoked'
+E         Use -v to get more diff
+
+test_binding_call_order.py:15: AssertionError</failure></testcase><testcase classname="test_binding_call_order" name="test_actual_returned_refresh_value_cannot_replace_wrapper" time="0.108" /></testsuite></testsuites>

@@ -1,0 +1,11 @@
+# Complete attention-tile arithmetic candidate
+
+This isolated owner assembles all 128 keys for one tile of 16 queries. It accepts already projected 768-wide Q/K/V ciphertexts, computes all 24,576 raw head scores with the public 1/8 gain, and separately computes all 12,288 probability-weighted value coordinates. Independent dense `einsum` references verify both directions across all 65,536 physical slots, including hostile padding. This is NumPy payload execution with production binary64 scale equations; no CKKS encryption ran.
+
+The source-bound check passed 198 tests in 11.77 seconds (11.95 seconds in the wrapper). All nine source/input files match before, after, archived and current bytes. Tests include every installed rotation key, noncanonical input scales, all 128 accumulation terms, input preservation, first/final callback corruption, missing keys, construction-bound owners and reentry cleanup. A separate read-only review found no arithmetic, permutation, level or guard blocker. The public key objects themselves are assumed immutable; the owner verifies their required inventory and context binding.
+
+At the pinned N131072/Q100/P14/p60 profile, each direction uses 128 ciphertext products, 4,328 rotations, 3,584 plaintext products, 256 routing rescales and 127 accumulation additions. It requires 89 supplied reusable rotation keys (79.265625 GiB of raw key payload, excluding dense projection, refresh and other memory). Scores consume three levels below the lower Q/K input. Value mixing ends three levels below the probability input when V has sufficient levels. Actual scales are retained and checked before accumulation; metadata is never relabeled.
+
+Dense projections, masks and nonlinear softmax, refresh, file stages and full-model execution are separate obligations. There is no common-profile CKKS error or timing claim. The candidate remains outside the main modules and contestant release. The original source-bound report records the test subprocess's exit0; the outer tool-session handle was not retained, so this archive makes no separate outer exit/reaping claim.
+
+Run `python verify.py` to verify archive integrity and the recorded result. It does not rerun tests or encrypted arithmetic.

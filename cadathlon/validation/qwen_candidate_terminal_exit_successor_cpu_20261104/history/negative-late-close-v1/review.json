@@ -1,0 +1,85 @@
+{
+  "actual_candidate_outcome_read": false,
+  "actual_private_body_read": false,
+  "archive_files": 5,
+  "archive_sha256": "78ed2e3d2a69069814b0f6536604975307d591d6ce2d2610a9dc705791415c15",
+  "direct_exit_code": 1,
+  "direct_tool_chunk": "dc34f0",
+  "expected_requirement_failures": 1,
+  "finding_confirmed": true,
+  "healthy_controls": 2,
+  "model_backend_imported": false,
+  "notes": [
+    "Exact supervise/accept_candidate_worker/failed_revision_coverage/accumulate AST, exact cleanup helper; synthetic output and signal wrappers only.",
+    "Source final entrypoint raises SystemExit(main()); unhandled OSError exits1.",
+    "This does not establish any actual candidate77543 failure."
+  ],
+  "probe_sha256": "e96ea93d39f67d801c4267612926a0a348141c949a660a92054084cae6eb0d13",
+  "schema": "qwen-candidate-terminal-contract-negative-review-v1",
+  "source_after": {
+    "checker_process.py": "b1fda655ff4c8a933e0ccceed8ff6d4cd0e8c7e9e7f9f86c05a90be35cc79694",
+    "cleanup_origin.py": "d74e991cc17121752e355f6313bb597ed0f6be887aa7b4a2007c7288c6448c75",
+    "entry.py": "175c8884f4753a9a59fdb27e270dc8b7bc089c13511b1329b04a902fec8edbe3",
+    "test_checker_process.py": "d75f095e178e34832a380319d8be3021720b5e970cb3632788d12720dbd9ca53"
+  },
+  "source_before": {
+    "checker_process.py": "b1fda655ff4c8a933e0ccceed8ff6d4cd0e8c7e9e7f9f86c05a90be35cc79694",
+    "cleanup_origin.py": "d74e991cc17121752e355f6313bb597ed0f6be887aa7b4a2007c7288c6448c75",
+    "entry.py": "175c8884f4753a9a59fdb27e270dc8b7bc089c13511b1329b04a902fec8edbe3",
+    "test_checker_process.py": "d75f095e178e34832a380319d8be3021720b5e970cb3632788d12720dbd9ca53"
+  },
+  "source_current": {
+    "checker_process.py": "b1fda655ff4c8a933e0ccceed8ff6d4cd0e8c7e9e7f9f86c05a90be35cc79694",
+    "cleanup_origin.py": "d74e991cc17121752e355f6313bb597ed0f6be887aa7b4a2007c7288c6448c75",
+    "entry.py": "175c8884f4753a9a59fdb27e270dc8b7bc089c13511b1329b04a902fec8edbe3",
+    "test_checker_process.py": "d75f095e178e34832a380319d8be3021720b5e970cb3632788d12720dbd9ca53"
+  },
+  "source_files_unchanged": true,
+  "synthetic_subprocesses": [
+    {
+      "final_close_exception_in_stderr": false,
+      "group_absent": true,
+      "mode": "failed_clean",
+      "pgid": 2962383,
+      "pid": 2962383,
+      "producer_accepts": true,
+      "rejection_type": null,
+      "report_cleanup": true,
+      "report_error_type": null,
+      "report_failed_candidate": true,
+      "report_passed": false,
+      "returncode": 1,
+      "waited": true
+    },
+    {
+      "final_close_exception_in_stderr": true,
+      "group_absent": true,
+      "mode": "failed_late_close",
+      "pgid": 2962384,
+      "pid": 2962384,
+      "producer_accepts": true,
+      "rejection_type": null,
+      "report_cleanup": true,
+      "report_error_type": null,
+      "report_failed_candidate": true,
+      "report_passed": false,
+      "returncode": 1,
+      "waited": true
+    },
+    {
+      "final_close_exception_in_stderr": true,
+      "group_absent": true,
+      "mode": "pass_late_close",
+      "pgid": 2962385,
+      "pid": 2962385,
+      "producer_accepts": false,
+      "rejection_type": "ValueError",
+      "report_cleanup": true,
+      "report_error_type": null,
+      "report_failed_candidate": false,
+      "report_passed": true,
+      "returncode": 1,
+      "waited": true
+    }
+  ]
+}

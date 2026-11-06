@@ -1,0 +1,97 @@
+"""Reverify the prepared original P3 sweep and exec its unchanged collector once."""
+import hashlib
+import json
+import os
+import stat
+import subprocess
+import tarfile
+import tempfile
+from datetime import datetime, timezone
+from pathlib import Path
+
+BASE = Path('/tmp/p3-original-six-preparation-20261105')
+REPO = Path('/home/jianming_gatech/CROSS')
+OUTPUT = BASE / 'run-v1'
+RECEIPT = BASE / 'launch-v1.json'
+sha = lambda data: hashlib.sha256(data).hexdigest()
+assert not OUTPUT.exists() and not RECEIPT.exists(), 'Do not restart or overwrite an existing launch'
+preparation_bytes = (BASE / 'preparation.json').read_bytes()
+assert sha(preparation_bytes) == '80e3b7fab9e439df7fe62a42ef98ef69288ff366f5a0b4ad07dcaedc3cd75a65'
+prep = json.loads(preparation_bytes)
+manifest_bytes = (BASE / 'sources.json').read_bytes()
+aux_bytes = (BASE / 'auxiliary.json').read_bytes()
+assert sha(manifest_bytes) == prep['source_map_sha256']
+assert sha(aux_bytes) == prep['auxiliary_map_sha256']
+manifest, auxiliary = json.loads(manifest_bytes), json.loads(aux_bytes)
+assert len(manifest) == 128 and len(auxiliary) == 1 and not set(manifest) & set(auxiliary)
+all_sources = manifest | auxiliary
+for name, expected in all_sources.items():
+    root, relative = name.split('/', 1)
+    assert root in ('repo', 'collector') and '..' not in Path(relative).parts
+    path = BASE / ('checkout' if root == 'repo' else 'collector') / relative
+    assert stat.S_ISREG(path.lstat().st_mode) and sha(path.read_bytes()) == expected
+    current = REPO / relative if root == 'repo' else Path(prep['source_collector']) / relative
+    assert stat.S_ISREG(current.lstat().st_mode) and sha(current.read_bytes()) == expected
+assert sha((BASE / 'sources.tar.gz').read_bytes()) == prep['archive_sha256']
+with tarfile.open(BASE / 'sources.tar.gz', 'r:*') as archive:
+    members = archive.getmembers()
+    assert len(members) == 129 and {m.name for m in members} == set(all_sources)
+    for member in members:
+        assert member.isfile() and not member.issym() and not member.islnk()
+        assert sha(archive.extractfile(member).read()) == all_sources[member.name]
+terminal_path = Path('/tmp/cross-optimized-twelve-20261103/evidence/root-terminal-admission-20261105.json')
+assert sha(terminal_path.read_bytes()) == 'b12038aa4400b1b8878570d6ef1dbd8e443570f36361de2dd4ec9e9ede38599f'
+assert not Path('/proc/944981').exists() and not Path('/proc/944985').exists()
+vfio = sorted(str(p) for p in Path('/dev/vfio').iterdir())
+assert len(vfio) == 9
+available = subprocess.run(['sudo', '-n', 'fuser', '-v', *vfio], capture_output=True, check=False)
+assert available.returncode == 1 and not available.stdout and not available.stderr, 'TPU not exclusively available; no launch'
+
+# Create only this sweep's parent. The collector owns and cleans each child
+# directory. Root will verify this parent's identity and emptiness at terminal.
+key_parent = Path(tempfile.mkdtemp(prefix='cross-p3-original-six-key-parent-', dir='/dev/shm'))
+key_stat = key_parent.lstat()
+assert stat.S_ISDIR(key_stat.st_mode) and key_stat.st_uid == os.getuid()
+os.sched_setaffinity(0, set(range(160, 168)))
+assert sorted(os.sched_getaffinity(0)) == list(range(160, 168))
+env = dict(os.environ)
+env.update(CROSS_ROOT=str(BASE / 'checkout'),
+           PYTHONPATH=str(BASE / 'checkout') + ':' + str(BASE / 'checkout/demos'),
+           JAX_PLATFORMS='tpu', OMP_NUM_THREADS='1', OPENBLAS_NUM_THREADS='1',
+           MKL_NUM_THREADS='1', PYTHONDONTWRITEBYTECODE='1',
+           CROSS_PUBLIC_KEY_DIRECTORY=str(key_parent))
+record_names = ['CROSS_ROOT', 'PYTHONPATH', 'JAX_PLATFORMS', 'OMP_NUM_THREADS',
+                'OPENBLAS_NUM_THREADS', 'MKL_NUM_THREADS', 'PYTHONDONTWRITEBYTECODE',
+                'CROSS_PUBLIC_KEY_DIRECTORY', 'CROSS_LEVEL_PARAMS_MAX',
+                'CROSS_BARRETT_NTT_CONTEXT_CACHE_CAPACITY', 'XLA_FLAGS', 'JAX_COMPILATION_CACHE_DIR']
+process_fields = Path('/proc/self/stat').read_text().rsplit(')', 1)[1].split()
+argv = prep['intended_argv']
+assert argv == ['/usr/bin/taskset', '-c', '160-167',
+                '/home/jianming_gatech/miniconda3/envs/jaxite/bin/python',
+                str(BASE / 'collector/check_p3_original_six.py'), '--repo',
+                str(BASE / 'checkout'), '--output', str(OUTPUT)]
+receipt = dict(schema='root-p3-original-six-actual-launch-v1',
+               observed_utc=datetime.now(timezone.utc).isoformat(),
+               launcher_pid=os.getpid(), ppid=os.getppid(), pgid=os.getpgrp(),
+               start_ticks=int(process_fields[19]), cpu_affinity=sorted(os.sched_getaffinity(0)),
+               argv=argv, cwd=str(REPO), environment={name: env.get(name) for name in record_names},
+               owned_public_key_parent=str(key_parent),
+               owned_public_key_parent_identity=dict(st_dev=key_stat.st_dev, st_ino=key_stat.st_ino,
+                                                     st_uid=key_stat.st_uid, st_gid=key_stat.st_gid, mode=stat.S_IMODE(key_stat.st_mode)),
+               measured_sources=128, auxiliary_sources=1, snapshot_current_archive_exact=True,
+               preparation_sha256=sha(preparation_bytes), source_map_sha256=sha(manifest_bytes),
+               preparation_archive_sha256=prep['archive_sha256'],
+               prior_tpu12_terminal_receipt=str(terminal_path), prior_tpu12_terminal_chunk='27218b',
+               prior_tpu12_terminal_receipt_sha256=sha(terminal_path.read_bytes()),
+               free_tpu_fuser_returncode=available.returncode, free_tpu_fuser_stdout='', free_tpu_fuser_stderr='',
+               launcher_source=str(Path(__file__).resolve()), launcher_sha256=sha(Path(__file__).read_bytes()),
+               healthy_timeout=None, numerical_result_claim=False,
+               parent_cleanup_owner='root, after authoritative terminal and all child cleanup',
+               note='Receipt precedes exec; original tool session and /proc readback must attest the actual running collector.')
+with RECEIPT.open('x') as stream:
+    stream.write(json.dumps(receipt, indent=2, sort_keys=True) + '\n')
+print(json.dumps({'launch_receipt':str(RECEIPT), 'sha256':sha(RECEIPT.read_bytes()),
+                  'pid':os.getpid(), 'cpu_affinity':receipt['cpu_affinity'],
+                  'source_files_verified':129, 'owned_public_key_parent':str(key_parent)}), flush=True)
+os.chdir(REPO)
+os.execve(argv[0], argv, env)

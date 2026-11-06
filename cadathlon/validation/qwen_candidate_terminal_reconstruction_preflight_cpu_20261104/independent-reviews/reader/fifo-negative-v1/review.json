@@ -1,0 +1,44 @@
+{
+  "scope": "Owned synthetic FIFO and regular-to-FIFO replacement only; no retained private/model bodies",
+  "tests": 2,
+  "expected_failures": 2,
+  "exit_code": 1,
+  "session": 23280,
+  "authoritatively_reaped": true,
+  "child_receipts": [
+    {
+      "kind": "calibration",
+      "pid": 2921143,
+      "pgid": 2921143,
+      "exit_code": -9,
+      "reaped": true,
+      "group_absent": true,
+      "timed_out": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "kind": "journal_race",
+      "pid": 2921286,
+      "pgid": 2921286,
+      "exit_code": -9,
+      "reaped": true,
+      "group_absent": true,
+      "timed_out": true,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "sources": {
+    "contract.py": "0f8931fe60813301998253cf072b8b8abdbc31d0d955a57f430c6bc787a0a9eb",
+    "private_journals.py": "100e525c9ac03acaab4465a11e44f9c05c06ca84b785e7bef5d7704ef8f57697",
+    "test_fifo.py": "7d13b95a3c4102054a857d386949d0b4b7d83604c4e96fc3e616845c78eb9465",
+    "producer_admission.py": "786877f12ec0b6d1790a303a285e731d10ef24897de1a78afd0f7d2b89307448",
+    "verify_statistics.py": "8d42587733075bf59fde632ce09dbce130d2a50f30b9f58dc88be346a04f3db4",
+    "verify_records.py": "10b424b1cad94fefcb70e8d1d84dfbed2988cb57ed00823694470fce9daa577e",
+    "fifo_child.py": "a892d0fade234bb1c77b05ca55723071276891bc52a61590b6aa2d33db95c1c1",
+    "sources/cleanup_origin.py": "d74e991cc17121752e355f6313bb597ed0f6be887aa7b4a2007c7288c6448c75"
+  },
+  "source_before_after_equal": true,
+  "source_archive_sha256": "2f117437a6d0e4a6ddfb62313c69e60b14c91729c598f2b3a38ac2895edaff71"
+}

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="44" time="17.702" timestamp="2026-11-03T17:27:38.450360+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_join" name="test_all_typed_contracts[0]" time="0.083" /><testcase classname="test_join" name="test_all_typed_contracts[1]" time="0.082" /><testcase classname="test_join" name="test_all_typed_contracts[2]" time="0.081" /><testcase classname="test_join" name="test_all_typed_contracts[3]" time="0.081" /><testcase classname="test_join" name="test_all_typed_contracts[4]" time="0.083" /><testcase classname="test_join" name="test_all_typed_contracts[5]" time="0.083" /><testcase classname="test_join" name="test_all_typed_contracts[6]" time="0.083" /><testcase classname="test_join" name="test_all_typed_contracts[7]" time="0.084" /><testcase classname="test_join" name="test_all_typed_contracts[8]" time="0.084" /><testcase classname="test_join" name="test_all_typed_contracts[9]" time="0.084" /><testcase classname="test_join" name="test_all_typed_contracts[10]" time="0.082" /><testcase classname="test_join" name="test_all_typed_contracts[11]" time="0.082" /><testcase classname="test_join" name="test_all_typed_contracts[12]" time="0.083" /><testcase classname="test_join" name="test_all_typed_contracts[13]" time="0.082" /><testcase classname="test_join" name="test_all_typed_contracts[14]" time="0.082" /><testcase classname="test_join" name="test_all_typed_contracts[15]" time="0.083" /><testcase classname="test_join" name="test_all_typed_contracts[16]" time="0.083" /><testcase classname="test_join" name="test_all_typed_contracts[17]" time="0.085" /><testcase classname="test_join" name="test_all_typed_contracts[18]" time="0.084" /><testcase classname="test_join" name="test_all_typed_contracts[19]" time="0.083" /><testcase classname="test_join" name="test_all_typed_contracts[20]" time="0.088" /><testcase classname="test_join" name="test_all_typed_contracts[21]" time="0.090" /><testcase classname="test_join" name="test_all_typed_contracts[22]" time="0.089" /><testcase classname="test_join" name="test_all_typed_contracts[23]" time="0.106" /><testcase classname="test_join" name="test_all_typed_contracts[24]" time="0.084" /><testcase classname="test_join" name="test_all_typed_contracts[25]" time="0.086" /><testcase classname="test_join" name="test_all_typed_contracts[26]" time="0.086" /><testcase classname="test_join" name="test_all_typed_contracts[27]" time="0.085" /><testcase classname="test_join" name="test_genuine_pinned_qkv_one_row" time="10.641"><failure message="ValueError: rotation changed metadata&#10;entered attention failure: borrowed owners/arrays quarantined; outer key loader must also quarantine until process exit">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7760605b4180&gt;
+
+    def test_genuine_pinned_qkv_one_row(monkeypatch):
+        owner,a,refresh,w,g=build(monkeypatch);rows,tiles=inputs((0,))
+        expected,domains=dense_reference(rows,w,g,0,(0,));assert all(r['passed'] for r in domains),domains
+        before=[v.polynomial.copy() for v in tiles]
+&gt;       result=owner.evaluate(tiles)
+               ^^^^^^^^^^^^^^^^^^^^^
+
+test_join.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+checkout/cadathlon/common/encrypted_qwen_attention_join.py:243: in evaluate
+    roped=self._call(f'tile{tile}.{kind}.rope',lambda x=normalized,h=heads:self.head.rope(x,tile=tile,heads=h))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_qwen_attention_join.py:205: in _call
+    result=fn();self._join_guard();self._phase_refs={};return result
+           ^^^^
+checkout/cadathlon/common/encrypted_qwen_attention_join.py:243: in &lt;lambda&gt;
+    roped=self._call(f'tile{tile}.{kind}.rope',lambda x=normalized,h=heads:self.head.rope(x,tile=tile,heads=h))
+                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_qwen_head_routing.py:206: in rope
+    return self._execute((value,),1,body)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_qwen_head_routing.py:180: in _execute
+    output=body(rotate,weighted,multiply,add,keep,guard)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_qwen_head_routing.py:205: in body
+    def body(rotate,weighted,*unused):return weighted([value,rotate(value,64),rotate(value,-64)],[cs.ravel(),plus.ravel(),minus.ravel()],'rope')
+                                                             ^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+v = &lt;ideal_primitives.Value object at 0x77605b547230&gt;, shift = 64
+
+    def rotate(v,shift):
+        guard();shift%=SLOTS
+        if not shift:return v
+        counts['rotations']+=1;out=a.rotate(v,shift)
+&gt;       if self._fingerprint(out)[0:2]!=self._fingerprint(v)[0:2]:raise ValueError('rotation changed metadata')
+                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       ValueError: rotation changed metadata
+E       entered attention failure: borrowed owners/arrays quarantined; outer key loader must also quarantine until process exit
+
+checkout/cadathlon/common/encrypted_qwen_head_routing.py:163: ValueError</failure></testcase><testcase classname="test_join" name="test_contract_alias_before_work[layer-True]" time="0.368" /><testcase classname="test_join" name="test_contract_alias_before_work[layer-0.0]" time="0.326" /><testcase classname="test_join" name="test_contract_alias_before_work[outer_events-value2]" time="0.338" /><testcase classname="test_join" name="test_sync_before_work[False]" time="0.337" /><testcase classname="test_join" name="test_sync_before_work[1]" time="0.303" /><testcase classname="test_join" name="test_sync_before_work[None]" time="0.299" /><testcase classname="test_join" name="test_first_callback_quarantines[refresh]" time="0.311" /><testcase classname="test_join" name="test_first_callback_quarantines[linear]" time="0.316" /><testcase classname="test_join" name="test_first_callback_quarantines[norm]" time="0.308" /><testcase classname="test_join" name="test_first_callback_quarantines[pending_input]" time="0.308" /><testcase classname="test_join" name="test_first_callback_quarantines[result_moduli]" time="0.303" /><testcase classname="test_join" name="test_entered_failure_quarantine[RuntimeError]" time="0.358" /><testcase classname="test_join" name="test_entered_failure_quarantine[KeyboardInterrupt]" time="0.311" /><testcase classname="test_join" name="test_entered_failure_quarantine[SystemExit]" time="0.317" /><testcase classname="test_join" name="test_no_backend_imports" time="0.000" /></testsuite></testsuites>

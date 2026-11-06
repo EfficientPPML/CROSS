@@ -1,0 +1,890 @@
+...............................FFF.FFFFFFFFFFFFF...........              [100%]
+=================================== FAILURES ===================================
+__________ test_device_integration[engine_evaluation_boundary_order] ___________
+
+case = 'engine_evaluation_boundary_order'
+tmp_path = PosixPath('/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/pytest-owned/test_device_integration_engine0')
+
+    @pytest.mark.parametrize('case',CASES,ids=CASES)
+    def test_device_integration(case,tmp_path):
+        source_map=os.environ['FULL28_FOCUSED_SOURCE_MAP'];source_sha=os.environ['FULL28_FOCUSED_SOURCE_MAP_SHA256']
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        observed_pgid=None;start=None;code=None;waited=False;primary=None;group_absent=False
+        with(tmp_path/'child.log').open('xb')as log:
+            child=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'owned_child.py'),case,str(HERE),str(tmp_path),source_map,source_sha],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(child.pid)
+                except ProcessLookupError:pass
+                try:start=_ticks(child.pid)
+                except FileNotFoundError:pass
+                if observed_pgid is not None:assert observed_pgid==child.pid
+                _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                    owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='waiting',direct_wait_completed=False))
+                code=child.wait();waited=True
+            except BaseException as error:
+                primary=error
+                try:
+                    try:os.killpg(child.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:code=child.wait();waited=True
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+            finally:
+                try:
+                    group_absent=_gone(child.pid)
+                    _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                        owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='terminal',
+                        exit_code=code,direct_wait_completed=waited,reaped=waited,group_absent=group_absent,
+                        child_report_read=False,primary_type=None if primary is None else type(primary).__name__))
+                except BaseException as cleanup:
+                    if primary is None:raise
+                    if cleanup is not primary:primary.add_note('terminal observation/publication: '+repr(cleanup))
+>       assert waited and group_absent and code==0,(case,code,_read_record(tmp_path/'child.log').decode(errors='replace')[-8192:])
+E       AssertionError: ('engine_evaluation_boundary_order', 70, 'Traceback (most recent call last):
+E           File "/tmp/qwen-full28-device-focused-...                             ^^^^^^^^^^^^^^^^^^^^^
+E         AttributeError: \'NoneType\' object has no attribute \'closed\'
+E         ')
+E       assert (True and True and 70 == 0)
+
+/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py:115: AssertionError
+_______ test_device_integration[engine_evaluation_callback_replacement] ________
+
+case = 'engine_evaluation_callback_replacement'
+tmp_path = PosixPath('/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/pytest-owned/test_device_integration_engine1')
+
+    @pytest.mark.parametrize('case',CASES,ids=CASES)
+    def test_device_integration(case,tmp_path):
+        source_map=os.environ['FULL28_FOCUSED_SOURCE_MAP'];source_sha=os.environ['FULL28_FOCUSED_SOURCE_MAP_SHA256']
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        observed_pgid=None;start=None;code=None;waited=False;primary=None;group_absent=False
+        with(tmp_path/'child.log').open('xb')as log:
+            child=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'owned_child.py'),case,str(HERE),str(tmp_path),source_map,source_sha],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(child.pid)
+                except ProcessLookupError:pass
+                try:start=_ticks(child.pid)
+                except FileNotFoundError:pass
+                if observed_pgid is not None:assert observed_pgid==child.pid
+                _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                    owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='waiting',direct_wait_completed=False))
+                code=child.wait();waited=True
+            except BaseException as error:
+                primary=error
+                try:
+                    try:os.killpg(child.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:code=child.wait();waited=True
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+            finally:
+                try:
+                    group_absent=_gone(child.pid)
+                    _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                        owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='terminal',
+                        exit_code=code,direct_wait_completed=waited,reaped=waited,group_absent=group_absent,
+                        child_report_read=False,primary_type=None if primary is None else type(primary).__name__))
+                except BaseException as cleanup:
+                    if primary is None:raise
+                    if cleanup is not primary:primary.add_note('terminal observation/publication: '+repr(cleanup))
+>       assert waited and group_absent and code==0,(case,code,_read_record(tmp_path/'child.log').decode(errors='replace')[-8192:])
+E       AssertionError: ('engine_evaluation_callback_replacement', 70, 'Traceback (most recent call last):
+E           File "/tmp/qwen-full28-device-fo...                             ^^^^^^^^^^^^^^^^^^^^^
+E         AttributeError: \'NoneType\' object has no attribute \'closed\'
+E         ')
+E       assert (True and True and 70 == 0)
+
+/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py:115: AssertionError
+_________ test_device_integration[engine_evaluation_callback_failure] __________
+
+case = 'engine_evaluation_callback_failure'
+tmp_path = PosixPath('/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/pytest-owned/test_device_integration_engine2')
+
+    @pytest.mark.parametrize('case',CASES,ids=CASES)
+    def test_device_integration(case,tmp_path):
+        source_map=os.environ['FULL28_FOCUSED_SOURCE_MAP'];source_sha=os.environ['FULL28_FOCUSED_SOURCE_MAP_SHA256']
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        observed_pgid=None;start=None;code=None;waited=False;primary=None;group_absent=False
+        with(tmp_path/'child.log').open('xb')as log:
+            child=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'owned_child.py'),case,str(HERE),str(tmp_path),source_map,source_sha],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(child.pid)
+                except ProcessLookupError:pass
+                try:start=_ticks(child.pid)
+                except FileNotFoundError:pass
+                if observed_pgid is not None:assert observed_pgid==child.pid
+                _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                    owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='waiting',direct_wait_completed=False))
+                code=child.wait();waited=True
+            except BaseException as error:
+                primary=error
+                try:
+                    try:os.killpg(child.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:code=child.wait();waited=True
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+            finally:
+                try:
+                    group_absent=_gone(child.pid)
+                    _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                        owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='terminal',
+                        exit_code=code,direct_wait_completed=waited,reaped=waited,group_absent=group_absent,
+                        child_report_read=False,primary_type=None if primary is None else type(primary).__name__))
+                except BaseException as cleanup:
+                    if primary is None:raise
+                    if cleanup is not primary:primary.add_note('terminal observation/publication: '+repr(cleanup))
+>       assert waited and group_absent and code==0,(case,code,_read_record(tmp_path/'child.log').decode(errors='replace')[-8192:])
+E       AssertionError: ('engine_evaluation_callback_failure', 70, 'Traceback (most recent call last):
+E           File "/tmp/qwen-full28-device-focuse...                             ^^^^^^^^^^^^^^^^^^^^^
+E         AttributeError: \'NoneType\' object has no attribute \'closed\'
+E         ')
+E       assert (True and True and 70 == 0)
+
+/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py:115: AssertionError
+______ test_device_integration[audit_owned_character_descriptor_control] _______
+
+case = 'audit_owned_character_descriptor_control'
+tmp_path = PosixPath('/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/pytest-owned/test_device_integration_audit_0')
+
+    @pytest.mark.parametrize('case',CASES,ids=CASES)
+    def test_device_integration(case,tmp_path):
+        source_map=os.environ['FULL28_FOCUSED_SOURCE_MAP'];source_sha=os.environ['FULL28_FOCUSED_SOURCE_MAP_SHA256']
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        observed_pgid=None;start=None;code=None;waited=False;primary=None;group_absent=False
+        with(tmp_path/'child.log').open('xb')as log:
+            child=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'owned_child.py'),case,str(HERE),str(tmp_path),source_map,source_sha],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(child.pid)
+                except ProcessLookupError:pass
+                try:start=_ticks(child.pid)
+                except FileNotFoundError:pass
+                if observed_pgid is not None:assert observed_pgid==child.pid
+                _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                    owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='waiting',direct_wait_completed=False))
+                code=child.wait();waited=True
+            except BaseException as error:
+                primary=error
+                try:
+                    try:os.killpg(child.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:code=child.wait();waited=True
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+            finally:
+                try:
+                    group_absent=_gone(child.pid)
+                    _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                        owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='terminal',
+                        exit_code=code,direct_wait_completed=waited,reaped=waited,group_absent=group_absent,
+                        child_report_read=False,primary_type=None if primary is None else type(primary).__name__))
+                except BaseException as cleanup:
+                    if primary is None:raise
+                    if cleanup is not primary:primary.add_note('terminal observation/publication: '+repr(cleanup))
+>       assert waited and group_absent and code==0,(case,code,_read_record(tmp_path/'child.log').decode(errors='replace')[-8192:])
+E       AssertionError: ('audit_owned_character_descriptor_control', 70, 'Traceback (most recent call last):
+E           File "/tmp/qwen-full28-device-...                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         PermissionError: sticky server audit denial
+E         ')
+E       assert (True and True and 70 == 0)
+
+/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py:115: AssertionError
+__________ test_device_integration[audit_opened_descriptor_mismatch] ___________
+
+case = 'audit_opened_descriptor_mismatch'
+tmp_path = PosixPath('/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/pytest-owned/test_device_integration_audit_1')
+
+    @pytest.mark.parametrize('case',CASES,ids=CASES)
+    def test_device_integration(case,tmp_path):
+        source_map=os.environ['FULL28_FOCUSED_SOURCE_MAP'];source_sha=os.environ['FULL28_FOCUSED_SOURCE_MAP_SHA256']
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        observed_pgid=None;start=None;code=None;waited=False;primary=None;group_absent=False
+        with(tmp_path/'child.log').open('xb')as log:
+            child=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'owned_child.py'),case,str(HERE),str(tmp_path),source_map,source_sha],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(child.pid)
+                except ProcessLookupError:pass
+                try:start=_ticks(child.pid)
+                except FileNotFoundError:pass
+                if observed_pgid is not None:assert observed_pgid==child.pid
+                _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                    owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='waiting',direct_wait_completed=False))
+                code=child.wait();waited=True
+            except BaseException as error:
+                primary=error
+                try:
+                    try:os.killpg(child.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:code=child.wait();waited=True
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+            finally:
+                try:
+                    group_absent=_gone(child.pid)
+                    _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                        owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='terminal',
+                        exit_code=code,direct_wait_completed=waited,reaped=waited,group_absent=group_absent,
+                        child_report_read=False,primary_type=None if primary is None else type(primary).__name__))
+                except BaseException as cleanup:
+                    if primary is None:raise
+                    if cleanup is not primary:primary.add_note('terminal observation/publication: '+repr(cleanup))
+>       assert waited and group_absent and code==0,(case,code,_read_record(tmp_path/'child.log').decode(errors='replace')[-8192:])
+E       AssertionError: ('audit_opened_descriptor_mismatch', 70, 'Traceback (most recent call last):
+E           File "/tmp/qwen-full28-device-focused-...                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         PermissionError: sticky server audit denial
+E         ')
+E       assert (True and True and 70 == 0)
+
+/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py:115: AssertionError
+_______ test_device_integration[audit_literal_flags_spelling_rejection] ________
+
+case = 'audit_literal_flags_spelling_rejection'
+tmp_path = PosixPath('/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/pytest-owned/test_device_integration_audit_2')
+
+    @pytest.mark.parametrize('case',CASES,ids=CASES)
+    def test_device_integration(case,tmp_path):
+        source_map=os.environ['FULL28_FOCUSED_SOURCE_MAP'];source_sha=os.environ['FULL28_FOCUSED_SOURCE_MAP_SHA256']
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        observed_pgid=None;start=None;code=None;waited=False;primary=None;group_absent=False
+        with(tmp_path/'child.log').open('xb')as log:
+            child=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'owned_child.py'),case,str(HERE),str(tmp_path),source_map,source_sha],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(child.pid)
+                except ProcessLookupError:pass
+                try:start=_ticks(child.pid)
+                except FileNotFoundError:pass
+                if observed_pgid is not None:assert observed_pgid==child.pid
+                _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                    owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='waiting',direct_wait_completed=False))
+                code=child.wait();waited=True
+            except BaseException as error:
+                primary=error
+                try:
+                    try:os.killpg(child.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:code=child.wait();waited=True
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+            finally:
+                try:
+                    group_absent=_gone(child.pid)
+                    _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                        owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='terminal',
+                        exit_code=code,direct_wait_completed=waited,reaped=waited,group_absent=group_absent,
+                        child_report_read=False,primary_type=None if primary is None else type(primary).__name__))
+                except BaseException as cleanup:
+                    if primary is None:raise
+                    if cleanup is not primary:primary.add_note('terminal observation/publication: '+repr(cleanup))
+>       assert waited and group_absent and code==0,(case,code,_read_record(tmp_path/'child.log').decode(errors='replace')[-8192:])
+E       AssertionError: ('audit_literal_flags_spelling_rejection', 70, 'Traceback (most recent call last):
+E           File "/tmp/qwen-full28-device-fo...                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         PermissionError: sticky server audit denial
+E         ')
+E       assert (True and True and 70 == 0)
+
+/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py:115: AssertionError
+________ test_device_integration[audit_metadata_body_overlap_rejection] ________
+
+case = 'audit_metadata_body_overlap_rejection'
+tmp_path = PosixPath('/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/pytest-owned/test_device_integration_audit_3')
+
+    @pytest.mark.parametrize('case',CASES,ids=CASES)
+    def test_device_integration(case,tmp_path):
+        source_map=os.environ['FULL28_FOCUSED_SOURCE_MAP'];source_sha=os.environ['FULL28_FOCUSED_SOURCE_MAP_SHA256']
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        observed_pgid=None;start=None;code=None;waited=False;primary=None;group_absent=False
+        with(tmp_path/'child.log').open('xb')as log:
+            child=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'owned_child.py'),case,str(HERE),str(tmp_path),source_map,source_sha],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(child.pid)
+                except ProcessLookupError:pass
+                try:start=_ticks(child.pid)
+                except FileNotFoundError:pass
+                if observed_pgid is not None:assert observed_pgid==child.pid
+                _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                    owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='waiting',direct_wait_completed=False))
+                code=child.wait();waited=True
+            except BaseException as error:
+                primary=error
+                try:
+                    try:os.killpg(child.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:code=child.wait();waited=True
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+            finally:
+                try:
+                    group_absent=_gone(child.pid)
+                    _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                        owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='terminal',
+                        exit_code=code,direct_wait_completed=waited,reaped=waited,group_absent=group_absent,
+                        child_report_read=False,primary_type=None if primary is None else type(primary).__name__))
+                except BaseException as cleanup:
+                    if primary is None:raise
+                    if cleanup is not primary:primary.add_note('terminal observation/publication: '+repr(cleanup))
+>       assert waited and group_absent and code==0,(case,code,_read_record(tmp_path/'child.log').decode(errors='replace')[-8192:])
+E       AssertionError: ('audit_metadata_body_overlap_rejection', 70, 'Traceback (most recent call last):
+E           File "/tmp/qwen-full28-device-foc...                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         PermissionError: sticky server audit denial
+E         ')
+E       assert (True and True and 70 == 0)
+
+/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py:115: AssertionError
+______ test_device_integration[audit_native_binding_accessor_replacement] ______
+
+case = 'audit_native_binding_accessor_replacement'
+tmp_path = PosixPath('/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/pytest-owned/test_device_integration_audit_4')
+
+    @pytest.mark.parametrize('case',CASES,ids=CASES)
+    def test_device_integration(case,tmp_path):
+        source_map=os.environ['FULL28_FOCUSED_SOURCE_MAP'];source_sha=os.environ['FULL28_FOCUSED_SOURCE_MAP_SHA256']
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        observed_pgid=None;start=None;code=None;waited=False;primary=None;group_absent=False
+        with(tmp_path/'child.log').open('xb')as log:
+            child=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'owned_child.py'),case,str(HERE),str(tmp_path),source_map,source_sha],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(child.pid)
+                except ProcessLookupError:pass
+                try:start=_ticks(child.pid)
+                except FileNotFoundError:pass
+                if observed_pgid is not None:assert observed_pgid==child.pid
+                _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                    owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='waiting',direct_wait_completed=False))
+                code=child.wait();waited=True
+            except BaseException as error:
+                primary=error
+                try:
+                    try:os.killpg(child.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:code=child.wait();waited=True
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+            finally:
+                try:
+                    group_absent=_gone(child.pid)
+                    _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                        owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='terminal',
+                        exit_code=code,direct_wait_completed=waited,reaped=waited,group_absent=group_absent,
+                        child_report_read=False,primary_type=None if primary is None else type(primary).__name__))
+                except BaseException as cleanup:
+                    if primary is None:raise
+                    if cleanup is not primary:primary.add_note('terminal observation/publication: '+repr(cleanup))
+>       assert waited and group_absent and code==0,(case,code,_read_record(tmp_path/'child.log').decode(errors='replace')[-8192:])
+E       AssertionError: ('audit_native_binding_accessor_replacement', 70, 'Traceback (most recent call last):
+E           File "/tmp/qwen-full28-device...                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         PermissionError: sticky server audit denial
+E         ')
+E       assert (True and True and 70 == 0)
+
+/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py:115: AssertionError
+_______________ test_device_integration[audit_proc_policy_only] ________________
+
+case = 'audit_proc_policy_only'
+tmp_path = PosixPath('/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/pytest-owned/test_device_integration_audit_5')
+
+    @pytest.mark.parametrize('case',CASES,ids=CASES)
+    def test_device_integration(case,tmp_path):
+        source_map=os.environ['FULL28_FOCUSED_SOURCE_MAP'];source_sha=os.environ['FULL28_FOCUSED_SOURCE_MAP_SHA256']
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        observed_pgid=None;start=None;code=None;waited=False;primary=None;group_absent=False
+        with(tmp_path/'child.log').open('xb')as log:
+            child=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'owned_child.py'),case,str(HERE),str(tmp_path),source_map,source_sha],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(child.pid)
+                except ProcessLookupError:pass
+                try:start=_ticks(child.pid)
+                except FileNotFoundError:pass
+                if observed_pgid is not None:assert observed_pgid==child.pid
+                _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                    owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='waiting',direct_wait_completed=False))
+                code=child.wait();waited=True
+            except BaseException as error:
+                primary=error
+                try:
+                    try:os.killpg(child.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:code=child.wait();waited=True
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+            finally:
+                try:
+                    group_absent=_gone(child.pid)
+                    _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                        owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='terminal',
+                        exit_code=code,direct_wait_completed=waited,reaped=waited,group_absent=group_absent,
+                        child_report_read=False,primary_type=None if primary is None else type(primary).__name__))
+                except BaseException as cleanup:
+                    if primary is None:raise
+                    if cleanup is not primary:primary.add_note('terminal observation/publication: '+repr(cleanup))
+>       assert waited and group_absent and code==0,(case,code,_read_record(tmp_path/'child.log').decode(errors='replace')[-8192:])
+E       AssertionError: ('audit_proc_policy_only', 70, 'Traceback (most recent call last):
+E           File "/tmp/qwen-full28-device-focused-proof-2026...                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         PermissionError: sticky server audit denial
+E         ')
+E       assert (True and True and 70 == 0)
+
+/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py:115: AssertionError
+_____________ test_device_integration[run_clean_retirement_order] ______________
+
+case = 'run_clean_retirement_order'
+tmp_path = PosixPath('/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/pytest-owned/test_device_integration_run_cl0')
+
+    @pytest.mark.parametrize('case',CASES,ids=CASES)
+    def test_device_integration(case,tmp_path):
+        source_map=os.environ['FULL28_FOCUSED_SOURCE_MAP'];source_sha=os.environ['FULL28_FOCUSED_SOURCE_MAP_SHA256']
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        observed_pgid=None;start=None;code=None;waited=False;primary=None;group_absent=False
+        with(tmp_path/'child.log').open('xb')as log:
+            child=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'owned_child.py'),case,str(HERE),str(tmp_path),source_map,source_sha],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(child.pid)
+                except ProcessLookupError:pass
+                try:start=_ticks(child.pid)
+                except FileNotFoundError:pass
+                if observed_pgid is not None:assert observed_pgid==child.pid
+                _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                    owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='waiting',direct_wait_completed=False))
+                code=child.wait();waited=True
+            except BaseException as error:
+                primary=error
+                try:
+                    try:os.killpg(child.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:code=child.wait();waited=True
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+            finally:
+                try:
+                    group_absent=_gone(child.pid)
+                    _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                        owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='terminal',
+                        exit_code=code,direct_wait_completed=waited,reaped=waited,group_absent=group_absent,
+                        child_report_read=False,primary_type=None if primary is None else type(primary).__name__))
+                except BaseException as cleanup:
+                    if primary is None:raise
+                    if cleanup is not primary:primary.add_note('terminal observation/publication: '+repr(cleanup))
+>       assert waited and group_absent and code==0,(case,code,_read_record(tmp_path/'child.log').decode(errors='replace')[-8192:])
+E       AssertionError: ('run_clean_retirement_order', 70, 'Traceback (most recent call last):
+E           File "/tmp/qwen-full28-device-focused-proof-...^^^^^^^^^^^^^^^
+E         ImportError: genuine native imports unavailable
+E         final source/origin restoration: AssertionError()
+E         ')
+E       assert (True and True and 70 == 0)
+
+/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py:115: AssertionError
+_________ test_device_integration[run_body_primary_cleanup_retention] __________
+
+case = 'run_body_primary_cleanup_retention'
+tmp_path = PosixPath('/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/pytest-owned/test_device_integration_run_bo0')
+
+    @pytest.mark.parametrize('case',CASES,ids=CASES)
+    def test_device_integration(case,tmp_path):
+        source_map=os.environ['FULL28_FOCUSED_SOURCE_MAP'];source_sha=os.environ['FULL28_FOCUSED_SOURCE_MAP_SHA256']
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        observed_pgid=None;start=None;code=None;waited=False;primary=None;group_absent=False
+        with(tmp_path/'child.log').open('xb')as log:
+            child=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'owned_child.py'),case,str(HERE),str(tmp_path),source_map,source_sha],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(child.pid)
+                except ProcessLookupError:pass
+                try:start=_ticks(child.pid)
+                except FileNotFoundError:pass
+                if observed_pgid is not None:assert observed_pgid==child.pid
+                _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                    owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='waiting',direct_wait_completed=False))
+                code=child.wait();waited=True
+            except BaseException as error:
+                primary=error
+                try:
+                    try:os.killpg(child.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:code=child.wait();waited=True
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+            finally:
+                try:
+                    group_absent=_gone(child.pid)
+                    _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                        owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='terminal',
+                        exit_code=code,direct_wait_completed=waited,reaped=waited,group_absent=group_absent,
+                        child_report_read=False,primary_type=None if primary is None else type(primary).__name__))
+                except BaseException as cleanup:
+                    if primary is None:raise
+                    if cleanup is not primary:primary.add_note('terminal observation/publication: '+repr(cleanup))
+>       assert waited and group_absent and code==0,(case,code,_read_record(tmp_path/'child.log').decode(errors='replace')[-8192:])
+E       AssertionError: ('run_body_primary_cleanup_retention', 70, 'Traceback (most recent call last):
+E           File "/tmp/qwen-full28-device-focuse...^^^^^^^^^^^^^^^
+E         ImportError: genuine native imports unavailable
+E         final source/origin restoration: AssertionError()
+E         ')
+E       assert (True and True and 70 == 0)
+
+/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py:115: AssertionError
+_____________ test_device_integration[run_default_exit_failure70] ______________
+
+case = 'run_default_exit_failure70'
+tmp_path = PosixPath('/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/pytest-owned/test_device_integration_run_de0')
+
+    @pytest.mark.parametrize('case',CASES,ids=CASES)
+    def test_device_integration(case,tmp_path):
+        source_map=os.environ['FULL28_FOCUSED_SOURCE_MAP'];source_sha=os.environ['FULL28_FOCUSED_SOURCE_MAP_SHA256']
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        observed_pgid=None;start=None;code=None;waited=False;primary=None;group_absent=False
+        with(tmp_path/'child.log').open('xb')as log:
+            child=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'owned_child.py'),case,str(HERE),str(tmp_path),source_map,source_sha],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(child.pid)
+                except ProcessLookupError:pass
+                try:start=_ticks(child.pid)
+                except FileNotFoundError:pass
+                if observed_pgid is not None:assert observed_pgid==child.pid
+                _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                    owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='waiting',direct_wait_completed=False))
+                code=child.wait();waited=True
+            except BaseException as error:
+                primary=error
+                try:
+                    try:os.killpg(child.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:code=child.wait();waited=True
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+            finally:
+                try:
+                    group_absent=_gone(child.pid)
+                    _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                        owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='terminal',
+                        exit_code=code,direct_wait_completed=waited,reaped=waited,group_absent=group_absent,
+                        child_report_read=False,primary_type=None if primary is None else type(primary).__name__))
+                except BaseException as cleanup:
+                    if primary is None:raise
+                    if cleanup is not primary:primary.add_note('terminal observation/publication: '+repr(cleanup))
+>       assert waited and group_absent and code==0,(case,code,_read_record(tmp_path/'child.log').decode(errors='replace')[-8192:])
+E       AssertionError: ('run_default_exit_failure70', 70, 'Traceback (most recent call last):
+E           File "/tmp/qwen-full28-device-focused-proof-...^^^^^^^^^^^^^^^
+E         ImportError: genuine native imports unavailable
+E         final source/origin restoration: AssertionError()
+E         ')
+E       assert (True and True and 70 == 0)
+
+/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py:115: AssertionError
+____________ test_device_integration[run_evidence_close_failure70] _____________
+
+case = 'run_evidence_close_failure70'
+tmp_path = PosixPath('/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/pytest-owned/test_device_integration_run_ev0')
+
+    @pytest.mark.parametrize('case',CASES,ids=CASES)
+    def test_device_integration(case,tmp_path):
+        source_map=os.environ['FULL28_FOCUSED_SOURCE_MAP'];source_sha=os.environ['FULL28_FOCUSED_SOURCE_MAP_SHA256']
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        observed_pgid=None;start=None;code=None;waited=False;primary=None;group_absent=False
+        with(tmp_path/'child.log').open('xb')as log:
+            child=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'owned_child.py'),case,str(HERE),str(tmp_path),source_map,source_sha],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(child.pid)
+                except ProcessLookupError:pass
+                try:start=_ticks(child.pid)
+                except FileNotFoundError:pass
+                if observed_pgid is not None:assert observed_pgid==child.pid
+                _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                    owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='waiting',direct_wait_completed=False))
+                code=child.wait();waited=True
+            except BaseException as error:
+                primary=error
+                try:
+                    try:os.killpg(child.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:code=child.wait();waited=True
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+            finally:
+                try:
+                    group_absent=_gone(child.pid)
+                    _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                        owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='terminal',
+                        exit_code=code,direct_wait_completed=waited,reaped=waited,group_absent=group_absent,
+                        child_report_read=False,primary_type=None if primary is None else type(primary).__name__))
+                except BaseException as cleanup:
+                    if primary is None:raise
+                    if cleanup is not primary:primary.add_note('terminal observation/publication: '+repr(cleanup))
+>       assert waited and group_absent and code==0,(case,code,_read_record(tmp_path/'child.log').decode(errors='replace')[-8192:])
+E       AssertionError: ('run_evidence_close_failure70', 70, 'Traceback (most recent call last):
+E           File "/tmp/qwen-full28-device-focused-proo...^^^^^^^^^^^^^^^
+E         ImportError: genuine native imports unavailable
+E         final source/origin restoration: AssertionError()
+E         ')
+E       assert (True and True and 70 == 0)
+
+/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py:115: AssertionError
+____________ test_device_integration[run_swallowed_audit_denial70] _____________
+
+case = 'run_swallowed_audit_denial70'
+tmp_path = PosixPath('/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/pytest-owned/test_device_integration_run_sw0')
+
+    @pytest.mark.parametrize('case',CASES,ids=CASES)
+    def test_device_integration(case,tmp_path):
+        source_map=os.environ['FULL28_FOCUSED_SOURCE_MAP'];source_sha=os.environ['FULL28_FOCUSED_SOURCE_MAP_SHA256']
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        observed_pgid=None;start=None;code=None;waited=False;primary=None;group_absent=False
+        with(tmp_path/'child.log').open('xb')as log:
+            child=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'owned_child.py'),case,str(HERE),str(tmp_path),source_map,source_sha],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(child.pid)
+                except ProcessLookupError:pass
+                try:start=_ticks(child.pid)
+                except FileNotFoundError:pass
+                if observed_pgid is not None:assert observed_pgid==child.pid
+                _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                    owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='waiting',direct_wait_completed=False))
+                code=child.wait();waited=True
+            except BaseException as error:
+                primary=error
+                try:
+                    try:os.killpg(child.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:code=child.wait();waited=True
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+            finally:
+                try:
+                    group_absent=_gone(child.pid)
+                    _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                        owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='terminal',
+                        exit_code=code,direct_wait_completed=waited,reaped=waited,group_absent=group_absent,
+                        child_report_read=False,primary_type=None if primary is None else type(primary).__name__))
+                except BaseException as cleanup:
+                    if primary is None:raise
+                    if cleanup is not primary:primary.add_note('terminal observation/publication: '+repr(cleanup))
+>       assert waited and group_absent and code==0,(case,code,_read_record(tmp_path/'child.log').decode(errors='replace')[-8192:])
+E       AssertionError: ('run_swallowed_audit_denial70', 70, 'Traceback (most recent call last):
+E           File "/tmp/qwen-full28-device-focused-proo...^^^^^^^^^^^^^^^
+E         ImportError: genuine native imports unavailable
+E         final source/origin restoration: AssertionError()
+E         ')
+E       assert (True and True and 70 == 0)
+
+/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py:115: AssertionError
+_________ test_device_integration[run_owner_accessor_cleanup_original] _________
+
+case = 'run_owner_accessor_cleanup_original'
+tmp_path = PosixPath('/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/pytest-owned/test_device_integration_run_ow0')
+
+    @pytest.mark.parametrize('case',CASES,ids=CASES)
+    def test_device_integration(case,tmp_path):
+        source_map=os.environ['FULL28_FOCUSED_SOURCE_MAP'];source_sha=os.environ['FULL28_FOCUSED_SOURCE_MAP_SHA256']
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        observed_pgid=None;start=None;code=None;waited=False;primary=None;group_absent=False
+        with(tmp_path/'child.log').open('xb')as log:
+            child=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'owned_child.py'),case,str(HERE),str(tmp_path),source_map,source_sha],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(child.pid)
+                except ProcessLookupError:pass
+                try:start=_ticks(child.pid)
+                except FileNotFoundError:pass
+                if observed_pgid is not None:assert observed_pgid==child.pid
+                _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                    owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='waiting',direct_wait_completed=False))
+                code=child.wait();waited=True
+            except BaseException as error:
+                primary=error
+                try:
+                    try:os.killpg(child.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:code=child.wait();waited=True
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+            finally:
+                try:
+                    group_absent=_gone(child.pid)
+                    _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                        owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='terminal',
+                        exit_code=code,direct_wait_completed=waited,reaped=waited,group_absent=group_absent,
+                        child_report_read=False,primary_type=None if primary is None else type(primary).__name__))
+                except BaseException as cleanup:
+                    if primary is None:raise
+                    if cleanup is not primary:primary.add_note('terminal observation/publication: '+repr(cleanup))
+>       assert waited and group_absent and code==0,(case,code,_read_record(tmp_path/'child.log').decode(errors='replace')[-8192:])
+E       AssertionError: ('run_owner_accessor_cleanup_original', 70, 'Traceback (most recent call last):
+E           File "/tmp/qwen-full28-device-focus...^^^^^^^^^^^^^^^
+E         ImportError: genuine native imports unavailable
+E         final source/origin restoration: AssertionError()
+E         ')
+E       assert (True and True and 70 == 0)
+
+/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py:115: AssertionError
+_________________ test_device_integration[evidence_output_cap] _________________
+
+case = 'evidence_output_cap'
+tmp_path = PosixPath('/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/pytest-owned/test_device_integration_eviden0')
+
+    @pytest.mark.parametrize('case',CASES,ids=CASES)
+    def test_device_integration(case,tmp_path):
+        source_map=os.environ['FULL28_FOCUSED_SOURCE_MAP'];source_sha=os.environ['FULL28_FOCUSED_SOURCE_MAP_SHA256']
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        observed_pgid=None;start=None;code=None;waited=False;primary=None;group_absent=False
+        with(tmp_path/'child.log').open('xb')as log:
+            child=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'owned_child.py'),case,str(HERE),str(tmp_path),source_map,source_sha],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(child.pid)
+                except ProcessLookupError:pass
+                try:start=_ticks(child.pid)
+                except FileNotFoundError:pass
+                if observed_pgid is not None:assert observed_pgid==child.pid
+                _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                    owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='waiting',direct_wait_completed=False))
+                code=child.wait();waited=True
+            except BaseException as error:
+                primary=error
+                try:
+                    try:os.killpg(child.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:code=child.wait();waited=True
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+            finally:
+                try:
+                    group_absent=_gone(child.pid)
+                    _dump(tmp_path/'parent-terminal.json',dict(schema='full28-device-parent-v1',case=case,pid=child.pid,
+                        owned_session_pgid=child.pid,observed_pgid=observed_pgid,starttime_ticks=start,status='terminal',
+                        exit_code=code,direct_wait_completed=waited,reaped=waited,group_absent=group_absent,
+                        child_report_read=False,primary_type=None if primary is None else type(primary).__name__))
+                except BaseException as cleanup:
+                    if primary is None:raise
+                    if cleanup is not primary:primary.add_note('terminal observation/publication: '+repr(cleanup))
+>       assert waited and group_absent and code==0,(case,code,_read_record(tmp_path/'child.log').decode(errors='replace')[-8192:])
+E       AssertionError: ('evidence_output_cap', 70, 'Traceback (most recent call last):
+E           File "/tmp/qwen-full28-device-focused-proof-2026110...issionError: child writes limited to its own fixture/result root
+E         final source/origin restoration: AssertionError()
+E         ')
+E       assert (True and True and 70 == 0)
+
+/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py:115: AssertionError
+=========================== short test summary info ============================
+FAILED ../../tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py::test_device_integration[engine_evaluation_boundary_order]
+FAILED ../../tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py::test_device_integration[engine_evaluation_callback_replacement]
+FAILED ../../tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py::test_device_integration[engine_evaluation_callback_failure]
+FAILED ../../tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py::test_device_integration[audit_owned_character_descriptor_control]
+FAILED ../../tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py::test_device_integration[audit_opened_descriptor_mismatch]
+FAILED ../../tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py::test_device_integration[audit_literal_flags_spelling_rejection]
+FAILED ../../tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py::test_device_integration[audit_metadata_body_overlap_rejection]
+FAILED ../../tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py::test_device_integration[audit_native_binding_accessor_replacement]
+FAILED ../../tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py::test_device_integration[audit_proc_policy_only]
+FAILED ../../tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py::test_device_integration[run_clean_retirement_order]
+FAILED ../../tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py::test_device_integration[run_body_primary_cleanup_retention]
+FAILED ../../tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py::test_device_integration[run_default_exit_failure70]
+FAILED ../../tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py::test_device_integration[run_evidence_close_failure70]
+FAILED ../../tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py::test_device_integration[run_swallowed_audit_denial70]
+FAILED ../../tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py::test_device_integration[run_owner_accessor_cleanup_original]
+FAILED ../../tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/test_device_integration.py::test_device_integration[evidence_output_cap]
+16 failed, 43 passed in 1368.54s (0:22:48)

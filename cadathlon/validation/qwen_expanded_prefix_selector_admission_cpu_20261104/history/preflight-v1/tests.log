@@ -1,0 +1,484 @@
+........................................................................ [ 48%]
+................................................................FFFFFFFF [ 96%]
+FF...F                                                                   [100%]
+=================================== FAILURES ===================================
+______________ test_snapshot_holds_exact_permissions_and_identity ______________
+
+tmp_path = PosixPath('/tmp/qwen-expanded-prefix-selector-admission-preflight-v1-20261104/temporary/pytest-of-jianming_gatech/pytest-0/test_snapshot_holds_exact_perm0')
+
+    def test_snapshot_holds_exact_permissions_and_identity(tmp_path):
+        path=tmp_path/'held';path.mkdir(mode=0o700);file=path/'snapshot';file.write_bytes(b'hello');file.chmod(0o600)
+        fs=file.stat();ps=path.stat();desc=dict(path=str(file),sha256=p.digest(b'hello'),bytes=5,
+            identity=[fs.st_dev,fs.st_ino],parent_identity=[ps.st_dev,ps.st_ino])
+>       assert process.snapshot_read(desc)==b'hello'
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_selection_process.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+selection_process.py:80: in snapshot_read
+    fd = os.open(path.name, os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK|os.O_CLOEXEC, dir_fd=parent_fd)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:22: in audit
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+kind = 'undeclared execution read'
+
+>   ???
+E   PermissionError: Forbidden access in synthetic selector preflight
+
+<string>:7: PermissionError
+______ test_snapshot_body_primary_survives_both_close_errors[ValueError] _______
+
+tmp_path = PosixPath('/tmp/qwen-expanded-prefix-selector-admission-preflight-v1-20261104/temporary/pytest-of-jianming_gatech/pytest-0/test_snapshot_body_primary_sur0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x703021d57350>
+primary_factory = <class 'ValueError'>
+
+    @pytest.mark.parametrize('primary_factory',[ValueError,KeyboardInterrupt,SystemExit])
+    def test_snapshot_body_primary_survives_both_close_errors(tmp_path,monkeypatch,primary_factory):
+        path=tmp_path/'held';path.mkdir(mode=0o700);file=path/'snapshot';file.write_bytes(b'x');file.chmod(0o600)
+        fs=file.stat();ps=path.stat();desc=dict(path=str(file),sha256=p.digest(b'x'),bytes=1,
+            identity=[fs.st_dev,fs.st_ino],parent_identity=[ps.st_dev,ps.st_ino])
+        primary=primary_factory('synthetic body');real_close=os.close;closed=[]
+        def close(fd):
+            real_close(fd);closed.append(fd);raise OSError('synthetic close')
+        fake=SimpleNamespace(**{n:getattr(os,n)for n in ('open','fstat','stat','getuid','O_RDONLY','O_DIRECTORY','O_NOFOLLOW','O_CLOEXEC','O_NONBLOCK')},
+                             read=lambda *a:(_ for _ in ()).throw(primary),close=close)
+        monkeypatch.setattr(process,'os',fake)
+>       with pytest.raises(type(primary))as result:process.snapshot_read(desc)
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_selection_process.py:117: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+selection_process.py:80: in snapshot_read
+    fd = os.open(path.name, os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK|os.O_CLOEXEC, dir_fd=parent_fd)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:22: in audit
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+kind = 'undeclared execution read'
+
+>   ???
+E   PermissionError: Forbidden access in synthetic selector preflight
+E   cleanup failure: OSError
+
+<string>:7: PermissionError
+___ test_snapshot_body_primary_survives_both_close_errors[KeyboardInterrupt] ___
+
+tmp_path = PosixPath('/tmp/qwen-expanded-prefix-selector-admission-preflight-v1-20261104/temporary/pytest-of-jianming_gatech/pytest-0/test_snapshot_body_primary_sur1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x703021ee0f50>
+primary_factory = <class 'KeyboardInterrupt'>
+
+    @pytest.mark.parametrize('primary_factory',[ValueError,KeyboardInterrupt,SystemExit])
+    def test_snapshot_body_primary_survives_both_close_errors(tmp_path,monkeypatch,primary_factory):
+        path=tmp_path/'held';path.mkdir(mode=0o700);file=path/'snapshot';file.write_bytes(b'x');file.chmod(0o600)
+        fs=file.stat();ps=path.stat();desc=dict(path=str(file),sha256=p.digest(b'x'),bytes=1,
+            identity=[fs.st_dev,fs.st_ino],parent_identity=[ps.st_dev,ps.st_ino])
+        primary=primary_factory('synthetic body');real_close=os.close;closed=[]
+        def close(fd):
+            real_close(fd);closed.append(fd);raise OSError('synthetic close')
+        fake=SimpleNamespace(**{n:getattr(os,n)for n in ('open','fstat','stat','getuid','O_RDONLY','O_DIRECTORY','O_NOFOLLOW','O_CLOEXEC','O_NONBLOCK')},
+                             read=lambda *a:(_ for _ in ()).throw(primary),close=close)
+        monkeypatch.setattr(process,'os',fake)
+>       with pytest.raises(type(primary))as result:process.snapshot_read(desc)
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_selection_process.py:117: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+selection_process.py:80: in snapshot_read
+    fd = os.open(path.name, os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK|os.O_CLOEXEC, dir_fd=parent_fd)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:22: in audit
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+kind = 'undeclared execution read'
+
+>   ???
+E   PermissionError: Forbidden access in synthetic selector preflight
+E   cleanup failure: OSError
+
+<string>:7: PermissionError
+______ test_snapshot_body_primary_survives_both_close_errors[SystemExit] _______
+
+tmp_path = PosixPath('/tmp/qwen-expanded-prefix-selector-admission-preflight-v1-20261104/temporary/pytest-of-jianming_gatech/pytest-0/test_snapshot_body_primary_sur2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x703021ee16d0>
+primary_factory = <class 'SystemExit'>
+
+    @pytest.mark.parametrize('primary_factory',[ValueError,KeyboardInterrupt,SystemExit])
+    def test_snapshot_body_primary_survives_both_close_errors(tmp_path,monkeypatch,primary_factory):
+        path=tmp_path/'held';path.mkdir(mode=0o700);file=path/'snapshot';file.write_bytes(b'x');file.chmod(0o600)
+        fs=file.stat();ps=path.stat();desc=dict(path=str(file),sha256=p.digest(b'x'),bytes=1,
+            identity=[fs.st_dev,fs.st_ino],parent_identity=[ps.st_dev,ps.st_ino])
+        primary=primary_factory('synthetic body');real_close=os.close;closed=[]
+        def close(fd):
+            real_close(fd);closed.append(fd);raise OSError('synthetic close')
+        fake=SimpleNamespace(**{n:getattr(os,n)for n in ('open','fstat','stat','getuid','O_RDONLY','O_DIRECTORY','O_NOFOLLOW','O_CLOEXEC','O_NONBLOCK')},
+                             read=lambda *a:(_ for _ in ()).throw(primary),close=close)
+        monkeypatch.setattr(process,'os',fake)
+>       with pytest.raises(type(primary))as result:process.snapshot_read(desc)
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_selection_process.py:117: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+selection_process.py:80: in snapshot_read
+    fd = os.open(path.name, os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK|os.O_CLOEXEC, dir_fd=parent_fd)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:22: in audit
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+kind = 'undeclared execution read'
+
+>   ???
+E   PermissionError: Forbidden access in synthetic selector preflight
+E   cleanup failure: OSError
+
+<string>:7: PermissionError
+____ test_snapshot_cleanup_only_later_cancellation_wins[KeyboardInterrupt] _____
+
+tmp_path = PosixPath('/tmp/qwen-expanded-prefix-selector-admission-preflight-v1-20261104/temporary/pytest-of-jianming_gatech/pytest-0/test_snapshot_cleanup_only_lat0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x703021f4a430>
+cancel = <class 'KeyboardInterrupt'>
+
+    @pytest.mark.parametrize('cancel',[KeyboardInterrupt,SystemExit])
+    def test_snapshot_cleanup_only_later_cancellation_wins(tmp_path,monkeypatch,cancel):
+        path=tmp_path/'held';path.mkdir(mode=0o700);file=path/'snapshot';file.write_bytes(b'x');file.chmod(0o600)
+        fs=file.stat();ps=path.stat();desc=dict(path=str(file),sha256=p.digest(b'x'),bytes=1,
+            identity=[fs.st_dev,fs.st_ino],parent_identity=[ps.st_dev,ps.st_ino])
+        real_close=os.close;closed=[];primary=OSError('file close');later=cancel('directory close')
+        def close(fd):
+            real_close(fd);closed.append(fd);raise primary if len(closed)==1 else later
+        fake=SimpleNamespace(**{n:getattr(os,n)for n in ('open','fstat','stat','read','getuid','O_RDONLY','O_DIRECTORY','O_NOFOLLOW','O_CLOEXEC','O_NONBLOCK')},close=close)
+        monkeypatch.setattr(process,'os',fake)
+>       with pytest.raises(cancel)as result:process.snapshot_read(desc)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_selection_process.py:131: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+selection_process.py:80: in snapshot_read
+    fd = os.open(path.name, os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK|os.O_CLOEXEC, dir_fd=parent_fd)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:22: in audit
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+kind = 'undeclared execution read'
+
+>   ???
+E   PermissionError: Forbidden access in synthetic selector preflight
+E   cleanup failure: OSError
+
+<string>:7: PermissionError
+________ test_snapshot_cleanup_only_later_cancellation_wins[SystemExit] ________
+
+tmp_path = PosixPath('/tmp/qwen-expanded-prefix-selector-admission-preflight-v1-20261104/temporary/pytest-of-jianming_gatech/pytest-0/test_snapshot_cleanup_only_lat1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x703021f4aeb0>
+cancel = <class 'SystemExit'>
+
+    @pytest.mark.parametrize('cancel',[KeyboardInterrupt,SystemExit])
+    def test_snapshot_cleanup_only_later_cancellation_wins(tmp_path,monkeypatch,cancel):
+        path=tmp_path/'held';path.mkdir(mode=0o700);file=path/'snapshot';file.write_bytes(b'x');file.chmod(0o600)
+        fs=file.stat();ps=path.stat();desc=dict(path=str(file),sha256=p.digest(b'x'),bytes=1,
+            identity=[fs.st_dev,fs.st_ino],parent_identity=[ps.st_dev,ps.st_ino])
+        real_close=os.close;closed=[];primary=OSError('file close');later=cancel('directory close')
+        def close(fd):
+            real_close(fd);closed.append(fd);raise primary if len(closed)==1 else later
+        fake=SimpleNamespace(**{n:getattr(os,n)for n in ('open','fstat','stat','read','getuid','O_RDONLY','O_DIRECTORY','O_NOFOLLOW','O_CLOEXEC','O_NONBLOCK')},close=close)
+        monkeypatch.setattr(process,'os',fake)
+>       with pytest.raises(cancel)as result:process.snapshot_read(desc)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_selection_process.py:131: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+selection_process.py:80: in snapshot_read
+    fd = os.open(path.name, os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK|os.O_CLOEXEC, dir_fd=parent_fd)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:22: in audit
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+kind = 'undeclared execution read'
+
+>   ???
+E   PermissionError: Forbidden access in synthetic selector preflight
+E   cleanup failure: OSError
+
+<string>:7: PermissionError
+____ test_cleanup_shield_entry_cannot_skip_original_owner_retirement[None] _____
+
+tmp_path = PosixPath('/tmp/qwen-expanded-prefix-selector-admission-preflight-v1-20261104/temporary/pytest-of-jianming_gatech/pytest-0/test_cleanup_shield_entry_cann0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x703021db61a0>
+failure = None
+
+    @pytest.mark.parametrize('failure',[None,OSError('shield entry'),KeyboardInterrupt('shield entry'),SystemExit('shield entry')])
+    def test_cleanup_shield_entry_cannot_skip_original_owner_retirement(tmp_path,monkeypatch,failure):
+        row=arrange(tmp_path);args=SimpleNamespace(execute=True,manifest=str(row['manifest']),
+            manifest_sha256=p.digest(row['manifest'].read_bytes()),grant=str(row['grant']),
+            grant_sha256=p.digest(row['grant'].read_bytes()),output=str(row['output']))
+        expected=p.parse(row['manifest'].read_bytes());seen=[];closed=[];body=ValueError('synthetic body')
+        original=process.Output
+        class Tracked(original):
+            def __init__(self,*args,**kwargs):super().__init__(*args,**kwargs);seen.append(self)
+            def close(self,primary=None):
+                if seen and self is seen[0]:closed.append(self)
+                return super().close(primary)
+        @contextmanager
+        def signal_scope(state=None,shield=False):
+            if shield and failure is not None:raise failure
+            try:yield
+            finally:
+                if state is not None:state['restored']=True
+        monkeypatch.setattr(process,'Output',Tracked);monkeypatch.setattr(process,'signals',signal_scope)
+        monkeypatch.setattr(process,'install_audit',lambda *a:[]);monkeypatch.setattr(process,'loaded_origins',lambda *a:{})
+        monkeypatch.setattr(process,'select_actual',lambda *a,**k:(_ for _ in ()).throw(body))
+        try:
+>           with pytest.raises(ValueError)as caught:process.run(args,row['manifest'].read_bytes(),expected,row['files'],{},row['source'])
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_selection_process.py:157: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+selection_process.py:260: in run
+    if primary is not None:raise primary
+                           ^^^^^^^^^^^^^
+selection_process.py:256: in run
+    if primary is not None:raise primary
+                           ^^^^^^^^^^^^^
+selection_process.py:201: in run
+    source_archive=output.write('sources.tar.gz',_archive(blobs)))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+freeze_io.py:133: in write
+    fd = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW | os.O_CLOEXEC,
+<string>:20: in audit
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+kind = 'write outside owned evidence'
+
+>   ???
+E   PermissionError: Forbidden access in synthetic selector preflight
+
+<string>:7: PermissionError
+__ test_cleanup_shield_entry_cannot_skip_original_owner_retirement[failure1] ___
+
+tmp_path = PosixPath('/tmp/qwen-expanded-prefix-selector-admission-preflight-v1-20261104/temporary/pytest-of-jianming_gatech/pytest-0/test_cleanup_shield_entry_cann1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x703021d6a210>
+failure = OSError('shield entry')
+
+    @pytest.mark.parametrize('failure',[None,OSError('shield entry'),KeyboardInterrupt('shield entry'),SystemExit('shield entry')])
+    def test_cleanup_shield_entry_cannot_skip_original_owner_retirement(tmp_path,monkeypatch,failure):
+        row=arrange(tmp_path);args=SimpleNamespace(execute=True,manifest=str(row['manifest']),
+            manifest_sha256=p.digest(row['manifest'].read_bytes()),grant=str(row['grant']),
+            grant_sha256=p.digest(row['grant'].read_bytes()),output=str(row['output']))
+        expected=p.parse(row['manifest'].read_bytes());seen=[];closed=[];body=ValueError('synthetic body')
+        original=process.Output
+        class Tracked(original):
+            def __init__(self,*args,**kwargs):super().__init__(*args,**kwargs);seen.append(self)
+            def close(self,primary=None):
+                if seen and self is seen[0]:closed.append(self)
+                return super().close(primary)
+        @contextmanager
+        def signal_scope(state=None,shield=False):
+            if shield and failure is not None:raise failure
+            try:yield
+            finally:
+                if state is not None:state['restored']=True
+        monkeypatch.setattr(process,'Output',Tracked);monkeypatch.setattr(process,'signals',signal_scope)
+        monkeypatch.setattr(process,'install_audit',lambda *a:[]);monkeypatch.setattr(process,'loaded_origins',lambda *a:{})
+        monkeypatch.setattr(process,'select_actual',lambda *a,**k:(_ for _ in ()).throw(body))
+        try:
+>           with pytest.raises(ValueError)as caught:process.run(args,row['manifest'].read_bytes(),expected,row['files'],{},row['source'])
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_selection_process.py:157: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+selection_process.py:260: in run
+    if primary is not None:raise primary
+                           ^^^^^^^^^^^^^
+selection_process.py:256: in run
+    if primary is not None:raise primary
+                           ^^^^^^^^^^^^^
+selection_process.py:201: in run
+    source_archive=output.write('sources.tar.gz',_archive(blobs)))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+freeze_io.py:133: in write
+    fd = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW | os.O_CLOEXEC,
+<string>:20: in audit
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+kind = 'write outside owned evidence'
+
+>   ???
+E   PermissionError: Forbidden access in synthetic selector preflight
+E   cleanup shield failure: OSError
+
+<string>:7: PermissionError
+__ test_cleanup_shield_entry_cannot_skip_original_owner_retirement[failure2] ___
+
+tmp_path = PosixPath('/tmp/qwen-expanded-prefix-selector-admission-preflight-v1-20261104/temporary/pytest-of-jianming_gatech/pytest-0/test_cleanup_shield_entry_cann2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70301f6daf90>
+failure = KeyboardInterrupt('shield entry')
+
+    @pytest.mark.parametrize('failure',[None,OSError('shield entry'),KeyboardInterrupt('shield entry'),SystemExit('shield entry')])
+    def test_cleanup_shield_entry_cannot_skip_original_owner_retirement(tmp_path,monkeypatch,failure):
+        row=arrange(tmp_path);args=SimpleNamespace(execute=True,manifest=str(row['manifest']),
+            manifest_sha256=p.digest(row['manifest'].read_bytes()),grant=str(row['grant']),
+            grant_sha256=p.digest(row['grant'].read_bytes()),output=str(row['output']))
+        expected=p.parse(row['manifest'].read_bytes());seen=[];closed=[];body=ValueError('synthetic body')
+        original=process.Output
+        class Tracked(original):
+            def __init__(self,*args,**kwargs):super().__init__(*args,**kwargs);seen.append(self)
+            def close(self,primary=None):
+                if seen and self is seen[0]:closed.append(self)
+                return super().close(primary)
+        @contextmanager
+        def signal_scope(state=None,shield=False):
+            if shield and failure is not None:raise failure
+            try:yield
+            finally:
+                if state is not None:state['restored']=True
+        monkeypatch.setattr(process,'Output',Tracked);monkeypatch.setattr(process,'signals',signal_scope)
+        monkeypatch.setattr(process,'install_audit',lambda *a:[]);monkeypatch.setattr(process,'loaded_origins',lambda *a:{})
+        monkeypatch.setattr(process,'select_actual',lambda *a,**k:(_ for _ in ()).throw(body))
+        try:
+>           with pytest.raises(ValueError)as caught:process.run(args,row['manifest'].read_bytes(),expected,row['files'],{},row['source'])
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_selection_process.py:157: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+selection_process.py:260: in run
+    if primary is not None:raise primary
+                           ^^^^^^^^^^^^^
+selection_process.py:256: in run
+    if primary is not None:raise primary
+                           ^^^^^^^^^^^^^
+selection_process.py:201: in run
+    source_archive=output.write('sources.tar.gz',_archive(blobs)))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+freeze_io.py:133: in write
+    fd = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW | os.O_CLOEXEC,
+<string>:20: in audit
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+kind = 'write outside owned evidence'
+
+>   ???
+E   PermissionError: Forbidden access in synthetic selector preflight
+E   cleanup shield failure: KeyboardInterrupt
+
+<string>:7: PermissionError
+__ test_cleanup_shield_entry_cannot_skip_original_owner_retirement[failure3] ___
+
+tmp_path = PosixPath('/tmp/qwen-expanded-prefix-selector-admission-preflight-v1-20261104/temporary/pytest-of-jianming_gatech/pytest-0/test_cleanup_shield_entry_cann3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70301cb5bcd0>
+failure = SystemExit('shield entry')
+
+    @pytest.mark.parametrize('failure',[None,OSError('shield entry'),KeyboardInterrupt('shield entry'),SystemExit('shield entry')])
+    def test_cleanup_shield_entry_cannot_skip_original_owner_retirement(tmp_path,monkeypatch,failure):
+        row=arrange(tmp_path);args=SimpleNamespace(execute=True,manifest=str(row['manifest']),
+            manifest_sha256=p.digest(row['manifest'].read_bytes()),grant=str(row['grant']),
+            grant_sha256=p.digest(row['grant'].read_bytes()),output=str(row['output']))
+        expected=p.parse(row['manifest'].read_bytes());seen=[];closed=[];body=ValueError('synthetic body')
+        original=process.Output
+        class Tracked(original):
+            def __init__(self,*args,**kwargs):super().__init__(*args,**kwargs);seen.append(self)
+            def close(self,primary=None):
+                if seen and self is seen[0]:closed.append(self)
+                return super().close(primary)
+        @contextmanager
+        def signal_scope(state=None,shield=False):
+            if shield and failure is not None:raise failure
+            try:yield
+            finally:
+                if state is not None:state['restored']=True
+        monkeypatch.setattr(process,'Output',Tracked);monkeypatch.setattr(process,'signals',signal_scope)
+        monkeypatch.setattr(process,'install_audit',lambda *a:[]);monkeypatch.setattr(process,'loaded_origins',lambda *a:{})
+        monkeypatch.setattr(process,'select_actual',lambda *a,**k:(_ for _ in ()).throw(body))
+        try:
+>           with pytest.raises(ValueError)as caught:process.run(args,row['manifest'].read_bytes(),expected,row['files'],{},row['source'])
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_selection_process.py:157: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+selection_process.py:260: in run
+    if primary is not None:raise primary
+                           ^^^^^^^^^^^^^
+selection_process.py:256: in run
+    if primary is not None:raise primary
+                           ^^^^^^^^^^^^^
+selection_process.py:201: in run
+    source_archive=output.write('sources.tar.gz',_archive(blobs)))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+freeze_io.py:133: in write
+    fd = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW | os.O_CLOEXEC,
+<string>:20: in audit
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+kind = 'write outside owned evidence'
+
+>   ???
+E   PermissionError: Forbidden access in synthetic selector preflight
+E   cleanup shield failure: SystemExit
+
+<string>:7: PermissionError
+_______________ test_swallowed_denial_vetoes_pass_and_zero_exit ________________
+
+tmp_path = PosixPath('/tmp/qwen-expanded-prefix-selector-admission-preflight-v1-20261104/temporary/pytest-of-jianming_gatech/pytest-0/test_swallowed_denial_vetoes_p0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70301d35d310>
+
+    def test_swallowed_denial_vetoes_pass_and_zero_exit(tmp_path,monkeypatch):
+        row=arrange(tmp_path);args=SimpleNamespace(execute=True,manifest=str(row['manifest']),
+            manifest_sha256=p.digest(row['manifest'].read_bytes()),grant=str(row['grant']),
+            grant_sha256=p.digest(row['grant'].read_bytes()),output=str(row['output']))
+        expected=p.parse(row['manifest'].read_bytes());denials=[];original=process.select_actual
+        def caught_operation(*args,**kwargs):
+            try:
+                denials.append(dict(event='os.fork'));raise PermissionError('synthetic swallowed denial')
+            except PermissionError:pass
+            return original(*args,**kwargs)
+        monkeypatch.setattr(process,'install_audit',lambda *a:denials)
+        monkeypatch.setattr(process,'loaded_origins',lambda *a:{})
+        monkeypatch.setattr(process,'select_actual',caught_operation)
+>       code=process.run(args,row['manifest'].read_bytes(),expected,row['files'],{},row['source'])
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_selection_process.py:232: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+selection_process.py:260: in run
+    if primary is not None:raise primary
+                           ^^^^^^^^^^^^^
+selection_process.py:256: in run
+    if primary is not None:raise primary
+                           ^^^^^^^^^^^^^
+selection_process.py:201: in run
+    source_archive=output.write('sources.tar.gz',_archive(blobs)))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+freeze_io.py:133: in write
+    fd = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW | os.O_CLOEXEC,
+<string>:20: in audit
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+kind = 'write outside owned evidence'
+
+>   ???
+E   PermissionError: Forbidden access in synthetic selector preflight
+
+<string>:7: PermissionError
+=========================== short test summary info ============================
+FAILED test_selection_process.py::test_snapshot_holds_exact_permissions_and_identity
+FAILED test_selection_process.py::test_snapshot_body_primary_survives_both_close_errors[ValueError]
+FAILED test_selection_process.py::test_snapshot_body_primary_survives_both_close_errors[KeyboardInterrupt]
+FAILED test_selection_process.py::test_snapshot_body_primary_survives_both_close_errors[SystemExit]
+FAILED test_selection_process.py::test_snapshot_cleanup_only_later_cancellation_wins[KeyboardInterrupt]
+FAILED test_selection_process.py::test_snapshot_cleanup_only_later_cancellation_wins[SystemExit]
+FAILED test_selection_process.py::test_cleanup_shield_entry_cannot_skip_original_owner_retirement[None]
+FAILED test_selection_process.py::test_cleanup_shield_entry_cannot_skip_original_owner_retirement[failure1]
+FAILED test_selection_process.py::test_cleanup_shield_entry_cannot_skip_original_owner_retirement[failure2]
+FAILED test_selection_process.py::test_cleanup_shield_entry_cannot_skip_original_owner_retirement[failure3]
+FAILED test_selection_process.py::test_swallowed_denial_vetoes_pass_and_zero_exit
+11 failed, 139 passed in 44.71s

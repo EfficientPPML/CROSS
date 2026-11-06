@@ -1,0 +1,39 @@
+INTERNALERROR> Traceback (most recent call last):
+INTERNALERROR>   File "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/_pytest/main.py", line 329, in wrap_session
+INTERNALERROR>     config._do_configure()
+INTERNALERROR>     ~~~~~~~~~~~~~~~~~~~~^^
+INTERNALERROR>   File "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/_pytest/config/__init__.py", line 1370, in _do_configure
+INTERNALERROR>     self.hook.pytest_configure.call_historic(kwargs=dict(config=self))
+INTERNALERROR>     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/pluggy/_caller.py", line 222, in call_historic
+INTERNALERROR>     res = self._hookexec(self.name, self._hookimpls.copy(), kwargs, False)
+INTERNALERROR>   File "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/pluggy/_manager.py", line 183, in _hookexec
+INTERNALERROR>     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+INTERNALERROR>            ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/pluggy/_execution.py", line 195, in _multicall
+INTERNALERROR>     raise exception
+INTERNALERROR>   File "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/pluggy/_execution.py", line 147, in _multicall
+INTERNALERROR>     res = hook_impl.function(*args)
+INTERNALERROR>   File "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/_pytest/logging.py", line 666, in pytest_configure
+INTERNALERROR>     config.pluginmanager.register(LoggingPlugin(config), "logging-plugin")
+INTERNALERROR>                                   ~~~~~~~~~~~~~^^^^^^^^
+INTERNALERROR>   File "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/_pytest/logging.py", line 703, in __init__
+INTERNALERROR>     self.log_file_handler = _FileHandler(
+INTERNALERROR>                             ~~~~~~~~~~~~^
+INTERNALERROR>         log_file, mode=self.log_file_mode, encoding="UTF-8"
+INTERNALERROR>         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>     )
+INTERNALERROR>     ^
+INTERNALERROR>   File "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/logging/__init__.py", line 1219, in __init__
+INTERNALERROR>     StreamHandler.__init__(self, self._open())
+INTERNALERROR>                                  ~~~~~~~~~~^^
+INTERNALERROR>   File "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/logging/__init__.py", line 1248, in _open
+INTERNALERROR>     return open_func(self.baseFilename, self.mode,
+INTERNALERROR>                      encoding=self.encoding, errors=self.errors)
+INTERNALERROR>   File "<string>", line 15, in audit
+INTERNALERROR>     if not path.is_relative_to(out):deny('write outside owned evidence')
+INTERNALERROR>                                     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "<string>", line 7, in deny
+INTERNALERROR>     denials.append(kind);raise PermissionError('Forbidden access in synthetic selector preflight')
+INTERNALERROR>                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR> PermissionError: Forbidden access in synthetic selector preflight

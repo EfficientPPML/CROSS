@@ -1,0 +1,221 @@
+{
+  "scope": "CPU-only abstract-shape bounds for proposed feature batching; no HE execution.\n\nThe summed SSA outputs bound the explicitly represented logical NTT arrays if\nall outputs are retained. This is intentionally loose. Compiler-internal dot\nworkspaces, allocator fragmentation, public tables and other live tensors are\nnot included, so this is NOT an HBM capacity guarantee or a latency estimate.\n",
+  "degree": 131072,
+  "q_count": 84,
+  "profiles": {
+    "3": {
+      "p_count": 27,
+      "parts": 3,
+      "alpha": 28,
+      "actual_qp_secure": true,
+      "raw_key_pair_bytes": 349175808,
+      "formatted_uint64_key_pair_bytes": 698351616,
+      "max_complement_limbs": 83,
+      "batches": {
+        "1": {
+          "ciphertext_payload_bytes": 88080384,
+          "two_inputs_plus_output_payload_bytes": 264241152,
+          "ntt_shapes": {
+            "original_q": {
+              "flattened_batch": 1,
+              "limbs": 84,
+              "largest_logical_temporary_bytes": 352321536,
+              "sum_all_ssa_output_bytes_upper_bound": 6066558752,
+              "input_payload_bytes": 44040192,
+              "one_direction_public_table_bytes": 484442112
+            },
+            "partition_complement": {
+              "flattened_batch": 1,
+              "limbs": 83,
+              "largest_logical_temporary_bytes": 348127232,
+              "sum_all_ssa_output_bytes_upper_bound": 5994337816,
+              "input_payload_bytes": 43515904,
+              "one_direction_public_table_bytes": 478674944
+            },
+            "moddown_p_two_components": {
+              "flattened_batch": 2,
+              "limbs": 27,
+              "largest_logical_temporary_bytes": 226492416,
+              "sum_all_ssa_output_bytes_upper_bound": 3843300440,
+              "input_payload_bytes": 28311552,
+              "one_direction_public_table_bytes": 155713536
+            }
+          }
+        },
+        "2": {
+          "ciphertext_payload_bytes": 176160768,
+          "two_inputs_plus_output_payload_bytes": 528482304,
+          "ntt_shapes": {
+            "original_q": {
+              "flattened_batch": 2,
+              "limbs": 84,
+              "largest_logical_temporary_bytes": 704643072,
+              "sum_all_ssa_output_bytes_upper_bound": 11956934432,
+              "input_payload_bytes": 88080384,
+              "one_direction_public_table_bytes": 484442112
+            },
+            "partition_complement": {
+              "flattened_batch": 2,
+              "limbs": 83,
+              "largest_logical_temporary_bytes": 696254464,
+              "sum_all_ssa_output_bytes_upper_bound": 11814589976,
+              "input_payload_bytes": 87031808,
+              "one_direction_public_table_bytes": 478674944
+            },
+            "moddown_p_two_components": {
+              "flattened_batch": 4,
+              "limbs": 27,
+              "largest_logical_temporary_bytes": 452984832,
+              "sum_all_ssa_output_bytes_upper_bound": 7629970520,
+              "input_payload_bytes": 56623104,
+              "one_direction_public_table_bytes": 155713536
+            }
+          }
+        },
+        "4": {
+          "ciphertext_payload_bytes": 352321536,
+          "two_inputs_plus_output_payload_bytes": 1056964608,
+          "ntt_shapes": {
+            "original_q": {
+              "flattened_batch": 4,
+              "limbs": 84,
+              "largest_logical_temporary_bytes": 1409286144,
+              "sum_all_ssa_output_bytes_upper_bound": 23737685792,
+              "input_payload_bytes": 176160768,
+              "one_direction_public_table_bytes": 484442112
+            },
+            "partition_complement": {
+              "flattened_batch": 4,
+              "limbs": 83,
+              "largest_logical_temporary_bytes": 1392508928,
+              "sum_all_ssa_output_bytes_upper_bound": 23455094296,
+              "input_payload_bytes": 174063616,
+              "one_direction_public_table_bytes": 478674944
+            },
+            "moddown_p_two_components": {
+              "flattened_batch": 8,
+              "limbs": 27,
+              "largest_logical_temporary_bytes": 905969664,
+              "sum_all_ssa_output_bytes_upper_bound": 15203310680,
+              "input_payload_bytes": 113246208,
+              "one_direction_public_table_bytes": 155713536
+            }
+          }
+        }
+      }
+    },
+    "8": {
+      "p_count": 11,
+      "parts": 8,
+      "alpha": 11,
+      "actual_qp_secure": true,
+      "raw_key_pair_bytes": 796917760,
+      "formatted_uint64_key_pair_bytes": 1593835520,
+      "max_complement_limbs": 88,
+      "batches": {
+        "1": {
+          "ciphertext_payload_bytes": 88080384,
+          "two_inputs_plus_output_payload_bytes": 264241152,
+          "ntt_shapes": {
+            "original_q": {
+              "flattened_batch": 1,
+              "limbs": 84,
+              "largest_logical_temporary_bytes": 352321536,
+              "sum_all_ssa_output_bytes_upper_bound": 6066558752,
+              "input_payload_bytes": 44040192,
+              "one_direction_public_table_bytes": 484442112
+            },
+            "partition_complement": {
+              "flattened_batch": 1,
+              "limbs": 88,
+              "largest_logical_temporary_bytes": 369098752,
+              "sum_all_ssa_output_bytes_upper_bound": 6355442496,
+              "input_payload_bytes": 46137344,
+              "one_direction_public_table_bytes": 507510784
+            },
+            "moddown_p_two_components": {
+              "flattened_batch": 2,
+              "limbs": 11,
+              "largest_logical_temporary_bytes": 92274688,
+              "sum_all_ssa_output_bytes_upper_bound": 1565789144,
+              "input_payload_bytes": 11534336,
+              "one_direction_public_table_bytes": 63438848
+            }
+          }
+        },
+        "2": {
+          "ciphertext_payload_bytes": 176160768,
+          "two_inputs_plus_output_payload_bytes": 528482304,
+          "ntt_shapes": {
+            "original_q": {
+              "flattened_batch": 2,
+              "limbs": 84,
+              "largest_logical_temporary_bytes": 704643072,
+              "sum_all_ssa_output_bytes_upper_bound": 11956934432,
+              "input_payload_bytes": 88080384,
+              "one_direction_public_table_bytes": 484442112
+            },
+            "partition_complement": {
+              "flattened_batch": 2,
+              "limbs": 88,
+              "largest_logical_temporary_bytes": 738197504,
+              "sum_all_ssa_output_bytes_upper_bound": 12526312256,
+              "input_payload_bytes": 92274688,
+              "one_direction_public_table_bytes": 507510784
+            },
+            "moddown_p_two_components": {
+              "flattened_batch": 4,
+              "limbs": 11,
+              "largest_logical_temporary_bytes": 184549376,
+              "sum_all_ssa_output_bytes_upper_bound": 3108506584,
+              "input_payload_bytes": 23068672,
+              "one_direction_public_table_bytes": 63438848
+            }
+          }
+        },
+        "4": {
+          "ciphertext_payload_bytes": 352321536,
+          "two_inputs_plus_output_payload_bytes": 1056964608,
+          "ntt_shapes": {
+            "original_q": {
+              "flattened_batch": 4,
+              "limbs": 84,
+              "largest_logical_temporary_bytes": 1409286144,
+              "sum_all_ssa_output_bytes_upper_bound": 23737685792,
+              "input_payload_bytes": 176160768,
+              "one_direction_public_table_bytes": 484442112
+            },
+            "partition_complement": {
+              "flattened_batch": 4,
+              "limbs": 88,
+              "largest_logical_temporary_bytes": 1476395008,
+              "sum_all_ssa_output_bytes_upper_bound": 24868051776,
+              "input_payload_bytes": 184549376,
+              "one_direction_public_table_bytes": 507510784
+            },
+            "moddown_p_two_components": {
+              "flattened_batch": 8,
+              "limbs": 11,
+              "largest_logical_temporary_bytes": 369098752,
+              "sum_all_ssa_output_bytes_upper_bound": 6193941464,
+              "input_payload_bytes": 46137344,
+              "one_direction_public_table_bytes": 63438848
+            }
+          }
+        }
+      }
+    }
+  },
+  "batch_contract": "One feature per Polynomial batch lane, identical key/context/level/scale/nsd; plaintext coefficients broadcast from batch one.",
+  "no_extra_rotation_keys": true,
+  "jax_version": "0.12.0.1",
+  "source_sha256": {
+    "cadathlon/validation/plan_transformer_batch_memory.py": "27498cbb88b256e7ecd78d55819bb3f701eadcef2f8e023dba0e522d5a843165",
+    "jaxite_word/hemul.py": "49a87eed37de76b7b3ab31f1d19dd23a39035f031cfee41c4d9a204064502803",
+    "jaxite_word/ntt_mm.py": "5a0cbff087f48f20c98cb5975f7894756a83d61fbdaaf5af358a1c7c192a1263",
+    "jaxite_word/util.py": "b34c675b50ae774cdb0ad913f8fc9c2f955b60bf4745006d3f81d7c013565026",
+    "jaxite_word/finite_field.py": "54418625f76e303d77a3055f93419e07895bdf71f706acc20ab0f6fe7c8def5e",
+    "jaxite_word/bconv.py": "53ac0665cf3803fc72672657146ef7c19c823f48f326cf7d54ae87a15ae92f82"
+  },
+  "source_unchanged": true
+}

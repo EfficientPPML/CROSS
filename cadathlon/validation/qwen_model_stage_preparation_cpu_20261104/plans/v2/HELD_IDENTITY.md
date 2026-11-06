@@ -1,0 +1,36 @@
+# Proposed held-identity acquisition overlay
+
+This is source-only specification, not an applied patch. It leaves original366 and the initial aggregate plan untouched. The proposed runtime base is the eight exact Python modules and12 public metadata files in `source_selection.json`. Only `qwen_public_parameters.py` requires the narrow acquisition overlay described here. The existing header parser, finite/residue-independent matrix checks, file/raw hashes, readonly mapping, gamma-member checks and consumer lifetime rules stay selected.
+
+## Two callers, no admission cycle
+
+The first readonly validation has no completed ModelAdmission yet. Its independently reviewed execution grant must bind the unadmitted public content/aggregate digests and an immutable **ExpectedStoreIdentity** record collected from filesystem metadata by the authorized owner. The grant binds three root path/device/inode/mode records and all198 file-state records (197 unique matrix files plus the gamma container). Collecting those public file identities is metadata work, not proof of their contents. It must happen before the actual granted body validator, not during this preparation.
+
+After that validator succeeds and its final report/outer/root proof is independently admitted, future actual server consumers derive the same ExpectedStoreIdentity from immutable ModelAdmission evidence. Thus the pre-validation grant and post-validation admission have different authority sources; neither is manufactured from the live path being opened. Both use the same acquisition checks. No model_id or source-hash cycle is introduced.
+
+## Proposed internal signatures
+
+The new actual validator/factory supplies a mandatory immutable expected-store argument. Existing direct component construction may retain its no-expected argument only as an explicitly trusted synthetic/component API; the new selected actual path never omits it.
+
+- `open_identity_bound_parameters(public, expected_store)`: validate exact immutable records and paths, rederive the selected ParameterCatalog, require its exact four-field JSON representation and all12 metadata hashes equal the fixed aggregate, then acquire the owner. This function is not an execution grant; the caller's fresh source/role/grant gate precedes it.
+- `PublicParameterFiles(..., expected_store=None)`: snapshot canonical expected bytes before any directory open; retain them separately from mutable public mirrors. Instantiate each existing HeldDirectory, immediately compare its held FD and visible original path to the expected root identity/mode, and repeat those comparisons in `check()`. No parameter file is opened until all three roots pass.
+- `_MatrixLease(..., expected_file=None)` and `_HeldFile(..., expected_file=None)`: forward the immutable per-file record. After successful open, inside the existing immediate cleanup try, run `fstat` regular-file/extent checks and compare the held state and exact mode with the external record. Compare the visible name under the held root to the same expected record. These comparisons must precede `_hash_fd`, `_header`, `pread`, mmap or any NPZ member read.
+- `matrix()` resolves `(family, descriptor.file)` to exactly one expected record; the tied embedding/head alias resolves to the same physical record. `gamma()` passes the sole gamma-container record through the same `_HeldFile` hook. Repeated identity checks retain the external expected state, not merely whichever inode happened to be opened first.
+
+These are data arguments and direct checks, not new arbitrary callbacks. Validate all record names/types/inventory before acquisition; no callback can decide that a mismatching FD is acceptable. The external record cannot weaken the catalog's exact shape/hash/header/extent checks. Use the existing regular-file and no-follow/nonblocking open behavior. Before any open, the selected entry rejects lexical/resolved path aliases and source/output/protected-root overlaps under its grant; directory/file held checks then close the open-versus-stat race for the actual body object.
+
+## Validation orchestration and cleanup
+
+New `model_store_validation.py` has an actual entry that remains disabled until independently reviewed source/bootstrap/grant/terminal handling exists. Its eventual internal operation captures the original owner and check/readback/close callbacks immediately after construction. It iterates all198 logical names while opening197 unique physical files exactly once, validates the tied alias, visits all113 gamma names and drops every returned view before final mapping retirement. It never accumulates parameter arrays, writes borrowed stores, constructs a model/context, or imports a cryptographic backend.
+
+Final readback uses captured original callbacks and expected identity snapshots; every mapping/descriptor close is attempted with the selected shared cleanup-origin policy. Source postchecks and public report publication follow that cleanup. A cleanup failure prevents positive admission even if all hashes matched. The normal-return/independent outer gate covers the final report close. The existing shared helper module remains exact: only `HeldDirectory` and `state` are selected from `reused_client_io`; its other reader/writer/Finalizer/archive functions are neither imported by name nor invoked by this new path.
+
+The overlay must not substitute a path-stat check followed by an unbound file open. It must not accept a newly observed inode as the external expected record, permit an omitted record on the actual path, reopen a different descriptor for body hashing, or silently treat a failed close as successful retirement. This does not promise atomicity against arbitrary process/global mutation; it retains the reviewed dedicated-process ownership model.
+
+## Pure gate and independent archive review
+
+New `model_admission.py` uses only stdlib plus the exact pure PublicContract/parser/source-pins modules. It authenticates immutable supplied bytes and externally trusted pins, recomputes model/catalog/map digests, checks the closed schemas and cross-document terminal/store bindings, and retains those bytes in its frozen result. It does not import `qwen_public_parameters`, NumPy, a backend, or any filesystem helper. It binds the fixed catalog preview already independently rederived from metadata; the body validator separately invokes the actual existing `ParameterCatalog.from_public` before opening directories.
+
+The pure gate has no archive input. The trusted root launch/review reads and verifies exact bounded archive bytes/members against the producer map and records `source_archive_members_verified=True`. The pure gate requires the externally pinned review digest, that flag and matching map/archive hashes. A report asserting the flag without the external trusted pin is not sufficient. Historical exporter archives and evidence are likewise root-authenticated through their actual schemas, not invented common outer fields.
+
+The eight-module/12-metadata list is the proposed reusable base, not a final executable source count or launch proof. New authenticator/validator source, this fixed manifest/schema/policy, dependencies and any later entry/publication lifecycle must be explicitly inventoried and reviewed before execution. No source or test implementation is included here.

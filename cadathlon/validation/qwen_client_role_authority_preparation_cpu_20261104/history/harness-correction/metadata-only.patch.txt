@@ -1,0 +1,82 @@
+--- preparation-v1/executed_driver.py
++++ preparation-v2/executed_driver.py
+@@ -7,7 +7,7 @@
+ import hashlib, json, os, signal, subprocess, sys, tarfile, time
+ import xml.etree.ElementTree as ET
+ 
+-CONFIG_SHA256 = 'b54359259300c0e47daff411f93215eab25851160eedcc3a3591bebe4af85919'
++CONFIG_SHA256 = 'e146143187f957f9b5c1908c42a57462f42dbd0bb4ee08b1e2c7f1c8d242ce1c'
+ WORKER_SHA256 = '3dfb645c744143d1e1b7699791680dffd549ec179b16d708348e0e67c4b4ec97'
+ HERE = Path(__file__).resolve().parent
+ sha = lambda raw: hashlib.sha256(raw).hexdigest()
+--- preparation-v1/handoff.json
++++ preparation-v2/handoff.json
+@@ -1,12 +1,12 @@
+ {
+   "NumPy_forbidden": true,
+-  "config_sha256": "b54359259300c0e47daff411f93215eab25851160eedcc3a3591bebe4af85919",
+-  "driver_sha256": "263bd38d13275dc2cf81b7f512697a51bec6f14a06e781cba3426170e089dd20",
++  "config_sha256": "e146143187f957f9b5c1908c42a57462f42dbd0bb4ee08b1e2c7f1c8d242ce1c",
++  "driver_sha256": "0cbe8adabba255e6c3b0b4bb53017201eaeee0ec417c05a8b6e93c79e82fe554",
+   "execution_authorized": false,
+   "imports_collection_execution": false,
+-  "launch_proposal_sha256": "426c59fb8f1c25cfa864a0d150c17a85dd98b34a3ea019e0c9f07d3ee73ce8cd",
++  "launch_proposal_sha256": "11db1dace27f1cc014caf169046c679bb8294983be589c92f6779dca5d4ba914",
+   "predecessor": "admitted pure39/48, not the NumPy-bearing producer83 harness",
+-  "proof_root": "/tmp/qwen-client-authority-boundary-proof-20261104/preparation-v1",
++  "proof_root": "/tmp/qwen-client-authority-boundary-proof-20261104/preparation-v2",
+   "schema": "qwen-client-authority-prepared-harness-handoff-v1",
+   "source_archive_sha256": "d568676329e12379f6b480980ab68d346928945de90832f151bb2eca76e329ea",
+   "source_count": 53,
+--- preparation-v1/launch-proposal.json
++++ preparation-v2/launch-proposal.json
+@@ -16,11 +16,11 @@
+     "/tmp/cross-pretrained-validation-env/bin/python",
+     "-I",
+     "-B",
+-    "/tmp/qwen-client-authority-boundary-proof-20261104/preparation-v1/executed_driver.py"
++    "/tmp/qwen-client-authority-boundary-proof-20261104/preparation-v2/executed_driver.py"
+   ],
+   "automatic_retry": false,
+-  "config_sha256": "b54359259300c0e47daff411f93215eab25851160eedcc3a3591bebe4af85919",
+-  "driver_sha256": "263bd38d13275dc2cf81b7f512697a51bec6f14a06e781cba3426170e089dd20",
++  "config_sha256": "e146143187f957f9b5c1908c42a57462f42dbd0bb4ee08b1e2c7f1c8d242ce1c",
++  "driver_sha256": "0cbe8adabba255e6c3b0b4bb53017201eaeee0ec417c05a8b6e93c79e82fe554",
+   "execution_authorized": false,
+   "healthy_job_deadline": false,
+   "schema": "qwen-client-authority-focused-launch-proposal-v1",
+--- preparation-v1/run_config.json
++++ preparation-v2/run_config.json
+@@ -1,10 +1,10 @@
+ {
+   "actual_execution_authorized": false,
+   "cpu_affinity": [
+-    112,
+-    113,
+-    114,
+-    115
++    108,
++    109,
++    110,
++    111
+   ],
+   "forbidden_roots": [
+     "flax",
+@@ -20,7 +20,7 @@
+     "torch_xla",
+     "transformers"
+   ],
+-  "proof_root": "/tmp/qwen-client-authority-boundary-proof-20261104/preparation-v1",
++  "proof_root": "/tmp/qwen-client-authority-boundary-proof-20261104/preparation-v2",
+   "runtime_module_origins": {},
+   "runtime_source_expectations": {},
+   "schema": "qwen-client-authority-focused-proof-v1",
+@@ -513,7 +513,7 @@
+   "selected_xml_cases_sha256": "effcafea08c2ab237f8c40ed86ecdbb35fdc6ff92f18c2509247dda166b90858",
+   "source_archive_sha256": "d568676329e12379f6b480980ab68d346928945de90832f151bb2eca76e329ea",
+   "source_count": 53,
+-  "source_manifest_encoding": "canonical sorted compact JSON plus newline",
++  "source_manifest_encoding": "canonical sorted indent=2 JSON plus newline",
+   "source_manifest_sha256": "597ca4c89e66a22608d28d2e67d9234bac37bfee40d84b04139ac727309dee18",
+   "source_root": "/tmp/qwen-client-role-authority-tests-v2-20261104",
+   "synthetic_only": true

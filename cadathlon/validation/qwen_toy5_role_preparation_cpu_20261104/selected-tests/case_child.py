@@ -1,0 +1,103 @@
+"""Owned child. Test source finder is deliberately NOT actual FrozenImports."""
+import argparse,hashlib,importlib.abc,importlib.util,json,os,runpy,sys,traceback
+from pathlib import Path
+ROOT=Path(__file__).resolve().parent;RUNTIME=ROOT/'runtime'
+FORBIDDEN=set(('bat', 'bconv', 'bootstrapping', 'bootstrapping_openfhe_crosscheck', 'bsgs', 'ckks_ctx', 'composite_prime_gen', 'finite_field', 'he_ops', 'he_params', 'headd', 'hemul', 'herot', 'hesub', 'key_gen', 'mapping', 'modular_reduction', 'nn', 'ntt', 'ntt_mm', 'ntt_sm', 'packing', 'polynomial', 'profiler', 'ptct_mul', 'rescale', 'rns', 'tabIX', 'tabV', 'tabVI', 'tabVII', 'util'))|{'jax','jaxlib','jax_plugins','jaxite_word','libtpu','torch','torch_xla','tensorflow','transformers','ckks_ctx','key_gen','polynomial','finite_field','ntt_mm'}
+PARSER=argparse.ArgumentParser();PARSER.add_argument('--case',required=True);PARSER.add_argument('--variant',default='');PARSER.add_argument('--output',required=True);ARGS=PARSER.parse_args()
+OUT=Path(ARGS.output);assert OUT.parent.is_dir()and OUT.is_dir()and OUT.resolve()==OUT
+MAP=(ROOT/'runtime-map.json').read_bytes();MAP_SHA=hashlib.sha256(MAP).hexdigest();assert MAP_SHA=='d82d68101c1f3ddc7f18b6ae4492aa7618d779012babaf9ed85355dfab927fea';TABLE=json.loads(MAP)
+START_TICKS=int((Path('/proc')/str(os.getpid())/'stat').read_text().rsplit(')',1)[1].split()[19])
+def dump(name,value):(OUT/name).write_text(json.dumps(value,sort_keys=True,indent=2,allow_nan=False)+'\n')
+dump('child-early.json',dict(pid=os.getpid(),pgid=os.getpgrp(),start_ticks=START_TICKS,case=ARGS.case,variant=ARGS.variant,runtime_map_sha256=MAP_SHA))
+NUMPY_ALLOWED=ARGS.case in {'test_tiny_sixfield_npz_publish_matches_exact_bytes_after_buffer_close','test_real_public_assets_tiny_load_check_and_clean_retirement','test_real_public_assets_fifo_rejects_without_blocking_or_body_read','test_all47_recorded_public_reads_precede_private_factory','test_last_public_artifact_rejection_keeps_private_unentered','test_default_decoder_abi_and_full_scratch_snapshots_are_original','test_decoder_failure_stops_without_relaxed_retry_and_reaches_key_scope','test_nonfinite_unused_slot_fails_full_decode_gate','test_returned_consumer_load_failure_retires_inside_private_scope','test_codec_or_context_replacement_is_rejected_before_next_decode'}
+NP_PINS=json.loads((ROOT/'numpy-pins.json').read_bytes())
+def numpy_sources():
+    for path,digest in NP_PINS['sources'].items():assert hashlib.sha256(Path(path).read_bytes()).hexdigest()==digest
+if NUMPY_ALLOWED:numpy_sources()
+SELECTED_HELPERS=frozenset(('q5_key_contract','q5_key_admission','q5_key_producer','q5_role_authority','q5_fixture_assets','q5_checkpoint_contract','q5_actual_metadata_replay','q5_checkpoint_roles','q5_checkpoint_transport','q5_checkpoint_arithmetic','q5_actual_process','q5_actual_dependencies','q5_ciphertext_owner','q5_checkpoint_oracle','q5_evidence_output','q5_actual_entry','q5_owned_io','cleanup','cleanup_origin','qwen_finalizer'))
+UNSELECTED_HELPERS=frozenset(('q5_toy_weights','q5_key_readers','q5_key_loader','q5_key_store','q5_actual_bootstrap','q5_checkpoint_entry','qwen_backend_identity','key_descriptor_io'))
+DENIALS=[];LOADED={};saved_path=list(sys.path);saved_meta=list(sys.meta_path);before_modules=dict(sys.modules)
+def import_audit(event,args):
+    if event in {'os.fork','os.forkpty','os.posix_spawn','os.exec','os.system','subprocess.Popen'}:
+        DENIALS.append(event);raise PermissionError('recording child cannot create descendants')
+    if event=='import'and args and type(args[0])is str:
+        root=args[0].split('.')[0]
+        if root in FORBIDDEN or root in UNSELECTED_HELPERS or root.startswith('encrypted_')or(root=='numpy'and not NUMPY_ALLOWED):
+            DENIALS.append(args[0]);raise ImportError('forbidden audited test import: '+args[0])
+sys.addaudithook(import_audit)
+class SourceFinder(importlib.abc.MetaPathFinder):
+    def find_spec(self,fullname,path=None,target=None):
+        root=fullname.split('.')[0]
+        if root in FORBIDDEN or root.startswith('encrypted_')or(root=='numpy'and not NUMPY_ALLOWED):
+            DENIALS.append(fullname);raise ImportError('forbidden test backend import: '+fullname)
+        if root in UNSELECTED_HELPERS or root in {'parent','reference'}:
+            DENIALS.append(fullname);raise ImportError('historical graph/genuine reader/generator imports not selected')
+        relative=fullname+'.py'
+        if '.'not in fullname and relative in TABLE and fullname in SELECTED_HELPERS:
+            p=RUNTIME/relative;raw=p.read_bytes();assert hashlib.sha256(raw).hexdigest()==TABLE[relative]
+            class Loader(importlib.abc.Loader):
+                def create_module(self,spec):return None
+                def exec_module(self,module):
+                    LOADED[fullname]=(module,module.__spec__,str(p));exec(compile(raw,str(p),'exec'),module.__dict__)
+            return importlib.util.spec_from_file_location(fullname,str(p),loader=Loader())
+        if root.startswith('q5_'):
+            DENIALS.append(fullname);raise ImportError('undeclared Q5 helper '+fullname)
+        return None
+FINDER=SourceFinder()
+for name in sys.modules:assert name.split('.')[0]not in FORBIDDEN and(name.split('.')[0]!='numpy'or NUMPY_ALLOWED)
+sys.meta_path.insert(0,FINDER);sys.path.insert(0,str(ROOT))
+EVENTS=[];passed=False;status=0;error=None;details={}
+try:
+    # CLI cases never import case fixtures or a Q5 helper.
+    if ARGS.case.startswith('test_actual_')and '_cli_'in ARGS.case or ARGS.variant:
+        role=ARGS.case.split('_')[2]if not ARGS.variant else'setup'
+        sys.argv=[str(RUNTIME/'q5_actual_entry.py')]
+        if ARGS.variant=='help':sys.argv+=['--help'];want=0
+        elif ARGS.variant=='usage':sys.argv+=['--role','bad'];want=2
+        else:
+            sys.argv+=['--role',role,'--source-root','/synthetic-unopened-q5/source','--source-map','/synthetic-unopened-q5/map','--source-map-sha256','0'*64,'--phase-packet','/synthetic-unopened-q5/packet','--phase-packet-sha256','1'*64];want=70
+        forbidden_body=[]
+        def audit(event,args):
+            if event=='open'and args and isinstance(args[0],str)and args[0].startswith('/synthetic-unopened-q5'):
+                forbidden_body.append(args[0]);raise AssertionError('entry attempted body/source path')
+        sys.addaudithook(audit)
+        try:runpy.run_path(str(RUNTIME/'q5_actual_entry.py'),run_name='__main__')
+        except SystemExit as e:
+            assert type(e.code)is int and e.code==want;status=e.code
+        else:raise AssertionError('exact entry guard did not exit')
+        assert not LOADED and not forbidden_body and not DENIALS
+        details=dict(actual_entry_exit=status,helper_imports=0,body_attempts=0);passed=True
+    else:
+        from case_fixtures import configure
+        configure(ROOT,RUNTIME,OUT,EVENTS)
+        category=next(row['nodeid'].split('::')[0]for row in json.loads((ROOT/'accepted-case-plan.json').read_bytes())['cases']if row['nodeid'].endswith('::'+ARGS.case))
+        module=__import__('cases_'+category.removeprefix('test_q5_').removesuffix('.py'))
+        getattr(module,ARGS.case)();passed=True
+except BaseException as exc:
+    error=type(exc).__name__;traceback.print_exc();status=1;passed=False
+finally:
+    origins={};numpy_origins={}
+    try:
+        assert set(LOADED)<=SELECTED_HELPERS
+        assert int((Path('/proc')/str(os.getpid())/'stat').read_text().rsplit(')',1)[1].split()[19])==START_TICKS
+        for name,(module,spec,path)in LOADED.items():
+            assert sys.modules.get(name)is module and module.__spec__ is spec and spec.origin==path and module.__file__==path and module.__loader__ is spec.loader and spec.has_location is True
+            assert hashlib.sha256(Path(path).read_bytes()).hexdigest()==TABLE[name+'.py']
+            origins[name]=path
+        for name in sys.modules:assert name.split('.')[0]not in FORBIDDEN
+        numpy_origins={name:getattr(sys.modules[name],'__file__',None)for name in ('numpy','numpy.lib._format_impl','numpy.lib._npyio_impl')if name in sys.modules}
+        if NUMPY_ALLOWED:numpy_sources()
+        for name,path in numpy_origins.items():assert path==NP_PINS['origins'][name]
+        if not NUMPY_ALLOWED:assert numpy_origins=={}
+        assert not DENIALS
+    except BaseException:
+        traceback.print_exc();passed=False;status=1
+    sys.meta_path[:]=saved_meta;sys.path[:]=saved_path
+    # Restore own imported helpers; preserve failure records until this final point.
+    for name in tuple(sys.modules):
+        if name in LOADED:sys.modules.pop(name,None)
+    for name,module in before_modules.items():
+        if name in LOADED:sys.modules[name]=module
+    dump('result.json',dict(case=ARGS.case,variant=ARGS.variant,passed=passed,error_type=error,runtime_map_sha256=MAP_SHA,details=details,events=EVENTS))
+    dump('child-terminal.json',dict(case=ARGS.case,pid=os.getpid(),pgid=os.getpgrp(),start_ticks=START_TICKS,passed=passed,forbidden_imports=DENIALS,helper_origins=origins,numpy_origins=numpy_origins,numpy_source_pins_checked=NUMPY_ALLOWED,recording_only=True,actual_authority=False))
+raise SystemExit(status)

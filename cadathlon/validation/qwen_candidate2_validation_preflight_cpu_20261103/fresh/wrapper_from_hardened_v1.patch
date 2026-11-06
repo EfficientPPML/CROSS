@@ -1,0 +1,114 @@
+--- hardened_candidate1/validate_heldout.py
++++ fresh/validate_heldout.py
+@@ -3,6 +3,8 @@
+ import argparse,gc,hashlib,importlib.metadata,io,json,math,os,sys,tarfile,time,traceback
+ import numpy as np
+ import calibration_gate
++import validation_gate
++import candidate_gate
+ import check_approximate as base
+ from check_approximate import sha,write,termination_signals,metric,summarize,decode_trace,merge_ranges,validate_manifest_inputs,NoJax
+ from native_capture import NativeCapture
+@@ -10,7 +12,7 @@
+ P=Path(__file__).resolve().parent
+ SNAPSHOT=base.SNAPSHOT
+ EXPECTED_MANIFEST=base.EXPECTED_MANIFEST
+-VALIDATION_INPUTS=Path('/home/jianming_gatech/CROSS/cadathlon/validation/qwen_native_workload_audit_20261103/full-v1/tokenized_fixtures.json')
++VALIDATION_INPUTS=P/'validation_inputs/tokenized_fixtures.json'
+ def load_validation_inputs(expected_sha):
+     if sha(VALIDATION_INPUTS)!=expected_sha:raise ValueError('Original validation input manifest hash mismatch')
+     rows=json.loads(VALIDATION_INPUTS.read_text())
+@@ -28,24 +30,25 @@
+     report={'passed':False,'complete':False,'smoke':False,'cases':[],'decode':[],'errors':[],'scope':__doc__,'validation_data_read':False,'coefficient_selection_performed':False,'encrypted_execution':False}
+     try:
+         write(args.output/'report.json',report)
+-        requirements=json.loads((P/'calibration_requirement.json').read_text())
++        requirements=validation_gate.verify(P)
+         report['calibration_prerequisite']=calibration_gate.verify(args.calibration_report,args.calibration_source_archive,P,requirements)
++        report['selection_prerequisite']=candidate_gate.verify(P)
+         validation=load_validation_inputs(requirements['validation_input_sha256'])
++        validation_protocol=json.loads((P/'validation_protocol.json').read_text())
++        report['workload']=validation_protocol['workload'];report['scope']=validation_protocol['scope']
+         report['validation_data_read']=True
+         import torch
+         from transformers import AutoTokenizer,Qwen3ForCausalLM
+         import transformers
+         torch.set_num_threads(4);torch.set_num_interop_threads(1)
+-        if sha(P/'candidate-v1/manifest.json')!=EXPECTED_MANIFEST:raise ValueError('Frozen candidate manifest mismatch')
+-        manifest=json.loads((P/'candidate-v1/manifest.json').read_text())
+-        verified_inputs=validate_manifest_inputs(P,manifest)
+-        protocol=json.loads((P/'protocol.json').read_text());pins=json.loads((P/'model_pins.json').read_text());corpus={'decode_prompt_ids':[r['id'] for r in validation if r['kind']=='decode']}
+-        if manifest['source_input_sha256']['protocol.json']!=sha(P/'protocol.json'):raise ValueError('Candidate protocol mismatch')
++        manifest=json.loads((P/'candidate-v2/manifest.json').read_text())
++        verified_inputs=report['selection_prerequisite']['verified']['selection_input_sha256']
++        protocol=json.loads((P/'calibration/protocol.json').read_text());pins=json.loads((P/'calibration/model_pins.json').read_text());corpus={'decode_prompt_ids':[r['id'] for r in validation if r['kind']=='decode']}
++        if sorted(os.sched_getaffinity(0))!=validation_protocol['runtime']['cores']:raise ValueError('Validation requires CPU140-143 affinity')
+         assets={n:sha(SNAPSHOT/n) for n in pins['asset_sha256']}
+         if assets!=pins['asset_sha256']:raise ValueError('Pinned model assets mismatch')
+-        names=['check_approximate.py','arithmetic.py','numeric.py','native_capture.py','reference.py','test_candidate.py','test_arithmetic.py','test_native_capture.py','test_approximate.py','protocol.json','model_pins.json','corpus.json','tokenized_calibration_inputs.json','candidate-v1/manifest.json']
+-        names=list(dict.fromkeys(names+list(manifest['source_input_sha256'])))
+-        names+=['validate_heldout.py','calibration_gate.py','calibration_requirement.json','test_validation_gate.py']
++        names=[n for n in requirements['expected_runtime_source_hashes'] if not n.startswith('software/')]
++        names+=['validate_heldout.py','calibration_gate.py','validation_gate.py','validation_requirement.json','validation_protocol.json','test_validation_gate.py','preflight_validation.py']
+         paths={n:P/n for n in names}
+         paths['validation_inputs/tokenized_fixtures.json']=VALIDATION_INPUTS
+         paths['calibration_prerequisite/report.json']=args.calibration_report
+@@ -56,9 +59,8 @@
+         before={n:sha(f) for n,f in paths.items()}
+         with tarfile.open(args.output/'sources.tar.gz','w:gz') as t:
+             for n,f in paths.items():b=f.read_bytes();i=tarfile.TarInfo(n);i.size=len(b);t.addfile(i,io.BytesIO(b))
+-        with tarfile.open(args.output/'sources.tar.gz') as t:
+-            if {i.name:hashlib.sha256(t.extractfile(i).read()).hexdigest() for i in t.getmembers()}!=before:raise ValueError('Source archive readback mismatch')
+-        report.update(verified_manifest_input_sha256=verified_inputs,source_hashes_before=before,source_archive_sha256=sha(args.output/'sources.tar.gz'),asset_sha256_before=assets,candidate_manifest_sha256=EXPECTED_MANIFEST,protocol_sha256=sha(P/'protocol.json'),calibration_corpus_sha256=sha(P/'corpus.json'),validation_inputs_sha256=sha(VALIDATION_INPUTS),cpu_affinity=sorted(os.sched_getaffinity(0)),versions={n:importlib.metadata.version(n) for n in ('numpy','torch','transformers','safetensors','tokenizers')})
++        candidate_gate.verify_archive(args.output/'sources.tar.gz',before)
++        report.update(verified_manifest_input_sha256=verified_inputs,source_hashes_before=before,source_archive_sha256=sha(args.output/'sources.tar.gz'),asset_sha256_before=assets,candidate_manifest_sha256=EXPECTED_MANIFEST,protocol_sha256=sha(P/'calibration/protocol.json'),selection_protocol_sha256=sha(P/'protocol.json'),validation_protocol_sha256=sha(P/'validation_protocol.json'),calibration_corpus_sha256=sha(P/'calibration/corpus.json'),validation_inputs_sha256=sha(VALIDATION_INPUTS),cpu_affinity=sorted(os.sched_getaffinity(0)),versions={n:importlib.metadata.version(n) for n in ('numpy','torch','transformers','safetensors','tokenizers')})
+         tokenizer=AutoTokenizer.from_pretrained(SNAPSHOT,local_files_only=True)
+         rows=[]
+         for item in validation:
+@@ -119,7 +121,7 @@
+         report.update(prefill_summary=pref,per_suite={str(S):summarize([r for r in report['cases'] if r['sequence_length']==S],16) for S in (8,16,32)},teacher_summary=teacher,free_summary=free,required_prefill_top1_matches=required_pref,required_teacher_top1_matches=required_teacher,required_complete_free_sequences=required_free,complete_free_sequence_matches=free_matches,
+             propagated_domain_ranges=aggregate,hook_invariance_checks=hook_checks,gates=gates,all_workload_entries_accounted=len(selected)+8*len(seeds),complete=all(x['complete'] for x in (pref,teacher,free)),
+             no_jax_imported=not any(n.split('.')[0] in ('jax','jaxlib','jaxite_word') for n in sys.modules),limits={'operator_block_nrmse':.05,'full_logit_nrmse':.10,'nrmse_floor':.01},
+-            limitations=['Original public held-out validation after successful frozen416-context calibration. No hidden benchmark, language-task accuracy, HE or refresh claim.',
++            limitations=[validation_protocol['scope']+' after successful frozen416-context calibration. No hidden benchmark, language-task accuracy, HE or refresh claim.',
+                 'Invalid declared domains stop this validation trajectory; no clipping/oracle substitution. Uncomputable free-running suffixes are explicitly unmeasured.',
+                 'Native operator/block comparisons use the same actual token prefix as the approximate circuit, including approximate-chosen free-running tokens.',
+                 'Prefill top1 is aggregate across buckets; per-suite rates are descriptive. Numerical/domain gates apply to every required context.',
+--- hardened_candidate1/calibration_gate.py
++++ fresh/calibration_gate.py
+@@ -11,7 +11,7 @@
+     require(sha(report_path)==requirements['full_report_sha256'],'full report hash')
+     require(sha(archive_path)==requirements['full_source_archive_sha256'],'full source archive hash')
+     r=json.loads(Path(report_path).read_text());expected=requirements['expected_runtime_source_hashes']
+-    require(len(expected)==31,'expected31-source runtime closure')
++    require(len(expected)==53,'expected53-source runtime closure')
+     require(r.get('passed') is True and r.get('complete') is True and r.get('smoke') is False,'successful complete full calibration')
+     require(r.get('source_files_unchanged') is True and r['source_hashes_before']==r['source_hashes_after']==expected,'source before/after identity')
+     require(r['source_archive_sha256']==requirements['full_source_archive_sha256'],'reported source archive hash')
+@@ -28,15 +28,15 @@
+         require(sha(path)==h,'current runtime source '+name)
+     require(r['versions']==requirements['expected_versions'],'reported software versions')
+     require({n:importlib.metadata.version(n) for n in r['versions']}==r['versions'],'current software versions')
+-    require(sha(root/'candidate-v1/manifest.json')==requirements['candidate_manifest_sha256']==r['candidate_manifest_sha256'],'candidate identity')
+-    m=json.loads((root/'candidate-v1/manifest.json').read_text())
+-    require(r['verified_manifest_input_sha256']==m['source_input_sha256'],'all nine frozen inputs verified')
++    require(sha(root/'candidate-v2/manifest.json')==requirements['candidate_manifest_sha256']==r['candidate_manifest_sha256'],'candidate identity')
++    m=json.loads((root/'candidate-v2/manifest.json').read_text())
++    require(r['verified_manifest_input_sha256']==m['source_input_sha256'],'all twenty frozen selection inputs verified')
+     for name,h in m['source_input_sha256'].items():require(sha(root/name)==h,'candidate input '+name)
+-    pins=json.loads((root/'model_pins.json').read_text())
++    pins=json.loads((root/'calibration/model_pins.json').read_text())
+     require(r['assets_unchanged'] and r['asset_sha256_before']==r['asset_sha256_after']==pins['asset_sha256'],'calibration asset identity')
+     require(r.get('validation_data_read') is False and r.get('coefficient_selection_performed') is False and r.get('encrypted_execution') is False and r.get('no_jax_imported') is True,'calibration scope')
+     require(len(r['cases'])==288 and len(r['decode'])==16 and r['all_workload_entries_accounted']==416,'complete calibration counts')
+-    inputs=json.loads((root/'tokenized_calibration_inputs.json').read_text());corpus=json.loads((root/'corpus.json').read_text())
++    inputs=json.loads((root/'calibration/tokenized_calibration_inputs.json').read_text());corpus=json.loads((root/'calibration/corpus.json').read_text())
+     for S in (8,16,32):
+         group=[x for x in r['cases'] if x['sequence_length']==S]
+         require(len(group)==96 and len({x['id'] for x in group})==96,'unique calibration bucket count')
+@@ -64,4 +64,4 @@
+     matches=lambda rows:sum(x['approximate_top1']==x['native_top1'] for x in rows)
+     require(matches(r['cases'])>=260 and matches(teacher)>=58 and sum(d['complete_sequence_agreement'] for d in r['decode'])>=12,'published aggregate/token gates')
+     require(all(r['gates'].values()) and r['required_prefill_top1_matches']==260 and r['required_teacher_top1_matches']==58 and r['required_complete_free_sequences']==12,'declared gates unchanged')
+-    return {'verified':True,'report_sha256':requirements['full_report_sha256'],'source_archive_sha256':requirements['full_source_archive_sha256'],'runtime_sources':31,'calibration_contexts':416,'manifest_sha256':requirements['candidate_manifest_sha256']}
++    return {'verified':True,'report_sha256':requirements['full_report_sha256'],'source_archive_sha256':requirements['full_source_archive_sha256'],'runtime_sources':53,'calibration_contexts':416,'manifest_sha256':requirements['candidate_manifest_sha256']}

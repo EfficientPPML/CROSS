@@ -1,0 +1,22 @@
+--- draft
++++ corrected
+@@ -150,7 +150,8 @@
+                 if role == "workspace":
+                     document["stages"]["post_init"]["additional_live_bytes"] = envelope + 1
+             bad = f.new_packet(mutate_document=mutate_document)
+-            assert bad["documents"]["workspace"]["stages"]["post_init"]["additional_live_bytes"] > bad["resource"]["device"]["working_memory_bytes"]
++            workspace = json.loads(bad["documents"]["workspace"])
++            assert workspace["stages"]["post_init"]["additional_live_bytes"] > bad["resource"]["device"]["working_memory_bytes"]
+             before = _counts(f)
+             f.expect(
+                 (ValueError,), lambda: f.packet_auth(bad),
+@@ -163,7 +164,8 @@
+             flags, message = _FLAG_CASES[case]
+             assert (1 << 30) & (os.O_ACCMODE | _REQUIRED) == 0
+             bad = f.new_packet(flags=flags)
+-            assert all(row["open_flags"] == flags for row in bad["documents"]["access"]["device_nodes"])
++            access = json.loads(bad["documents"]["access"])
++            assert all(row["open_flags"] == flags for row in access["device_nodes"])
+             before = _counts(f)
+             f.expect((ValueError,), lambda: f.packet_auth(bad), message=message)
+             after = _no_later_work(f, before)

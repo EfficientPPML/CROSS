@@ -1,0 +1,64 @@
+{
+  "scope": "Exact source AST and real cleanup marker, fake signals/output only; no actual signals/backend/input/model/HE",
+  "checks": [
+    {
+      "passed": true,
+      "observed": "KeyboardInterrupt",
+      "expected": "KeyboardInterrupt",
+      "setup_marked_as_body": false,
+      "events": [
+        "body",
+        "cleanup",
+        "source_check",
+        "output_close",
+        "publication",
+        "output_close"
+      ],
+      "scientific_pass": false,
+      "cleanup_completed": false
+    },
+    {
+      "passed": true,
+      "observed": "SystemExit",
+      "expected": "SystemExit",
+      "setup_marked_as_body": false,
+      "events": [
+        "body",
+        "cleanup",
+        "source_check",
+        "output_close",
+        "publication",
+        "output_close"
+      ],
+      "scientific_pass": false,
+      "cleanup_completed": false
+    },
+    {
+      "passed": true,
+      "observed": "ValueError",
+      "expected": "ValueError",
+      "setup_marked_as_body": false,
+      "events": [
+        "body",
+        "cleanup",
+        "source_check",
+        "output_close",
+        "publication",
+        "output_close"
+      ],
+      "scientific_pass": false,
+      "cleanup_completed": false
+    }
+  ],
+  "expected_negative_failures": 0,
+  "genuine_body_control": true,
+  "sources_before": {
+    "checker_process.py": "e0d4d36bf5c2b8c2096b93a1eb16e020dd5535d0e2a9f898d8576d6762a02eaf",
+    "cleanup_origin.py": "d74e991cc17121752e355f6313bb597ed0f6be887aa7b4a2007c7288c6448c75"
+  },
+  "sources_after": {
+    "checker_process.py": "e0d4d36bf5c2b8c2096b93a1eb16e020dd5535d0e2a9f898d8576d6762a02eaf",
+    "cleanup_origin.py": "d74e991cc17121752e355f6313bb597ed0f6be887aa7b4a2007c7288c6448c75"
+  },
+  "archive_sha256": "0ce037ff4777e20611f65386529a5f09f45d3e0a886bc11a1cb9acad79159606"
+}

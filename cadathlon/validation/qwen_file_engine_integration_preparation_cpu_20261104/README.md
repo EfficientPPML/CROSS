@@ -1,0 +1,19 @@
+# Qwen server file-engine integration preparation
+
+The repaired server stage passed the same 12 focused recording tests on an unchanged 366-file source closure. Session 68008 ended with exit 0 and was authoritatively reaped (tool 17d040); the recorded wrapper and worker processes/groups were absent afterward. Root independently admitted this result. These are component ownership tests with new synthetic files, not a genuine Qwen execution.
+
+The integration selects the reviewed 328-file composition, 43-file key reader and 28-file publisher explicitly. Its 337 copied-source records declare four import/cleanup overlays. The parser has a separate module name, and all active cleanup paths use the exact shared Toy4 cleanup-origin policy. The repaired stage captures each original close/write/finish method when its owner is returned, checks bindings after finish and cleanup, and propagates ownership failures while still inside the key-loader scope. Cleanup therefore retires the original file consumers or retains the failed owner graph before the loader disposes its context.
+
+The focused tests use recording 335 key mappings, context, transfers and arithmetic, with real owned synthetic six-field response containers and all 38 output barriers/publications. Original learned parameters, tokens, calibration/validation data, existing keys/ciphertexts and real backend contexts were not read or executed. The unchanged 208 arithmetic is present in the source archive but was not run as a learned full model. The 1–2 request-tile / 38 vocabulary-block geometry and default decoder remain unchanged. Actual factories and execution flags remain disabled. Future client phases, actual bootstrap/grants, independent outer terminal admission and scientific/HE accuracy are separate obligations.
+
+Preserved evidence:
+
+- `history/cleanup-negative`: exact old Finalizer AST, two expected failures plus three passing controls. `history/cleanup-successor` runs the identical five-case probe successfully with the shared selector.
+- `history/stage-negative`: unchanged 365-file checkpoint, nine passing controls and three expected ownership failures. `measured` runs those exact 12 test bytes against the repaired 366-file successor; no numeric or reader/publisher implementation changed.
+- `source/integration_selection.json` describes the copied-source selection and its four overlays. `source/stage_ownership_successor.json` separately records the later stage/document repair; the older stage-additions metadata remains historical, not a current-file hash assertion.
+- `parents` and `parent-proof-references.json` retain the three independent proof reports, maps, XML and owner handoffs, with exact external archive pins. Their 47/120/27 results are not added to the 12 joined tests. The full final 366-source archive is included once; no synthetic array bodies are copied into this capsule.
+- `reviews` contains root selection/negative/successor verification, CNN selection review and Security's pre-run stage source review. Their scopes and timing remain distinct.
+
+Run `python -I -B verify.py` for portable source/archive/XML/link verification, or add `--current` to compare the retained original/execution source trees and referenced parent artifacts. Neither command imports producer code or executes tests/backends. The 366 sources contain only Python, JSON and Markdown. The source archive intentionally includes historical unselected references; runtime resolution and actual-mode limits are explicit in the selection/design files.
+
+Related public preparation: [file adapter 238/191](../qwen_file_adapter_preparation_cpu_20261104/README.md) and [combined full owner 208/330](../qwen_cohort_full_owner_preparation_cpu_20261104/README.md). No scientific pass, validation freeze, contestant-starter change, production promotion or HE recovery is claimed.

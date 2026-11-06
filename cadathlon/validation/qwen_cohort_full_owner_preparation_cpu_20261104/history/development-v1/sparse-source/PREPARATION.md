@@ -1,0 +1,90 @@
+# Expanded-candidate full28 owner successor
+
+This isolated successor binds the exact public candidate
+`344954b3873a8847ececba320646f52612ca7277412c7de81a7313894e21799a`.
+It is preparation only. Independent complete-calibration PASS, first-PASS freeze,
+model/row0/heldout execution and actual HE grants are all absent. The original87
+sources remain byte-identical in `before87/` and in their original lab.
+
+The implementation changes candidate admission, normalization metadata and the
+final continuation. The exact selected113 normalization rules are unchanged:
+36 polynomial certificates and77 directed Newton certificates are recomputed
+from the new manifest. All260 inverse-only refresh events remain at their
+original positions and bounds. Generic RMS evaluation, scale replay, the refresh
+binding, fixed Q/P/d8 profile, numerical gates and failure quarantine remain
+unchanged. The RMS source has only its metadata pin changed.
+
+The new final rule has degree256, so actual levels are
+`tail4 -> select3 -> refresh25 -> RMS3 -> all38 vocabulary maps2`.
+Vocabulary descriptor levels derive from the authenticated final RMS contract;
+the parent uses those exact fields for metadata and the real scale divisor.
+The new final raw-input refresh bound is8192 under the unchanged9/8 power-of-two
+policy; the other112 raw bounds remain unchanged. The learned-output bound is
+still1024. These are conditional exact-real bounds, not evidence of bootstrap
+accuracy at8192 or encrypted output accuracy at level2. No extra refresh is added.
+
+`qwen_candidate_bridge.py` authenticates the exact old/new public manifests and
+canonical equality of28 SiLU rules,28 softmax rows,32 K-specific reciprocal rules,
+the exp rule and initial reciprocal. The old protected certificate and QKV/
+decoder parameter manifests retain their original bytes and old candidate
+identity. Their narrow reuse is recorded separately. No old normalization,
+calibration or whole-model PASS is transferred to the new candidate. The
+parameter bridge also binds the unchanged checkpoint/config and exact original
+tensor-descriptor manifests. No tensor body is read by this preparation.
+
+`derive_expanded.verify_generated()` is read-only: it recomputes all113 fresh
+certificates, events, bounds and the bridge, then compares serialized bytes with
+the frozen public artifacts. It never overwrites them. `plan_full.derive()`
+derives all32 public workload schedules, actual-scale examples and final storage
+counts from these contracts. The unchanged166-key public plan is sufficient for
+the unchanged geometry; it is metadata only, not an available-key claim.
+
+The final `prepare_expanded.py` preparation entry selects only the ten focused public/synthetic
+test files and these two read-only derivations. Inherited `collect_focused`,
+`collect_public`, `collect_tail`, `verify_public`, `verify_tail`, `audit_public`
+and the one-time overlay builder are historical, unselected entrypoints. Their
+old expectations must never validate this successor. No actual execution mode
+is exposed by the new entry. An external source-manifest digest, fresh
+execution tree, both trees' before/after hashes and independent outer wait/group
+receipt are required for the final source-bound proof.
+
+Synthetic tests run the actual parent object/metadata/lifetime loop with explicit
+attention, tail, final-norm and linear stand-ins. They do not run a learned28-layer
+trajectory. They preserve original-position extraction, all38 output objects,
+actual returned scales, hostile padding, typed descriptor mutation rejection and
+failure retention. The key stand-in authenticates exactly166 placeholders and
+rejects nonzero normalized rotations outside that inventory; true period/zero
+aliases remain no-ops. There are no key payloads.
+
+Development history is retained externally and via the source-bound history
+metadata. First run34532 had101 passes and70 identical `KeyError('resources')`
+failures because an inherited fixture expected the removed obsolete dense-key
+plan field. Its source map was captured during the run, not before it. Second
+run49486 had75 genuine checks pass and four test-setup failures introduced by a
+subsequently withdrawn root queue-size interpretation. The root correction
+`e4ac10` establishes that the existing queue helper receives the input level and
+reports the post-rescale output size: `2*input_level` is correct. V3 restores that
+exact expression and removes those four false-lead tests. Both prior trees and
+their complete failure evidence remain unchanged. None of these development
+results is a scientific model or encrypted result.
+
+The first198 closure added the preparation entry1a7c49, its two exact
+observer-v5 I/O/provenance helpers and explicit provenance/selection metadata.
+It is preserved unchanged after pytest logging configuration failed before any
+test cases ran. This successor directs pytest logging into the owned output and
+excludes both venv and base site/dist-packages from the standard-library read
+allowance while keeping the same required package names. The exact-AST path
+probe retains the old one-failure negative and corrected four-case pass. A first
+site-module shadow draft failed before audit construction and remains preserved.
+
+This successor also binds the unbatched causal-softmax wrapper refresh/check
+accessors at construction and rejects replacement before dynamically calling
+check. Its arithmetic and refresh schedule are unchanged. The four added
+synthetic cases cover both callback mutations, clean execution and a genuine
+callback body failure. The final selection is180 checks. The borrowed original
+198 sources and all development evidence remain unchanged.
+`selected_preparation.json` is the declared selection; inherited collectors and
+verifiers remain present solely as historical sources and are rejected by the
+new importer. Source/archive/output manifests and the outer lifecycle receipt
+are published outside both source trees. All frozen public input files remain
+read-only during fresh certificate replay.

@@ -1,0 +1,32 @@
+{
+  "cwd": "/tmp/bert-size0-input-fixture-20261103",
+  "python": "/tmp/cross-pretrained-validation-env/bin/python",
+  "affinity": [
+    168,
+    169,
+    170,
+    171
+  ],
+  "environment": {
+    "HF_HUB_OFFLINE": "1",
+    "TRANSFORMERS_OFFLINE": "1",
+    "OMP_NUM_THREADS": "4",
+    "OPENBLAS_NUM_THREADS": "4",
+    "MKL_NUM_THREADS": "4",
+    "NUMEXPR_NUM_THREADS": "4",
+    "TOKENIZERS_PARALLELISM": "false"
+  },
+  "preflight_argv": [
+    "-m",
+    "pytest",
+    "-q",
+    "--tb=short",
+    "test_fixture.py",
+    "--source-report",
+    "preflight-v2"
+  ],
+  "actual_argv": [
+    "build_fixture.py",
+    "actual-v1"
+  ]
+}

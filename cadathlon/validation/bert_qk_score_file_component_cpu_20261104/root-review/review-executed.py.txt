@@ -1,0 +1,60 @@
+from pathlib import Path
+import hashlib,json,math,os,tarfile
+ROOT=Path('/tmp/bert-qk-file-component-20261103')
+P=ROOT/'run-v1'
+OUT=Path('/tmp/bert-qk-terminal-root-review-20261104')
+sha=lambda data:hashlib.sha256(data).hexdigest()
+r=json.loads((P/'report.json').read_bytes())
+assert sha((P/'report.json').read_bytes())=='f548bdbfb432516ec74fe608b30bf3a66de17d3ad822b024c46ce9a2b53360a1'
+assert all(r[k] is True for k in ('passed','all_component_gates_passed','all_processes_reaped','owned_component_directory_removed','owned_directory_handle_closed','source_files_unchanged'))
+assert all(r[k] is False for k in ('full_attention_evaluated','full_bert_evaluated','mrpc_accuracy_evaluated','scoring_calibrated'))
+expected=r['source_hashes_start'];assert len(expected)==307 and expected==r['source_hashes_end']
+current={n:sha(Path(n).read_bytes()) for n in expected};assert current==expected
+archive_sha=sha((P/'sources.tar.gz').read_bytes());assert archive_sha==r['source_archive_sha256']
+named={}
+for n,h in expected.items():
+ p=Path(n)
+ key='repository/'+p.relative_to(ROOT/'checkout').as_posix() if ROOT/'checkout' in p.parents else 'prototype/'+p.name
+ assert key not in named;named[key]=h
+with tarfile.open(P/'sources.tar.gz','r:gz') as t:
+ members=t.getmembers();assert len(members)==307 and len({m.name for m in members})==307 and all(m.isfile() for m in members)
+ archived={m.name:sha(t.extractfile(m).read()) for m in members}
+assert archived==named
+pids=[r['wrapper_pid']]; keypaths=[]
+for name,s in r['stages'].items():
+ assert s['passed'] is True and s['returncode']==0 and s['process_reaped'] is True and s['timeout_s'] is None
+ assert s['result']['passed'] is True and s['owned_directory_handle_closed'] is True
+ pids.append(s['pid']);keypaths.append(s['owned_public_key_directory'])
+ assert s['public_key_store_removed'] is True
+assert not any(Path('/proc',str(pid)).exists() for pid in pids)
+assert not any(os.path.lexists(p) for p in keypaths+[r['owned_component_directory']])
+pre=r['stages']['public-preflight']['result'];params=pre['parameters']
+qp=sum(math.log2(v) for v in params['q_towers']+params['p_towers'])
+assert len(params['q_towers'])==38 and len(params['p_towers'])==10 and params['degree']==131072 and params['dnum']==4
+assert abs(qp-pre['actual_log2_qp'])<1e-9 and math.ceil(qp)<=3523
+server=r['stages']['keyless-server']['result']
+assert server['server_secret_absent'] and server['client_codecs_and_keygen_forbidden'] and not server['client_file_access_attempts']
+assert server['input_count']==server['output_count']==2 and server['no_refresh']
+for name,level in [('raw_scores',7),('masked_scores',6)]:
+ check=server['checks'][name];assert check['level']==level and check['slots']==65536 and check['nsd']==1
+ assert check['ring'][0]['q_towers']==params['q_towers'] and check['ring'][0]['p_towers']==params['p_towers']
+finish=r['stages']['client-decrypt']['result']
+assert finish['all_slots_checked']==131072 and finish['raw_score_gate_nonvacuous'] is True
+for name,check in finish['checks'].items():
+ assert check['passed'] is True and check['gate']==r['gate']==1e-6 and check['slots_checked']==65536
+ assert math.isfinite(check['max_abs_error']) and check['max_abs_error']<=1e-6
+raw=finish['checks']['raw_scores'];masked=finish['checks']['masked_scores']
+assert raw['native_target_nonzero_count_above_1e_12']==192 and raw['reference_all_zero'] is False
+assert masked['reference_all_zero'] is True and masked['native_target_nonzero_count_above_1e_12']==0
+assert r['preprocessing']['selected_valid_key_rows']==0
+OUT.mkdir(mode=0o700)
+review=dict(passed=True,report_sha256=sha((P/'report.json').read_bytes()),source_archive_sha256=archive_sha,
+ source_members=307,source_current_start_end_archive_equal=True,direct_owner_reap='CNN session89248 exit0 reported; root independently verifies PID absence',
+ independently_absent_pids=pids,owned_key_and_private_directories_absent=True,actual_log2_QP=qp,security_log2_QP_ceiling=3523,
+ slots_checked=131072,raw_nonzero_native_anchors=192,raw_max_error=raw['max_abs_error'],fixed_gate=1e-6,
+ masked_reference_is_all_zero=True,masked_result_is_not_a_nonvacuous_valid_key_proof=True,
+ no_refresh=True,raw_level=7,masked_level=6,elapsed_s=r['elapsed_s'],
+ full_attention=False,full_bert=False,mrpc_accuracy=False,calibrated_scoring=False,
+ review_script_sha256=sha(Path(__file__).read_bytes()))
+(OUT/'review.json').write_text(json.dumps(review,indent=2)+'\n')
+print(json.dumps(review))

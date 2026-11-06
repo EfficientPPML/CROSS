@@ -1,0 +1,15 @@
+F
+=================================== FAILURES ===================================
+_ test_every_site_full_slots_selected_method_and_metadata[minimum-1.1467305003699404e+18-1-0.attention] _
+test_all_row_norm.py:71: in test_every_site_full_slots_selected_method_and_metadata
+    positions=tuple(range(0,2*valid,2));result=owner.normalize_tile(source,valid_rows=valid,original_positions=positions,capture_checkpoints=True)
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_bert_all_row_norm.py:290: in normalize_tile
+    self._core._validate_ciphertext(value,depth+2)
+checkout/cadathlon/common/encrypted_row_normalization.py:76: in _validate_ciphertext
+    raise ValueError('row normalization needs its full circuit plus one reserved level')
+E   ValueError: row normalization needs its full circuit plus one reserved level
+=========================== short test summary info ============================
+FAILED test_all_row_norm.py::test_every_site_full_slots_selected_method_and_metadata[minimum-1.1467305003699404e+18-1-0.attention]
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 194 deselected in 0.75s

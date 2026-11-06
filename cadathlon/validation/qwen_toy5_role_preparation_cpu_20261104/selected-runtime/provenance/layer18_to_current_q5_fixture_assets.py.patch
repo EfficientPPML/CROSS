@@ -1,0 +1,67 @@
+--- /tmp/qwen-toy5-actual-key-io-layer-20261104/q5_fixture_assets.py
++++ q5_fixture_assets.py
+@@ -5,8 +5,8 @@
+ PublicAssets; it never calls the toy generator or derives clear embeddings.
+ """
+ from dataclasses import dataclass
+-from pathlib import Path
+-import hashlib,io,math,os,stat
++from pathlib import Path,PurePosixPath
++import hashlib,io,math,os,stat,weakref
+ from cleanup_origin import protect_body
+ from qwen_finalizer import Finalizer
+ from q5_key_contract import PublicProfile,parse as compact_parse,canonical as compact,sha,bindings
+@@ -14,6 +14,7 @@
+ from q5_checkpoint_transport import HeldRoot,Exporter,descriptor,state,_hash,finish
+ _QUARANTINE=[]
+ _OWNERS={}
++_CLOSED=weakref.WeakSet()
+ 
+ def catalog(profile):
+     if type(profile)is not PublicProfile:raise TypeError('exact source-bound Q5 profile required')
+@@ -62,7 +63,11 @@
+         if v['schema']!='qwen-toy5-public-assets-v1'or v['bindings']!=bindings()or v['model_id']!=model_id(self.profile)or v['terminal_authority']is not False:
+             raise ValueError('fixed Q5 public asset identity differs')
+         if canonical(v['root'])!=self.expected_root:raise ValueError('external original asset root differs')
+-        descriptor(self.expected_root)
++        expected_root=parse(self.expected_root)
++        if type(expected_root)is not dict or set(expected_root)!={'path','device','inode','mode','uid'}or canonical(expected_root)!=self.expected_root:raise ValueError('closed immutable asset root metadata required')
++        path=expected_root['path']
++        if type(path)is not str or not path.startswith('/')or path.startswith('//')or str(PurePosixPath(path))!=path or '..'in PurePosixPath(path).parts or '\\'in path or '\x00'in path:raise ValueError('canonical asset root metadata path required')
++        if any(type(expected_root[n])is not int or expected_root[n]<(1 if n=='inode'else 0)for n in ('device','inode','mode','uid'))or expected_root['mode']>4095:raise ValueError('typed asset root metadata required')
+         if type(v['arrays'])is not dict or set(v['arrays'])!=set(rows):raise ValueError('complete35 original asset files required')
+         for i,name in enumerate(sorted(rows)):
+             record=v['arrays'][name]
+@@ -102,6 +107,7 @@
+             root=HeldRoot(binding.expected_root);r['root']=root;self.root=root;r['root_close']=root.close;r['root_check']=root.check
+         except BaseException as error:r['failure']=protect_body(error);_QUARANTINE.append((self,r,error));raise
+     def _record(self):
++        if self in _CLOSED:raise ValueError('public assets already retired')
+         r=_OWNERS.get(id(self))
+         if r is None or r['owner']is not self:raise ValueError('original public asset owner missing')
+         return r
+@@ -118,7 +124,7 @@
+         r['entered']=True;v=r['binding'].check();np=r['np'];weights={}
+         try:
+             for name,record in sorted(v['arrays'].items()):
+-                fd=os.open(record['name'],os.O_RDONLY|os.O_NOFOLLOW|os.O_CLOEXEC,dir_fd=r['root'].fd)
++                fd=os.open(record['name'],os.O_RDONLY|os.O_NONBLOCK|os.O_NOFOLLOW|os.O_CLOEXEC,dir_fd=r['root'].fd)
+                 held=[fd,record];r['files'].append(held);before=os.fstat(fd)
+                 if not stat.S_ISREG(before.st_mode)or before.st_uid!=os.geteuid()or stat.S_IMODE(before.st_mode)!=0o600 or state(before)!=record['state']or before.st_size!=record['bytes']:
+                     raise ValueError('original owned public weight identity differs')
+@@ -142,6 +148,9 @@
+         for name,array in r['weights'].items():_check_array(r['np'],array,v['arrays'][name]['content'])
+         return r['weights']
+     def close(self,primary=None):
++        if self in _CLOSED:
++            if primary is not None:raise primary
++            return
+         r=self._record()
+         if r['closed']:
+             if primary is not None:raise primary
+@@ -156,4 +165,4 @@
+         r['closed']=True;self.closed=True;error=final.selected()
+         if error is not None or r['failure']is not None:
+             error=error if error is not None else r['failure'];r['failure']=error;_QUARANTINE.append((self,r,original_files,error));raise error
+-        r['weights']=None;self.weights=None;r['files'].clear()
++        self.weights=None;self.np=None;self.binding=None;self.root=None;r.clear();_OWNERS.pop(id(self));_CLOSED.add(self)

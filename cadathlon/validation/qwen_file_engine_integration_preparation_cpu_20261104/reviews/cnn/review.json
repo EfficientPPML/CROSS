@@ -1,0 +1,81 @@
+{
+  "all_nonoverlaid_copied_sources_exact": true,
+  "conclusions": [
+    "The four overlays reconstruct exactly from declared predecessor bytes and literal replacements; no other copied source differs at this checkpoint.",
+    "File-contract and parameter parsing now select the explicit exact parser namespace. Engine, parameter and file lifecycle owners select the explicit new finalizer; no active import in these four files selects the old Finalizer or parse by search-path fallback.",
+    "The shared Toy4v4 cleanup_origin is exact. Finalizer protects genuine primary identity before actions, marks caught cleanup failures, attempts shield fallback, and selects through the common rule. Engine quarantine now records final.selected(), matching the error later raised.",
+    "The exact166/335 reader/admission/loader code remains unchanged from admitted43. Its full PublicContract/external expected IDs precede readers; key owner, context/maps/transfers and serial role/quarantine policy are retained.",
+    "Borrowed engine ownership and numerical body are unchanged except Finalizer import and selected-error query. Original run-local owner/array/callback inventories and consumer-before-key-retirement requirements remain intact."
+  ],
+  "concrete_findings": [],
+  "copied_source_count": 337,
+  "declared_overlay_count": 4,
+  "finalizer_sha256": "46e6566a275a84b4ae4596e066c592a4aa3a60e41b3afb4ec30bb96b72551240",
+  "limitations": [
+    "The future role-level qwen_stage_composition bridge was not part of this held source read; no joined loader/publisher/engine path or complete integration closure is admitted.",
+    "HeldDirectory/state remain explicitly selected legacy helpers; this is not an all-reader robustness or arbitrary Python mutation guarantee.",
+    "The actual factories remain disabled; full335 real bodies, backend security/context construction, signals/device readiness, source bootstrap and external execution grants are outside this review.",
+    "Peer focused Finalizer regression results are not a test rerun or terminal admission by this reviewer."
+  ],
+  "overlays": {
+    "qwen_backend_composition.py": {
+      "after_sha256": "4922518125324ccef64bf8747e10d804e7887bbae3c211d89856eccda87a13c1",
+      "before_sha256": "c640569bebed4a94db21b384d0d5b89b02370020c9d5468b4a1f69ec90d71259",
+      "replacements": [
+        {
+          "after": "from qwen_finalizer import Finalizer",
+          "before": "from reused_client_io import Finalizer"
+        },
+        {
+          "after": "error=final.selected()",
+          "before": "error=final.primary if final.primary is not None else final.failure"
+        }
+      ]
+    },
+    "qwen_file_contract.py": {
+      "after_sha256": "25e81bbe50bea14c5f00eebc82165e8d135d515ebc5467c6c19b3f3a211ad004",
+      "before_sha256": "c9da93227590ba32b7eb9d61b0bd925a3d4ba391a9d16685828ea98b04a9cdc0",
+      "replacements": [
+        {
+          "after": "from qwen_public_parse import parse",
+          "before": "from reused_client_io import parse"
+        }
+      ]
+    },
+    "qwen_file_lifecycle.py": {
+      "after_sha256": "39366fc06adbb69d55928c8f5131faa4bdf46500852768c6a44444c072fb6782",
+      "before_sha256": "ab358e5d7a4d8649463112caa193f042c33de60b000f4ea92e2aa68bc785d2bb",
+      "replacements": [
+        {
+          "after": "from reused_client_io import HeldDirectory\nfrom qwen_finalizer import Finalizer",
+          "before": "from reused_client_io import HeldDirectory,Finalizer"
+        }
+      ]
+    },
+    "qwen_public_parameters.py": {
+      "after_sha256": "2c2552225f087f7b9856e1ec05708c08a16c272f1b97a663ffeee7c5282e8335",
+      "before_sha256": "1cc0ff5d9133eb066582cc636f1f3efe12c20ebd4875f1f50c051ac435fb1df4",
+      "replacements": [
+        {
+          "after": "from reused_client_io import HeldDirectory,state\nfrom qwen_public_parse import parse\nfrom qwen_finalizer import Finalizer",
+          "before": "from reused_client_io import HeldDirectory,Finalizer,state,parse"
+        }
+      ]
+    }
+  },
+  "parser_sha256": "d29919969c9950a86d2e663f5392c401742e6306a0ed7c9ad7ab3ea2f4e830f0",
+  "passed": true,
+  "retained_reader_sha256": {
+    "cleanup_origin.py": "4543b26bf1168e29bc21375c2f80a9aa99648205a9fd9aea6d5a8059c6d18175",
+    "key_descriptor_io.py": "b6e97e176c1b089ab8891ad1217c83a3b1c686438209ad4f92da7b6c3c2a9352",
+    "qwen_key_adapter.py": "a396049c0acd6f105244f23743d765b477c75618db11b5b03de44230f239faf8",
+    "qwen_key_contract.py": "49c7e502f84b48e461a4588ce490f94f6aea9fa11d90e7cc657ea8238fc15bb5",
+    "qwen_key_files_admission.py": "27bb10c7d620dfd7625fb086c7672eab86cfc22686293c06fd9c62d1cbfca7ff",
+    "qwen_key_loader.py": "cef368d4016a930fdee7b8e05f19826cde9b67de1e52f6e4fa78d00ec3b19d80",
+    "qwen_key_readers.py": "5b83d0a279a89f937dbf524223257780d8cea0d0ec65274632e5c60d44f319dc"
+  },
+  "review_script_sha256": "a8b86024c956b7f95312ad89e54dd7ae0262b2645886d19af32b5648994f2813",
+  "schema": "qwen-integration-selection-cnn-source-review-v1",
+  "scope": "Bounded static source/overlay/cleanup-policy inspection only. No selected module imports, tests, backend/context calls or actual key/model/token/ciphertext/private body reads.",
+  "selection_sha256": "ff28797f6e0dfc5edf554aadf24f662602a08eb3b6425f40649f8e0910b65b38"
+}

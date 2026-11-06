@@ -1,0 +1,18 @@
+{
+  "scope": "Exact production run AST with public mocked dependencies; no model/key/private/ciphertext reads",
+  "returncode": 1,
+  "tests": 7,
+  "expected_failures": 7,
+  "source_hashes_before": {
+    "sources/bridge_worker.py": "a35886bd99d754f7e55e0f0c57f005d0f625afb6e21a07abf0c3d829078b7fe8",
+    "test_worker_envelope.py": "f4e69c4d6cb35d5f10e43df53eb74b5e031b32f77912c0aca100823b536d7b94"
+  },
+  "source_hashes_after": {
+    "sources/bridge_worker.py": "a35886bd99d754f7e55e0f0c57f005d0f625afb6e21a07abf0c3d829078b7fe8",
+    "test_worker_envelope.py": "f4e69c4d6cb35d5f10e43df53eb74b5e031b32f77912c0aca100823b536d7b94"
+  },
+  "source_files_unchanged": true,
+  "source_archive_sha256": "3a89c1f3d17f05f0d6bfc0834d4fd8ec33c51d173bbc8d24bf1e1f00f4fb0365",
+  "direct_child_waited": true,
+  "finding": "Valid envelope nests staged_root inside request; production run reads it at outer level and raises KeyError before all seven handlers."
+}

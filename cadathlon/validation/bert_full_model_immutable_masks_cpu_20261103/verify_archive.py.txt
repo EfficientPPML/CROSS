@@ -1,0 +1,62 @@
+"""Whitelist terminal joined ideal integration evidence; never archive arrays."""
+from pathlib import Path,PurePosixPath
+import argparse,hashlib,json,re,tarfile,xml.etree.ElementTree as ET
+LAB=Path('/tmp/bert-full-model-immutable-masks-20261103')
+PARENT_TAR='4b5e11f598d25dce089b97ec87640ef40752bfd390a05d1ec16e2ad4a605cfb4'
+PIDS=(1505435,1505436,1505437,1505453)
+def need(ok,why):
+    if not ok:raise ValueError(why)
+def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+def safe(value):
+    if isinstance(value,dict):
+        for key,child in value.items():
+            need(key.lower() not in {'secret_key','private_key','sk','embeddings','logits','predictions','labels','input_ids','ciphertext','ciphertexts','payload'},'unapproved private data field: '+key)
+            safe(child)
+    elif isinstance(value,list):
+        for child in value:safe(child)
+def verify(run):
+    r=json.loads((run/'report.json').read_text());safe(r)
+    before=r['source_hashes_before']
+    need(len(before)==137 and before==r['source_hashes_after']==r['snapshot_source_hashes_after'],'source hashes differ')
+    need(before=={n:sha(LAB/n) for n in before}=={n:sha(run/'snapshot'/n) for n in before},'source current/snapshot differs')
+    with tarfile.open(run/'sources.tar.gz') as t:
+        members=t.getmembers();need(len(members)==len({m.name for m in members})==137,'source inventory differs')
+        need(all(m.isfile() and not PurePosixPath(m.name).is_absolute() and '..' not in PurePosixPath(m.name).parts for m in members),'unsafe source member')
+        need({m.name:hashlib.sha256(t.extractfile(m).read()).hexdigest() for m in members}==before,'source archive differs')
+    need(sha(run/'sources.tar.gz')==r['source_archive_sha256'],'archive digest differs')
+    need(r['source_files_unchanged'] and r['asset_files_unchanged'] and r['source_archive_verified'] and r['cleanup_errors']==[],'source/asset/cleanup failed')
+    need(r['process_cleanup']['reaped'] and r['process_cleanup']['group_gone'],'test process cleanup failed')
+    need(not Path('/proc/'+str(r['child_pid'])).exists(),'child remains')
+    return r
+
+def main():
+    p=argparse.ArgumentParser();p.add_argument('destination',type=Path);p.add_argument('--observed-exit-code',type=int,required=True);a=p.parse_args()
+    need(a.observed_exit_code==0,'success archive requires observed terminal exit0')
+    need(all(not Path('/proc/'+str(pid)).exists() for pid in PIDS),'recorded wrapper/child remains')
+    run=LAB/'source-bound-v1';r=verify(run);smoke=verify(LAB/'guard-head-smoke-v1')
+    need(r['passed'] and r['complete'] and r['selection'] is None and r['test_exit_code']==0,'incomplete full integration')
+    need(r['tests']=={'tests':46,'errors':0,'failures':0,'skipped':0},'full test gates changed')
+    need(len(r['cases'])==2 and {x['K'] for x in r['cases']}=={15,128},'fixture cases changed')
+    for row in r['cases']:
+        need(row['passed'] and row['ideal_gate']==1e-7 and row['native_prediction_agrees'] and row['all_connections_are_actual_output_objects'],'numerical/connection gate failed')
+        need(row['native_logit_gate']=='abs(error)<=0.02+0.01*abs(native)','native gate changed')
+    need(smoke['test_exit_code']==0 and smoke['tests']=={'tests':44,'errors':0,'failures':0,'skipped':0} and not smoke['complete'] and not smoke['passed'],'smoke scope changed')
+    parent=json.loads((LAB/'baseline_copy_verification.json').read_text())
+    need(parent['parent_archive_sha256']==PARENT_TAR and parent['source_count']==137,'parent baseline differs')
+    need(set(parent['changed_files'])=={'source_origin.json','prerequisites.json','checkout/cadathlon/common/encrypted_score_reduction.py'},'additional runtime change')
+    selected={LAB/'baseline_copy_verification.json':'baseline_copy_verification.json',LAB/'source-bound-v1.log':'run.log',LAB/'guard-head-smoke-v1.log':'smoke.log',Path(__file__).resolve():'verify_archive.py.txt'}
+    for folder,label in [('source-bound-v1','measured'),('guard-head-smoke-v1','smoke')]:
+        for f in (LAB/folder).iterdir():
+            if f.is_file() and (f.name in {'report.json','tests.log','tests.xml','sources.tar.gz'} or f.name.startswith('joined-') and f.suffix in {'.json','.jsonl'}):selected[f]=label+'/'+f.name
+    dest=a.destination.resolve();dest.mkdir(parents=True,exist_ok=False)
+    copied={}
+    for source,name in selected.items():
+        need(source.suffix not in {'.npz','.npy'},'array selected')
+        if source.suffix=='.json':safe(json.loads(source.read_text()))
+        if source.suffix=='.jsonl':
+            for line in source.read_text().splitlines():safe(json.loads(line))
+        target=dest/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(source.read_bytes());need(sha(target)==sha(source),'copy differs');copied[name]=sha(target)
+    raw=(LAB/'source-bound-v1.log').read_text();rss=re.search(r'Maximum resident set size \(kbytes\): (\d+)',raw)
+    verification={'passed':True,'scope':'Archive-time exact-byte verification of joined ideal integration, no HE/file-stage/wholemodel performance claim.','observed_session':58770,'observed_exit_code':0,'recorded_pids_absent':PIDS,'source_files':137,'source_archive_sha256':r['source_archive_sha256'],'private_arrays_keys_ciphertexts_copied':False,'elapsed_s':r['elapsed_s'],'peak_rss_kib':int(rss.group(1)) if rss else None,'copied_sha256':copied}
+    (dest/'verification.json').write_text(json.dumps(verification,indent=2)+'\n');print(json.dumps({k:v for k,v in verification.items() if k!='copied_sha256'},indent=2))
+if __name__=='__main__':main()

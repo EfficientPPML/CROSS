@@ -1,0 +1,30 @@
+--- historical/synthetic_keygen_chain.py
++++ synthetic_keygen_chain_client.py
+@@ -94,7 +94,8 @@
+ def build_chain(public, aggregate_raw, *, change_source=None, change_intent=None,
+                 change_model_report=None, model_consumer=None, change_grant=None,
+                 change_launch_pins=None, change_public=None, change_report=None,
+-                change_outer=None, change_root=None, change_ready_pins=None):
++                change_outer=None, change_root=None, change_ready_pins=None,
++                role_sources=None, role_builder=None):
+     """Hooks re-pin modified public documents to exercise semantic rejection."""
+     values = public.check()
+     profile = PublicProfile.from_bytes(values['inputs/profile_audit.json'],values['inputs/actual_key_plan.json'])
+@@ -111,6 +112,8 @@
+                        readiness_review_sha256=fake_hash(role+' readiness'),
+                        execution_grant_sha256=fake_hash(role+' grant'))
+              for role in ('request_producer','response_consumer')}
++    if role_sources is not None:
++        for name,digest in role_sources.items():roles[name]['source_manifest_sha256']=digest
+     policies = {name:fake_hash(name) for name in ('dependency_policy_sha256','role_policy_sha256',
+                                                  'resource_policy_sha256','resource_review_sha256')}
+     scope = dict(fresh_key_generation=True,new_owned_key_readback=True,
+@@ -134,6 +137,8 @@
+             scope='inherited logical store allowance only; actual memory/runtime/evidence headroom requires separate reviewed policy'))
+     if change_intent: change_intent(intent_value)
+     intent = ActualKeygenIntent(public,canonical(intent_value))
++    if role_builder is not None:
++        roles=role_builder(intent,source_hash,archive,model)
+     parents = {name:dict(path='/synthetic-unopened-keygen',device=9,inode=900,mode=0o700)
+                for name in ('public_root','private_root','evidence_root')}
+     grant = dict(schema='qwen-keygen-actual-grant-v1',role='generate_fresh_qwen166_keys',execute=True,

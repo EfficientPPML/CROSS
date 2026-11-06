@@ -1,0 +1,63 @@
+{
+  "execution_authorized": false,
+  "harness_pins": {
+    "executed_driver.py": "0abf93eed934872faf79aa22590de829897baccd050ba1b523aaf9c2aefa55bb",
+    "handoff.json": "0b21aa92f7679de930b0f52ebb68a5b740624a037ca353759aa1f1264f64f0bb",
+    "launch-proposal.json": "673fa9208f72d8dd41e3ba8dac59ffbe90797ba2bbe9a62e00b8feb674d8a1b9",
+    "run_config.json": "c2bb4d4d172f6130992ee149c00c9b328d0a89901155a4bc59c2ab2f8ddd61eb",
+    "worker_driver.py": "14b20e9830cafacf472774e4c4fbf10814e07a8ad93ec05224020b847e32e246"
+  },
+  "label": "client24",
+  "nested_count": 464,
+  "nested_runtime_exact": true,
+  "passed": true,
+  "prior_outputs_absent": [
+    "report.json",
+    "tests.log",
+    "tests.xml",
+    "live-observation.json",
+    "worker-audit.json",
+    "sources-after.json",
+    "execution-after.json",
+    "pytest-owned"
+  ],
+  "review_script_sha256": "48a26b6e535cc8f58846454cf501819f8db2fc6d67d5d661d4787d57607457a1",
+  "runtime_changed_files": [
+    "qwen_client_dependencies.py"
+  ],
+  "runtime_manifest_sha256": "072d3900906ad0ad113cc21f7c52b660fcec394ddfec2ccc29787b02fa36590c",
+  "schema": "qwen-proc-self-root-preexecution-review-v1",
+  "scope": "Exactly24 targeted client audit/kernel cases:6 bounded own-process metadata reads through the selected helper or builtin audit path,15 successor flag/spelling denials,3 unchanged464 controls. Actual AccessScope with explicit synthetic admission; no actual client process, ModelAdmission, key readiness,335-reader traversal, private/model/key/CT/token body, backend/NumPy, RNG or capacity measurement. No inherited suite. Original464 and source-only corrected464 remain disabled.",
+  "source_archive_sha256": "9ed75e3c56eaf743a34f591d6978af69394de93a8ea806a26bb5fb9b98d4a617",
+  "source_count": 472,
+  "source_current_execution_archive_equal": true,
+  "source_manifest_sha256": "208049d311bc26bb8db8ce71c610c6c484dfbec064e1b26bbbe5f51483a1ec40",
+  "source_only": true,
+  "static_ordered_nodes": [
+    "test_kernel_allowlist.py::test_successor_kernel_policy[helper:status]",
+    "test_kernel_allowlist.py::test_successor_kernel_policy[helper:cgroup]",
+    "test_kernel_allowlist.py::test_successor_kernel_policy[helper:mountinfo]",
+    "test_kernel_allowlist.py::test_successor_kernel_policy[builtin:status]",
+    "test_kernel_allowlist.py::test_successor_kernel_policy[builtin:cgroup]",
+    "test_kernel_allowlist.py::test_successor_kernel_policy[builtin:mountinfo]",
+    "test_kernel_allowlist.py::test_successor_kernel_policy[flag:wronly]",
+    "test_kernel_allowlist.py::test_successor_kernel_policy[flag:rdwr]",
+    "test_kernel_allowlist.py::test_successor_kernel_policy[flag:trunc]",
+    "test_kernel_allowlist.py::test_successor_kernel_policy[flag:append]",
+    "test_kernel_allowlist.py::test_successor_kernel_policy[flag:create_excl]",
+    "test_kernel_allowlist.py::test_successor_kernel_policy[flag:directory]",
+    "test_kernel_allowlist.py::test_successor_kernel_policy[flag:path]",
+    "test_kernel_allowlist.py::test_successor_kernel_policy[spelling:bytes]",
+    "test_kernel_allowlist.py::test_successor_kernel_policy[spelling:pathlike]",
+    "test_kernel_allowlist.py::test_successor_kernel_policy[spelling:dot]",
+    "test_kernel_allowlist.py::test_successor_kernel_policy[spelling:double_slash]",
+    "test_kernel_allowlist.py::test_successor_kernel_policy[spelling:explicit_pid]",
+    "test_kernel_allowlist.py::test_successor_kernel_policy[spelling:dir_fd]",
+    "test_kernel_allowlist.py::test_successor_kernel_policy[spelling:unselected_self]",
+    "test_kernel_allowlist.py::test_successor_kernel_policy[spelling:owned_alias]",
+    "test_kernel_allowlist.py::test_old464_alias_controls[helper:status]",
+    "test_kernel_allowlist.py::test_old464_alias_controls[helper:cgroup]",
+    "test_kernel_allowlist.py::test_old464_alias_controls[helper:mountinfo]"
+  ],
+  "utc": "2026-11-04T19:37:12.906416+00:00"
+}

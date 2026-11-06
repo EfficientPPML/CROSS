@@ -1,0 +1,65 @@
+"""Read-only public source/provenance check. No runtime/backend imports."""
+from pathlib import Path
+import ast,hashlib,json
+HERE=Path(__file__).resolve().parent
+OLD=Path('/tmp/qwen-expanded-candidate-checker-ready-20261104')
+ROOT=Path('/tmp/qwen-expanded-candidate-checker-ready-v2-20261104')
+PARENT=Path('/tmp/qwen-expanded-candidate-checker-runtime-v2-20261104')
+H=lambda x:hashlib.sha256(x).hexdigest()
+J=lambda p:json.loads(p.read_bytes())
+NUMERIC=('checker_runtime.py','strict_metrics.py','candidate_domains.py','test_checker_runtime.py','test_strict_metrics.py','test_candidate_domains.py')
+READ=('proof_limits.py','entry.py','checker_process.py','checker_admission.py','candidate_binding.json','test_proof_limits.py','execution_authorization.json','input_gate.py','checker_runtime_policy.json','initial_proof.py','selection_grant.py','cleanup_origin.py')
+files=set(READ)|set(NUMERIC)
+config=J(ROOT/'candidate_binding.json')
+public_files={row['blob']:row['sha256']for row in [config['candidate'],*config['initial_proof'].values(),*config['selector_proof'].values()]}
+files.update(public_files)
+before={n:H((ROOT/n).read_bytes())for n in sorted(files)}
+assert all(H((ROOT/n).read_bytes())==pin for n,pin in public_files.items())
+assert config['ready']is True and J(ROOT/'execution_authorization.json')=={'execute':False}
+assert config['budget']==dict(manifest_sha256='344954b3873a8847ececba320646f52612ca7277412c7de81a7313894e21799a',max_candidates=3,ordinal=1,previous_attempts=[])
+assert config['selector_proof']['assessments']==dict(blob='candidate_proof/selector-assessments.json',sha256='66010488eb2e6e57b4f465741098018f09bf5826bd5ee8fd60fdf1f2e0fc4741')
+assert (ROOT/'candidate_proof/selector-assessments.json').stat().st_size==37283359
+numerics={n:dict(current=before[n],parent115=H((PARENT/n).read_bytes()),equal=(ROOT/n).read_bytes()==(PARENT/n).read_bytes())for n in NUMERIC}
+assert all(r['equal']for r in numerics.values())
+for n in ('proof_limits.py','entry.py','checker_admission.py','candidate_binding.json','test_proof_limits.py'):
+ assert (ROOT/n).read_bytes()==(OLD/n).read_bytes()
+def functions(path,names):
+ return {node.name:ast.dump(node,include_attributes=False)for node in ast.parse(path.read_bytes()).body if isinstance(node,ast.FunctionDef)and node.name in names}
+assert functions(ROOT/'proof_limits.py',{'source_limit','check_source_sizes'})==functions(ROOT/'entry.py',{'source_limit','check_source_sizes'})
+parentfunc=functions(PARENT/'checker_process.py',{'grant_check','worker','collect'})
+# The current collect/worker sources are read above; grant authentication ordering is preserved exactly.
+assert functions(ROOT/'checker_process.py',{'grant_check','worker','collect'})==parentfunc
+before137=J(Path('/tmp/qwen-expanded-candidate-checker-ready-sources-v1-20261104.json'))
+assert len(before137)==137
+assert H(Path('/tmp/qwen-expanded-candidate-checker-ready-sources-v1-20261104.json').read_bytes())=='07ff48c78106070f28549e7b7283cb52f8f28c1c93e851b93955bf7bf6cd5fbf'
+assert all(H((OLD/n).read_bytes())==pin for n,pin in before137.items())
+assert before=={n:H((ROOT/n).read_bytes())for n in sorted(files)}
+negative=J(Path('/tmp/qwen-checker-shield-construction-review-20261104/negative-v1/review.json'))
+successor=J(Path('/tmp/qwen-checker-shield-construction-review-20261104/successor-v1/review.json'))
+assert negative['expected_negative_confirmed']is True and successor['expected_successor_pass']is True
+assert before['checker_process.py']==successor['source_hashes_before']['checker_process.py']
+review=dict(schema='qwen-ready-checker-narrow-source-review-v1',passed=True,
+ scope='Source read and stdlib public byte/AST comparisons only; independently extracted supervise AST exercised separately with synthetic resources. No full suite rerun, candidate/model/native forward, private snapshot/journal, calibration/token/validation or HE body access.',
+ reviewed_sources_before=before,reviewed_sources_after=before,numerical_six=numerics,
+ parent_ready137_manifest_sha256='07ff48c78106070f28549e7b7283cb52f8f28c1c93e851b93955bf7bf6cd5fbf',
+ assessment_bytes=37283359,assessment_exact_path='candidate_proof/selector-assessments.json',assessment_max_bytes=64<<20,
+ source_total_max_bytes=96<<20,ordinary_source_max_bytes=8<<20,ordinary_admission_role_max_bytes=32<<20,candidate_role_max_bytes=16<<20,
+ source_bootstrap_terminal_limit_functions_identical=True,
+ nested_selector_archive_limits=dict(member_bytes=8<<20,total_bytes=32<<20),
+ source_findings=[
+  'Only the exact assessment data member receives64MiB. Renamed/code/alias members retain8MiB source limit; canonical paths, no symlinks and exact source inventory reject aliases.',
+  'Bootstrap authenticates external map before local imports and rejects file/spec/PathLike/symlink-origin local preloads. Terminal source_end applies same per-member/96MiB checks. Current source archive uses only authenticated blobs and verifies copied execution source before child dispatch.',
+  'Public ready candidate binding pins authentic initial61 and selector36 reports/archives/root outer receipts and candidate344954 identity. Root-reviewed candidate publication pins are immutable source data; CandidateBinding.execution_authorized remainsFalse.',
+  'Both collect-candidate and candidate-worker run grant_check before Output allocation, private Reader construction, backend enablement or model execution. Missing external grant raises after public-only proof inspection.',
+  'Six numerical/runtime test files equal reviewed115 exactly. Large-proof packaging changes no coefficient/reference/metric/dispatch arithmetic.',
+ ],
+ concrete_finding='Shield object construction outside setup try skipped owned cleanup. Confirmed against137 and repaired only in separate ready-v2.',
+ negative_capsule='/tmp/qwen-checker-shield-construction-review-20261104/negative-v1',
+ successor_capsule='/tmp/qwen-checker-shield-construction-review-20261104/successor-v1',
+ successor_runtime_sha256=before['checker_process.py'],
+ negative_expected_failures=3,negative_passing_control=1,successor_identical_tests_passed=4,
+ unresolved_concrete_findings=[],
+ limitations=['Public hash/source/audit integrity is not OS sandboxing.','The final ready-v2 whole preflight and independent grant remain required; this review does not execute or authorize a candidate.','All advertised byte caps are logical input/file bounds, not resident-memory peak guarantees.'],
+ review_script_sha256=H(Path(__file__).read_bytes()))
+(HERE/'review.json').write_text(json.dumps(review,sort_keys=True,indent=2)+'\n')
+print(json.dumps(dict(passed=True,reviewed_files=len(before),review_sha256=H((HERE/'review.json').read_bytes()))))

@@ -1,0 +1,20 @@
+--- failed261/q5_test_fixtures.py
++++ successor261/q5_test_fixtures.py
+@@ -76,11 +76,16 @@
+     assert dense['complete'], 'new independent dense evaluation must complete'
+     layout=ns['PackedPairLayout'](2,4,32,65536)
+     arithmetic=ns['Arithmetic'](plan['raw_profile'],{})
++    # Exact original _qwen phase labels, independent of expected trace indices.
++    # BoundedArithmetic also records refresh-start/complete phases; those
++    # are not the diagnostic layer ends and must not be exported twice.
++    layer_phases={f'packed Qwen layer {layer}: {phase} ready'
++                  for layer in range(config['num_hidden_layers'])for phase in ('attention','MLP')}
+     captures=[];original_record=arithmetic.record
+     def record(kind,label,value,**extra):
+         result=original_record(kind,label,value,**extra)
+         # Retain only the47 new targets, not every full-size intermediate.
+-        if kind in ('input','output','phase','refresh_before','refresh_after') or (kind=='normalize_after' and str(label)=='6'):
++        if kind in ('input','output','refresh_before','refresh_after') or (kind=='phase' and label in layer_phases) or (kind=='normalize_after' and str(label)=='6'):
+             captures.append((len(arithmetic.trace)-1,np.array(value.slots,copy=True)))
+         return result
+     arithmetic.record=record;observations=[]

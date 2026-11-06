@@ -1,0 +1,37 @@
+{
+  "argv": [
+    "/usr/bin/env",
+    "-i",
+    "PATH=/usr/bin:/bin",
+    "LANG=C.UTF-8",
+    "TZ=UTC",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1",
+    "OPENBLAS_NUM_THREADS=4",
+    "OMP_NUM_THREADS=4",
+    "MKL_NUM_THREADS=4",
+    "/usr/bin/taskset",
+    "-c",
+    "108-111",
+    "/tmp/cross-pretrained-validation-env/bin/python",
+    "-I",
+    "-B",
+    "/tmp/qwen-client-kernel-focused-proof-20261104/preparation-v2/executed_driver.py"
+  ],
+  "automatic_retry": false,
+  "config_sha256": "c2bb4d4d172f6130992ee149c00c9b328d0a89901155a4bc59c2ab2f8ddd61eb",
+  "driver_sha256": "0abf93eed934872faf79aa22590de829897baccd050ba1b523aaf9c2aefa55bb",
+  "execution_authorized": false,
+  "healthy_job_deadline": false,
+  "schema": "qwen-client-kernel-focused-launch-proposal-v1",
+  "scope": "Exactly24 targeted client audit/kernel cases:6 bounded own-process metadata reads through the selected helper or builtin audit path,15 successor flag/spelling denials,3 unchanged464 controls. Actual AccessScope with explicit synthetic admission; no actual client process, ModelAdmission, key readiness,335-reader traversal, private/model/key/CT/token body, backend/NumPy, RNG or capacity measurement. No inherited suite. Original464 and source-only corrected464 remain disabled.",
+  "selected_files": [
+    "test_kernel_allowlist.py"
+  ],
+  "separate_root_review_and_grant_required": true,
+  "source_archive_sha256": "9ed75e3c56eaf743a34f591d6978af69394de93a8ea806a26bb5fb9b98d4a617",
+  "source_count": 472,
+  "source_manifest_sha256": "208049d311bc26bb8db8ce71c610c6c484dfbec064e1b26bbbe5f51483a1ec40",
+  "static_selected_count": 24,
+  "worker_sha256": "14b20e9830cafacf472774e4c4fbf10814e07a8ad93ec05224020b847e32e246"
+}

@@ -1,0 +1,61 @@
+"""Archive only completed public key-generation evidence, never key payloads."""
+from pathlib import Path
+import hashlib,importlib.util,json,shutil,tarfile,sys
+LAB=Path('/tmp/bert-full-key-generation-component-20261103');E=LAB/'actual-v1'
+OUT=Path('/home/jianming_gatech/CROSS/cadathlon/validation/bert_full_key_generation_cpu_20261103')
+sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+REPORT='022cbdf687273e765668184f32cb7cd501d371c4220916e1c8f02574cf3a7f08';TAR='083851cf0667d2bb500514b5599028312c7d387236347ce3de3b585c3dcd2a29'
+CONTEXT='ba28d6a81704eba60c51ad59fbfee3901516b783a1144d973e8199a014d87fb9'
+
+def safe(v):
+    if isinstance(v,dict):
+        for k,x in v.items():
+            if k.lower() in {'secret_key','private_manifest','private_key','sk','secret_key_descriptor','secret_key_sha256','sk_sha256','ciphertext','ciphertexts','payload','input_ids','labels','embeddings','logits'}:raise ValueError('unapproved data field '+k)
+            safe(x)
+    elif isinstance(v,list):
+        for x in v:safe(x)
+
+def main():
+    assert sha(E/'report.json')==REPORT and sha(E/'sources.tar.gz')==TAR
+    r=json.loads((E/'report.json').read_text());w=json.loads((E/'worker/worker_report.json').read_text());m=json.loads((E/'public_manifest.json').read_text())
+    for x in (r,w,m):safe(x)
+    assert all(r[k]is True for k in ('passed','execute','actual_key_generation','workspace_retained','all_processes_reaped','source_files_unchanged','source_archive_verified','cleanup_completed'))
+    p=r['worker_process'];assert type(p['returncode'])is int and p['returncode']==0 and not p.get('error')
+    assert all(p[k]is True for k in ('process_reaped','public_key_store_removed','owned_directory_handle_closed'))
+    assert p['result']['worker_report_sha256']==sha(E/'worker/worker_report.json')
+    assert r['context_id']==p['result']['context_id']==m['context_id']==CONTEXT
+    assert w['public_manifest']==m and all(w[k]is True for k in ('passed','actual_key_generation_started','actual_key_generation_completed','private_binding_verified','private_permissions_verified','source_files_unchanged'))
+    assert w['private_file_count']==2 # Generation-time evidence only; never inspect current private inventory.
+    body={k:v for k,v in m.items() if k!='context_id'}
+    assert hashlib.sha256((json.dumps(body,sort_keys=True,separators=(',',':'),allow_nan=False)+'\n').encode()).hexdigest()==CONTEXT
+    before=r['source_hashes_start'];assert len(before)==58 and before==r['source_hashes_end']==r['isolated_execution_source_hashes']==w['source_hashes_start']==w['source_hashes_end']
+    assert json.loads((E/'source_manifest.json').read_text())==before
+    with tarfile.open(E/'sources.tar.gz') as t:
+        members=t.getmembers();assert len(members)==len({x.name for x in members})==58 and all(x.isfile() for x in members)
+        assert {x.name:hashlib.sha256(t.extractfile(x).read()).hexdigest() for x in members}==before
+    assert {n:sha(E/'execution_source'/n) for n in before}==before
+    sys.path.insert(0,str(LAB));spec=importlib.util.spec_from_file_location('key_evidence_collector',LAB/'collect.py');c=importlib.util.module_from_spec(spec);spec.loader.exec_module(c)
+    assert c.hashes(c.sources())==before
+    assert not any(Path('/proc/'+str(pid)).exists() for pid in (r['wrapper_pid'],p['pid']))
+    # Metadata-only retained-root identity check: no traversal or payload read.
+    s=Path(r['workspace']).lstat();assert [s.st_dev,s.st_ino]==r['workspace_identity']==[24,1563]
+    assert len(m['arrays'])==263 and sum(x['bytes'] for x in m['arrays'].values())==125380363136
+    selected={'report.json':'measured/report.json','sources.tar.gz':'measured/sources.tar.gz','source_manifest.json':'measured/source_manifest.json','public_manifest.json':'measured/public_manifest.json',
+        'worker/worker_report.json':'measured/worker/worker_report.json','worker/stdout.json':'measured/worker/stdout.json','worker/stderr.log':'measured/worker/stderr.log','worker/process.json':'measured/worker/process.json'}
+    OUT.mkdir(exist_ok=False)
+    for n,d in selected.items():
+        target=OUT/d;target.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(E/n,target);assert sha(target)==sha(E/n)
+    shutil.copy2(LAB/'actual-v1.log',OUT/'run.log');(OUT/'source').mkdir();shutil.copy2(__file__,OUT/'source/archive_and_current_verify.py.txt')
+    summary=dict(passed=True,scope='Genuine client-only complete fixed-profile key generation and durable public/private separation. No input encryption, inference, bootstrap or accuracy evaluation.',
+        observed_session=63746,observed_exit_code=0,terminal_exit_and_reaping_owner='/root',independently_observed_process_ids_absent=[r['wrapper_pid'],p['pid']],
+        report_sha256=REPORT,source_archive_sha256=TAR,context_id=CONTEXT,source_count=58,source_current_copy_archive_unchanged=True,
+        profile=dict(degree=m['parameters']['degree'],Q=len(m['parameters']['q_towers']),P=len(m['parameters']['p_towers']),dnum=m['parameters']['dnum'],max_level=m['parameters']['max_level'],composite_degree=m['parameters']['composite_degree'],scale=m['parameters']['scaling_factor']),
+        security=r['security'],public_array_count=263,public_array_npy_bytes=125380363136,public_rotation_count=len(m['rotations']),
+        worker_elapsed_s=w['elapsed_s'],collector_elapsed_s=r['elapsed_s'],cpu_affinity=r['cpu_affinity'],
+        retained_workspace_metadata_identity=r['workspace_identity'],retained_workspace_payloads_read_for_archive=False,
+        generation_time_private_evidence={'binding_verified':True,'permissions_verified':True,'file_count':2},
+        private_count_scope='These flags/count describe generation time. Later requests.json/completed.json may legitimately add files; archival verification does not require permanent private count2.',
+        key_payloads_private_manifest_secret_descriptors_archived=False)
+    (OUT/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
+    print(json.dumps({'archive':str(OUT),'sources':58,'public_arrays':263,'context_id':CONTEXT,'private_payloads_read':False}))
+if __name__=='__main__':main()

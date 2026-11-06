@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="2" time="0.515" timestamp="2026-11-03T16:14:02.189449+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_callback_metadata" name="test_softmax_rejects_final_callback_modulus_count_mutation" time="0.368"><failure message="Failed: DID NOT RAISE ValueError">def test_softmax_rejects_final_callback_modulus_count_mutation():
+        owner, arithmetic, refresh, source = setup(corrupt_final)
+&gt;       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+/tmp/qwen-causal-softmax-review-20261103/test_callback_metadata.py:13: Failed</failure></testcase><testcase classname="test_callback_metadata" name="test_direct_value_rejects_final_callback_modulus_count_mutation" time="0.024"><failure message="Failed: DID NOT RAISE ValueError">def test_direct_value_rejects_final_callback_modulus_count_mutation():
+        softmax, arithmetic, refresh, unused = setup(positions=(7,))
+        result = softmax.evaluate_tile(None, query_tile=0)
+        pv = pv_setup(arithmetic, (7,), corrupt_final)
+&gt;       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+/tmp/qwen-causal-softmax-review-20261103/test_callback_metadata.py:21: Failed</failure></testcase></testsuite></testsuites>

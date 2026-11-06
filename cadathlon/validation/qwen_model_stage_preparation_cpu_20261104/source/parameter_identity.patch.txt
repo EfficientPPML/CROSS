@@ -1,0 +1,131 @@
+--- selected366/qwen_public_parameters.py
++++ model-stage-successor/qwen_public_parameters.py
+@@ -11,6 +11,7 @@
+ from qwen_public_parse import parse
+ from qwen_finalizer import Finalizer
+ from qwen_file_contract import PublicContract,canonical,sha,hash_value,same
++from model_admission import ExpectedStoreIdentity
+ 
+ _QUARANTINE=[]
+ HEADER_LIMIT=16384
+@@ -100,8 +101,9 @@
+     return out.hexdigest()
+ 
+ class _HeldFile:
+-    def __init__(self,directory,name,maximum,expected_hash):
++    def __init__(self,directory,name,maximum,expected_hash,expected_file=None):
+         self.directory=directory;self.name=flat_name(name);self.fd=None;self.failed=None;self.expected=hash_value(expected_hash)
++        self.expected_file=None if expected_file is None else canonical(expected_file)
+         try:
+             directory.check()
+             self.fd=os.open(name,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=directory.fd)
+@@ -121,6 +123,11 @@
+         self.directory.check();visible=os.stat(self.name,dir_fd=self.directory.fd,follow_symlinks=False)
+         if not stat.S_ISREG(visible.st_mode)or state(visible)!=self.identity or state(os.fstat(self.fd))!=self.identity:
+             raise ValueError('held public file inode/extent changed')
++        if self.expected_file is not None:
++            expected=parse(self.expected_file)['state'];held=os.fstat(self.fd)
++            for info in (held,visible):
++                actual=dict(device=info.st_dev,inode=info.st_ino,size=info.st_size,mtime_ns=info.st_mtime_ns,ctime_ns=info.st_ctime_ns,mode=stat.S_IMODE(info.st_mode))
++                same(actual,expected,'externally expected held file identity differs before body read')
+     def readback(self):
+         self.check()
+         if _hash_fd(self.fd)!=self.expected:raise ValueError('held public bytes changed')
+@@ -151,12 +158,12 @@
+     return offset
+ 
+ class _MatrixLease:
+-    def __init__(self,directory,description):
++    def __init__(self,directory,description,expected_file=None):
+         self.file=None;self.mapping=None;self.value=None;self.failed=None
+         try:
+             shape=description['shape']
+             if type(shape)is not list or not shape or any(type(x)is not int or x<=0 for x in shape):raise ValueError('exact positive descriptor shape required')
+-            self.file=_HeldFile(directory,description['file'],math.prod(shape)*8+HEADER_LIMIT,description['file_sha256'])
++            self.file=_HeldFile(directory,description['file'],math.prod(shape)*8+HEADER_LIMIT,description['file_sha256'],expected_file)
+             offset=_header(_FdReader(self.file.fd,self.file.size),self.file.size,shape)
+             if _hash_fd(self.file.fd,offset,self.file.size)!=description['sha256']:raise ValueError('promoted raw payload hash differs')
+             self.mapping=mmap.mmap(self.file.fd,0,access=mmap.ACCESS_READ)
+@@ -184,38 +191,62 @@
+ 
+ class PublicParameterFiles:
+     """Own public backing files; caller owns the consumer/context barriers."""
+-    def __init__(self,catalog,*,qkv_root,decoder_root,gamma_file):
++    def __init__(self,catalog,*,qkv_root,decoder_root,gamma_file,expected_store=None):
+         from pathlib import Path
+         if type(catalog)is not ParameterCatalog:raise TypeError('exact parameter catalog required')
+         catalog.check()
++        self.expected_store=expected_store;self.expected_store_state=None
++        if expected_store is not None:
++            if type(expected_store)is not ExpectedStoreIdentity:raise TypeError('exact immutable external store identity required')
++            expected_store.check();self.expected_store_state=(expected_store,expected_store.raw,expected_store.aggregate)
++            actual_catalog=dict(matrices=parse(catalog.matrices),gammas=parse(catalog.gammas),gamma_container_sha256=catalog.gamma_container_sha256,provenance=parse(catalog.provenance))
++            same(actual_catalog,expected_store.aggregate.catalog,'externally expected parameter catalog differs before open')
++            paths=dict(qkv=str(qkv_root),decoder=str(decoder_root),gamma=str(Path(gamma_file).parent))
++            same(paths,{name:row['path']for name,row in expected_store.check()['roots'].items()},'external parameter root paths differ before open')
++            if Path(gamma_file).name!=expected_store.gamma['name']:raise ValueError('external gamma filename differs before open')
+         self.catalog=catalog;self.catalog_state=(catalog.matrices,catalog.gammas,catalog.gamma_container_sha256,catalog.provenance)
+         self.roots={};self.matrices={};self.gamma_lease=None;self.gamma_values={};self.entered=False;self.retired=False;self.closed=False;self.failed=None
+         self.gamma_path=Path(gamma_file)
+         try:
+             for family,path in (('qkv',qkv_root),('decoder',decoder_root),('gamma',self.gamma_path.parent)):
+                 self.roots[family]=HeldDirectory(path)
++                if expected_store is not None:self._check_expected_root(family)
+         except BaseException as primary:
+             try:self.close(primary=primary)
+             except BaseException as secondary:
+                 if secondary is not primary:primary.add_note('parameter setup cleanup: '+repr(secondary))
+             raise
++    def _check_expected_root(self,family):
++        owner=self.roots[family];expected=self.expected_store.root(family)
++        if str(owner.path)!=expected['path']or owner.path.resolve(strict=True)!=owner.path:raise ValueError('externally expected canonical root differs')
++        owner.check()
++        for info in (os.fstat(owner.fd),owner.path.lstat()):
++            if not stat.S_ISDIR(info.st_mode):raise ValueError('externally expected root must be directory')
++            same(dict(path=str(owner.path),device=info.st_dev,inode=info.st_ino,mode=stat.S_IMODE(info.st_mode)),expected,'externally expected held root differs before file open')
+     def check(self):
+         if self.failed is not None:raise self.failed
+         if self.closed:raise ValueError('public parameter owner is closed')
+         self.catalog.check()
+         if (self.catalog.matrices,self.catalog.gammas,self.catalog.gamma_container_sha256,self.catalog.provenance)!=self.catalog_state:raise ValueError('public catalog changed')
++        if self.expected_store_state is not None:
++            expected,raw,aggregate=self.expected_store_state
++            if self.expected_store is not expected or expected.raw is not raw or expected.aggregate is not aggregate:raise ValueError('original expected-store binding changed')
++            expected.check()
++            for family in self.roots:self._check_expected_root(family)
+         for owner in self.roots.values():owner.check()
+     def matrix(self,name):
+         self.check();rows=parse(self.catalog.matrices)
+         if type(name)is not str or name not in rows:raise ValueError('unknown public matrix name')
+         row=rows[name];description=row['descriptor'];key=(row['family'],description['file'])
+-        if key not in self.matrices:self.matrices[key]=_MatrixLease(self.roots[row['family']],description)
++        expected=None if self.expected_store is None else self.expected_store.file(row['family'],description['file'])
++        if key not in self.matrices:self.matrices[key]=_MatrixLease(self.roots[row['family']],description,expected)
+         lease=self.matrices[key];lease.file.check();return lease.value
+     def gamma(self,site):
+         self.check();rows=parse(self.catalog.gammas)
+         if type(site)is not str or site not in rows:raise ValueError('unknown public gamma site')
+         if self.gamma_lease is None:
+-            lease=_HeldFile(self.roots['gamma'],self.gamma_path.name,GAMMA_CONTAINER_LIMIT,self.catalog.gamma_container_sha256)
++            expected=None if self.expected_store is None else self.expected_store.file('gamma',self.gamma_path.name)
++            lease=_HeldFile(self.roots['gamma'],self.gamma_path.name,GAMMA_CONTAINER_LIMIT,self.catalog.gamma_container_sha256,expected)
+             self.gamma_lease=lease
+             with zipfile.ZipFile(_FdReader(lease.fd,lease.size))as archive:
+                 entries=archive.infolist();expected={name+'.npy'for name in rows}
+@@ -274,3 +305,16 @@
+     """
+     catalog=ParameterCatalog.from_public(public)
+     return PublicParameterFiles(catalog,qkv_root=qkv_root,decoder_root=decoder_root,gamma_file=gamma_file)
++
++def open_identity_bound_parameters(public,expected_store):
++    """Trusted component only; external source/role/read grant must precede it."""
++    if type(public)is not PublicContract or type(expected_store)is not ExpectedStoreIdentity:raise TypeError('exact public contract/external store identity required')
++    public.check();expected_store.check()
++    if public.blobs!=expected_store.aggregate.public.blobs:raise ValueError('store/public metadata differs before open')
++    catalog=ParameterCatalog.from_public(public)
++    roots=expected_store.check()['roots'];gamma=expected_store.gamma
++    from pathlib import Path
++    return PublicParameterFiles(catalog,qkv_root=roots['qkv']['path'],decoder_root=roots['decoder']['path'],gamma_file=Path(roots['gamma']['path'])/gamma['name'],expected_store=expected_store)
++
++def open_actual_admitted_parameters(*args,**kwargs):
++    raise PermissionError('actual model parameter role admission is unavailable')

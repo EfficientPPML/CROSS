@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="3" time="0.036" timestamp="2026-11-04T05:38:08.366444+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_partial" name="test_first_norm_input_stop_rejects_future_output[operator]" time="0.002"><failure message="Failed: DID NOT RAISE ValueError">kind = 'operator'
+
+    @pytest.mark.parametrize('kind',['operator','block'])
+    def test_first_norm_input_stop_rejects_future_output(kind):
+        operators={'0.input.inverse_sqrt':metric('operator',1024)}if kind=='operator'else{}
+        blocks=[metric('block',1024)]if kind=='block'else[]
+        row,e,prefix,pin,plan=record(operators,blocks)
+&gt;       with pytest.raises(ValueError):r.candidate_journal(row,e,prefix,pin,plan,{})
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+/tmp/qwen-terminal-prefix-security-review-20261104/negative-v1/source/test_partial.py:19: Failed</failure></testcase><testcase classname="test_partial" name="test_first_norm_input_stop_rejects_future_output[block]" time="0.002"><failure message="Failed: DID NOT RAISE ValueError">kind = 'block'
+
+    @pytest.mark.parametrize('kind',['operator','block'])
+    def test_first_norm_input_stop_rejects_future_output(kind):
+        operators={'0.input.inverse_sqrt':metric('operator',1024)}if kind=='operator'else{}
+        blocks=[metric('block',1024)]if kind=='block'else[]
+        row,e,prefix,pin,plan=record(operators,blocks)
+&gt;       with pytest.raises(ValueError):r.candidate_journal(row,e,prefix,pin,plan,{})
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+/tmp/qwen-terminal-prefix-security-review-20261104/negative-v1/source/test_partial.py:19: Failed</failure></testcase><testcase classname="test_partial" name="test_first_norm_input_stop_with_no_future_output_control" time="0.001" /></testsuite></testsuites>

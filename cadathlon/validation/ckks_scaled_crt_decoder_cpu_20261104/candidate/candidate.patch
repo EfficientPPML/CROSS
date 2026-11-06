@@ -1,0 +1,44 @@
+--- a/jaxite_word/ckks_ctx.py
++++ b/jaxite_word/ckks_ctx.py
+@@ -1689,6 +1689,27 @@
+   _check_decode_stddev(_decode_approximation_stddev(values, conjugate))
+ 
+ 
++def _scale_centered_crt_coefficient(value: int, scale: float, scale_inv: float) -> float:
++  """Scale a centered CRT integer without overflowing its initial conversion.
++
++  Preserve the existing binary64 operations when integer conversion succeeds.
++  Only an overflowing integer conversion takes the exact binary64 scale's
++  integer-ratio path. A nonrepresentable scaled result still raises; the decode
++  approximation check is unchanged.
++  """
++  try:
++    raw = float(value)
++  except OverflowError:
++    numerator, denominator = float(scale).as_integer_ratio()
++    try:
++      return (value * denominator) / numerator
++    except OverflowError as error:
++      raise OverflowError(
++          'CKKS unit-scale coefficient is not representable as binary64'
++      ) from error
++  return raw * scale_inv
++
++
+ def _fast_decode(
+     coef_rns: np.ndarray,
+     ctx,
+@@ -1731,11 +1752,11 @@
+     r = combined[i * gap]
+     if r > Big_half:
+       r -= Big
+-    reals[i] = float(r) * scale_inv
++    reals[i] = _scale_centered_crt_coefficient(r, scale, scale_inv)
+     im = combined[i * gap + Nh]
+     if im > Big_half:
+       im -= Big
+-    imags[i] = float(im) * scale_inv
++    imags[i] = _scale_centered_crt_coefficient(im, scale, scale_inv)
+ 
+   cur = reals + 1j * imags
+ 

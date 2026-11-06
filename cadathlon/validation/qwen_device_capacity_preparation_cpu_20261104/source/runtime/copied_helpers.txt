@@ -1,0 +1,15 @@
+def _bytes(value,label,limit=2<<20):
+    if type(value)is not str:raise TypeError('exact UTF-8 public '+label+' bytes required')
+    raw=value.encode('utf-8')
+    if not 0<len(raw)<=limit:raise ValueError('bounded public '+label+' required')
+    return raw
+
+def _model(public,value):
+    obj(value,('manifest','report','outer','root_review','expected_pins'),'public model proof bundle')
+    return authenticate_model(public,_bytes(value['manifest'],'model manifest'),_bytes(value['report'],'model report'),
+        _bytes(value['outer'],'model outer',1<<16),_bytes(value['root_review'],'model root review',1<<16),
+        expected_pins=ExpectedModelPins(_bytes(value['expected_pins'],'model external pins',1<<20)))
+
+def public_from_sources(blobs):
+    if type(blobs)is not dict:raise TypeError('already authenticated complete source bytes required')
+    return PublicContract.from_blobs({name:blobs['public_inputs/'+name]for name in PUBLIC_PINS})

@@ -1,0 +1,117 @@
+{
+  "scope": "Isolated combined candidate only; not applied to live runtime. CPU component/contract validation, no accelerator or full encrypted transformer claim.",
+  "passed": true,
+  "archived_utc": "2026-11-03T01:13:51.509455+00:00",
+  "combined": {
+    "returncode": 0,
+    "session_id": 80408,
+    "reaped": true,
+    "pytest_passed": 326,
+    "pytest_subtests_passed": 68,
+    "skipped": 7,
+    "pytest_seconds": 167.178,
+    "external_wrapper_seconds": 168.5395920839983,
+    "source_files": 171,
+    "sources_unchanged": true,
+    "junit": {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "7",
+      "tests": "401",
+      "time": "167.178",
+      "timestamp": "2026-11-03T01:09:55.329022+00:00",
+      "hostname": "t1v-n-a4e6c486-w-0"
+    }
+  },
+  "skip_scope": "Six secure arithmetic/real-context codec/refresh tests were not enabled; one optional second-device guard skips on the ordinary one-device CPU process and passed in a separate two-device process.",
+  "secure_giant_linear": {
+    "ring": {
+      "degree": 8192,
+      "depth": 1,
+      "dnum": 2,
+      "q_count": 4,
+      "p_count": 3,
+      "actual_log2_qp": 206.9977101580269,
+      "security_bits": 128
+    },
+    "cases": 4,
+    "ntt_subsets_enabled": true,
+    "max_abs_error": 4.573679976416223e-12,
+    "exact_payload_and_metadata_vs_baseline": true,
+    "provider_stats": {
+      "builds": 88,
+      "hits": 40
+    }
+  },
+  "secure_rotation_followup": {
+    "session_id": 37786,
+    "returncode": 0,
+    "reaped": true,
+    "batch": 2,
+    "degree": 8192,
+    "actual_log2_qp": 212.45574163467,
+    "levels": [
+      3,
+      1
+    ],
+    "rotations": [
+      3,
+      -5
+    ],
+    "max_abs_error": 6.071638949597946e-08,
+    "owner_contexts_collected": true,
+    "sources_unchanged": true,
+    "seconds": 20.62161307000133
+  },
+  "initial_failure": "Preserved one-device run:326 passed,68 subtests,6 skipped,1 failure because the initial optional-device test asserted two devices. No runtime edits followed; the test now skips clearly, and separate two-device coverage passes.",
+  "patch_files": [
+    "jaxite_word/key_gen.py",
+    "jaxite_word/he_params.py",
+    "jaxite_word/he_ops.py",
+    "jaxite_word/herot.py",
+    "cadathlon/common/encrypted_reference.py",
+    "cadathlon/common/encrypted_ntt.py",
+    "cadathlon/common/encrypted_packed_transformer.py",
+    "cadathlon/common/package.py",
+    "cadathlon/tests/test_package.py",
+    "cadathlon/tests/test_scoped_ntt.py",
+    "cadathlon/tests/test_linear_queue.py"
+  ],
+  "patch_apply_check": "git apply --check passed against unchanged live base; no patch applied.",
+  "graph_scope": "All twelve public configurations pass both ideal packed and bounded graph contracts. Their symbolic payloads select pending_limit1; real multi-pending scheduling is covered separately by queue/lifetime and secure linear tests.",
+  "limitations": [
+    "No speedup calibration; CPU times are development component observations.",
+    "Queue payload budget excludes baby ciphertexts, accumulator, plaintexts, NTT/key/control and primitive workspaces; not an HBM cap.",
+    "Scoped NTT reuse remains explicit opt-in and defaults false. Existing published runtime/TPU proofs remain associated with their original source snapshots.",
+    "No full encrypted model, bootstrap accuracy, unseen-input polynomial-domain, or secure large-ring memory claim."
+  ],
+  "versions": {
+    "jax": "0.12.0.1",
+    "jaxlib": "0.12.0.1",
+    "numpy": "2.5.4",
+    "pytest": "9.2.0"
+  },
+  "archive_source_hashes_verified": true,
+  "artifact_sha256": {
+    "base_source_sha256.json": "b1d9ee750cf00ef6d620f210cd2551db0a6c4a7446afd8ca31df4d6c65bc5347",
+    "combined_runtime.patch": "a3afee5fd8d230ccb20442b0d016887312782f9ee8cc7fd421d439e6119a735a",
+    "build_patch.py": "663cb9d6b13bc294169e755e4524cbfe9d854037e863e21056c73724615c536c",
+    "patch_sources.json": "d78c7fee7cbc82ff26edb0d24a79baa050a76732ca2fc900fa70b883cd1b9513",
+    "initial_one_device_failure/combined_tests.json": "e3221a96978840e4b50c0cbe4ee2c551bc9bc6600df4969434e8afa421ddab59",
+    "initial_one_device_failure/tested_sources.tar.gz": "d80684b8cbc84c4ee723edce6fee260d39c2ee6c32db9a4680ec2bd05b71b631",
+    "initial_one_device_failure/tests.xml": "721cf1be799ea259c48e5dd640b6e11e330cfeb755357fcea0fb313061a72bb4",
+    "initial_one_device_failure/secure_result.json": "fc1bacc5214bc0049257badb96bd4d6b69b01df9047c8231e4440460020b9a7c",
+    "initial_one_device_failure/tests.log": "6a4dcacf2cbd202802d0a01af073ad5b2859a2150c68fa59691d9c771921f1a7",
+    "combined/combined_tests.json": "b0e7ba99f541cb8ca89a7f10281420f1a238ecc05a7ccdd00ff4004c61bd0df0",
+    "combined/tested_sources.tar.gz": "096f7009acbfd2289084db2013d6a2940fde00b824b11d5bd305d6d54f00e29c",
+    "combined/tests.xml": "dd5324343f3d2200dcd077ef36035211a4fcaf1e5e56de9a7c3961894523ed6c",
+    "combined/secure_result.json": "98fcb6b05d120d34c01b80deb66eb30921af53aa79084b50574b2c2484b99b06",
+    "combined/tests.log": "3c9dd472056ed76fd80d4d0b8ae6f6c6519b1143d8dd309f8f6611f4112c0790",
+    "ntt_followup/report.json": "57902c82b97f6388344affb67b875cae9b482dfe30e483e3b1a28a8009a1550d",
+    "ntt_followup/tested_sources.tar.gz": "090d6e421e2b24d39fb1ff71d31f957bc09b3c1e5894d7dc1d4c6894b32dd895",
+    "ntt_followup/secure_batch_level.log": "ebf04cc8f72fa8ae57b992ff2d26edffc52d16989c0f39117d9d6b72b83bb971",
+    "ntt_followup/integrated.json": "b46255a5cbcef73e0ec20da73ffcdc9b3bb20309f9340b46fa9f3c9fb6261422",
+    "ntt_followup/second_device.log": "85a7532b40196fb821e4b3dfb1231181e8e280a2da477abec65674576186c6c1"
+  }
+}

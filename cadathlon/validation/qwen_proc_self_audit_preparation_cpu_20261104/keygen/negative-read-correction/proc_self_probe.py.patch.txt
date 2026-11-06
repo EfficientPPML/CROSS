@@ -1,0 +1,61 @@
+--- before/proc_self_probe.py
++++ after/proc_self_probe.py
+@@ -99,6 +99,18 @@
+     # strings are used here; original-type rejection is tested via os.open.
+     with open(path,mode)as stream:
+         if mode=='rb':assert stream.read(256)
++
++
++def open_fd_only(path,flags,**kwargs):
++    # A faulty admission must still never cause a negative test to read the
++    # unselected file. Retire an unexpectedly opened descriptor immediately.
++    fd=os.open(path,flags,**kwargs)
++    original=fd;fd=None
++    close_once(original)
++
++
++def open_builtin_only(path,mode):
++    with open(path,mode):pass
+ 
+ 
+ def rejected(operation):
+@@ -151,7 +163,7 @@
+                 'flag_nonblock':os.O_NONBLOCK,'flag_all':os.O_CLOEXEC|os.O_NOFOLLOW|os.O_NONBLOCK}[case]
+             read_fd('/proc/self/status',flags);read_succeeded=True
+         elif case in('body_error','swallowed_then_read'):
+-            if case=='swallowed_then_read':rejected(lambda:read_fd('/proc/self/environ',0))
++            if case=='swallowed_then_read':rejected(lambda:open_fd_only('/proc/self/environ',0))
+             read_fd('/proc/self/status',os.O_CLOEXEC);read_succeeded=True
+             if case=='body_error':
+                 body=OSError('synthetic body after permitted metadata read')
+@@ -160,18 +172,18 @@
+             bad_flags={'write_wronly':os.O_WRONLY,'write_rdwr':os.O_RDWR,'write_creat':os.O_CREAT,
+                 'write_trunc':os.O_TRUNC,'write_append':os.O_APPEND,'flag_directory':os.O_DIRECTORY,
+                 'flag_path':os.O_PATH,'flag_bool':False}
+-            if case in bad_flags:rejected(lambda:read_fd('/proc/self/status',bad_flags[case]))
+-            elif case=='builtin_write':rejected(lambda:read_builtin('/proc/self/status','wb'))
+-            elif case=='bytes':rejected(lambda:read_fd(b'/proc/self/status',0))
+-            elif case=='pathlike':rejected(lambda:read_fd(Path('/proc/self/status'),0))
+-            elif case=='dot':rejected(lambda:read_fd('/proc/self/./status',0))
+-            elif case=='double_slash':rejected(lambda:read_fd('/proc//self/status',0))
+-            elif case=='explicit_pid':rejected(lambda:read_fd('/proc/'+str(os.getpid())+'/status',0))
+-            elif case=='unselected':rejected(lambda:read_fd('/proc/self/environ',0))
+-            elif case=='relative_dirfd':rejected(lambda:read_fd('status',0,dir_fd=directory_fd))
+-            elif case=='absolute_dirfd':rejected(lambda:read_fd('/proc/self/status',0,dir_fd=directory_fd))
+-            elif case=='symlink':rejected(lambda:read_fd(str(alias),0))
+-            elif case=='protected':rejected(lambda:read_fd('/proc/self/status',0))
++            if case in bad_flags:rejected(lambda:open_fd_only('/proc/self/status',bad_flags[case]))
++            elif case=='builtin_write':rejected(lambda:open_builtin_only('/proc/self/status','wb'))
++            elif case=='bytes':rejected(lambda:open_fd_only(b'/proc/self/status',0))
++            elif case=='pathlike':rejected(lambda:open_fd_only(Path('/proc/self/status'),0))
++            elif case=='dot':rejected(lambda:open_fd_only('/proc/self/./status',0))
++            elif case=='double_slash':rejected(lambda:open_fd_only('/proc//self/status',0))
++            elif case=='explicit_pid':rejected(lambda:open_fd_only('/proc/'+str(os.getpid())+'/status',0))
++            elif case=='unselected':rejected(lambda:open_fd_only('/proc/self/environ',0))
++            elif case=='relative_dirfd':rejected(lambda:open_fd_only('status',0,dir_fd=directory_fd))
++            elif case=='absolute_dirfd':rejected(lambda:open_fd_only('/proc/self/status',0,dir_fd=directory_fd))
++            elif case=='symlink':rejected(lambda:open_fd_only(str(alias),0))
++            elif case=='protected':rejected(lambda:open_fd_only('/proc/self/status',0))
+             else:raise AssertionError('unknown fixed probe case')
+         if negative:
+             assert scope.denials

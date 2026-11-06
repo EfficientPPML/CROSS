@@ -1,0 +1,128 @@
+{
+  "active_case": "test1.in",
+  "actual_archive_sha256": "a5e8b41586e683bb6eb23d57266195bfcb0206acb94f2f1a4af9fef6636074eb",
+  "completed_cases": [],
+  "first_case_owned_key_directory": "/dev/shm/cross-p3-original-six-key-parent-f383y30c/cross-transformer-case-lhwcudr8",
+  "first_case_owned_key_identity": {
+    "device": 24,
+    "inode": 4065
+  },
+  "healthy_timeout": null,
+  "launch_receipt_sha256": "f219750cc03acb90d05283d2076f53cb9623df62e35f0ef7b9e5021434b3d5d5",
+  "launch_tool_chunk": "58a623",
+  "measured_sources": 128,
+  "numerical_success_claim": false,
+  "observed_utc": "2026-11-05T12:34:28.615127+00:00",
+  "original_session": 81235,
+  "owned_key_parent": "/dev/shm/cross-p3-original-six-key-parent-f383y30c",
+  "owned_key_parent_identity": {
+    "mode": 448,
+    "st_dev": 24,
+    "st_gid": 2002,
+    "st_ino": 4064,
+    "st_uid": 2002
+  },
+  "preparation_auxiliary_files": 1,
+  "processes": [
+    {
+      "command": [
+        "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+        "/tmp/p3-original-six-preparation-20261105/collector/check_p3_original_six.py",
+        "--repo",
+        "/tmp/p3-original-six-preparation-20261105/checkout",
+        "--output",
+        "/tmp/p3-original-six-preparation-20261105/run-v1"
+      ],
+      "cpu_affinity": [
+        160,
+        161,
+        162,
+        163,
+        164,
+        165,
+        166,
+        167
+      ],
+      "pgid": 1598331,
+      "pid": 1598331,
+      "ppid": 16918,
+      "start_ticks": 24558173,
+      "state": "S"
+    },
+    {
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "-o",
+        "/tmp/p3-original-six-preparation-20261105/run-v1/test1/time.txt",
+        "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+        "/tmp/p3-original-six-preparation-20261105/collector/check_p3_original_six.py",
+        "--repo",
+        "/tmp/p3-original-six-preparation-20261105/checkout",
+        "--child-runner",
+        "/tmp/p3-original-six-preparation-20261105/checkout/cadathlon/non_agent_pset/p3_cnn/src/runner.py",
+        "--",
+        "--case",
+        "/tmp/p3-original-six-preparation-20261105/checkout/cadathlon/non_agent_pset/p3_cnn/test/test1.in",
+        "--baseline",
+        "--warmups",
+        "0",
+        "--repeats",
+        "1"
+      ],
+      "cpu_affinity": [
+        160,
+        161,
+        162,
+        163,
+        164,
+        165,
+        166,
+        167
+      ],
+      "pgid": 1598337,
+      "pid": 1598337,
+      "ppid": 1598331,
+      "start_ticks": 24558222,
+      "state": "S"
+    },
+    {
+      "command": [
+        "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+        "/tmp/p3-original-six-preparation-20261105/collector/check_p3_original_six.py",
+        "--repo",
+        "/tmp/p3-original-six-preparation-20261105/checkout",
+        "--child-runner",
+        "/tmp/p3-original-six-preparation-20261105/checkout/cadathlon/non_agent_pset/p3_cnn/src/runner.py",
+        "--",
+        "--case",
+        "/tmp/p3-original-six-preparation-20261105/checkout/cadathlon/non_agent_pset/p3_cnn/test/test1.in",
+        "--baseline",
+        "--warmups",
+        "0",
+        "--repeats",
+        "1"
+      ],
+      "cpu_affinity": [
+        160,
+        161,
+        162,
+        163,
+        164,
+        165,
+        166,
+        167
+      ],
+      "pgid": 1598337,
+      "pid": 1598338,
+      "ppid": 1598337,
+      "start_ticks": 24558222,
+      "state": "R"
+    }
+  ],
+  "schema": "root-p3-original-six-actual-start-readback-v1",
+  "source_start_and_archive_exact": true,
+  "terminal": false,
+  "tpu_fuser_tool_chunk": "f04a59",
+  "tpu_holder_pid": 1598338
+}

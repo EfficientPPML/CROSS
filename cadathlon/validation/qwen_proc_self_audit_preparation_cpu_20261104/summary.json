@@ -1,0 +1,192 @@
+{
+  "actual_role_execution": false,
+  "backend_imports": false,
+  "borrowed_body_reads": false,
+  "capacity_measurement": false,
+  "client_cases": 24,
+  "encrypted_execution": false,
+  "independent_live_observation": false,
+  "key_generation": false,
+  "keygen_cases": 32,
+  "lineages": [
+    {
+      "archive": "client",
+      "label": "client464v2",
+      "map": "client/runtime-correction/sources.json",
+      "prefix": "runtime/",
+      "replace": {}
+    },
+    {
+      "archive": "client",
+      "label": "client464 predecessor",
+      "map": "client/runtime-correction/parent464-sources.json",
+      "prefix": "runtime/",
+      "replace": {
+        "qwen_client_dependencies.py": "client/runtime-correction/before_qwen_client_dependencies.py"
+      }
+    },
+    {
+      "archive": "client",
+      "label": "client472 unrun ownership predecessor",
+      "map": "client/test-ownership-correction/parent472-sources.json",
+      "prefix": "",
+      "replace": {
+        "test_kernel_allowlist.py": "client/test-ownership-correction/before_test_kernel_allowlist.py"
+      }
+    },
+    {
+      "archive": "keygen",
+      "label": "keygen85v3",
+      "map": "keygen/runtime-correction/sources.json",
+      "prefix": "runtime/",
+      "replace": {}
+    },
+    {
+      "archive": "keygen",
+      "label": "keygen85v2 predecessor",
+      "map": "keygen/runtime-correction/parent85-sources.json",
+      "prefix": "runtime/",
+      "replace": {
+        "keygen_dependencies.py": "keygen/runtime-correction/before_keygen_dependencies.py"
+      }
+    },
+    {
+      "archive": "keygen",
+      "label": "keygen92 unrun negative-read predecessor",
+      "map": "keygen/negative-read-correction/unrun-source-handoff/sources.json",
+      "prefix": "",
+      "replace": {
+        "SCOPE.md": "keygen/negative-read-correction/before/SCOPE.md",
+        "proc_self_probe.py": "keygen/negative-read-correction/before/proc_self_probe.py",
+        "test_origin.json": "keygen/negative-read-correction/before/test_origin.json"
+      }
+    }
+  ],
+  "model_execution": false,
+  "passed": true,
+  "prior61_and95_retested": false,
+  "proc_contents_retained": false,
+  "proof_owner": {
+    "client": {
+      "exit_code": 0,
+      "reaped": true,
+      "session": 68374,
+      "terminal_chunk": "170b97"
+    },
+    "keygen": {
+      "exit_code": 0,
+      "reaped": true,
+      "session": 67367,
+      "terminal_chunk": "74d265"
+    }
+  },
+  "proofs": {
+    "client": {
+      "affinity": [
+        108,
+        109,
+        110,
+        111
+      ],
+      "current_source": "/tmp/qwen-client-kernel-allowlist-tests-v2-20261104",
+      "root_label": "client24",
+      "source_archive_sha256": "9ed75e3c56eaf743a34f591d6978af69394de93a8ea806a26bb5fb9b98d4a617",
+      "source_count": 472,
+      "source_manifest_sha256": "208049d311bc26bb8db8ce71c610c6c484dfbec064e1b26bbbe5f51483a1ec40",
+      "tests": 24
+    },
+    "keygen": {
+      "affinity": [
+        112,
+        113,
+        114,
+        115
+      ],
+      "current_source": "/tmp/qwen-keygen-proc-self-tests-v2-20261104",
+      "root_label": "keygen32",
+      "source_archive_sha256": "f6368d99e879e5e9e3629b05a12fc09c4748709ff3c393f7811e606303b9bc56",
+      "source_count": 92,
+      "source_manifest_sha256": "bb9bee8a343f45e65fdb344240bdf3b5f7fc66b9ef5167c67909b11e9d81d53d",
+      "tests": 32
+    }
+  },
+  "readable_source_bindings": {
+    "client/selected-source/TEST_SCOPE.md": {
+      "archive": "client",
+      "member": "TEST_SCOPE.md"
+    },
+    "client/selected-source/before_qwen_client_dependencies.py": {
+      "archive": "client",
+      "member": "before_qwen_client_dependencies.py"
+    },
+    "client/selected-source/conftest.py": {
+      "archive": "client",
+      "member": "conftest.py"
+    },
+    "client/selected-source/kernel_probe.py": {
+      "archive": "client",
+      "member": "kernel_probe.py"
+    },
+    "client/selected-source/parent464-sources.json": {
+      "archive": "client",
+      "member": "parent464-sources.json"
+    },
+    "client/selected-source/runtime-sources.json": {
+      "archive": "client",
+      "member": "runtime-sources.json"
+    },
+    "client/selected-source/runtime/qwen_client_dependencies.py": {
+      "archive": "client",
+      "member": "runtime/qwen_client_dependencies.py"
+    },
+    "client/selected-source/selected_tests.json": {
+      "archive": "client",
+      "member": "selected_tests.json"
+    },
+    "client/selected-source/test_kernel_allowlist.py": {
+      "archive": "client",
+      "member": "test_kernel_allowlist.py"
+    },
+    "keygen/selected-source/SCOPE.md": {
+      "archive": "keygen",
+      "member": "SCOPE.md"
+    },
+    "keygen/selected-source/conftest.py": {
+      "archive": "keygen",
+      "member": "conftest.py"
+    },
+    "keygen/selected-source/proc_self_probe.py": {
+      "archive": "keygen",
+      "member": "proc_self_probe.py"
+    },
+    "keygen/selected-source/runtime/keygen_dependencies.py": {
+      "archive": "keygen",
+      "member": "runtime/keygen_dependencies.py"
+    },
+    "keygen/selected-source/runtime_sources.json": {
+      "archive": "keygen",
+      "member": "runtime_sources.json"
+    },
+    "keygen/selected-source/test_origin.json": {
+      "archive": "keygen",
+      "member": "test_origin.json"
+    },
+    "keygen/selected-source/test_proc_self_integration.py": {
+      "archive": "keygen",
+      "member": "test_proc_self_integration.py"
+    },
+    "keygen/selected-source/test_selection.json": {
+      "archive": "keygen",
+      "member": "test_selection.json"
+    }
+  },
+  "rng": false,
+  "runtime_scope": {
+    "client": "464v2: one dependency overlay; 463 unchanged",
+    "keygen": "85v3: one dependency overlay; 84 unchanged"
+  },
+  "schema": "qwen-proc-self-public-capsule-v1",
+  "scope": "Real installed audit hooks and os.open wrappers, own-process proc metadata only, with explicit synthetic admissions.",
+  "source_only_history_not_observed_failures": true,
+  "tests": 56
+}

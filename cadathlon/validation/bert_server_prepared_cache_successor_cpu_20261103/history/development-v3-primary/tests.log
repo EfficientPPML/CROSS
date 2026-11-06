@@ -1,0 +1,46 @@
+..............................F..........                                [100%]
+=================================== FAILURES ===================================
+_ test_real_loader_quarantines_original_failed_owner_after_engine_replacement __
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x722ed0b16e40>
+
+    def test_real_loader_quarantines_original_failed_owner_after_engine_replacement(monkeypatch):
+        import loader_prepared_rotation as loader_module,types
+        events=[];ctx=NS(_param_cache=NS(coef_maps={1:object()}))
+        session=object.__new__(loader_module.PreparedLoaderSession)
+        session._context=ctx;session._active=True;session._failure=None;session._registered=[];session.cleanup_completed=False
+        session._arrays={'retained':object()};session._maps={};session._states={};session._owner=object()
+        session.lease=NS(_check=lambda:None,retire=lambda:events.append('lease-retired'));session._lease_bound=session.lease
+        module=types.ModuleType('prepared_rotation');module.create_prepared_arithmetic=lambda c,**kw:Arithmetic(c,kw['source_lease'],events)
+        monkeypatch.setitem(sys.modules,'prepared_rotation',module)
+        monkeypatch.setattr(p,'_types',lambda:(loader_module.PreparedLoaderSession,Arithmetic,Rotation))
+        control=p.PreparedEngineOwners(NS(ctx=ctx,prepared_arithmetic=session.create),ctx)
+        a=control.create('graph',ctx,low_memory=True,preserve_dispatch_cache=True);b=control.create('linear',ctx,low_memory=True,preserve_dispatch_cache=True)
+        original=a.rotation;failure=OSError('uncertain transfer');original._failed=failure;a.rotation=object();control.owners.clear()
+>       with pytest.raises(OSError) as caught:control.close()
+                                              ^^^^^^^^^^^^^^^
+
+test_engine_prepared.py:171: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+runtime/stage/engine_prepared_owners.py:110: in close
+    raise failure
+runtime/stage/engine_prepared_owners.py:91: in attempt
+    try:return call()
+               ^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <engine_prepared_owners.PreparedEngineOwners object at 0x722ece545910>
+
+    def _check_inventory(self):
+        if (self.owners is not self._owner_list or type(self.owners)is not list or len(self.owners)!=len(self._registered)
+                or any(a is not b for a,b in zip(self.owners,self._registered))):
+>           raise ValueError('original prepared owner inventory changed')
+E           ValueError: original prepared owner inventory changed
+E           additional prepared-engine cleanup: OSError
+E           additional prepared-engine cleanup: ValueError
+E           additional prepared-engine cleanup: OSError
+
+runtime/stage/engine_prepared_owners.py:58: ValueError
+=========================== short test summary info ============================
+FAILED test_engine_prepared.py::test_real_loader_quarantines_original_failed_owner_after_engine_replacement
+1 failed, 40 passed in 0.11s

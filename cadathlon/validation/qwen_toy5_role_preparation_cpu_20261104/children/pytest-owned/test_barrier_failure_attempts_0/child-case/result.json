@@ -1,0 +1,120 @@
+{
+  "case": "test_barrier_failure_attempts_remaining_original_owners_and_keeps_primary",
+  "details": {},
+  "error_type": null,
+  "events": [
+    {
+      "event": "ct_guard"
+    },
+    {
+      "event": "ct_guard"
+    },
+    {
+      "event": "ct_guard"
+    },
+    {
+      "event": "ff_init",
+      "owner": 128435939496288
+    },
+    {
+      "event": "ct_guard"
+    },
+    {
+      "event": "ntt_init",
+      "ff": 128435939496288,
+      "owner": 128435939496624
+    },
+    {
+      "count": 1,
+      "event": "barrier",
+      "name": "ff_table"
+    },
+    {
+      "count": 1,
+      "event": "barrier",
+      "name": "ntt_table"
+    },
+    {
+      "event": "ct_guard"
+    },
+    {
+      "event": "transfer"
+    },
+    {
+      "array": 128435941401888,
+      "event": "from_array",
+      "ntt": 128435939496624,
+      "parameter_keys": [
+        "moduli",
+        "ntt_ctx"
+      ],
+      "shape_keys": [
+        "batch",
+        "degree",
+        "degree_layout",
+        "num_elements",
+        "num_moduli",
+        "precision"
+      ]
+    },
+    {
+      "event": "validate"
+    },
+    {
+      "count": 1,
+      "event": "barrier",
+      "name": "payload"
+    },
+    {
+      "event": "ct_guard"
+    },
+    {
+      "ctx": 128435939537200,
+      "event": "security",
+      "values": [
+        128435939496960
+      ]
+    },
+    {
+      "event": "ct_guard"
+    },
+    {
+      "event": "ct_guard"
+    },
+    {
+      "event": "ct_guard"
+    },
+    {
+      "event": "ct_guard"
+    },
+    {
+      "event": "ct_guard"
+    },
+    {
+      "count": 2,
+      "event": "barrier",
+      "name": "payload"
+    },
+    {
+      "count": 1,
+      "event": "barrier",
+      "name": "moduli"
+    },
+    {
+      "event": "ct_guard"
+    },
+    {
+      "count": 2,
+      "event": "barrier",
+      "name": "ff_table"
+    },
+    {
+      "count": 2,
+      "event": "barrier",
+      "name": "ntt_table"
+    }
+  ],
+  "passed": true,
+  "runtime_map_sha256": "d82d68101c1f3ddc7f18b6ae4492aa7618d779012babaf9ed85355dfab927fea",
+  "variant": ""
+}

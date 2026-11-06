@@ -1,0 +1,23 @@
+Thirty focused synthetic device-policy and state cases passed on the exact 50-file source closure, including 34 runtime files. The root-owned run exited 0 and was reaped (session 24307, launch `ab0197`, terminal `6454a9`). The recorded duration is 4.183208093018038 seconds; it is not a performance result. [Root terminal review](root-review/terminal-review.json) and [independent terminal readback](peer-review/terminal/review.json) bind the source maps, archives, XML, audit and process receipts.
+
+The tests exercise the unchanged six-file device component and the real pure resource validator using complete synthetic policy/review documents. Only the phase and phase-pin validation methods are recording seams. Seventeen children temporarily install the source-owned JAX-shaped fixture; no genuine NumPy, JAX, native device or backend is imported. Each case has its own child process and one-use registry. The source-bound checks verify local module file/spec origins and original resource functions; there is no emitted observed-origin table. See [TEST_SCOPE.md](source/TEST_SCOPE.md), [selected cases](source/selected_tests.json) and [report](measured/report.json).
+
+These results cover closed policy joins, retained policy identities, hook and descriptor identities, failure/reentry behavior, stage ordering, synthetic statistics and original-permit rejection after restoration. They do not establish genuine device capacity, memory reservation, an exclusive lease, native API compatibility, scientific admission, or an actual server execution. The component's local identity guard does not newly snapshot nested phase graphs or protect arbitrary mutable globals. The policy documents and fake statistics are test data, not usable policies or grants. No model, token, key, ciphertext or private proof bodies are included.
+
+The capsule preserves these distinct histories:
+
+- [Device v1](history/device-v1/handoff.json) had a source-only finding: reauthentication could use rebound policy fields because the original dictionary and field identities were not separately retained. [The original finding](peer-review/device-v1/review.json) is not a demonstrated runtime bypass. [Device v2](history/device-v2/handoff.json) captures and checks those original identities; its [source peer review](peer-review/device-v2/review.json) remains source-only.
+- [The original test plan](history/test-plan/PLAN.md) proposed a whole-resource seam. Root refined that plan before authoring: the selected tests use the real pure `authenticate_policy` and `logical_facts` functions, with counters confirming their execution where expected.
+- [The 49-file test source](history/tests-v1/handoff.json) was never run. Its [coverage review](peer-review/tests-v1/review.json) requested an observable original-permit retry after restoring benign identities and callbacks. [The 50-file successor](history/tests-v2/handoff.json) makes that central assertion without changing the 30 cases or 34 runtime files. Both archives and the exact patch are retained.
+- The CNN review's initial substring check incorrectly matched an equality assertion. [The initial script](peer-review/tests-v2/review_source_initial.py), corrected AST-based script and [review history](peer-review/tests-v2/review.json) are retained. This was a reviewer-only failure, not a product or test failure.
+
+The measured evidence includes 30 early parent retirement receipts and 30 positive child terminal/result/log sets: 120 regular files. Twenty-one pytest alias records are retained as metadata only; no alias was followed, copied or recreated. The alias count reflects pytest's truncated-name collisions. Root and peer post-exit checks found the recorded PIDs/groups absent. Their late observations did not capture a live process; only the root owns the direct wait/reap claim. [Root scripts](root-review/scripts/root_device_terminal_20261104.py) and [root owner receipt](root-review/direct-owner.json) preserve that distinction. The initial root source authorization was inline; no standalone source-grant script is invented here.
+
+`files.json` hashes every other file, `whitelist.json` closes the inventory, and `origins.json` records exact copied public paths and hashes. The stdlib verifier reads evidence only; it never imports measured code, reruns tests, probes processes or queries capacity:
+
+```sh
+python -I -B verify.py
+python -I -B verify.py --current
+```
+
+The first command is portable. The second also compares copied public originals at their recorded paths. This capsule was assembled under `/tmp`; it does not modify measured sources, repository files, or validation status.

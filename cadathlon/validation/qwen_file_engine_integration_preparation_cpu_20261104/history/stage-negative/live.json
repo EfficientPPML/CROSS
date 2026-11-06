@@ -1,0 +1,24 @@
+{
+  "wrapper_pid": 3905012,
+  "wrapper_pgid": 3905012,
+  "worker_pid": 3905032,
+  "worker_pgid": 3905032,
+  "command": [
+    "taskset",
+    "-c",
+    "176-179",
+    "/tmp/cross-pretrained-validation-env/bin/python",
+    "-I",
+    "-B",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "--rootdir=/tmp/qwen-stage-boundary-negative-proof-20261104/development-v1/execution",
+    "--confcutdir=/tmp/qwen-stage-boundary-negative-proof-20261104/development-v1/execution",
+    "--import-mode=importlib",
+    "--junitxml=/tmp/qwen-stage-boundary-negative-proof-20261104/development-v1/tests.xml",
+    "/tmp/qwen-stage-boundary-negative-proof-20261104/development-v1/execution/test_stage_boundaries.py"
+  ]
+}

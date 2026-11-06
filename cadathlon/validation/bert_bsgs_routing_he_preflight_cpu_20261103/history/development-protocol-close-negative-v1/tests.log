@@ -1,0 +1,76 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+____ test_later_cleanup_only_cancellation_has_precedence[KeyboardInterrupt] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-405/test_later_cleanup_only_cancel0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7a8ee9de48a0>
+cancellation = <class 'KeyboardInterrupt'>
+
+    @pytest.mark.parametrize('cancellation',[KeyboardInterrupt,SystemExit])
+    def test_later_cleanup_only_cancellation_has_precedence(tmp_path,monkeypatch,cancellation):
+        write=methods()['write'];original=os.close;regular=OSError('first close-only error');cancel=cancellation('later directory close cancellation');closed=[]
+        def close(fd):
+            info=os.fstat(fd);original(fd);closed.append(fd)
+            if stat.S_ISREG(info.st_mode):raise regular
+            raise cancel
+        monkeypatch.setattr(os,'close',close)
+>       with pytest.raises(cancellation) as caught:write(tmp_path/'report.json',{'passed':True})
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_close.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+unchanged_protocol_methods:99: in write
+    ???
+unchanged_protocol_methods:83: in close
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fd = 14
+
+    def close(fd):
+        info=os.fstat(fd);original(fd);closed.append(fd)
+>       if stat.S_ISREG(info.st_mode):raise regular
+                                      ^^^^^^^^^^^^^
+E       OSError: first close-only error
+E       component descriptor close: KeyboardInterrupt('later directory close cancellation')
+
+test_close.py:18: OSError
+_______ test_later_cleanup_only_cancellation_has_precedence[SystemExit] ________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-405/test_later_cleanup_only_cancel1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7a8ee9de42b0>
+cancellation = <class 'SystemExit'>
+
+    @pytest.mark.parametrize('cancellation',[KeyboardInterrupt,SystemExit])
+    def test_later_cleanup_only_cancellation_has_precedence(tmp_path,monkeypatch,cancellation):
+        write=methods()['write'];original=os.close;regular=OSError('first close-only error');cancel=cancellation('later directory close cancellation');closed=[]
+        def close(fd):
+            info=os.fstat(fd);original(fd);closed.append(fd)
+            if stat.S_ISREG(info.st_mode):raise regular
+            raise cancel
+        monkeypatch.setattr(os,'close',close)
+>       with pytest.raises(cancellation) as caught:write(tmp_path/'report.json',{'passed':True})
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_close.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+unchanged_protocol_methods:99: in write
+    ???
+unchanged_protocol_methods:83: in close
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fd = 14
+
+    def close(fd):
+        info=os.fstat(fd);original(fd);closed.append(fd)
+>       if stat.S_ISREG(info.st_mode):raise regular
+                                      ^^^^^^^^^^^^^
+E       OSError: first close-only error
+E       component descriptor close: SystemExit('later directory close cancellation')
+
+test_close.py:18: OSError
+=========================== short test summary info ============================
+FAILED test_close.py::test_later_cleanup_only_cancellation_has_precedence[KeyboardInterrupt]
+FAILED test_close.py::test_later_cleanup_only_cancellation_has_precedence[SystemExit]
+2 failed in 0.03s

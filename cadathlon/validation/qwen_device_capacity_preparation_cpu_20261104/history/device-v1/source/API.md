@@ -1,0 +1,68 @@
+# Closed TPU policy and admission component — held source, unexecuted
+
+Two new modules are proposed for later explicit source selection: `qwen_device_policy.py` and `qwen_device_capacity.py`. Neither is copied into the current server. Existing `require_complete_capacity` remains selected and denied. No policy instance, numeric capacity, device path, backend import, probe, test, grant or successful observation is supplied. All numerical policy fields are mandatory external facts. This source has only been parsed as AST.
+
+The trust boundary is the accepted one: independently reviewed, pinned native backend code is trusted to implement its stated device interfaces. Python audit is a useful additional check and is explicitly not a native-syscall or arbitrary-Python sandbox. No new OS-containment prerequisite is imposed. An actual access inventory must still state the native paths/interfaces/side effects honestly; broad unknown access cannot be mislabeled a complete inventory.
+
+## Pure document API
+
+`authenticate(phase, blobs, *, expected_pins) -> DevicePolicyAdmission` takes the exact `ServerPhaseAdmission`, an immutable tuple of `(name, exact_bytes)` in `ROLES` order, and independently trusted canonical expected-pin bytes. No filesystem or backend is used by this function. The phase's own pure admission and selected resource validator run normally. Each document is capped at 256 KiB and uses compact sorted JSON plus newline, duplicate keys and nonfinite numbers rejected. This is a metadata bound, not a capacity allowance. It may need a declared bounded successor if a real reviewed inventory exceeds it.
+
+The ten required roles are resource_policy, resource_review, dependency_policy, selection, allocator, access, workspace, evidence, review, lease. There is no digest-only fallback: all ten bodies must be supplied, authenticated, structurally checked and joined. Exact source/archive/phase pins and phase-granted resource/dependency hashes are compared. The selected resource's selection and allocator hashes must match those exact documents. The source map must include both new helper files and the actual process. Expected pins must be provided by the independent launch authority; callers may not derive them from whatever bytes are presented.
+
+`DevicePolicyAdmission.check()` repeats full pure authentication; `.execution_authorized` is always false. Constructing the dataclass is not authority: runtime issuance reauthenticates it.
+
+The closed field sets are executable in `qwen_device_policy.py`; they are the authoritative schema definition. In particular:
+
+| Document | Required meaning and joins |
+|---|---|
+| selection | Actual externally selected host/physical-memory identity; exact TPU descriptor; single process and one physical device per ciphertext; full dependency environment; exact access/workspace hashes. No device number is chosen by this component. |
+| allocator | Exact dependency hash; genuine JAX file/hash matching installed-source and module-origin inventories; required `bytes_in_use` and `bytes_limit`; reviewed exclusive-memory allocator interpretation; exact environment configuration (an explicitly reviewed empty configuration may mean native defaults); actual factual-evidence hash. No GPU-only allocator flag is repurposed for TPU. |
+| access | Explicit `trusted_pinned_native_backend`; exact native libraries also present in dependency source pins; device nodes with real major/minor/open flags; literal metadata paths; native interfaces, owned side effects and network/IPC declarations; factual-evidence hash; Python-native-sandbox flag false. No glob permission. |
+| workspace | Exact server source/archive/request joins; additional memory after each original stage baseline; closed four-stage working/workspace/reserve bounds within the existing resource envelope; factual-evidence hash. |
+| evidence | Nonempty actual rationale for all14 fixed coverage subjects and explicit limitations. Narrative alone is not trusted: the independent review and externally supplied expected hash are required. |
+| review | Exact source/archive and eight predecessor document hashes; all14 affirmative factual review subjects; exact five process hook names; native trust/sandbox and nonreservation/non-live-review flags. It does not bind its own hash, lease, or phase grant. |
+| lease | Independently held exclusive physical allocation, exact selection/review/phase joins, root-owned lease ID, initialization permission and no interference with other jobs; lifetime until owned process retirement. No elapsed-time healthy deadline or lock-stealing policy. |
+
+There is no source/hash cycle: selection does not bind source, grant, review or lease. Workspace can bind the actual source/archive, which does not contain these externally supplied resource documents. The review binds predecessor policies but not itself or the phase grant; the lease binds the final phase and review. A future source closure that embeds a self-referential external policy must be rejected/reworked rather than weakening these joins.
+
+## Source-fixed process hooks
+
+The component does not accept arbitrary callback arguments. It requires five exact top-level Python functions in the selected `qwen_server_process` module. Their module/global/code identities, canonical independent file/spec origins and selected source hash are retained. Both new helper modules must also have original selected origins/hashes. Defaults and closures on the hooks are rejected. These hooks are absent from the current process, so issuance presently fails closed.
+
+All hooks receive `(phase, blobs, ...)`. The blobs argument is the original immutable tuple. The actual source implementation of these hooks requires separate review before use; names alone do not establish their behavior.
+
+1. `device_capacity_check_bindings(phase, blobs) -> None`: enforce original phase/source/archive/policy/helper identities, exact installed sources and backend/native origins, current environment/configuration and sticky audit status. Before initialization it must keep model/key/request reads and evaluation disabled, permit only the independently admitted initialization surface, and reject an already initialized foreign backend. After initialization it must retain the same original backend owner. This hook must not recursively call this component's state transitions.
+2. `device_capacity_check_host(phase, blobs, stage) -> bytes`: call the genuine selected `check_host_capacity` with the correct pre/post-import state, failing on any capacity or cleanup error. Return canonical `qwen-device-host-observation-v1` with exact pid, stage, resource policy hash and the complete actual `observation` object. It must preserve host-only flags. No recording or caller-supplied success report is accepted in actual integration. This component validates the wrapper and scope; the source-fixed hook is responsible for the actual host measurement and checker call.
+3. `device_capacity_check_lease(phase, blobs) -> None`: verify the original independently granted lease is still held by this run for the selected physical memory. It must not acquire another job's device or remove a foreign lock. The independent scheduler/owner's factual lease and the hook's implementation are explicit trust inputs; static JSON cannot discover current exclusivity.
+4. `device_capacity_initialize(phase, blobs) -> genuine original jax.Device`: initialize once using precisely the reviewed pinned backend/access/environment. Retain the partially constructed backend/default-device/lease owners if the hook fails. Enter and retain the selected `jax.default_device` scope through all consumers and guard retirement. It may initialize but must not load keys/model/request or create a ciphertext. The component retains a returned device before post-return checks. Native initialization is a real authorized device action; it is not a capacity-free probe.
+5. `device_capacity_synchronize(phase, blobs, stage) -> None`: synchronize the process's original retained device-array work relevant to that stage; never infer global synchronization from memory_stats. `post_init` must have no user workload; later stages use the original loader/engine inventories, without forcing private reads or doing new evaluation. Retire helper/array owners according to existing lifetimes; this component does not own those resources.
+
+Current server hooks, dependency transition, device inventory and factual policies do not exist yet as admitted actual instances. This component does not synthesize them. The hook/source trust is not a claim to reject arbitrary tampering with interpreter internals, private registry globals or native code.
+
+## Process-bound transition API
+
+`issue_initialization(policy) -> InitializationPermit` reauthenticates everything, captures the original process/hooks, and obtains real pre-import host and lease checks. It does not import or initialize JAX. One issuance attempt is allowed per process, including failure. An attempted reentry during capture/check makes the original attempt sticky-failed. The registry is installed before callback work, retaining original inputs on failure.
+
+`initialize_once(permit) -> same permit` consumes that original permit before calling the initializer. It binds the genuine JAX module file/hash and independent spec, exact `jax.Device` type, original `memory_stats` class descriptor and bound method, original selection function/code identities, original device and PID/thread. It verifies the exact granted descriptor, x64 and retained default-device scope. This first implementation supports one globally visible/addressable local JAX TPU device and one process only. It does not multiply TensorCores/chips or repartition ciphertexts. A different subtype/topology needs an explicit reviewed extension, not a permissive fallback. No body scope is enabled by its return.
+
+`observe_capacity(permit, stage) -> CapacityAdmission` accepts these stages exactly once and in order:
+
+| Stage | Intended immediate process boundary |
+|---|---|
+| post_init | Before first public-key map/transfer/context work. |
+| post_keys | After genuine public-key/context setup, before request/model body reads. |
+| pre_evaluation | After required setup, before full28 evaluation. |
+| terminal | After computation/publication synchronization, while original device/default scope remains retained. |
+
+It repeats original binding and lease checks, invokes synchronization and the real host checker, calls the retained genuine device memory_stats method, and rejects None/missing/bool/negative/inconsistent values. All observed integer fields are preserved; no missing key defaults are used. The comparison is `bytes_limit - bytes_in_use >= additional_live_bytes + workspace_bytes + reserve_bytes` for the exact stage. It is meaningful only under the authenticated factual allocator/exclusivity/complete-bound review; it is not proof of global free memory or future allocation success by itself. No statistic is reported as a reservation. It does not use largest-free-block/peak/pool values as unsupported substitutes.
+
+`require_current(permit, admission, stage) -> exact observation bytes` verifies the original current admission and original bindings/lease before the process's immediate transition. It is not a second memory sample. Advancing a stage invalidates the earlier admission as current. `.execution_authorized` remains false: the selected actual process must separately satisfy all phase/scientific/security/source/file/host gates and enable only the corresponding read/evaluation scope. Holding an object or reading its fields never activates a role.
+
+`retire(permit) -> tuple of observation bytes` requires the terminal stage, retires only this guard and never releases hardware or removes a lock. The process retains its native/default-device owner through this call, then performs original owner cleanup and independent terminal publication/exit checks. The external lease owner retires the physical allocation only after the owned process is known retired. Any state/source/hook/native/statistics/cleanup failure leaves the attempt failed and retained until process exit; there is no retry or cache across runs.
+
+Single-device payload checks remain mandatory in the engine/transfer boundaries: their genuine array device sets must equal the retained selected singleton, not merely have cardinality one. The component does not inspect or copy ciphertext arrays itself. No arithmetic, decoder, coefficients or scientific gate is changed.
+
+## Pending integration and validation
+
+The future process must implement and review these hooks, bind this component's exact source in its manifest and readiness evidence, add the factual document packet/load scope, and separate initialization-only permission from complete post-init capacity. Current complete-capacity denial cannot simply return true before backend import. A future test proposal should target the pure joins, one-use/sticky/retention state and actual selected-hook behavior; no tests were authored or run here. No numeric bound or external review/lease instance has been invented. All admitted server/client/keygen predecessors and active jobs remain unchanged.

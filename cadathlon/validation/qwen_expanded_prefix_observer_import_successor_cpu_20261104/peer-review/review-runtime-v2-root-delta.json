@@ -1,0 +1,29 @@
+{
+  "utc": "2026-11-04T03:55:54.913879+00:00",
+  "source_root": "/tmp/qwen-expanded-prefix-observer-runtime-v2-20261104",
+  "scope": "Independent source-only narrow runtime-v2 root delta review; no imports/tests/model/data reads",
+  "sources": {
+    "model_runtime.py": "3828a8af1f919987c28ea6e24811f681598389266c3e6f88db0fa4b779d8d963",
+    "test_model_runtime.py": "a6f4aa3c5636d401da4068b1c8a85776585808827c2386ea1e7eaec2ab355a33",
+    "backend_environment.py": "6ef8dc95d0987dbf93db6d38df53fc9b4a439873b864ecc25199c855a3af33f7"
+  },
+  "installed_import_utils": {
+    "path": "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/utils/import_utils.py",
+    "sha256": "ebf251757528959eba86630babdccd0b27c32df2b3351afa9fecece524460a51"
+  },
+  "prior_review_sha256": "622e9d3deeae1ddbee55127bda23d3d9e3778673729a448015c86bc86d49ece6",
+  "findings": [],
+  "checks": [
+    "Five exact environment values checked before any calibration/model body reader",
+    "USE_TF=0 skips tensorflow find_spec; USE_FLAX=0 skips flax/jax availability probes; USE_TORCH_XLA=0 skips torch_xla; FORCE_TF_AVAILABLE=0 disables forced TF override; USE_TORCH=1 enables torch",
+    "Unconditional tensorflow_probability/tensorflow_text availability probes remain in installed source; no direct tensorflow/JAX backend import inferred",
+    "Model-loaded progress emitted only after exact loading/architecture/dtype/tied-weight/backend checks",
+    "Native started progress precedes actual model call; completed follows returned/copied logits; successful report carries actual counters",
+    "No numerical forward/calibration ordering changes in reviewed delta"
+  ],
+  "limitations": [
+    "Security lifecycle/import-only smoke successor not yet reviewed in this receipt",
+    "No actual import smoke or model execution by reviewer",
+    "No launch grant implied"
+  ]
+}

@@ -1,0 +1,16 @@
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import runpy,sys,types; m=types.ModuleType('review_unknown_alias'); m.__file__='/tmp/qwen-token-entry-alias-review-20261104/successor-v2/exact_origin_control/source/input_plan.py'; sys.modules['review_unknown_alias']=m; sys.argv=sys.argv[1:]; runpy.run_path(sys.argv[0],run_name='__main__')
+                                                                                                                                                                                                                                                       ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 294, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/tmp/qwen-token-entry-alias-review-20261104/successor-v2/exact_origin_control/source/entry.py", line 168, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/tmp/qwen-token-entry-alias-review-20261104/successor-v2/exact_origin_control/source/entry.py", line 161, in main
+    raw, expected, blobs, origins = authenticate(args.manifest, args.manifest_sha256)
+                                    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/qwen-token-entry-alias-review-20261104/successor-v2/exact_origin_control/source/entry.py", line 122, in authenticate
+    raise ValueError('preloaded local helper or unknown local alias')
+ValueError: preloaded local helper or unknown local alias

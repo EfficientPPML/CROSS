@@ -1,0 +1,83 @@
+from pathlib import Path
+from collections import Counter
+import datetime,hashlib,json,os,stat,tarfile
+lab=Path('/tmp/qwen-expanded-prefix-token-freeze-v2-20261104');out=Path('/tmp/qwen-expanded-prefix-token-freeze-actual-v1-20261104');private=Path('/tmp/qwen-expanded-prefix-token-inputs-20261104-v1');review=Path('/tmp/qwen-expanded-prefix-token-freeze-root-review-20261104')
+read=lambda p:json.loads(p.read_bytes());sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+r=read(out/'report.json');w=read(out/'worker/report.json');m=read(out/'source_manifest.json');grant=read(review/'grant.json')
+assert sha(out/'report.json')=='0c9f0521465f0fee5085c1c86e46cef25ada3b5216cda9098ea8d6b459d6516c'
+assert sha(out/'sources.tar.gz')=='eac29c7d1d456d1c3ebc4042b59789eb54f0233b128169af7036b17612f1f5ec'
+assert sha(review/'grant.json')=='33deb320b455e30c16c7193ff38219de5e3fe0d80c7b45b5601d5b20c16f3289'
+assert sha(review/'launch_review.json')==grant['independent_review_sha256']
+assert len(m)==33 and m==r['source_hashes_start']==r['source_hashes_end']==w['source_hashes_start']==w['source_hashes_end']
+assert all(sha(lab/n)==v and sha(out/'execution_source'/n)==v for n,v in m.items())
+with tarfile.open(out/'sources.tar.gz')as tar:
+ members=tar.getmembers();assert len(members)==len({x.name for x in members})==33 and sum(x.size for x in members)==664713
+ assert all(x.isfile()and not Path(x.name).is_absolute()and '..'not in Path(x.name).parts for x in members)
+ assert {x.name:hashlib.sha256(tar.extractfile(x).read()).hexdigest()for x in members}==m
+assert all(r[k]is True and w[k]is True for k in ('passed','complete','cleanup_completed','signal_restoration_completed','source_files_unchanged'))
+assert r['worker']==w and r['worker_report_sha256']==sha(out/'worker/report.json')
+assert r['actual_tokenizer_stage']is True and w['grant_sha256']==sha(review/'grant.json')
+assert r['audit_denials']==w['audit_denials']==[] and r['child_returncode']==0 and r['child_reaped']and r['child_group_absent']
+assert r['model_forward']is r['coefficient_selection']is w['model_forward']is w['coefficient_selection']is w['generated_decode_contexts']is False
+for pid in (r['pid'],r['child_pid']):assert not Path('/proc',str(pid)).exists()
+try:os.killpg(r['child_pgid'],0)
+except ProcessLookupError:pass
+else:raise AssertionError('group remains')
+# The source-bound IO utility is reused only for bounded reads, not mapping/proof logic.
+io_bytes=(lab/'freeze_io.py').read_bytes();assert hashlib.sha256(io_bytes).hexdigest()==m['freeze_io.py'];ns={'__name__':'root_authenticated_io'};exec(compile(io_bytes,str(lab/'freeze_io.py'),'exec'),ns)
+body=lambda path,expected:ns['parse'](ns['read'](path,expected))
+pins=read(lab/'external_inputs.json');old={name:body(row['path'],row['sha256'])for name,row in pins.items()}
+assets=read(lab/'public/model_pins.json')['asset_sha256'];assetroot=Path('/home/jianming_gatech/cross_validation_assets/qwen/c1899de289a04d12100db370d81485cdf75e47ca')
+for name in ('tokenizer.json','tokenizer_config.json','vocab.json','merges.txt'):ns['read'](assetroot/name,assets[name])
+assert w['input_sha256']=={n:v['sha256']for n,v in pins.items()}
+assert w['tokenizer_asset_sha256']=={n:assets[n]for n in ('tokenizer.json','tokenizer_config.json','vocab.json','merges.txt')}
+dir_stat=private.lstat();assert stat.S_ISDIR(dir_stat.st_mode)and stat.S_IMODE(dir_stat.st_mode)==0o700 and dir_stat.st_uid==os.getuid()
+assert {p.name for p in private.iterdir()}=={'calibration_inputs.json','validation_inputs.json'}
+outputs={}
+for label,filename in (('calibration','calibration_inputs.json'),('validation','validation_inputs.json')):
+ p=private/filename;s=p.lstat();pin=w['private_outputs'][label]
+ assert stat.S_ISREG(s.st_mode)and stat.S_IMODE(s.st_mode)==0o600 and s.st_uid==os.getuid()
+ assert [s.st_dev,s.st_ino]==pin['identity']and s.st_size==pin['bytes']
+ outputs[label]=body(p,pin['sha256'])
+cal=outputs['calibration'];new=outputs['validation'];corpus=old['calibration_corpus'];rows=old['calibration_tokens'];design=read(lab/'public/validation_design.json')
+assert len(cal['prefills'])==3072 and len(cal['decode_seeds'])==16 and len(rows)==288
+ids=[x['id']for x in corpus['calibration_prompts']];assert len(ids)==len(set(ids))==96
+for i,name in enumerate(ids):
+ full=rows[i*3+2]['token_ids']
+ for j,n in enumerate((8,16,32)):
+  row=rows[i*3+j];assert row['id']==name and row['sequence_length']==n and row['token_ids']==full[:n]and row['raw_token_count']==rows[i*3+2]['raw_token_count']>=32
+ for n in range(1,33):
+  row=cal['prefills'][i*32+n-1]
+  assert row==dict(prompt_ordinal=i,id=name,sequence_length=n,token_ids=full[:n],original_prefill_member=n in(8,16,32))
+for i,name in enumerate(corpus['decode_prompt_ids']):
+ assert cal['decode_seeds'][i]==dict(seed_ordinal=i,prompt_ordinal=ids.index(name),id=name,token_ids=rows[ids.index(name)*3+1]['token_ids'])
+assert len(new['prefills'])==1024 and len(new['decode_seeds'])==8 and len(new['natural_token_lengths'])==32
+for i in range(32):
+ full=new['prefills'][i*32+31]['token_ids'];assert len(full)==32
+ for n in range(1,33):assert new['prefills'][i*32+n-1]==dict(prompt_ordinal=i,sequence_length=n,token_ids=full[:n])
+for i,ordinal in enumerate(design['decode_seed_prompt_ordinals']):
+ assert new['decode_seeds'][i]==dict(seed_ordinal=i,prompt_ordinal=ordinal,token_ids=new['prefills'][ordinal*32+15]['token_ids'])
+cal_contexts=[tuple(x['token_ids'])for x in cal['prefills']];new_contexts=[tuple(x['token_ids'])for x in new['prefills']]
+cal_seeds=[tuple(x['token_ids'])for x in cal['decode_seeds']];new_seeds=[tuple(x['token_ids'])for x in new['decode_seeds']]
+excluded=set(cal_contexts)|set(cal_seeds)|{(0,)};old_seeds=set(cal_seeds)
+for name in ('published_tokens','candidate2_fresh_tokens','candidate3_fresh_tokens'):
+ records=old[name];assert len(records)==56
+ assert Counter((x['kind'],x['sequence_length'])for x in records)=={('prefill',8):16,('prefill',16):16,('prefill',32):16,('decode',16):8}
+ for row in records:
+  seq=tuple(row['token_ids']);assert len(seq)==row['sequence_length'];excluded.add(seq)
+  if row['kind']=='decode':old_seeds.add(seq)
+for seq in cal_contexts+new_contexts+cal_seeds+new_seeds+list(excluded):assert seq and all(type(x)is int and 0<=x<151936 for x in seq)
+assert not(set(new_contexts)|set(new_seeds))&excluded
+assert not{x[:16]for x in new_contexts if len(x)>=16}&old_seeds
+assert not set(new_seeds)&{x[:16]for x in excluded if len(x)>=16}
+assert not set(new_seeds)&old_seeds
+for seqs,name,entries in ((cal_contexts,'calibration_prefills',96),(new_contexts,'validation_prefills',32)):
+ counts={str(n):{'entries':sum(len(x)==n for x in seqs),'unique':len({x for x in seqs if len(x)==n})}for n in range(1,33)}
+ assert counts==w['overlap'][name]and all(v['entries']==entries for v in counts.values())
+assert w['overlap']['known_full_context_intersections']=={} and all(w['overlap'][k]==0 for k in ('known_new_context_vs_old_decode_family_prefixes','new_decode_seed_vs_excluded_context_prefixes','new_vs_old_decode_family_prefixes'))
+assert w['new_natural_token_min']==min(new['natural_token_lengths'])==60 and w['new_natural_token_max']==max(new['natural_token_lengths'])==63
+terminal=dict(outer_tool_chunk='000207',outer_returncode=0,persistent_session=None,outer_completed=True,collector_pid=r['pid'],collector_absent=True,child_pid=r['child_pid'],child_reaped=True,child_returncode=0,child_group_absent=True,report_sha256=sha(out/'report.json'),source_archive_sha256=sha(out/'sources.tar.gz'),checked_at_utc=datetime.datetime.now(datetime.timezone.utc).isoformat())
+(out/'terminal_observation.json').write_text(json.dumps(terminal,indent=2,sort_keys=True)+'\n')
+receipt=dict(schema='root-qwen-expanded-prefix-input-freeze-actual-review-v1',passed=True,checked_at_utc=terminal['checked_at_utc'],sources=33,source_current_execution_start_end_archive_equal=True,report_sha256=sha(out/'report.json'),source_archive_sha256=sha(out/'sources.tar.gz'),grant_sha256=sha(review/'grant.json'),private_root_identity=[dir_stat.st_dev,dir_stat.st_ino],private_outputs=w['private_outputs'],all_five_original_inputs_and_four_tokenizer_assets_reauthenticated=True,original288_mapping_and16_seeds_exact=True,calibration_prefills=3072,calibration_unique_prefills=len(set(cal_contexts)),validation_prefills=1024,validation_unique_prefills=len(set(new_contexts)),calibration_decode_seeds=16,validation_decode_seeds=8,known_token_context_intersections=0,append_only_decode_family_prefix_intersections=0,new_natural_token_range=[60,63],counts_by_length=w['overlap'],private_directory0700_files0600=True,outer=terminal,model_forward=False,coefficient_selection=False,generated_decode_contexts=False,scope='Independent input-only mapping/count/set-prefix proof and process/source readback; equality separation is not semantic independence or model/generalization evidence.')
+(out/'root-review').mkdir();(out/'root-review/review.json').write_text(json.dumps(receipt,indent=2,sort_keys=True)+'\n');(out/'root-review/review-executed.py.txt').write_bytes(Path(__file__).read_bytes())
+print(json.dumps({k:receipt[k]for k in ('passed','sources','report_sha256','calibration_prefills','calibration_unique_prefills','validation_prefills','validation_unique_prefills','known_token_context_intersections','append_only_decode_family_prefix_intersections','private_directory0700_files0600','model_forward','coefficient_selection')}))

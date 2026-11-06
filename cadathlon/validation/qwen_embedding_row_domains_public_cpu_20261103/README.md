@@ -1,0 +1,11 @@
+# Exact public Qwen embedding-row and Q/K score bounds
+
+The source-bound audit passed in18.996s;22 focused tests passed, all8 sources and7 pinned asset hashes stayed unchanged. It reads the entire public BF16 embedding table and56 Q/K norm vectors directly, promotes their bytes exactly to FP32, and matches all57 raw/promoted tensor identities to the earlier public audit. It loads no model/backend, token sequence, prompt, hidden activation or validation result and selects no coefficient.
+
+Across all151936 rows, the exact stored-value RMS denominator with configured binary64 epsilon lies within outward endpoints **[9.028572102258705e-5,0.0018623166357577261]**. The lower endpoint improves90.2857× over epsilon and the upper endpoint tightens11.0442× relative to the prior coordinate envelope. The condition ratio is20.6269 instead of20567.7135. This tightens the first embedding normalization only. Every row uses exact integer/dyadic squares and sums;64 fixed public rows plus extrema are independently checked with Fraction. A digest commits to the complete exact row-sum stream.
+
+FP32 epsilon differs from the configured binary64 epsilon by−2.5247572468697606e-15 and is reported separately. The actual stored BF16 squares are exactly FP32-representable, but native mean/add rounding and instruction ordering are **not** certified. No native floating-model or CKKS claim follows from the exact interval.
+
+The exact-native post-Q/K-norm score bound uses each head's L2 constraint and RoPE's preserved half-split coordinate pairs. Pairwise gamma maxima tighten26/28 layer bounds by factors1.0287–9.0539; two are unchanged. Equal-position bounds are separately labeled and cannot be used for arbitrary token pairs. Conditional approximate bounds explicitly require uniform norm-relative-error and correlation premises; floating RoPE and CKKS/refresh error remain open.
+
+`DESIGN.md` contains the exact derivation. `public-v1/sources.tar.gz` contains all eight measured sources/inputs. No tensor arrays, keys or ciphertexts are archived. `python verify_archive.py` checks exact archive bytes, asset/tensor identity records and rational aggregate consistency without rereading model weights. The complete151936-row computation is preserved as the source-bound run, not inferred from the offline aggregate verifier.

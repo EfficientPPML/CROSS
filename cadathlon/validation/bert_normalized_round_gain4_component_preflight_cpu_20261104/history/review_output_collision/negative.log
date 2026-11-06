@@ -1,0 +1,21 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____________________ test_existing_report_must_not_change _____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-506/test_existing_report_must_not_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x78725632c180>
+
+    def test_existing_report_must_not_change(tmp_path,monkeypatch):
+     out=tmp_path/'existing';out.mkdir();report=out/'report.json';old=b'{"passed":true,"foreign":"retained"}';report.write_bytes(old)
+     monkeypatch.setattr(sys,'argv',['collector','--output',str(out),'--key-evidence',str(tmp_path/'keys-proof'),'--key-workspace',str(tmp_path/'keys')])
+     with pytest.raises(FileExistsError):c.main()
+>    assert report.read_bytes()==old
+E    assert b'{"error":{"...ted":false}\n' == b'{"passed":t...":"retained"}'
+E      
+E      At index 2 diff: b'e' != b'p'
+E      Use -v to get more diff
+
+review_output_collision/test_existing.py:11: AssertionError
+=========================== short test summary info ============================
+FAILED review_output_collision/test_existing.py::test_existing_report_must_not_change
+1 failed in 0.07s

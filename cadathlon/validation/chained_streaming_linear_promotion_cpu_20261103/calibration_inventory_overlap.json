@@ -1,0 +1,26 @@
+{
+  "p1": {
+    "manifest": "/home/jianming_gatech/CROSS/cadathlon/validation/p1_student_post_promotion_20261103/source_inventory.json",
+    "manifest_sha256": "5786f559ba40f94120712591155284bb949328c61c25cc3bda67f73ffc551195",
+    "measured_files": 103,
+    "overlap_with_proposed_files": [],
+    "current_measured_file_mismatches": []
+  },
+  "p3": {
+    "manifest": "/home/jianming_gatech/CROSS/cadathlon/validation/p3_compact_post_promotion_20261103/source-start.json",
+    "manifest_sha256": "bdc7f5a7a1d97e8b5e95362598df06e9b0f140f6c9dd387d8281e9258aa0cc70",
+    "measured_files": 119,
+    "overlap_with_proposed_files": [],
+    "current_measured_file_mismatches": []
+  },
+  "secure_proof_existing_runtime_differences": [
+    "checkout/cadathlon/common/encrypted_score_routing.py",
+    "checkout/cadathlon/common/package.py"
+  ],
+  "changed_files": [
+    "cadathlon/common/encrypted_packed_transformer.py",
+    "cadathlon/common/encrypted_streaming_linear.py",
+    "cadathlon/tests/test_chained_streaming_linear.py"
+  ],
+  "conclusion": "No P1/P3 measured-source overlap from these two transformer helpers and one test. Existing timing/source snapshots must remain unchanged; release bytes/hash change if the optional helper implementation is published."
+}

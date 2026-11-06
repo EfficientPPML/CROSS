@@ -1,0 +1,7 @@
+# Q5 focused harness preparation-v2 — UNRUN
+
+This successor selects the exact corrected261/48 sources. Only the fixture's semantic layer-phase selector changed; all250 runtime files and all48 test assertions, including independent47 trace indices, remain unchanged. The original preparation-v1 failed42PASS/6FAIL because its fixture also captured38 refresh-start/complete implementation phases. Its sources, execution copy, harness and complete failed evidence remain unchanged; the root terminal receipt is preserved here by exact bytes.
+
+The pytest argument vector now explicitly includes `-c /dev/null`, preventing configuration discovery. The driver changes only its two derived config/worker pins. The immediate-Popen ownership block remains AST-identical to v1 and the admitted pure53v2 model; abnormal group cleanup always attempts direct wait, and there is no healthy deadline. CPU108–111, sanitized environment, Python-I-B, plugin suppression, exact48 prefixture selection, compact source maps, NumPy4 source hashes/root-only origin and backend denials are unchanged. Fresh own pytest basetemp stays outside execution and has the same128-file/16MiB post-run retention bound, not OS confinement.
+
+No successor imports, collection, arithmetic, probes, tests or role execution occurred. This is not a retry grant. Root review and a separate explicit authorization remain required. No prior140 PASS or first encrypted-divergence claim transfers.

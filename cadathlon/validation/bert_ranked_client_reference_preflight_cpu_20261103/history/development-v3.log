@@ -1,0 +1,37 @@
+.....................................................F                   [100%]
+=================================== FAILURES ===================================
+_______________ test_authenticated_reader_uses_no_dup_or_fdopen ________________
+
+fixture = namespace(evidence=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-377/test_authenticated_reader_uses0/evidence'), ro...6f9526a9a3d33ba9e7e205fb0bee67fc35141f142a8b3ca5987623', publish=<function fixture.<locals>.publish at 0x7e95d055f100>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7e95d064f850>
+
+    def test_authenticated_reader_uses_no_dup_or_fdopen(fixture,monkeypatch):
+        def denied(*args,**kwargs):raise AssertionError('descriptor ownership handoff')
+        with monkeypatch.context() as m:
+            m.setattr(g.os,'dup',denied);m.setattr(g.os,'fdopen',denied)
+>           with g.BorrowedFixtures(authorized(fixture)) as held:assert held.check()
+                                    ^^^^^^^^^^^^^^^^^^^
+
+test_fixture_lifecycle.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_ranked_reference.py:36: in authorized
+    def authorized(f):return g.public(f.evidence,f.pin)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+ranked_input_gate.py:19: in public
+    evidence=Path(evidence);raw=key_gate.read(evidence/'report.json',4<<20)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+key_gate.py:20: in read
+    with os.fdopen(os.dup(fd),'rb') as f:raw=f.read(maximum+1)
+                   ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (13,), kwargs = {}
+
+>   def denied(*args,**kwargs):raise AssertionError('descriptor ownership handoff')
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: descriptor ownership handoff
+
+test_fixture_lifecycle.py:95: AssertionError
+=========================== short test summary info ============================
+FAILED test_fixture_lifecycle.py::test_authenticated_reader_uses_no_dup_or_fdopen
+1 failed, 53 passed in 12.26s

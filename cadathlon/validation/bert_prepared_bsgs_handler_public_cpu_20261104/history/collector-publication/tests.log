@@ -1,0 +1,75 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+_ test_body_primary_survives_final_source_and_publication_failures[KeyboardInterrupt] _
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-491/test_body_primary_survives_fin0')
+kind = <class 'KeyboardInterrupt'>
+
+    @pytest.mark.parametrize('kind',(KeyboardInterrupt,SystemExit))
+    def test_body_primary_survives_final_source_and_publication_failures(tmp_path,kind):
+     primary=kind('body cancellation');checks=[];writes=[]
+     def check(*args,**kwargs):
+      checks.append(1)
+      if len(checks)==1:raise primary
+      raise OSError('final source failure')
+     def write(path,value):
+      writes.append(1)
+      if len(writes)>1:raise OSError('final publication failure')
+      path.write_text(json.dumps(value))
+     run=actual_run(tmp_path,write,NS(capture_sources=lambda *a,**k:{},check_sources=check))
+     with pytest.raises(BaseException)as caught:run(tmp_path/'out',source_guard_tests=1)
+>    assert caught.value is primary
+E    AssertionError: assert OSError('final publication failure') is KeyboardInterrupt('body cancellation')
+E     +  where OSError('final publication failure') = <ExceptionInfo OSError('final publication failure') tblen=3>.value
+
+/tmp/bert-combined-preflight-review-20261104/negative-v1/test_publication.py:28: AssertionError
+_ test_body_primary_survives_final_source_and_publication_failures[SystemExit] _
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-491/test_body_primary_survives_fin1')
+kind = <class 'SystemExit'>
+
+    @pytest.mark.parametrize('kind',(KeyboardInterrupt,SystemExit))
+    def test_body_primary_survives_final_source_and_publication_failures(tmp_path,kind):
+     primary=kind('body cancellation');checks=[];writes=[]
+     def check(*args,**kwargs):
+      checks.append(1)
+      if len(checks)==1:raise primary
+      raise OSError('final source failure')
+     def write(path,value):
+      writes.append(1)
+      if len(writes)>1:raise OSError('final publication failure')
+      path.write_text(json.dumps(value))
+     run=actual_run(tmp_path,write,NS(capture_sources=lambda *a,**k:{},check_sources=check))
+     with pytest.raises(BaseException)as caught:run(tmp_path/'out',source_guard_tests=1)
+>    assert caught.value is primary
+E    AssertionError: assert OSError('final publication failure') is SystemExit('body cancellation')
+E     +  where OSError('final publication failure') = <ExceptionInfo OSError('final publication failure') tblen=3>.value
+
+/tmp/bert-combined-preflight-review-20261104/negative-v1/test_publication.py:28: AssertionError
+___________ test_outer_termination_failure_republishes_failed_record ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-491/test_outer_termination_failure0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7952c7aae2c0>
+
+    def test_outer_termination_failure_republishes_failed_record(tmp_path,monkeypatch):
+     tree=ast.parse((HERE/'preflight_combined.py').read_bytes());node=next(n for n in tree.body if isinstance(n,ast.If)and isinstance(n.test,ast.Compare))
+     output=tmp_path/'report.json';failure=OSError('termination handler restoration')
+     @contextmanager
+     def termination():
+      yield
+      raise failure
+     def run(*args,**kwargs):
+      result=dict(passed=True,complete=True,source_count=265,groups=[],elapsed_seconds=1.)
+      output.write_text(json.dumps(result));return result
+     monkeypatch.setattr(sys,'argv',['preflight',str(tmp_path),'--source-guard-tests','36'])
+     env={'__name__':'__main__','argparse':argparse,'termination_signals':termination,'run':run,'json':json}
+     with pytest.raises(OSError):exec(compile(ast.Module(body=[node],type_ignores=[]),'exact_main','exec'),env)
+>    assert json.loads(output.read_text())['passed']is False
+E    assert True is False
+
+/tmp/bert-combined-preflight-review-20261104/negative-v1/test_publication.py:43: AssertionError
+=========================== short test summary info ============================
+FAILED ../../tmp/bert-combined-preflight-review-20261104/negative-v1/test_publication.py::test_body_primary_survives_final_source_and_publication_failures[KeyboardInterrupt]
+FAILED ../../tmp/bert-combined-preflight-review-20261104/negative-v1/test_publication.py::test_body_primary_survives_final_source_and_publication_failures[SystemExit]
+FAILED ../../tmp/bert-combined-preflight-review-20261104/negative-v1/test_publication.py::test_outer_termination_failure_republishes_failed_record
+3 failed in 0.03s

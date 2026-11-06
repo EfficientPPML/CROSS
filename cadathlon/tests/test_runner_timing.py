@@ -8,9 +8,11 @@ import numpy as np
 import pytest
 
 
-@pytest.mark.parametrize("problem", ["p1_benchmark", "p3_cnn"])
+@pytest.mark.parametrize("problem,prepared", [
+    ("p1_benchmark", False), ("p3_cnn", False), ("p3_cnn", True),
+])
 @pytest.mark.parametrize("warmups", [0, 1])
-def test_cold_request_and_total_wall_time(monkeypatch, problem, warmups):
+def test_cold_request_and_total_wall_time(monkeypatch, problem, prepared, warmups):
     clock = SimpleNamespace(now=0.0)
     expected = np.array([[0.5, 0.2]])
 
@@ -36,12 +38,14 @@ def test_cold_request_and_total_wall_time(monkeypatch, problem, warmups):
         decrypt_output = decrypt
 
         def release(self):
+            assert not self.released, 'release is not required to be idempotent'
             clock.now += 7.0
             self.released = True
 
     service = Service()
 
     def build(*args, **kwargs):
+        assert not prepared, 'a prepared Mapping must not be constructed twice'
         clock.now += 10.0
         return service
 
@@ -72,10 +76,11 @@ def test_cold_request_and_total_wall_time(monkeypatch, problem, warmups):
     spec.loader.exec_module(runner)
     monkeypatch.setattr(runner, "time", SimpleNamespace(perf_counter=lambda: clock.now))
 
+    kwargs = {"prepared": (service, 10.0)} if prepared else {}
     result = runner.run(SimpleNamespace(
-        case=Path("test1.in"), reference=False, baseline=True, warmups=warmups, repeats=2))
+        case=Path("test1.in"), reference=False, baseline=True, warmups=warmups, repeats=2), **kwargs)
 
-    assert service.released
+    assert service.released is not prepared
     assert result["setup_s"] == 10.0
     assert result["cold_start_included"] is (warmups == 0)
     assert result["warmup_s"] == ([104.0] if warmups else [])
@@ -83,6 +88,9 @@ def test_cold_request_and_total_wall_time(monkeypatch, problem, warmups):
     assert result["end_to_end_s"] == ([6.0, 6.0] if warmups else [104.0, 6.0])
     assert result["server_s"] == ([2.0, 2.0] if warmups else [100.0, 2.0])
     assert result["median_s"] == (6.0 if warmups else 55.0)
-    # Include fixture preparation and release, even though neither is part
-    # of the historical constructor or request timing fields.
-    assert result["total_s"] == (138.0 if warmups else 132.0)
+    # A prepared mapping is borrowed: its suite owner measures construction
+    # and cleanup outside this invocation and releases it exactly once.
+    assert result["total_s"] == (138.0 if warmups else 132.0) - (17.0 if prepared else 0.0)
+    if prepared:
+        assert result["mapping_release_included"] is False
+        service.release()

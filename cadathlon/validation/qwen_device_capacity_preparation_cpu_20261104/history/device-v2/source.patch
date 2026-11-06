@@ -1,0 +1,164 @@
+--- v1/qwen_device_capacity.py
++++ v2/qwen_device_capacity.py
+@@ -10,7 +10,7 @@
+ import threading
+ from pathlib import Path
+ from types import FunctionType,ModuleType
+-from qwen_device_policy import (DevicePolicyAdmission,HOOKS,STAGES,canonical,sha,parse,obj,same,integer)
++from qwen_device_policy import (DevicePolicyAdmission,HOOKS,STAGES,canonical,sha,parse,obj,same,integer,authenticate)
+ 
+ _ISSUED=False
+ _REGISTRY={}
+@@ -49,8 +49,42 @@
+         output.append((name,fn,fn.__code__))
+     return tuple(output)
+ 
+-def _caller(policy):
+-    phase=policy.phase;pp=phase.expected_pins.check();grant=parse(phase.grant_bytes,'phase')
++def _capture_policy(record):
++    # Retain the original dictionary/three field objects before authentication
++    # or callback work. This is local policy identity, not a nested phase-graph
++    # snapshot or an arbitrary-interpreter mutation guarantee.
++    policy=record['policy']
++    if type(policy)is not DevicePolicyAdmission:raise TypeError('exact pure policy admission required')
++    fields=object.__getattribute__(policy,'__dict__');record['policy_dict']=fields
++    if type(fields)is not dict or set(fields)!= {'phase','blobs','expected_pins'}:
++        raise ValueError('exact original policy fields required')
++    record['policy_fields']=(fields['phase'],fields['blobs'],fields['expected_pins'])
++    phase,blobs,pins=record['policy_fields']
++    if type(blobs)is not tuple or type(pins)is not bytes or any(type(row)is not tuple or len(row)!=2 or type(row[0])is not str or type(row[1])is not bytes for row in blobs):
++        raise TypeError('original immutable policy inputs required')
++
++def _policy_guard(record):
++    try:
++        policy=record['policy'];original=record['policy_fields']
++        if type(policy)is not DevicePolicyAdmission or type(original)is not tuple or len(original)!=3:
++            raise ValueError('original policy capture required')
++        fields=object.__getattribute__(policy,'__dict__')
++        if fields is not record['policy_dict']or type(fields)is not dict or set(fields)!= {'phase','blobs','expected_pins'}:
++            raise ValueError('original policy dictionary changed')
++        if any(fields[name]is not value for name,value in zip(('phase','blobs','expected_pins'),original,strict=True)):
++            raise ValueError('original policy field identity changed')
++        return original
++    except BaseException:
++        record['state']='failed'
++        raise
++
++def _reauthenticate(record):
++    phase,blobs,pins=_policy_guard(record)
++    authenticate(phase,blobs,expected_pins=pins)
++    _policy_guard(record)
++
++def _caller(phase):
++    pp=phase.expected_pins.check();grant=parse(phase.grant_bytes,'phase')
+     wanted=str(Path(grant['source_root'])/'qwen_server_process.py')
+     module=sys.modules.get('qwen_server_process');spec=_origin(module,wanted)
+     if sha(Path(wanted).read_bytes())!=pp['source_map']['qwen_server_process.py']:raise ValueError('selected process source changed')
+@@ -69,22 +103,26 @@
+ def _context(record):
+     if (os.getpid()!=record['pid']or threading.get_ident()!=record['thread_id']or threading.current_thread()is not record['thread']):
+         raise PermissionError('original dedicated process/thread required')
+-    policy=record['policy'];policy.check()
+-    caller,spec,hooks=_caller(policy)
++    _reauthenticate(record)
++    phase,blobs,pins=_policy_guard(record)
++    caller,spec,hooks=_caller(phase)
++    _policy_guard(record)
+     if caller is not record['caller']or spec is not record['spec']or len(hooks)!=len(record['hooks']):raise ValueError('original process module binding changed')
+     for now,old in zip(hooks,record['hooks'],strict=True):
+         if now[0]!=old[0]or now[1]is not old[1]or now[2]is not old[2]:raise ValueError('original process hook changed')
+-    return policy
++    return record['policy']
+ 
+ def _hook(record,index,*args):
+     # The original function is used even if a callback tries to replace exports.
+     fn=record['hooks'][index][1]
+-    result=fn(record['policy'].phase,record['policy'].blobs,*args)
++    phase,blobs,pins=_policy_guard(record)
++    result=fn(phase,blobs,*args)
+     # Capture a returned native/device owner before any post-callback check.
+     # The selected process also retains its initializer's partially built
+     # owner if that hook raises before returning anything.
+     if result is not None:record['returned'].append(result)
+     if record['state']!='busy':raise RuntimeError('nested or failed device transition is sticky')
++    _policy_guard(record)
+     _context(record)
+     return result
+ 
+@@ -104,7 +142,7 @@
+     obj(value,('schema','pid','stage','resource_policy_sha256','observation'),'host admission observation')
+     same(value['schema'],'qwen-device-host-observation-v1','host hook schema differs')
+     same(value['pid'],record['pid'],'host hook process differs');same(value['stage'],stage,'host hook stage differs')
+-    same(value['resource_policy_sha256'],sha(dict(record['policy'].blobs)['resource_policy']),'host resource bytes differ')
++    same(value['resource_policy_sha256'],sha(dict(_policy_guard(record)[1])['resource_policy']),'host resource bytes differ')
+     observation=value['observation']
+     if type(observation)is not dict:raise ValueError('actual selected host checker result required')
+     if (observation.get('after_import')is not(stage!='before_init')or observation.get('borrowed_body_reads')is not False
+@@ -124,12 +162,13 @@
+     _ISSUED=True
+     permit=InitializationPermit()
+     record=dict(permit=permit,policy=policy,pid=os.getpid(),thread_id=threading.get_ident(),thread=threading.current_thread(),
+-        caller=None,spec=None,hooks=(),state='capturing',device=None,jax=None,host=[],observations=[],returned=[],stage_index=-1,current=None)
++        policy_dict=None,policy_fields=None,caller=None,spec=None,hooks=(),state='capturing',device=None,jax=None,host=[],observations=[],returned=[],stage_index=-1,current=None)
+     _REGISTRY[id(permit)]=record
+     try:
+-        if type(policy)is not DevicePolicyAdmission:raise TypeError('exact pure policy admission required')
+-        policy.check()
+-        record['caller'],record['spec'],record['hooks']=_caller(policy)
++        _capture_policy(record)
++        _reauthenticate(record)
++        record['caller'],record['spec'],record['hooks']=_caller(_policy_guard(record)[0])
++        _policy_guard(record)
+         _before(record);_host(record,'before_init')
+         record['state']='permitted'
+         return permit
+@@ -138,7 +177,7 @@
+         raise
+ 
+ def _jax_binding(record,device):
+-    policy=dict(record['policy'].blobs);allocator=parse(policy['allocator'],'allocator');selection=parse(policy['selection'],'selection')
++    policy=dict(_policy_guard(record)[1]);allocator=parse(policy['allocator'],'allocator');selection=parse(policy['selection'],'selection')
+     jax=sys.modules.get('jax');info=allocator['jax_module'];spec=_origin(jax,info['path'])
+     if sha(Path(info['path']).read_bytes())!=info['sha256']:raise ValueError('original JAX source differs')
+     cls=getattr(jax,'Device',None)
+@@ -166,7 +205,7 @@
+     if sys.modules.get('jax')is not jax or jax.__spec__ is not spec or getattr(jax,'Device',None)is not cls or type(device)is not cls:
+         raise ValueError('original JAX/device identity changed')
+     if vars(cls).get('memory_stats')is not descriptor:raise ValueError('original memory_stats descriptor changed')
+-    info=parse(dict(record['policy'].blobs)['allocator'],'allocator')['jax_module']
++    info=parse(dict(_policy_guard(record)[1])['allocator'],'allocator')['jax_module']
+     if _origin(jax,info['path'])is not spec:raise ValueError('original JAX origins changed')
+     for name,fn,code in methods:
+         if getattr(jax,name)is not fn or getattr(fn,'__code__',None)is not code:raise ValueError('original JAX selection callable changed')
+@@ -213,15 +252,15 @@
+             raise ValueError('exact nonnegative allocator integer fields required')
+         limit=integer(stats['bytes_limit'],1,'allocator limit');used=stats['bytes_in_use']
+         if used>limit or('peak_bytes_in_use'in stats and stats['peak_bytes_in_use']<used):raise ValueError('inconsistent allocator observation')
+-        workspace=parse(dict(record['policy'].blobs)['workspace'],'workspace');bound=workspace['stages'][stage]
++        workspace=parse(dict(_policy_guard(record)[1])['workspace'],'workspace');bound=workspace['stages'][stage]
+         required=sum(bound.values())
+         if limit-used<required:raise MemoryError('reviewed stage additional peak/workspace/reserve does not fit')
+         _device_guard(record)
+         if _hook(record,0)is not None or _hook(record,2)is not None:raise ValueError('post-observation binding/lease check did not complete normally')
+         raw=canonical(dict(schema='qwen-tpu-capacity-observation-v1',pid=record['pid'],stage=stage,
+-            device=parse(dict(record['policy'].blobs)['selection'],'selection')['device'],statistics=dict(stats),
++            device=parse(dict(_policy_guard(record)[1])['selection'],'selection')['device'],statistics=dict(stats),
+             stage_bounds=bound,required_additional_bytes=required,host_observation_sha256=sha(host),
+-            expected_pins_sha256=sha(record['policy'].expected_pins),documents={n:sha(b)for n,b in record['policy'].blobs},
++            expected_pins_sha256=sha(_policy_guard(record)[2]),documents={n:sha(b)for n,b in _policy_guard(record)[1]},
+             comparison_passed=True,capacity_reserved=False,global_free_memory_measured=False,
+             sufficient_only_under_independently_reviewed_evidence=True,actual_server_role_authorized=False))
+         value=CapacityAdmission();record['observations'].append(raw);record['stage_index']=next_index
+--- v1/API.md
++++ v2/API.md
+@@ -42,7 +42,9 @@
+ 
+ ## Process-bound transition API
+ 
+-`issue_initialization(policy) -> InitializationPermit` reauthenticates everything, captures the original process/hooks, and obtains real pre-import host and lease checks. It does not import or initialize JAX. One issuance attempt is allowed per process, including failure. An attempted reentry during capture/check makes the original attempt sticky-failed. The registry is installed before callback work, retaining original inputs on failure.
++`issue_initialization(policy) -> InitializationPermit` first retains the exact original `DevicePolicyAdmission` dictionary and its three original field objects (`phase`, immutable `blobs`, immutable `expected_pins`), then reauthenticates everything, captures the original process/hooks, and obtains real pre-import host and lease checks. It does not import or initialize JAX. One issuance attempt is allowed per process, including failure. An attempted reentry during capture/check makes the original attempt sticky-failed. The registry is installed before callback work, retaining original inputs on failure.
++
++The v2 local policy guard compares the original dictionary identity, exact field set and each field's identity before/after full reauthentication and around original hook calls. Replacement with equal bytes or an equal tuple also fails and remains sticky. Hooks receive the retained original phase and blobs rather than rereading mutable dataclass fields. Original input objects remain strongly held after rejection. This fixes the source-reviewed v1 local identity gap; it is not an actual authority-bypass claim. Nested phase-object integrity still uses full phase authentication and the selected process binding/snapshot obligations; this narrow guard does not newly claim a complete nested graph or arbitrary interpreter-global freeze.
+ 
+ `initialize_once(permit) -> same permit` consumes that original permit before calling the initializer. It binds the genuine JAX module file/hash and independent spec, exact `jax.Device` type, original `memory_stats` class descriptor and bound method, original selection function/code identities, original device and PID/thread. It verifies the exact granted descriptor, x64 and retained default-device scope. This first implementation supports one globally visible/addressable local JAX TPU device and one process only. It does not multiply TensorCores/chips or repartition ciphertexts. A different subtype/topology needs an explicit reviewed extension, not a permissive fallback. No body scope is enabled by its return.
+ 

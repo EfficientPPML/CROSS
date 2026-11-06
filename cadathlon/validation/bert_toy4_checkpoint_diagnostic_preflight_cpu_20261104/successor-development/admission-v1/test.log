@@ -1,0 +1,142 @@
+..........................FFFFFF.........................                [100%]
+=================================== FAILURES ===================================
+_ test_replaced_owned_destination_never_overwrites_foreign[True-RuntimeError] __
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-612/test_replaced_owned_destinatio0')
+failure = <class 'RuntimeError'>, replace_directory = True
+
+    @pytest.mark.parametrize('failure',[RuntimeError,KeyboardInterrupt,SystemExit])
+    @pytest.mark.parametrize('replace_directory',[True,False])
+    def test_replaced_owned_destination_never_overwrites_foreign(tmp_path,failure,replace_directory):
+     owner=OwnedOutput(tmp_path/'owned').acquire();path=owner.path/'report.json';owner.write(path,dict(passed=False))
+     sentinel=b'{"foreign":true}\n';primary=failure('body')
+     def body():
+      if replace_directory:owner.path.rename(tmp_path/'retained');owner.path.mkdir(mode=0o700)
+      else:path.rename(owner.path/'retained.json')
+      path.write_bytes(sentinel)
+      raise primary
+     with pytest.raises(failure)as caught:finish(path,body,owner.write,owner.read)
+     assert caught.value is primary and path.read_bytes()==sentinel
+>    assert any('republication' in n for n in primary.__notes__)
+E    assert False
+E     +  where False = any(<generator object test_replaced_owned_destination_never_overwrites_foreign.<locals>.<genexpr> at 0x70c1c04b8fb0>)
+
+test_publication.py:21: AssertionError
+_ test_replaced_owned_destination_never_overwrites_foreign[True-KeyboardInterrupt] _
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-612/test_replaced_owned_destinatio1')
+failure = <class 'KeyboardInterrupt'>, replace_directory = True
+
+    @pytest.mark.parametrize('failure',[RuntimeError,KeyboardInterrupt,SystemExit])
+    @pytest.mark.parametrize('replace_directory',[True,False])
+    def test_replaced_owned_destination_never_overwrites_foreign(tmp_path,failure,replace_directory):
+     owner=OwnedOutput(tmp_path/'owned').acquire();path=owner.path/'report.json';owner.write(path,dict(passed=False))
+     sentinel=b'{"foreign":true}\n';primary=failure('body')
+     def body():
+      if replace_directory:owner.path.rename(tmp_path/'retained');owner.path.mkdir(mode=0o700)
+      else:path.rename(owner.path/'retained.json')
+      path.write_bytes(sentinel)
+      raise primary
+     with pytest.raises(failure)as caught:finish(path,body,owner.write,owner.read)
+     assert caught.value is primary and path.read_bytes()==sentinel
+>    assert any('republication' in n for n in primary.__notes__)
+E    assert False
+E     +  where False = any(<generator object test_replaced_owned_destination_never_overwrites_foreign.<locals>.<genexpr> at 0x70c1c04bbac0>)
+
+test_publication.py:21: AssertionError
+__ test_replaced_owned_destination_never_overwrites_foreign[True-SystemExit] ___
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-612/test_replaced_owned_destinatio2')
+failure = <class 'SystemExit'>, replace_directory = True
+
+    @pytest.mark.parametrize('failure',[RuntimeError,KeyboardInterrupt,SystemExit])
+    @pytest.mark.parametrize('replace_directory',[True,False])
+    def test_replaced_owned_destination_never_overwrites_foreign(tmp_path,failure,replace_directory):
+     owner=OwnedOutput(tmp_path/'owned').acquire();path=owner.path/'report.json';owner.write(path,dict(passed=False))
+     sentinel=b'{"foreign":true}\n';primary=failure('body')
+     def body():
+      if replace_directory:owner.path.rename(tmp_path/'retained');owner.path.mkdir(mode=0o700)
+      else:path.rename(owner.path/'retained.json')
+      path.write_bytes(sentinel)
+      raise primary
+     with pytest.raises(failure)as caught:finish(path,body,owner.write,owner.read)
+     assert caught.value is primary and path.read_bytes()==sentinel
+>    assert any('republication' in n for n in primary.__notes__)
+E    assert False
+E     +  where False = any(<generator object test_replaced_owned_destination_never_overwrites_foreign.<locals>.<genexpr> at 0x70c1c047adc0>)
+
+test_publication.py:21: AssertionError
+_ test_replaced_owned_destination_never_overwrites_foreign[False-RuntimeError] _
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-612/test_replaced_owned_destinatio3')
+failure = <class 'RuntimeError'>, replace_directory = False
+
+    @pytest.mark.parametrize('failure',[RuntimeError,KeyboardInterrupt,SystemExit])
+    @pytest.mark.parametrize('replace_directory',[True,False])
+    def test_replaced_owned_destination_never_overwrites_foreign(tmp_path,failure,replace_directory):
+     owner=OwnedOutput(tmp_path/'owned').acquire();path=owner.path/'report.json';owner.write(path,dict(passed=False))
+     sentinel=b'{"foreign":true}\n';primary=failure('body')
+     def body():
+      if replace_directory:owner.path.rename(tmp_path/'retained');owner.path.mkdir(mode=0o700)
+      else:path.rename(owner.path/'retained.json')
+      path.write_bytes(sentinel)
+      raise primary
+     with pytest.raises(failure)as caught:finish(path,body,owner.write,owner.read)
+     assert caught.value is primary and path.read_bytes()==sentinel
+>    assert any('republication' in n for n in primary.__notes__)
+E    assert False
+E     +  where False = any(<generator object test_replaced_owned_destination_never_overwrites_foreign.<locals>.<genexpr> at 0x70c1c0479970>)
+
+test_publication.py:21: AssertionError
+_ test_replaced_owned_destination_never_overwrites_foreign[False-KeyboardInterrupt] _
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-612/test_replaced_owned_destinatio4')
+failure = <class 'KeyboardInterrupt'>, replace_directory = False
+
+    @pytest.mark.parametrize('failure',[RuntimeError,KeyboardInterrupt,SystemExit])
+    @pytest.mark.parametrize('replace_directory',[True,False])
+    def test_replaced_owned_destination_never_overwrites_foreign(tmp_path,failure,replace_directory):
+     owner=OwnedOutput(tmp_path/'owned').acquire();path=owner.path/'report.json';owner.write(path,dict(passed=False))
+     sentinel=b'{"foreign":true}\n';primary=failure('body')
+     def body():
+      if replace_directory:owner.path.rename(tmp_path/'retained');owner.path.mkdir(mode=0o700)
+      else:path.rename(owner.path/'retained.json')
+      path.write_bytes(sentinel)
+      raise primary
+     with pytest.raises(failure)as caught:finish(path,body,owner.write,owner.read)
+     assert caught.value is primary and path.read_bytes()==sentinel
+>    assert any('republication' in n for n in primary.__notes__)
+E    assert False
+E     +  where False = any(<generator object test_replaced_owned_destination_never_overwrites_foreign.<locals>.<genexpr> at 0x70c1c04a8c70>)
+
+test_publication.py:21: AssertionError
+__ test_replaced_owned_destination_never_overwrites_foreign[False-SystemExit] __
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-612/test_replaced_owned_destinatio5')
+failure = <class 'SystemExit'>, replace_directory = False
+
+    @pytest.mark.parametrize('failure',[RuntimeError,KeyboardInterrupt,SystemExit])
+    @pytest.mark.parametrize('replace_directory',[True,False])
+    def test_replaced_owned_destination_never_overwrites_foreign(tmp_path,failure,replace_directory):
+     owner=OwnedOutput(tmp_path/'owned').acquire();path=owner.path/'report.json';owner.write(path,dict(passed=False))
+     sentinel=b'{"foreign":true}\n';primary=failure('body')
+     def body():
+      if replace_directory:owner.path.rename(tmp_path/'retained');owner.path.mkdir(mode=0o700)
+      else:path.rename(owner.path/'retained.json')
+      path.write_bytes(sentinel)
+      raise primary
+     with pytest.raises(failure)as caught:finish(path,body,owner.write,owner.read)
+     assert caught.value is primary and path.read_bytes()==sentinel
+>    assert any('republication' in n for n in primary.__notes__)
+E    assert False
+E     +  where False = any(<generator object test_replaced_owned_destination_never_overwrites_foreign.<locals>.<genexpr> at 0x70c1c04a82b0>)
+
+test_publication.py:21: AssertionError
+=========================== short test summary info ============================
+FAILED test_publication.py::test_replaced_owned_destination_never_overwrites_foreign[True-RuntimeError]
+FAILED test_publication.py::test_replaced_owned_destination_never_overwrites_foreign[True-KeyboardInterrupt]
+FAILED test_publication.py::test_replaced_owned_destination_never_overwrites_foreign[True-SystemExit]
+FAILED test_publication.py::test_replaced_owned_destination_never_overwrites_foreign[False-RuntimeError]
+FAILED test_publication.py::test_replaced_owned_destination_never_overwrites_foreign[False-KeyboardInterrupt]
+FAILED test_publication.py::test_replaced_owned_destination_never_overwrites_foreign[False-SystemExit]
+6 failed, 51 passed in 7.49s

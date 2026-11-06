@@ -1,0 +1,137 @@
+{
+  "all_current_archive_parent29_equal": true,
+  "guards_sha256": "e23e5c206eb600d7d5c1aeb430ce54c8685106ad2290629f999e093cd021b54b",
+  "numpy_refs": {
+    "additional_source": {
+      "path": "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/numpy/lib/format.py",
+      "sha256": "9e9274789853eee28d2b96b49423067e226ff91e23c8d86220f7996c970d5c1b"
+    },
+    "expected_loaded_modules": {
+      "numpy": {
+        "path": "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/numpy/__init__.py",
+        "sha256": "09295a80660f17925ae23765ce8cbd7ff7ceae968d5f2f89349f1cb74c0b9e11"
+      },
+      "numpy.lib._format_impl": {
+        "path": "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/numpy/lib/_format_impl.py",
+        "sha256": "5d7fd66e8c78d0bd9fab82e8893609ba88f7fcd3569eaebb0748f40768e85c16"
+      },
+      "numpy.lib._npyio_impl": {
+        "path": "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/numpy/lib/_npyio_impl.py",
+        "sha256": "51eb4572baad1e8198f71b3488a3cbcdb81ac85aa3c15cc2708cd907198a1fb5"
+      }
+    },
+    "runtime_imports_in_preparation": 0,
+    "schema": "qwen-model-stage-focused-numpy-origins-v1",
+    "scope": "Genuine imports arise from selected small NPY tests, not an artificial probe; no JAX/Torch/model/backend imports.",
+    "source_only_pins": true
+  },
+  "owner": "security_review authored sources; CNN owns later independent harness/proof after root review.",
+  "ready_sha256": "c8f3bef2357978a2d51dbcd9172b7b5198587d171e1f5b23287797d891aa2fcf",
+  "schema": "qwen-model-stage-test-source-handoff-v1",
+  "scope": "Source/test text and archive assembly only. No test collection, candidate/NumPy/backend import, body reads or actual grant.",
+  "selection": {
+    "actual_execution_enabled": false,
+    "actual_model_body_reads": false,
+    "affinity": [
+      108,
+      109,
+      110,
+      111
+    ],
+    "backend_forbidden_roots": [
+      "jax",
+      "jaxlib",
+      "jaxite_word",
+      "torch",
+      "transformers",
+      "tensorflow",
+      "safetensors",
+      "libtpu"
+    ],
+    "expected_nodes": 48,
+    "files": [
+      "test_model_admission.py",
+      "test_held_identity.py",
+      "test_model_recording.py"
+    ],
+    "inherited_suites_selected": false,
+    "interpreter": "/tmp/cross-pretrained-validation-env/bin/python",
+    "nodes": [
+      "test_model_admission.py::test_synthetic_positive_chain_reauthenticates_without_execution_authority",
+      "test_model_admission.py::test_canonical_compact_source_map_is_required",
+      "test_model_admission.py::test_content_model_id_does_not_depend_on_producer_or_consumer_sources",
+      "test_model_admission.py::test_forged_retained_dataclass_and_wrong_consumer_are_rejected",
+      "test_model_admission.py::test_repinned_incomplete_or_infrastructure_report_rejects[failed]",
+      "test_model_admission.py::test_repinned_incomplete_or_infrastructure_report_rejects[incomplete]",
+      "test_model_admission.py::test_repinned_incomplete_or_infrastructure_report_rejects[error]",
+      "test_model_admission.py::test_repinned_incomplete_or_infrastructure_report_rejects[cleanup]",
+      "test_model_admission.py::test_repinned_incomplete_or_infrastructure_report_rejects[backend]",
+      "test_model_admission.py::test_repinned_incomplete_or_infrastructure_report_rejects[counts]",
+      "test_model_admission.py::test_repinned_incomplete_or_infrastructure_report_rejects[audit]",
+      "test_model_admission.py::test_repinned_incomplete_or_infrastructure_report_rejects[source-end]",
+      "test_model_admission.py::test_repinned_outer_must_bind_normal_success_and_retirement[exit]",
+      "test_model_admission.py::test_repinned_outer_must_bind_normal_success_and_retirement[reaped]",
+      "test_model_admission.py::test_repinned_outer_must_bind_normal_success_and_retirement[group]",
+      "test_model_admission.py::test_repinned_outer_must_bind_normal_success_and_retirement[report-hash]",
+      "test_model_admission.py::test_repinned_root_review_cannot_omit_archive_store_or_scope_links[archive-members]",
+      "test_model_admission.py::test_repinned_root_review_cannot_omit_archive_store_or_scope_links[store-hash]",
+      "test_model_admission.py::test_repinned_root_review_cannot_omit_archive_store_or_scope_links[execution]",
+      "test_model_admission.py::test_external_expected_pins_are_not_replaced_by_report_claims[model]",
+      "test_model_admission.py::test_external_expected_pins_are_not_replaced_by_report_claims[report-digest]",
+      "test_model_admission.py::test_external_store_inventory_and_exact_types_reject[duplicate]",
+      "test_model_admission.py::test_external_store_inventory_and_exact_types_reject[missing]",
+      "test_model_admission.py::test_external_store_inventory_and_exact_types_reject[boolean-mode]",
+      "test_model_admission.py::test_external_store_inventory_and_exact_types_reject[raw-hash]",
+      "test_model_admission.py::test_actual_entries_reject_before_argument_access[admission]",
+      "test_model_admission.py::test_actual_entries_reject_before_argument_access[parameters]",
+      "test_model_admission.py::test_actual_entries_reject_before_argument_access[validator]",
+      "test_held_identity.py::test_expected_root_mismatch_rejects_before_any_parameter_file_open[device]",
+      "test_held_identity.py::test_expected_root_mismatch_rejects_before_any_parameter_file_open[inode]",
+      "test_held_identity.py::test_expected_root_mismatch_rejects_before_any_parameter_file_open[mode]",
+      "test_held_identity.py::test_expected_file_mismatch_rejects_before_first_hash_header_or_mapping[device]",
+      "test_held_identity.py::test_expected_file_mismatch_rejects_before_first_hash_header_or_mapping[inode]",
+      "test_held_identity.py::test_expected_file_mismatch_rejects_before_first_hash_header_or_mapping[size]",
+      "test_held_identity.py::test_expected_file_mismatch_rejects_before_first_hash_header_or_mapping[mtime]",
+      "test_held_identity.py::test_expected_file_mismatch_rejects_before_first_hash_header_or_mapping[mode]",
+      "test_held_identity.py::test_matching_small_npy_identity_then_original_readback_and_retirement",
+      "test_held_identity.py::test_metadata_changed_after_open_rejects_before_second_hash",
+      "test_model_recording.py::test_all198_logical197_physical113_gamma_visits_drop_views_and_stay_unready",
+      "test_model_recording.py::test_source_rejection_precedes_parameter_factory",
+      "test_model_recording.py::test_factory_failure_preserves_primary_without_claiming_complete_validation",
+      "test_model_recording.py::test_mutated_owner_callbacks_reject_but_captured_originals_retire[close]",
+      "test_model_recording.py::test_mutated_owner_callbacks_reject_but_captured_originals_retire[readback]",
+      "test_model_recording.py::test_partial_gamma_body_failure_retains_original_owner_and_drops_views",
+      "test_model_recording.py::test_cleanup_only_cancellation_outranks_ordinary_close[keyboardinterrupt]",
+      "test_model_recording.py::test_cleanup_only_cancellation_outranks_ordinary_close[systemexit]",
+      "test_model_recording.py::test_genuine_body_survives_cleanup_cancellation",
+      "test_model_recording.py::test_shield_construction_failure_still_retires_original_owner"
+    ],
+    "numpy_scope": "NumPy deliberately used for small owned NPY controls and selected parameter module; pure model_admission module itself remains NumPy-free.",
+    "per_file": {
+      "test_held_identity.py": 10,
+      "test_model_admission.py": 28,
+      "test_model_recording.py": 10
+    },
+    "pytest_args": [
+      "-p",
+      "no:cacheprovider",
+      "--import-mode=importlib"
+    ],
+    "python_flags": [
+      "-I",
+      "-B"
+    ],
+    "schema": "qwen-model-stage-focused-test-selection-v1",
+    "scope": "Static AST/source IDs only; no collection/execution. Synthetic proof bytes, owned small NPY/metadata and trusted recording complete catalog only."
+  },
+  "source_archive": {
+    "path": "/tmp/qwen-model-stage-test-source-handoff-20261104/sources.tar.gz",
+    "sha256": "b456d1148ee8d2abe7e12444e5f9e3cdf2a806df7809771cf8b90c2d62780286"
+  },
+  "source_count": 38,
+  "source_manifest": {
+    "path": "/tmp/qwen-model-stage-test-review-sources-v1-20261104.json",
+    "sha256": "30ab709ada68471e65767357808398990cbb36329bb29650d91fc0b1a75a3f1a"
+  },
+  "source_root": "/tmp/qwen-model-stage-aggregate-tests-20261104"
+}

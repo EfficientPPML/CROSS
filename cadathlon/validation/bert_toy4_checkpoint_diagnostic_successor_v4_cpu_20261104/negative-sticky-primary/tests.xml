@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="3" time="0.033" timestamp="2026-11-04T03:22:46.851426+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_repeated_primary" name="test_repeated_true_body_primary_remains_body[later0]" time="0.000"><failure message="AssertionError: assert KeyboardInterrupt('later cleanup') is ValueError('genuine body failed before cleanup')">later = KeyboardInterrupt('later cleanup')
+
+    @pytest.mark.parametrize('later',[KeyboardInterrupt('later cleanup'),SystemExit('later cleanup')])
+    def test_repeated_true_body_primary_remains_body(later):
+        primary=ValueError('genuine body failed before cleanup')
+        final=Finalizer(primary)
+        final.attempt('sticky barrier reraises same error',throwing(primary))
+        final.attempt('later cleanup cancellation',throwing(later))
+&gt;       try:final.raise_failure()
+            ^^^^^^^^^^^^^^^^^^^^^
+
+test_repeated_primary.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+execution/component_protocol.py:17: in raise_failure
+    if chosen is not None:raise chosen
+                          ^^^^^^^^^^^^
+execution/component_protocol.py:13: in attempt
+    try:return action()
+               ^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+&gt;   def action():raise error
+                 ^^^^^^^^^^^
+E   KeyboardInterrupt: later cleanup
+E   earlier cleanup: ValueError('genuine body failed before cleanup')
+
+test_repeated_primary.py:16: KeyboardInterrupt
+
+During handling of the above exception, another exception occurred:
+
+later = KeyboardInterrupt('later cleanup')
+
+    @pytest.mark.parametrize('later',[KeyboardInterrupt('later cleanup'),SystemExit('later cleanup')])
+    def test_repeated_true_body_primary_remains_body(later):
+        primary=ValueError('genuine body failed before cleanup')
+        final=Finalizer(primary)
+        final.attempt('sticky barrier reraises same error',throwing(primary))
+        final.attempt('later cleanup cancellation',throwing(later))
+        try:final.raise_failure()
+&gt;       except BaseException as actual:assert actual is primary
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert KeyboardInterrupt('later cleanup') is ValueError('genuine body failed before cleanup')
+
+test_repeated_primary.py:27: AssertionError</failure></testcase><testcase classname="test_repeated_primary" name="test_repeated_true_body_primary_remains_body[later1]" time="0.000"><failure message="AssertionError: assert SystemExit('later cleanup') is ValueError('genuine body failed before cleanup')">later = SystemExit('later cleanup')
+
+    @pytest.mark.parametrize('later',[KeyboardInterrupt('later cleanup'),SystemExit('later cleanup')])
+    def test_repeated_true_body_primary_remains_body(later):
+        primary=ValueError('genuine body failed before cleanup')
+        final=Finalizer(primary)
+        final.attempt('sticky barrier reraises same error',throwing(primary))
+        final.attempt('later cleanup cancellation',throwing(later))
+&gt;       try:final.raise_failure()
+            ^^^^^^^^^^^^^^^^^^^^^
+
+test_repeated_primary.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+execution/component_protocol.py:17: in raise_failure
+    if chosen is not None:raise chosen
+                          ^^^^^^^^^^^^
+execution/component_protocol.py:13: in attempt
+    try:return action()
+               ^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+&gt;   def action():raise error
+                 ^^^^^^^^^^^
+E   SystemExit: later cleanup
+E   earlier cleanup: ValueError('genuine body failed before cleanup')
+
+test_repeated_primary.py:16: SystemExit
+
+During handling of the above exception, another exception occurred:
+
+later = SystemExit('later cleanup')
+
+    @pytest.mark.parametrize('later',[KeyboardInterrupt('later cleanup'),SystemExit('later cleanup')])
+    def test_repeated_true_body_primary_remains_body(later):
+        primary=ValueError('genuine body failed before cleanup')
+        final=Finalizer(primary)
+        final.attempt('sticky barrier reraises same error',throwing(primary))
+        final.attempt('later cleanup cancellation',throwing(later))
+        try:final.raise_failure()
+&gt;       except BaseException as actual:assert actual is primary
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert SystemExit('later cleanup') is ValueError('genuine body failed before cleanup')
+
+test_repeated_primary.py:27: AssertionError</failure></testcase><testcase classname="test_repeated_primary" name="test_distinct_cleanup_error_body_control" time="0.000" /></testsuite></testsuites>

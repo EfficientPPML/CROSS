@@ -1,0 +1,64 @@
+{
+  "scope": "Native float32 full-checkpoint MRPC validation audit of previously fixed public arithmetic domains. Not approximate inference, encrypted inference, or calibration.",
+  "audit_completed": true,
+  "domain_coverage_passed": false,
+  "official_validation_examples": 408,
+  "native_all408_accuracy": 0.8455882352941176,
+  "subsets": {
+    "100": {
+      "size": 100,
+      "base_seed": 42,
+      "derived_input_seed": 191664963,
+      "correct": 82,
+      "accuracy": 0.82,
+      "valid_query_failing_operators": 31,
+      "padded_query_failing_operators": 15,
+      "examples_with_valid_query_domain_violation": 100
+    },
+    "200": {
+      "size": 200,
+      "base_seed": 42,
+      "derived_input_seed": 191664963,
+      "correct": 162,
+      "accuracy": 0.81,
+      "valid_query_failing_operators": 35,
+      "padded_query_failing_operators": 17,
+      "examples_with_valid_query_domain_violation": 200
+    },
+    "408": {
+      "size": 408,
+      "base_seed": 42,
+      "derived_input_seed": 191664963,
+      "correct": 345,
+      "accuracy": 0.8455882352941176,
+      "valid_query_failing_operators": 41,
+      "padded_query_failing_operators": 18,
+      "examples_with_valid_query_domain_violation": 408
+    }
+  },
+  "checked_valid_query_domain_contracts": 61,
+  "checked_padded_query_domain_contracts": 60,
+  "source_count": 26,
+  "sources_unchanged": true,
+  "source_archive_sha256": "96c183459b82d386023d26e17a921a5044d9be21aaafc51e144ca2c987083963",
+  "elapsed_s": 40.418595249000646,
+  "no_jax_imported": true,
+  "focused_tests": {
+    "passed": 4,
+    "log": "tests-v1.log"
+  },
+  "dataset": {
+    "dataset": "nyu-mll/glue",
+    "configuration": "mrpc",
+    "split": "validation",
+    "revision": "bcdcba79d07bc864c1c254ccfcedcce55bcc9a8c",
+    "url": "https://huggingface.co/datasets/nyu-mll/glue/resolve/bcdcba79d07bc864c1c254ccfcedcce55bcc9a8c/mrpc/validation-00000-of-00001.parquet",
+    "file": "validation.parquet",
+    "bytes": 75678,
+    "sha256": "33c007dbf5bfa8463d87a13e6226df8c0fcf2596c2cd39d0f3bb79754e00f50f",
+    "local_search_before_download": "No MRPC data files in BERT_validation, .cache/huggingface, or cross_validation_assets including ignored/hidden files; only upstream loader sources existed."
+  },
+  "no_raw_hidden_arrays_saved": true,
+  "full_model_encrypted": false,
+  "approximate_model_evaluated": false
+}

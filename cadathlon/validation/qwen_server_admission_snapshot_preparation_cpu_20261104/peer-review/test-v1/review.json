@@ -1,0 +1,63 @@
+{
+  "backend_or_body_reads": false,
+  "capacity_probes": false,
+  "collection": false,
+  "current_archive_exact": true,
+  "findings": [
+    {
+      "condition": "Parent getpgid raises ProcessLookupError and observed_pgid remains None.",
+      "execution_reproduction": false,
+      "id": "parent-child-pgid-binding",
+      "line": 51,
+      "observed_source": "Child self-reported pgid is compared only when observed_pgid is non-None, then used for the group-absence probe.",
+      "path": "test_snapshot_guard.py",
+      "required": "Require exact int reported PGID equal to proc.pid from start_new_session=True unconditionally, in addition to any observed PGID comparison; retain original source as unrun predecessor.",
+      "runtime_failure_observed": false,
+      "severity": "test ownership receipt assertion gap"
+    }
+  ],
+  "guard_v2_exact": true,
+  "limitations": [
+    "These are source assertions, not executed results.",
+    "Synthetic marker bytes are intentionally invalid as scientific proofs; full validator replaced by the explicit recording seam.",
+    "No actual admission, resource sufficiency, body/private ordering, backend, capacity or HE claim.",
+    "No process was launched or reaped by this reviewer."
+  ],
+  "ordered_static_selection_exact": true,
+  "parent27_exact": true,
+  "read_targets": {
+    "TEST_SCOPE.md": "470587af059b718e547670d7ff5427acccba9e345b01c11b38e793500a327996",
+    "conftest.py": "f9035d19862ac3557734b1e76c4f6e6e9bcb4fdce115d66a3547e8cd47874e93",
+    "origin.json": "6f099ccb4512bbe3b072403886776bf21c3cb717518e3f69c5bc368a983d5e0b",
+    "pytest.ini": "b7d8a2b1461f216dcacbe357b07d49bf2e53c15b11b097dd198fd5b71bc7d2e0",
+    "runtime/model_admission.py": "60bb47d044649625a5c1d9870256aed7b6d7a3bf53c49b5267bcfc4919d098d3",
+    "runtime/qwen_admission_snapshot.py": "8790711a1a402f4c21ef444ccdb76f773b4c62cd334f5be07a49d2cd4535b395",
+    "runtime/qwen_file_contract.py": "25e81bbe50bea14c5f00eebc82165e8d135d515ebc5467c6c19b3f3a211ad004",
+    "runtime/qwen_scientific_admission.py": "5765835681558215c9ef02cdb7cc590e644cc9ab43ec06995977100a051bb711",
+    "runtime/qwen_server_admission.py": "a096e5ff32439621696901bd8aa0839687208370bfde5d8a38d0c5f83aeba808",
+    "runtime/qwen_server_authority_packet.py": "40817e55db31bf133ff180f6244b0b9d4840d788d59d6323006fa2b4d3b2b41a",
+    "runtime_sources.json": "6ada972534c7dd9d20305f3fc6c2f22f8c95a69bca9139a8df497a50e6a4f19a",
+    "selected_tests.json": "184adbbb9ef952c3e88a16a454702a775e46e56d20b61ce3a054594c6a9d04a9",
+    "snapshot_child.py": "7901c1fae9125e6720c311d9a4d5a7bd820384774de95f36529bf541e2df69d0",
+    "test_snapshot_guard.py": "0a92f14bb2ce2188ca02e76ca826a150d5c879d8ac91c6c1a17e4188560886b6"
+  },
+  "ready_for_focused_run": false,
+  "review_script_sha256": "f1b3bdf7271a39fd9a2956340123bde6bdc7182b570b256672b58f66817f5b84",
+  "reviewed_assertions": [
+    "Exact13 admission dataclass graph and25 proof-name markers; recording full validator seam disclosed and restored.",
+    "Clean capture full-check count1 versus repeated hot checks/retirement; one-issued and sticky registry failures remain.",
+    "Identity-equal byte/tuple replacements, dictionary replacement, unknown fields/mutable graph, helper code/export/default/descriptor mutations target actual guard checks.",
+    "Wrong packet/thread, caught and uncaught reentry, validator/callback failures retain original marker identity and graph fields.",
+    "Immediate post-Popen ownership and nested direct wait after attempted group cleanup; no healthy deadline."
+  ],
+  "runtime_count": 28,
+  "schema": "qwen-snapshot-test-cnn-source-review-v1",
+  "source_archive_sha256": "ce7a10f02b1e763cf96ac0a3b9098b76223652bfb4d1a05285dd09a979a94b0e",
+  "source_count": 36,
+  "source_manifest_sha256": "8ecdb98742f8f79dd9988cad12a0b4b79c6b33415315c022741dc65b12ff27b2",
+  "source_only": true,
+  "source_root": "/tmp/qwen-server-admission-snapshot-tests-20261104",
+  "static_case_count": 18,
+  "tests_or_imports": false,
+  "utc": "2026-11-04T20:11:33.721541+00:00"
+}

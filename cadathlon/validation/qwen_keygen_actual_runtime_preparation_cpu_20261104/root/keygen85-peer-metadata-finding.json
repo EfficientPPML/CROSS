@@ -1,0 +1,28 @@
+{
+  "actual_execution_authorized": false,
+  "authorized_source_fix": "Fresh separate85 source successor with only2canonical JSON encodings; external declared provenance, updated map/archive; same semantic objects/runtime bytes/inventory names",
+  "candidate_imports_or_tests": false,
+  "files": {
+    "keygen_entry_status.json": {
+      "actual_bytes": 77,
+      "required_compact_bytes": 68,
+      "sha256": "5e662e636e707911a806c20b0fd8f2110206f045fb6118b9c90ca0a3089cd056"
+    },
+    "keygen_static_policy.json": {
+      "actual_bytes": 1508,
+      "required_compact_bytes": 1376,
+      "sha256": "dfc2ad1bd3f0e3fb2ca0153314164184807d9c3e86198e5296a405c7920cc82e"
+    }
+  },
+  "finder": "Transformer independent source review",
+  "finding": "keygen_process.parsed requires compact canonical bytes; selected entry-status and static-policy JSON are pretty encoded",
+  "impact": "default entry remains denied before grant/body/backend; status parsing raises ValueError before intended disabled-entry PermissionError; future ready successor would also reject static policy",
+  "initial_root_review_sha256": "72ae135d3ab2edc856e282f9f526e38d56f7934244b692a1c74f750983814b1e",
+  "root_confirmation_tool": "a4dedb",
+  "runtime_failure_observed": false,
+  "schema": "root-keygen85-peer-source-finding-v1",
+  "source85_preserved": true,
+  "source_manifest_sha256": "fa75863298e5b41ce7adbafc1a03030ce27728fcbe68ca0742137f5f6ed706e4",
+  "test_execution_authorized": false,
+  "utc": "2026-11-04T16:42:36.017644+00:00"
+}

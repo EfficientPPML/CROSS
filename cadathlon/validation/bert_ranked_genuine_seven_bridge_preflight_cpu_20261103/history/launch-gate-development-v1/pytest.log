@@ -1,0 +1,39 @@
+......................................................F.                 [100%]
+=================================== FAILURES ===================================
+____ test_public_fd_body_primary_preserved_and_uncertain_close_not_retried _____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c845666fbd0>
+
+    def test_public_fd_body_primary_preserved_and_uncertain_close_not_retried(monkeypatch):
+        body = RuntimeError('body')
+        closed = []
+        monkeypatch.setattr(gate.os, 'open', lambda *a: 999999)
+        monkeypatch.setattr(gate.os, 'fstat', lambda _: (_ for _ in ()).throw(body))
+        def fail_close(fd):
+            closed.append(fd)
+            raise KeyboardInterrupt('close')
+        monkeypatch.setattr(gate.os, 'close', fail_close)
+        try:
+            with pytest.raises(RuntimeError) as caught:
+>               gate.read_public('/public/synthetic')
+
+test_launch_authorization.py:290: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+launch_authorization.py:78: in read_public
+    before = os.fstat(fd)
+             ^^^^^^^^^^^^
+test_launch_authorization.py:283: in <lambda>
+    monkeypatch.setattr(gate.os, 'fstat', lambda _: (_ for _ in ()).throw(body))
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+.0 = <tuple_iterator object at 0x7c84567902b0>
+
+>   monkeypatch.setattr(gate.os, 'fstat', lambda _: (_ for _ in ()).throw(body))
+E   RuntimeError: body
+E   public authorization descriptor close: KeyboardInterrupt('close')
+
+test_launch_authorization.py:283: RuntimeError
+=========================== short test summary info ============================
+FAILED test_launch_authorization.py::test_public_fd_body_primary_preserved_and_uncertain_close_not_retried
+1 failed, 55 passed in 0.77s

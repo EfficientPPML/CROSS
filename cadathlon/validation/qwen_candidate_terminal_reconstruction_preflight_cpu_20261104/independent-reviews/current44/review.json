@@ -1,0 +1,58 @@
+{
+  "scope": "Independent source and isolated synthetic regression review; full44-source terminal proof is owned separately by Transformer",
+  "source_root": "/tmp/qwen-candidate-terminal-reconstruction-v2-20261104",
+  "source_manifest_sha256": "c0a00954ae17a8262df609a872b3081eee83e441fd9f8ad4187387a64c0d8439",
+  "all44_current_match_manifest": true,
+  "reviewed_sources": {
+    "entry.py": "3f168a4fc70111364c9e692007ab59a4f52a732ed2ea2911c205471433774209",
+    "reconstruction_process.py": "13560e5373c044f590369fe5b33960d432191fd25fe886aeabb567745ba144c4",
+    "reconstruction_scope.py": "0efa2dcffba0f6a95bdd86e1bd4bdf46962cb1a0090b760157917744adddef93",
+    "producer_admission.py": "c1dbe4c1cba81280c5f427f36a521c4c980b605ab1b0045925c0e27614f74bc9",
+    "private_journals.py": "9fe4d15baa1bc1d9964b5fa174960cfff6a962f992d7cfcd3c95a24b834b9b88",
+    "verify_records.py": "10b424b1cad94fefcb70e8d1d84dfbed2988cb57ed00823694470fce9daa577e",
+    "verify_statistics.py": "8d42587733075bf59fde632ce09dbce130d2a50f30b9f58dc88be346a04f3db4",
+    "contract.py": "0f8931fe60813301998253cf072b8b8abdbc31d0d955a57f430c6bc787a0a9eb",
+    "cleanup.py": "af2de68646d1071778479aedbf2854e91c48c3178edab95246ca0a84e7a82d7f",
+    "cleanup_origin.py": "81ede1e4d03f3eef954f27e5247676a914e3ad4e98ededdd40f89c2f7aeec7d4",
+    "component_processes.py": "9a14d59f61ae216cbe31300b483d0337eee56f314acefbff9b34980f688c0672",
+    "freeze_io.py": "4db4dba8ac9b5215cfdcc5089ea62da27f7086079704fea263254397d2e5363d",
+    "reconstruction_protected_paths.json": "1d56b7675a5e18055f39b9ff1c48962e46e8c3d9541cd8364ba0ebad33097646",
+    "RUNNABLE_DESIGN.md": "2f4094f6cc92000c901e30d908c9db5d70fce803c6fc390c3c1678717295fffe"
+  },
+  "concrete_unresolved_blockers": [],
+  "fixed_findings": [
+    {
+      "finding": "Partial input event allowed causally future output/block",
+      "negative": "/tmp/qwen-terminal-prefix-security-review-20261104/negative-v1",
+      "successor": "/tmp/qwen-terminal-prefix-security-review-20261104/successor-v1",
+      "identical_tests": 3
+    },
+    {
+      "finding": "Uncertain close descriptor retried",
+      "negative": "/tmp/qwen-reconstruction-reader-security-review-20261104/negative-v1",
+      "successor": "/tmp/qwen-reconstruction-reader-security-review-20261104/successor-v1",
+      "identical_tests": 2
+    },
+    {
+      "finding": "FIFO file opens blocked before regular-file rejection",
+      "negative": "/tmp/qwen-reconstruction-reader-security-review-20261104/fifo-negative-v1",
+      "successor": "/tmp/qwen-reconstruction-reader-security-review-20261104/fifo-successor-v1",
+      "identical_tests": 2
+    },
+    {
+      "finding": "Public grant read and preflight output could touch protected borrowed tree before admission",
+      "negative": "/tmp/qwen-reconstruction-scope-security-review-20261104/negative-v1",
+      "successor": "/tmp/qwen-reconstruction-scope-security-review-20261104/successor-v1",
+      "identical_tests": 4
+    }
+  ],
+  "limits": [
+    "No actual producer report, private calibration/journal/model/validation body, or actual candidate outcome was read.",
+    "Recorded statistic/metric/argmax reconstruction does not recompute unavailable raw arrays or native outputs.",
+    "Path resolution can inspect filesystem metadata before admission; scope guarantees rejection before private file-body opens, not zero metadata lookup.",
+    "Python audit is not OS isolation; relative held-descriptor paths depend on reviewed code.",
+    "Publication cannot attest its own final close: separate exact exit/reap/group and closure-bound outer receipt remains mandatory."
+  ],
+  "actual_grant_issued": false,
+  "model_or_backend_execution": false
+}

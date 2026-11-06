@@ -1,0 +1,104 @@
+"""Authenticate completed stage2 evidence before client input or key payloads.
+
+The caller supplies the independently verified report hash. This gate checks
+public evidence and retained manifest identity. The actual client handler later
+authenticates every model tensor and every public/private key array it uses.
+"""
+from pathlib import Path
+import io,stat,tarfile
+import key_gate
+MAX_SOURCE_MEMBER_BYTES=8<<20
+MAX_SOURCE_TOTAL_BYTES=16<<20
+
+
+def completed(evidence,expected_sha256):
+    evidence=Path(evidence)
+    raw=key_gate.read(evidence/'report.json')
+    if key_gate.digest(raw)!=key_gate.sha_field(expected_sha256):
+        raise ValueError('externally authenticated completed-model report differs')
+    report=key_gate.parse(raw)
+    required=('passed','execute','actual_preprocessing','model_workspace_retained',
+              'all_processes_reaped','cleanup_completed','source_files_unchanged','source_archive_verified')
+    if type(report)is not dict or any(report.get(n)is not True for n in required):
+        raise ValueError('completed actual model preprocessing required')
+    if report.get('error') or report.get('cleanup_errors'):
+        raise ValueError('completed model proof contains errors')
+    before=report.get('source_hashes_start')
+    if type(before)is not dict or not before or before!=report.get('source_hashes_end'):
+        raise ValueError('unchanged complete model-stage source closure required')
+    for name,value in before.items():
+        if type(name)is not str or Path(name).is_absolute() or '..' in Path(name).parts:
+            raise ValueError('relative source member required')
+        key_gate.sha_field(value)
+    source=key_gate.read(evidence/'sources.tar.gz',MAX_SOURCE_TOTAL_BYTES)
+    if key_gate.digest(source)!=key_gate.sha_field(report.get('source_archive_sha256')):
+        raise ValueError('model-stage source archive differs')
+    with tarfile.open(fileobj=io.BytesIO(source)) as archive:
+        members=archive.getmembers()
+        if (len(members)!=len(before) or len({m.name for m in members})!=len(members)
+                or any(not m.isfile() or m.size>MAX_SOURCE_MEMBER_BYTES for m in members)
+                or sum(m.size for m in members)>MAX_SOURCE_TOTAL_BYTES):
+            raise ValueError('bounded complete source archive required')
+        if {m.name:key_gate.digest(archive.extractfile(m).read()) for m in members}!=before:
+            raise ValueError('model-stage archived source bytes differ')
+    process=report.get('worker_process')
+    if (type(process)is not dict or type(process.get('returncode'))is not int or process['returncode']!=0
+            or process.get('error') or any(process.get(n)is not True for n in
+                ('process_reaped','public_key_store_removed','owned_directory_handle_closed'))):
+        raise ValueError('model worker terminal cleanup required')
+    result=process.get('result')
+    if type(result)is not dict or result.get('passed')is not True:
+        raise ValueError('successful model worker result required')
+    worker_raw=key_gate.read(evidence/'worker/worker_report.json')
+    if key_gate.digest(worker_raw)!=key_gate.sha_field(result.get('worker_report_sha256')):
+        raise ValueError('model worker report digest differs')
+    worker=key_gate.parse(worker_raw)
+    flags=('passed','actual_server_preprocess_called','readback_complete','all_readback_fp64_immutable',
+           'source_files_unchanged','keygen_and_codecs_forbidden','context_construction_forbidden')
+    if (type(worker)is not dict or any(worker.get(n)is not True for n in flags)
+            or worker.get('forbidden_attempts') or worker.get('source_hashes_start')!=before
+            or worker.get('source_hashes_end')!=before or type(worker.get('tensor_count'))is not int
+            or worker['tensor_count']!=196 or type(worker.get('matrix_count'))is not int or worker['matrix_count']!=74):
+        raise ValueError('complete actual public-model worker proof required')
+    return report,worker,result
+
+
+def _directory(path,identity):
+    info=Path(path).lstat()
+    if (type(identity)is not list or len(identity)!=2 or any(type(n)is not int for n in identity)
+            or not stat.S_ISDIR(info.st_mode) or [info.st_dev,info.st_ino]!=identity):
+        raise ValueError('retained model directory identity differs')
+
+
+def authenticate(evidence,expected_report_sha256,workspace,*,keys):
+    evidence=Path(evidence);workspace=Path(workspace)
+    report,worker,result=completed(evidence,expected_report_sha256)
+    prerequisite={n:keys[n] for n in ('context_id','key_report_sha256','key_source_archive_sha256')}
+    if report.get('prerequisite')!=prerequisite or worker.get('prerequisite')!=prerequisite:
+        raise ValueError('model preprocessing belongs to different completed keys')
+    context_id=key_gate.sha_field(keys['context_id'])
+    if report.get('model_workspace')!=str(workspace):raise ValueError('retained model workspace path differs')
+    _directory(workspace,report.get('model_workspace_identity'))
+    cache=workspace/'server_data'/context_id
+    if report.get('model_cache')!=str(cache):raise ValueError('retained model cache path differs')
+    _directory(cache,report.get('model_cache_identity'))
+    raw=key_gate.read(cache/'model_manifest.json',1<<20)
+    if key_gate.digest(raw)!=key_gate.sha_field(report.get('model_manifest_sha256')):
+        raise ValueError('retained public model manifest differs')
+    manifest=key_gate.parse(raw)
+    if raw!=key_gate.canonical(manifest) or key_gate.parse(key_gate.read(evidence/'model_manifest.json'))!=manifest:
+        raise ValueError('canonical archived model manifest differs')
+    if manifest!=worker.get('public_model_manifest') or manifest.get('context_id')!=context_id:
+        raise ValueError('worker/cache model identity differs')
+    from server_public_model import CHECKPOINT_SHA256,CONFIG_SHA256,CANDIDATE_SHA256,PROFILE_SHA256
+    pins={'model.safetensors':CHECKPOINT_SHA256,'config.json':CONFIG_SHA256}
+    if any(obj.get(n)!=pins for obj in (report,worker) for n in ('asset_hashes_start','asset_hashes_end')):
+        raise ValueError('fixed source model/config assets differ')
+    for name,value in dict(checkpoint_sha256=CHECKPOINT_SHA256,config_sha256=CONFIG_SHA256,
+                           candidate_sha256=CANDIDATE_SHA256,profile_sha256=PROFILE_SHA256).items():
+        if manifest.get(name)!=value:raise ValueError('fixed model/circuit identity differs')
+    model_id=key_gate.sha_field(manifest.get('model_id'))
+    if any(obj.get('context_id')!=context_id or obj.get('model_id')!=model_id for obj in (report,result)):
+        raise ValueError('completed model result identity differs')
+    return dict(server_data=workspace/'server_data',context_id=context_id,model_id=model_id,
+                model_report_sha256=expected_report_sha256,model_manifest_sha256=report['model_manifest_sha256'])

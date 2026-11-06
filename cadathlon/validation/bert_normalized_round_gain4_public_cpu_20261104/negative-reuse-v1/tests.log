@@ -1,0 +1,15 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________________ test_entered_failure_forbids_new_owner_reuse _________________
+
+    def test_entered_failure_forbids_new_owner_reuse():
+        owner,ops,source=setup(progress=lambda *args:(_ for _ in ()).throw(KeyboardInterrupt('entered failure')))
+        with pytest.raises(KeyboardInterrupt):owner.evaluate_tile(source)
+>       with pytest.raises(RuntimeError):g.BertNormalizationRoundGain4(ops,owner.layout,owner.contract)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE RuntimeError
+
+test_gain4_failure_edges.py:22: Failed
+=========================== short test summary info ============================
+FAILED test_gain4_failure_edges.py::test_entered_failure_forbids_new_owner_reuse
+1 failed in 0.13s

@@ -2,7 +2,7 @@
 
 ``HEParameterCache`` computes NTT twiddle factors, finite-field reduction
 contexts, and psi/inv_psi arrays once at max level. Per-level BConv parameters
-(which cannot be sliced) are computed separately. The module also owns
+(which cannot be sliced) are computed on first use in deterministic lazy mode. The module also owns
 versioned ring-security generation and the corresponding command-line entry
 point.
 
@@ -85,6 +85,83 @@ class LevelBConvParams:
   PInvModq: jnp.ndarray
 
 
+def _build_level_bconv_params(level, num_q_l, q_at_level, qp_at_level,
+                             num_p, dnum, ff_context_cls, perf_test):
+  """Build BConv parameters for key-switch decomposition + approx-mod-down."""
+  q_at_level, qp_at_level = list(q_at_level), list(qp_at_level)
+  sizeQl = num_q_l
+  sizeP = num_p
+  alpha = (sizeQl + dnum - 1) // dnum
+  numPartQl = (sizeQl + alpha - 1) // alpha
+
+  # Partition indices for key-switch decomposition
+  original_moduli_extract_index = []
+  for i in range(sizeQl):
+    if i % alpha == 0:
+      original_moduli_extract_index.append([i])
+    else:
+      original_moduli_extract_index[-1].append(i)
+
+  select_tower_index = []
+  non_select_tower_index = []
+  restore_indices = []
+  control_indices_list = []
+
+  # Key-switch decomposition configs (dnum partitions)
+  for part in range(numPartQl):
+    sel_index = original_moduli_extract_index[part]
+    non_sel_index = [i for i in range(len(qp_at_level)) if i not in sel_index]
+    select_tower_index.append(jnp.array(sel_index, jnp.uint16))
+    non_select_tower_index.append(jnp.array(non_sel_index, jnp.uint16))
+    control_indices_list.append((sel_index, non_sel_index))
+
+    concat_order = sel_index + non_sel_index
+    restore_index = [0] * len(concat_order)
+    for pos, val in enumerate(concat_order):
+      restore_index[val] = pos
+    restore_indices.append(jnp.array(restore_index, dtype=jnp.uint16))
+
+  # Approx-mod-down config: P -> Q
+  extend_indices = list(range(sizeQl, sizeQl + sizeP))
+  rotate_indices = list(range(sizeQl))
+  control_indices_list.append((extend_indices, rotate_indices))
+
+  # Create BConv through the backend hook and generate controls
+  bconv_obj = bconv.make_bconv(ff_context_cls, qp_at_level)
+  bconv_obj.control_gen(control_indices_list, perf_test=perf_test)
+
+  # P^{-1} mod q_i for each Q modulus at this level
+  P = 1
+  for p in qp_at_level[num_q_l:]:
+    P *= p
+  PInvModq = jnp.asarray(
+      [util.modinv(P, q) for q in q_at_level], dtype=jnp.uint32
+  ).reshape(num_q_l)
+
+  return LevelBConvParams(
+      level=level,
+      num_q=num_q_l,
+      bconv=bconv_obj,
+      select_tower_index=select_tower_index,
+      non_select_tower_index=non_select_tower_index,
+      restore_indices=restore_indices,
+      PInvModq=PInvModq,
+  )
+
+
+@dataclass(frozen=True)
+class _DeferredBConvParameters:
+  """Immutable public inputs only; no cache/key owner or bound callback."""
+
+  specification: tuple
+  device: object
+
+  def __deepcopy__(self, memo):
+    # All inputs (integers, tuples, backend class and device) are immutable.
+    # Avoid asking deepcopy to pickle a JAX Device before materialization.
+    return self
+
+
 @dataclass
 class LevelParams:
   """All parameters for a specific level."""
@@ -99,6 +176,26 @@ class LevelParams:
   inv_psi_q: jnp.ndarray
   psi_qp: jnp.ndarray
   inv_psi_qp: jnp.ndarray
+
+  def __getattribute__(self, name):
+    # Direct field reads and dataclass helpers keep their existing contract.
+    # A caller-provided None or replacement value retains its ordinary meaning.
+    value = object.__getattribute__(self, name)
+    if name == 'bconv_params' and isinstance(value, _DeferredBConvParameters):
+      # A retained LevelParams can outlive its cache. Preserve the construction
+      # device even when the first read happens in a different default scope.
+      with jax.default_device(value.device):
+        value = _build_level_bconv_params(*value.specification)
+      # Failed construction leaves the immutable specification retryable.
+      object.__setattr__(self, name, value)
+    return value
+
+  def __getstate__(self):
+    # JAX Device objects in the pending public specification are not pickleable.
+    # Serialize the same materialized controls as the original eager dataclass.
+    state = vars(self).copy()
+    state['bconv_params'] = self.bconv_params
+    return state
 
   @property
   def sliced_barrett_q(self):
@@ -155,6 +252,10 @@ class HEParameterCache:
     self.rotation_key_noise_scale = self.noise_scale_degree
     self.key_generation_version: int = int(kg.KEY_GENERATION_VERSION)
     self.cache_rotation_keys: bool = bool(cache_rotation_keys)
+    # Explicit owner-scoped experimental control construction; default unchanged.
+    self.rotation_polynomial_factory = None
+    self.multiplication_polynomial_factory = None
+    self.rescale_polynomial_factory = None
     self.level_params: Dict[int, LevelParams] = {}
 
     # Reduction backend (a FiniteFieldContextBase subclass). The paired NTT
@@ -682,12 +783,24 @@ class HEParameterCache:
         axis=-1,
     )
 
-    # BConv params
-    bconv_params = self._build_bconv_params(
-        level, num_q_l, q_at_level, qp_at_level
-    )
+    # Ordinary NTT/finite-field lookups do not consume BConv controls. Keep
+    # eager mode and synthetic perf-test generation order unchanged; otherwise
+    # direct bconv_params/get_bconv_params reads build those controls on demand.
+    bconv_params = None
+    if self._lazy_level_params and not self.perf_test:
+      devices = jnp.asarray(0, dtype=jnp.uint8).devices()
+      if len(devices) == 1:
+        bconv_params = _DeferredBConvParameters(
+            (level, num_q_l, tuple(q_at_level), tuple(qp_at_level), self.num_p,
+             self.dnum, self.ff_context_cls, self.perf_test),
+            next(iter(devices)),
+        )
+    if bconv_params is None:
+      bconv_params = self._build_bconv_params(
+          level, num_q_l, q_at_level, qp_at_level
+      )
 
-    return LevelParams(
+    params = LevelParams(
         num_q=num_q_l,
         sliced_ntt_q=sliced_ntt_q,
         sliced_ff_q=sliced_ff_q,
@@ -699,66 +812,13 @@ class HEParameterCache:
         psi_qp=psi_qp,
         inv_psi_qp=inv_psi_qp,
     )
+    return params
 
   def _build_bconv_params(self, level, num_q_l, q_at_level, qp_at_level):
-    """Build BConv parameters for key-switch decomposition + approx-mod-down."""
-    sizeQl = num_q_l
-    sizeP = self.num_p
-    alpha = (sizeQl + self.dnum - 1) // self.dnum
-    numPartQl = (sizeQl + alpha - 1) // alpha
-
-    # Partition indices for key-switch decomposition
-    original_moduli_extract_index = []
-    for i in range(sizeQl):
-      if i % alpha == 0:
-        original_moduli_extract_index.append([i])
-      else:
-        original_moduli_extract_index[-1].append(i)
-
-    select_tower_index = []
-    non_select_tower_index = []
-    restore_indices = []
-    control_indices_list = []
-
-    # Key-switch decomposition configs (dnum partitions)
-    for part in range(numPartQl):
-      sel_index = original_moduli_extract_index[part]
-      non_sel_index = [i for i in range(len(qp_at_level)) if i not in sel_index]
-      select_tower_index.append(jnp.array(sel_index, jnp.uint16))
-      non_select_tower_index.append(jnp.array(non_sel_index, jnp.uint16))
-      control_indices_list.append((sel_index, non_sel_index))
-
-      concat_order = sel_index + non_sel_index
-      restore_index = [0] * len(concat_order)
-      for pos, val in enumerate(concat_order):
-        restore_index[val] = pos
-      restore_indices.append(jnp.array(restore_index, dtype=jnp.uint16))
-
-    # Approx-mod-down config: P -> Q
-    extend_indices = list(range(sizeQl, sizeQl + sizeP))
-    rotate_indices = list(range(sizeQl))
-    control_indices_list.append((extend_indices, rotate_indices))
-
-    # Create BConv through the backend hook and generate controls
-    bconv_obj = bconv.make_bconv(self.ff_context_cls, qp_at_level)
-    bconv_obj.control_gen(control_indices_list, perf_test=self.perf_test)
-
-    # P^{-1} mod q_i for each Q modulus at this level
-    P = 1
-    for p in self.p_towers:
-      P *= p
-    PInvModq = jnp.asarray(
-        [util.modinv(P, q) for q in q_at_level], dtype=jnp.uint32
-    ).reshape(num_q_l)
-
-    return LevelBConvParams(
-        level=level,
-        num_q=num_q_l,
-        bconv=bconv_obj,
-        select_tower_index=select_tower_index,
-        non_select_tower_index=non_select_tower_index,
-        restore_indices=restore_indices,
-        PInvModq=PInvModq,
+    """Build BConv parameters from public metadata only."""
+    return _build_level_bconv_params(
+        level, num_q_l, q_at_level, qp_at_level, self.num_p, self.dnum,
+        self.ff_context_cls, self.perf_test,
     )
 
   # ================================================================

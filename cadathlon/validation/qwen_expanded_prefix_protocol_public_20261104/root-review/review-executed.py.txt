@@ -1,0 +1,57 @@
+from pathlib import Path
+import datetime,hashlib,json,tarfile,subprocess,xml.etree.ElementTree as ET
+repo=Path('/home/jianming_gatech/CROSS');lab=Path('/tmp/qwen-expanded-prefix-protocol-20261104');out=lab/'public-v3';a=repo/'cadathlon/validation/qwen_expanded_prefix_protocol_public_20261104'
+read=lambda p:json.loads(p.read_bytes());sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+r=read(out/'report.json');plan=read(out/'plan.json');h=r['source_hashes_before'];old=read(lab/'public-v2/report.json')
+assert sha(out/'report.json')=='d60b74140b645fb033e665706f3fadeb92e4211c80b1ddcb6f1119dfb8995eed'
+assert sha(out/'sources.tar.gz')=='31f8f68d30a19639b4860a6a2ee7077d246ec6059fb06d9e4dff704877c2bf43'
+assert len(h)==23 and h==r['source_hashes_after']==r['execution_source_hashes_before']==r['execution_source_hashes_after']
+with tarfile.open(out/'sources.tar.gz')as t:
+ members=t.getmembers();assert len(members)==len({m.name for m in members})==23 and all(m.isfile()and not Path(m.name).is_absolute()and '..'not in Path(m.name).parts for m in members)
+ assert {m.name:hashlib.sha256(t.extractfile(m).read()).hexdigest()for m in members}==h
+assert all(sha(lab/n)==sha(out/'execution'/n)==v for n,v in h.items())
+assert set(old['source_hashes_before'])==set(h) and {n for n in h if h[n]!=old['source_hashes_before'][n]}=={'inventory.json'}
+assert old['passed']is False and old['complete']is False and old['tests']==dict(tests=68,failures=0,errors=0,skipped=0)
+for k in ('passed','complete','cleanup_completed','terminal_scope_completed','termination_scope_completed','source_files_unchanged','execution_files_unchanged','zero_audited_private_model_body_reads'):assert r[k]is True
+assert r['HE_executed']is r['model_forward']is False
+for n in ('audit.json','plan-audit.json'):
+ audit=read(out/n);assert audit['passed']is True and audit['denied_attempts']==[]and audit['backend_modules']==[]
+cases=list(ET.parse(out/'tests.xml').iter('testcase'));assert len(cases)==68 and not any(c.findall(k)for c in cases for k in ('failure','error','skipped'))
+assert r['plan_sha256']==sha(out/'plan.json')and r['input_pins_sha256']==sha(lab/'input_pins.json')
+for n,pin in read(lab/'input_pins.json').items():assert sha(lab/'inputs'/n)==pin['sha256']
+assert sha(lab/'inputs/candidate3_manifest.json')==plan['old_candidate_manifest_sha256']=='7f6478a6bc710f3d2a370198e075e6ba8b0e55c144d981bca0eed59eaf176333'
+assert plan['execution_authorized']is plan['tokenizer_or_model_or_selection_executed']is False and plan['distinct_from_original_three_candidate_protocol']is True
+w=plan['calibration']['workload'];assert len(w)==3200 and sum(x['original416_member']for x in w)==416
+assert {(x['prompt_ordinal'],x['length'])for x in w if x['kind']=='prefill'}=={(p,n)for p in range(96)for n in range(1,33)}
+assert sum(x['kind']=='teacher'for x in w)==sum(x['kind']=='free'for x in w)==64
+assert all(x['original416_member']==(x['length']in (8,16,32))for x in w if x['kind']=='prefill')
+oldg=read(lab/'inputs/original_protocol.json')['gates'];newg=plan['acceptance']['unchanged_numeric_gates']
+assert {k:v for k,v in newg.items()if k not in ('prefill_top1_aggregation','teacher_forced_required_matches')}=={k:v for k,v in oldg.items()if k not in ('prefill_top1_aggregation','teacher_forced_required_matches')}
+c=plan['acceptance']['calibration'];v=plan['acceptance']['untouched_validation'];assert c['prefill_required_matches']==(9*3072+9)//10==2765 and v['prefill_required_matches']==(9*1024+9)//10==922
+assert (c['teacher_required_matches'],c['complete_free_required'],v['teacher_required_matches'],v['complete_free_required'])==(58,12,29,6)
+obs=plan['observation'];assert (obs['selection_site_count'],obs['normalization_count'],obs['silu_count'],obs['centered_softmax_count'])==(169,113,28,28)
+assert obs['full_metrics']==dict(operators_per_context=421,blocks_per_context=28,last_position_logits=151936)
+sel=plan['selection'];assert sel['maximum_candidates']==3 and sel['degree_ladder']==[16,32,64,128,256,512]and sel['uniform_relative_target']==1e-6 and sel['preserve_all_attempts']is True
+fresh=plan['untouched_validation'];assert all(fresh[k]is False for k in ('measured','tokenized','token_disjointness_verified'))
+assert 'EXPANDED3072'in fresh['prerequisite']and 'row0 tokenID0 S1'in fresh['prerequisite']and 'entry/unique counts by length'in fresh['prerequisite']
+assert fresh['design_sha256']==sha(lab/'inputs/untouched_validation_design.json')and len(fresh['design']['prompts'])==32 and fresh['design']['total']==1088
+assert plan['row0_regression']['excluded_from_selection']is plan['row0_regression']['original_failure_remains']is plan['row0_regression']['no_targeted_domain_widening']is True
+pids=set();groups=set()
+for report in (old,r):
+ for child in report['children']:
+  pids.add(child['pid']);groups.add(child['process_group']);assert child['direct_returncode']==0 and not child['cleanup_errors']and not child['signals_sent']and all(child[k]is True for k in ('direct_child_reaped','group_empty_verified','cleanup_completed'))
+assert all(not Path('/proc',str(p)).exists()for p in pids)
+for p in Path('/proc').iterdir():
+ if not p.name.isdigit():continue
+ try:pg=int((p/'stat').read_text().rsplit(')',1)[1].split()[2])
+ except(OSError,ValueError):continue
+ assert pg not in groups
+receipt=dict(schema='root-qwen-expanded-prefix-protocol-review-v1',checked_at_utc=datetime.datetime.now(datetime.timezone.utc).isoformat(),passed=True,sources=23,tests=68,current_execution_archive_equal=True,report_sha256=sha(out/'report.json'),archive_sha256=sha(out/'sources.tar.gz'),original_candidate3_unchanged=True,calibration_entries=3200,original_workload_subset_entries=416,proposed_validation_entries=1088,entries_are_not_unique_context_claims=True,numeric_gates_unchanged=True,expanded_prefix_overlap_gate_required=True,tokenizer_or_model_or_selection_executed=False,token_disjointness_achieved=False,original_S1_failure_unchanged=True,outer_exec_completed_without_persistent_session=True,final_exec_chunk='4123f3',final_exit_code=0,failed_v2_exec_chunk='081e7e',failed_v2_exit_code=1,outer_outcomes_attested_by_owner=True,all_child_pids_groups_absent=True,actual_launch_authorized=False,scope='Distinct public protocol design and synthetic policy checks only. Separate tokenizer-only construction/source proof must freeze data and establish overlap gates before expanded model observation/selection.')
+root=lab/'root-review';root.mkdir(exist_ok=True);dst=root/'protocol.json';assert not dst.exists();dst.write_text(json.dumps(receipt,indent=2,sort_keys=True)+'\n')
+manifest=a/'artifact_hashes.json';m=read(manifest)
+for n,v in m.items():assert sha(a/n)==v
+items={'root-review/protocol.json':dst,'root-review/review-executed.py.txt':Path(__file__)}
+for n,src in items.items():
+ q=a/n;q.parent.mkdir(exist_ok=True);assert not q.exists();q.write_bytes(src.read_bytes());m[n]=sha(q)
+manifest.write_text(json.dumps(m,indent=2,sort_keys=True)+'\n');subprocess.run(['git','add','-f','--',*[str(a/n)for n in items],str(manifest)],cwd=repo,check=True)
+print(json.dumps(receipt,sort_keys=True))

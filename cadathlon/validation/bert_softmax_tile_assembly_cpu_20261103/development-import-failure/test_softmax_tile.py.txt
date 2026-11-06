@@ -1,0 +1,200 @@
+"""Complete arithmetic composition with identity refresh; no encrypted evidence."""
+from pathlib import Path
+from types import SimpleNamespace
+import math
+import numpy as np
+import pytest
+
+from test_initial_ideal import (Arithmetic, Value, Q, DELTA, CONTRACT,
+                               ideal_primitives, independent)
+import encrypted_scaled_newton as newton
+import tracked_reciprocal as tracked
+import encrypted_refresh
+from encrypted_score_reduction import ScoreReductionLayout, SLOTS
+from encrypted_bert_normalization_round import NormalizationRoundContract
+from encrypted_bert_softmax_tile import BertSoftmaxTile
+
+MANIFEST = (Path(__file__).parent/'candidate_manifest.json').read_bytes()
+
+
+class IdentityRefresh:
+    input_level = 2
+    meta_precision = 10
+    public_bound = 2.
+    def __init__(self, arithmetic):
+        self.ctx = arithmetic.ctx
+        self.evaluator = arithmetic
+        self.engine = SimpleNamespace()
+        self.compiled_primitives = (object(), object(), object())
+        self.plan = encrypted_refresh.refresh_plan(2*SLOTS, SLOTS, (4, 4), max_level=49)
+        self.calls = []
+        self.inject = None
+        cache = arithmetic.ctx._param_cache
+        keys = set(self.plan['rotations']) | set(ScoreReductionLayout.rotation_indices())
+        cache.raw_rotation_keys = {k: {'a': object(), 'b': object()} for k in keys}
+        cache.coef_maps = {k: object() for k in keys}
+        cache.per_level_rotation_keys = False
+    @property
+    def output_level(self): return self.plan['output_level']
+    def refresh(self, value, *, public_bound):
+        assert public_bound == 2. and value.level >= 2
+        self.calls.append((value.level, value._ckks_scale, public_bound))
+        # Adjacent actual scale is an input to the following plan, never relabeled.
+        scale = math.nextafter(DELTA, math.inf if len(self.calls)%2 else -math.inf)
+        result = Value(value.data, self.output_level, scale)
+        if self.inject is not None: self.inject(value, result)
+        return result
+
+
+@pytest.fixture(autouse=True)
+def refresh_and_tracked(ideal_primitives, monkeypatch):
+    monkeypatch.setattr(encrypted_refresh, 'BoundedSecureRefresh', IdentityRefresh)
+    monkeypatch.setattr(tracked, 'affine_at_scale', newton.affine_at_scale)
+    monkeypatch.setattr(tracked, 'integer_affine', newton.integer_affine)
+    monkeypatch.setattr(tracked, '_require_unbounded_keyless_owner', lambda a: a.ctx)
+
+
+def setup(keys=128, valid=16, continuation=2, progress=None):
+    positions = np.arange(128)
+    mask = np.array([((positions+17*row+1)%128)<keys for row in range(16)])
+    layout = ScoreReductionLayout(mask, valid_rows=valid)
+    arithmetic = Arithmetic()
+    refresher = IdentityRefresh(arithmetic)
+    graph = BertSoftmaxTile(arithmetic, layout, MANIFEST, refresher,
+                            continuation_levels=continuation, progress=progress)
+    return arithmetic, refresher, graph, layout
+
+
+def reference(scores, layout, contract):
+    values = independent(scores, layout.key_mask, layout.valid_rows)[0]
+    for _ in range(5):
+        next_values = np.zeros(SLOTS)
+        for row in range(layout.valid_rows):
+            selected = np.flatnonzero(layout.key_mask[row])
+            for head in range(12):
+                indices = row*4096+selected*16+head
+                squares = values[indices]**2
+                denominator = squares.sum()
+                assert contract.domain[0] <= denominator <= contract.domain[1]
+                y = denominator*contract.first_weight+contract.first_bias
+                for _ in range(1, contract.updates): y *= 2-denominator*y
+                next_values[indices] = squares*y
+        values = next_values
+    return values
+
+
+@pytest.mark.parametrize('keys', [1, 15, 128])
+@pytest.mark.parametrize('valid,continuation', [(7, 2), (16, 17)])
+def test_complete_five_round_composition(keys, valid, continuation):
+    ops, refresh, graph, layout = setup(keys, valid, continuation)
+    rng = np.random.default_rng(2026110305+keys)
+    scores = rng.uniform(-7, 7, (16, 4096))+np.arange(16)[:, None]*70
+    scores = scores.reshape(-1)
+    scores[layout.input_mask == 0] = rng.choice([-10000., 10000.], int(np.sum(layout.input_mask == 0)))
+    source = Value(scores, 45)
+    original = source.data.copy()
+    output = graph.evaluate_tile(source)
+    expected = reference(scores, layout, graph.round.contract)
+    np.testing.assert_allclose(output.data, expected, rtol=0, atol=3e-13)
+    assert np.all(output.data[layout.input_mask == 0] == 0)
+    np.testing.assert_array_equal(source.data, original)
+    assert source._public_row_l2_bound == 'stale'
+    assert not any(n.startswith('_public_') for n in vars(output))
+    plan = graph.last_run['plan']
+    assert len(refresh.calls) == plan['refresh_count']
+    assert output.level == plan['output_level'] >= continuation
+    assert len([r for r in graph.last_run['actual_metadata'] if r['stage'].startswith('normalized round')]) == 5
+    assert graph.last_run['range_verified'] is graph.last_run['repeated_refresh_error_verified'] is False
+    assert not graph._active and graph._source is None
+    if keys == 128:
+        assert [r['output_level'] for r in plan['normalized_rounds']] == [5, 7, 7, 7, 7]
+        assert len(refresh.calls) == (4 if continuation == 2 else 5)
+        assert graph.last_run['actual_metadata'][0]['scale'] == math.nextafter(DELTA, -math.inf)
+
+
+@pytest.mark.parametrize('keys', range(1, 129))
+@pytest.mark.parametrize('continuation', [2, 17])
+def test_every_public_K_schedule(keys, continuation):
+    ops, refresh, graph, _ = setup(keys=keys, continuation=continuation)
+    plan = graph.level_plan(45)
+    count = NormalizationRoundContract(MANIFEST, keys).updates
+    level = 23
+    expected = []
+    refreshes = 0
+    for i in range(5):
+        if level < count+7: level = 25; refreshes += 1
+        entry = level
+        level -= count+5
+        expected.append((entry, level))
+    if level < continuation: level = 25; refreshes += 1
+    assert [(r['input_level'], r['output_level']) for r in plan['normalized_rounds']] == expected
+    assert plan['output_level'] == level and plan['refresh_count'] == refreshes
+    assert not ops.calls and not refresh.calls
+
+
+@pytest.mark.parametrize('mutation', ['source', 'result', 'context', 'refresher', 'engine', 'plan',
+                                    'bound', 'precision', 'continuation', 'callback', 'component_callback', 'key'])
+def test_callback_mutations_stop_before_next_primitive(mutation):
+    called = []
+    def progress(label, result, counts):
+        called.append(len(ops.calls))
+        if mutation == 'source': source.polynomial = source.polynomial.copy()
+        elif mutation == 'result': result._ckks_nsd = True
+        elif mutation == 'context': refresh.ctx = Arithmetic().ctx
+        elif mutation == 'refresher': graph.refresher = IdentityRefresh(ops)
+        elif mutation == 'engine': refresh.engine = object()
+        elif mutation == 'plan': refresh.plan['period'] = 128
+        elif mutation == 'bound': refresh.public_bound = 16.
+        elif mutation == 'precision': refresh.meta_precision = 11
+        elif mutation == 'continuation': graph.continuation_levels = 17
+        elif mutation == 'callback': graph.progress = None
+        elif mutation == 'component_callback': graph.round.reduction.progress = None
+        elif mutation == 'key': ops.ctx._param_cache.coef_maps.clear()
+    ops, refresh, graph, _ = setup(progress=progress)
+    source = Value(np.zeros(SLOTS), 45)
+    with pytest.raises(ValueError): graph.evaluate_tile(source)
+    assert called == [len(ops.calls)] and not graph._active and graph.last_run is None
+
+
+@pytest.mark.parametrize('mutation', ['input', 'result_nsd', 'level', 'scale', 'context'])
+def test_bad_refresh_result_or_mutation_cannot_continue(mutation):
+    ops, refresh, graph, _ = setup()
+    calls = []
+    def inject(source, result):
+        calls.append(len(ops.calls))
+        if mutation == 'input': source.polynomial = source.polynomial.copy()
+        elif mutation == 'result_nsd': result._ckks_nsd = True
+        elif mutation == 'level': result.level = 24
+        elif mutation == 'scale': result._ckks_scale *= 2
+        elif mutation == 'context': ops.ctx.secret_key = object()
+    refresh.inject = inject
+    with pytest.raises((ValueError, RuntimeError)): graph.evaluate_tile(Value(np.zeros(SLOTS), 45))
+    assert calls == [len(ops.calls)] and not graph._active and graph.last_run is None
+
+
+def test_reentry_and_primary_cancellation_leave_owner_reusable():
+    error = KeyboardInterrupt('preserve me')
+    source = Value(np.zeros(SLOTS), 45)
+    def cancel(label, result, counts):
+        with pytest.raises(ValueError, match='reentered'): graph.evaluate_tile(source)
+        raise error
+    ops, refresh, graph, _ = setup(progress=cancel)
+    with pytest.raises(KeyboardInterrupt) as caught: graph.evaluate_tile(source)
+    assert caught.value is error and not graph._active and graph._source is None
+    assert graph.last_run is None and len(ops.calls) == 1
+
+
+@pytest.mark.parametrize('mutation', ['nonuniform', 'low_level', 'periodic', 'low_refresh', 'bool_continuation'])
+def test_invalid_public_contract_fails_before_arithmetic(mutation):
+    ops = Arithmetic()
+    refresh = IdentityRefresh(ops)
+    mask = np.ones((16, 128), bool)
+    if mutation == 'nonuniform': mask[0, 0] = False
+    if mutation == 'periodic': refresh.plan['period'] = 128
+    if mutation == 'low_refresh': refresh.plan['output_level'] = 19
+    layout = ScoreReductionLayout(mask)
+    with pytest.raises((ValueError, TypeError)):
+        graph = BertSoftmaxTile(ops, layout, MANIFEST, refresh,
+                               continuation_levels=True if mutation == 'bool_continuation' else 2)
+        graph.evaluate_tile(Value(np.zeros(SLOTS), 23 if mutation == 'low_level' else 45))
+    assert not ops.calls and not refresh.calls

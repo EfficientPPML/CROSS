@@ -1,0 +1,43 @@
+"""Apply the source-verified runtime candidate and collector follow-up."""
+import hashlib
+import json
+from pathlib import Path
+import subprocess
+import time
+
+ROOT = Path('/home/jianming_gatech/CROSS')
+BASE = ROOT / 'cadathlon/validation/runtime_followup_integration_cpu_20261103'
+FOLLOW = ROOT / 'cadathlon/validation/transformer_collector_outer_failure_cpu_20261103'
+OUT = ROOT / 'cadathlon/validation/runtime_promotion_20261103'
+OUT.mkdir(exist_ok=False)
+changes = json.loads((BASE / 'changed_sources.json').read_text())
+def digest(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
+patches = [(BASE / 'combined.patch', '5b510f61f86145678b230dab602bcabe2985dad74a352042ff095c9285a1a9c9'),
+           (FOLLOW / 'incremental.patch', '43b89ced9aa845da7cda86f5bae1655581a5ed1eedfa35906e3085da68538b3b')]
+before = {name: digest(ROOT / name) for name in changes}
+assert before == {name: record['before_sha256'] for name, record in changes.items()}, 'live source drift'
+for patch, expected in patches:
+    assert digest(patch) == expected, f'patch mismatch: {patch}'
+record = {'passed': False, 'started_utc': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+          'source_hashes_before': before, 'patches': {str(p.relative_to(ROOT)): s for p, s in patches},
+          'scope': 'local promotion of independently reviewed source-bound CPU candidates; fresh TPU recalibration pending',
+          'historical_evidence_unchanged': True, 'committed_or_published': False}
+(OUT / 'promotion.json').write_text(json.dumps(record, indent=2)+'\n')
+for index, (patch, expected) in enumerate(patches):
+    subprocess.run(['git', 'apply', '--check', str(patch)], cwd=ROOT, check=True)
+    subprocess.run(['git', 'apply', str(patch)], cwd=ROOT, check=True)
+    if index == 0:
+        assert all(digest(ROOT / name) == value['after_sha256'] for name, value in changes.items())
+expected = {name: value['after_sha256'] for name, value in changes.items()}
+for name in ('cadathlon/validation/check_transformer_suite.py', 'cadathlon/tests/test_transformer_suite.py'):
+    expected[name] = digest(Path('/tmp/transformer-collector-outer-failure-20261103/checkout') / name)
+after = {name: digest(ROOT / name) for name in changes}
+assert after == expected, 'promoted bytes differ from tested sources'
+subprocess.run(['git', 'diff', '--check', '--', *changes], cwd=ROOT, check=True)
+record.update(passed=True, source_hashes_after=after, exact_tested_bytes_verified=True,
+              changed_files=len(changes), completed_utc=time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()))
+(OUT / 'promotion.json').write_text(json.dumps(record, indent=2)+'\n')
+subprocess.run(['git', 'add', '--', *changes], cwd=ROOT, check=True)
+subprocess.run(['git', 'add', '-f', str(OUT)], cwd=ROOT, check=True)
+print(json.dumps({'passed': True, 'changed_files': len(changes), 'evidence': str(OUT)}, indent=2))

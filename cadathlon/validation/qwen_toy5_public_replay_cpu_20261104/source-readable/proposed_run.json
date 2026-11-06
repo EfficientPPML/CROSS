@@ -1,0 +1,58 @@
+{
+  "argv_template": [
+    "/usr/bin/env",
+    "-i",
+    "PATH=/usr/bin:/bin",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1",
+    "OPENBLAS_NUM_THREADS=4",
+    "OMP_NUM_THREADS=4",
+    "MKL_NUM_THREADS=4",
+    "/usr/bin/taskset",
+    "-c",
+    "108-111",
+    "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+    "-I",
+    "-B",
+    "/tmp/qwen-toy5-public-replay-20261104/entry.py",
+    "--manifest",
+    "EXTERNAL_FINAL_MAP",
+    "--manifest-sha256",
+    "FINAL_MAP_SHA256",
+    "--grant",
+    "SEPARATE_ROOT_GRANT_NOT_CREATED",
+    "--grant-sha256",
+    "ROOT_GRANT_SHA256",
+    "--output",
+    "/tmp/qwen-toy5-public-replay-proof-20261104/execution-v1"
+  ],
+  "execution_authorized": false,
+  "expected_cpu_affinity": [
+    108,
+    109,
+    110,
+    111
+  ],
+  "grant_exists": false,
+  "not_authorized": [
+    "NumPy import now",
+    "Weight generation now",
+    "Replay now",
+    "Backend/context",
+    "Original ciphertext/key bodies",
+    "Learned model/calibration/heldout",
+    "HE",
+    "TPU queue changes"
+  ],
+  "output_proposal": "/tmp/qwen-toy5-public-replay-proof-20261104/execution-v1",
+  "python": "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+  "requirements": [
+    "Root source/harness review",
+    "Separate exact external CPU-public grant",
+    "Fresh owned output parent prepared by launch owner",
+    "Authoritative outer direct exit/reap and exact report hash",
+    "No healthy-job deadline or automatic retry"
+  ],
+  "schema": "qwen-toy5-replay-proposal-v1",
+  "status": "source-only-held-not-run"
+}

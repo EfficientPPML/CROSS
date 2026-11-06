@@ -1,0 +1,52 @@
+"""Read-only public source/proof audit; imports no reviewed runtime."""
+from pathlib import Path
+import ast,difflib,hashlib,json,tarfile,xml.etree.ElementTree as ET
+V4=Path('/tmp/bert-toy4-checkpoint-component-v4-20261104')
+V3=Path('/tmp/bert-toy4-checkpoint-component-v3-20261104')
+V2=Path('/tmp/bert-toy4-checkpoint-component-v2-20261104')
+PROOF=Path('/tmp/bert-toy4-checkpoint-v4-source-bound-20261104/preflight-v1')
+OUT=Path('/tmp/bert-toy4-v4-cleanup-independent-review-20261104');OUT.mkdir(exist_ok=False)
+h=lambda b:hashlib.sha256(b).hexdigest()
+j=lambda p:json.loads(p.read_bytes())
+pins=j(PROOF/'source_hashes.json');report=j(PROOF/'report.json')
+assert len(pins)==260 and report['source_hashes_start']==report['source_hashes_end']==report['execution_hashes_end']==pins
+assert all(report[k]is True for k in('passed','complete','cleanup_completed','terminal_scope_completed','termination_scope_completed','source_verified','all_tests_executed_without_skip'))
+assert report['execute']is False and report['test_cases']==report['expected_test_cases']==371 and report['tests_returncode']==0
+current={n:h((V4/n).read_bytes()) for n in pins};assert current==pins
+execution={n:h((PROOF/'execution'/n).read_bytes()) for n in pins};assert execution==pins
+with tarfile.open(PROOF/'sources.tar.gz')as t:
+ members=t.getmembers();assert len(members)==len({m.name for m in members})==260 and all(m.isfile() for m in members)
+ archived={m.name:h(t.extractfile(m).read())for m in members}
+assert archived==pins and h((PROOF/'sources.tar.gz').read_bytes())==report['source_archive_sha256']
+xml=ET.parse(PROOF/'tests.xml');cases=xml.findall('.//testcase');assert len(cases)==371 and not any(c.find(x)is not None for c in cases for x in('failure','error','skipped'))
+original=j(V4/'public_plan/predecessor.json')['source_hashes'];assert len(original)==199
+assert all(h((V4/'runtime'/n).read_bytes())==p==h((V2/'runtime'/n).read_bytes())for n,p in original.items())
+reviewed=['cleanup_origin.py','cleanup.py','component_protocol.py','component_transport.py','stage/client_keys.py','stage/key_contexts.py','component_arithmetic.py','component_processes.py','finish.py','terminal.py','source_guard.py','collect.py','component_worker.py','test_sticky_cleanup.py']
+source_states={n:dict(v4=pins[n],v3=h((V3/n).read_bytes())if(V3/n).exists()else None,v2=h((V2/n).read_bytes())if(V2/n).exists()else None)for n in reviewed}
+diffs=[]
+for n in reviewed:
+ if(V3/n).exists():diffs.extend(difflib.unified_diff((V3/n).read_text().splitlines(True),(V4/n).read_text().splitlines(True),fromfile='v3/'+n,tofile='v4/'+n))
+(OUT/'reviewed_delta.patch.txt').write_text(''.join(diffs))
+def nodes(root):return ast.parse((root/'component_arithmetic.py').read_text()).body
+def dump(node):return ast.dump(node,include_attributes=False)
+a,b=nodes(V3),nodes(V4)
+classes=lambda items:{n.name:dump(n)for n in items if isinstance(n,ast.ClassDef)}
+assert classes(a)==classes(b)
+exercise=lambda items:next(n for n in items if isinstance(n,ast.FunctionDef)and n.name=='exercise')
+trybody=lambda fn:next(n for n in fn.body if isinstance(n,ast.Try)).body
+assert [dump(n)for n in trybody(exercise(a))]==[dump(n)for n in trybody(exercise(b))]
+assert h((V4/'execution_authorization.json').read_bytes())==pins['execution_authorization.json']and j(V4/'execution_authorization.json')=={'ready':False}
+assert {n:h((V4/n).read_bytes())for n in pins}==pins
+result=dict(passed=True,scope='Independent read-only source/proof review; no reviewed runtime imports, tests, backend, model, key or ciphertext work',sources=260,reviewed_sources=source_states,report_sha256=h((PROOF/'report.json').read_bytes()),source_archive_sha256=report['source_archive_sha256'],existing_xml_cases=371,full_tests_rerun=False,original199_unchanged_from_v2=True,numerical_classes_and_exercise_try_body_ast_equal_v3=True,actual_execution_authorized=False,review_findings=[
+ 'No concrete new blocker found in the protected-body cleanup delta.',
+ 'Finalizer, both IO close states, signal scopes and loader/arithmetic body catches protect genuine exception identity before cleanup can mark a sticky rethrow.',
+ 'Cleanup-only provenance is preserved across layers; later non-Exception cancellation outranks ordinary cleanup failure. Removal of the per-state errors identity fallback prevents it from overriding protected genuine-body provenance.',
+ 'OwnedChild retains bounded failure-only TERM/KILL retirement and direct-child/group evidence; close protects the supplied body exception before nested signal/cleanup work.',
+ 'Loader and arithmetic keep their readiness barriers and failure quarantine paths. Protected-body changes do not release uncertain key mappings or arithmetic owners.',
+ 'Preimport descriptor-close paths skip marking the identical body object without importing an unauthenticated cleanup helper.',
+ 'Signal masking remains main-thread scoped; this review does not establish process-wide atomicity, arbitrary hostile mutation handling, numerical HE success or actual launch permission.'
+ ],session_51618_status='exit0/reaped reported by owning Transformer; no authoritative session poll by this reviewer')
+(OUT/'review.json').write_text(json.dumps(result,sort_keys=True,indent=2)+'\n')
+(OUT/'review-executed.py.txt').write_bytes(Path(__file__).read_bytes())
+(OUT/'files.sha256.json').write_text(json.dumps({p.name:h(p.read_bytes())for p in OUT.iterdir()if p.is_file()},sort_keys=True,indent=2)+'\n')
+print(json.dumps({'passed':True,'review':str(OUT/'review.json'),'sources':260,'existing_xml_cases':371,'runtime_imports':False,'test_rerun':False}))

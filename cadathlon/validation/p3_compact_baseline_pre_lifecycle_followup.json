@@ -1,0 +1,196 @@
+{
+  "passed": true,
+  "budget_s": 300.0,
+  "profile": "compact-v1",
+  "gate_version": "compact-v1",
+  "schedule": [
+    "student1.in",
+    "student2.in"
+  ],
+  "mode": "baseline",
+  "trained_accuracy_evaluated": false,
+  "worker_returncode": 0,
+  "cases": {
+    "student1.in": {
+      "case": "student1.in",
+      "mode": "HE-synthetic-smoke",
+      "device": "TPU_0(process=0,(0,0,0,0))",
+      "passed": true,
+      "implementation": "baseline_student.py",
+      "execution_rings": [
+        {
+          "degree": 8192,
+          "num_slots": 4096,
+          "num_q": 8,
+          "num_p": 2,
+          "dnum": 4,
+          "max_level": 3,
+          "q_towers": [
+            4079617,
+            1196033,
+            1589249,
+            1376257,
+            2277377,
+            1720321,
+            1769473,
+            1785857
+          ],
+          "p_towers": [
+            8273921,
+            8257537
+          ],
+          "log2_Q": 166.49832178445186,
+          "log2_QP": 212.45574163467,
+          "security_bits": 128,
+          "security_model": "classical"
+        }
+      ],
+      "setup_s": 68.98950495499957,
+      "end_to_end_s": [
+        0.07136354999965988,
+        0.07102919899989502,
+        0.07077375999961077
+      ],
+      "server_s": [
+        0.021289579999574926,
+        0.02110820999951102,
+        0.02113160000044445
+      ],
+      "warmup_s": [
+        0.2433915279998473
+      ],
+      "warmup_server_s": [
+        0.07336293000025762
+      ],
+      "cold_start_included": false,
+      "median_s": 0.07102919899989502,
+      "batch": 1,
+      "trained_accuracy_evaluated": false,
+      "max_abs_error": 1.190862009047347e-08,
+      "nrmse": 3.3942904548608457e-07,
+      "top1_agreement": 1.0,
+      "total_s": 0.8349358529994788,
+      "model": "compact_gray_cnn"
+    },
+    "student2.in": {
+      "case": "student2.in",
+      "mode": "HE-synthetic-smoke",
+      "device": "TPU_0(process=0,(0,0,0,0))",
+      "passed": true,
+      "implementation": "baseline_student.py",
+      "execution_rings": [
+        {
+          "degree": 8192,
+          "num_slots": 4096,
+          "num_q": 8,
+          "num_p": 2,
+          "dnum": 4,
+          "max_level": 3,
+          "q_towers": [
+            4079617,
+            1196033,
+            1589249,
+            1376257,
+            2277377,
+            1720321,
+            1769473,
+            1785857
+          ],
+          "p_towers": [
+            8273921,
+            8257537
+          ],
+          "log2_Q": 166.49832178445186,
+          "log2_QP": 212.45574163467,
+          "security_bits": 128,
+          "security_model": "classical"
+        }
+      ],
+      "setup_s": 64.02933491800013,
+      "end_to_end_s": [
+        0.06967745000019931,
+        0.06937918899984652,
+        0.06925668900021265
+      ],
+      "server_s": [
+        0.019776850000198465,
+        0.01970383000025322,
+        0.01973502000055305
+      ],
+      "warmup_s": [
+        0.10458440900038113
+      ],
+      "warmup_server_s": [
+        0.03106659899913211
+      ],
+      "cold_start_included": false,
+      "median_s": 0.06937918899984652,
+      "batch": 1,
+      "trained_accuracy_evaluated": false,
+      "max_abs_error": 5.781215070901902e-09,
+      "nrmse": 9.042646047035064e-08,
+      "top1_agreement": 1.0,
+      "total_s": 0.6906679139992775,
+      "model": "compact_rgb_cnn"
+    }
+  },
+  "setup_workers": 1,
+  "devices": [
+    "TPU_0(process=0,(0,0,0,0))"
+  ],
+  "device_kinds": [
+    "TPU v6 lite"
+  ],
+  "versions": {
+    "jax": "0.12.0.1",
+    "jaxlib": "0.12.0.1",
+    "libtpu": "0.0.50.1",
+    "numpy": "2.5.4",
+    "torch": "2.15.0+cpu",
+    "python": "3.13.18"
+  },
+  "source_sha256": {
+    "cadathlon/non_agent_pset/p3_cnn/src/baseline_student.py": "05c3d0210d05cbcdcb46825dde0c6188abbe674ada98c6cff039a18a4f1b2e6a",
+    "cadathlon/non_agent_pset/p3_cnn/src/runner.py": "4528da76477fdc1c924ab0b42ece099c9563b51560393b374d466f5b380595a9",
+    "cadathlon/non_agent_pset/p3_cnn/src/evaluate.py": "ab853b614c0cc282cfe7fd4aedba131b8dc2defbb93c2bed05416f6f108890b1",
+    "cadathlon/non_agent_pset/p3_cnn/src/compact_models.py": "bb7f6461cd8040a32955ac8b356839fcbd711159e8ce86d735424d502bf2cabf",
+    "cadathlon/non_agent_pset/p3_cnn/src/reference.py": "4515f9c6556db844aab24803071cfd246378e7a8eaef805530b93aa012726fa1",
+    "jaxite_word/mapping.py": "c8d035d4b7d743b18324830eeb09b6cd2a562bc4862e6af2ee10702922f6816f",
+    "jaxite_word/packing.py": "7496f37b7116b883c14f8e3d5cae6bd1ed7375d0a8d2425f78c8f84e347c0206",
+    "jaxite_word/ckks_ctx.py": "d3ed2db0ca47e395a257a9e3da2850c2ad127d0d022d2ee3a575a236b32d5149",
+    "jaxite_word/bsgs.py": "52a1027be9bf704fd3ffd453251d2b3136ab31a3242c12d341ca1374b1b82aed",
+    "jaxite_word/composite_prime_gen.py": "e3e689237d2b8449333774e84fa271a15a5c54ad603a32f7fcbe60ecb26f0317",
+    "cadathlon/non_agent_pset/p3_cnn/test/student1.in": "362469c1b15077203df27e24e975580c43bea615c16f7b8b0242a18f38c5bdc7",
+    "cadathlon/non_agent_pset/p3_cnn/test/student1.out": "66aa9ecf834026fc498104aa1712b25b7948f4df6ca18bae12bd7c2334a4d1a8",
+    "cadathlon/non_agent_pset/p3_cnn/test/student2.in": "ace28917dbbcb5f15ea89db25017132ad0a01eacd03b77801ba57ccba7781ac1",
+    "cadathlon/non_agent_pset/p3_cnn/test/student2.out": "79a794604c8904bdcb984d5e0b3b5d2b4f08463de758af398a3d46cf0790b19b"
+  },
+  "fixture_sha256": {
+    "student1.in": {
+      ".in": "362469c1b15077203df27e24e975580c43bea615c16f7b8b0242a18f38c5bdc7",
+      ".out": "66aa9ecf834026fc498104aa1712b25b7948f4df6ca18bae12bd7c2334a4d1a8"
+    },
+    "student2.in": {
+      ".in": "ace28917dbbcb5f15ea89db25017132ad0a01eacd03b77801ba57ccba7781ac1",
+      ".out": "79a794604c8904bdcb984d5e0b3b5d2b4f08463de758af398a3d46cf0790b19b"
+    }
+  },
+  "model_source_sha256": "bb7f6461cd8040a32955ac8b356839fcbd711159e8ce86d735424d502bf2cabf",
+  "device_memory": [
+    {
+      "num_allocs": 463,
+      "bytes_in_use": 27714560,
+      "peak_bytes_in_use": 1526606336,
+      "largest_alloc_size": 167772160,
+      "bytes_limit": 33546039296,
+      "bytes_reserved": 0,
+      "peak_bytes_reserved": 71712768,
+      "bytes_reservable_limit": 32108044288,
+      "largest_free_block_bytes": 32108044288
+    }
+  ],
+  "worker_elapsed_s": 145.1398832169998,
+  "peak_host_rss_kib": 11268652,
+  "elapsed_s": 152.96140972800004,
+  "within_budget": true
+}

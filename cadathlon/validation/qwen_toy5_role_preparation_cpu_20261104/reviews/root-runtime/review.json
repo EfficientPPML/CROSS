@@ -1,0 +1,63 @@
+{
+  "actual_ready": false,
+  "backend_or_capacity_probes": false,
+  "borrowed_body_reads": false,
+  "candidate_imports": false,
+  "collection": false,
+  "current_archive_exact": true,
+  "execution_authorized": false,
+  "findings": [
+    {
+      "detail": "InputOwner.close calls _record before consulting the weak closed tombstone. A successful first close removes its registry record, so a repeated close raises consumer already retired.",
+      "id": "input-close-idempotence",
+      "line": 159,
+      "path": "q5_ciphertext_owner.py",
+      "required_change": "Consult the weak closed tombstone first, preserving an explicit primary exception; remove the duplicated CiphertextOwner tombstone branch."
+    },
+    {
+      "detail": "Polynomial.__init__ separately creates moduli_array. The owner retains transferred payload and value.polynomial for cleanup barriers, but omits this returned original moduli_array; state identity retention alone does not synchronize it.",
+      "id": "moduli-array-retirement",
+      "line": 51,
+      "path": "q5_ciphertext_owner.py",
+      "required_change": "Immediately retain returned original moduli_array in the cleanup inventory and barrier it before release/key-scope exit, including later validation or security failures."
+    }
+  ],
+  "handoff_sha256": "d49dbcd4092b49b0df16cfc94e89fc34be126eb29ef800c46929cbf5ae78eb6a",
+  "limits": [
+    "No actual RuntimeAdmission issuer/native/audit/device/capacity policy implementation or launch authority exists in this held source.",
+    "No numerical, HE, first-divergence, performance, genuine device compatibility or runtime ownership proof follows from source review.",
+    "Held382 and held18 are preserved; corrections require a separately pinned successor."
+  ],
+  "passed_within_scope": false,
+  "resource_limit": "The exact original NTT base initializer eagerly evaluates BarrettContext(moduli) as the default argument of parameters.get even when an ff context is supplied. This additional unreturned transient allocation is outside local owner traversal and must remain in actual resource/initialization synchronization/process-quarantine obligations; no claim of complete local retention.",
+  "review_mode": "source reads and stdlib hash/archive/AST inspection only",
+  "reviewed_sources": {
+    "RESOURCE_STATUS.json": "fe6ef25d6bb23073c9961141f66046ab9daf9feb17896624bad37a7a5cbc98af",
+    "SOURCE_DESIGN.md": "7aa4b4935237f6bf079edc2b6286a208bfcfde9621387146e8053b98969f9840",
+    "q5_actual_dependencies.py": "cef52c60f495bdbae8652ee08ee4777373292b890af5228e98203641249f5f2f",
+    "q5_checkpoint_arithmetic.py": "062ad6383570be2c2735a94c600592b5c196dd3bfd57350a651670227f395014",
+    "q5_checkpoint_roles.py": "936e80e2e32a1f9f55735f5bdf6a1838275d040cc5e345f1bea1b97edee666bf",
+    "q5_checkpoint_transport.py": "7e2433415b3898421bb8d73bb0c18610f2836f243d868f291f111d2dcd1c800e",
+    "q5_ciphertext_owner.py": "df4c497e381b26be3b44137d54056e72482dec8debebc87661db228186a49653",
+    "q5_fixture_assets.py": "80125e5c10ff47d54692c7bd8c2edbfc52cc8a7fa3035e5b46b619ebe8b6e107",
+    "q5_owned_io.py": "bbe4c0291064b477985db85dbaa9e72fef091bbf3a26ef6b44b47dda146d349a",
+    "runtime/jaxite_word/finite_field.py": "54418625f76e303d77a3055f93419e07895bdf71f706acc20ab0f6fe7c8def5e",
+    "runtime/jaxite_word/he_params.py": "b34f2a938598ef9fd1f9de157db3400c48befcb60866751449742917e2e3fccc",
+    "runtime/jaxite_word/ntt_mm.py": "5a0cbff087f48f20c98cb5975f7894756a83d61fbdaaf5af358a1c7c192a1263",
+    "runtime/jaxite_word/polynomial.py": "043e1dcdf9aca02f2df9435ac610c1561859b7d29a7dee1b7254bf9bc3c89a5b"
+  },
+  "schema": "qwen-toy5-disabled-runtime-root-source-review-v1",
+  "source_archive_sha256": "6cf407cc9c5b8b310acc282ab55d8c0a4ac9d59d8d89e845649af7ec74ab89b8",
+  "source_count": 382,
+  "source_manifest_sha256": "b787490da5ad804dacdeca7c19cbb39a99868ab80ea762a607e1a6457cfb3180",
+  "tests": false,
+  "utc": "2026-11-04T22:09:44.171234+00:00",
+  "verified_corrections": [
+    "Three-argument Polynomial.from_array(array, shapes, parameters) passes authenticated Q and retained NTT context; from_array ABI and cache level accessor match exact core sources.",
+    "Server captures original cache/get_sliced_ntt_q; client explicitly acquires original Barrett and NTT objects before their original initializers. No new core arithmetic is selected.",
+    "Successful CT/NTT/input/assets/publisher cleanup clears strong registries and borrowed mirrors; failure records remain quarantined. InputOwner repeated-close exception remains below.",
+    "PublicAssets opens with O_NONBLOCK before fstat; regular file, original identity, bounded extent, digest and fixed weight content checks remain.",
+    "BoundedBuffer constrains write/writelines/seek/truncate before growth; encoding is closed before sole raw FD acquisition and synchronous publication/readback.",
+    "Original finish and cleanup guards stay inside server key scope; client strictly decodes all slots with default decoder and fails fast through the key scope."
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "scope": "Compare public eager/lazy LevelParams serialization in one fixed checkout.",
+  "source_hashes_before": {
+    "/tmp/lazy-bconv-20261103/checkout/jaxite_word/he_params.py": "8afb2079275d79ea5b6e63113cc081757892114298532bd6246908d1033fb3c9",
+    "/tmp/lazy-bconv-20261103/checkout/cadathlon/tests/test_lazy_bconv.py": "28cab2edc8dba49520cf77daee7fb8af5004e7f06a2cb4600cd4909bf82c93c9",
+    "/tmp/check_deferred_bconv_pickle_20261103.py": "500415490f03ede048a0f08c206b6aa3f04cdba9d49e8dbbe5fcd9bc572a5b8e"
+  },
+  "cases": {
+    "eager": {
+      "passed": true,
+      "serialized_bytes": 70242,
+      "public_controls_exact": true
+    },
+    "lazy": {
+      "passed": false,
+      "error": "TypeError: cannot pickle 'jaxlib._jax.Device' object"
+    }
+  },
+  "source_hashes_after": {
+    "/tmp/lazy-bconv-20261103/checkout/jaxite_word/he_params.py": "8afb2079275d79ea5b6e63113cc081757892114298532bd6246908d1033fb3c9",
+    "/tmp/lazy-bconv-20261103/checkout/cadathlon/tests/test_lazy_bconv.py": "28cab2edc8dba49520cf77daee7fb8af5004e7f06a2cb4600cd4909bf82c93c9",
+    "/tmp/check_deferred_bconv_pickle_20261103.py": "500415490f03ede048a0f08c206b6aa3f04cdba9d49e8dbbe5fcd9bc572a5b8e"
+  },
+  "sources_unchanged": true,
+  "passed": false
+}

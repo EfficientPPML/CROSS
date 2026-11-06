@@ -1,0 +1,213 @@
+{
+  "actual_execution_authorized": false,
+  "capacity_acquisition_authorized": false,
+  "cpu_affinity": [
+    112,
+    113,
+    114,
+    115
+  ],
+  "forbidden_roots": [
+    "flax",
+    "jax",
+    "jaxite_word",
+    "jaxlib",
+    "libtpu",
+    "numpy",
+    "safetensors",
+    "tensorflow",
+    "tokenizers",
+    "torch",
+    "torch_xla",
+    "transformers"
+  ],
+  "genuine_backend_imports_authorized": false,
+  "own_process_metadata_scope": [
+    "/proc/self/status",
+    "/proc/self/cgroup",
+    "/proc/self/mountinfo"
+  ],
+  "process_metadata_contents_recorded": false,
+  "proof_root": "/tmp/qwen-keygen-proc-self-focused-proof-20261104/preparation-v1",
+  "runtime_module_origins": {},
+  "runtime_source_expectations": {},
+  "schema": "qwen-keygen-proc-self-focused-proof-v1",
+  "scope": "Exactly32 focused real audit/os.open integration cases in dedicated isolated children. All85v3 runtime bytes stay exact; the parent uses no candidate/backend imports. Child source authentication precedes pure AccessScope imports and synthetic empty-profile admission. Only own /proc/self/{status,cgroup,mountinfo} metadata is read by positive cases; no contents are retained, capacity() and resource sufficiency are unselected. Writes/extra flags/alias/PID/dirfd/protected reads reject, sticky audit closes restore original wrapper, and each owned child is directly waited/reaped. No NumPy/backend/model/key/ciphertext body, RNG or actual role authority; no ModuleType name doubles.",
+  "selected_files": [
+    "test_proc_self_integration.py"
+  ],
+  "selected_nodes": [
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[read_status]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[read_cgroup]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[read_mountinfo]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[builtin_status]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[builtin_cgroup]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[builtin_mountinfo]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[flag_plain]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[flag_cloexec]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[flag_nofollow]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[flag_nonblock]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[flag_all]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[write_wronly]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[write_rdwr]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[write_creat]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[write_trunc]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[write_append]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[flag_directory]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[flag_path]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[flag_bool]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[builtin_write]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[bytes]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[pathlike]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[dot]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[double_slash]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[explicit_pid]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[unselected]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[relative_dirfd]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[absolute_dirfd]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[symlink]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[protected]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[body_error]",
+    "test_proc_self_integration.py::test_real_proc_self_audit_boundary[swallowed_then_read]"
+  ],
+  "selected_nodes_sha256": "7cc15939641665db336e37d3b8778e5a49742c9b27421a83c677bf2b233f7108",
+  "selected_xml_cases": [
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[read_status]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[read_cgroup]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[read_mountinfo]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[builtin_status]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[builtin_cgroup]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[builtin_mountinfo]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[flag_plain]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[flag_cloexec]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[flag_nofollow]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[flag_nonblock]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[flag_all]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[write_wronly]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[write_rdwr]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[write_creat]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[write_trunc]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[write_append]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[flag_directory]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[flag_path]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[flag_bool]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[builtin_write]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[bytes]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[pathlike]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[dot]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[double_slash]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[explicit_pid]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[unselected]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[relative_dirfd]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[absolute_dirfd]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[symlink]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[protected]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[body_error]"
+    },
+    {
+      "classname": "test_proc_self_integration",
+      "name": "test_real_proc_self_audit_boundary[swallowed_then_read]"
+    }
+  ],
+  "selected_xml_cases_sha256": "2c35a599d17c0c1e95f328733ebe0c884c41cb63ea45023a63816f79d2bbe75e",
+  "selection_digest_encoding": "sorted indent=2 JSON plus newline",
+  "source_archive_sha256": "06e7aabb5bb19f443d317e68702280dd99a9c5ee5fe990fdd71feece46f7ba3f",
+  "source_count": 92,
+  "source_manifest_encoding": "canonical sorted compact JSON plus newline",
+  "source_manifest_sha256": "67a60c8637df99ce6707a736c073314714658f834ea252f4fb0591a306700606",
+  "source_root": "/tmp/qwen-keygen-proc-self-tests-20261104",
+  "synthetic_only": true,
+  "temporary_module_name_doubles": false
+}

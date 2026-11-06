@@ -1,0 +1,118 @@
+..................................FFF............                        [100%]
+=================================== FAILURES ===================================
+_ test_single_wrapper421_outputs113_variances28_blocks_and_original_return[1] __
+
+backend = (namespace(training=False, model=namespace(layers=[<test_capture.Target object at 0x77140d0efe00>, <test_capture.Targe... object at 0x77140c504530>), (<test_capture.Tensor object at 0x77140a42e750>, <object object at 0x77140c504520>), ...])
+S = 1
+
+    @pytest.mark.parametrize('S',[1,3,32])
+    def test_single_wrapper421_outputs113_variances28_blocks_and_original_return(backend,S):
+     model,state,module,original,calls,returns=backend
+     with NativeCaptureWithInputs(model)as capture:
+      _,_,_,inactive=emit(model,module,S);assert not capture.operators and not capture.book.ranges
+      capture.begin(S);x,q,k,actual=emit(model,module,S);result=capture.end()
+      assert len(result['operators'])==421 and len(result['blocks'])==28
+      assert result['inputs']['norm_input_sites']==113 and result['inputs']['silu_gate_sites']==28
+      assert len(calls)==56 and all(actual[i]is returns[28+i]for i in range(28))
+      assert all(row[-1]=={'unchanged':True}for row in calls)
+      # Distinct variance INPUT and learned-weight output namespaces.
+      expected=float(np.float32(np.mean(x.data[0,0]**2)+np.float32(1e-6)))
+      assert result['inputs']['ranges']['0.input.inverse_sqrt']['minimum']==expected
+>     np.testing.assert_array_equal(result['operators']['0.input.inverse_sqrt'],x.data.astype(float)+100)
+E     AssertionError: 
+E     Arrays are not equal
+E     
+E     Mismatched elements: 3 / 4 (75%)
+E     Mismatch at indices:
+E      [0, 0, 1]: 101.0999984741211 (ACTUAL), 101.10000002384186 (DESIRED)
+E      [0, 0, 2]: 101.19999694824219 (ACTUAL), 101.20000004768372 (DESIRED)
+E      [0, 0, 3]: 101.30000305175781 (ACTUAL), 101.29999995231628 (DESIRED)
+E     Max absolute difference among violations: 3.09944153e-06
+E     Max relative difference among violations: 3.06268926e-08
+E      ACTUAL: array([[[101.      , 101.099998, 101.199997, 101.300003]]])
+E      DESIRED: array([[[101. , 101.1, 101.2, 101.3]]])
+
+test_capture.py:86: AssertionError
+_ test_single_wrapper421_outputs113_variances28_blocks_and_original_return[3] __
+
+backend = (namespace(training=False, model=namespace(layers=[<test_capture.Target object at 0x77140a4123c0>, <test_capture.Targe... object at 0x77140c504920>), (<test_capture.Tensor object at 0x77140ac24650>, <object object at 0x77140c504910>), ...])
+S = 3
+
+    @pytest.mark.parametrize('S',[1,3,32])
+    def test_single_wrapper421_outputs113_variances28_blocks_and_original_return(backend,S):
+     model,state,module,original,calls,returns=backend
+     with NativeCaptureWithInputs(model)as capture:
+      _,_,_,inactive=emit(model,module,S);assert not capture.operators and not capture.book.ranges
+      capture.begin(S);x,q,k,actual=emit(model,module,S);result=capture.end()
+      assert len(result['operators'])==421 and len(result['blocks'])==28
+      assert result['inputs']['norm_input_sites']==113 and result['inputs']['silu_gate_sites']==28
+      assert len(calls)==56 and all(actual[i]is returns[28+i]for i in range(28))
+      assert all(row[-1]=={'unchanged':True}for row in calls)
+      # Distinct variance INPUT and learned-weight output namespaces.
+      expected=float(np.float32(np.mean(x.data[0,0]**2)+np.float32(1e-6)))
+      assert result['inputs']['ranges']['0.input.inverse_sqrt']['minimum']==expected
+>     np.testing.assert_array_equal(result['operators']['0.input.inverse_sqrt'],x.data.astype(float)+100)
+E     AssertionError: 
+E     Arrays are not equal
+E     
+E     Mismatched elements: 9 / 12 (75%)
+E     First 5 mismatches are at indices:
+E      [0, 0, 1]: 101.0999984741211 (ACTUAL), 101.10000002384186 (DESIRED)
+E      [0, 0, 2]: 101.19999694824219 (ACTUAL), 101.20000004768372 (DESIRED)
+E      [0, 0, 3]: 101.30000305175781 (ACTUAL), 101.29999995231628 (DESIRED)
+E      [0, 1, 0]: 101.4000015258789 (ACTUAL), 101.39999997615814 (DESIRED)
+E      [0, 1, 2]: 101.5999984741211 (ACTUAL), 101.60000002384186 (DESIRED)
+E     Max absolute difference among violations: 3.09944153e-06
+E     Max relative difference among violations: 3.06268926e-08
+E      ACTUAL: array([[[101.      , 101.099998, 101.199997, 101.300003],
+E             [101.400002, 101.5     , 101.599998, 101.699997],
+E             [101.800003, 101.900002, 102.      , 102.099998]]])
+E      DESIRED: array([[[101. , 101.1, 101.2, 101.3],
+E             [101.4, 101.5, 101.6, 101.7],
+E             [101.8, 101.9, 102. , 102.1]]])
+
+test_capture.py:86: AssertionError
+_ test_single_wrapper421_outputs113_variances28_blocks_and_original_return[32] _
+
+backend = (namespace(training=False, model=namespace(layers=[<test_capture.Target object at 0x77140a4335c0>, <test_capture.Targe... object at 0x77140c504c90>), (<test_capture.Tensor object at 0x77140ac2a6f0>, <object object at 0x77140c504ce0>), ...])
+S = 32
+
+    @pytest.mark.parametrize('S',[1,3,32])
+    def test_single_wrapper421_outputs113_variances28_blocks_and_original_return(backend,S):
+     model,state,module,original,calls,returns=backend
+     with NativeCaptureWithInputs(model)as capture:
+      _,_,_,inactive=emit(model,module,S);assert not capture.operators and not capture.book.ranges
+      capture.begin(S);x,q,k,actual=emit(model,module,S);result=capture.end()
+      assert len(result['operators'])==421 and len(result['blocks'])==28
+      assert result['inputs']['norm_input_sites']==113 and result['inputs']['silu_gate_sites']==28
+      assert len(calls)==56 and all(actual[i]is returns[28+i]for i in range(28))
+      assert all(row[-1]=={'unchanged':True}for row in calls)
+      # Distinct variance INPUT and learned-weight output namespaces.
+      expected=float(np.float32(np.mean(x.data[0,0]**2)+np.float32(1e-6)))
+      assert result['inputs']['ranges']['0.input.inverse_sqrt']['minimum']==expected
+>     np.testing.assert_array_equal(result['operators']['0.input.inverse_sqrt'],x.data.astype(float)+100)
+E     AssertionError: 
+E     Arrays are not equal
+E     
+E     Mismatched elements: 102 / 128 (79.7%)
+E     First 5 mismatches are at indices:
+E      [0, 0, 1]: 101.0999984741211 (ACTUAL), 101.10000002384186 (DESIRED)
+E      [0, 0, 2]: 101.19999694824219 (ACTUAL), 101.20000004768372 (DESIRED)
+E      [0, 0, 3]: 101.30000305175781 (ACTUAL), 101.29999995231628 (DESIRED)
+E      [0, 1, 0]: 101.4000015258789 (ACTUAL), 101.39999997615814 (DESIRED)
+E      [0, 1, 2]: 101.5999984741211 (ACTUAL), 101.60000002384186 (DESIRED)
+E     Max absolute difference among violations: 3.09944153e-06
+E     Max relative difference among violations: 3.06268926e-08
+E      ACTUAL: array([[[101.      , 101.099998, 101.199997, 101.300003],
+E             [101.400002, 101.5     , 101.599998, 101.699997],
+E             [101.800003, 101.900002, 102.      , 102.099998],...
+E      DESIRED: array([[[101. , 101.1, 101.2, 101.3],
+E             [101.4, 101.5, 101.6, 101.7],
+E             [101.8, 101.9, 102. , 102.1],...
+
+test_capture.py:86: AssertionError
+=========================== short test summary info ============================
+FAILED test_capture.py::test_single_wrapper421_outputs113_variances28_blocks_and_original_return[1]
+FAILED test_capture.py::test_single_wrapper421_outputs113_variances28_blocks_and_original_return[3]
+FAILED test_capture.py::test_single_wrapper421_outputs113_variances28_blocks_and_original_return[32]
+3 failed, 46 passed in 1.35s

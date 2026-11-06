@@ -1,0 +1,567 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="36" skipped="0" tests="43" time="2.980" timestamp="2026-11-04T06:33:48.650350+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_terminal_exit" name="test_real_entry_and_exact_terminal_helper[None-True-candidate-worker]" time="0.072" /><testcase classname="test_terminal_exit" name="test_real_entry_and_exact_terminal_helper[None-True-collect-candidate]" time="0.071" /><testcase classname="test_terminal_exit" name="test_real_entry_and_exact_terminal_helper[None-False-candidate-worker]" time="0.071" /><testcase classname="test_terminal_exit" name="test_real_entry_and_exact_terminal_helper[None-False-collect-candidate]" time="0.070" /><testcase classname="test_terminal_exit" name="test_real_entry_and_exact_terminal_helper[OSError-True-candidate-worker]" time="0.074"><failure message="assert 1 == 70">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_real_entry_and_exact_term4')
+mode = 'candidate-worker', passed = True, fault = 'OSError'
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('passed', (True, False))
+    @pytest.mark.parametrize('fault', (None, 'OSError', 'SystemExit0', 'SystemExit1',
+                                     'KeyboardInterrupt', 'diagnostic_failure'))
+    def test_real_entry_and_exact_terminal_helper(tmp_path, mode, passed, fault):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, helper(passed, fault), mode)
+        code, stdout, stderr = launch(args, tmp_path/'child_receipt.json')
+        row = json.loads((tmp_path/'out/report.json').read_bytes())
+        assert row['passed'] is passed
+        assert row['cleanup_completed'] is True and row['signal_restoration_completed'] is True
+        assert row['failed_attempt_terminal_candidate'] is (not passed)
+&gt;       assert code == (70 if fault else 0 if passed else 1)
+E       assert 1 == 70
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:119: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_real_entry_and_exact_terminal_helper[OSError-True-collect-candidate]" time="0.075"><failure message="assert 1 == 70">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_real_entry_and_exact_term5')
+mode = 'collect-candidate', passed = True, fault = 'OSError'
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('passed', (True, False))
+    @pytest.mark.parametrize('fault', (None, 'OSError', 'SystemExit0', 'SystemExit1',
+                                     'KeyboardInterrupt', 'diagnostic_failure'))
+    def test_real_entry_and_exact_terminal_helper(tmp_path, mode, passed, fault):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, helper(passed, fault), mode)
+        code, stdout, stderr = launch(args, tmp_path/'child_receipt.json')
+        row = json.loads((tmp_path/'out/report.json').read_bytes())
+        assert row['passed'] is passed
+        assert row['cleanup_completed'] is True and row['signal_restoration_completed'] is True
+        assert row['failed_attempt_terminal_candidate'] is (not passed)
+&gt;       assert code == (70 if fault else 0 if passed else 1)
+E       assert 1 == 70
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:119: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_real_entry_and_exact_terminal_helper[OSError-False-candidate-worker]" time="0.073"><failure message="assert 1 == 70">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_real_entry_and_exact_term6')
+mode = 'candidate-worker', passed = False, fault = 'OSError'
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('passed', (True, False))
+    @pytest.mark.parametrize('fault', (None, 'OSError', 'SystemExit0', 'SystemExit1',
+                                     'KeyboardInterrupt', 'diagnostic_failure'))
+    def test_real_entry_and_exact_terminal_helper(tmp_path, mode, passed, fault):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, helper(passed, fault), mode)
+        code, stdout, stderr = launch(args, tmp_path/'child_receipt.json')
+        row = json.loads((tmp_path/'out/report.json').read_bytes())
+        assert row['passed'] is passed
+        assert row['cleanup_completed'] is True and row['signal_restoration_completed'] is True
+        assert row['failed_attempt_terminal_candidate'] is (not passed)
+&gt;       assert code == (70 if fault else 0 if passed else 1)
+E       assert 1 == 70
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:119: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_real_entry_and_exact_terminal_helper[OSError-False-collect-candidate]" time="0.073"><failure message="assert 1 == 70">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_real_entry_and_exact_term7')
+mode = 'collect-candidate', passed = False, fault = 'OSError'
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('passed', (True, False))
+    @pytest.mark.parametrize('fault', (None, 'OSError', 'SystemExit0', 'SystemExit1',
+                                     'KeyboardInterrupt', 'diagnostic_failure'))
+    def test_real_entry_and_exact_terminal_helper(tmp_path, mode, passed, fault):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, helper(passed, fault), mode)
+        code, stdout, stderr = launch(args, tmp_path/'child_receipt.json')
+        row = json.loads((tmp_path/'out/report.json').read_bytes())
+        assert row['passed'] is passed
+        assert row['cleanup_completed'] is True and row['signal_restoration_completed'] is True
+        assert row['failed_attempt_terminal_candidate'] is (not passed)
+&gt;       assert code == (70 if fault else 0 if passed else 1)
+E       assert 1 == 70
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:119: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_real_entry_and_exact_terminal_helper[SystemExit0-True-candidate-worker]" time="0.071"><failure message="assert 0 == 70">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_real_entry_and_exact_term8')
+mode = 'candidate-worker', passed = True, fault = 'SystemExit0'
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('passed', (True, False))
+    @pytest.mark.parametrize('fault', (None, 'OSError', 'SystemExit0', 'SystemExit1',
+                                     'KeyboardInterrupt', 'diagnostic_failure'))
+    def test_real_entry_and_exact_terminal_helper(tmp_path, mode, passed, fault):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, helper(passed, fault), mode)
+        code, stdout, stderr = launch(args, tmp_path/'child_receipt.json')
+        row = json.loads((tmp_path/'out/report.json').read_bytes())
+        assert row['passed'] is passed
+        assert row['cleanup_completed'] is True and row['signal_restoration_completed'] is True
+        assert row['failed_attempt_terminal_candidate'] is (not passed)
+&gt;       assert code == (70 if fault else 0 if passed else 1)
+E       assert 0 == 70
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:119: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_real_entry_and_exact_terminal_helper[SystemExit0-True-collect-candidate]" time="0.071"><failure message="assert 0 == 70">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_real_entry_and_exact_term9')
+mode = 'collect-candidate', passed = True, fault = 'SystemExit0'
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('passed', (True, False))
+    @pytest.mark.parametrize('fault', (None, 'OSError', 'SystemExit0', 'SystemExit1',
+                                     'KeyboardInterrupt', 'diagnostic_failure'))
+    def test_real_entry_and_exact_terminal_helper(tmp_path, mode, passed, fault):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, helper(passed, fault), mode)
+        code, stdout, stderr = launch(args, tmp_path/'child_receipt.json')
+        row = json.loads((tmp_path/'out/report.json').read_bytes())
+        assert row['passed'] is passed
+        assert row['cleanup_completed'] is True and row['signal_restoration_completed'] is True
+        assert row['failed_attempt_terminal_candidate'] is (not passed)
+&gt;       assert code == (70 if fault else 0 if passed else 1)
+E       assert 0 == 70
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:119: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_real_entry_and_exact_terminal_helper[SystemExit0-False-candidate-worker]" time="0.070"><failure message="assert 0 == 70">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_real_entry_and_exact_term10')
+mode = 'candidate-worker', passed = False, fault = 'SystemExit0'
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('passed', (True, False))
+    @pytest.mark.parametrize('fault', (None, 'OSError', 'SystemExit0', 'SystemExit1',
+                                     'KeyboardInterrupt', 'diagnostic_failure'))
+    def test_real_entry_and_exact_terminal_helper(tmp_path, mode, passed, fault):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, helper(passed, fault), mode)
+        code, stdout, stderr = launch(args, tmp_path/'child_receipt.json')
+        row = json.loads((tmp_path/'out/report.json').read_bytes())
+        assert row['passed'] is passed
+        assert row['cleanup_completed'] is True and row['signal_restoration_completed'] is True
+        assert row['failed_attempt_terminal_candidate'] is (not passed)
+&gt;       assert code == (70 if fault else 0 if passed else 1)
+E       assert 0 == 70
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:119: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_real_entry_and_exact_terminal_helper[SystemExit0-False-collect-candidate]" time="0.072"><failure message="assert 0 == 70">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_real_entry_and_exact_term11')
+mode = 'collect-candidate', passed = False, fault = 'SystemExit0'
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('passed', (True, False))
+    @pytest.mark.parametrize('fault', (None, 'OSError', 'SystemExit0', 'SystemExit1',
+                                     'KeyboardInterrupt', 'diagnostic_failure'))
+    def test_real_entry_and_exact_terminal_helper(tmp_path, mode, passed, fault):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, helper(passed, fault), mode)
+        code, stdout, stderr = launch(args, tmp_path/'child_receipt.json')
+        row = json.loads((tmp_path/'out/report.json').read_bytes())
+        assert row['passed'] is passed
+        assert row['cleanup_completed'] is True and row['signal_restoration_completed'] is True
+        assert row['failed_attempt_terminal_candidate'] is (not passed)
+&gt;       assert code == (70 if fault else 0 if passed else 1)
+E       assert 0 == 70
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:119: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_real_entry_and_exact_terminal_helper[SystemExit1-True-candidate-worker]" time="0.071"><failure message="assert 1 == 70">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_real_entry_and_exact_term12')
+mode = 'candidate-worker', passed = True, fault = 'SystemExit1'
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('passed', (True, False))
+    @pytest.mark.parametrize('fault', (None, 'OSError', 'SystemExit0', 'SystemExit1',
+                                     'KeyboardInterrupt', 'diagnostic_failure'))
+    def test_real_entry_and_exact_terminal_helper(tmp_path, mode, passed, fault):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, helper(passed, fault), mode)
+        code, stdout, stderr = launch(args, tmp_path/'child_receipt.json')
+        row = json.loads((tmp_path/'out/report.json').read_bytes())
+        assert row['passed'] is passed
+        assert row['cleanup_completed'] is True and row['signal_restoration_completed'] is True
+        assert row['failed_attempt_terminal_candidate'] is (not passed)
+&gt;       assert code == (70 if fault else 0 if passed else 1)
+E       assert 1 == 70
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:119: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_real_entry_and_exact_terminal_helper[SystemExit1-True-collect-candidate]" time="0.071"><failure message="assert 1 == 70">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_real_entry_and_exact_term13')
+mode = 'collect-candidate', passed = True, fault = 'SystemExit1'
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('passed', (True, False))
+    @pytest.mark.parametrize('fault', (None, 'OSError', 'SystemExit0', 'SystemExit1',
+                                     'KeyboardInterrupt', 'diagnostic_failure'))
+    def test_real_entry_and_exact_terminal_helper(tmp_path, mode, passed, fault):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, helper(passed, fault), mode)
+        code, stdout, stderr = launch(args, tmp_path/'child_receipt.json')
+        row = json.loads((tmp_path/'out/report.json').read_bytes())
+        assert row['passed'] is passed
+        assert row['cleanup_completed'] is True and row['signal_restoration_completed'] is True
+        assert row['failed_attempt_terminal_candidate'] is (not passed)
+&gt;       assert code == (70 if fault else 0 if passed else 1)
+E       assert 1 == 70
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:119: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_real_entry_and_exact_terminal_helper[SystemExit1-False-candidate-worker]" time="0.071"><failure message="assert 1 == 70">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_real_entry_and_exact_term14')
+mode = 'candidate-worker', passed = False, fault = 'SystemExit1'
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('passed', (True, False))
+    @pytest.mark.parametrize('fault', (None, 'OSError', 'SystemExit0', 'SystemExit1',
+                                     'KeyboardInterrupt', 'diagnostic_failure'))
+    def test_real_entry_and_exact_terminal_helper(tmp_path, mode, passed, fault):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, helper(passed, fault), mode)
+        code, stdout, stderr = launch(args, tmp_path/'child_receipt.json')
+        row = json.loads((tmp_path/'out/report.json').read_bytes())
+        assert row['passed'] is passed
+        assert row['cleanup_completed'] is True and row['signal_restoration_completed'] is True
+        assert row['failed_attempt_terminal_candidate'] is (not passed)
+&gt;       assert code == (70 if fault else 0 if passed else 1)
+E       assert 1 == 70
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:119: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_real_entry_and_exact_terminal_helper[SystemExit1-False-collect-candidate]" time="0.071"><failure message="assert 1 == 70">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_real_entry_and_exact_term15')
+mode = 'collect-candidate', passed = False, fault = 'SystemExit1'
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('passed', (True, False))
+    @pytest.mark.parametrize('fault', (None, 'OSError', 'SystemExit0', 'SystemExit1',
+                                     'KeyboardInterrupt', 'diagnostic_failure'))
+    def test_real_entry_and_exact_terminal_helper(tmp_path, mode, passed, fault):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, helper(passed, fault), mode)
+        code, stdout, stderr = launch(args, tmp_path/'child_receipt.json')
+        row = json.loads((tmp_path/'out/report.json').read_bytes())
+        assert row['passed'] is passed
+        assert row['cleanup_completed'] is True and row['signal_restoration_completed'] is True
+        assert row['failed_attempt_terminal_candidate'] is (not passed)
+&gt;       assert code == (70 if fault else 0 if passed else 1)
+E       assert 1 == 70
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:119: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_real_entry_and_exact_terminal_helper[KeyboardInterrupt-True-candidate-worker]" time="0.073"><failure message="assert -2 == 70">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_real_entry_and_exact_term16')
+mode = 'candidate-worker', passed = True, fault = 'KeyboardInterrupt'
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('passed', (True, False))
+    @pytest.mark.parametrize('fault', (None, 'OSError', 'SystemExit0', 'SystemExit1',
+                                     'KeyboardInterrupt', 'diagnostic_failure'))
+    def test_real_entry_and_exact_terminal_helper(tmp_path, mode, passed, fault):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, helper(passed, fault), mode)
+        code, stdout, stderr = launch(args, tmp_path/'child_receipt.json')
+        row = json.loads((tmp_path/'out/report.json').read_bytes())
+        assert row['passed'] is passed
+        assert row['cleanup_completed'] is True and row['signal_restoration_completed'] is True
+        assert row['failed_attempt_terminal_candidate'] is (not passed)
+&gt;       assert code == (70 if fault else 0 if passed else 1)
+E       assert -2 == 70
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:119: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_real_entry_and_exact_terminal_helper[KeyboardInterrupt-True-collect-candidate]" time="0.073"><failure message="assert -2 == 70">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_real_entry_and_exact_term17')
+mode = 'collect-candidate', passed = True, fault = 'KeyboardInterrupt'
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('passed', (True, False))
+    @pytest.mark.parametrize('fault', (None, 'OSError', 'SystemExit0', 'SystemExit1',
+                                     'KeyboardInterrupt', 'diagnostic_failure'))
+    def test_real_entry_and_exact_terminal_helper(tmp_path, mode, passed, fault):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, helper(passed, fault), mode)
+        code, stdout, stderr = launch(args, tmp_path/'child_receipt.json')
+        row = json.loads((tmp_path/'out/report.json').read_bytes())
+        assert row['passed'] is passed
+        assert row['cleanup_completed'] is True and row['signal_restoration_completed'] is True
+        assert row['failed_attempt_terminal_candidate'] is (not passed)
+&gt;       assert code == (70 if fault else 0 if passed else 1)
+E       assert -2 == 70
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:119: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_real_entry_and_exact_terminal_helper[KeyboardInterrupt-False-candidate-worker]" time="0.073"><failure message="assert -2 == 70">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_real_entry_and_exact_term18')
+mode = 'candidate-worker', passed = False, fault = 'KeyboardInterrupt'
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('passed', (True, False))
+    @pytest.mark.parametrize('fault', (None, 'OSError', 'SystemExit0', 'SystemExit1',
+                                     'KeyboardInterrupt', 'diagnostic_failure'))
+    def test_real_entry_and_exact_terminal_helper(tmp_path, mode, passed, fault):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, helper(passed, fault), mode)
+        code, stdout, stderr = launch(args, tmp_path/'child_receipt.json')
+        row = json.loads((tmp_path/'out/report.json').read_bytes())
+        assert row['passed'] is passed
+        assert row['cleanup_completed'] is True and row['signal_restoration_completed'] is True
+        assert row['failed_attempt_terminal_candidate'] is (not passed)
+&gt;       assert code == (70 if fault else 0 if passed else 1)
+E       assert -2 == 70
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:119: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_real_entry_and_exact_terminal_helper[KeyboardInterrupt-False-collect-candidate]" time="0.073"><failure message="assert -2 == 70">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_real_entry_and_exact_term19')
+mode = 'collect-candidate', passed = False, fault = 'KeyboardInterrupt'
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('passed', (True, False))
+    @pytest.mark.parametrize('fault', (None, 'OSError', 'SystemExit0', 'SystemExit1',
+                                     'KeyboardInterrupt', 'diagnostic_failure'))
+    def test_real_entry_and_exact_terminal_helper(tmp_path, mode, passed, fault):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, helper(passed, fault), mode)
+        code, stdout, stderr = launch(args, tmp_path/'child_receipt.json')
+        row = json.loads((tmp_path/'out/report.json').read_bytes())
+        assert row['passed'] is passed
+        assert row['cleanup_completed'] is True and row['signal_restoration_completed'] is True
+        assert row['failed_attempt_terminal_candidate'] is (not passed)
+&gt;       assert code == (70 if fault else 0 if passed else 1)
+E       assert -2 == 70
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:119: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_real_entry_and_exact_terminal_helper[diagnostic_failure-True-candidate-worker]" time="0.073"><failure message="assert 1 == 70">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_real_entry_and_exact_term20')
+mode = 'candidate-worker', passed = True, fault = 'diagnostic_failure'
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('passed', (True, False))
+    @pytest.mark.parametrize('fault', (None, 'OSError', 'SystemExit0', 'SystemExit1',
+                                     'KeyboardInterrupt', 'diagnostic_failure'))
+    def test_real_entry_and_exact_terminal_helper(tmp_path, mode, passed, fault):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, helper(passed, fault), mode)
+        code, stdout, stderr = launch(args, tmp_path/'child_receipt.json')
+        row = json.loads((tmp_path/'out/report.json').read_bytes())
+        assert row['passed'] is passed
+        assert row['cleanup_completed'] is True and row['signal_restoration_completed'] is True
+        assert row['failed_attempt_terminal_candidate'] is (not passed)
+&gt;       assert code == (70 if fault else 0 if passed else 1)
+E       assert 1 == 70
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:119: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_real_entry_and_exact_terminal_helper[diagnostic_failure-True-collect-candidate]" time="0.073"><failure message="assert 1 == 70">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_real_entry_and_exact_term21')
+mode = 'collect-candidate', passed = True, fault = 'diagnostic_failure'
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('passed', (True, False))
+    @pytest.mark.parametrize('fault', (None, 'OSError', 'SystemExit0', 'SystemExit1',
+                                     'KeyboardInterrupt', 'diagnostic_failure'))
+    def test_real_entry_and_exact_terminal_helper(tmp_path, mode, passed, fault):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, helper(passed, fault), mode)
+        code, stdout, stderr = launch(args, tmp_path/'child_receipt.json')
+        row = json.loads((tmp_path/'out/report.json').read_bytes())
+        assert row['passed'] is passed
+        assert row['cleanup_completed'] is True and row['signal_restoration_completed'] is True
+        assert row['failed_attempt_terminal_candidate'] is (not passed)
+&gt;       assert code == (70 if fault else 0 if passed else 1)
+E       assert 1 == 70
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:119: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_real_entry_and_exact_terminal_helper[diagnostic_failure-False-candidate-worker]" time="0.073"><failure message="assert 1 == 70">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_real_entry_and_exact_term22')
+mode = 'candidate-worker', passed = False, fault = 'diagnostic_failure'
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('passed', (True, False))
+    @pytest.mark.parametrize('fault', (None, 'OSError', 'SystemExit0', 'SystemExit1',
+                                     'KeyboardInterrupt', 'diagnostic_failure'))
+    def test_real_entry_and_exact_terminal_helper(tmp_path, mode, passed, fault):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, helper(passed, fault), mode)
+        code, stdout, stderr = launch(args, tmp_path/'child_receipt.json')
+        row = json.loads((tmp_path/'out/report.json').read_bytes())
+        assert row['passed'] is passed
+        assert row['cleanup_completed'] is True and row['signal_restoration_completed'] is True
+        assert row['failed_attempt_terminal_candidate'] is (not passed)
+&gt;       assert code == (70 if fault else 0 if passed else 1)
+E       assert 1 == 70
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:119: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_real_entry_and_exact_terminal_helper[diagnostic_failure-False-collect-candidate]" time="0.073"><failure message="assert 1 == 70">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_real_entry_and_exact_term23')
+mode = 'collect-candidate', passed = False, fault = 'diagnostic_failure'
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('passed', (True, False))
+    @pytest.mark.parametrize('fault', (None, 'OSError', 'SystemExit0', 'SystemExit1',
+                                     'KeyboardInterrupt', 'diagnostic_failure'))
+    def test_real_entry_and_exact_terminal_helper(tmp_path, mode, passed, fault):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, helper(passed, fault), mode)
+        code, stdout, stderr = launch(args, tmp_path/'child_receipt.json')
+        row = json.loads((tmp_path/'out/report.json').read_bytes())
+        assert row['passed'] is passed
+        assert row['cleanup_completed'] is True and row['signal_restoration_completed'] is True
+        assert row['failed_attempt_terminal_candidate'] is (not passed)
+&gt;       assert code == (70 if fault else 0 if passed else 1)
+E       assert 1 == 70
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:119: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_malformed_normal_return_never_scientific[True-candidate-worker]" time="0.063"><failure message="assert (1 == 70)">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_malformed_normal_return_n0')
+mode = 'candidate-worker', returned = 'True'
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('returned', ('True', 'None', '0.0', '2', '70', "'1'",
+                                        "type('Status', (int,), {})(0)"))
+    def test_malformed_normal_return_never_scientific(tmp_path, mode, returned):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, 'def dispatch(*args): return '+returned+'\n', mode)
+        code, _, stderr = launch(args, tmp_path/'child_receipt.json')
+&gt;       assert code == 70 and b'ValueError' in stderr
+E       assert (1 == 70)
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:134: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_malformed_normal_return_never_scientific[True-collect-candidate]" time="0.063"><failure message="assert (1 == 70)">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_malformed_normal_return_n1')
+mode = 'collect-candidate', returned = 'True'
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('returned', ('True', 'None', '0.0', '2', '70', "'1'",
+                                        "type('Status', (int,), {})(0)"))
+    def test_malformed_normal_return_never_scientific(tmp_path, mode, returned):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, 'def dispatch(*args): return '+returned+'\n', mode)
+        code, _, stderr = launch(args, tmp_path/'child_receipt.json')
+&gt;       assert code == 70 and b'ValueError' in stderr
+E       assert (1 == 70)
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:134: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_malformed_normal_return_never_scientific[None-candidate-worker]" time="0.062"><failure message="assert (0 == 70)">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_malformed_normal_return_n2')
+mode = 'candidate-worker', returned = 'None'
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('returned', ('True', 'None', '0.0', '2', '70', "'1'",
+                                        "type('Status', (int,), {})(0)"))
+    def test_malformed_normal_return_never_scientific(tmp_path, mode, returned):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, 'def dispatch(*args): return '+returned+'\n', mode)
+        code, _, stderr = launch(args, tmp_path/'child_receipt.json')
+&gt;       assert code == 70 and b'ValueError' in stderr
+E       assert (0 == 70)
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:134: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_malformed_normal_return_never_scientific[None-collect-candidate]" time="0.063"><failure message="assert (0 == 70)">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_malformed_normal_return_n3')
+mode = 'collect-candidate', returned = 'None'
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('returned', ('True', 'None', '0.0', '2', '70', "'1'",
+                                        "type('Status', (int,), {})(0)"))
+    def test_malformed_normal_return_never_scientific(tmp_path, mode, returned):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, 'def dispatch(*args): return '+returned+'\n', mode)
+        code, _, stderr = launch(args, tmp_path/'child_receipt.json')
+&gt;       assert code == 70 and b'ValueError' in stderr
+E       assert (0 == 70)
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:134: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_malformed_normal_return_never_scientific[0.0-candidate-worker]" time="0.061"><failure message="assert (1 == 70)">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_malformed_normal_return_n4')
+mode = 'candidate-worker', returned = '0.0'
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('returned', ('True', 'None', '0.0', '2', '70', "'1'",
+                                        "type('Status', (int,), {})(0)"))
+    def test_malformed_normal_return_never_scientific(tmp_path, mode, returned):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, 'def dispatch(*args): return '+returned+'\n', mode)
+        code, _, stderr = launch(args, tmp_path/'child_receipt.json')
+&gt;       assert code == 70 and b'ValueError' in stderr
+E       assert (1 == 70)
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:134: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_malformed_normal_return_never_scientific[0.0-collect-candidate]" time="0.063"><failure message="assert (1 == 70)">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_malformed_normal_return_n5')
+mode = 'collect-candidate', returned = '0.0'
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('returned', ('True', 'None', '0.0', '2', '70', "'1'",
+                                        "type('Status', (int,), {})(0)"))
+    def test_malformed_normal_return_never_scientific(tmp_path, mode, returned):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, 'def dispatch(*args): return '+returned+'\n', mode)
+        code, _, stderr = launch(args, tmp_path/'child_receipt.json')
+&gt;       assert code == 70 and b'ValueError' in stderr
+E       assert (1 == 70)
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:134: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_malformed_normal_return_never_scientific[2-candidate-worker]" time="0.061"><failure message="assert (2 == 70)">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_malformed_normal_return_n6')
+mode = 'candidate-worker', returned = '2'
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('returned', ('True', 'None', '0.0', '2', '70', "'1'",
+                                        "type('Status', (int,), {})(0)"))
+    def test_malformed_normal_return_never_scientific(tmp_path, mode, returned):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, 'def dispatch(*args): return '+returned+'\n', mode)
+        code, _, stderr = launch(args, tmp_path/'child_receipt.json')
+&gt;       assert code == 70 and b'ValueError' in stderr
+E       assert (2 == 70)
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:134: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_malformed_normal_return_never_scientific[2-collect-candidate]" time="0.063"><failure message="assert (2 == 70)">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_malformed_normal_return_n7')
+mode = 'collect-candidate', returned = '2'
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('returned', ('True', 'None', '0.0', '2', '70', "'1'",
+                                        "type('Status', (int,), {})(0)"))
+    def test_malformed_normal_return_never_scientific(tmp_path, mode, returned):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, 'def dispatch(*args): return '+returned+'\n', mode)
+        code, _, stderr = launch(args, tmp_path/'child_receipt.json')
+&gt;       assert code == 70 and b'ValueError' in stderr
+E       assert (2 == 70)
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:134: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_malformed_normal_return_never_scientific[70-candidate-worker]" time="0.062"><failure message="AssertionError: assert (70 == 70 and b'ValueError' in b'')">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_malformed_normal_return_n8')
+mode = 'candidate-worker', returned = '70'
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('returned', ('True', 'None', '0.0', '2', '70', "'1'",
+                                        "type('Status', (int,), {})(0)"))
+    def test_malformed_normal_return_never_scientific(tmp_path, mode, returned):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, 'def dispatch(*args): return '+returned+'\n', mode)
+        code, _, stderr = launch(args, tmp_path/'child_receipt.json')
+&gt;       assert code == 70 and b'ValueError' in stderr
+E       AssertionError: assert (70 == 70 and b'ValueError' in b'')
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:134: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_malformed_normal_return_never_scientific[70-collect-candidate]" time="0.061"><failure message="AssertionError: assert (70 == 70 and b'ValueError' in b'')">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_malformed_normal_return_n9')
+mode = 'collect-candidate', returned = '70'
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('returned', ('True', 'None', '0.0', '2', '70', "'1'",
+                                        "type('Status', (int,), {})(0)"))
+    def test_malformed_normal_return_never_scientific(tmp_path, mode, returned):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, 'def dispatch(*args): return '+returned+'\n', mode)
+        code, _, stderr = launch(args, tmp_path/'child_receipt.json')
+&gt;       assert code == 70 and b'ValueError' in stderr
+E       AssertionError: assert (70 == 70 and b'ValueError' in b'')
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:134: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_malformed_normal_return_never_scientific['1'-candidate-worker]" time="0.062"><failure message="assert (1 == 70)">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_malformed_normal_return_n10')
+mode = 'candidate-worker', returned = "'1'"
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('returned', ('True', 'None', '0.0', '2', '70', "'1'",
+                                        "type('Status', (int,), {})(0)"))
+    def test_malformed_normal_return_never_scientific(tmp_path, mode, returned):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, 'def dispatch(*args): return '+returned+'\n', mode)
+        code, _, stderr = launch(args, tmp_path/'child_receipt.json')
+&gt;       assert code == 70 and b'ValueError' in stderr
+E       assert (1 == 70)
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:134: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_malformed_normal_return_never_scientific['1'-collect-candidate]" time="0.063"><failure message="assert (1 == 70)">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_malformed_normal_return_n11')
+mode = 'collect-candidate', returned = "'1'"
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('returned', ('True', 'None', '0.0', '2', '70', "'1'",
+                                        "type('Status', (int,), {})(0)"))
+    def test_malformed_normal_return_never_scientific(tmp_path, mode, returned):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, 'def dispatch(*args): return '+returned+'\n', mode)
+        code, _, stderr = launch(args, tmp_path/'child_receipt.json')
+&gt;       assert code == 70 and b'ValueError' in stderr
+E       assert (1 == 70)
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:134: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_malformed_normal_return_never_scientific[type('Status', (int,), {})(0)-candidate-worker]" time="0.063"><failure message="assert (0 == 70)">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_malformed_normal_return_n12')
+mode = 'candidate-worker', returned = "type('Status', (int,), {})(0)"
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('returned', ('True', 'None', '0.0', '2', '70', "'1'",
+                                        "type('Status', (int,), {})(0)"))
+    def test_malformed_normal_return_never_scientific(tmp_path, mode, returned):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, 'def dispatch(*args): return '+returned+'\n', mode)
+        code, _, stderr = launch(args, tmp_path/'child_receipt.json')
+&gt;       assert code == 70 and b'ValueError' in stderr
+E       assert (0 == 70)
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:134: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_malformed_normal_return_never_scientific[type('Status', (int,), {})(0)-collect-candidate]" time="0.062"><failure message="assert (0 == 70)">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_malformed_normal_return_n13')
+mode = 'collect-candidate', returned = "type('Status', (int,), {})(0)"
+
+    @pytest.mark.parametrize('mode', MODES)
+    @pytest.mark.parametrize('returned', ('True', 'None', '0.0', '2', '70', "'1'",
+                                        "type('Status', (int,), {})(0)"))
+    def test_malformed_normal_return_never_scientific(tmp_path, mode, returned):
+        root, marker, manifest, args = prepared(tmp_path)
+        install(root, manifest, args, 'def dispatch(*args): return '+returned+'\n', mode)
+        code, _, stderr = launch(args, tmp_path/'child_receipt.json')
+&gt;       assert code == 70 and b'ValueError' in stderr
+E       assert (0 == 70)
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:134: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_help_and_usage_stay_outside_work[--help-0]" time="0.052" /><testcase classname="test_terminal_exit" name="test_help_and_usage_stay_outside_work[--unknown-2]" time="0.051" /><testcase classname="test_terminal_exit" name="test_source_failure_is_infrastructure_before_helper[candidate-worker]" time="0.055"><failure message="assert (1 == 70)">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_source_failure_is_infrast0')
+mode = 'candidate-worker'
+
+    @pytest.mark.parametrize('mode', MODES)
+    def test_source_failure_is_infrastructure_before_helper(tmp_path, mode):
+        root, marker, manifest, args = prepared(tmp_path)
+        args[args.index('--mode')+1] = mode
+        (root/'input_gate.py').write_text('raise RuntimeError("untrusted")\n')
+        code, _, _ = launch(args, tmp_path/'child_receipt.json')
+&gt;       assert code == 70 and not marker.exists()
+E       assert (1 == 70)
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:150: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_source_failure_is_infrastructure_before_helper[collect-candidate]" time="0.055"><failure message="assert (1 == 70)">tmp_path = PosixPath('/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/tmp/test_source_failure_is_infrast1')
+mode = 'collect-candidate'
+
+    @pytest.mark.parametrize('mode', MODES)
+    def test_source_failure_is_infrastructure_before_helper(tmp_path, mode):
+        root, marker, manifest, args = prepared(tmp_path)
+        args[args.index('--mode')+1] = mode
+        (root/'input_gate.py').write_text('raise RuntimeError("untrusted")\n')
+        code, _, _ = launch(args, tmp_path/'child_receipt.json')
+&gt;       assert code == 70 and not marker.exists()
+E       assert (1 == 70)
+
+/tmp/qwen-candidate-terminal-contract-review-20261104/identical-cli-predecessor-v1/source/test_terminal_exit.py:150: AssertionError</failure></testcase><testcase classname="test_terminal_exit" name="test_both_production_roles_return_unchanged_supervise" time="0.007" /></testsuite></testsuites>

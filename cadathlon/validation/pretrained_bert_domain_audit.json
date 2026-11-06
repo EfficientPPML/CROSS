@@ -1,0 +1,157 @@
+{
+  "scope": "Plaintext full-checkpoint semantics and empirical domain audit on three public examples; no MRPC accuracy or HE execution.",
+  "model_id": "google-bert/bert-base-cased-finetuned-mrpc",
+  "revision": "f150c1d609d1e50dd5e2e5408661cfac8339277c",
+  "asset_sha256": {
+    "config.json": "ec2b6cd6ce741dda6c972aea96f9d1a449cbb4b5349e688c5370a9b2f6872d30",
+    "model.safetensors": "e1f8085ef673c9eb8a1a93a84270742e8aa0ccbceadef01eef15e26c44b46034",
+    "tokenizer.json": "5b3360be30cdf39081153cf9d30bfb0503c011462fc9f77f097127c83ef0f4d9",
+    "tokenizer_config.json": "0f6d13e6f4da6f9e24f22ada6bc3be571123d858d7c0c05a8a7cd55a9c23c2e8",
+    "vocab.txt": "eeaa9875b23b04b4c54ef759d03db9d1ba1554838f8fb26c5d96fa551df93d02"
+  },
+  "examples": [
+    [
+      "The committee approved the proposal.",
+      "The committee approved the proposal."
+    ],
+    [
+      "A person is playing a guitar.",
+      "Someone is performing music."
+    ],
+    [
+      "The train arrived at noon.",
+      "The weather will be cold tomorrow."
+    ]
+  ],
+  "layers": 12,
+  "sequence_length": 128,
+  "weights_loaded_without_missing_or_mismatched_tensors": true,
+  "loading_info": {
+    "missing_keys": [],
+    "unexpected_keys": [],
+    "mismatched_keys": [],
+    "error_msgs": []
+  },
+  "semantic_match": true,
+  "max_abs_logit_error_vs_transformers": 8.881784197001252e-16,
+  "exact_logits": [
+    [
+      -0.4985213493357233,
+      2.111903917909392
+    ],
+    [
+      -0.3179379053925241,
+      1.8908439617397337
+    ],
+    [
+      1.1197922319738276,
+      -1.2585947350165745
+    ]
+  ],
+  "toy_contracts": {
+    "inverse_sqrt": [
+      [
+        0.5,
+        1.5
+      ],
+      2
+    ],
+    "exp": [
+      [
+        -4.0,
+        4.0
+      ],
+      8
+    ],
+    "reciprocal": [
+      [
+        0.5,
+        8.0
+      ],
+      8
+    ],
+    "gelu": [
+      [
+        -3.0,
+        3.0
+      ],
+      8
+    ],
+    "silu": [
+      [
+        -2.0,
+        2.0
+      ],
+      2
+    ],
+    "tanh": [
+      [
+        -2.0,
+        2.0
+      ],
+      8
+    ]
+  },
+  "observed_ranges": {
+    "exp": {
+      "min": -22.772386358922528,
+      "max": 21.64186587638965,
+      "count": 9437184
+    },
+    "reciprocal": {
+      "min": 1.00164682549125,
+      "max": 158869713.40523463,
+      "count": 9437184
+    },
+    "layernorm_variance": {
+      "min": 0.1755029026349933,
+      "max": 266.2743696373006,
+      "count": 9216
+    },
+    "gelu": {
+      "min": -28.884377551245933,
+      "max": 36.156685860675466,
+      "count": 14155776
+    },
+    "tanh": {
+      "min": -19.4168552671645,
+      "max": 19.492003552143792,
+      "count": 2304
+    }
+  },
+  "observed_toy_domain_violations": {
+    "exp": 208254,
+    "reciprocal": 3858304,
+    "layernorm_variance": 4173,
+    "gelu": 842146,
+    "tanh": 1020
+  },
+  "toy_domains_cover_observed_intermediates": false,
+  "approximate_full_forward_evaluated": false,
+  "limitation": "Observed ranges are examples, not certified bounds. Toy-polynomial gates cannot establish pretrained BERT readiness.",
+  "elapsed_s": 2.6805157149992738,
+  "versions": {
+    "numpy": "2.5.4",
+    "torch": "2.15.0+cpu",
+    "transformers": "4.51.3",
+    "safetensors": "0.8.0",
+    "tokenizers": "0.21.4"
+  },
+  "source_hashes_before": {
+    "cadathlon/validation/check_pretrained_bert_domains.py": "d3463f03bdfcb1a0539bf8b6333a22b9fc776231815ed120bf31a29b73f08c40",
+    "cadathlon/agent_pset/p2_bert/src/benchmark.py": "acb6c5679106e00dd1c482dd750ca4620423f13c9b37e7c7bbce1781b8e76aec",
+    "cadathlon/agent_pset/p2_bert/src/reference.py": "6d254c92b70257e773d1701a6f85fb592365e67d037b231b9e5a1589e64e7a04",
+    "cadathlon/validation/plan_transformer_polynomials.py": "417b4a1ea843888be8f27d08539af8fa8063c0119d0faa873f4b8a515bea63c6",
+    "cadathlon/common/encrypted_polynomial.py": "d01cbcf26897c9b190919bb6b279e731716d7dcc4e687bbdfbc4e2e4baf5975e",
+    "cadathlon/common/encrypted_transformer.py": "18846a05ad6076997eea70454c775a9a038c46f95b5c97687a08ac682e5501de"
+  },
+  "source_hashes_after": {
+    "cadathlon/validation/check_pretrained_bert_domains.py": "d3463f03bdfcb1a0539bf8b6333a22b9fc776231815ed120bf31a29b73f08c40",
+    "cadathlon/agent_pset/p2_bert/src/benchmark.py": "acb6c5679106e00dd1c482dd750ca4620423f13c9b37e7c7bbce1781b8e76aec",
+    "cadathlon/agent_pset/p2_bert/src/reference.py": "6d254c92b70257e773d1701a6f85fb592365e67d037b231b9e5a1589e64e7a04",
+    "cadathlon/validation/plan_transformer_polynomials.py": "417b4a1ea843888be8f27d08539af8fa8063c0119d0faa873f4b8a515bea63c6",
+    "cadathlon/common/encrypted_polynomial.py": "d01cbcf26897c9b190919bb6b279e731716d7dcc4e687bbdfbc4e2e4baf5975e",
+    "cadathlon/common/encrypted_transformer.py": "18846a05ad6076997eea70454c775a9a038c46f95b5c97687a08ac682e5501de"
+  },
+  "source_files_unchanged": true
+}

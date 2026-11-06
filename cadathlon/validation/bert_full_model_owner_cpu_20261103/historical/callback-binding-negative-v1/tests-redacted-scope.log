@@ -1,0 +1,16 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+________________ test_callback_factory_binding_is_fixed[False] _________________
+test_full_model_owner.py:57: in test_callback_factory_binding_is_fixed
+    with pytest.raises(ValueError):owner._guard()
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+_________________ test_callback_factory_binding_is_fixed[True] _________________
+test_full_model_owner.py:54: in test_callback_factory_binding_is_fixed
+    with pytest.raises(ValueError):owner._callback('probe',Value(np.zeros(65536)),{})
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+=========================== short test summary info ============================
+FAILED test_full_model_owner.py::test_callback_factory_binding_is_fixed[False]
+FAILED test_full_model_owner.py::test_callback_factory_binding_is_fixed[True]
+2 failed in 4.82s

@@ -1,0 +1,11 @@
+# Held, unrun Q5 role-focused preparation
+
+This enclosing source-only harness selects 55 tests and 56 direct children against the exact nested389 runtime in held427. The separate root source review covers the test closure; it does not grant execution. CPU108–111 remains conditional on root resource review. The launch proposal uses the pinned jaxite Python interpreter, env-i, -I -B, plugin autoload disabled, -c /dev/null, and exact ordered prefixture collection. No inherited suite is selected.
+
+The worker itself forbids NumPy and backend imports. Ten declared child cases permit genuine NumPy for tiny owned public files or float64 snapshot checks. Four installed source files and the three observed module origins are checked; this does not attest every native NumPy dependency. No RNG/key generation, real key/context/device/backend, borrowed body, actual role or HE is authorized. The runtime remains default-deny.
+
+The collector owns its Popen immediately, never uses a healthy timeout, and always attempts the original direct wait after group cleanup. A dedicated flag is set only after wait returns normally. It records separate worker early/pre-exit/owner-terminal and collector pre-exit receipts. Root/tool must independently record the actual collector exit/reap/group absence; the collector cannot certify its own reap. Primary exceptions survive final observation/publication errors.
+
+The inspector reads only the seven fixed public receipt/log names per child (392 expected; each at most1MiB) and joins original PID, PGID, start ticks, case, variant, source, expected exit and direct wait records. It never follows pytest aliases. Child fixture roots owned_io and owned_assets receive bounded lstat metadata only; no fixture body is opened, hashed or copied. The deliberately preserved FIFO weight_00.npy is never opened by collection. Unexpected/missing evidence rejects readiness; original files remain available.
+
+Source/execution/archive maps and NumPy source hashes are checked before/after a future run. This preparation has only stdlib source copying/hashing/AST parsing, with no candidate imports, collection, tests, runtime probes or launch. The driver differs explicitly from the admitted device50 template; driver_provenance.json and exact patches describe that delta. All prior proofs remain unchanged.

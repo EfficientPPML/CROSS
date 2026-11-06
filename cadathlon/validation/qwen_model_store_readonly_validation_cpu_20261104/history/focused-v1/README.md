@@ -1,0 +1,13 @@
+# Readonly model focused test source
+
+This is held source for 62 declared checks (30 admission/bootstrap, 9 tiny owned-output/descriptor checks, 23 recorded process/terminal checks). It has not been imported, collected, or executed. A separate source and harness review and explicit launch authorization are required.
+
+`runtime/` is the exact 42-file readonly successor, including its unchanged runtime inventory. `runtime_sources.json` is its exact external compact map. Tests and two historical source excerpts are outside that tree. The complete focused inventory separately binds both. No inherited test suite is selected.
+
+The fresh CLI cases select the actual copied entry in Python -I -B and cover clean help, usage, source rejection and missing grant before output/body access. Origins regressions use controlled module metadata; the five old40 origin omissions are positive historical controls. The old40 publication control and new42 veto select their exact run AST with the same explicit recording dependencies. Neither source-control result is claimed before execution.
+
+Tiny new files exercise Output fsync/readback, original inode reopening, replacement retention, uncertain-close non-retry and primary preservation. Actual observed_stores reads live FD metadata for two small file records. The real selected parameter factory opens two new empty directories and must reject an externally wrong second-root inode before any hash/header or body. This naturally imports NumPy; four selected Python-source hashes and three genuine module origins are required, with no binary-closure claim.
+
+The complete198 logical/197 physical/113 gamma process traversal uses disclosed recording admission, resource, signal, audit-install, catalog, reader and observation seams. It exercises unchanged production callback retention, view release, cleanup and fresh Output publication. Its synthetic reports are test fixtures, not integrity evidence. Genuine body identity, cleanup cancellation, construction failure, callback replacement, monotone read state, sticky denial after publication and late close are checked. Terminal probes use the exact terminal_status and final entry guard with synthetic dispatch; they are not full real-role positive executions.
+
+No original model, key, ciphertext, tokenizer, calibration or private body is read. No backend/context, real resource admission, actual model-store integrity, generation, role grant or promotion is claimed. Root-owned metadata acquisition outputs are not used. Test children have direct waits and fresh process groups; no healthy-job deadline.

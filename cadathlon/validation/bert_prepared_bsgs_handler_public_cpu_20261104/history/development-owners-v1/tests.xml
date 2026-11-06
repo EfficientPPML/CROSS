@@ -1,0 +1,727 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="11" failures="0" skipped="0" tests="26" time="0.291" timestamp="2026-11-04T00:13:00.454682+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_combined_owners" name="test_registered_graph_and_linear_capture_before_first_bsgs_operation[49]" time="0.005"><error message="failed on setup with &quot;AttributeError: module 'encrypted_bsgs_score_routing' has no attribute '_QUARANTINE'&quot;">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7169a997da70&gt;
+doubles = []
+
+    @pytest.fixture
+    def rig(monkeypatch,doubles):
+        events=[];ctx=fixture.Arithmetic().ctx
+        ctx.parameters['secret_key']=None
+        for k in attention.BertBSGSAttentionTile.required_rotation_indices():
+            ctx._param_cache.raw_rotation_keys.setdefault(k,{n:NS(shape=(8,114,131072),dtype=np.dtype('uint32'))for n in ('a','b')})
+            ctx._param_cache.coef_maps.setdefault(k,NS(shape=(131072,),dtype=np.dtype('int32')))
+        class Helper(fixture.Helper):
+            def clear(self,**kw):events.append(('helper-clear',id(self)))
+        class Rotation(Helper):
+            def __init__(self,context):
+                super().__init__(context);self._lease=lease;self._max_entries=2;self._max_bytes=2&lt;&lt;30
+                self._failed=None;self.entries=[];self.closed=False
+            def clear(self,*,executables=False):
+                events.append(('rotation-clear',id(self),executables))
+                if self._failed is not None:raise self._failed
+                self.entries.clear()
+            def close(self):self.clear(executables=True);self.closed=True
+            def rotate(self,value,shift):
+                return Value(np.roll(value.polynomial.data,-shift),value.level,value._ckks_scale)
+        class Base(fixture.Arithmetic):
+            def __init__(self,context,**kw):
+                self.ctx=context;self.low_memory=kw['low_memory'];self._active_level=None;self.calls=[]
+                self._plaintext_multiply=Helper(context);self._rescale=Helper(context);self._multiplication_compiler=None
+            def _clear_working_caches(self):events.append(('base-clear',id(self)))
+            def multiply(self,left,right):
+                level=min(left.level,right.level)
+                return Value(left.polynomial.data*right.polynomial.data,level-1,left._ckks_scale*right._ckks_scale/math.prod(Q[2*level:2*level+2]))
+        common=HERE/'joined/checkout/cadathlon/common'
+        tree=ast.parse((common/'encrypted_polynomial.py').read_bytes())
+        base=next(x for x in tree.body if isinstance(x,ast.ClassDef)and x.name=='EncryptedPolynomialEvaluator')
+        namespace={}
+        exec(compile(ast.Module(body=[x for x in base.body if isinstance(x,ast.FunctionDef)and x.name in ('_prepare','checkpoint')],type_ignores=[]),'actual-level-checkpoint','exec'),namespace)
+        for name in ('_prepare','checkpoint'):setattr(Base,name,namespace[name])
+        tree=ast.parse((common/'encrypted_packed_qwen.py').read_bytes())
+        cls=next(x for x in tree.body if isinstance(x,ast.ClassDef)and x.name=='CompiledArithmetic')
+        namespace=dict(EncryptedPolynomialEvaluator=Base,CompiledRotation=Rotation)
+        exec(compile(ast.Module(body=[cls],type_ignores=[]),'actual-compiled-arithmetic','exec'),namespace)
+        Arithmetic=namespace['CompiledArithmetic']
+        lease=NS(_check=lambda:events.append('lease-check'),retire=lambda:events.append('lease-retired'))
+        session=object.__new__(loader_module.PreparedLoaderSession)
+        session._context=ctx;session._active=True;session._failure=None;session._registered=[];session.cleanup_completed=False
+        session._arrays={'sentinel':object()};session._maps={};session._states={};session._owner=object()
+        session.lease=lease;session._lease_bound=lease
+        def factory(context,**kw):
+            assert kw==dict(source_lease=lease,max_entries=2,max_bytes=2&lt;&lt;30,low_memory=True,preserve_dispatch_cache=True)
+            return Arithmetic(context,low_memory=True,preserve_dispatch_cache=True)
+        module=ModuleType('prepared_rotation');module.create_prepared_arithmetic=factory
+        monkeypatch.setitem(sys.modules,'prepared_rotation',module)
+        monkeypatch.setitem(sys.modules,'encrypted_packed_qwen',NS(CompiledArithmetic=Arithmetic))
+        monkeypatch.setattr(control_module,'_types',lambda:(loader_module.PreparedLoaderSession,Arithmetic,Rotation))
+        handle=NS(ctx=ctx,prepared_arithmetic=session.create)
+        class Refresh:
+            def __init__(self,context,**kw):
+                assert context is ctx and 'arithmetic_factory'not in kw
+                self.evaluator=Arithmetic(context,low_memory=True,preserve_dispatch_cache=True)
+                self.compiled_primitives=tuple(Helper(context)for _ in range(5))
+        provider=NS(close=lambda:events.append('provider-close'))
+        monkeypatch.setattr(engine,'_dependencies',lambda:(lambda c:provider,Arithmetic,ChainedStreamingLinear,RowTileLayout,Refresh,object,lambda *a:None))
+&gt;       assert not attention._QUARANTINE and not routing._QUARANTINE
+                                                 ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'encrypted_bsgs_score_routing' has no attribute '_QUARANTINE'
+
+test_combined_owners.py:84: AttributeError</error></testcase><testcase classname="test_combined_owners" name="test_registered_graph_and_linear_capture_before_first_bsgs_operation[25]" time="0.005"><error message="failed on setup with &quot;AttributeError: module 'encrypted_bsgs_score_routing' has no attribute '_QUARANTINE'&quot;">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7169a997df30&gt;
+doubles = []
+
+    @pytest.fixture
+    def rig(monkeypatch,doubles):
+        events=[];ctx=fixture.Arithmetic().ctx
+        ctx.parameters['secret_key']=None
+        for k in attention.BertBSGSAttentionTile.required_rotation_indices():
+            ctx._param_cache.raw_rotation_keys.setdefault(k,{n:NS(shape=(8,114,131072),dtype=np.dtype('uint32'))for n in ('a','b')})
+            ctx._param_cache.coef_maps.setdefault(k,NS(shape=(131072,),dtype=np.dtype('int32')))
+        class Helper(fixture.Helper):
+            def clear(self,**kw):events.append(('helper-clear',id(self)))
+        class Rotation(Helper):
+            def __init__(self,context):
+                super().__init__(context);self._lease=lease;self._max_entries=2;self._max_bytes=2&lt;&lt;30
+                self._failed=None;self.entries=[];self.closed=False
+            def clear(self,*,executables=False):
+                events.append(('rotation-clear',id(self),executables))
+                if self._failed is not None:raise self._failed
+                self.entries.clear()
+            def close(self):self.clear(executables=True);self.closed=True
+            def rotate(self,value,shift):
+                return Value(np.roll(value.polynomial.data,-shift),value.level,value._ckks_scale)
+        class Base(fixture.Arithmetic):
+            def __init__(self,context,**kw):
+                self.ctx=context;self.low_memory=kw['low_memory'];self._active_level=None;self.calls=[]
+                self._plaintext_multiply=Helper(context);self._rescale=Helper(context);self._multiplication_compiler=None
+            def _clear_working_caches(self):events.append(('base-clear',id(self)))
+            def multiply(self,left,right):
+                level=min(left.level,right.level)
+                return Value(left.polynomial.data*right.polynomial.data,level-1,left._ckks_scale*right._ckks_scale/math.prod(Q[2*level:2*level+2]))
+        common=HERE/'joined/checkout/cadathlon/common'
+        tree=ast.parse((common/'encrypted_polynomial.py').read_bytes())
+        base=next(x for x in tree.body if isinstance(x,ast.ClassDef)and x.name=='EncryptedPolynomialEvaluator')
+        namespace={}
+        exec(compile(ast.Module(body=[x for x in base.body if isinstance(x,ast.FunctionDef)and x.name in ('_prepare','checkpoint')],type_ignores=[]),'actual-level-checkpoint','exec'),namespace)
+        for name in ('_prepare','checkpoint'):setattr(Base,name,namespace[name])
+        tree=ast.parse((common/'encrypted_packed_qwen.py').read_bytes())
+        cls=next(x for x in tree.body if isinstance(x,ast.ClassDef)and x.name=='CompiledArithmetic')
+        namespace=dict(EncryptedPolynomialEvaluator=Base,CompiledRotation=Rotation)
+        exec(compile(ast.Module(body=[cls],type_ignores=[]),'actual-compiled-arithmetic','exec'),namespace)
+        Arithmetic=namespace['CompiledArithmetic']
+        lease=NS(_check=lambda:events.append('lease-check'),retire=lambda:events.append('lease-retired'))
+        session=object.__new__(loader_module.PreparedLoaderSession)
+        session._context=ctx;session._active=True;session._failure=None;session._registered=[];session.cleanup_completed=False
+        session._arrays={'sentinel':object()};session._maps={};session._states={};session._owner=object()
+        session.lease=lease;session._lease_bound=lease
+        def factory(context,**kw):
+            assert kw==dict(source_lease=lease,max_entries=2,max_bytes=2&lt;&lt;30,low_memory=True,preserve_dispatch_cache=True)
+            return Arithmetic(context,low_memory=True,preserve_dispatch_cache=True)
+        module=ModuleType('prepared_rotation');module.create_prepared_arithmetic=factory
+        monkeypatch.setitem(sys.modules,'prepared_rotation',module)
+        monkeypatch.setitem(sys.modules,'encrypted_packed_qwen',NS(CompiledArithmetic=Arithmetic))
+        monkeypatch.setattr(control_module,'_types',lambda:(loader_module.PreparedLoaderSession,Arithmetic,Rotation))
+        handle=NS(ctx=ctx,prepared_arithmetic=session.create)
+        class Refresh:
+            def __init__(self,context,**kw):
+                assert context is ctx and 'arithmetic_factory'not in kw
+                self.evaluator=Arithmetic(context,low_memory=True,preserve_dispatch_cache=True)
+                self.compiled_primitives=tuple(Helper(context)for _ in range(5))
+        provider=NS(close=lambda:events.append('provider-close'))
+        monkeypatch.setattr(engine,'_dependencies',lambda:(lambda c:provider,Arithmetic,ChainedStreamingLinear,RowTileLayout,Refresh,object,lambda *a:None))
+&gt;       assert not attention._QUARANTINE and not routing._QUARANTINE
+                                                 ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'encrypted_bsgs_score_routing' has no attribute '_QUARANTINE'
+
+test_combined_owners.py:84: AttributeError</error></testcase><testcase classname="test_combined_owners" name="test_bsgs_captured_helper_or_accessor_replacement_rejected_before_work[rotation]" time="0.005"><error message="failed on setup with &quot;AttributeError: module 'encrypted_bsgs_score_routing' has no attribute '_QUARANTINE'&quot;">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7169aa4ce9f0&gt;
+doubles = []
+
+    @pytest.fixture
+    def rig(monkeypatch,doubles):
+        events=[];ctx=fixture.Arithmetic().ctx
+        ctx.parameters['secret_key']=None
+        for k in attention.BertBSGSAttentionTile.required_rotation_indices():
+            ctx._param_cache.raw_rotation_keys.setdefault(k,{n:NS(shape=(8,114,131072),dtype=np.dtype('uint32'))for n in ('a','b')})
+            ctx._param_cache.coef_maps.setdefault(k,NS(shape=(131072,),dtype=np.dtype('int32')))
+        class Helper(fixture.Helper):
+            def clear(self,**kw):events.append(('helper-clear',id(self)))
+        class Rotation(Helper):
+            def __init__(self,context):
+                super().__init__(context);self._lease=lease;self._max_entries=2;self._max_bytes=2&lt;&lt;30
+                self._failed=None;self.entries=[];self.closed=False
+            def clear(self,*,executables=False):
+                events.append(('rotation-clear',id(self),executables))
+                if self._failed is not None:raise self._failed
+                self.entries.clear()
+            def close(self):self.clear(executables=True);self.closed=True
+            def rotate(self,value,shift):
+                return Value(np.roll(value.polynomial.data,-shift),value.level,value._ckks_scale)
+        class Base(fixture.Arithmetic):
+            def __init__(self,context,**kw):
+                self.ctx=context;self.low_memory=kw['low_memory'];self._active_level=None;self.calls=[]
+                self._plaintext_multiply=Helper(context);self._rescale=Helper(context);self._multiplication_compiler=None
+            def _clear_working_caches(self):events.append(('base-clear',id(self)))
+            def multiply(self,left,right):
+                level=min(left.level,right.level)
+                return Value(left.polynomial.data*right.polynomial.data,level-1,left._ckks_scale*right._ckks_scale/math.prod(Q[2*level:2*level+2]))
+        common=HERE/'joined/checkout/cadathlon/common'
+        tree=ast.parse((common/'encrypted_polynomial.py').read_bytes())
+        base=next(x for x in tree.body if isinstance(x,ast.ClassDef)and x.name=='EncryptedPolynomialEvaluator')
+        namespace={}
+        exec(compile(ast.Module(body=[x for x in base.body if isinstance(x,ast.FunctionDef)and x.name in ('_prepare','checkpoint')],type_ignores=[]),'actual-level-checkpoint','exec'),namespace)
+        for name in ('_prepare','checkpoint'):setattr(Base,name,namespace[name])
+        tree=ast.parse((common/'encrypted_packed_qwen.py').read_bytes())
+        cls=next(x for x in tree.body if isinstance(x,ast.ClassDef)and x.name=='CompiledArithmetic')
+        namespace=dict(EncryptedPolynomialEvaluator=Base,CompiledRotation=Rotation)
+        exec(compile(ast.Module(body=[cls],type_ignores=[]),'actual-compiled-arithmetic','exec'),namespace)
+        Arithmetic=namespace['CompiledArithmetic']
+        lease=NS(_check=lambda:events.append('lease-check'),retire=lambda:events.append('lease-retired'))
+        session=object.__new__(loader_module.PreparedLoaderSession)
+        session._context=ctx;session._active=True;session._failure=None;session._registered=[];session.cleanup_completed=False
+        session._arrays={'sentinel':object()};session._maps={};session._states={};session._owner=object()
+        session.lease=lease;session._lease_bound=lease
+        def factory(context,**kw):
+            assert kw==dict(source_lease=lease,max_entries=2,max_bytes=2&lt;&lt;30,low_memory=True,preserve_dispatch_cache=True)
+            return Arithmetic(context,low_memory=True,preserve_dispatch_cache=True)
+        module=ModuleType('prepared_rotation');module.create_prepared_arithmetic=factory
+        monkeypatch.setitem(sys.modules,'prepared_rotation',module)
+        monkeypatch.setitem(sys.modules,'encrypted_packed_qwen',NS(CompiledArithmetic=Arithmetic))
+        monkeypatch.setattr(control_module,'_types',lambda:(loader_module.PreparedLoaderSession,Arithmetic,Rotation))
+        handle=NS(ctx=ctx,prepared_arithmetic=session.create)
+        class Refresh:
+            def __init__(self,context,**kw):
+                assert context is ctx and 'arithmetic_factory'not in kw
+                self.evaluator=Arithmetic(context,low_memory=True,preserve_dispatch_cache=True)
+                self.compiled_primitives=tuple(Helper(context)for _ in range(5))
+        provider=NS(close=lambda:events.append('provider-close'))
+        monkeypatch.setattr(engine,'_dependencies',lambda:(lambda c:provider,Arithmetic,ChainedStreamingLinear,RowTileLayout,Refresh,object,lambda *a:None))
+&gt;       assert not attention._QUARANTINE and not routing._QUARANTINE
+                                                 ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'encrypted_bsgs_score_routing' has no attribute '_QUARANTINE'
+
+test_combined_owners.py:84: AttributeError</error></testcase><testcase classname="test_combined_owners" name="test_bsgs_captured_helper_or_accessor_replacement_rejected_before_work[_plaintext_multiply]" time="0.005"><error message="failed on setup with &quot;AttributeError: module 'encrypted_bsgs_score_routing' has no attribute '_QUARANTINE'&quot;">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7169aa9d5040&gt;
+doubles = []
+
+    @pytest.fixture
+    def rig(monkeypatch,doubles):
+        events=[];ctx=fixture.Arithmetic().ctx
+        ctx.parameters['secret_key']=None
+        for k in attention.BertBSGSAttentionTile.required_rotation_indices():
+            ctx._param_cache.raw_rotation_keys.setdefault(k,{n:NS(shape=(8,114,131072),dtype=np.dtype('uint32'))for n in ('a','b')})
+            ctx._param_cache.coef_maps.setdefault(k,NS(shape=(131072,),dtype=np.dtype('int32')))
+        class Helper(fixture.Helper):
+            def clear(self,**kw):events.append(('helper-clear',id(self)))
+        class Rotation(Helper):
+            def __init__(self,context):
+                super().__init__(context);self._lease=lease;self._max_entries=2;self._max_bytes=2&lt;&lt;30
+                self._failed=None;self.entries=[];self.closed=False
+            def clear(self,*,executables=False):
+                events.append(('rotation-clear',id(self),executables))
+                if self._failed is not None:raise self._failed
+                self.entries.clear()
+            def close(self):self.clear(executables=True);self.closed=True
+            def rotate(self,value,shift):
+                return Value(np.roll(value.polynomial.data,-shift),value.level,value._ckks_scale)
+        class Base(fixture.Arithmetic):
+            def __init__(self,context,**kw):
+                self.ctx=context;self.low_memory=kw['low_memory'];self._active_level=None;self.calls=[]
+                self._plaintext_multiply=Helper(context);self._rescale=Helper(context);self._multiplication_compiler=None
+            def _clear_working_caches(self):events.append(('base-clear',id(self)))
+            def multiply(self,left,right):
+                level=min(left.level,right.level)
+                return Value(left.polynomial.data*right.polynomial.data,level-1,left._ckks_scale*right._ckks_scale/math.prod(Q[2*level:2*level+2]))
+        common=HERE/'joined/checkout/cadathlon/common'
+        tree=ast.parse((common/'encrypted_polynomial.py').read_bytes())
+        base=next(x for x in tree.body if isinstance(x,ast.ClassDef)and x.name=='EncryptedPolynomialEvaluator')
+        namespace={}
+        exec(compile(ast.Module(body=[x for x in base.body if isinstance(x,ast.FunctionDef)and x.name in ('_prepare','checkpoint')],type_ignores=[]),'actual-level-checkpoint','exec'),namespace)
+        for name in ('_prepare','checkpoint'):setattr(Base,name,namespace[name])
+        tree=ast.parse((common/'encrypted_packed_qwen.py').read_bytes())
+        cls=next(x for x in tree.body if isinstance(x,ast.ClassDef)and x.name=='CompiledArithmetic')
+        namespace=dict(EncryptedPolynomialEvaluator=Base,CompiledRotation=Rotation)
+        exec(compile(ast.Module(body=[cls],type_ignores=[]),'actual-compiled-arithmetic','exec'),namespace)
+        Arithmetic=namespace['CompiledArithmetic']
+        lease=NS(_check=lambda:events.append('lease-check'),retire=lambda:events.append('lease-retired'))
+        session=object.__new__(loader_module.PreparedLoaderSession)
+        session._context=ctx;session._active=True;session._failure=None;session._registered=[];session.cleanup_completed=False
+        session._arrays={'sentinel':object()};session._maps={};session._states={};session._owner=object()
+        session.lease=lease;session._lease_bound=lease
+        def factory(context,**kw):
+            assert kw==dict(source_lease=lease,max_entries=2,max_bytes=2&lt;&lt;30,low_memory=True,preserve_dispatch_cache=True)
+            return Arithmetic(context,low_memory=True,preserve_dispatch_cache=True)
+        module=ModuleType('prepared_rotation');module.create_prepared_arithmetic=factory
+        monkeypatch.setitem(sys.modules,'prepared_rotation',module)
+        monkeypatch.setitem(sys.modules,'encrypted_packed_qwen',NS(CompiledArithmetic=Arithmetic))
+        monkeypatch.setattr(control_module,'_types',lambda:(loader_module.PreparedLoaderSession,Arithmetic,Rotation))
+        handle=NS(ctx=ctx,prepared_arithmetic=session.create)
+        class Refresh:
+            def __init__(self,context,**kw):
+                assert context is ctx and 'arithmetic_factory'not in kw
+                self.evaluator=Arithmetic(context,low_memory=True,preserve_dispatch_cache=True)
+                self.compiled_primitives=tuple(Helper(context)for _ in range(5))
+        provider=NS(close=lambda:events.append('provider-close'))
+        monkeypatch.setattr(engine,'_dependencies',lambda:(lambda c:provider,Arithmetic,ChainedStreamingLinear,RowTileLayout,Refresh,object,lambda *a:None))
+&gt;       assert not attention._QUARANTINE and not routing._QUARANTINE
+                                                 ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'encrypted_bsgs_score_routing' has no attribute '_QUARANTINE'
+
+test_combined_owners.py:84: AttributeError</error></testcase><testcase classname="test_combined_owners" name="test_bsgs_captured_helper_or_accessor_replacement_rejected_before_work[_rescale]" time="0.005"><error message="failed on setup with &quot;AttributeError: module 'encrypted_bsgs_score_routing' has no attribute '_QUARANTINE'&quot;">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7169a998e7a0&gt;
+doubles = []
+
+    @pytest.fixture
+    def rig(monkeypatch,doubles):
+        events=[];ctx=fixture.Arithmetic().ctx
+        ctx.parameters['secret_key']=None
+        for k in attention.BertBSGSAttentionTile.required_rotation_indices():
+            ctx._param_cache.raw_rotation_keys.setdefault(k,{n:NS(shape=(8,114,131072),dtype=np.dtype('uint32'))for n in ('a','b')})
+            ctx._param_cache.coef_maps.setdefault(k,NS(shape=(131072,),dtype=np.dtype('int32')))
+        class Helper(fixture.Helper):
+            def clear(self,**kw):events.append(('helper-clear',id(self)))
+        class Rotation(Helper):
+            def __init__(self,context):
+                super().__init__(context);self._lease=lease;self._max_entries=2;self._max_bytes=2&lt;&lt;30
+                self._failed=None;self.entries=[];self.closed=False
+            def clear(self,*,executables=False):
+                events.append(('rotation-clear',id(self),executables))
+                if self._failed is not None:raise self._failed
+                self.entries.clear()
+            def close(self):self.clear(executables=True);self.closed=True
+            def rotate(self,value,shift):
+                return Value(np.roll(value.polynomial.data,-shift),value.level,value._ckks_scale)
+        class Base(fixture.Arithmetic):
+            def __init__(self,context,**kw):
+                self.ctx=context;self.low_memory=kw['low_memory'];self._active_level=None;self.calls=[]
+                self._plaintext_multiply=Helper(context);self._rescale=Helper(context);self._multiplication_compiler=None
+            def _clear_working_caches(self):events.append(('base-clear',id(self)))
+            def multiply(self,left,right):
+                level=min(left.level,right.level)
+                return Value(left.polynomial.data*right.polynomial.data,level-1,left._ckks_scale*right._ckks_scale/math.prod(Q[2*level:2*level+2]))
+        common=HERE/'joined/checkout/cadathlon/common'
+        tree=ast.parse((common/'encrypted_polynomial.py').read_bytes())
+        base=next(x for x in tree.body if isinstance(x,ast.ClassDef)and x.name=='EncryptedPolynomialEvaluator')
+        namespace={}
+        exec(compile(ast.Module(body=[x for x in base.body if isinstance(x,ast.FunctionDef)and x.name in ('_prepare','checkpoint')],type_ignores=[]),'actual-level-checkpoint','exec'),namespace)
+        for name in ('_prepare','checkpoint'):setattr(Base,name,namespace[name])
+        tree=ast.parse((common/'encrypted_packed_qwen.py').read_bytes())
+        cls=next(x for x in tree.body if isinstance(x,ast.ClassDef)and x.name=='CompiledArithmetic')
+        namespace=dict(EncryptedPolynomialEvaluator=Base,CompiledRotation=Rotation)
+        exec(compile(ast.Module(body=[cls],type_ignores=[]),'actual-compiled-arithmetic','exec'),namespace)
+        Arithmetic=namespace['CompiledArithmetic']
+        lease=NS(_check=lambda:events.append('lease-check'),retire=lambda:events.append('lease-retired'))
+        session=object.__new__(loader_module.PreparedLoaderSession)
+        session._context=ctx;session._active=True;session._failure=None;session._registered=[];session.cleanup_completed=False
+        session._arrays={'sentinel':object()};session._maps={};session._states={};session._owner=object()
+        session.lease=lease;session._lease_bound=lease
+        def factory(context,**kw):
+            assert kw==dict(source_lease=lease,max_entries=2,max_bytes=2&lt;&lt;30,low_memory=True,preserve_dispatch_cache=True)
+            return Arithmetic(context,low_memory=True,preserve_dispatch_cache=True)
+        module=ModuleType('prepared_rotation');module.create_prepared_arithmetic=factory
+        monkeypatch.setitem(sys.modules,'prepared_rotation',module)
+        monkeypatch.setitem(sys.modules,'encrypted_packed_qwen',NS(CompiledArithmetic=Arithmetic))
+        monkeypatch.setattr(control_module,'_types',lambda:(loader_module.PreparedLoaderSession,Arithmetic,Rotation))
+        handle=NS(ctx=ctx,prepared_arithmetic=session.create)
+        class Refresh:
+            def __init__(self,context,**kw):
+                assert context is ctx and 'arithmetic_factory'not in kw
+                self.evaluator=Arithmetic(context,low_memory=True,preserve_dispatch_cache=True)
+                self.compiled_primitives=tuple(Helper(context)for _ in range(5))
+        provider=NS(close=lambda:events.append('provider-close'))
+        monkeypatch.setattr(engine,'_dependencies',lambda:(lambda c:provider,Arithmetic,ChainedStreamingLinear,RowTileLayout,Refresh,object,lambda *a:None))
+&gt;       assert not attention._QUARANTINE and not routing._QUARANTINE
+                                                 ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'encrypted_bsgs_score_routing' has no attribute '_QUARANTINE'
+
+test_combined_owners.py:84: AttributeError</error></testcase><testcase classname="test_combined_owners" name="test_bsgs_captured_helper_or_accessor_replacement_rejected_before_work[multiply]" time="0.005"><error message="failed on setup with &quot;AttributeError: module 'encrypted_bsgs_score_routing' has no attribute '_QUARANTINE'&quot;">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7169a7f11350&gt;
+doubles = []
+
+    @pytest.fixture
+    def rig(monkeypatch,doubles):
+        events=[];ctx=fixture.Arithmetic().ctx
+        ctx.parameters['secret_key']=None
+        for k in attention.BertBSGSAttentionTile.required_rotation_indices():
+            ctx._param_cache.raw_rotation_keys.setdefault(k,{n:NS(shape=(8,114,131072),dtype=np.dtype('uint32'))for n in ('a','b')})
+            ctx._param_cache.coef_maps.setdefault(k,NS(shape=(131072,),dtype=np.dtype('int32')))
+        class Helper(fixture.Helper):
+            def clear(self,**kw):events.append(('helper-clear',id(self)))
+        class Rotation(Helper):
+            def __init__(self,context):
+                super().__init__(context);self._lease=lease;self._max_entries=2;self._max_bytes=2&lt;&lt;30
+                self._failed=None;self.entries=[];self.closed=False
+            def clear(self,*,executables=False):
+                events.append(('rotation-clear',id(self),executables))
+                if self._failed is not None:raise self._failed
+                self.entries.clear()
+            def close(self):self.clear(executables=True);self.closed=True
+            def rotate(self,value,shift):
+                return Value(np.roll(value.polynomial.data,-shift),value.level,value._ckks_scale)
+        class Base(fixture.Arithmetic):
+            def __init__(self,context,**kw):
+                self.ctx=context;self.low_memory=kw['low_memory'];self._active_level=None;self.calls=[]
+                self._plaintext_multiply=Helper(context);self._rescale=Helper(context);self._multiplication_compiler=None
+            def _clear_working_caches(self):events.append(('base-clear',id(self)))
+            def multiply(self,left,right):
+                level=min(left.level,right.level)
+                return Value(left.polynomial.data*right.polynomial.data,level-1,left._ckks_scale*right._ckks_scale/math.prod(Q[2*level:2*level+2]))
+        common=HERE/'joined/checkout/cadathlon/common'
+        tree=ast.parse((common/'encrypted_polynomial.py').read_bytes())
+        base=next(x for x in tree.body if isinstance(x,ast.ClassDef)and x.name=='EncryptedPolynomialEvaluator')
+        namespace={}
+        exec(compile(ast.Module(body=[x for x in base.body if isinstance(x,ast.FunctionDef)and x.name in ('_prepare','checkpoint')],type_ignores=[]),'actual-level-checkpoint','exec'),namespace)
+        for name in ('_prepare','checkpoint'):setattr(Base,name,namespace[name])
+        tree=ast.parse((common/'encrypted_packed_qwen.py').read_bytes())
+        cls=next(x for x in tree.body if isinstance(x,ast.ClassDef)and x.name=='CompiledArithmetic')
+        namespace=dict(EncryptedPolynomialEvaluator=Base,CompiledRotation=Rotation)
+        exec(compile(ast.Module(body=[cls],type_ignores=[]),'actual-compiled-arithmetic','exec'),namespace)
+        Arithmetic=namespace['CompiledArithmetic']
+        lease=NS(_check=lambda:events.append('lease-check'),retire=lambda:events.append('lease-retired'))
+        session=object.__new__(loader_module.PreparedLoaderSession)
+        session._context=ctx;session._active=True;session._failure=None;session._registered=[];session.cleanup_completed=False
+        session._arrays={'sentinel':object()};session._maps={};session._states={};session._owner=object()
+        session.lease=lease;session._lease_bound=lease
+        def factory(context,**kw):
+            assert kw==dict(source_lease=lease,max_entries=2,max_bytes=2&lt;&lt;30,low_memory=True,preserve_dispatch_cache=True)
+            return Arithmetic(context,low_memory=True,preserve_dispatch_cache=True)
+        module=ModuleType('prepared_rotation');module.create_prepared_arithmetic=factory
+        monkeypatch.setitem(sys.modules,'prepared_rotation',module)
+        monkeypatch.setitem(sys.modules,'encrypted_packed_qwen',NS(CompiledArithmetic=Arithmetic))
+        monkeypatch.setattr(control_module,'_types',lambda:(loader_module.PreparedLoaderSession,Arithmetic,Rotation))
+        handle=NS(ctx=ctx,prepared_arithmetic=session.create)
+        class Refresh:
+            def __init__(self,context,**kw):
+                assert context is ctx and 'arithmetic_factory'not in kw
+                self.evaluator=Arithmetic(context,low_memory=True,preserve_dispatch_cache=True)
+                self.compiled_primitives=tuple(Helper(context)for _ in range(5))
+        provider=NS(close=lambda:events.append('provider-close'))
+        monkeypatch.setattr(engine,'_dependencies',lambda:(lambda c:provider,Arithmetic,ChainedStreamingLinear,RowTileLayout,Refresh,object,lambda *a:None))
+&gt;       assert not attention._QUARANTINE and not routing._QUARANTINE
+                                                 ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'encrypted_bsgs_score_routing' has no attribute '_QUARANTINE'
+
+test_combined_owners.py:84: AttributeError</error></testcase><testcase classname="test_combined_owners" name="test_original_prepared_readiness_failure_retained_until_loader_retirement[OSError]" time="0.005"><error message="failed on setup with &quot;AttributeError: module 'encrypted_bsgs_score_routing' has no attribute '_QUARANTINE'&quot;">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7169aa4dfb50&gt;
+doubles = []
+
+    @pytest.fixture
+    def rig(monkeypatch,doubles):
+        events=[];ctx=fixture.Arithmetic().ctx
+        ctx.parameters['secret_key']=None
+        for k in attention.BertBSGSAttentionTile.required_rotation_indices():
+            ctx._param_cache.raw_rotation_keys.setdefault(k,{n:NS(shape=(8,114,131072),dtype=np.dtype('uint32'))for n in ('a','b')})
+            ctx._param_cache.coef_maps.setdefault(k,NS(shape=(131072,),dtype=np.dtype('int32')))
+        class Helper(fixture.Helper):
+            def clear(self,**kw):events.append(('helper-clear',id(self)))
+        class Rotation(Helper):
+            def __init__(self,context):
+                super().__init__(context);self._lease=lease;self._max_entries=2;self._max_bytes=2&lt;&lt;30
+                self._failed=None;self.entries=[];self.closed=False
+            def clear(self,*,executables=False):
+                events.append(('rotation-clear',id(self),executables))
+                if self._failed is not None:raise self._failed
+                self.entries.clear()
+            def close(self):self.clear(executables=True);self.closed=True
+            def rotate(self,value,shift):
+                return Value(np.roll(value.polynomial.data,-shift),value.level,value._ckks_scale)
+        class Base(fixture.Arithmetic):
+            def __init__(self,context,**kw):
+                self.ctx=context;self.low_memory=kw['low_memory'];self._active_level=None;self.calls=[]
+                self._plaintext_multiply=Helper(context);self._rescale=Helper(context);self._multiplication_compiler=None
+            def _clear_working_caches(self):events.append(('base-clear',id(self)))
+            def multiply(self,left,right):
+                level=min(left.level,right.level)
+                return Value(left.polynomial.data*right.polynomial.data,level-1,left._ckks_scale*right._ckks_scale/math.prod(Q[2*level:2*level+2]))
+        common=HERE/'joined/checkout/cadathlon/common'
+        tree=ast.parse((common/'encrypted_polynomial.py').read_bytes())
+        base=next(x for x in tree.body if isinstance(x,ast.ClassDef)and x.name=='EncryptedPolynomialEvaluator')
+        namespace={}
+        exec(compile(ast.Module(body=[x for x in base.body if isinstance(x,ast.FunctionDef)and x.name in ('_prepare','checkpoint')],type_ignores=[]),'actual-level-checkpoint','exec'),namespace)
+        for name in ('_prepare','checkpoint'):setattr(Base,name,namespace[name])
+        tree=ast.parse((common/'encrypted_packed_qwen.py').read_bytes())
+        cls=next(x for x in tree.body if isinstance(x,ast.ClassDef)and x.name=='CompiledArithmetic')
+        namespace=dict(EncryptedPolynomialEvaluator=Base,CompiledRotation=Rotation)
+        exec(compile(ast.Module(body=[cls],type_ignores=[]),'actual-compiled-arithmetic','exec'),namespace)
+        Arithmetic=namespace['CompiledArithmetic']
+        lease=NS(_check=lambda:events.append('lease-check'),retire=lambda:events.append('lease-retired'))
+        session=object.__new__(loader_module.PreparedLoaderSession)
+        session._context=ctx;session._active=True;session._failure=None;session._registered=[];session.cleanup_completed=False
+        session._arrays={'sentinel':object()};session._maps={};session._states={};session._owner=object()
+        session.lease=lease;session._lease_bound=lease
+        def factory(context,**kw):
+            assert kw==dict(source_lease=lease,max_entries=2,max_bytes=2&lt;&lt;30,low_memory=True,preserve_dispatch_cache=True)
+            return Arithmetic(context,low_memory=True,preserve_dispatch_cache=True)
+        module=ModuleType('prepared_rotation');module.create_prepared_arithmetic=factory
+        monkeypatch.setitem(sys.modules,'prepared_rotation',module)
+        monkeypatch.setitem(sys.modules,'encrypted_packed_qwen',NS(CompiledArithmetic=Arithmetic))
+        monkeypatch.setattr(control_module,'_types',lambda:(loader_module.PreparedLoaderSession,Arithmetic,Rotation))
+        handle=NS(ctx=ctx,prepared_arithmetic=session.create)
+        class Refresh:
+            def __init__(self,context,**kw):
+                assert context is ctx and 'arithmetic_factory'not in kw
+                self.evaluator=Arithmetic(context,low_memory=True,preserve_dispatch_cache=True)
+                self.compiled_primitives=tuple(Helper(context)for _ in range(5))
+        provider=NS(close=lambda:events.append('provider-close'))
+        monkeypatch.setattr(engine,'_dependencies',lambda:(lambda c:provider,Arithmetic,ChainedStreamingLinear,RowTileLayout,Refresh,object,lambda *a:None))
+&gt;       assert not attention._QUARANTINE and not routing._QUARANTINE
+                                                 ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'encrypted_bsgs_score_routing' has no attribute '_QUARANTINE'
+
+test_combined_owners.py:84: AttributeError</error></testcase><testcase classname="test_combined_owners" name="test_original_prepared_readiness_failure_retained_until_loader_retirement[KeyboardInterrupt]" time="0.005"><error message="failed on setup with &quot;AttributeError: module 'encrypted_bsgs_score_routing' has no attribute '_QUARANTINE'&quot;">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7169a7fa5310&gt;
+doubles = []
+
+    @pytest.fixture
+    def rig(monkeypatch,doubles):
+        events=[];ctx=fixture.Arithmetic().ctx
+        ctx.parameters['secret_key']=None
+        for k in attention.BertBSGSAttentionTile.required_rotation_indices():
+            ctx._param_cache.raw_rotation_keys.setdefault(k,{n:NS(shape=(8,114,131072),dtype=np.dtype('uint32'))for n in ('a','b')})
+            ctx._param_cache.coef_maps.setdefault(k,NS(shape=(131072,),dtype=np.dtype('int32')))
+        class Helper(fixture.Helper):
+            def clear(self,**kw):events.append(('helper-clear',id(self)))
+        class Rotation(Helper):
+            def __init__(self,context):
+                super().__init__(context);self._lease=lease;self._max_entries=2;self._max_bytes=2&lt;&lt;30
+                self._failed=None;self.entries=[];self.closed=False
+            def clear(self,*,executables=False):
+                events.append(('rotation-clear',id(self),executables))
+                if self._failed is not None:raise self._failed
+                self.entries.clear()
+            def close(self):self.clear(executables=True);self.closed=True
+            def rotate(self,value,shift):
+                return Value(np.roll(value.polynomial.data,-shift),value.level,value._ckks_scale)
+        class Base(fixture.Arithmetic):
+            def __init__(self,context,**kw):
+                self.ctx=context;self.low_memory=kw['low_memory'];self._active_level=None;self.calls=[]
+                self._plaintext_multiply=Helper(context);self._rescale=Helper(context);self._multiplication_compiler=None
+            def _clear_working_caches(self):events.append(('base-clear',id(self)))
+            def multiply(self,left,right):
+                level=min(left.level,right.level)
+                return Value(left.polynomial.data*right.polynomial.data,level-1,left._ckks_scale*right._ckks_scale/math.prod(Q[2*level:2*level+2]))
+        common=HERE/'joined/checkout/cadathlon/common'
+        tree=ast.parse((common/'encrypted_polynomial.py').read_bytes())
+        base=next(x for x in tree.body if isinstance(x,ast.ClassDef)and x.name=='EncryptedPolynomialEvaluator')
+        namespace={}
+        exec(compile(ast.Module(body=[x for x in base.body if isinstance(x,ast.FunctionDef)and x.name in ('_prepare','checkpoint')],type_ignores=[]),'actual-level-checkpoint','exec'),namespace)
+        for name in ('_prepare','checkpoint'):setattr(Base,name,namespace[name])
+        tree=ast.parse((common/'encrypted_packed_qwen.py').read_bytes())
+        cls=next(x for x in tree.body if isinstance(x,ast.ClassDef)and x.name=='CompiledArithmetic')
+        namespace=dict(EncryptedPolynomialEvaluator=Base,CompiledRotation=Rotation)
+        exec(compile(ast.Module(body=[cls],type_ignores=[]),'actual-compiled-arithmetic','exec'),namespace)
+        Arithmetic=namespace['CompiledArithmetic']
+        lease=NS(_check=lambda:events.append('lease-check'),retire=lambda:events.append('lease-retired'))
+        session=object.__new__(loader_module.PreparedLoaderSession)
+        session._context=ctx;session._active=True;session._failure=None;session._registered=[];session.cleanup_completed=False
+        session._arrays={'sentinel':object()};session._maps={};session._states={};session._owner=object()
+        session.lease=lease;session._lease_bound=lease
+        def factory(context,**kw):
+            assert kw==dict(source_lease=lease,max_entries=2,max_bytes=2&lt;&lt;30,low_memory=True,preserve_dispatch_cache=True)
+            return Arithmetic(context,low_memory=True,preserve_dispatch_cache=True)
+        module=ModuleType('prepared_rotation');module.create_prepared_arithmetic=factory
+        monkeypatch.setitem(sys.modules,'prepared_rotation',module)
+        monkeypatch.setitem(sys.modules,'encrypted_packed_qwen',NS(CompiledArithmetic=Arithmetic))
+        monkeypatch.setattr(control_module,'_types',lambda:(loader_module.PreparedLoaderSession,Arithmetic,Rotation))
+        handle=NS(ctx=ctx,prepared_arithmetic=session.create)
+        class Refresh:
+            def __init__(self,context,**kw):
+                assert context is ctx and 'arithmetic_factory'not in kw
+                self.evaluator=Arithmetic(context,low_memory=True,preserve_dispatch_cache=True)
+                self.compiled_primitives=tuple(Helper(context)for _ in range(5))
+        provider=NS(close=lambda:events.append('provider-close'))
+        monkeypatch.setattr(engine,'_dependencies',lambda:(lambda c:provider,Arithmetic,ChainedStreamingLinear,RowTileLayout,Refresh,object,lambda *a:None))
+&gt;       assert not attention._QUARANTINE and not routing._QUARANTINE
+                                                 ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'encrypted_bsgs_score_routing' has no attribute '_QUARANTINE'
+
+test_combined_owners.py:84: AttributeError</error></testcase><testcase classname="test_combined_owners" name="test_original_prepared_readiness_failure_retained_until_loader_retirement[SystemExit]" time="0.005"><error message="failed on setup with &quot;AttributeError: module 'encrypted_bsgs_score_routing' has no attribute '_QUARANTINE'&quot;">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7169a7fa4aa0&gt;
+doubles = []
+
+    @pytest.fixture
+    def rig(monkeypatch,doubles):
+        events=[];ctx=fixture.Arithmetic().ctx
+        ctx.parameters['secret_key']=None
+        for k in attention.BertBSGSAttentionTile.required_rotation_indices():
+            ctx._param_cache.raw_rotation_keys.setdefault(k,{n:NS(shape=(8,114,131072),dtype=np.dtype('uint32'))for n in ('a','b')})
+            ctx._param_cache.coef_maps.setdefault(k,NS(shape=(131072,),dtype=np.dtype('int32')))
+        class Helper(fixture.Helper):
+            def clear(self,**kw):events.append(('helper-clear',id(self)))
+        class Rotation(Helper):
+            def __init__(self,context):
+                super().__init__(context);self._lease=lease;self._max_entries=2;self._max_bytes=2&lt;&lt;30
+                self._failed=None;self.entries=[];self.closed=False
+            def clear(self,*,executables=False):
+                events.append(('rotation-clear',id(self),executables))
+                if self._failed is not None:raise self._failed
+                self.entries.clear()
+            def close(self):self.clear(executables=True);self.closed=True
+            def rotate(self,value,shift):
+                return Value(np.roll(value.polynomial.data,-shift),value.level,value._ckks_scale)
+        class Base(fixture.Arithmetic):
+            def __init__(self,context,**kw):
+                self.ctx=context;self.low_memory=kw['low_memory'];self._active_level=None;self.calls=[]
+                self._plaintext_multiply=Helper(context);self._rescale=Helper(context);self._multiplication_compiler=None
+            def _clear_working_caches(self):events.append(('base-clear',id(self)))
+            def multiply(self,left,right):
+                level=min(left.level,right.level)
+                return Value(left.polynomial.data*right.polynomial.data,level-1,left._ckks_scale*right._ckks_scale/math.prod(Q[2*level:2*level+2]))
+        common=HERE/'joined/checkout/cadathlon/common'
+        tree=ast.parse((common/'encrypted_polynomial.py').read_bytes())
+        base=next(x for x in tree.body if isinstance(x,ast.ClassDef)and x.name=='EncryptedPolynomialEvaluator')
+        namespace={}
+        exec(compile(ast.Module(body=[x for x in base.body if isinstance(x,ast.FunctionDef)and x.name in ('_prepare','checkpoint')],type_ignores=[]),'actual-level-checkpoint','exec'),namespace)
+        for name in ('_prepare','checkpoint'):setattr(Base,name,namespace[name])
+        tree=ast.parse((common/'encrypted_packed_qwen.py').read_bytes())
+        cls=next(x for x in tree.body if isinstance(x,ast.ClassDef)and x.name=='CompiledArithmetic')
+        namespace=dict(EncryptedPolynomialEvaluator=Base,CompiledRotation=Rotation)
+        exec(compile(ast.Module(body=[cls],type_ignores=[]),'actual-compiled-arithmetic','exec'),namespace)
+        Arithmetic=namespace['CompiledArithmetic']
+        lease=NS(_check=lambda:events.append('lease-check'),retire=lambda:events.append('lease-retired'))
+        session=object.__new__(loader_module.PreparedLoaderSession)
+        session._context=ctx;session._active=True;session._failure=None;session._registered=[];session.cleanup_completed=False
+        session._arrays={'sentinel':object()};session._maps={};session._states={};session._owner=object()
+        session.lease=lease;session._lease_bound=lease
+        def factory(context,**kw):
+            assert kw==dict(source_lease=lease,max_entries=2,max_bytes=2&lt;&lt;30,low_memory=True,preserve_dispatch_cache=True)
+            return Arithmetic(context,low_memory=True,preserve_dispatch_cache=True)
+        module=ModuleType('prepared_rotation');module.create_prepared_arithmetic=factory
+        monkeypatch.setitem(sys.modules,'prepared_rotation',module)
+        monkeypatch.setitem(sys.modules,'encrypted_packed_qwen',NS(CompiledArithmetic=Arithmetic))
+        monkeypatch.setattr(control_module,'_types',lambda:(loader_module.PreparedLoaderSession,Arithmetic,Rotation))
+        handle=NS(ctx=ctx,prepared_arithmetic=session.create)
+        class Refresh:
+            def __init__(self,context,**kw):
+                assert context is ctx and 'arithmetic_factory'not in kw
+                self.evaluator=Arithmetic(context,low_memory=True,preserve_dispatch_cache=True)
+                self.compiled_primitives=tuple(Helper(context)for _ in range(5))
+        provider=NS(close=lambda:events.append('provider-close'))
+        monkeypatch.setattr(engine,'_dependencies',lambda:(lambda c:provider,Arithmetic,ChainedStreamingLinear,RowTileLayout,Refresh,object,lambda *a:None))
+&gt;       assert not attention._QUARANTINE and not routing._QUARANTINE
+                                                 ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'encrypted_bsgs_score_routing' has no attribute '_QUARANTINE'
+
+test_combined_owners.py:84: AttributeError</error></testcase><testcase classname="test_combined_owners" name="test_bsgs_callback_keeps_original_payload_and_failure_identity[scores]" time="0.005"><error message="failed on setup with &quot;AttributeError: module 'encrypted_bsgs_score_routing' has no attribute '_QUARANTINE'&quot;">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7169a8166a50&gt;
+doubles = []
+
+    @pytest.fixture
+    def rig(monkeypatch,doubles):
+        events=[];ctx=fixture.Arithmetic().ctx
+        ctx.parameters['secret_key']=None
+        for k in attention.BertBSGSAttentionTile.required_rotation_indices():
+            ctx._param_cache.raw_rotation_keys.setdefault(k,{n:NS(shape=(8,114,131072),dtype=np.dtype('uint32'))for n in ('a','b')})
+            ctx._param_cache.coef_maps.setdefault(k,NS(shape=(131072,),dtype=np.dtype('int32')))
+        class Helper(fixture.Helper):
+            def clear(self,**kw):events.append(('helper-clear',id(self)))
+        class Rotation(Helper):
+            def __init__(self,context):
+                super().__init__(context);self._lease=lease;self._max_entries=2;self._max_bytes=2&lt;&lt;30
+                self._failed=None;self.entries=[];self.closed=False
+            def clear(self,*,executables=False):
+                events.append(('rotation-clear',id(self),executables))
+                if self._failed is not None:raise self._failed
+                self.entries.clear()
+            def close(self):self.clear(executables=True);self.closed=True
+            def rotate(self,value,shift):
+                return Value(np.roll(value.polynomial.data,-shift),value.level,value._ckks_scale)
+        class Base(fixture.Arithmetic):
+            def __init__(self,context,**kw):
+                self.ctx=context;self.low_memory=kw['low_memory'];self._active_level=None;self.calls=[]
+                self._plaintext_multiply=Helper(context);self._rescale=Helper(context);self._multiplication_compiler=None
+            def _clear_working_caches(self):events.append(('base-clear',id(self)))
+            def multiply(self,left,right):
+                level=min(left.level,right.level)
+                return Value(left.polynomial.data*right.polynomial.data,level-1,left._ckks_scale*right._ckks_scale/math.prod(Q[2*level:2*level+2]))
+        common=HERE/'joined/checkout/cadathlon/common'
+        tree=ast.parse((common/'encrypted_polynomial.py').read_bytes())
+        base=next(x for x in tree.body if isinstance(x,ast.ClassDef)and x.name=='EncryptedPolynomialEvaluator')
+        namespace={}
+        exec(compile(ast.Module(body=[x for x in base.body if isinstance(x,ast.FunctionDef)and x.name in ('_prepare','checkpoint')],type_ignores=[]),'actual-level-checkpoint','exec'),namespace)
+        for name in ('_prepare','checkpoint'):setattr(Base,name,namespace[name])
+        tree=ast.parse((common/'encrypted_packed_qwen.py').read_bytes())
+        cls=next(x for x in tree.body if isinstance(x,ast.ClassDef)and x.name=='CompiledArithmetic')
+        namespace=dict(EncryptedPolynomialEvaluator=Base,CompiledRotation=Rotation)
+        exec(compile(ast.Module(body=[cls],type_ignores=[]),'actual-compiled-arithmetic','exec'),namespace)
+        Arithmetic=namespace['CompiledArithmetic']
+        lease=NS(_check=lambda:events.append('lease-check'),retire=lambda:events.append('lease-retired'))
+        session=object.__new__(loader_module.PreparedLoaderSession)
+        session._context=ctx;session._active=True;session._failure=None;session._registered=[];session.cleanup_completed=False
+        session._arrays={'sentinel':object()};session._maps={};session._states={};session._owner=object()
+        session.lease=lease;session._lease_bound=lease
+        def factory(context,**kw):
+            assert kw==dict(source_lease=lease,max_entries=2,max_bytes=2&lt;&lt;30,low_memory=True,preserve_dispatch_cache=True)
+            return Arithmetic(context,low_memory=True,preserve_dispatch_cache=True)
+        module=ModuleType('prepared_rotation');module.create_prepared_arithmetic=factory
+        monkeypatch.setitem(sys.modules,'prepared_rotation',module)
+        monkeypatch.setitem(sys.modules,'encrypted_packed_qwen',NS(CompiledArithmetic=Arithmetic))
+        monkeypatch.setattr(control_module,'_types',lambda:(loader_module.PreparedLoaderSession,Arithmetic,Rotation))
+        handle=NS(ctx=ctx,prepared_arithmetic=session.create)
+        class Refresh:
+            def __init__(self,context,**kw):
+                assert context is ctx and 'arithmetic_factory'not in kw
+                self.evaluator=Arithmetic(context,low_memory=True,preserve_dispatch_cache=True)
+                self.compiled_primitives=tuple(Helper(context)for _ in range(5))
+        provider=NS(close=lambda:events.append('provider-close'))
+        monkeypatch.setattr(engine,'_dependencies',lambda:(lambda c:provider,Arithmetic,ChainedStreamingLinear,RowTileLayout,Refresh,object,lambda *a:None))
+&gt;       assert not attention._QUARANTINE and not routing._QUARANTINE
+                                                 ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'encrypted_bsgs_score_routing' has no attribute '_QUARANTINE'
+
+test_combined_owners.py:84: AttributeError</error></testcase><testcase classname="test_combined_owners" name="test_bsgs_callback_keeps_original_payload_and_failure_identity[values]" time="0.005"><error message="failed on setup with &quot;AttributeError: module 'encrypted_bsgs_score_routing' has no attribute '_QUARANTINE'&quot;">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7169a8165fd0&gt;
+doubles = []
+
+    @pytest.fixture
+    def rig(monkeypatch,doubles):
+        events=[];ctx=fixture.Arithmetic().ctx
+        ctx.parameters['secret_key']=None
+        for k in attention.BertBSGSAttentionTile.required_rotation_indices():
+            ctx._param_cache.raw_rotation_keys.setdefault(k,{n:NS(shape=(8,114,131072),dtype=np.dtype('uint32'))for n in ('a','b')})
+            ctx._param_cache.coef_maps.setdefault(k,NS(shape=(131072,),dtype=np.dtype('int32')))
+        class Helper(fixture.Helper):
+            def clear(self,**kw):events.append(('helper-clear',id(self)))
+        class Rotation(Helper):
+            def __init__(self,context):
+                super().__init__(context);self._lease=lease;self._max_entries=2;self._max_bytes=2&lt;&lt;30
+                self._failed=None;self.entries=[];self.closed=False
+            def clear(self,*,executables=False):
+                events.append(('rotation-clear',id(self),executables))
+                if self._failed is not None:raise self._failed
+                self.entries.clear()
+            def close(self):self.clear(executables=True);self.closed=True
+            def rotate(self,value,shift):
+                return Value(np.roll(value.polynomial.data,-shift),value.level,value._ckks_scale)
+        class Base(fixture.Arithmetic):
+            def __init__(self,context,**kw):
+                self.ctx=context;self.low_memory=kw['low_memory'];self._active_level=None;self.calls=[]
+                self._plaintext_multiply=Helper(context);self._rescale=Helper(context);self._multiplication_compiler=None
+            def _clear_working_caches(self):events.append(('base-clear',id(self)))
+            def multiply(self,left,right):
+                level=min(left.level,right.level)
+                return Value(left.polynomial.data*right.polynomial.data,level-1,left._ckks_scale*right._ckks_scale/math.prod(Q[2*level:2*level+2]))
+        common=HERE/'joined/checkout/cadathlon/common'
+        tree=ast.parse((common/'encrypted_polynomial.py').read_bytes())
+        base=next(x for x in tree.body if isinstance(x,ast.ClassDef)and x.name=='EncryptedPolynomialEvaluator')
+        namespace={}
+        exec(compile(ast.Module(body=[x for x in base.body if isinstance(x,ast.FunctionDef)and x.name in ('_prepare','checkpoint')],type_ignores=[]),'actual-level-checkpoint','exec'),namespace)
+        for name in ('_prepare','checkpoint'):setattr(Base,name,namespace[name])
+        tree=ast.parse((common/'encrypted_packed_qwen.py').read_bytes())
+        cls=next(x for x in tree.body if isinstance(x,ast.ClassDef)and x.name=='CompiledArithmetic')
+        namespace=dict(EncryptedPolynomialEvaluator=Base,CompiledRotation=Rotation)
+        exec(compile(ast.Module(body=[cls],type_ignores=[]),'actual-compiled-arithmetic','exec'),namespace)
+        Arithmetic=namespace['CompiledArithmetic']
+        lease=NS(_check=lambda:events.append('lease-check'),retire=lambda:events.append('lease-retired'))
+        session=object.__new__(loader_module.PreparedLoaderSession)
+        session._context=ctx;session._active=True;session._failure=None;session._registered=[];session.cleanup_completed=False
+        session._arrays={'sentinel':object()};session._maps={};session._states={};session._owner=object()
+        session.lease=lease;session._lease_bound=lease
+        def factory(context,**kw):
+            assert kw==dict(source_lease=lease,max_entries=2,max_bytes=2&lt;&lt;30,low_memory=True,preserve_dispatch_cache=True)
+            return Arithmetic(context,low_memory=True,preserve_dispatch_cache=True)
+        module=ModuleType('prepared_rotation');module.create_prepared_arithmetic=factory
+        monkeypatch.setitem(sys.modules,'prepared_rotation',module)
+        monkeypatch.setitem(sys.modules,'encrypted_packed_qwen',NS(CompiledArithmetic=Arithmetic))
+        monkeypatch.setattr(control_module,'_types',lambda:(loader_module.PreparedLoaderSession,Arithmetic,Rotation))
+        handle=NS(ctx=ctx,prepared_arithmetic=session.create)
+        class Refresh:
+            def __init__(self,context,**kw):
+                assert context is ctx and 'arithmetic_factory'not in kw
+                self.evaluator=Arithmetic(context,low_memory=True,preserve_dispatch_cache=True)
+                self.compiled_primitives=tuple(Helper(context)for _ in range(5))
+        provider=NS(close=lambda:events.append('provider-close'))
+        monkeypatch.setattr(engine,'_dependencies',lambda:(lambda c:provider,Arithmetic,ChainedStreamingLinear,RowTileLayout,Refresh,object,lambda *a:None))
+&gt;       assert not attention._QUARANTINE and not routing._QUARANTINE
+                                                 ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'encrypted_bsgs_score_routing' has no attribute '_QUARANTINE'
+
+test_combined_owners.py:84: AttributeError</error></testcase><testcase classname="test_combined_handler" name="test_default_branch_matches_original_handler_trace" time="0.007" /><testcase classname="test_combined_handler" name="test_exact_loader_handle_and_engine_order[False]" time="0.003" /><testcase classname="test_combined_handler" name="test_exact_loader_handle_and_engine_order[True]" time="0.003" /><testcase classname="test_combined_handler" name="test_non_boolean_mode_fails_before_any_path_or_parameter_access[0]" time="0.003" /><testcase classname="test_combined_handler" name="test_non_boolean_mode_fails_before_any_path_or_parameter_access[1]" time="0.003" /><testcase classname="test_combined_handler" name="test_non_boolean_mode_fails_before_any_path_or_parameter_access[None]" time="0.003" /><testcase classname="test_combined_handler" name="test_non_boolean_mode_fails_before_any_path_or_parameter_access[true]" time="0.003" /><testcase classname="test_combined_handler" name="test_non_boolean_mode_fails_before_any_path_or_parameter_access[bad4]" time="0.005" /><testcase classname="test_combined_handler" name="test_non_boolean_mode_fails_before_any_path_or_parameter_access[bad5]" time="0.003" /><testcase classname="test_combined_handler" name="test_entered_failure_propagates_through_engine_before_loader[ValueError-load]" time="0.003" /><testcase classname="test_combined_handler" name="test_entered_failure_propagates_through_engine_before_loader[ValueError-evaluate]" time="0.003" /><testcase classname="test_combined_handler" name="test_entered_failure_propagates_through_engine_before_loader[KeyboardInterrupt-load]" time="0.003" /><testcase classname="test_combined_handler" name="test_entered_failure_propagates_through_engine_before_loader[KeyboardInterrupt-evaluate]" time="0.003" /><testcase classname="test_combined_handler" name="test_entered_failure_propagates_through_engine_before_loader[SystemExit-load]" time="0.003" /><testcase classname="test_combined_handler" name="test_entered_failure_propagates_through_engine_before_loader[SystemExit-evaluate]" time="0.003" /></testsuite></testsuites>

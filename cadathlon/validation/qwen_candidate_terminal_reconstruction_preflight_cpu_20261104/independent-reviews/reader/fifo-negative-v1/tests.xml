@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="2" time="4.036" timestamp="2026-11-04T05:57:15.287100+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_fifo" name="test_fifo_rejected_without_blocking[calibration]" time="2.006"><failure message="AssertionError: FIFO open blocked before regular-file rejection&#10;assert not True">kind = 'calibration'
+
+    @pytest.mark.parametrize("kind",["calibration","journal_race"])
+    def test_fifo_rejected_without_blocking(kind):
+     p=subprocess.Popen([sys.executable,"-I","-B",str(Path(__file__).with_name("fifo_child.py")),kind],stdout=subprocess.PIPE,stderr=subprocess.PIPE,start_new_session=True)
+     timed_out=False
+     try:out,err=p.communicate(timeout=2)
+     except subprocess.TimeoutExpired:
+      timed_out=True;os.killpg(p.pid,signal.SIGKILL);out,err=p.communicate(timeout=5)
+     try:os.killpg(p.pid,0)
+     except ProcessLookupError:absent=True
+     else:absent=False
+     receipt=dict(kind=kind,pid=p.pid,pgid=p.pid,exit_code=p.returncode,reaped=True,group_absent=absent,timed_out=timed_out,stdout=out.decode(),stderr=err.decode())
+     Path(__file__).parent.parent.joinpath(kind+"-receipt.json").write_text(json.dumps(receipt,indent=2)+"\n")
+     assert absent
+&gt;    assert not timed_out,"FIFO open blocked before regular-file rejection"
+E    AssertionError: FIFO open blocked before regular-file rejection
+E    assert not True
+
+test_fifo.py:17: AssertionError</failure></testcase><testcase classname="test_fifo" name="test_fifo_rejected_without_blocking[journal_race]" time="2.005"><failure message="AssertionError: FIFO open blocked before regular-file rejection&#10;assert not True">kind = 'journal_race'
+
+    @pytest.mark.parametrize("kind",["calibration","journal_race"])
+    def test_fifo_rejected_without_blocking(kind):
+     p=subprocess.Popen([sys.executable,"-I","-B",str(Path(__file__).with_name("fifo_child.py")),kind],stdout=subprocess.PIPE,stderr=subprocess.PIPE,start_new_session=True)
+     timed_out=False
+     try:out,err=p.communicate(timeout=2)
+     except subprocess.TimeoutExpired:
+      timed_out=True;os.killpg(p.pid,signal.SIGKILL);out,err=p.communicate(timeout=5)
+     try:os.killpg(p.pid,0)
+     except ProcessLookupError:absent=True
+     else:absent=False
+     receipt=dict(kind=kind,pid=p.pid,pgid=p.pid,exit_code=p.returncode,reaped=True,group_absent=absent,timed_out=timed_out,stdout=out.decode(),stderr=err.decode())
+     Path(__file__).parent.parent.joinpath(kind+"-receipt.json").write_text(json.dumps(receipt,indent=2)+"\n")
+     assert absent
+&gt;    assert not timed_out,"FIFO open blocked before regular-file rejection"
+E    AssertionError: FIFO open blocked before regular-file rejection
+E    assert not True
+
+test_fifo.py:17: AssertionError</failure></testcase></testsuite></testsuites>

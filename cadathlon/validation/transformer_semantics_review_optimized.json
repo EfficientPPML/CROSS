@@ -1,0 +1,802 @@
+{
+  "scope": "Read-only plaintext algebra/domain analysis and symbolic execution of runtime polynomial/normalization methods. No encrypted pass or TPU performance evidence.",
+  "cases": {
+    "bert/test1.in": {
+      "max_abs_error": 0.004302472913275679,
+      "nrmse": 0.011767180010083865,
+      "plaintext_numeric_gate": true,
+      "runtime_polynomial_symbolic_depth": 50,
+      "static_depth": 50,
+      "selected_operation_counts_without_refresh": {
+        "weighted_sum": 342,
+        "plaintext_multiply": 3046,
+        "plaintext_add": 212,
+        "rescale": 342,
+        "nonzero_rotation": 288,
+        "ciphertext_multiply": 398,
+        "ciphertext_add_or_subtract": 132
+      },
+      "ranges_including_padding_and_masked_slots": {
+        "exp": {
+          "min": -0.6560568453916537,
+          "max": 0.4613680740865349,
+          "domain": [
+            -4.0,
+            4.0
+          ],
+          "outside": 0
+        },
+        "reciprocal": {
+          "min": 1.0013057632040583,
+          "max": 1.091173902802277,
+          "domain": [
+            0.5,
+            8.0
+          ],
+          "outside": 0
+        },
+        "inverse_sqrt": {
+          "min": 0.8468901869737574,
+          "max": 1.1953392645436791,
+          "domain": [
+            0.5,
+            1.5
+          ],
+          "outside": 0
+        },
+        "gelu": {
+          "min": -1.1956075013800618,
+          "max": 0.9054016399137759,
+          "domain": [
+            -3.0,
+            3.0
+          ],
+          "outside": 0
+        },
+        "tanh": {
+          "min": -0.9544947997435771,
+          "max": 0.7560934777346829,
+          "domain": [
+            -2.0,
+            2.0
+          ],
+          "outside": 0
+        }
+      }
+    },
+    "bert/test2.in": {
+      "max_abs_error": 0.0008575027950339098,
+      "nrmse": 0.00318820429659784,
+      "plaintext_numeric_gate": true,
+      "runtime_polynomial_symbolic_depth": 50,
+      "static_depth": 50,
+      "selected_operation_counts_without_refresh": {
+        "weighted_sum": 342,
+        "plaintext_multiply": 3302,
+        "plaintext_add": 212,
+        "rescale": 342,
+        "nonzero_rotation": 592,
+        "ciphertext_multiply": 398,
+        "ciphertext_add_or_subtract": 180
+      },
+      "ranges_including_padding_and_masked_slots": {
+        "exp": {
+          "min": -0.7920852334506612,
+          "max": 0.8806679251170929,
+          "domain": [
+            -4.0,
+            4.0
+          ],
+          "outside": 0
+        },
+        "reciprocal": {
+          "min": 1.0000832195802178,
+          "max": 1.1860417027335934,
+          "domain": [
+            0.5,
+            8.0
+          ],
+          "outside": 0
+        },
+        "inverse_sqrt": {
+          "min": 0.89672656907623,
+          "max": 1.2460293502215813,
+          "domain": [
+            0.5,
+            1.5
+          ],
+          "outside": 0
+        },
+        "gelu": {
+          "min": -1.7132684365713162,
+          "max": 1.3203380890942333,
+          "domain": [
+            -3.0,
+            3.0
+          ],
+          "outside": 0
+        },
+        "tanh": {
+          "min": -0.7408727330925061,
+          "max": 0.7471141404903441,
+          "domain": [
+            -2.0,
+            2.0
+          ],
+          "outside": 0
+        }
+      }
+    },
+    "bert/test3.in": {
+      "max_abs_error": 0.0007700079624816392,
+      "nrmse": 0.004440138999802376,
+      "plaintext_numeric_gate": true,
+      "runtime_polynomial_symbolic_depth": 93,
+      "static_depth": 93,
+      "selected_operation_counts_without_refresh": {
+        "weighted_sum": 634,
+        "plaintext_multiply": 6236,
+        "plaintext_add": 406,
+        "rescale": 634,
+        "nonzero_rotation": 1184,
+        "ciphertext_multiply": 716,
+        "ciphertext_add_or_subtract": 360
+      },
+      "ranges_including_padding_and_masked_slots": {
+        "exp": {
+          "min": -0.437004497189488,
+          "max": 0.4666496470886542,
+          "domain": [
+            -4.0,
+            4.0
+          ],
+          "outside": 0
+        },
+        "reciprocal": {
+          "min": 1.0012249720863422,
+          "max": 1.0496435048118329,
+          "domain": [
+            0.5,
+            8.0
+          ],
+          "outside": 0
+        },
+        "inverse_sqrt": {
+          "min": 0.9268351607123194,
+          "max": 1.3395130237999362,
+          "domain": [
+            0.5,
+            1.5
+          ],
+          "outside": 0
+        },
+        "gelu": {
+          "min": -1.3944084217483839,
+          "max": 1.2361967639823601,
+          "domain": [
+            -3.0,
+            3.0
+          ],
+          "outside": 0
+        },
+        "tanh": {
+          "min": -0.9938647398565343,
+          "max": 1.021095288832755,
+          "domain": [
+            -2.0,
+            2.0
+          ],
+          "outside": 0
+        }
+      },
+      "symbolic_refresh_schedule": {
+        "output_capacity": 25,
+        "refresh_calls": 36,
+        "final_level": 19,
+        "note": "Uses current scheduler with ideal refresh objects. No bootstrap executed and no latency claim."
+      }
+    },
+    "bert/test4.in": {
+      "max_abs_error": 0.002424120610027558,
+      "nrmse": 0.010335468549510679,
+      "plaintext_numeric_gate": true,
+      "runtime_polynomial_symbolic_depth": 93,
+      "static_depth": 93,
+      "selected_operation_counts_without_refresh": {
+        "weighted_sum": 914,
+        "plaintext_multiply": 12532,
+        "plaintext_add": 590,
+        "rescale": 914,
+        "nonzero_rotation": 1728,
+        "ciphertext_multiply": 1012,
+        "ciphertext_add_or_subtract": 488
+      },
+      "ranges_including_padding_and_masked_slots": {
+        "exp": {
+          "min": -0.9577799046082525,
+          "max": 1.1918694449197211,
+          "domain": [
+            -4.0,
+            4.0
+          ],
+          "outside": 0
+        },
+        "reciprocal": {
+          "min": 1.0017584542986204,
+          "max": 1.269180737884127,
+          "domain": [
+            0.5,
+            8.0
+          ],
+          "outside": 0
+        },
+        "inverse_sqrt": {
+          "min": 0.8086931584947401,
+          "max": 1.3835448550916285,
+          "domain": [
+            0.5,
+            1.5
+          ],
+          "outside": 0
+        },
+        "gelu": {
+          "min": -1.8790442095545272,
+          "max": 2.4830466856806175,
+          "domain": [
+            -3.0,
+            3.0
+          ],
+          "outside": 0
+        },
+        "tanh": {
+          "min": -1.203305207791119,
+          "max": 0.9364279784702276,
+          "domain": [
+            -2.0,
+            2.0
+          ],
+          "outside": 0
+        }
+      },
+      "symbolic_refresh_schedule": {
+        "output_capacity": 25,
+        "refresh_calls": 52,
+        "final_level": 19,
+        "note": "Uses current scheduler with ideal refresh objects. No bootstrap executed and no latency claim."
+      }
+    },
+    "bert/test5.in": {
+      "max_abs_error": 0.0048824962155587515,
+      "nrmse": 0.016505664692269856,
+      "plaintext_numeric_gate": true,
+      "runtime_polynomial_symbolic_depth": 136,
+      "static_depth": 136,
+      "selected_operation_counts_without_refresh": {
+        "weighted_sum": 1334,
+        "plaintext_multiply": 20730,
+        "plaintext_add": 872,
+        "rescale": 1334,
+        "nonzero_rotation": 5088,
+        "ciphertext_multiply": 1458,
+        "ciphertext_add_or_subtract": 924
+      },
+      "ranges_including_padding_and_masked_slots": {
+        "exp": {
+          "min": -0.958864618590022,
+          "max": 0.7749524463722115,
+          "domain": [
+            -4.0,
+            4.0
+          ],
+          "outside": 0
+        },
+        "reciprocal": {
+          "min": 1.001005927088061,
+          "max": 1.1460494197959354,
+          "domain": [
+            0.5,
+            8.0
+          ],
+          "outside": 0
+        },
+        "inverse_sqrt": {
+          "min": 0.835580689051787,
+          "max": 1.3752356634355818,
+          "domain": [
+            0.5,
+            1.5
+          ],
+          "outside": 0
+        },
+        "gelu": {
+          "min": -1.9969039967069433,
+          "max": 2.273076677096481,
+          "domain": [
+            -3.0,
+            3.0
+          ],
+          "outside": 0
+        },
+        "tanh": {
+          "min": -1.4976323883212648,
+          "max": 1.0536605339495044,
+          "domain": [
+            -2.0,
+            2.0
+          ],
+          "outside": 0
+        }
+      },
+      "symbolic_refresh_schedule": {
+        "output_capacity": 25,
+        "refresh_calls": 172,
+        "final_level": 19,
+        "note": "Uses current scheduler with ideal refresh objects. No bootstrap executed and no latency claim."
+      }
+    },
+    "bert/test6.in": {
+      "max_abs_error": 0.001884039206677346,
+      "nrmse": 0.0049687459166555285,
+      "plaintext_numeric_gate": true,
+      "runtime_polynomial_symbolic_depth": 136,
+      "static_depth": 136,
+      "selected_operation_counts_without_refresh": {
+        "weighted_sum": 1334,
+        "plaintext_multiply": 20730,
+        "plaintext_add": 872,
+        "rescale": 1334,
+        "nonzero_rotation": 5088,
+        "ciphertext_multiply": 1458,
+        "ciphertext_add_or_subtract": 924
+      },
+      "ranges_including_padding_and_masked_slots": {
+        "exp": {
+          "min": -1.3344859833706304,
+          "max": 1.3534898526021875,
+          "domain": [
+            -4.0,
+            4.0
+          ],
+          "outside": 0
+        },
+        "reciprocal": {
+          "min": 1.0025407185521646,
+          "max": 1.2336502724871996,
+          "domain": [
+            0.5,
+            8.0
+          ],
+          "outside": 0
+        },
+        "inverse_sqrt": {
+          "min": 0.7691626915217682,
+          "max": 1.3279989434516135,
+          "domain": [
+            0.5,
+            1.5
+          ],
+          "outside": 0
+        },
+        "gelu": {
+          "min": -2.1826590522371,
+          "max": 2.4111348871967535,
+          "domain": [
+            -3.0,
+            3.0
+          ],
+          "outside": 0
+        },
+        "tanh": {
+          "min": -0.9799050899404623,
+          "max": 1.079684021171287,
+          "domain": [
+            -2.0,
+            2.0
+          ],
+          "outside": 0
+        }
+      },
+      "symbolic_refresh_schedule": {
+        "output_capacity": 25,
+        "refresh_calls": 172,
+        "final_level": 19,
+        "note": "Uses current scheduler with ideal refresh objects. No bootstrap executed and no latency claim."
+      }
+    },
+    "qwen/test1.in": {
+      "max_abs_error": 0.030491730076015244,
+      "nrmse": 0.013616942983325563,
+      "plaintext_numeric_gate": true,
+      "runtime_polynomial_symbolic_depth": 38,
+      "static_depth": 38,
+      "selected_operation_counts_without_refresh": {
+        "ciphertext_multiply": 177,
+        "weighted_sum": 209,
+        "plaintext_multiply": 2615,
+        "plaintext_add": 33,
+        "rescale": 209,
+        "ciphertext_add_or_subtract": 32
+      },
+      "ranges_including_padding_and_masked_slots": {
+        "inverse_sqrt": {
+          "min": 0.023803285477435557,
+          "max": 0.05260019264608842,
+          "domain": [
+            0.005,
+            0.35
+          ],
+          "outside": 0
+        },
+        "silu": {
+          "min": -0.6295241568621622,
+          "max": 0.8494313555546089,
+          "domain": [
+            -2.0,
+            2.0
+          ],
+          "outside": 0
+        }
+      }
+    },
+    "qwen/test2.in": {
+      "max_abs_error": 0.026664462862310057,
+      "nrmse": 0.018524133521614323,
+      "plaintext_numeric_gate": true,
+      "runtime_polynomial_symbolic_depth": 67,
+      "static_depth": 67,
+      "selected_operation_counts_without_refresh": {
+        "ciphertext_multiply": 463,
+        "weighted_sum": 463,
+        "plaintext_multiply": 3893,
+        "plaintext_add": 63,
+        "rescale": 463,
+        "nonzero_rotation": 144,
+        "ciphertext_add_or_subtract": 116
+      },
+      "ranges_including_padding_and_masked_slots": {
+        "inverse_sqrt": {
+          "min": 0.008475706187553129,
+          "max": 0.22361799708397515,
+          "domain": [
+            0.005,
+            0.35
+          ],
+          "outside": 0
+        },
+        "exp": {
+          "min": -1.7770226932439774,
+          "max": 1.0064577111423287,
+          "domain": [
+            -4.0,
+            4.0
+          ],
+          "outside": 0
+        },
+        "reciprocal": {
+          "min": 0.9999999999999929,
+          "max": 1.5504194335174362,
+          "domain": [
+            0.5,
+            8.0
+          ],
+          "outside": 0
+        },
+        "silu": {
+          "min": -0.9043893874367197,
+          "max": 0.8416406453723168,
+          "domain": [
+            -2.0,
+            2.0
+          ],
+          "outside": 0
+        }
+      },
+      "symbolic_refresh_schedule": {
+        "output_capacity": 29,
+        "refresh_calls": 33,
+        "final_level": 18,
+        "note": "Uses current scheduler with ideal refresh objects. No bootstrap executed and no latency claim."
+      }
+    },
+    "qwen/test3.in": {
+      "max_abs_error": 0.04742219110105805,
+      "nrmse": 0.03221083366668133,
+      "plaintext_numeric_gate": true,
+      "runtime_polynomial_symbolic_depth": 123,
+      "static_depth": 123,
+      "selected_operation_counts_without_refresh": {
+        "ciphertext_multiply": 883,
+        "weighted_sum": 875,
+        "plaintext_multiply": 7485,
+        "plaintext_add": 123,
+        "rescale": 875,
+        "nonzero_rotation": 704,
+        "ciphertext_add_or_subtract": 392
+      },
+      "ranges_including_padding_and_masked_slots": {
+        "inverse_sqrt": {
+          "min": 0.015626253459757773,
+          "max": 0.3171594131512388,
+          "domain": [
+            0.005,
+            0.35
+          ],
+          "outside": 0
+        },
+        "exp": {
+          "min": -1.735109190126661,
+          "max": 2.245979213471043,
+          "domain": [
+            -4.0,
+            4.0
+          ],
+          "outside": 0
+        },
+        "reciprocal": {
+          "min": 0.9999999999999929,
+          "max": 2.9873042446462277,
+          "domain": [
+            0.5,
+            8.0
+          ],
+          "outside": 0
+        },
+        "silu": {
+          "min": -1.12444165769845,
+          "max": 0.8999589799609744,
+          "domain": [
+            -2.0,
+            2.0
+          ],
+          "outside": 0
+        }
+      },
+      "symbolic_refresh_schedule": {
+        "output_capacity": 25,
+        "refresh_calls": 129,
+        "final_level": 14,
+        "note": "Uses current scheduler with ideal refresh objects. No bootstrap executed and no latency claim."
+      }
+    },
+    "qwen/test4.in": {
+      "max_abs_error": 0.025871586461855056,
+      "nrmse": 0.0160500365423555,
+      "plaintext_numeric_gate": true,
+      "runtime_polynomial_symbolic_depth": 123,
+      "static_depth": 123,
+      "selected_operation_counts_without_refresh": {
+        "ciphertext_multiply": 883,
+        "weighted_sum": 875,
+        "plaintext_multiply": 7997,
+        "plaintext_add": 123,
+        "rescale": 875,
+        "nonzero_rotation": 1376,
+        "ciphertext_add_or_subtract": 552
+      },
+      "ranges_including_padding_and_masked_slots": {
+        "inverse_sqrt": {
+          "min": 0.009603954705258794,
+          "max": 0.2702327768639886,
+          "domain": [
+            0.005,
+            0.35
+          ],
+          "outside": 0
+        },
+        "exp": {
+          "min": -2.643967553797739,
+          "max": 2.571140124295473,
+          "domain": [
+            -4.0,
+            4.0
+          ],
+          "outside": 0
+        },
+        "reciprocal": {
+          "min": 0.9999999999999929,
+          "max": 2.752962198096044,
+          "domain": [
+            0.5,
+            8.0
+          ],
+          "outside": 0
+        },
+        "silu": {
+          "min": -0.8948536572621563,
+          "max": 0.9812040732057412,
+          "domain": [
+            -2.0,
+            2.0
+          ],
+          "outside": 0
+        }
+      },
+      "symbolic_refresh_schedule": {
+        "output_capacity": 25,
+        "refresh_calls": 129,
+        "final_level": 14,
+        "note": "Uses current scheduler with ideal refresh objects. No bootstrap executed and no latency claim."
+      }
+    },
+    "qwen/test5.in": {
+      "max_abs_error": 0.03932663214209009,
+      "nrmse": 0.01829837328911338,
+      "plaintext_numeric_gate": true,
+      "runtime_polynomial_symbolic_depth": 179,
+      "static_depth": 179,
+      "selected_operation_counts_without_refresh": {
+        "ciphertext_multiply": 1303,
+        "weighted_sum": 1287,
+        "plaintext_multiply": 10949,
+        "plaintext_add": 183,
+        "rescale": 1287,
+        "nonzero_rotation": 1056,
+        "ciphertext_add_or_subtract": 588
+      },
+      "ranges_including_padding_and_masked_slots": {
+        "inverse_sqrt": {
+          "min": 0.012135818816400185,
+          "max": 0.2326326376252094,
+          "domain": [
+            0.005,
+            0.35
+          ],
+          "outside": 0
+        },
+        "exp": {
+          "min": -2.0007159462779107,
+          "max": 2.185710288306263,
+          "domain": [
+            -4.0,
+            4.0
+          ],
+          "outside": 0
+        },
+        "reciprocal": {
+          "min": 0.9999999999999929,
+          "max": 2.6693595348472456,
+          "domain": [
+            0.5,
+            8.0
+          ],
+          "outside": 0
+        },
+        "silu": {
+          "min": -0.972550817171403,
+          "max": 0.8468319224441196,
+          "domain": [
+            -2.0,
+            2.0
+          ],
+          "outside": 0
+        }
+      },
+      "symbolic_refresh_schedule": {
+        "output_capacity": 25,
+        "refresh_calls": 225,
+        "final_level": 14,
+        "note": "Uses current scheduler with ideal refresh objects. No bootstrap executed and no latency claim."
+      }
+    },
+    "qwen/test6.in": {
+      "max_abs_error": 0.017334105926255644,
+      "nrmse": 0.009827903834231775,
+      "plaintext_numeric_gate": true,
+      "runtime_polynomial_symbolic_depth": 179,
+      "static_depth": 179,
+      "selected_operation_counts_without_refresh": {
+        "ciphertext_multiply": 1303,
+        "weighted_sum": 1287,
+        "plaintext_multiply": 13253,
+        "plaintext_add": 183,
+        "rescale": 1287,
+        "nonzero_rotation": 3840,
+        "ciphertext_add_or_subtract": 1068
+      },
+      "ranges_including_padding_and_masked_slots": {
+        "inverse_sqrt": {
+          "min": 0.009195861773651746,
+          "max": 0.2916878989989939,
+          "domain": [
+            0.005,
+            0.35
+          ],
+          "outside": 0
+        },
+        "exp": {
+          "min": -2.773891673167108,
+          "max": 2.8674110388949905,
+          "domain": [
+            -4.0,
+            4.0
+          ],
+          "outside": 0
+        },
+        "reciprocal": {
+          "min": 0.9999999999999929,
+          "max": 2.72738398591631,
+          "domain": [
+            0.5,
+            8.0
+          ],
+          "outside": 0
+        },
+        "silu": {
+          "min": -1.1150599196430555,
+          "max": 1.1235721056357206,
+          "domain": [
+            -2.0,
+            2.0
+          ],
+          "outside": 0
+        }
+      },
+      "symbolic_refresh_schedule": {
+        "output_capacity": 25,
+        "refresh_calls": 225,
+        "final_level": 14,
+        "note": "Uses current scheduler with ideal refresh objects. No bootstrap executed and no latency claim."
+      }
+    }
+  },
+  "interpretation": {
+    "accuracy_scope": "All six public fixtures for each model, using the selected NumPy power basis arithmetic. Checked cleartext oracle outputs against the stored .out fixtures. No CKKS noise, scale error, bootstrap error or TPU execution was simulated.",
+    "certified_domain_bounds": false,
+    "depth_scope": "Actual runtime polynomial evaluate() and normalize() methods executed with symbolic level objects; ciphertext multiply and weighted sum each modeled as one level. This checks critical-path accounting, not cryptographic execution.",
+    "domain_observation_scope": "Minimum complete PairLayout period including padded batch/query/key coordinates and polynomial arguments in slots later masked out. Full CKKS slot vectors repeat that period.",
+    "encrypted_execution": false,
+    "generalization": "Observed fixture domains do not certify arbitrary inputs, weights, seeds or pretrained checkpoints.",
+    "operation_count_scope": "Selected facade/arithmetic counts without refresh. Ciphertext_add_or_subtract counts only explicit tensor calls; it omits additions internal to weighted sums and normalization. Rescale counts are weighted-sum rescales; ciphertext multiplication includes its own rescale.",
+    "refresh_count_scope": "Conditional symbolic schedule only: initial chain level49, ideal bootstrap always returning exactly refresh_plan.output_level (25 or29), current per-operation capacity checks and reference sharing. Actual bootstrap may return more capacity, and measured refresh counts/times can differ. No refresh executed.",
+    "refresh_error_scope": "Ideal refresh preserved values exactly. These counts establish neither repeated-refresh numerical stability nor practical performance."
+  },
+  "analysis_program_sha256": "be9a2875cce98b7aec7addb273f16a696d12077e5cafd0c20f23a4e7d51f3ed7",
+  "analysis_program": "cadathlon/validation/review_transformer_semantics.py",
+  "source_sha256": {
+    "cadathlon/validation/review_transformer_semantics.py": "be9a2875cce98b7aec7addb273f16a696d12077e5cafd0c20f23a4e7d51f3ed7",
+    "jaxite_word/bootstrapping.py": "264bbfc71797aec44f95f911a84d088d646e66125e32c9b479a214c6fe12cc5a",
+    "cadathlon/common/encrypted_transformer.py": "18846a05ad6076997eea70454c775a9a038c46f95b5c97687a08ac682e5501de",
+    "cadathlon/common/encrypted_polynomial.py": "d01cbcf26897c9b190919bb6b279e731716d7dcc4e687bbdfbc4e2e4baf5975e",
+    "cadathlon/common/encrypted_refresh.py": "cbb925cb6174b1adaedbf586f82129e8821d92e212b223be6ee81553353ad791",
+    "cadathlon/common/encrypted_reference.py": "84129e607b7facdf525f1b461725c4b5b9124eb63ed730f27366e9d51309f634",
+    "cadathlon/agent_pset/p2_bert/src/reference.py": "6d254c92b70257e773d1701a6f85fb592365e67d037b231b9e5a1589e64e7a04",
+    "cadathlon/agent_pset/p2_bert/test/test1.in": "91e26d127826b649b3470b3303154a8358aecf027e22ec54c0e31bf9a4240acb",
+    "cadathlon/agent_pset/p2_bert/test/test2.in": "72e033b6ea3f81ed554fc11206fbe1321de99e9b4b82b240b3f04a3ba879557e",
+    "cadathlon/agent_pset/p2_bert/test/test3.in": "3707189846653778b8338839229ed5c79233c8af3011223a43f88174f44febfe",
+    "cadathlon/agent_pset/p2_bert/test/test4.in": "97688631dc250c1caa66ada50f30a7cf9685ab6f5df5c05566bcba97fb7cdaf2",
+    "cadathlon/agent_pset/p2_bert/test/test5.in": "6943da7d806c16740c920d228ed22514f34fa8665b81522c1c7932cc7120735c",
+    "cadathlon/agent_pset/p2_bert/test/test6.in": "839baf64ae3256fadbbd7c35e7101a033d60191d7b8fa45ee45abcf0e7ec658a",
+    "cadathlon/agent_pset/p2_bert/test/test1.out": "7c949b1e50b4c42724f80c65711ca68e10e8da05fb7efb95807f86deb79c8b81",
+    "cadathlon/agent_pset/p2_bert/test/test2.out": "78a8048f007f62debe7ac64758e55f4ea691842e6206c30f6bce43fe18489e6c",
+    "cadathlon/agent_pset/p2_bert/test/test3.out": "1335ed4408c8734aa87d5b5ad6a235c9dcf46f6079b018b7b52ebf733772117c",
+    "cadathlon/agent_pset/p2_bert/test/test4.out": "76d841b882cd1e069bf827ed0f9d6633369558236704e02afb6628ddb8db7418",
+    "cadathlon/agent_pset/p2_bert/test/test5.out": "0f7457daa9ca77de42665f6b7f2b5b217a2ae5f6731ec2fbf4540263ae814532",
+    "cadathlon/agent_pset/p2_bert/test/test6.out": "d2e910f69eb792a43f2273d62aa76c1812f52b7e2d36e8a1d45934115d428057",
+    "cadathlon/agent_pset/p4_qwen/src/reference.py": "667c8483648adcf583212b0f828347614423c1c1401807f4f9512612f74aa147",
+    "cadathlon/agent_pset/p4_qwen/test/test1.in": "2e48f785cc4da8a47dd5e661b65d0b7e2f407ea413c1e9bab5a9e66dd0567c67",
+    "cadathlon/agent_pset/p4_qwen/test/test2.in": "afa2249ba74cc0b23548430ab60d0dacf42cc0ea4eead7d4465e21fe648fe592",
+    "cadathlon/agent_pset/p4_qwen/test/test3.in": "f68ea67dd9828e0aa82f705edd74589c20168bdbc551153cb586b7fe0fb47a91",
+    "cadathlon/agent_pset/p4_qwen/test/test4.in": "4a7cfe8f27f41598ea5776e7a24328e3f1514ec74b3c578873cc9c99ca094a63",
+    "cadathlon/agent_pset/p4_qwen/test/test5.in": "df67a2c4e59030d923b019c9d57a2eedd96d11ad1e4eb31bbbddee69d460c018",
+    "cadathlon/agent_pset/p4_qwen/test/test6.in": "771bebbcace1bf4a3661f5918249ab8b335d27812acb182409538ab57302e6e7",
+    "cadathlon/agent_pset/p4_qwen/test/test1.out": "9f1c877b620f66faa5eda9ef1a67987c6aabda279e131f9efc65799a99211a48",
+    "cadathlon/agent_pset/p4_qwen/test/test2.out": "3e443497b9afd6f147a54d9d5a044a763b64f7c38022c5dec55f02b60ac1d79d",
+    "cadathlon/agent_pset/p4_qwen/test/test3.out": "9110fe012ddb1b1dbc8586d0035f4275f49129221e6385ac6953076b0a84aae6",
+    "cadathlon/agent_pset/p4_qwen/test/test4.out": "d25b560fb9723a98580d4cf2df8d11fe6ad4fc6d7b780bf6ee46166dd6c2dc72",
+    "cadathlon/agent_pset/p4_qwen/test/test5.out": "5fd9d803b97f33233acc6d1172a91981d992c6b623c27db57ac74e3b03266585",
+    "cadathlon/agent_pset/p4_qwen/test/test6.out": "43c12ab0fb8a9290fe843bf3c0ff8d83c1c3e8a335bf8f588afa196da61e6ba2"
+  },
+  "source_unchanged_at_recording": true,
+  "plaintext_numerical_gates_pass": true,
+  "within_observed_domains": true,
+  "versions": {
+    "python": "3.13.18",
+    "numpy": "2.5.4"
+  },
+  "conditional_refresh_profile": {
+    "degree": 131072,
+    "initial_level": 49,
+    "refresh_for_static_depth_above": 52,
+    "output_capacity": "exactly the advertised minimum"
+  }
+}

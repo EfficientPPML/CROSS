@@ -1,0 +1,44 @@
+{
+  "authoritative_session_id": 82669,
+  "outer_exit_code": 0,
+  "outer_reaped": true,
+  "collector_pid": 1775270,
+  "children": [
+    {
+      "phase": "collector-tests",
+      "pid": 1775287,
+      "command": [
+        "/tmp/cross-pretrained-validation-env/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "test_collector.py",
+        "--junitxml=/tmp/bert-ordinary-rotation-digits-seam-v2-20261103/source-bound-v2/tests.xml"
+      ],
+      "reaped": true,
+      "returncode": 0
+    },
+    {
+      "phase": "public-parity",
+      "pid": 1775292,
+      "command": [
+        "/tmp/cross-pretrained-validation-env/bin/python",
+        "/tmp/bert-ordinary-rotation-digits-seam-v2-20261103/source-bound-v2/snapshot/check_public.py",
+        "--output",
+        "/tmp/bert-ordinary-rotation-digits-seam-v2-20261103/source-bound-v2/public-parity"
+      ],
+      "reaped": true,
+      "returncode": 0
+    }
+  ],
+  "numeric_pids_absent_at_readback": true,
+  "recorded_utc": "2026-11-03T14:39:12.448791+00:00",
+  "historical_v1": {
+    "outer_session_handle_lost_at_compaction": true,
+    "outer_exit_code": null,
+    "child_exit0_and_reaped_recorded_by_collector": true,
+    "collector_passed": false,
+    "original_source_bytes_unchanged": true,
+    "failure": "Recursive source discovery added its own30 snapshot/checkout output files. The old stdout unconditionally printed passed:true; authoritative final report is passed:false."
+  }
+}

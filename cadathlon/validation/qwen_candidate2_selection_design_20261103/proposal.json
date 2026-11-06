@@ -1,0 +1,192 @@
+{
+  "schema": "qwen-candidate2-selection-rule-proposal",
+  "status": "await_root_review_and_all28_uniform_multipliers_no_selection_performed",
+  "motivation": "Separately declared design after candidate1 calibration pass and original validation failure. Domain formula uses public weights/certificates, never held-out extrema or output choices.",
+  "frozen_base": {
+    "manifest_path": "/home/jianming_gatech/CROSS/cadathlon/validation/qwen_calibration_candidate1_cpu_20261103/candidate-v1/manifest.json",
+    "manifest_sha256": "d16cfe0eaf4079b1e782790dcff277ed6901aa7ea1376ee7877b40b54dde93a2",
+    "unchanged_norm_rule_count": 113,
+    "unchanged_norm_rules_canonical_sha256": "92ab97fe9e72d3e667f3b21cede3b50466571d5352e8f9797153f1ac363b35ba",
+    "unchanged_softmax_rules_canonical_sha256": "78c1a17a973bc0b3232f38727a35e49a417223c4eea0c98044b6829915d71763",
+    "unchanged_softmax_fields": [
+      "softmax",
+      "exp",
+      "initial_reciprocal",
+      "reciprocal_by_keys"
+    ],
+    "arithmetic_path": "/home/jianming_gatech/CROSS/cadathlon/validation/qwen_approximate_calibration_cpu_20261103/arithmetic.py",
+    "arithmetic_sha256": "9689b843b4ec2d0a0ef724dbdca7a516e9a4f23da83f83af5571da13380e9a6f"
+  },
+  "allowed_manifest_changes": [
+    "The28 nonlinear entries named <layer>.silu",
+    "Candidate/provenance/schema metadata and abstract depth summaries"
+  ],
+  "norm_and_softmax_policy": "All113 norm entries including domains, coefficients, strategies, affine seeds and iteration counts stay byte-equivalent as canonical JSON; all centered-score domains/exp/initial+K1..32 reciprocal rules stay byte-equivalent. Any failure requiring those changes stops this proposal and needs a separately reviewed design.",
+  "public_domain_rule": {
+    "native_bound_report": "/home/jianming_gatech/CROSS/cadathlon/validation/qwen_public_silu_bounds_cpu_20261103/public-v1/report.json",
+    "native_bound_report_sha256": "45bcf78ea0e2a45fe455c4de504269f5bbe1392f2ada91598db9327689cfdc7f",
+    "formula": "D_l=ceil((9/8)*(1+delta_l)*B_l), domain[-D_l,D_l], B_l=max_j stored outward exact-real native bound",
+    "margin_rational": [
+      9,
+      8
+    ],
+    "rounding": "Parse finite binary64 B_l as its exact Fraction. Parse the outward decimal/rational uniform delta_l exactly. Multiply rationally, then mathematical integer ceil; no nearest rounding or observed-extrema fit.",
+    "delta_requirement": "Each existing post-norm implementation must have an independently verified uniform relative inverse-sqrt error certificate0<=delta<1 plus positivity over its entire unchanged declared domain, including actual rounded affine mapper/coefficients. Certificate must bind site/domain/basis and coefficients; no model grid substitutes.",
+    "delta_sources": {
+      "20Newton": "Use existing final_relative_error_bound and rounded-first-affine certificate; later arithmetic rounding excluded.",
+      "8polynomial": "CNN independent actual-coefficient uniform certificate; currently3power certified,5balanced pending. Do not finalize domains from a placeholder."
+    },
+    "margin_scope": "The12.5% reserve is a fixed engineering design margin, not a proved native/NumPy/CKKS/refresh error budget. Same-input variance relation, domain membership and finite arithmetic remain conditions."
+  },
+  "analytic_selection": {
+    "degrees_in_order": [
+      8,
+      12,
+      16,
+      24,
+      32,
+      48,
+      64,
+      96,
+      128,
+      192,
+      256
+    ],
+    "direct_strategy": "Balanced Chebyshev with unchanged numeric.py coefficient/pruning/evaluation algorithm. Choose first candidate meeting all analytic grids.",
+    "absolute_silu_target": 0.0001,
+    "grids": [
+      "16385 uniformly spaced points over the entire public domain",
+      "16385 uniformly spaced points over the intersection with[-16,16]",
+      "Explicit domain endpoints and zero; deduplicate the union"
+    ],
+    "grid_scope": "These fixed analytic grids are sampled checks, not a uniform approximation guarantee. The dense center grid is fixed before selection because wide public domains otherwise coarsen the nonlinear transition sampling.",
+    "fallback": {
+      "identity": "x*(1+tanh(x/2))/2",
+      "base_domain": [
+        -1,
+        1
+      ],
+      "base_degrees_in_order": [
+        8,
+        12,
+        16,
+        20,
+        24
+      ],
+      "base_strategy": "existing conditioned power, degree<=32 and finite coefficientL1<=1e8",
+      "doublings": "smallest nonnegative integer m such that D_l<=2**(m+1)",
+      "reciprocal": "Reuse the exact candidate1 layer27.silu.reciprocal bytes on[1,2.1],fiveupdates/depth13; no new reciprocal fitting.",
+      "gate": "Every analytic-grid intermediate is finite and every double-angle denominator belongs to[1,2.1], with finalabsoluteerror<=1e-4 on all fixed grids.",
+      "depth": "base_depth+17*m+2; preserve actual chosen coefficients and symbolic depth before any model execution."
+    },
+    "unsupported": "If no direct or prescribed rational candidate meets fixed analytic criteria, preserve all results and mark that site unsupported. Do not expand degrees, relax target, clip, or substitute native results."
+  },
+  "calibration_and_validation_sequence": [
+    "Verify all28 public multipliers and exact frozen-base identity. Freeze a final approved selection protocol before coefficient generation.",
+    "Generate exactly one first candidate2 from public bounds and fixed analytic rules. No model output or old held-out values participate.",
+    "Archive candidate2 coefficients/domains/depths and source/input hashes before approximate calibration.",
+    "Evaluate the unchanged original calibration corpus only:288prefills+64teacher+64free, using native operators on the same actual prefixes and fixed published gates.",
+    "Preserve any failure. No norm/softmax retuning or hidden escalation under this proposal. Any further candidate rule requires a new explicit review and still cannot use fresh-validation results.",
+    "After a complete successful frozen calibration and root review, run the already-frozen fresh48prefills+32teacher+32free. Failedfree prefixes stop suffixes; no native token substitution.",
+    "After the complete fresh112 attempt, run the unchanged original published112 workload as a required regression against the same frozen candidate2, including failed/stopped prefixes; no intervening fitting. A numerical fresh-validation failure does not erase the published regression obligation.",
+    "Preserve both validation/regression outcomes and prohibit either from feeding coefficient selection. Original candidate1 failure stays archived. Fresh success cannot replace published-suite obligations; original regression is no longer an untouched held-out claim."
+  ],
+  "selection_data_allowlist": [
+    "Pinned public weights/config and exact public gate-bound report",
+    "Uniform norm certificates for the unchanged implementations",
+    "Fixed analytic functions and grids",
+    "Previously archived calibration inputs/results for calibration feasibility checks only"
+  ],
+  "selection_data_denylist": [
+    "Original112 held-out extrema/logits/errors/token choices",
+    "Fresh56 input outputs or domain observations",
+    "Per-example coefficients, lookup outputs, clipping or runtime oracle branches"
+  ],
+  "fresh_validation": {
+    "tokenized_manifest_path": "/home/jianming_gatech/CROSS/cadathlon/validation/qwen_public_silu_bounds_cpu_20261103/public-v1/tokenized_fresh_inputs.json",
+    "sha256": "af93ae2a580bc4ff51d1463e8ab50ab054e295d0e4932340ae81d18185696988",
+    "source_raw_sha256": "09bc0837526d4b53e7eb33255ab6cd698bb2631f64b8a065b1f092ec9872cc51",
+    "prefill_counts": {
+      "8": 16,
+      "16": 16,
+      "32": 16
+    },
+    "decode_seeds": 8,
+    "steps": 4,
+    "prior_input_overlap_count": 0,
+    "already_frozen": true,
+    "model_evaluated": false
+  },
+  "gates": {
+    "operator_block_nrmse": 0.05,
+    "full_logit_nrmse": 0.1,
+    "nrmse_floor": 0.01,
+    "exact_native": {
+      "max_abs": 0.001,
+      "nrmse": 1e-05,
+      "top1": true
+    },
+    "calibration": {
+      "aggregate_prefill_matches": 260,
+      "teacher_matches": 58,
+      "complete_free_sequences": 12,
+      "counts": [
+        288,
+        64,
+        64
+      ]
+    },
+    "fresh_validation": {
+      "aggregate_prefill_matches": 44,
+      "teacher_matches": 29,
+      "complete_free_sequences": 6,
+      "counts": [
+        48,
+        32,
+        32
+      ]
+    },
+    "all_required_domains_and_contexts": true,
+    "per_suite_reporting": true,
+    "original_published_regression": {
+      "aggregate_prefill_matches": 44,
+      "teacher_matches": 29,
+      "complete_free_sequences": 6,
+      "counts": [
+        48,
+        32,
+        32
+      ]
+    }
+  },
+  "viability_assessment": {
+    "provisional_radius_if_all_polynomial_delta_le_1e-6": [
+      48,
+      3601
+    ],
+    "layer26_provisional_radius": 763,
+    "layer27_provisional_radius": 3601,
+    "balanced_direct_depth_cap": 18,
+    "rational_depth_if_prescribed_base_candidates_pass": [
+      92,
+      196
+    ],
+    "actual_analytic_targets_tested_for_candidate2": false,
+    "expected_issue": "Wide public domains may force rational fallbacks and add many levels; base degree12 worked at one narrower candidate1 site but does not prove these domains.",
+    "full_model_crypto_feasibility": "Not implied; the unchanged whole graph already costs roughly10k abstractlevels and norm domains remain calibration-scoped. No new HE execution/refresh schedule is supplied."
+  },
+  "model_evaluated": false,
+  "coefficient_selection": false,
+  "original_published_regression": {
+    "input_manifest_path": "/home/jianming_gatech/CROSS/cadathlon/validation/qwen_native_workload_audit_20261103/full-v1/tokenized_fixtures.json",
+    "input_manifest_sha256": "5caad37526dfda5a379f029ddfc75fb10879b3313d3533ec4cbf60d4192ef359",
+    "counts": [
+      48,
+      32,
+      32
+    ],
+    "required_after_fresh_validation": true,
+    "untouched_held_out_claim": false,
+    "same_frozen_candidate_no_intervening_fitting": true
+  }
+}

@@ -1,0 +1,13 @@
+# Stage4 server preparation
+
+The final isolated candidate passed **113 mocked tests** and authenticated the completed stage1, stage2 and stage3 public evidence. Its **219-file proof** contains the 217 candidate files and two external verification drivers; all before/after/archive bytes matched. The public gate validates the completed producer reports, exact source inventories, worker linkage, terminal cleanup flags, retained directory identities, canonical upload batch and all eight ordered transport manifests. It does not open ciphertext, key, model or private-input payloads. Those payload checks belong to the separately authorized actual worker.
+
+A separate fresh-process installed-module probe passed all **25 forbidden-entrypoint denials and restorations**, retained the allowed `load_server` and `server_encrypted_compute` entrypoints, and bound 69 loaded local module identities. Its 218-file proof contains the same 217 candidate files and its external driver. It imported actual runtime code but constructed no context and executed no codec, model or encrypted handler. The two key-generator import spellings were distinct and both guarded. Python entrypoint and path checks are regression guards, not an operating-system sandbox.
+
+The candidate preserves the full joined model implementation. Only the adopted context-loader and engine cleanup successors differ from the original 198-file assembly; the assembly itself remains unchanged. The outer cleanup/terminal helpers preserve cancellation, attempt all releases and invalidate a previously published success if the cleanup scope fails. Both intentional program exits occur outside their termination scopes. Worker/collector failures retain external key, model and I/O workspaces; the unchanged handler may roll back its own incomplete response.
+
+`historical-scaffold-v1` preserves the earlier 61-test/214-file mocked preparation before the final cleanup overlays and completed-stage3 gate. `history-public-gate-v1` preserves the first successful public-gate check before the final explicit phase/type guards. Neither is relabeled as the final candidate.
+
+The parent independently verified all 219 final-preflight and 218 installed-probe source/archive identities and took ownership of the actual stage4 launch. That actual run is **separate and pending** in this archive. No encrypted accuracy, client decryption, full-workload completion or model-readiness claim follows from this preparation.
+
+Run `python verify_archive.py` to verify the portable archived evidence. No private inputs, key/model/ciphertext payloads, secret-key descriptors or decoded outputs are included. No shared runtime or release was changed.

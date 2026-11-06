@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="6" time="0.050" timestamp="2026-11-03T17:21:50.160959+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_cleanup_negatives" name="test_attempt_write_body_keeps_primary_after_close_error[KeyboardInterrupt]" time="0.003" /><testcase classname="test_cleanup_negatives" name="test_attempt_write_body_keeps_primary_after_close_error[SystemExit]" time="0.002" /><testcase classname="test_cleanup_negatives" name="test_exact_entrypoint_file_directory_shape[False-ranked_worker.py]" time="0.004" /><testcase classname="test_cleanup_negatives" name="test_exact_entrypoint_file_directory_shape[False-ranked_collect.py]" time="0.004"><failure message="assert 1 == 0&#10; +  where 1 = SystemExit(1).code&#10; +    where SystemExit(1) = &lt;ExceptionInfo SystemExit(1) tblen=2&gt;.value">tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-425/test_exact_entrypoint_file_dir1')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x798734132f50&gt;
+source = 'ranked_collect.py', restore_failure = False
+
+    @pytest.mark.parametrize('source',['ranked_worker.py','ranked_collect.py'])
+    @pytest.mark.parametrize('restore_failure',[False,True])
+    def test_exact_entrypoint_file_directory_shape(tmp_path,monkeypatch,source,restore_failure):
+        from contextlib import nullcontext
+        from types import ModuleType
+        tree=ast.parse((HERE/source).read_bytes());main=next(n for n in tree.body if isinstance(n,ast.If) and ast.unparse(n.test)=="__name__ == '__main__'")
+        report=tmp_path/'report.json';argument=tmp_path if source=='ranked_collect.py' else report
+        def run(**kwargs):
+            assert kwargs['output']==argument
+            data=dict(passed=True,execute=True,operation_complete=True,terminal_scope_completed=True)
+            report.write_text(json.dumps(data));return data
+        @contextmanager
+        def scope():
+            yield
+            if restore_failure:raise RuntimeError('termination restore failed')
+        class Parser:
+            def add_argument(self,*a,**kw):pass
+            def parse_args(self):return NS(output=argument)
+        def write(path,value):
+            path.write_text(json.dumps(value))
+        gate=NS(read=lambda p,n:p.read_bytes(),digest=lambda raw:'public_digest')
+        module=ModuleType('ranked_terminal');module.__dict__.update(Path=Path,json=json,key_gate=gate,termination_signals=scope,cleanup_signals=nullcontext)
+        finish=next(n for n in ast.parse((HERE/'ranked_terminal.py').read_bytes()).body if isinstance(n,ast.FunctionDef) and n.name=='finish')
+        exec(compile(ast.Module(body=[finish],type_ignores=[]),'ranked_terminal.py','exec'),module.__dict__)
+        monkeypatch.setitem(sys.modules,'ranked_terminal',module)
+        namespace=dict(__name__='__main__',Path=Path,argparse=NS(ArgumentParser=Parser),
+            termination_signals=scope,run=run,json=json,write=write,key_gate=gate)
+        with pytest.raises(SystemExit) as got:exec(compile(ast.Module(body=[main],type_ignores=[]),source,'exec'),namespace)
+&gt;       assert got.value.code==(1 if restore_failure else 0)
+E       assert 1 == 0
+E        +  where 1 = SystemExit(1).code
+E        +    where SystemExit(1) = &lt;ExceptionInfo SystemExit(1) tblen=2&gt;.value
+
+test_cleanup_negatives.py:57: AssertionError</failure></testcase><testcase classname="test_cleanup_negatives" name="test_exact_entrypoint_file_directory_shape[True-ranked_worker.py]" time="0.003" /><testcase classname="test_cleanup_negatives" name="test_exact_entrypoint_file_directory_shape[True-ranked_collect.py]" time="0.004"><failure message="assert True is not True">tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-425/test_exact_entrypoint_file_dir3')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x79873415ae40&gt;
+source = 'ranked_collect.py', restore_failure = True
+
+    @pytest.mark.parametrize('source',['ranked_worker.py','ranked_collect.py'])
+    @pytest.mark.parametrize('restore_failure',[False,True])
+    def test_exact_entrypoint_file_directory_shape(tmp_path,monkeypatch,source,restore_failure):
+        from contextlib import nullcontext
+        from types import ModuleType
+        tree=ast.parse((HERE/source).read_bytes());main=next(n for n in tree.body if isinstance(n,ast.If) and ast.unparse(n.test)=="__name__ == '__main__'")
+        report=tmp_path/'report.json';argument=tmp_path if source=='ranked_collect.py' else report
+        def run(**kwargs):
+            assert kwargs['output']==argument
+            data=dict(passed=True,execute=True,operation_complete=True,terminal_scope_completed=True)
+            report.write_text(json.dumps(data));return data
+        @contextmanager
+        def scope():
+            yield
+            if restore_failure:raise RuntimeError('termination restore failed')
+        class Parser:
+            def add_argument(self,*a,**kw):pass
+            def parse_args(self):return NS(output=argument)
+        def write(path,value):
+            path.write_text(json.dumps(value))
+        gate=NS(read=lambda p,n:p.read_bytes(),digest=lambda raw:'public_digest')
+        module=ModuleType('ranked_terminal');module.__dict__.update(Path=Path,json=json,key_gate=gate,termination_signals=scope,cleanup_signals=nullcontext)
+        finish=next(n for n in ast.parse((HERE/'ranked_terminal.py').read_bytes()).body if isinstance(n,ast.FunctionDef) and n.name=='finish')
+        exec(compile(ast.Module(body=[finish],type_ignores=[]),'ranked_terminal.py','exec'),module.__dict__)
+        monkeypatch.setitem(sys.modules,'ranked_terminal',module)
+        namespace=dict(__name__='__main__',Path=Path,argparse=NS(ArgumentParser=Parser),
+            termination_signals=scope,run=run,json=json,write=write,key_gate=gate)
+        with pytest.raises(SystemExit) as got:exec(compile(ast.Module(body=[main],type_ignores=[]),source,'exec'),namespace)
+        assert got.value.code==(1 if restore_failure else 0)
+&gt;       assert json.loads(report.read_bytes())['passed'] is (not restore_failure)
+E       assert True is not True
+
+test_cleanup_negatives.py:58: AssertionError</failure></testcase></testsuite></testsuites>

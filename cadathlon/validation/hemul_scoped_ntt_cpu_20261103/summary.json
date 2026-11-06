@@ -1,0 +1,95 @@
+{
+  "scope": "Isolated optional HEMul NTT control-construction candidate; CPU correctness/lifetime only, unapplied.",
+  "passed": true,
+  "base_patch": "../combined_runtime_candidate_cpu_20261103/combined_runtime.patch",
+  "base_patch_sha256": "a3afee5fd8d230ccb20442b0d016887312782f9ee8cc7fd421d439e6119a735a",
+  "base_patch_unchanged": true,
+  "incremental_patch_sha256": "1cc3d18be81ede102522c6f722b9866a3506dd8bfa238933c5be7e356ae2fe51",
+  "incremental_patch_files": [
+    "jaxite_word/hemul.py",
+    "jaxite_word/he_ops.py",
+    "jaxite_word/he_params.py",
+    "cadathlon/common/encrypted_ntt.py",
+    "cadathlon/tests/test_scoped_mul_ntt.py"
+  ],
+  "applies_after_combined_patch": true,
+  "apply_check_passed": true,
+  "final_regressions": {
+    "passed": 123,
+    "subtests_passed": 6,
+    "skipped": 1,
+    "skip": "requires second logical CPU device; separately passed"
+  },
+  "second_device_tests_passed": 1,
+  "fixture_planning_tests_passed": 24,
+  "secure_scope": {
+    "ring_degree": 8192,
+    "q_count": 6,
+    "p_count": 2,
+    "dnum": 3,
+    "actual_log2_qp": 184.67680580287663,
+    "security_gate_bits": 128,
+    "batch": 2,
+    "levels": [
+      2,
+      1
+    ],
+    "max_abs_error": 5.041982788916988e-08,
+    "payload_metadata_exact": true,
+    "paths": [
+      "core tensor-only",
+      "core relinearization",
+      "core multiply plus composite post-rescale",
+      "CompiledTensorOnly",
+      "CompiledRelinearization",
+      "CompiledTensorProduct",
+      "Bootstrap._he_op_mul with installed compiled primitives"
+    ],
+    "owner_and_controls_collected_with_executable_retained": true
+  },
+  "evidence": {
+    "initial_proof": {
+      "source_count": 137,
+      "exact_source_archive_verified": true,
+      "passed": true,
+      "elapsed_s": 43.34342311599903
+    },
+    "mistyped_test_path": {
+      "source_count": 137,
+      "exact_source_archive_verified": true,
+      "passed": false,
+      "elapsed_s": 0.16089789899706375
+    },
+    "regressions": {
+      "source_count": 137,
+      "exact_source_archive_verified": true,
+      "passed": true,
+      "elapsed_s": 159.855084351002
+    },
+    "second_device": {
+      "source_count": 137,
+      "exact_source_archive_verified": true,
+      "passed": true,
+      "elapsed_s": 1.0846446759969695
+    },
+    "graph_fixture_followup": {
+      "source_count": 187,
+      "exact_source_archive_verified": true,
+      "passed": true,
+      "elapsed_s": 12.434236711000267
+    }
+  },
+  "versions": {
+    "jax": "0.12.0.1",
+    "jaxlib": "0.12.0.1",
+    "numpy": "2.5.4",
+    "pytest": "9.2.0"
+  },
+  "limitations": [
+    "No live runtime integration or TPU measurement.",
+    "No complete refresh or transformer encrypted execution in this proof.",
+    "Nested rescale controls and independent CompiledTensorOnly path intentionally unchanged.",
+    "The twelve packed/bounded fixture checks use NumPy and ideal refresh, not encrypted passes.",
+    "No new generated keys, ciphertext payloads, or private inputs are archived."
+  ]
+}

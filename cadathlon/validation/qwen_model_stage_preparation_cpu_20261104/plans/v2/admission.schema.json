@@ -1,0 +1,660 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "expected_pins is a caller-supplied trusted argument, never read from untrusted evidence. This schema documents separately bounded byte arguments; an aggregate serialized bundle is not an authority. Cross-document digests/identities and canonical forms must be checked by the future pure implementation. Failed/incomplete reports are preserved but rejected by this positive admission schema. The pure gate never opens an archive: independently trusted root review verifies bounded archive bytes/members; the pure gate binds its pinned digest, source map and receipt flag.",
+  "properties": {
+    "expected_pins": {
+      "additionalProperties": false,
+      "properties": {
+        "aggregate_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "catalog_sha256": {
+          "const": "6faa4630169f055b853a62a64088952e2ead48dc2ace5b61b6aa438c0106a0c0"
+        },
+        "consumer_source_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "execution_grant_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "model_id": {
+          "const": "ee3daf8b07141134466d02a6e1c141365ac4e0f0117d62f887c416a050b04bfb"
+        },
+        "producer_source_archive_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "producer_source_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "producer_source_map": {
+          "additionalProperties": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "maxProperties": 512,
+          "minProperties": 1,
+          "propertyNames": {
+            "maxLength": 512,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "root_review_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "schema": {
+          "const": "qwen-model-expected-pins-v1"
+        },
+        "validation_outer_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "validation_report_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema",
+        "model_id",
+        "aggregate_manifest_sha256",
+        "catalog_sha256",
+        "producer_source_manifest_sha256",
+        "producer_source_archive_sha256",
+        "producer_source_map",
+        "execution_grant_sha256",
+        "validation_report_sha256",
+        "validation_outer_sha256",
+        "root_review_sha256",
+        "consumer_source_manifest_sha256"
+      ],
+      "type": "object"
+    },
+    "root_review": {
+      "additionalProperties": false,
+      "properties": {
+        "actual_server_execution_authorized": {
+          "const": false
+        },
+        "aggregate_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "all_required_links_verified": {
+          "const": true
+        },
+        "catalog_sha256": {
+          "const": "6faa4630169f055b853a62a64088952e2ead48dc2ace5b61b6aa438c0106a0c0"
+        },
+        "current_store_binding_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "execution_grant_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "model_id": {
+          "const": "ee3daf8b07141134466d02a6e1c141365ac4e0f0117d62f887c416a050b04bfb"
+        },
+        "passed": {
+          "const": true
+        },
+        "schema": {
+          "const": "qwen-model-stage-root-admission-v1"
+        },
+        "source_archive_members_verified": {
+          "const": true
+        },
+        "source_archive_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "source_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "validation_outer_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "validation_report_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema",
+        "passed",
+        "model_id",
+        "aggregate_manifest_sha256",
+        "catalog_sha256",
+        "validation_report_sha256",
+        "validation_outer_sha256",
+        "source_manifest_sha256",
+        "source_archive_sha256",
+        "execution_grant_sha256",
+        "current_store_binding_sha256",
+        "all_required_links_verified",
+        "source_archive_members_verified",
+        "actual_server_execution_authorized"
+      ],
+      "type": "object"
+    },
+    "validation_outer": {
+      "additionalProperties": false,
+      "properties": {
+        "aggregate_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "execution_grant_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "exit_code": {
+          "const": 0
+        },
+        "model_id": {
+          "const": "ee3daf8b07141134466d02a6e1c141365ac4e0f0117d62f887c416a050b04bfb"
+        },
+        "normal_return": {
+          "const": true
+        },
+        "pgid": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "pid": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "process_group_absent": {
+          "const": true
+        },
+        "reaped": {
+          "const": true
+        },
+        "report_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "schema": {
+          "const": "qwen-model-store-validation-outer-v1"
+        },
+        "source_archive_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "source_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema",
+        "report_sha256",
+        "aggregate_manifest_sha256",
+        "model_id",
+        "source_manifest_sha256",
+        "source_archive_sha256",
+        "execution_grant_sha256",
+        "pid",
+        "pgid",
+        "exit_code",
+        "normal_return",
+        "reaped",
+        "process_group_absent"
+      ],
+      "type": "object"
+    },
+    "validation_report": {
+      "additionalProperties": false,
+      "properties": {
+        "aggregate_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "audit_denials": {
+          "const": []
+        },
+        "catalog_sha256": {
+          "const": "6faa4630169f055b853a62a64088952e2ead48dc2ace5b61b6aa438c0106a0c0"
+        },
+        "checks": {
+          "additionalProperties": false,
+          "properties": {
+            "all_gamma_members_headers_hashes_finite": {
+              "const": true
+            },
+            "all_matrix_headers_extents_hashes_finite": {
+              "const": true
+            },
+            "borrowed_stores_retained": {
+              "const": true
+            },
+            "cleanup_completed": {
+              "const": true
+            },
+            "complete_catalog_rederived": {
+              "const": true
+            },
+            "original_held_identity_unchanged": {
+              "const": true
+            },
+            "public_provenance_authenticated": {
+              "const": true
+            },
+            "readback_completed": {
+              "const": true
+            },
+            "signals_restored": {
+              "const": true
+            },
+            "source_postcheck_completed": {
+              "const": true
+            }
+          },
+          "required": [
+            "public_provenance_authenticated",
+            "complete_catalog_rederived",
+            "all_matrix_headers_extents_hashes_finite",
+            "all_gamma_members_headers_hashes_finite",
+            "original_held_identity_unchanged",
+            "readback_completed",
+            "source_postcheck_completed",
+            "cleanup_completed",
+            "signals_restored",
+            "borrowed_stores_retained"
+          ],
+          "type": "object"
+        },
+        "complete": {
+          "const": true
+        },
+        "counts": {
+          "additionalProperties": false,
+          "properties": {
+            "gamma_raw_bytes": {
+              "const": 524288
+            },
+            "gamma_vectors": {
+              "const": 113
+            },
+            "logical_matrices": {
+              "const": 198
+            },
+            "physical_matrices": {
+              "const": 197
+            },
+            "physical_matrix_raw_bytes": {
+              "const": 4767875072
+            }
+          },
+          "required": [
+            "logical_matrices",
+            "physical_matrices",
+            "gamma_vectors",
+            "physical_matrix_raw_bytes",
+            "gamma_raw_bytes"
+          ],
+          "type": "object"
+        },
+        "error_type": {
+          "type": "null"
+        },
+        "execution_grant_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "mode": {
+          "const": "reuse_existing_exports"
+        },
+        "model_id": {
+          "const": "ee3daf8b07141134466d02a6e1c141365ac4e0f0117d62f887c416a050b04bfb"
+        },
+        "passed": {
+          "const": true
+        },
+        "process": {
+          "additionalProperties": false,
+          "properties": {
+            "pgid": {
+              "minimum": 1,
+              "type": "integer"
+            },
+            "pid": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "pid",
+            "pgid"
+          ],
+          "type": "object"
+        },
+        "schema": {
+          "const": "qwen-model-store-validation-v1"
+        },
+        "scope": {
+          "additionalProperties": false,
+          "properties": {
+            "backend_context_constructed": {
+              "const": false
+            },
+            "ciphertexts_read": {
+              "const": false
+            },
+            "coefficient_selection": {
+              "const": false
+            },
+            "keys_read": {
+              "const": false
+            },
+            "model_forward": {
+              "const": false
+            },
+            "new_export_performed": {
+              "const": false
+            },
+            "parameter_body_reads_performed": {
+              "const": true
+            },
+            "scientific_calibration_pass_claimed": {
+              "const": false
+            },
+            "token_inputs_read": {
+              "const": false
+            }
+          },
+          "required": [
+            "parameter_body_reads_performed",
+            "new_export_performed",
+            "model_forward",
+            "backend_context_constructed",
+            "keys_read",
+            "ciphertexts_read",
+            "token_inputs_read",
+            "coefficient_selection",
+            "scientific_calibration_pass_claimed"
+          ],
+          "type": "object"
+        },
+        "source_archive_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "source_hashes_after": {
+          "additionalProperties": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "maxProperties": 512,
+          "minProperties": 1,
+          "propertyNames": {
+            "maxLength": 512,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "source_hashes_before": {
+          "additionalProperties": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "maxProperties": 512,
+          "minProperties": 1,
+          "propertyNames": {
+            "maxLength": 512,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "source_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "stores": {
+          "additionalProperties": false,
+          "properties": {
+            "files": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "family": {
+                    "enum": [
+                      "qkv",
+                      "decoder",
+                      "gamma"
+                    ]
+                  },
+                  "file_sha256": {
+                    "pattern": "^[0-9a-f]{64}$",
+                    "type": "string"
+                  },
+                  "name": {
+                    "maxLength": 255,
+                    "minLength": 1,
+                    "pattern": "^[^/\\\\\u0000]+$",
+                    "type": "string"
+                  },
+                  "raw_sha256": {
+                    "anyOf": [
+                      {
+                        "pattern": "^[0-9a-f]{64}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "state": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "ctime_ns": {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "device": {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "inode": {
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      "mode": {
+                        "maximum": 4095,
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "mtime_ns": {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "size": {
+                        "minimum": 1,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "device",
+                      "inode",
+                      "size",
+                      "mtime_ns",
+                      "ctime_ns",
+                      "mode"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "family",
+                  "name",
+                  "state",
+                  "file_sha256",
+                  "raw_sha256"
+                ],
+                "type": "object"
+              },
+              "maxItems": 198,
+              "minItems": 198,
+              "type": "array"
+            },
+            "roots": {
+              "additionalProperties": false,
+              "properties": {
+                "decoder": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "device": {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "inode": {
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "mode": {
+                      "maximum": 4095,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "path": {
+                      "maxLength": 4096,
+                      "minLength": 2,
+                      "pattern": "^/",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "path",
+                    "device",
+                    "inode",
+                    "mode"
+                  ],
+                  "type": "object"
+                },
+                "gamma": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "device": {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "inode": {
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "mode": {
+                      "maximum": 4095,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "path": {
+                      "maxLength": 4096,
+                      "minLength": 2,
+                      "pattern": "^/",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "path",
+                    "device",
+                    "inode",
+                    "mode"
+                  ],
+                  "type": "object"
+                },
+                "qkv": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "device": {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "inode": {
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "mode": {
+                      "maximum": 4095,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "path": {
+                      "maxLength": 4096,
+                      "minLength": 2,
+                      "pattern": "^/",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "path",
+                    "device",
+                    "inode",
+                    "mode"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "qkv",
+                "decoder",
+                "gamma"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "roots",
+            "files"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "mode",
+        "passed",
+        "complete",
+        "error_type",
+        "model_id",
+        "aggregate_manifest_sha256",
+        "catalog_sha256",
+        "execution_grant_sha256",
+        "source_manifest_sha256",
+        "source_archive_sha256",
+        "source_hashes_before",
+        "source_hashes_after",
+        "process",
+        "stores",
+        "counts",
+        "checks",
+        "scope",
+        "audit_denials"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "expected_pins",
+    "validation_report",
+    "validation_outer",
+    "root_review"
+  ],
+  "title": "Proposed positive Qwen model-stage admission contract",
+  "type": "object"
+}

@@ -1,0 +1,34 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+______________ test_source_snapshot_failure_does_not_leave_active ______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x766effc4f100>
+
+    def test_source_snapshot_failure_does_not_leave_active(monkeypatch):
+        owner,ops,source=setup();primary=MemoryError('source snapshot')
+        monkeypatch.setattr(owner,'_fingerprint',lambda v:(_ for _ in ()).throw(primary))
+        with pytest.raises(MemoryError)as seen:owner.evaluate_tile(source)
+>       assert seen.value is primary and owner._active is False and not ops.calls
+E       AssertionError: assert (MemoryError('source snapshot') is MemoryError('source snapshot') and True is False)
+E        +  where MemoryError('source snapshot') = <ExceptionInfo MemoryError('source snapshot') tblen=5>.value
+E        +  and   True = <encrypted_bert_normalization_gain4.BertNormalizationRoundGain4 object at 0x766effae0ec0>._active
+
+test_gain4_failure_edges.py:8: AssertionError
+_______________ test_later_entered_failure_clears_previous_plan ________________
+
+    def test_later_entered_failure_clears_previous_plan():
+        fail=[False]
+        def progress(*args):
+            if fail[0]:raise KeyboardInterrupt('later invocation')
+        owner,ops,source=setup(progress=progress);owner.evaluate_tile(source)
+        assert owner.last_plan is not None;fail[0]=True
+        with pytest.raises(KeyboardInterrupt):owner.evaluate_tile(source)
+>       assert owner.last_plan is None and not owner._active
+E       AssertionError: assert ({'key_count': 128, 'gain': 4, 'updates': 13, 'input_scale': 1.1467305003699405e+18, ...} is None)
+E        +  where {'key_count': 128, 'gain': 4, 'updates': 13, 'input_scale': 1.1467305003699405e+18, ...} = <encrypted_bert_normalization_gain4.BertNormalizationRoundGain4 object at 0x766efd7779d0>.last_plan
+
+test_gain4_failure_edges.py:17: AssertionError
+=========================== short test summary info ============================
+FAILED test_gain4_failure_edges.py::test_source_snapshot_failure_does_not_leave_active
+FAILED test_gain4_failure_edges.py::test_later_entered_failure_clears_previous_plan
+2 failed in 0.37s

@@ -1,0 +1,42 @@
+"""Independent public boundary/certificate regressions; no model/HE inputs."""
+from decimal import Decimal,localcontext
+from fractions import Fraction as F
+import json,math
+import numpy as np
+import pytest
+import assess,numeric
+
+@pytest.mark.parametrize('original',([1e-4,.01],[1e-6,1.],[1e-7,2.],[math.nextafter(.03,0),math.nextafter(7.,math.inf)]))
+def test_same_factor_exact_outward_and_epsilon_floor(original):
+    low,high=assess.domain(original,1e-6)
+    assert F(low)<=max(F(1e-6),F(original[0])/4) and F(high)>=4*F(original[1])
+    assert low>=1e-6 and high>=original[1]
+    assert low<=max(original[0],1e-6)
+
+@pytest.mark.parametrize('factor',(True,4.,2,8))
+def test_factor_aliases_or_site_specific_alternatives_rejected(factor):
+    with pytest.raises(ValueError):assess.domain([.1,1.],1e-6,factor)
+
+@pytest.mark.parametrize('domain',([1e-6,.01],[.0001,.007],[.1,1000.],[1.,1e6]))
+def test_actual_rounded_first_affine_certificate_and_independent_decimal_endpoints(domain):
+    rule=numeric.rsqrt_contract(domain);assert assess.check_certificate(rule)['verified']
+    with localcontext() as ctx:
+        ctx.prec=90
+        for x in (domain[0],math.sqrt(domain[0]*domain[1]),domain[1]):
+            value=Decimal.from_float(x);y=value*Decimal.from_float(rule['rounded_first_weight'])+Decimal.from_float(rule['rounded_first_bias'])
+            for _ in range(rule['iterations']-1):y=y*(Decimal('1.5')-Decimal('.5')*value*y*y)
+            error=abs(y*value.sqrt()-1)
+            assert error<=Decimal(rule['final_relative_error_bound'])
+    assert rule['depth']==4*rule['iterations']-3
+
+@pytest.mark.parametrize('low',(1e-6,.1,3.,100.))
+def test_inverse_magnitude_bound_is_outward(low):
+    delta=F(1,10**6);bound=assess.inverse_bound(low,delta)
+    assert F(bound)**2*F(low)>=(1+delta)**2
+
+
+def test_original_calibration_only_inputs_and_same_all113_policy():
+    p=json.loads((assess.ROOT/'protocol.json').read_text());m=json.loads((assess.ROOT/'inputs/candidate2_manifest.json').read_text())
+    assert p['policy']['factor']==4 and len([n for n in m['nonlinear'] if n.endswith('.inverse_sqrt')])==113
+    assert all('validation' not in n and 'fresh' not in n for n in p['source_input_sha256'])
+    assert p['policy']['target_uniform_relative_error']==1e-6

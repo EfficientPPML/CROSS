@@ -1,0 +1,27 @@
+--- held54-v1/tests/support.py
++++ held54-v2/tests/support.py
+@@ -83,15 +83,17 @@
+         try:
+             observed=os.getpgid(proc.pid);assert observed==pgid
+             code=proc.wait()
+-        except BaseException:
+-            try:os.killpg(pgid,signal.SIGKILL)
+-            except ProcessLookupError:pass
+-            proc.wait();raise
+-        finally:
+-            if proc.returncode is None:
++        except BaseException as primary:
++            try:
+                 try:os.killpg(pgid,signal.SIGKILL)
+                 except ProcessLookupError:pass
+-                proc.wait()
++                except BaseException as cleanup:
++                    if cleanup is not primary:primary.add_note('owned child group cleanup: '+repr(cleanup))
++            finally:
++                try:proc.wait()
++                except BaseException as cleanup:
++                    if cleanup is not primary:primary.add_note('owned child direct wait: '+repr(cleanup))
++            raise
+     try:os.killpg(pgid,0)
+     except ProcessLookupError:absent=True
+     else:absent=False

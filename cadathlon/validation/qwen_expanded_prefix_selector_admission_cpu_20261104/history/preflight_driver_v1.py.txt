@@ -1,0 +1,105 @@
+"""Source-bound synthetic selector proof; no actual observer/result reads."""
+from pathlib import Path
+import hashlib,io,json,os,signal,subprocess,sys,tarfile,time,xml.etree.ElementTree as ET
+ROOT=Path('/tmp/qwen-expanded-prefix-selector-admission-v2-20261104')
+OUT=Path('/tmp/qwen-expanded-prefix-selector-admission-preflight-v1-20261104')
+PYTHON='/tmp/cross-pretrained-validation-env/bin/python'
+def sha(b):return hashlib.sha256(b).hexdigest()
+def write(p,v):p.write_text(json.dumps(v,indent=2,sort_keys=True,allow_nan=False)+'\n')
+def group_absent(pid):
+ try:os.killpg(pid,0)
+ except ProcessLookupError:return True
+ return False
+
+def main():
+ OUT.mkdir(exist_ok=False);(OUT/'temporary').mkdir();execution=OUT/'execution_source';execution.mkdir();started=time.monotonic()
+ names=sorted(f.relative_to(ROOT).as_posix()for f in ROOT.rglob('*')if f.is_file());assert len(names)==36
+ raw={n:(ROOT/n).read_bytes()for n in names};before={n:sha(b)for n,b in raw.items()}
+ external_manifest=Path('/tmp/qwen-expanded-prefix-selector-admission-v2-sources-20261104.json').read_bytes();assert sha(external_manifest)=='f3d0bf68c503c2baba2cc34b7806c152efae153bbc180a4ebb85aaeae2d833f0'and json.loads(external_manifest)==before
+ parent=json.loads(raw['parent_sources.json']);assert len(parent)==18 and all(before[n]==h for n,h in parent.items())
+ proof=dict(raw);proof['external_preflight.py']=Path(__file__).read_bytes()
+ write(OUT/'source_manifest.json',before)
+ with tarfile.open(OUT/'sources.tar.gz','w:gz')as tar:
+  for n,b in sorted(proof.items()):m=tarfile.TarInfo(n);m.size=len(b);m.mode=0o600;tar.addfile(m,io.BytesIO(b))
+ for n,b in raw.items():p=execution/n;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(b)
+ report=dict(passed=False,complete=False,pid=os.getpid(),source_hashes_before=before,source_archive_sha256=sha((OUT/'sources.tar.gz').read_bytes()),proof_source_count=37,candidate_source_count=36,actual_observer_admission=False,actual_coefficient_selection=False,model_or_HE_executed=False,synthetic_selection_exercised=True,synthetic_actual_path_exercised=True,actual_observer_evidence_read=False,root_grant_issued=False)
+ write(OUT/'report.json',report);child=None;primary=None
+ wrapper=r'''
+from pathlib import Path
+import sys,os,json,hashlib
+root=Path(sys.argv[1]).resolve();out=Path(sys.argv[2]).resolve();allowed=set(json.loads((out/'source_manifest.json').read_bytes()));denials=[]
+forbidden=('torch','transformers','tokenizers','safetensors','jax','jaxlib','jaxite_word','tensorflow','flax','torch_xla');children=[]
+def deny(kind):
+ denials.append(kind);raise PermissionError('Forbidden access in synthetic selector preflight')
+def audit(event,args):
+ if event=='import'and any(args[0]==n or args[0].startswith(n+'.')for n in forbidden):deny('model/backend import')
+ if event=='subprocess.Popen':
+  executable,argv,cwd,env=args
+  if (Path(executable).resolve()!=Path(sys.executable).resolve()or type(argv)not in(list,tuple)or len(argv)<4 or list(argv[1:3])!=['-I','-B'] or not Path(argv[3]).resolve().is_relative_to(out)):
+   deny('unscoped subprocess')
+  children.append(dict(executable=str(Path(executable).resolve()),script=str(Path(argv[3]).resolve().relative_to(out))))
+ if event in('os.fork','os.forkpty','os.posix_spawn','os.posix_spawnp','os.system')or event.startswith(('socket.','os.exec','os.spawn')):deny('process/network')
+ if event=='open'and isinstance(args[0],(str,bytes,os.PathLike)):
+  path=Path(os.fsdecode(args[0])).resolve();mode=args[1];flags=args[2]
+  writing=(isinstance(mode,str)and any(x in mode for x in('w','a','x','+')))or(isinstance(flags,int)and flags&(os.O_WRONLY|os.O_RDWR|os.O_CREAT|os.O_TRUNC))
+  if writing:
+   if path.is_relative_to(root)or(not path.is_relative_to(out)and str(path)!='/dev/null'):deny('write outside owned evidence')
+  elif path.is_relative_to(root):
+   if path.relative_to(root).as_posix()not in allowed and not(path.suffix=='.pyc'and not path.exists()):deny('undeclared execution read')
+  elif path.is_relative_to(out):pass
+  elif any(path.is_relative_to(Path(x))for x in('/usr','/lib','/lib64',sys.prefix,sys.base_prefix)):pass
+  elif str(path)in('/dev/null','/dev/urandom','/etc/localtime')or path.is_relative_to(Path('/proc/self'))or str(path).startswith('/proc/'+str(os.getpid())+'/'):pass
+  else:deny('outside public execution/system reads')
+sys.addaudithook(audit);sys.path.insert(0,str(root))
+import pytest,numpy
+code=pytest.main(['-q','-p','no:cacheprovider',str(root/'test_selector.py'),str(root/'test_initial_proof.py'),str(root/'test_selection_process.py'),'--junitxml='+str(out/'tests.xml')])
+loaded={}
+for name,module in tuple(sys.modules.items()):
+ origin=getattr(module,'__file__',None)
+ if origin:
+  path=Path(origin).resolve()
+  if path.is_relative_to(root):loaded[name]={'path':path.relative_to(root).as_posix(),'sha256':hashlib.sha256(path.read_bytes()).hexdigest()}
+(out/'audit.json').write_text(json.dumps(dict(passed=not denials,denials=denials,loaded_local_modules=loaded,model_backend_modules=[n for n in sys.modules if any(n==x or n.startswith(x+'.')for x in forbidden)],numpy_version=numpy.__version__,python=sys.version,synthetic_child_launches=children,scope='Strict parent read/import audit; only exact isolated Python scripts under owned synthetic evidence may spawn. Synthetic actual-entry children carry own bounded audit. No OS sandbox claim'),sort_keys=True,indent=2)+'\n')
+raise SystemExit(code)
+'''
+ try:
+  env={'PATH':'/usr/bin:/bin','LANG':'C.UTF-8','TMPDIR':str(OUT/'temporary'),'PYTHONDONTWRITEBYTECODE':'1','PYTEST_DISABLE_PLUGIN_AUTOLOAD':'1','OPENBLAS_NUM_THREADS':'1','OMP_NUM_THREADS':'1','MKL_NUM_THREADS':'1'}
+  with(OUT/'tests.log').open('wb')as log:
+   child=subprocess.Popen([PYTHON,'-I','-B','-c',wrapper,str(execution),str(OUT)],cwd=execution,stdout=log,stderr=subprocess.STDOUT,env=env,start_new_session=True)
+   report['child_pid']=child.pid;write(OUT/'report.json',report);code=child.wait()
+  report.update(child_returncode=code,child_reaped=True,child_group_absent=group_absent(child.pid))
+  cases=ET.parse(OUT/'tests.xml').findall('.//testcase');audit=json.loads((OUT/'audit.json').read_bytes())
+  report.update(tests=len(cases),xml_bad=sum(c.find(x)is not None for c in cases for x in('failure','error','skipped')),audit=audit)
+  report['passed']=code==0 and len(cases)==150 and report['xml_bad']==0 and audit['passed']is True and not audit['model_backend_modules']and report['child_group_absent']
+  assert all(before[x['path']]==x['sha256']for x in audit['loaded_local_modules'].values())
+  report['complete']=True
+ except BaseException as e:
+  primary=e;report.update(passed=False,error_type=type(e).__name__)
+ finally:
+  if child is not None and(child.poll()is None or not group_absent(child.pid)):
+   for sig in(signal.SIGTERM,signal.SIGKILL):
+    try:os.killpg(child.pid,sig)
+    except ProcessLookupError:pass
+    except BaseException as e:
+     if primary is None:primary=e
+     else:primary.add_note('child cleanup: '+type(e).__name__)
+    try:child.wait(timeout=5)
+    except subprocess.TimeoutExpired:continue
+    except BaseException as e:
+     if primary is None:primary=e
+     else:primary.add_note('child wait: '+type(e).__name__)
+    if group_absent(child.pid):break
+   report.update(child_returncode=child.returncode,child_reaped=child.returncode is not None,child_group_absent=group_absent(child.pid))
+  try:
+   after={n:sha((ROOT/n).read_bytes())for n in names};executed={n:sha((execution/n).read_bytes())for n in names}
+   assert {p.relative_to(execution).as_posix()for p in execution.rglob('*')if p.is_file()}==set(names)
+   with tarfile.open(OUT/'sources.tar.gz')as tar:archived={m.name:sha(tar.extractfile(m).read())for m in tar.getmembers()}
+   report.update(source_hashes_after=after,execution_hashes=executed,source_files_unchanged=before==after==executed,source_archive_verified=archived=={n:sha(b)for n,b in proof.items()},elapsed_s=time.monotonic()-started)
+   report['passed']=report['passed']and report['source_files_unchanged']and report['source_archive_verified']and primary is None
+   write(OUT/'report.json',report)
+  except BaseException as e:
+   if primary is not None:primary.add_note('final proof publication/check failed: '+type(e).__name__)
+   else:primary=e
+ if primary is not None:raise primary
+ print(json.dumps({k:report[k]for k in('passed','tests','candidate_source_count','proof_source_count','elapsed_s','source_archive_sha256')}));return 0 if report['passed']else 1
+if __name__=='__main__':raise SystemExit(main())

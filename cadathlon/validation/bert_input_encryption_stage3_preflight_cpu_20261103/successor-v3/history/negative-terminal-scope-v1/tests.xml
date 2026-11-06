@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="3" time="0.237" timestamp="2026-11-03T13:28:02.839356+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_worker" name="test_cleanup_scope_exit_cannot_leave_success_report_or_replace_primary[False-False]" time="0.004"><failure message="assert (True is False)">case = namespace(args={'key_evidence': PosixPath('/tmp/pytest-of-jianming_gatech/pytest-318/test_cleanup_scope_exit_cannot0/k...up_scope_exit_cannot0/io'), expected={'marker.py': 'd3caa55a216eb9c57995b6ff8576aab40d606ed71fee4a6e8d6c1e01a01e61af'})
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x70610d0263f0&gt;
+has_primary = False, cancel = False
+
+    @pytest.mark.parametrize('has_primary',[False,True])
+    @pytest.mark.parametrize('cancel',[False,True])
+    def test_cleanup_scope_exit_cannot_leave_success_report_or_replace_primary(case,monkeypatch,has_primary,cancel):
+        primary=ValueError('handler primary') if has_primary else None
+        restoration=KeyboardInterrupt('scope restoration') if cancel else OSError('scope restoration')
+        if primary is not None:case.failure['handler']=primary
+        @contextmanager
+        def broken_scope():
+            try:yield
+            finally:raise restoration
+        monkeypatch.setattr(worker,'cleanup_signals',broken_scope)
+        with pytest.raises(type(primary if primary is not None else restoration)) as caught:
+            worker.run(**case.args)
+        assert caught.value is (primary if primary is not None else restoration)
+        result=json.loads(case.output.read_text())
+&gt;       assert result['passed'] is False and result.get('error')
+E       assert (True is False)
+
+test_worker.py:149: AssertionError</failure></testcase><testcase classname="test_worker" name="test_cleanup_scope_exit_cannot_leave_success_report_or_replace_primary[False-True]" time="0.003"><failure message="OSError: scope restoration">@contextmanager
+    def broken_scope():
+&gt;       try:yield
+            ^^^^^
+
+test_worker.py:142: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+worker.py:116: in run
+    if primary is not None:raise primary
+                           ^^^^^^^^^^^^^
+worker.py:88: in run
+    result=file_stages.client_encode_encrypt_input(paths)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+paths = {'size': 0, 'batch_size': 1, 'model_id': 'model', 'model_revision': 'revision', ...}
+
+    def handler(paths):
+        events.append('encrypt');Path(paths['upload']).mkdir()
+        request=Path(paths['client_private'])/'requests.json';request.write_text('{}');request.chmod(0o600)
+&gt;       if failure.get('handler'):raise failure['handler']
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^
+E       ValueError: handler primary
+
+test_worker.py:32: ValueError
+
+During handling of the above exception, another exception occurred:
+
+case = namespace(args={'key_evidence': PosixPath('/tmp/pytest-of-jianming_gatech/pytest-318/test_cleanup_scope_exit_cannot1/k...up_scope_exit_cannot1/io'), expected={'marker.py': 'd3caa55a216eb9c57995b6ff8576aab40d606ed71fee4a6e8d6c1e01a01e61af'})
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x70610ce20c30&gt;
+has_primary = True, cancel = False
+
+    @pytest.mark.parametrize('has_primary',[False,True])
+    @pytest.mark.parametrize('cancel',[False,True])
+    def test_cleanup_scope_exit_cannot_leave_success_report_or_replace_primary(case,monkeypatch,has_primary,cancel):
+        primary=ValueError('handler primary') if has_primary else None
+        restoration=KeyboardInterrupt('scope restoration') if cancel else OSError('scope restoration')
+        if primary is not None:case.failure['handler']=primary
+        @contextmanager
+        def broken_scope():
+            try:yield
+            finally:raise restoration
+        monkeypatch.setattr(worker,'cleanup_signals',broken_scope)
+        with pytest.raises(type(primary if primary is not None else restoration)) as caught:
+&gt;           worker.run(**case.args)
+
+test_worker.py:146: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+worker.py:106: in run
+    with cleanup_signals():
+         ^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/contextlib.py:162: in __exit__
+    self.gen.throw(value)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    @contextmanager
+    def broken_scope():
+        try:yield
+&gt;       finally:raise restoration
+                ^^^^^^^^^^^^^^^^^
+E       OSError: scope restoration
+
+test_worker.py:143: OSError</failure></testcase><testcase classname="test_worker" name="test_cleanup_scope_exit_cannot_leave_success_report_or_replace_primary[True-False]" time="0.002"><failure message="assert (True is False)">case = namespace(args={'key_evidence': PosixPath('/tmp/pytest-of-jianming_gatech/pytest-318/test_cleanup_scope_exit_cannot2/k...up_scope_exit_cannot2/io'), expected={'marker.py': 'd3caa55a216eb9c57995b6ff8576aab40d606ed71fee4a6e8d6c1e01a01e61af'})
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x70610a911250&gt;
+has_primary = False, cancel = True
+
+    @pytest.mark.parametrize('has_primary',[False,True])
+    @pytest.mark.parametrize('cancel',[False,True])
+    def test_cleanup_scope_exit_cannot_leave_success_report_or_replace_primary(case,monkeypatch,has_primary,cancel):
+        primary=ValueError('handler primary') if has_primary else None
+        restoration=KeyboardInterrupt('scope restoration') if cancel else OSError('scope restoration')
+        if primary is not None:case.failure['handler']=primary
+        @contextmanager
+        def broken_scope():
+            try:yield
+            finally:raise restoration
+        monkeypatch.setattr(worker,'cleanup_signals',broken_scope)
+        with pytest.raises(type(primary if primary is not None else restoration)) as caught:
+            worker.run(**case.args)
+        assert caught.value is (primary if primary is not None else restoration)
+        result=json.loads(case.output.read_text())
+&gt;       assert result['passed'] is False and result.get('error')
+E       assert (True is False)
+
+test_worker.py:149: AssertionError</failure></testcase><testcase time="0.001" /></testsuite></testsuites>

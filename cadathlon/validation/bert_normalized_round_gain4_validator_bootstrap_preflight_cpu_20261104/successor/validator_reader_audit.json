@@ -1,0 +1,38 @@
+{
+  "schema": "gain4-selected-reader-path-audit-v1",
+  "source_sha256": {
+    "component_key_gate.py": "f60c2441b636a12156daa1884e2e057134a8f00177f518da1262f42bbb5b9aed",
+    "component_transport.py": "9807086006b2ead8355893dcad8fa9efbb8ccef2ea9fa6252ad41bcb075e53ff",
+    "component_protocol.py": "17dc37314a939da70c9055e8d3e75404e23628d8c9dd603fb6aceafb6f12819e",
+    "component_worker.py": "4786abaf3f5e649f46e90f15ad0636a65cabfe1b7eee4cd0534c3197d5ed00ee",
+    "runtime/stage/client_keys.py": "d6a2aac4e8ecf483e250a793a341cc6e451e2e9471ad8725e7699f720c7cfa76",
+    "runtime/stage/key_contexts.py": "056627ee3080f3d6ec7445ceb2f25171b49c7fc08eb256449a656b100f5853f0"
+  },
+  "paths": {
+    "public_prerequisites": [
+      "component_key_gate.read -> component_transport._stream/_CloseState",
+      "producer_gate -> unchanged component_protocol.terminal_gate -> component_key_gate.read",
+      "source guard bounded os.read with primary-preserving descriptor close"
+    ],
+    "ciphertext_before_private": [
+      "component_protocol.readback -> component_transport._validate_ciphertext(shared state) -> _read_regular(shared state)",
+      "component_transport._payload uses only in-memory BytesIO/ZipFile/NPZ readers; no owned filesystem descriptor handoff"
+    ],
+    "private_key_loader": [
+      "key_contexts.load_client -> _load -> _read_public/_read_private -> client_keys._read",
+      "key_contexts._load -> _map_array -> client_keys._stream(non-owning)/_sha_fd(borrowed) with shared cleanup state",
+      "key_contexts._load attempt-all outer directory/map cleanup remains as reviewed117; no claim of process-wide signal atomicity"
+    ],
+    "decode": [
+      "unchanged component_worker.validate -> component_transport.load_ciphertext -> validate_ciphertext -> bounded readers",
+      "only authenticated public original oracle arrays and fixed54 decoded slots processed; no request_lifecycle/file_stage_io/client_inputs/input_gate invocation"
+    ],
+    "outside_selected_path": [
+      "client_keys._authenticate_array/authenticate_public and _store/_write/generate retain historical code; never selected by key_contexts.load_client",
+      "top-level key_gate.py and input_gate.py are not imported/invoked by this validator prerequisite path; component_key_gate is selected",
+      "original file_stages engine/receipt helpers may be imported for boundary denial only, not called"
+    ],
+    "limits": "Read-only active-call source audit plus inherited/focused descriptor tests, not exhaustive filesystem fault coverage or actual client execution."
+  },
+  "no_new_runtime_overlay_required_for_confirmed_dup_handoff": true
+}

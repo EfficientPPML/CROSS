@@ -1,0 +1,152 @@
+{
+  "passed": false,
+  "command": [
+    "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+    "/tmp/bert-row-layernorm-candidate-20261103/prototype/component.py",
+    "finish",
+    "--root",
+    "/tmp/cross-bert-row-norm-component-wbc6eqb5",
+    "--request-id",
+    "8fbd51d64b904f688325a538b7d11fee"
+  ],
+  "timeout_s": null,
+  "cleanup_grace_s": 30.0,
+  "owned_public_key_directory": "/tmp/cross-transformer-case-2onxth8k",
+  "owned_public_key_directory_identity": {
+    "device": 66305,
+    "inode": 2362407
+  },
+  "pid": 1002008,
+  "returncode": 1,
+  "result": {
+    "stage": "client-decrypt",
+    "passed": false,
+    "checks": {
+      "attention_mean": {
+        "passed": true,
+        "max_abs_error": 1.844076974455433e-10,
+        "gate": 1e-06,
+        "slots_checked": 16384,
+        "per_physical_row_max_abs": [
+          1.844076974455433e-10,
+          9.137549796001296e-11,
+          9.685471292424324e-11,
+          1.0012505408107941e-10
+        ],
+        "decoded_min": -0.02879252529948714,
+        "decoded_max": 0.024700425799829555,
+        "padding_max_abs_error": 1.0012505408107941e-10
+      },
+      "attention_variance": {
+        "passed": true,
+        "max_abs_error": 3.2810954952999793e-07,
+        "gate": 1e-06,
+        "slots_checked": 16384,
+        "per_physical_row_max_abs": [
+          1.705505783267114e-07,
+          2.0436085373942703e-07,
+          7.056733097865475e-08,
+          3.2810954952999793e-07
+        ],
+        "decoded_min": 0.48868032362737795,
+        "decoded_max": 0.9749478379780603
+      },
+      "attention_inverse": {
+        "passed": true,
+        "max_abs_error": 2.991102687754932e-07,
+        "gate": 1e-06,
+        "slots_checked": 16384,
+        "per_physical_row_max_abs": [
+          8.858288258473124e-08,
+          2.991102687754932e-07,
+          5.416595239005062e-08,
+          2.518499910841854e-07
+        ],
+        "decoded_min": 1.0127665173887035,
+        "decoded_max": 1.4304989113148938
+      },
+      "attention_output": {
+        "passed": false,
+        "max_abs_error": 3.637523654731467e-06,
+        "gate": 1e-06,
+        "slots_checked": 16384,
+        "per_physical_row_max_abs": [
+          3.637523654731467e-06,
+          1.0942153707560465e-06,
+          4.0690418851508865e-13,
+          4.4731543441951997e-13
+        ],
+        "decoded_min": -49.37371332821611,
+        "decoded_max": 2.5221125015400645,
+        "padding_max_abs_error": 5.997205579299507e-13
+      },
+      "mlp_mean": {
+        "passed": true,
+        "max_abs_error": 1.7282479614078028e-10,
+        "gate": 1e-06,
+        "slots_checked": 16384,
+        "per_physical_row_max_abs": [
+          1.7282479614078028e-10,
+          5.3011275893782177e-11,
+          8.519389648998976e-11,
+          6.707128949456909e-11
+        ],
+        "decoded_min": -0.08794639350605823,
+        "decoded_max": 7.979701174257243e-11,
+        "padding_max_abs_error": 8.519389648998976e-11
+      },
+      "mlp_variance": {
+        "passed": true,
+        "max_abs_error": 3.301960864732223e-07,
+        "gate": 1e-06,
+        "slots_checked": 16384,
+        "per_physical_row_max_abs": [
+          1.686780670695498e-07,
+          2.1138560324374112e-07,
+          7.667161305846548e-08,
+          3.301960864732223e-07
+        ],
+        "decoded_min": 3.752874805433135,
+        "decoded_max": 6.4713260938833645
+      },
+      "mlp_inverse": {
+        "passed": true,
+        "max_abs_error": 1.7768748805657708e-08,
+        "gate": 1e-06,
+        "slots_checked": 16384,
+        "per_physical_row_max_abs": [
+          5.123124591221995e-09,
+          1.4537956172233635e-08,
+          4.126007147053912e-09,
+          1.7768748805657708e-08
+        ],
+        "decoded_min": 0.39310015179262714,
+        "decoded_max": 0.516200013029251
+      },
+      "mlp_output": {
+        "passed": true,
+        "max_abs_error": 1.385236725326422e-07,
+        "gate": 1e-06,
+        "slots_checked": 16384,
+        "per_physical_row_max_abs": [
+          1.385236725326422e-07,
+          8.452795086100195e-08,
+          4.448016173077379e-13,
+          4.149790116404478e-13
+        ],
+        "decoded_min": -12.953285830589476,
+        "decoded_max": 1.490655155216098,
+        "padding_max_abs_error": 6.317021465773331e-13
+      }
+    },
+    "worst_abs_error": 3.637523654731467e-06,
+    "all_slots_checked": 131072,
+    "full_bert_evaluated": false,
+    "mrpc_accuracy_evaluated": false
+  },
+  "error": "runner exited 1; see stderr.log",
+  "process_reaped": true,
+  "public_key_store_removed": true,
+  "owned_directory_handle_closed": true,
+  "process_elapsed_s": 7.07006358900253
+}

@@ -190,7 +190,7 @@ class BSGSMatVecTest(parameterized.TestCase):
         operation_plans={'linear': plan}, bsgs_n_jobs=1, bsgs_streaming=False)
     constant = SimpleNamespace(_constant_kind='dense', values=np.eye(n))
     operation = ('linear', 'matvec', ('input',), (constant, None, None, None, None))
-    original_encode = ckks_ctx.CKKSContext.encode
+    original_encode = ckks_ctx.CKKSContext._encode_host_array
     failed_encoder_ids = []
 
     def fail_after_encode(encoder, values):
@@ -198,7 +198,7 @@ class BSGSMatVecTest(parameterized.TestCase):
       failed_encoder_ids.append(id(encoder))
       raise RuntimeError('failed after allocating encoder tables')
 
-    with mock.patch.object(ckks_ctx.CKKSContext, 'encode', fail_after_encode):
+    with mock.patch.object(ckks_ctx.CKKSContext, '_encode_host_array', fail_after_encode):
       with self.assertRaisesRegex(RuntimeError, 'allocating encoder tables'):
         mapping_mod._bind_operation(ctx, state, operation, None)
     self.assertLen(failed_encoder_ids, 1)
@@ -353,7 +353,7 @@ class BSGSMatVecTest(parameterized.TestCase):
     op.preprocess({0: np.ones(n)}, memory_bounded=True)
     with mock.patch.object(
         op._encoder,
-        'encode',
+        '_encode_host_array',
         side_effect=ckks_ctx.ScalingFactorTooSmall('too small'),
     ):
       with self.assertRaisesRegex(ValueError, 'underflowed CKKS encode'):

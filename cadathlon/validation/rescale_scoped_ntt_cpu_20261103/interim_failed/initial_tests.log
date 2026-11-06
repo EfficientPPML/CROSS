@@ -1,0 +1,72 @@
+........F                                                                [100%]
+=================================== FAILURES ===================================
+_________ test_secure_facade_compiled_bootstrap_dispatch_and_lifetime __________
+
+ring = (<jaxite_word.ckks_ctx.CKKSContext object at 0x770ed29a46e0>, {'degree': 8192, 'num_slots': 4096, 'scaling_factor': 10...1, 4079617, 1097729, 1130497, 786433, 1032193], 'P': [1073692673, 1073643521]}, 'P': [1073692673, 1073643521], ...}, 3)
+
+    def test_secure_facade_compiled_bootstrap_dispatch_and_lifetime(ring):
+     client=ring[0]
+     def execute():
+      ordinary=server_for(ring,2);server=server_for(ring,2)
+      assert server.secret_key is None and server._param_cache.secret_key is None and server.parameters.get('secret_key') is None
+      def forbidden(*a,**kw):raise AssertionError('no server encryption/decryption')
+      for name in ('encrypt','decrypt','encrypt_slots','decrypt_slots','encrypt_slots_batch','decrypt_slots_batch'):setattr(server,name,forbidden)
+      provider=enable_scoped_ntt_subsets(server)
+      helper=CompiledRescale(server);evaluator=EncryptedPolynomialEvaluator(server)
+      values=np.stack([np.linspace(-.3,.3,client.num_slots),.2*np.sin(np.arange(client.num_slots)/17)])
+      fresh=client.encrypt_slots_batch(values,scale=float(1<<40))
+      pt=server.encode_at_level(np.full(client.num_slots,.5),2,scale=float(1<<40))
+      twice=server.ptct_mul[2].mul(fresh,pt)
+      thrice=server.ptct_mul[2].mul(twice,pt)
+      eager=bootstrap_shell(ordinary);compiled=bootstrap_shell(server);helpers=_install_compiled_primitives(compiled,server)
+      for source,target,value,truth in [(2,1,twice,.5*values),(1,0,evaluator._lower(twice,1),.5*values),(2,0,thrice,.25*values)]:
+       expected_op=ordinary.he_rescale[source,target];actual_op=server.he_rescale[source,target]
+       assert expected_op._he_rescale._polynomial_factory is rescale.Polynomial
+       assert actual_op._he_rescale._polynomial_factory.__self__ is provider
+       checks=controls_equal(actual_op._he_rescale,expected_op._he_rescale)
+       expected=expected_op.rescale(value);actual=actual_op.rescale(value);assert_same(actual,expected)
+       error=float(np.max(np.abs(client.decrypt_slots_batch(actual)-truth)));assert error<5e-6,error
+       assert_same(helper.rescale(value,source,target),expected)
+       count=helper.compiler.compile_count
+       helper.clear();server.he_rescale._instances.clear();provider.clear();jax.clear_caches()
+       assert_same(helper.rescale(value,source,target),expected);assert helper.compiler.compile_count==count
+       assert_same(compiled._he_op_rescale(source,target,value),eager._he_op_rescale(source,target,value))
+       RECORDS.append(dict(kind='secure_rescale_paths',source=source,target=target,input_nsd=value._ckks_nsd,six_field_checks=checks,max_abs_error=error,raw_payload_and_metadata_exact=True,executable_reused=True))
+      compiler=helper.compiler;control_refs=[weakref.ref(x) for x in helper.binding[1].controls]
+      owner_refs=[weakref.ref(server),weakref.ref(server._param_cache)]
+      for h in helpers:h.clear()
+      helper.clear();provider.close();server.he_rescale._instances.clear()
+      assert server._param_cache.rescale_polynomial_factory is None
+      assert server.he_rescale[1,0]._he_rescale._polynomial_factory is rescale.Polynomial
+      ckks_ctx.evict_context_caches(server);ckks_ctx.evict_context_caches(ordinary)
+      return compiler,control_refs,owner_refs,provider
+>    compiler,controls,owners,provider=execute()
+                                       ^^^^^^^^^
+
+cadathlon/tests/test_scoped_rescale_ntt.py:110: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+cadathlon/tests/test_scoped_rescale_ntt.py:89: in execute
+    for source,target,value,truth in [(2,1,twice,.5*values),(1,0,evaluator._lower(twice,1),.5*values),(2,0,thrice,.25*values)]:
+                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+cadathlon/common/encrypted_polynomial.py:255: in _lower
+    source = self._level(value)
+             ^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <encrypted_polynomial.EncryptedPolynomialEvaluator object at 0x770eb1b1d350>
+value = <polynomial.Polynomial object at 0x770ead2b25f0>
+
+    def _level(self, value):
+        from support import require_secure_execution
+        require_secure_execution(self, value)
+        scale = getattr(value, "_ckks_scale", None)
+        if scale is None or not math.isfinite(scale) or scale <= 0:
+            raise ValueError("ciphertext must carry a finite positive scale")
+        if getattr(value, "_ckks_nsd", 1) != 1:
+>           raise ValueError("ciphertext must be rescaled to noise-scale degree 1")
+E           ValueError: ciphertext must be rescaled to noise-scale degree 1
+
+cadathlon/common/encrypted_polynomial.py:222: ValueError
+=========================== short test summary info ============================
+FAILED cadathlon/tests/test_scoped_rescale_ntt.py::test_secure_facade_compiled_bootstrap_dispatch_and_lifetime
+1 failed, 8 passed in 8.35s

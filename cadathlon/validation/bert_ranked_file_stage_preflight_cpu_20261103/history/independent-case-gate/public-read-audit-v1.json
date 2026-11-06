@@ -1,0 +1,11 @@
+{
+  "passed": false,
+  "tool_exit_code": 1,
+  "failure_kind": "review harness import boundary",
+  "message": "Audit rejected lazy stdlib gzip import during tarfile.open. No gate rejection or private read occurred; this attempt is not a successful public authentication proof.",
+  "candidate_source_sha256": {
+    "ranked_case_gate.py": "aa5e5e5473cc8eb9cf65b5476196e51d28b586d8421e102a79d7833188b21186",
+    "test_ranked_case_gate.py": "1efcf0872d41763c9bef7556e1c1429bb8736a2ab83d87034d4346562512e2a3"
+  },
+  "preservation": "Exact observed tool result: RuntimeError forbidden non-public authentication read, stack tarfile.py gzopen -> importlib get_code/get_data."
+}

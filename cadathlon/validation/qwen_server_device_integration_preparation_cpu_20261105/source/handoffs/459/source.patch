@@ -1,0 +1,10 @@
+--- failed458/owned_child.py
++++ unrun459/owned_child.py
+@@ -73,7 +73,6 @@
+             group=json.loads((ROOT/'case_groups.json').read_bytes())[case]
+             name={'P':'cases_packet','F':'cases_packet','O':'cases_device','T':'cases_device',
+                 'A':'cases_audit','R':'cases_process','L':'cases_loader_engine','E':'cases_loader_engine','B':'cases_startup'}[group]
+-            import importlib
+             detail=importlib.import_module(name).run(fixture,case)
+             counts=dict(fixture.counts);events=list(fixture.events);seams=list(fixture.seams);details=dict(fixture.details)
+             entry.origins(expected,core_enabled=fixture.gate.core_enabled)

@@ -1,0 +1,13 @@
+--- parent459/cases_process.py
++++ successor460/cases_process.py
+@@ -69,6 +69,10 @@
+ 
+ def _setup_run(f, case):
+     f._graph()
++    # The selected stage/loader definitions refer to NumPy, while their numeric
++    # effects below are recordings. Use the same empty owned definition name
++    # as L/E; never discover or import a genuine numerical package.
++    f.enable_numpy()
+     if case == "run_default_exit_failure70":
+         f.mode = "exit_failure"
+     f.native_seams()

@@ -1,0 +1,172 @@
+--- readonly42/model_entry.py
++++ keygen85/keygen_entry.py
+@@ -1,8 +1,7 @@
+-"""Fresh stdlib source bootstrap and reserved infrastructure terminal status.
+-
+-Reference: reviewed checker141 entry. This readonly adaptation uses shared4543
+-marker semantics even before trusted helpers can be imported; NumPy is enabled
+-only after source, external grant, expected-store and resource admission.
++"""Fresh keygen stdlib bootstrap; backend enablement follows public admission.
++
++Reference: reviewed checker141 entry. This keygen adaptation uses shared4543
++marker semantics even before trusted helpers can be imported; CPU core imports are enabled only after source, model, role, policy and grant admission.
+ """
+ import argparse
+ import hashlib
+@@ -16,8 +15,9 @@
+ 
+ ROOT=Path(os.path.abspath(__file__)).parent
+ INFRASTRUCTURE_EXIT=70
+-FORBIDDEN=frozenset(('jax','jaxlib','jaxite_word','torch','transformers',
++FORBIDDEN=frozenset(('torch','transformers',
+     'tensorflow','flax','torch_xla','safetensors','tokenizers','libtpu'))
++CORE_ROOTS=frozenset(('jax','jaxlib','jaxite_word','numpy'))
+ EARLY_PROTECTED=('/home/jianming_gatech/cross_validation_assets', '/tmp/qwen-candidate2-fresh-validation-20261103', '/tmp/qwen-candidate3-calibration-20261103', '/tmp/qwen-candidate3-fresh56-validation-20261103', '/tmp/qwen-candidate3-published-regression-20261103', '/tmp/qwen-decoder-parameters-20261103/actual-v1/public_matrices', '/tmp/qwen-expanded-candidate-checker-actual-v1-20261104', '/tmp/qwen-expanded-candidate-checker-private-v1-20261104', '/tmp/qwen-expanded-prefix-observer-actual-v1-20261104', '/tmp/qwen-expanded-prefix-observer-actual-v2-20261104', '/tmp/qwen-expanded-prefix-observer-private-v1-20261104', '/tmp/qwen-expanded-prefix-observer-private-v2-20261104', '/tmp/qwen-expanded-prefix-observer-terminal-outer-root-20261104', '/tmp/qwen-expanded-prefix-observer-terminal-root-review-20261104', '/tmp/qwen-expanded-prefix-selector-actual-v1-20261104', '/tmp/qwen-expanded-prefix-selector-root-launch-20261104', '/tmp/qwen-expanded-prefix-selector-terminal-outer-root-20261104', '/tmp/qwen-expanded-prefix-selector-terminal-root-review-20261104', '/tmp/qwen-expanded-prefix-token-inputs-20261104-v1', '/tmp/qwen-full-model-trajectory-v2-20261104', '/tmp/qwen-native-calibration-20261103', '/tmp/qwen-qkv-attention-join-20261103/public_qkv_parameters', '/tmp/qwen-rmsnorm-owner-20261103', '/tmp/qwen-s1-final-rms-diagnosis-20261104')
+ _CLEANUP='_cross_toy4_cleanup_origin'
+ _BODY='_cross_toy4_body_origin'
+@@ -120,38 +120,47 @@
+     return blobs
+ 
+ 
+-def origins(expected,*,initial=False):
+-    local={Path(n).stem for n in expected if n.endswith('.py')and '/'not in n}
++def module_source(name,expected):
++    if name=='__main__': return 'keygen_entry.py'
++    flat=name+'.py'
++    if '.'not in name and flat in expected: return flat
++    if name=='jaxite_word': return 'runtime/jaxite_word/__init__.py'
++    if name.startswith('jaxite_word.'):
++        item='runtime/'+name.replace('.','/')
++        if item+'.py'in expected:return item+'.py'
++        if item+'/__init__.py'in expected:return item+'/__init__.py'
++    if '.'not in name and 'runtime/jaxite_word/'+name+'.py'in expected:
++        return 'runtime/jaxite_word/'+name+'.py'
++    return None
++
++
++def origins(expected,*,initial=False,core_enabled=False):
+     for name,module in tuple(sys.modules.items()):
+-        if name.split('.')[0]in FORBIDDEN or(initial and name.split('.')[0]=='numpy'):
+-            raise ValueError('preloaded/unselected backend or NumPy')
+-        if initial and name in local and name!='__main__': raise ValueError('preloaded local helper')
++        first=name.split('.')[0];selected=module_source(name,expected)
++        if first in FORBIDDEN or ((initial or not core_enabled)and first in CORE_ROOTS):
++            raise ValueError('preloaded/unselected backend')
++        if initial and selected is not None and name!='__main__': raise ValueError('preloaded local/core helper')
+         if name=='__main__':
+-            # The selected CLI is a direct absolute script, not runpy/-m. Its
+-            # missing spec is an exact initial/postcondition, not permission
+-            # to ignore an unexpected outside-root spec origin.
+             value=getattr(module,'__file__',None)
+-            if (not isinstance(value,(str,os.PathLike)) or Path(value)!=ROOT/'model_entry.py'
+-                    or Path(value).resolve()!=ROOT/'model_entry.py'
+-                    or getattr(module,'__spec__',None)is not None):
++            if (not isinstance(value,(str,os.PathLike))or Path(value)!=ROOT/'keygen_entry.py'
++                    or Path(value).resolve()!=ROOT/'keygen_entry.py'or getattr(module,'__spec__',None)is not None):
+                 raise ValueError('exact direct-CLI main file/spec origin required')
+         values=(getattr(module,'__file__',None),getattr(getattr(module,'__spec__',None),'origin',None))
+         found=[]
+         for value in values:
+-            if value is None or isinstance(value,str)and value in('built-in','frozen'): continue
++            if value is None or isinstance(value,str)and value in('built-in','frozen'):continue
+             if not isinstance(value,(str,os.PathLike)):
+-                if name in local or name=='__main__': raise ValueError('invalid critical module origin')
++                if selected is not None:raise ValueError('invalid selected module origin')
+                 continue
+-            raw_path=Path(value);p=raw_path.resolve()
+-            if not initial and name in local and raw_path!=ROOT/(name+'.py'):
+-                raise ValueError('canonical helper origin alias differs')
+-            if p==ROOT or ROOT in p.parents:
+-                expected_name='model_entry.py'if name=='__main__'else name+'.py'
+-                if expected_name not in expected or p!=ROOT/expected_name:
+-                    raise ValueError('unknown local module alias or origin')
+-            found.append(p)
+-        if not initial and name in local:
+-            if len(found)!=2 or any(p!=ROOT/(name+'.py') for p in found): raise ValueError('selected module origins differ')
++            raw_path=Path(value);resolved=raw_path.resolve()
++            if selected is not None and(raw_path!=ROOT/selected or resolved!=ROOT/selected):
++                raise ValueError('selected module origin alias differs')
++            if resolved==ROOT or ROOT in resolved.parents:
++                if selected is None or selected not in expected or resolved!=ROOT/selected:
++                    raise ValueError('unknown local/core alias or origin')
++            found.append(resolved)
++        if not initial and selected is not None and name!='__main__':
++            if len(found)!=2 or any(x!=ROOT/selected for x in found):raise ValueError('both selected origins required')
+ 
+ 
+ def authenticate(manifest,expected_digest):
+@@ -165,16 +174,17 @@
+     for name,h in expected.items():
+         if type(name)is not str or not 0<len(name)<=512 or name.startswith('/')or '\\'in name or '\x00'in name or any(v in('','.','..')for v in name.split('/'))or not digest(h):
+             raise ValueError('exact canonical relative source member required')
+-    required={'model_entry.py','model_output.py','model_validation_grant.py','model_validation_process.py',
+-        'model_admission.py','qwen_public_parameters.py','qwen_finalizer.py','cleanup.py','cleanup_origin.py',
+-        'model_source_inventory.json','model_readonly_policy.json','model_dependencies.json'}
+-    if not required<=set(expected): raise ValueError('complete model entry closure required')
++    required={'keygen_entry.py','keygen_output.py','keygen_process.py','keygen_dependencies.py',
++        'keygen_authority.py','keygen_boundary_pins.py','model_admission.py','qwen_key_store.py',
++        'qwen_backend_identity.py','qwen_finalizer.py','cleanup.py','cleanup_origin.py',
++        'keygen_source_inventory.json','keygen_entry_status.json','keygen_static_policy.json'}
++    if not required<=set(expected): raise ValueError('complete keygen entry closure required')
+     origins(expected,initial=True);blobs=snapshot(expected)
+-    inventory=parse(blobs['model_source_inventory.json'])
+-    if inventory!={'schema':'qwen-model-store-source-inventory-v1','files':sorted(expected)}:
++    inventory=parse(blobs['keygen_source_inventory.json'])
++    if inventory!={'schema':'qwen-keygen-source-inventory-v1','files':sorted(expected)}:
+         raise ValueError('selected source inventory differs')
+-    policy=parse(blobs['model_readonly_policy.json'])
+-    if sorted(policy['protected_paths']+policy['bootstrap_borrowed_roots'])!=list(EARLY_PROTECTED):
++    policy=parse(blobs['keygen_static_policy.json'])
++    if policy!={'schema':'qwen-keygen-static-policy-v1','protected_paths':list(EARLY_PROTECTED)}:
+         raise ValueError('bootstrap/static path policy differs')
+     return raw,expected,blobs
+ 
+@@ -188,11 +198,11 @@
+ 
+ 
+ class FrozenImports(importlib.abc.MetaPathFinder):
+-    def __init__(self,blobs): self.blobs=blobs;self.allow_numpy=False
++    def __init__(self,blobs): self.blobs=blobs;self.core_enabled=False
+     def find_spec(self,fullname,path=None,target=None):
+         first=fullname.split('.')[0]
+-        if first in FORBIDDEN or(first=='numpy'and not self.allow_numpy):
+-            raise ImportError('unselected import in readonly model phase')
++        if first in FORBIDDEN or(first in CORE_ROOTS and not self.core_enabled):
++            raise ImportError('unselected import in keygen phase')
+         if '.'not in fullname and fullname+'.py'in self.blobs:
+             return importlib.util.spec_from_loader(fullname,FrozenLoader(fullname,self.blobs[fullname+'.py']),origin=str(ROOT/(fullname+'.py')))
+         return None
+@@ -203,7 +213,7 @@
+         value=call()
+         if type(value)is not int or value not in(0,1): raise ValueError('exact normal terminal result required')
+     except BaseException as error:
+-        try: print('Readonly model infrastructure failure: '+type(error).__name__,file=sys.stderr)
++        try: print('Keygen infrastructure failure: '+type(error).__name__,file=sys.stderr)
+         except BaseException: pass
+         return INFRASTRUCTURE_EXIT
+     return value
+@@ -211,17 +221,18 @@
+ 
+ def dispatch(args):
+     raw,expected,blobs=authenticate(args.manifest,args.manifest_sha256)
+-    early_public(args.grant);path(args.output)
+-    if not digest(args.grant_sha256): raise ValueError('external grant SHA256 required')
++    early_public(args.grant);early_public(args.bundle);early_public(args.expected_pins)
++    if any(not digest(v)for v in (args.grant_sha256,args.bundle_sha256,args.expected_pins_sha256)):
++        raise ValueError('independent grant/bundle/expected-pins digests required')
+     finder=FrozenImports(blobs);sys.meta_path.insert(0,finder)
+-    from model_validation_process import run
++    from keygen_process import run
+     return run(args,raw,expected,blobs,finder,snapshot,origins)
+ 
+ 
+ def main():
+-    parser=argparse.ArgumentParser(description='Independently granted readonly model-store validation')
+-    parser.add_argument('--role',required=True,choices=('validate_existing_model_stores',))
+-    for name in ('manifest','manifest-sha256','grant','grant-sha256','output'):
++    parser=argparse.ArgumentParser(description='Independently granted fresh Qwen CPU key generation')
++    parser.add_argument('--role',required=True,choices=('generate_fresh_qwen166_keys',))
++    for name in ('manifest','manifest-sha256','grant','grant-sha256','bundle','bundle-sha256','expected-pins','expected-pins-sha256'):
+         parser.add_argument('--'+name,required=True)
+     args=parser.parse_args()
+     return terminal_status(lambda:dispatch(args))

@@ -1,0 +1,162 @@
+{
+  "scope": "Actual CPU CKKS packed components; no encrypted full-Qwen result.",
+  "passed": true,
+  "source_sha256": {
+    "/home/jianming_gatech/CROSS/cadathlon/validation/check_packed_qwen_components.py": "4fdfd36943fcfb897c5a17acb6de9479e625def54b81d91186d98cc35f8133f6",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_packed_qwen.py": "1bbd65d76150a3f8304ce6aeec67d9a75ff445a73cdf8b844f535cd52cd06dd5",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_polynomial.py": "d01cbcf26897c9b190919bb6b279e731716d7dcc4e687bbdfbc4e2e4baf5975e",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_rotation.py": "6992fe6652eadf6d4957d5016456dcd031fac9e7f506dfeebc13b28f35765cee",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_primitives.py": "9d8805a00be63a5b6a01f4f6adf611d3ffcd3c127ee1b73918add8b3767b68c8",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_compilation.py": "4518d5f1cebba64fd1f5e1fb162da95fa7dde10936b01f274b0cdc6a31486fb2",
+    "/home/jianming_gatech/CROSS/jaxite_word/bsgs.py": "52a1027be9bf704fd3ffd453251d2b3136ab31a3242c12d341ca1374b1b82aed",
+    "/home/jianming_gatech/CROSS/jaxite_word/ckks_ctx.py": "d3ed2db0ca47e395a257a9e3da2850c2ad127d0d022d2ee3a575a236b32d5149",
+    "/home/jianming_gatech/CROSS/jaxite_word/hemul.py": "49a87eed37de76b7b3ab31f1d19dd23a39035f031cfee41c4d9a204064502803",
+    "/home/jianming_gatech/CROSS/jaxite_word/he_ops.py": "bd0fb682b936a30c3faad9c09aad1337daa61657be744323605e73c875c99650",
+    "/home/jianming_gatech/CROSS/jaxite_word/herot.py": "bdb1ef0604150246b052cbc63dd41f6d92478505672d116aa13ce3bf4726eb89",
+    "/home/jianming_gatech/CROSS/cadathlon/common/support.py": "458111de25dbae4418c474670cf45a2d39e8e6ba40b75c2d17ad8f96cbaaa40f",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_transformer.py": "18846a05ad6076997eea70454c775a9a038c46f95b5c97687a08ac682e5501de",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_refresh.py": "1892d382a1b04f6d39059a038cf33766a768280aad7ec973c55a975fc2f32206",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/src/reference.py": "667c8483648adcf583212b0f828347614423c1c1401807f4f9512612f74aa147",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p4_qwen/test/test1.in": "2e48f785cc4da8a47dd5e661b65d0b7e2f407ea413c1e9bab5a9e66dd0567c67"
+  },
+  "tests": {
+    "gate24x16": {
+      "passed": true,
+      "max_abs_error": 2.597946420666985e-07,
+      "output_level": 3,
+      "noise_scale_degree": 1,
+      "scale": 13464729812993.0
+    },
+    "value32x16_fused_gqa": {
+      "passed": true,
+      "max_abs_error": 2.5864584583118466e-07,
+      "output_level": 3,
+      "noise_scale_degree": 1,
+      "scale": 13464729812993.0
+    },
+    "attention16x32": {
+      "passed": true,
+      "max_abs_error": 2.587485234101685e-07,
+      "output_level": 3,
+      "noise_scale_degree": 1,
+      "scale": 13464729812993.0
+    },
+    "down16x24": {
+      "passed": true,
+      "max_abs_error": 2.582828789233688e-07,
+      "output_level": 3,
+      "noise_scale_degree": 1,
+      "scale": 13464729812993.0
+    },
+    "actual_fixture_gate_then_silu": {
+      "passed": true,
+      "max_abs_error": 4.1608699411291306e-08,
+      "output_level": 1,
+      "noise_scale_degree": 1,
+      "scale": 13464729812993.0
+    },
+    "square_then_segmented_variance": {
+      "passed": true,
+      "max_abs_error": 2.209894536947532e-07,
+      "output_level": 2,
+      "noise_scale_degree": 1,
+      "scale": 13464729812993.0
+    }
+  },
+  "cpu_only": true,
+  "ring": {
+    "degree": 16384,
+    "q_count": 10,
+    "p_count": 3,
+    "dnum": 3,
+    "actual_log2_qp": 307.7028486050912,
+    "security_bits": 128,
+    "rotations": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      16,
+      24,
+      8160,
+      8168,
+      8176,
+      8184,
+      8188,
+      8190,
+      8191
+    ]
+  },
+  "keyless_evaluator": true,
+  "phase_results": [
+    {
+      "operation": "packed-linear",
+      "shape": [
+        24,
+        16
+      ],
+      "input_level": 4,
+      "output_level": 3,
+      "elapsed_s": 19.054640348000248
+    },
+    {
+      "operation": "packed-linear",
+      "shape": [
+        32,
+        16
+      ],
+      "input_level": 4,
+      "output_level": 3,
+      "elapsed_s": 18.594651368000996
+    },
+    {
+      "operation": "packed-linear",
+      "shape": [
+        16,
+        32
+      ],
+      "input_level": 4,
+      "output_level": 3,
+      "elapsed_s": 18.473105000000942
+    },
+    {
+      "operation": "packed-linear",
+      "shape": [
+        16,
+        24
+      ],
+      "input_level": 4,
+      "output_level": 3,
+      "elapsed_s": 17.09739196800001
+    },
+    {
+      "operation": "packed-linear",
+      "shape": [
+        24,
+        16
+      ],
+      "input_level": 4,
+      "output_level": 3,
+      "elapsed_s": 28.342535563000638
+    }
+  ],
+  "future_full_qwen1_profile": {
+    "degree": 131072,
+    "q_count": 78,
+    "p_count": 37,
+    "dnum": 2,
+    "depth": 38,
+    "actual_log2_qp": 3283.2516965115124,
+    "security_bits": 128,
+    "executed": false
+  },
+  "wall_s": 127.50672500099972,
+  "max_rss_kib": 1654352,
+  "source_unchanged": true,
+  "jax_version": "0.12.0.1",
+  "numpy_version": "2.5.4"
+}

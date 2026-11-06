@@ -1,0 +1,88 @@
+{
+  "passed": true,
+  "checkpoint_sha256": "e1f8085ef673c9eb8a1a93a84270742e8aa0ccbceadef01eef15e26c44b46034",
+  "native_fixture_sha256": "184397324e50f8c33cd6ea62f47457b3b0992da85814c001927b412ca6d06ce7",
+  "arrays": {
+    "intermediate.weight": {
+      "source": "bert.encoder.layer.0.intermediate.dense.weight",
+      "shape": [
+        3072,
+        768
+      ],
+      "source_f32_sha256": "9a0c8aa79b2bac48fc35f37b6695d253080f7eedd556b70b65411aab9c319fd3",
+      "exact_f64_lift": true
+    },
+    "intermediate.bias": {
+      "source": "bert.encoder.layer.0.intermediate.dense.bias",
+      "shape": [
+        3072
+      ],
+      "source_f32_sha256": "b279856af79c545cdb2f914e02e9a953204152319f160e484ebfcc8d6b825774",
+      "exact_f64_lift": true
+    },
+    "output.weight": {
+      "source": "bert.encoder.layer.0.output.dense.weight",
+      "shape": [
+        768,
+        3072
+      ],
+      "source_f32_sha256": "754a718ad071ca9ec27790aee1b82dc9db41cc3ef90c6c73a90ada8668f6fa0d",
+      "exact_f64_lift": true
+    },
+    "output.bias": {
+      "source": "bert.encoder.layer.0.output.dense.bias",
+      "shape": [
+        768
+      ],
+      "source_f32_sha256": "744629ad72bdc326f22cd92c6429610c06ed41dd3a2fedd307d3f01f861638b9",
+      "exact_f64_lift": true
+    },
+    "gamma": {
+      "source": "bert.encoder.layer.0.output.LayerNorm.weight",
+      "shape": [
+        768
+      ],
+      "source_f32_sha256": "e10771889f781626f1a16ea0ad106b3f88ee65df412cd0021b37bdf3c93c007e",
+      "exact_f64_lift": true
+    },
+    "beta": {
+      "source": "bert.encoder.layer.0.output.LayerNorm.bias",
+      "shape": [
+        768
+      ],
+      "source_f32_sha256": "5ca80117e32d77fbf91306d6bce9dc1a4b93548c158312825d493346857d6a2d",
+      "exact_f64_lift": true
+    },
+    "K15_native": {
+      "shape": [
+        15,
+        768
+      ],
+      "dtype": "<f8",
+      "sha256": "611aa4aef3382062c0e39f692301ccec07d3a883b4ab41c8621ff5c95fdc004a"
+    },
+    "K15_original_positions": {
+      "shape": [
+        15
+      ],
+      "dtype": "<i8",
+      "sha256": "4107167d6f03f7cb8e829358a6fb9c09ff16b19adc550b79d4874e76e96849bb"
+    },
+    "K128_native": {
+      "shape": [
+        128,
+        768
+      ],
+      "dtype": "<f8",
+      "sha256": "290cd8c709217b2064876e6d6683fc8c470bbb5312b987313300176709126023"
+    },
+    "K128_original_positions": {
+      "shape": [
+        128
+      ],
+      "dtype": "<i8",
+      "sha256": "3e4f0a2fd9498da7c1440a355a22b6292161a5216c63aa0bc59b5a4742fd1e36"
+    }
+  },
+  "scope": "Direct pinned public weight bytes and previously fixed trusted native attention outputs; no new model inference; arrays excluded from archive."
+}

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="10" time="0.062" timestamp="2026-11-03T23:16:11.368012+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_cleanup" name="test_worker_later_cleanup_ordinary_failure_does_not_replace_prior_cancellation[KeyboardInterrupt]" time="0.003"><failure message="OSError: later source read">/tmp/bert-genuine-bridge-review-20261103/negative-lifecycle-v1/test_cleanup.py:32: in test_worker_later_cleanup_ordinary_failure_does_not_replace_prior_cancellation
+    with pytest.raises(kind)as seen:load('bridge_worker.py','run',ns)('request','d'*64,'output','manifest')
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/bert-genuine-bridge-review-20261103/negative-lifecycle-v1/sources/bridge_worker.py:135: in run
+    if primary is not None:raise primary
+                           ^^^^^^^^^^^^^
+/tmp/bert-genuine-bridge-review-20261103/negative-lifecycle-v1/sources/bridge_worker.py:122: in run
+    after=hashes(expected) if expected else {};report.update(source_hashes_end=after,source_files_unchanged=bool(expected) and after==expected,
+          ^^^^^^^^^^^^^^^^
+/tmp/bert-genuine-bridge-review-20261103/negative-lifecycle-v1/test_cleanup.py:26: in hashes
+    if counter==2:raise ordinary
+                  ^^^^^^^^^^^^^^
+E   OSError: later source read</failure></testcase><testcase classname="test_cleanup" name="test_worker_later_cleanup_ordinary_failure_does_not_replace_prior_cancellation[SystemExit]" time="0.002"><failure message="OSError: later source read">/tmp/bert-genuine-bridge-review-20261103/negative-lifecycle-v1/test_cleanup.py:32: in test_worker_later_cleanup_ordinary_failure_does_not_replace_prior_cancellation
+    with pytest.raises(kind)as seen:load('bridge_worker.py','run',ns)('request','d'*64,'output','manifest')
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/bert-genuine-bridge-review-20261103/negative-lifecycle-v1/sources/bridge_worker.py:135: in run
+    if primary is not None:raise primary
+                           ^^^^^^^^^^^^^
+/tmp/bert-genuine-bridge-review-20261103/negative-lifecycle-v1/sources/bridge_worker.py:122: in run
+    after=hashes(expected) if expected else {};report.update(source_hashes_end=after,source_files_unchanged=bool(expected) and after==expected,
+          ^^^^^^^^^^^^^^^^
+/tmp/bert-genuine-bridge-review-20261103/negative-lifecycle-v1/test_cleanup.py:26: in hashes
+    if counter==2:raise ordinary
+                  ^^^^^^^^^^^^^^
+E   OSError: later source read</failure></testcase><testcase classname="test_cleanup" name="test_harness_child_environment_restored_if_directory_creation_fails" time="0.004"><failure message="assert &lt;function run_prepared.&lt;locals&gt;.collect.&lt;locals&gt;.&lt;lambda&gt; at 0x7cf106358720&gt; is &lt;function test_harness_child_environment_restored_if_directory_creation_fails.&lt;locals&gt;.&lt;lambda&gt; at 0x7cf1063591c0&gt;&#10; +  where &lt;function run_prepared.&lt;locals&gt;.collect.&lt;locals&gt;.&lt;lambda&gt; at 0x7cf106358720&gt; = namespace(child_environment_overrides=&lt;function run_prepared.&lt;locals&gt;.collect.&lt;locals&gt;.&lt;lambda&gt; at 0x7cf106358720&gt;).child_environment_overrides">/tmp/bert-genuine-bridge-review-20261103/negative-lifecycle-v1/test_cleanup.py:56: in test_harness_child_environment_restored_if_directory_creation_fails
+    assert process.child_environment_overrides is original
+E   assert &lt;function run_prepared.&lt;locals&gt;.collect.&lt;locals&gt;.&lt;lambda&gt; at 0x7cf106358720&gt; is &lt;function test_harness_child_environment_restored_if_directory_creation_fails.&lt;locals&gt;.&lt;lambda&gt; at 0x7cf1063591c0&gt;
+E    +  where &lt;function run_prepared.&lt;locals&gt;.collect.&lt;locals&gt;.&lt;lambda&gt; at 0x7cf106358720&gt; = namespace(child_environment_overrides=&lt;function run_prepared.&lt;locals&gt;.collect.&lt;locals&gt;.&lt;lambda&gt; at 0x7cf106358720&gt;).child_environment_overrides</failure></testcase><testcase classname="test_worker_envelope" name="test_valid_nested_envelope_reaches_held_owner_and_phase[client_key_generation-1]" time="0.002" /><testcase classname="test_worker_envelope" name="test_valid_nested_envelope_reaches_held_owner_and_phase[server_preprocess_model-2]" time="0.002" /><testcase classname="test_worker_envelope" name="test_valid_nested_envelope_reaches_held_owner_and_phase[client_preprocess_input-3]" time="0.002" /><testcase classname="test_worker_envelope" name="test_valid_nested_envelope_reaches_held_owner_and_phase[client_encode_encrypt_input-3]" time="0.002" /><testcase classname="test_worker_envelope" name="test_valid_nested_envelope_reaches_held_owner_and_phase[server_encrypted_compute-4]" time="0.003" /><testcase classname="test_worker_envelope" name="test_valid_nested_envelope_reaches_held_owner_and_phase[client_decrypt_decode-5]" time="0.002" /><testcase classname="test_worker_envelope" name="test_valid_nested_envelope_reaches_held_owner_and_phase[client_postprocess-5]" time="0.002" /></testsuite></testsuites>

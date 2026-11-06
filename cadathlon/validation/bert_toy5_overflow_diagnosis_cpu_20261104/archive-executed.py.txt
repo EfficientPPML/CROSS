@@ -1,0 +1,28 @@
+from pathlib import Path
+import json,hashlib,shutil
+out=Path('/home/jianming_gatech/CROSS/cadathlon/validation/bert_toy5_overflow_diagnosis_cpu_20261104');out.mkdir(exist_ok=False)
+def cp(src,name):
+ p=out/name;p.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(src,p)
+old=Path('/tmp/bert-toy5-overflow-diagnosis-20261104');new=Path('/tmp/bert-toy5-overflow-diagnosis-v2-20261104')
+for f in (old/'failure-preserved').iterdir():
+ if f.is_file():cp(f,Path('original-failure')/f.name)
+cp('/tmp/cross-optimized-twelve-20261103/evidence/sources.tar.gz','original-failure/frozen199-sources.tar.gz')
+for p,label in [(old,'preserved-synthetic18'),(new,'synthetic19')]:
+ for name in ('proof-sources-before.json','proof-sources-after.json','proof-sources.tar.gz','tests.log','tests.xml'):
+  cp(p/name,Path(label)/name)
+for name in ('report.json','revision.json'):cp(new/name,Path('synthetic19')/name)
+cp(new/'DIAGNOSIS.md','DIAGNOSIS.md');cp(old/'public_conversion_geometry.json','public_conversion_geometry.json')
+for name in ('review.json','review.py','parent_report_at_review.json'):cp(Path('/tmp/bert-toy5-terminal-root-review-20261104')/name,Path('root-failure-review')/name)
+(out/'owner-test-observation.json').write_text(json.dumps({'schema':'bert-toy5-public-conversion-test-owner-v1','v1':{'direct_tool_chunk':'8fb419','exit_code':1,'persistent_session':None,'pid_or_pgid_captured':False,'tests':18,'passed':17,'failed':1},'v2':{'direct_tool_chunk':'e5d48b','exit_code':0,'persistent_session':None,'pid_or_pgid_captured':False,'tests':19,'passed':19,'failed':0},'scope':'Authoritative direct tool completion; no PID absence invented. Public/synthetic decoder mechanism only; no actual encryption/model/decode payload execution.'},indent=2,sort_keys=True)+'\n')
+cp(__file__,'archive-executed.py.txt')
+(out/'README.md').write_text('''Original BERT toytest5 remains FAILURE: OverflowError “int too large to convert to float”. Its public process record reports exit1, reaping, source invariance and owned key-store removal. Root retains the live twelve-case sweep; this archive does not reap or alter that parent or infer a full-model result.
+
+Read DIAGNOSIS.md for the source/metadata inference and isolated conversion candidate. Output-security metadata establishes that encrypted evaluation returned before the client-side failure. No traceback or actual coefficient payload exists here, so the actual throw site and encrypted precision cause remain unproved. The original199 source archive and public case/resource metadata are preserved unchanged.
+
+The candidate is an isolated two-expression AST overlay with exact frozen decoder/noise-guard bodies. CRT outputs are synthetic integer lists and FFT is a call-count seam. Nineteen synthetic checks pass; no actual decryption, backend, model, private input, key or ciphertext body was used. A range-safe integer-ratio fallback can avoid pre-scaling conversion overflow, while true scaled overflow and the original1/32 approximation gate remain failures. It changes no magnitude gate, threshold, profile, refresh or circuit. The predecessor17PASS/1incorrect symmetric-control expectation is retained, with the test-only correction documented. Nothing is installed into the frozen/live runtime, and no failing HE result is reclassified.
+
+Resource RSS is sampled process-tree sum, not unique physical memory or a continuous peak. Security/device metadata records boundary placements, not every internal operation. Parent/root reviews and independent source-only receipts have their own explicit scope. Only public source/metadata/log/test evidence is archived; no secret, ciphertext, actual coefficient, model parameter or private text/token bodies are included. Original public toy fixtures may appear within the frozen199 source archive.
+
+Run `python -B verify.py` for portable evidence verification; `--current` additionally checks the original frozen199 and both isolated proof source trees. Neither mode executes the decoder or imports model/backend code.
+''')
+print(out)

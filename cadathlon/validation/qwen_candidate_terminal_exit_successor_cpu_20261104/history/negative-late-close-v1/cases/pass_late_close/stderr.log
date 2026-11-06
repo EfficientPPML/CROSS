@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/tmp/qwen-candidate-terminal-contract-review-20261104/negative-late-close-v1/probe.py", line 116, in <module>
+    child(sys.argv[2], Path(sys.argv[3]))
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/qwen-candidate-terminal-contract-review-20261104/negative-late-close-v1/probe.py", line 77, in child
+    raise SystemExit(ns['supervise'](Output(), report, lambda: None, [], directory, expected))
+                     ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "checker_process.py", line 494, in supervise
+  File "checker_process.py", line 490, in supervise
+  File "/tmp/qwen-candidate-terminal-contract-review-20261104/negative-late-close-v1/probe.py", line 73, in close
+    raise OSError('injected final publication close failure')
+OSError: injected final publication close failure

@@ -1,0 +1,50 @@
+--- v1/TEST_SCOPE.md
++++ v2/TEST_SCOPE.md
+@@ -73,3 +73,14 @@
+ This would prove synthetic policy/state behavior only. It supplies no genuine
+ scientific/resource admission, device/native compatibility, live host/device
+ capacity, actual lease/exclusivity, body access or actual server execution.
++
++The v2 test-source successor strengthens existing failed-state assertions without
++adding cases. The central retained_failed helper now runs all identity restorers,
++sets recording hooks and statistics to benign values, and attempts the original
++permit's next appropriate public transition. Before device admission this is
++initialize_once; after admission it is observe_capacity at the next valid ordered
++stage. Rejection must leave hook count, initializer count and memory-sample count
++unchanged. The original retained dictionary/three fields and failed registry row
++are checked again. Reissuance remains a separate one-use check, not the sole
++observable evidence of sticky failure. No runtime or registry state is reset.
++The exact49 predecessor and its unrun handoff remain preserved.
+--- v1/device_child.py
++++ v2/device_child.py
+@@ -142,8 +142,28 @@
+                 assert row['state']=='failed'and row['policy']is policy
+                 assert row['policy_dict']is original_dict
+                 assert all(a is b for a,b in zip(row['policy_fields'],original_fields,strict=True))
+-                before=len(state['log']);raises(PermissionError,lambda:capacity.issue_initialization(policy))
+-                assert len(state['log'])==before and row['state']=='failed'
++                # Restore the original identities and benign recording behavior
++                # before testing public stickiness, not merely the private flag
++                # or global one-use issuance rule. Never reset guard state.
++                while restores:restores.pop()()
++                state['mode']='benign'
++                if RECORDING_JAX is not None:
++                    RECORDING_JAX.STATS={'bytes_in_use':90,'bytes_limit':100,'peak_bytes_in_use':90}
++                assert policy.__dict__ is original_dict
++                assert all(policy.__dict__[name]is value for name,value in zip(('phase','blobs','expected_pins'),original_fields,strict=True))
++                before=(len(state['log']),state['initializations'],0 if RECORDING_JAX is None else RECORDING_JAX.CALLS)
++                original_permit=row['permit']
++                if row['device']is None:
++                    raises(PermissionError,lambda:capacity.initialize_once(original_permit))
++                else:
++                    next_index=row['stage_index']+1
++                    assert 0<=next_index<len(fixtures.STAGES)
++                    raises(PermissionError,lambda:capacity.observe_capacity(original_permit,fixtures.STAGES[next_index]))
++                assert (len(state['log']),state['initializations'],0 if RECORDING_JAX is None else RECORDING_JAX.CALLS)==before
++                assert capacity._REGISTRY[id(original_permit)]is row and row['state']=='failed'
++                raises(PermissionError,lambda:capacity.issue_initialization(policy))
++                assert (len(state['log']),state['initializations'],0 if RECORDING_JAX is None else RECORDING_JAX.CALLS)==before
++                assert row['state']=='failed'
+                 return row
+             if scenario in('binding_failure','lease_failure','reentry_caught','reentry_uncaught'):
+                 error=raises((RuntimeError,PermissionError),lambda:capacity.issue_initialization(policy))

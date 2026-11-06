@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="40" time="0.081" timestamp="2026-11-04T03:35:38.690938+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_input_gate" name="test_public_producer_inspection_reads_no_external_body" time="0.007" /><testcase classname="test_input_gate" name="test_producer_digest_failure_before_body[public/tokenizer_report.json]" time="0.001" /><testcase classname="test_input_gate" name="test_producer_digest_failure_before_body[public/tokenizer_worker_report.json]" time="0.001" /><testcase classname="test_input_gate" name="test_producer_digest_failure_before_body[public/tokenizer_root_review.json]" time="0.001" /><testcase classname="test_input_gate" name="test_producer_digest_failure_before_body[public/tokenizer_grant.json]" time="0.001" /><testcase classname="test_input_gate" name="test_producer_digest_failure_before_body[public/tokenizer_sources.tar.gz]" time="0.001" /><testcase classname="test_input_gate" name="test_producer_digest_failure_before_body[public/protocol.json]" time="0.001" /><testcase classname="test_input_gate" name="test_producer_digest_failure_before_body[public/candidate3_manifest.json]" time="0.002" /><testcase classname="test_input_gate" name="test_typed_calibration_descriptor[bytes-True]" time="0.001" /><testcase classname="test_input_gate" name="test_typed_calibration_descriptor[bytes-0]" time="0.001" /><testcase classname="test_input_gate" name="test_typed_calibration_descriptor[identity-value2]" time="0.001" /><testcase classname="test_input_gate" name="test_typed_calibration_descriptor[parent_identity-value3]" time="0.001" /><testcase classname="test_input_gate" name="test_typed_calibration_descriptor[mode-0644]" time="0.001" /><testcase classname="test_input_gate" name="test_typed_calibration_descriptor[parent_mode-0755]" time="0.000" /><testcase classname="test_input_gate" name="test_typed_calibration_descriptor[path-/tmp/private/validation_inputs.json]" time="0.001" /><testcase classname="test_input_gate" name="test_typed_calibration_descriptor[sha256-bad]" time="0.001" /><testcase classname="test_input_gate" name="test_reader_only_fixed_calibration_and_rechecks" time="0.002" /><testcase classname="test_input_gate" name="test_calibration_ownership_change_rejected[mode]" time="0.001" /><testcase classname="test_input_gate" name="test_calibration_ownership_change_rejected[symlink]" time="0.001" /><testcase classname="test_input_gate" name="test_calibration_ownership_change_rejected[parent]" time="0.001" /><testcase classname="test_input_gate" name="test_calibration_ownership_change_rejected[file]" time="0.001" /><testcase classname="test_input_gate" name="test_model_only_streams_three_fixed_files" time="0.001" /><testcase classname="test_input_gate" name="test_model_body_change_rejects_postcheck" time="0.001" /><testcase classname="test_input_gate" name="test_model_body_identity_survives_sticky_rethrow_and_cleanup_cancel[KeyboardInterrupt]" time="0.001" /><testcase classname="test_input_gate" name="test_model_body_identity_survives_sticky_rethrow_and_cleanup_cancel[SystemExit]" time="0.001" /><testcase classname="test_input_gate" name="test_model_cleanup_only_cancellation_precedes_ordinary[KeyboardInterrupt]" time="0.001" /><testcase classname="test_input_gate" name="test_model_cleanup_only_cancellation_precedes_ordinary[SystemExit]" time="0.001" /><testcase classname="test_freeze_io" name="test_same_body_identity_cannot_be_retagged[KeyboardInterrupt-ValueError]" time="0.000" /><testcase classname="test_freeze_io" name="test_same_body_identity_cannot_be_retagged[KeyboardInterrupt-OSError]" time="0.000" /><testcase classname="test_freeze_io" name="test_same_body_identity_cannot_be_retagged[KeyboardInterrupt-KeyboardInterrupt]" time="0.000" /><testcase classname="test_freeze_io" name="test_same_body_identity_cannot_be_retagged[KeyboardInterrupt-SystemExit]" time="0.000" /><testcase classname="test_freeze_io" name="test_same_body_identity_cannot_be_retagged[SystemExit-ValueError]" time="0.000" /><testcase classname="test_freeze_io" name="test_same_body_identity_cannot_be_retagged[SystemExit-OSError]" time="0.000" /><testcase classname="test_freeze_io" name="test_same_body_identity_cannot_be_retagged[SystemExit-KeyboardInterrupt]" time="0.000" /><testcase classname="test_freeze_io" name="test_same_body_identity_cannot_be_retagged[SystemExit-SystemExit]" time="0.000" /><testcase classname="test_freeze_io" name="test_cleanup_origin_cross_helper_priority[KeyboardInterrupt]" time="0.000" /><testcase classname="test_freeze_io" name="test_cleanup_origin_cross_helper_priority[SystemExit]" time="0.000" /><testcase classname="test_freeze_io" name="test_read_body_preserved_on_close_failure" time="0.001"><failure message="TypeError: throwing.&lt;locals&gt;.action() takes 0 positional arguments but 2 were given&#10;cleanup failure: KeyboardInterrupt">tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-629/test_read_body_preserved_on_cl0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7012195161d0&gt;
+
+    def test_read_body_preserved_on_close_failure(tmp_path,monkeypatch):
+        path=tmp_path/'data';path.write_bytes(b'synthetic');primary=ValueError('read body');closed=[]
+        original=os.close
+        monkeypatch.setattr(f.os,'read',throwing(primary))
+        def close(fd):closed.append(fd);original(fd);raise KeyboardInterrupt('close')
+        monkeypatch.setattr(f.os,'close',close)
+&gt;       with pytest.raises(ValueError) as found:f.read(path)
+                                                ^^^^^^^^^^^^
+
+test_freeze_io.py:35: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-629/test_read_body_preserved_on_cl0/data')
+expected = None, limit = 33554432
+
+    def read(path, expected=None, limit=MAX_INPUT):
+        if type(limit) is not int or limit &lt;= 0:
+            raise ValueError('positive exact input bound required')
+        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC)
+        primary = None
+        try:
+            before = os.fstat(fd)
+            if not stat.S_ISREG(before.st_mode) or not 0 &lt; before.st_size &lt;= limit:
+                raise ValueError('bounded nonempty regular input required')
+            chunks = []
+            remaining = limit + 1
+            while remaining:
+&gt;               block = os.read(fd, min(remaining, 1024 * 1024))
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               TypeError: throwing.&lt;locals&gt;.action() takes 0 positional arguments but 2 were given
+E               cleanup failure: KeyboardInterrupt
+
+freeze_io.py:40: TypeError</failure></testcase><testcase classname="test_freeze_io" name="test_owned_directory_replacement_never_publishes" time="0.001" /><testcase classname="test_freeze_io" name="test_fresh_output_collision_leaves_original_bytes" time="0.000" /></testsuite></testsuites>

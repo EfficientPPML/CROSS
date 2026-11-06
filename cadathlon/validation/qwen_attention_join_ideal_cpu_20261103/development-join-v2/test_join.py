@@ -1,0 +1,97 @@
+"""Full-slot composition tests with explicit primitive/identity-refresh doubles."""
+from pathlib import Path
+import hashlib,json,math,sys
+import numpy as np
+import pytest
+from join_ideal import Arithmetic,Linear,OuterIdentityRefresh,install_matrix,gamma,weights,dense_reference,Value,DELTA
+import encrypted_qwen_attention_join as runtime
+P=Path(__file__).resolve().parent
+
+def make_contract(layer=0):
+    return runtime.QwenAttentionJoinContract((P/'inputs/candidate_manifest.json').read_bytes(),
+        (P/'inputs/site_metadata.json').read_bytes(),(P/'inputs/certificates.json').read_bytes(),
+        (P/'inputs/join_plan.json').read_bytes(),layer)
+
+@pytest.fixture(autouse=True)
+def isolated_quarantine():
+    # Only test doubles are ever held here. Production exposes no reset API.
+    runtime._QUARANTINE.clear()
+    yield
+    runtime._QUARANTINE.clear()
+
+def build(monkeypatch,positions=(0,),layer=0,progress=None):
+    install_matrix(monkeypatch);a=Arithmetic();linear=Linear(a);refresh=OuterIdentityRefresh(a)
+    raw,w=weights(layer);g=gamma(layer)
+    owner=runtime.QwenAttentionJoin(a,linear,make_contract(layer),(P/'inputs/config.json').read_bytes(),
+        parameter_manifest_bytes=raw,weights=w,gammas=g,positions=positions,refresher=refresh,progress=progress)
+    return owner,a,refresh,w,g
+
+def inputs(positions,layer=0):
+    # Predeclared public synthetic vectors, never model/validation trajectories.
+    scale=.035 if layer==0 else 10.
+    rows=np.stack([scale*(np.sin(np.arange(1024)*.137+i*.053)+.1*np.cos(np.arange(1024)*.061+i*.101)) for i in range(len(positions))])
+    values=[]
+    for start in range(0,len(rows),16):
+        data=np.full((16,4096),37.);part=rows[start:start+16];data[:len(part),:1024]=part
+        values.append(Value(data.ravel(),25,math.nextafter(DELTA,math.inf)))
+    return rows,tuple(values)
+
+@pytest.mark.parametrize('layer',range(28))
+def test_all_typed_contracts(layer):
+    c=make_contract(layer);runtime.verify_contract(c)
+    assert len(c.outer_events)==5+sum(e.stage.endswith('_reserve') for e in c.outer_events)
+    assert c.outer_events[0].stage=='normalized_input'
+    assert all(type(e.public_bound)is float and e.output_level==25 for e in c.outer_events)
+
+def test_genuine_pinned_qkv_one_row(monkeypatch):
+    owner,a,refresh,w,g=build(monkeypatch);rows,tiles=inputs((0,))
+    expected,domains=dense_reference(rows,w,g,0,(0,));assert all(r['passed'] for r in domains),domains
+    before=[v.polynomial.copy() for v in tiles]
+    result=owner.evaluate(tiles)
+    want=np.zeros((16,4096));want[0,:2048]=expected[0]
+    np.testing.assert_allclose(result.outputs[0].polynomial,want.ravel(),atol=1e-8,rtol=0.)
+    assert result.metadata[0]['level']==22
+    assert len(result.refresh_events)==5
+    assert len(refresh.calls)==5
+    for old,value in zip(before,tiles):np.testing.assert_array_equal(old,value.polynomial)
+    assert owner.last_run is not None
+
+@pytest.mark.parametrize('target,value',[('layer',True),('layer',0.),('outer_events',[])])
+def test_contract_alias_before_work(monkeypatch,target,value):
+    owner,a,_,_,_=build(monkeypatch);setattr_value=lambda:object.__setattr__(owner.contract,target,value)
+    setattr_value();_,tiles=inputs((0,))
+    with pytest.raises((TypeError,ValueError)):owner.evaluate(tiles)
+    assert not a.calls and not runtime._QUARANTINE
+
+@pytest.mark.parametrize('flag',[False,1,None])
+def test_sync_before_work(monkeypatch,flag):
+    owner,a,_,_,_=build(monkeypatch);a.low_memory=flag;_,tiles=inputs((0,))
+    with pytest.raises(ValueError):owner.evaluate(tiles)
+    assert not a.calls
+
+@pytest.mark.parametrize('which',['refresh','linear','norm','pending_input','result_moduli'])
+def test_first_callback_quarantines(monkeypatch,which):
+    holder={};called=[]
+    def callback(label,value,metadata):
+        if called:return
+        called.append(label);owner=holder['owner']
+        if which=='refresh':owner.refresher.refresh=lambda *a,**kw:None
+        elif which=='linear':owner.linear.linear_tile=lambda *a,**kw:None
+        elif which=='norm':owner.norms[1].evaluate_tile=lambda *a,**kw:None
+        elif which=='pending_input':holder['tiles'][1].num_moduli=1
+        else:value.num_moduli=1
+    owner,a,_,_,_=build(monkeypatch,tuple(range(19)),progress=callback);_,tiles=inputs(tuple(range(19)));holder.update(owner=owner,tiles=tiles)
+    with pytest.raises(ValueError):owner.evaluate(tiles)
+    assert called and runtime._QUARANTINE and owner.last_run is None
+    with pytest.raises(RuntimeError):owner.evaluate(tiles)
+
+@pytest.mark.parametrize('error',[RuntimeError,KeyboardInterrupt,SystemExit])
+def test_entered_failure_quarantine(monkeypatch,error):
+    def callback(*args):raise error('chosen')
+    owner,a,refresh,_,_=build(monkeypatch,progress=callback);_,tiles=inputs((0,))
+    with pytest.raises(error,match='chosen'):owner.evaluate(tiles)
+    assert runtime._QUARANTINE and runtime._QUARANTINE[0][0]is owner
+    assert owner.last_run is None and owner._active is False
+
+def test_no_backend_imports():
+    assert not any(n in sys.modules for n in ('jax','jaxlib','torch','transformers','safetensors'))

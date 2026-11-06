@@ -1,0 +1,26 @@
+{
+  "alternative_preinjection": "Explicit pre-owned setup NTT injection would change setup callgraph and should be separately proposed rather than silently added.",
+  "candidate_imports": false,
+  "execution_authorized": false,
+  "finding": "The source-selected setup _EncryptedInput retains the returned Polynomial and its payload, but close barriers only objects directly exposing block_until_ready. It omits the separately allocated returned moduli_array and returned/context-attached NTT plus finite-field table arrays.",
+  "prior_root_review_sha256": "ea93e0dc06ae9a0465d4c988de93eadb429d6fbe226456401f8b2b2dedf4a490",
+  "required_correction": "Preserve original encrypt_slots/core arithmetic. Retain and barrier the returned original moduli_array and reachable returned or context-attached original NTT/finite-field arrays before owner release/key exit, including the attached partial-failure path. Continue to acknowledge inaccessible constructor locals and retain failed process/context state.",
+  "reviewed_sources": {
+    "q5_actual_process.py": "af856cdefa2c5948691530b64771a0c07752ef1466f0b8587d1a297f4dee2c26",
+    "q5_key_loader.py": "54d403b392400036cb4c067c49836668749257def0b1ac6691475f881cb26d32",
+    "runtime/jaxite_word/ckks_ctx.py": "bc978cb7412b55416f7ed634a689ae616a263b0f47fd9eef996ba244f2505db6",
+    "runtime/jaxite_word/ntt_mm.py": "5a0cbff087f48f20c98cb5975f7894756a83d61fbdaaf5af358a1c7c192a1263",
+    "runtime/jaxite_word/polynomial.py": "043e1dcdf9aca02f2df9435ac610c1561859b7d29a7dee1b7254bf9bc3c89a5b"
+  },
+  "schema": "qwen-toy5-disabled-runtime-root-setup-owner-addendum-v1",
+  "scope": "Newly examined setup-owner internals beyond prior CT/IO scope; source-only concrete finding, no runtime/test proof or full ownership claim.",
+  "source_manifest_sha256": "b787490da5ad804dacdeca7c19cbb39a99868ab80ea762a607e1a6457cfb3180",
+  "tests": false,
+  "trace": [
+    "Exact bc978 encrypt_slots calls _fast_encode_encrypt_batch via _fast_encode_encrypt.",
+    "_fast_encode_encrypt_batch uses _polynomial_from_flat_array with no NTT on a fresh codec-only context, then retains returned NTT in ctx._polynomial_ntt_ctx.",
+    "Polynomial default construction obtains shared Barrett NTT tables and separately creates moduli_array.",
+    "Client key loader transfer inventory covers explicit key transfers and lazy rotation cache; codec-only setup has no _param_cache. Its evict_context_caches drops only encrypt/decrypt cache entries and does not barrier these returned NTT tables."
+  ],
+  "utc": "2026-11-04T22:16:17.134847+00:00"
+}

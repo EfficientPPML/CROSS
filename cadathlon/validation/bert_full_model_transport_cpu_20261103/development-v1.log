@@ -1,0 +1,1449 @@
+.......................................EFEEEEEEEEEEEEEFFFFFFFF...FF....  [100%]
+==================================== ERRORS ====================================
+_____ ERROR at setup of test_real_full_shape_uncompressed_request_checked ______
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x743b9975afd0>, _basetemp=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-247'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope='module')
+    def request_cache(tmp_path_factory):
+        v=contract();binding=c.ciphertext_contract(v,'request',0,None,None)
+        path=tmp_path_factory.mktemp('full_transport')/'request'
+        with pytest.MonkeyPatch.context() as patch:
+            patch.setitem(sys.modules,'jaxite_word',types.SimpleNamespace(Polynomial=FakePolynomial))
+>           m=t.save_ciphertext(FakePolynomial(binding),path,contract=v,role='request',tile_index=0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_transport.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+transport.py:230: in save_ciphertext
+    _bundle(bundle_raw);_payload(payload_raw,binding)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+raw = b"PK\x03\x04-\x00\x00\x00\x00\x00\x00\x00!\x00\xee#\xdd\xc0\xff\xff\xff\xff\xff\xff\xff\xff\x0b\x00\x14\x00payload.npy...00\x00\x00\x00\x80\x01\xf6\x06@\x06nsd.npyPK\x05\x06\x00\x00\x00\x00\x06\x00\x06\x00W\x01\x00\x00\xb7\x07@\x06\x00\x00"
+contract = {'context_id': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'model_id': 'bbbbbbbbbbbbbbbbbbbbbb... 'opaque_sample_X', 'request_contract_sha256': '0d7b6147f33bffd5a14a5263fedd412191a3762b5250cb14442495e35276472c', ...}
+
+    def _payload(raw, contract):
+        maximum = math.prod(contract['shape'])*4 + 65536
+        if len(raw) > maximum:
+            raise ValueError('ciphertext container exceeds public size bound')
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            entries = archive.infolist()
+            if (len(entries) != len(NPZ_FIELDS)
+                    or {entry.filename for entry in entries} != {name+'.npy' for name in NPZ_FIELDS}
+                    or any(entry.compress_type != zipfile.ZIP_STORED for entry in entries)
+                    or sum(entry.file_size for entry in entries) > maximum):
+                raise ValueError('unexpected ciphertext container inventory or compression')
+            # Validate NPY headers before np.load can allocate a claimed shape.
+            expected = {
+                'payload': (np.dtype('uint32'), contract['shape']),
+                'moduli': (np.dtype('int64'), (len(contract['moduli']),)),
+                'degree_layout': (np.dtype('int64'), (2,)),
+                'precision': (np.dtype('int64'), ()), 'nsd': (np.dtype('int64'), ()),
+                'scale': (np.dtype('float64'), ()),
+            }
+            for entry in entries:
+                name = entry.filename[:-4]
+                with archive.open(entry) as stream:
+                    version = np.lib.format.read_magic(stream)
+                    if version not in ((1,0),(2,0)):raise ValueError('unsupported NPY format')
+>                   shape, fortran, dtype = np.lib.format._read_array_header(stream,version,max_header_size=512)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   AttributeError: module 'numpy.lib.format' has no attribute '_read_array_header'. Did you mean: 'read_array_header_1_0'?
+
+transport.py:114: AttributeError
+_______ ERROR at setup of test_artifact_rejections_before_backend[index] _______
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x743b9975afd0>, _basetemp=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-247'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope='module')
+    def request_cache(tmp_path_factory):
+        v=contract();binding=c.ciphertext_contract(v,'request',0,None,None)
+        path=tmp_path_factory.mktemp('full_transport')/'request'
+        with pytest.MonkeyPatch.context() as patch:
+            patch.setitem(sys.modules,'jaxite_word',types.SimpleNamespace(Polynomial=FakePolynomial))
+>           m=t.save_ciphertext(FakePolynomial(binding),path,contract=v,role='request',tile_index=0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_transport.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+transport.py:230: in save_ciphertext
+    _bundle(bundle_raw);_payload(payload_raw,binding)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+raw = b"PK\x03\x04-\x00\x00\x00\x00\x00\x00\x00!\x00\xee#\xdd\xc0\xff\xff\xff\xff\xff\xff\xff\xff\x0b\x00\x14\x00payload.npy...00\x00\x00\x00\x80\x01\xf6\x06@\x06nsd.npyPK\x05\x06\x00\x00\x00\x00\x06\x00\x06\x00W\x01\x00\x00\xb7\x07@\x06\x00\x00"
+contract = {'context_id': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'model_id': 'bbbbbbbbbbbbbbbbbbbbbb... 'opaque_sample_X', 'request_contract_sha256': '0d7b6147f33bffd5a14a5263fedd412191a3762b5250cb14442495e35276472c', ...}
+
+    def _payload(raw, contract):
+        maximum = math.prod(contract['shape'])*4 + 65536
+        if len(raw) > maximum:
+            raise ValueError('ciphertext container exceeds public size bound')
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            entries = archive.infolist()
+            if (len(entries) != len(NPZ_FIELDS)
+                    or {entry.filename for entry in entries} != {name+'.npy' for name in NPZ_FIELDS}
+                    or any(entry.compress_type != zipfile.ZIP_STORED for entry in entries)
+                    or sum(entry.file_size for entry in entries) > maximum):
+                raise ValueError('unexpected ciphertext container inventory or compression')
+            # Validate NPY headers before np.load can allocate a claimed shape.
+            expected = {
+                'payload': (np.dtype('uint32'), contract['shape']),
+                'moduli': (np.dtype('int64'), (len(contract['moduli']),)),
+                'degree_layout': (np.dtype('int64'), (2,)),
+                'precision': (np.dtype('int64'), ()), 'nsd': (np.dtype('int64'), ()),
+                'scale': (np.dtype('float64'), ()),
+            }
+            for entry in entries:
+                name = entry.filename[:-4]
+                with archive.open(entry) as stream:
+                    version = np.lib.format.read_magic(stream)
+                    if version not in ((1,0),(2,0)):raise ValueError('unsupported NPY format')
+>                   shape, fortran, dtype = np.lib.format._read_array_header(stream,version,max_header_size=512)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   AttributeError: module 'numpy.lib.format' has no attribute '_read_array_header'. Did you mean: 'read_array_header_1_0'?
+
+transport.py:114: AttributeError
+_______ ERROR at setup of test_artifact_rejections_before_backend[scale] _______
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x743b9975afd0>, _basetemp=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-247'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope='module')
+    def request_cache(tmp_path_factory):
+        v=contract();binding=c.ciphertext_contract(v,'request',0,None,None)
+        path=tmp_path_factory.mktemp('full_transport')/'request'
+        with pytest.MonkeyPatch.context() as patch:
+            patch.setitem(sys.modules,'jaxite_word',types.SimpleNamespace(Polynomial=FakePolynomial))
+>           m=t.save_ciphertext(FakePolynomial(binding),path,contract=v,role='request',tile_index=0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_transport.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+transport.py:230: in save_ciphertext
+    _bundle(bundle_raw);_payload(payload_raw,binding)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+raw = b"PK\x03\x04-\x00\x00\x00\x00\x00\x00\x00!\x00\xee#\xdd\xc0\xff\xff\xff\xff\xff\xff\xff\xff\x0b\x00\x14\x00payload.npy...00\x00\x00\x00\x80\x01\xf6\x06@\x06nsd.npyPK\x05\x06\x00\x00\x00\x00\x06\x00\x06\x00W\x01\x00\x00\xb7\x07@\x06\x00\x00"
+contract = {'context_id': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'model_id': 'bbbbbbbbbbbbbbbbbbbbbb... 'opaque_sample_X', 'request_contract_sha256': '0d7b6147f33bffd5a14a5263fedd412191a3762b5250cb14442495e35276472c', ...}
+
+    def _payload(raw, contract):
+        maximum = math.prod(contract['shape'])*4 + 65536
+        if len(raw) > maximum:
+            raise ValueError('ciphertext container exceeds public size bound')
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            entries = archive.infolist()
+            if (len(entries) != len(NPZ_FIELDS)
+                    or {entry.filename for entry in entries} != {name+'.npy' for name in NPZ_FIELDS}
+                    or any(entry.compress_type != zipfile.ZIP_STORED for entry in entries)
+                    or sum(entry.file_size for entry in entries) > maximum):
+                raise ValueError('unexpected ciphertext container inventory or compression')
+            # Validate NPY headers before np.load can allocate a claimed shape.
+            expected = {
+                'payload': (np.dtype('uint32'), contract['shape']),
+                'moduli': (np.dtype('int64'), (len(contract['moduli']),)),
+                'degree_layout': (np.dtype('int64'), (2,)),
+                'precision': (np.dtype('int64'), ()), 'nsd': (np.dtype('int64'), ()),
+                'scale': (np.dtype('float64'), ()),
+            }
+            for entry in entries:
+                name = entry.filename[:-4]
+                with archive.open(entry) as stream:
+                    version = np.lib.format.read_magic(stream)
+                    if version not in ((1,0),(2,0)):raise ValueError('unsupported NPY format')
+>                   shape, fortran, dtype = np.lib.format._read_array_header(stream,version,max_header_size=512)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   AttributeError: module 'numpy.lib.format' has no attribute '_read_array_header'. Did you mean: 'read_array_header_1_0'?
+
+transport.py:114: AttributeError
+_______ ERROR at setup of test_artifact_rejections_before_backend[level] _______
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x743b9975afd0>, _basetemp=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-247'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope='module')
+    def request_cache(tmp_path_factory):
+        v=contract();binding=c.ciphertext_contract(v,'request',0,None,None)
+        path=tmp_path_factory.mktemp('full_transport')/'request'
+        with pytest.MonkeyPatch.context() as patch:
+            patch.setitem(sys.modules,'jaxite_word',types.SimpleNamespace(Polynomial=FakePolynomial))
+>           m=t.save_ciphertext(FakePolynomial(binding),path,contract=v,role='request',tile_index=0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_transport.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+transport.py:230: in save_ciphertext
+    _bundle(bundle_raw);_payload(payload_raw,binding)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+raw = b"PK\x03\x04-\x00\x00\x00\x00\x00\x00\x00!\x00\xee#\xdd\xc0\xff\xff\xff\xff\xff\xff\xff\xff\x0b\x00\x14\x00payload.npy...00\x00\x00\x00\x80\x01\xf6\x06@\x06nsd.npyPK\x05\x06\x00\x00\x00\x00\x06\x00\x06\x00W\x01\x00\x00\xb7\x07@\x06\x00\x00"
+contract = {'context_id': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'model_id': 'bbbbbbbbbbbbbbbbbbbbbb... 'opaque_sample_X', 'request_contract_sha256': '0d7b6147f33bffd5a14a5263fedd412191a3762b5250cb14442495e35276472c', ...}
+
+    def _payload(raw, contract):
+        maximum = math.prod(contract['shape'])*4 + 65536
+        if len(raw) > maximum:
+            raise ValueError('ciphertext container exceeds public size bound')
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            entries = archive.infolist()
+            if (len(entries) != len(NPZ_FIELDS)
+                    or {entry.filename for entry in entries} != {name+'.npy' for name in NPZ_FIELDS}
+                    or any(entry.compress_type != zipfile.ZIP_STORED for entry in entries)
+                    or sum(entry.file_size for entry in entries) > maximum):
+                raise ValueError('unexpected ciphertext container inventory or compression')
+            # Validate NPY headers before np.load can allocate a claimed shape.
+            expected = {
+                'payload': (np.dtype('uint32'), contract['shape']),
+                'moduli': (np.dtype('int64'), (len(contract['moduli']),)),
+                'degree_layout': (np.dtype('int64'), (2,)),
+                'precision': (np.dtype('int64'), ()), 'nsd': (np.dtype('int64'), ()),
+                'scale': (np.dtype('float64'), ()),
+            }
+            for entry in entries:
+                name = entry.filename[:-4]
+                with archive.open(entry) as stream:
+                    version = np.lib.format.read_magic(stream)
+                    if version not in ((1,0),(2,0)):raise ValueError('unsupported NPY format')
+>                   shape, fortran, dtype = np.lib.format._read_array_header(stream,version,max_header_size=512)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   AttributeError: module 'numpy.lib.format' has no attribute '_read_array_header'. Did you mean: 'read_array_header_1_0'?
+
+transport.py:114: AttributeError
+_____ ERROR at setup of test_artifact_rejections_before_backend[nsd_extra] _____
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x743b9975afd0>, _basetemp=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-247'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope='module')
+    def request_cache(tmp_path_factory):
+        v=contract();binding=c.ciphertext_contract(v,'request',0,None,None)
+        path=tmp_path_factory.mktemp('full_transport')/'request'
+        with pytest.MonkeyPatch.context() as patch:
+            patch.setitem(sys.modules,'jaxite_word',types.SimpleNamespace(Polynomial=FakePolynomial))
+>           m=t.save_ciphertext(FakePolynomial(binding),path,contract=v,role='request',tile_index=0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_transport.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+transport.py:230: in save_ciphertext
+    _bundle(bundle_raw);_payload(payload_raw,binding)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+raw = b"PK\x03\x04-\x00\x00\x00\x00\x00\x00\x00!\x00\xee#\xdd\xc0\xff\xff\xff\xff\xff\xff\xff\xff\x0b\x00\x14\x00payload.npy...00\x00\x00\x00\x80\x01\xf6\x06@\x06nsd.npyPK\x05\x06\x00\x00\x00\x00\x06\x00\x06\x00W\x01\x00\x00\xb7\x07@\x06\x00\x00"
+contract = {'context_id': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'model_id': 'bbbbbbbbbbbbbbbbbbbbbb... 'opaque_sample_X', 'request_contract_sha256': '0d7b6147f33bffd5a14a5263fedd412191a3762b5250cb14442495e35276472c', ...}
+
+    def _payload(raw, contract):
+        maximum = math.prod(contract['shape'])*4 + 65536
+        if len(raw) > maximum:
+            raise ValueError('ciphertext container exceeds public size bound')
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            entries = archive.infolist()
+            if (len(entries) != len(NPZ_FIELDS)
+                    or {entry.filename for entry in entries} != {name+'.npy' for name in NPZ_FIELDS}
+                    or any(entry.compress_type != zipfile.ZIP_STORED for entry in entries)
+                    or sum(entry.file_size for entry in entries) > maximum):
+                raise ValueError('unexpected ciphertext container inventory or compression')
+            # Validate NPY headers before np.load can allocate a claimed shape.
+            expected = {
+                'payload': (np.dtype('uint32'), contract['shape']),
+                'moduli': (np.dtype('int64'), (len(contract['moduli']),)),
+                'degree_layout': (np.dtype('int64'), (2,)),
+                'precision': (np.dtype('int64'), ()), 'nsd': (np.dtype('int64'), ()),
+                'scale': (np.dtype('float64'), ()),
+            }
+            for entry in entries:
+                name = entry.filename[:-4]
+                with archive.open(entry) as stream:
+                    version = np.lib.format.read_magic(stream)
+                    if version not in ((1,0),(2,0)):raise ValueError('unsupported NPY format')
+>                   shape, fortran, dtype = np.lib.format._read_array_header(stream,version,max_header_size=512)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   AttributeError: module 'numpy.lib.format' has no attribute '_read_array_header'. Did you mean: 'read_array_header_1_0'?
+
+transport.py:114: AttributeError
+________ ERROR at setup of test_artifact_rejections_before_backend[ctx] ________
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x743b9975afd0>, _basetemp=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-247'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope='module')
+    def request_cache(tmp_path_factory):
+        v=contract();binding=c.ciphertext_contract(v,'request',0,None,None)
+        path=tmp_path_factory.mktemp('full_transport')/'request'
+        with pytest.MonkeyPatch.context() as patch:
+            patch.setitem(sys.modules,'jaxite_word',types.SimpleNamespace(Polynomial=FakePolynomial))
+>           m=t.save_ciphertext(FakePolynomial(binding),path,contract=v,role='request',tile_index=0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_transport.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+transport.py:230: in save_ciphertext
+    _bundle(bundle_raw);_payload(payload_raw,binding)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+raw = b"PK\x03\x04-\x00\x00\x00\x00\x00\x00\x00!\x00\xee#\xdd\xc0\xff\xff\xff\xff\xff\xff\xff\xff\x0b\x00\x14\x00payload.npy...00\x00\x00\x00\x80\x01\xf6\x06@\x06nsd.npyPK\x05\x06\x00\x00\x00\x00\x06\x00\x06\x00W\x01\x00\x00\xb7\x07@\x06\x00\x00"
+contract = {'context_id': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'model_id': 'bbbbbbbbbbbbbbbbbbbbbb... 'opaque_sample_X', 'request_contract_sha256': '0d7b6147f33bffd5a14a5263fedd412191a3762b5250cb14442495e35276472c', ...}
+
+    def _payload(raw, contract):
+        maximum = math.prod(contract['shape'])*4 + 65536
+        if len(raw) > maximum:
+            raise ValueError('ciphertext container exceeds public size bound')
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            entries = archive.infolist()
+            if (len(entries) != len(NPZ_FIELDS)
+                    or {entry.filename for entry in entries} != {name+'.npy' for name in NPZ_FIELDS}
+                    or any(entry.compress_type != zipfile.ZIP_STORED for entry in entries)
+                    or sum(entry.file_size for entry in entries) > maximum):
+                raise ValueError('unexpected ciphertext container inventory or compression')
+            # Validate NPY headers before np.load can allocate a claimed shape.
+            expected = {
+                'payload': (np.dtype('uint32'), contract['shape']),
+                'moduli': (np.dtype('int64'), (len(contract['moduli']),)),
+                'degree_layout': (np.dtype('int64'), (2,)),
+                'precision': (np.dtype('int64'), ()), 'nsd': (np.dtype('int64'), ()),
+                'scale': (np.dtype('float64'), ()),
+            }
+            for entry in entries:
+                name = entry.filename[:-4]
+                with archive.open(entry) as stream:
+                    version = np.lib.format.read_magic(stream)
+                    if version not in ((1,0),(2,0)):raise ValueError('unsupported NPY format')
+>                   shape, fortran, dtype = np.lib.format._read_array_header(stream,version,max_header_size=512)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   AttributeError: module 'numpy.lib.format' has no attribute '_read_array_header'. Did you mean: 'read_array_header_1_0'?
+
+transport.py:114: AttributeError
+_______ ERROR at setup of test_artifact_rejections_before_backend[nonce] _______
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x743b9975afd0>, _basetemp=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-247'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope='module')
+    def request_cache(tmp_path_factory):
+        v=contract();binding=c.ciphertext_contract(v,'request',0,None,None)
+        path=tmp_path_factory.mktemp('full_transport')/'request'
+        with pytest.MonkeyPatch.context() as patch:
+            patch.setitem(sys.modules,'jaxite_word',types.SimpleNamespace(Polynomial=FakePolynomial))
+>           m=t.save_ciphertext(FakePolynomial(binding),path,contract=v,role='request',tile_index=0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_transport.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+transport.py:230: in save_ciphertext
+    _bundle(bundle_raw);_payload(payload_raw,binding)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+raw = b"PK\x03\x04-\x00\x00\x00\x00\x00\x00\x00!\x00\xee#\xdd\xc0\xff\xff\xff\xff\xff\xff\xff\xff\x0b\x00\x14\x00payload.npy...00\x00\x00\x00\x80\x01\xf6\x06@\x06nsd.npyPK\x05\x06\x00\x00\x00\x00\x06\x00\x06\x00W\x01\x00\x00\xb7\x07@\x06\x00\x00"
+contract = {'context_id': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'model_id': 'bbbbbbbbbbbbbbbbbbbbbb... 'opaque_sample_X', 'request_contract_sha256': '0d7b6147f33bffd5a14a5263fedd412191a3762b5250cb14442495e35276472c', ...}
+
+    def _payload(raw, contract):
+        maximum = math.prod(contract['shape'])*4 + 65536
+        if len(raw) > maximum:
+            raise ValueError('ciphertext container exceeds public size bound')
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            entries = archive.infolist()
+            if (len(entries) != len(NPZ_FIELDS)
+                    or {entry.filename for entry in entries} != {name+'.npy' for name in NPZ_FIELDS}
+                    or any(entry.compress_type != zipfile.ZIP_STORED for entry in entries)
+                    or sum(entry.file_size for entry in entries) > maximum):
+                raise ValueError('unexpected ciphertext container inventory or compression')
+            # Validate NPY headers before np.load can allocate a claimed shape.
+            expected = {
+                'payload': (np.dtype('uint32'), contract['shape']),
+                'moduli': (np.dtype('int64'), (len(contract['moduli']),)),
+                'degree_layout': (np.dtype('int64'), (2,)),
+                'precision': (np.dtype('int64'), ()), 'nsd': (np.dtype('int64'), ()),
+                'scale': (np.dtype('float64'), ()),
+            }
+            for entry in entries:
+                name = entry.filename[:-4]
+                with archive.open(entry) as stream:
+                    version = np.lib.format.read_magic(stream)
+                    if version not in ((1,0),(2,0)):raise ValueError('unsupported NPY format')
+>                   shape, fortran, dtype = np.lib.format._read_array_header(stream,version,max_header_size=512)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   AttributeError: module 'numpy.lib.format' has no attribute '_read_array_header'. Did you mean: 'read_array_header_1_0'?
+
+transport.py:114: AttributeError
+_____ ERROR at setup of test_artifact_rejections_before_backend[contract] ______
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x743b9975afd0>, _basetemp=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-247'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope='module')
+    def request_cache(tmp_path_factory):
+        v=contract();binding=c.ciphertext_contract(v,'request',0,None,None)
+        path=tmp_path_factory.mktemp('full_transport')/'request'
+        with pytest.MonkeyPatch.context() as patch:
+            patch.setitem(sys.modules,'jaxite_word',types.SimpleNamespace(Polynomial=FakePolynomial))
+>           m=t.save_ciphertext(FakePolynomial(binding),path,contract=v,role='request',tile_index=0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_transport.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+transport.py:230: in save_ciphertext
+    _bundle(bundle_raw);_payload(payload_raw,binding)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+raw = b"PK\x03\x04-\x00\x00\x00\x00\x00\x00\x00!\x00\xee#\xdd\xc0\xff\xff\xff\xff\xff\xff\xff\xff\x0b\x00\x14\x00payload.npy...00\x00\x00\x00\x80\x01\xf6\x06@\x06nsd.npyPK\x05\x06\x00\x00\x00\x00\x06\x00\x06\x00W\x01\x00\x00\xb7\x07@\x06\x00\x00"
+contract = {'context_id': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'model_id': 'bbbbbbbbbbbbbbbbbbbbbb... 'opaque_sample_X', 'request_contract_sha256': '0d7b6147f33bffd5a14a5263fedd412191a3762b5250cb14442495e35276472c', ...}
+
+    def _payload(raw, contract):
+        maximum = math.prod(contract['shape'])*4 + 65536
+        if len(raw) > maximum:
+            raise ValueError('ciphertext container exceeds public size bound')
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            entries = archive.infolist()
+            if (len(entries) != len(NPZ_FIELDS)
+                    or {entry.filename for entry in entries} != {name+'.npy' for name in NPZ_FIELDS}
+                    or any(entry.compress_type != zipfile.ZIP_STORED for entry in entries)
+                    or sum(entry.file_size for entry in entries) > maximum):
+                raise ValueError('unexpected ciphertext container inventory or compression')
+            # Validate NPY headers before np.load can allocate a claimed shape.
+            expected = {
+                'payload': (np.dtype('uint32'), contract['shape']),
+                'moduli': (np.dtype('int64'), (len(contract['moduli']),)),
+                'degree_layout': (np.dtype('int64'), (2,)),
+                'precision': (np.dtype('int64'), ()), 'nsd': (np.dtype('int64'), ()),
+                'scale': (np.dtype('float64'), ()),
+            }
+            for entry in entries:
+                name = entry.filename[:-4]
+                with archive.open(entry) as stream:
+                    version = np.lib.format.read_magic(stream)
+                    if version not in ((1,0),(2,0)):raise ValueError('unsupported NPY format')
+>                   shape, fortran, dtype = np.lib.format._read_array_header(stream,version,max_header_size=512)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   AttributeError: module 'numpy.lib.format' has no attribute '_read_array_header'. Did you mean: 'read_array_header_1_0'?
+
+transport.py:114: AttributeError
+______ ERROR at setup of test_artifact_rejections_before_backend[missing] ______
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x743b9975afd0>, _basetemp=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-247'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope='module')
+    def request_cache(tmp_path_factory):
+        v=contract();binding=c.ciphertext_contract(v,'request',0,None,None)
+        path=tmp_path_factory.mktemp('full_transport')/'request'
+        with pytest.MonkeyPatch.context() as patch:
+            patch.setitem(sys.modules,'jaxite_word',types.SimpleNamespace(Polynomial=FakePolynomial))
+>           m=t.save_ciphertext(FakePolynomial(binding),path,contract=v,role='request',tile_index=0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_transport.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+transport.py:230: in save_ciphertext
+    _bundle(bundle_raw);_payload(payload_raw,binding)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+raw = b"PK\x03\x04-\x00\x00\x00\x00\x00\x00\x00!\x00\xee#\xdd\xc0\xff\xff\xff\xff\xff\xff\xff\xff\x0b\x00\x14\x00payload.npy...00\x00\x00\x00\x80\x01\xf6\x06@\x06nsd.npyPK\x05\x06\x00\x00\x00\x00\x06\x00\x06\x00W\x01\x00\x00\xb7\x07@\x06\x00\x00"
+contract = {'context_id': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'model_id': 'bbbbbbbbbbbbbbbbbbbbbb... 'opaque_sample_X', 'request_contract_sha256': '0d7b6147f33bffd5a14a5263fedd412191a3762b5250cb14442495e35276472c', ...}
+
+    def _payload(raw, contract):
+        maximum = math.prod(contract['shape'])*4 + 65536
+        if len(raw) > maximum:
+            raise ValueError('ciphertext container exceeds public size bound')
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            entries = archive.infolist()
+            if (len(entries) != len(NPZ_FIELDS)
+                    or {entry.filename for entry in entries} != {name+'.npy' for name in NPZ_FIELDS}
+                    or any(entry.compress_type != zipfile.ZIP_STORED for entry in entries)
+                    or sum(entry.file_size for entry in entries) > maximum):
+                raise ValueError('unexpected ciphertext container inventory or compression')
+            # Validate NPY headers before np.load can allocate a claimed shape.
+            expected = {
+                'payload': (np.dtype('uint32'), contract['shape']),
+                'moduli': (np.dtype('int64'), (len(contract['moduli']),)),
+                'degree_layout': (np.dtype('int64'), (2,)),
+                'precision': (np.dtype('int64'), ()), 'nsd': (np.dtype('int64'), ()),
+                'scale': (np.dtype('float64'), ()),
+            }
+            for entry in entries:
+                name = entry.filename[:-4]
+                with archive.open(entry) as stream:
+                    version = np.lib.format.read_magic(stream)
+                    if version not in ((1,0),(2,0)):raise ValueError('unsupported NPY format')
+>                   shape, fortran, dtype = np.lib.format._read_array_header(stream,version,max_header_size=512)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   AttributeError: module 'numpy.lib.format' has no attribute '_read_array_header'. Did you mean: 'read_array_header_1_0'?
+
+transport.py:114: AttributeError
+_______ ERROR at setup of test_artifact_rejections_before_backend[extra] _______
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x743b9975afd0>, _basetemp=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-247'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope='module')
+    def request_cache(tmp_path_factory):
+        v=contract();binding=c.ciphertext_contract(v,'request',0,None,None)
+        path=tmp_path_factory.mktemp('full_transport')/'request'
+        with pytest.MonkeyPatch.context() as patch:
+            patch.setitem(sys.modules,'jaxite_word',types.SimpleNamespace(Polynomial=FakePolynomial))
+>           m=t.save_ciphertext(FakePolynomial(binding),path,contract=v,role='request',tile_index=0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_transport.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+transport.py:230: in save_ciphertext
+    _bundle(bundle_raw);_payload(payload_raw,binding)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+raw = b"PK\x03\x04-\x00\x00\x00\x00\x00\x00\x00!\x00\xee#\xdd\xc0\xff\xff\xff\xff\xff\xff\xff\xff\x0b\x00\x14\x00payload.npy...00\x00\x00\x00\x80\x01\xf6\x06@\x06nsd.npyPK\x05\x06\x00\x00\x00\x00\x06\x00\x06\x00W\x01\x00\x00\xb7\x07@\x06\x00\x00"
+contract = {'context_id': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'model_id': 'bbbbbbbbbbbbbbbbbbbbbb... 'opaque_sample_X', 'request_contract_sha256': '0d7b6147f33bffd5a14a5263fedd412191a3762b5250cb14442495e35276472c', ...}
+
+    def _payload(raw, contract):
+        maximum = math.prod(contract['shape'])*4 + 65536
+        if len(raw) > maximum:
+            raise ValueError('ciphertext container exceeds public size bound')
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            entries = archive.infolist()
+            if (len(entries) != len(NPZ_FIELDS)
+                    or {entry.filename for entry in entries} != {name+'.npy' for name in NPZ_FIELDS}
+                    or any(entry.compress_type != zipfile.ZIP_STORED for entry in entries)
+                    or sum(entry.file_size for entry in entries) > maximum):
+                raise ValueError('unexpected ciphertext container inventory or compression')
+            # Validate NPY headers before np.load can allocate a claimed shape.
+            expected = {
+                'payload': (np.dtype('uint32'), contract['shape']),
+                'moduli': (np.dtype('int64'), (len(contract['moduli']),)),
+                'degree_layout': (np.dtype('int64'), (2,)),
+                'precision': (np.dtype('int64'), ()), 'nsd': (np.dtype('int64'), ()),
+                'scale': (np.dtype('float64'), ()),
+            }
+            for entry in entries:
+                name = entry.filename[:-4]
+                with archive.open(entry) as stream:
+                    version = np.lib.format.read_magic(stream)
+                    if version not in ((1,0),(2,0)):raise ValueError('unsupported NPY format')
+>                   shape, fortran, dtype = np.lib.format._read_array_header(stream,version,max_header_size=512)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   AttributeError: module 'numpy.lib.format' has no attribute '_read_array_header'. Did you mean: 'read_array_header_1_0'?
+
+transport.py:114: AttributeError
+__ ERROR at setup of test_artifact_rejections_before_backend[duplicate_json] ___
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x743b9975afd0>, _basetemp=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-247'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope='module')
+    def request_cache(tmp_path_factory):
+        v=contract();binding=c.ciphertext_contract(v,'request',0,None,None)
+        path=tmp_path_factory.mktemp('full_transport')/'request'
+        with pytest.MonkeyPatch.context() as patch:
+            patch.setitem(sys.modules,'jaxite_word',types.SimpleNamespace(Polynomial=FakePolynomial))
+>           m=t.save_ciphertext(FakePolynomial(binding),path,contract=v,role='request',tile_index=0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_transport.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+transport.py:230: in save_ciphertext
+    _bundle(bundle_raw);_payload(payload_raw,binding)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+raw = b"PK\x03\x04-\x00\x00\x00\x00\x00\x00\x00!\x00\xee#\xdd\xc0\xff\xff\xff\xff\xff\xff\xff\xff\x0b\x00\x14\x00payload.npy...00\x00\x00\x00\x80\x01\xf6\x06@\x06nsd.npyPK\x05\x06\x00\x00\x00\x00\x06\x00\x06\x00W\x01\x00\x00\xb7\x07@\x06\x00\x00"
+contract = {'context_id': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'model_id': 'bbbbbbbbbbbbbbbbbbbbbb... 'opaque_sample_X', 'request_contract_sha256': '0d7b6147f33bffd5a14a5263fedd412191a3762b5250cb14442495e35276472c', ...}
+
+    def _payload(raw, contract):
+        maximum = math.prod(contract['shape'])*4 + 65536
+        if len(raw) > maximum:
+            raise ValueError('ciphertext container exceeds public size bound')
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            entries = archive.infolist()
+            if (len(entries) != len(NPZ_FIELDS)
+                    or {entry.filename for entry in entries} != {name+'.npy' for name in NPZ_FIELDS}
+                    or any(entry.compress_type != zipfile.ZIP_STORED for entry in entries)
+                    or sum(entry.file_size for entry in entries) > maximum):
+                raise ValueError('unexpected ciphertext container inventory or compression')
+            # Validate NPY headers before np.load can allocate a claimed shape.
+            expected = {
+                'payload': (np.dtype('uint32'), contract['shape']),
+                'moduli': (np.dtype('int64'), (len(contract['moduli']),)),
+                'degree_layout': (np.dtype('int64'), (2,)),
+                'precision': (np.dtype('int64'), ()), 'nsd': (np.dtype('int64'), ()),
+                'scale': (np.dtype('float64'), ()),
+            }
+            for entry in entries:
+                name = entry.filename[:-4]
+                with archive.open(entry) as stream:
+                    version = np.lib.format.read_magic(stream)
+                    if version not in ((1,0),(2,0)):raise ValueError('unsupported NPY format')
+>                   shape, fortran, dtype = np.lib.format._read_array_header(stream,version,max_header_size=512)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   AttributeError: module 'numpy.lib.format' has no attribute '_read_array_header'. Did you mean: 'read_array_header_1_0'?
+
+transport.py:114: AttributeError
+_ ERROR at setup of test_artifact_rejections_before_backend[bundle_plaintext] __
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x743b9975afd0>, _basetemp=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-247'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope='module')
+    def request_cache(tmp_path_factory):
+        v=contract();binding=c.ciphertext_contract(v,'request',0,None,None)
+        path=tmp_path_factory.mktemp('full_transport')/'request'
+        with pytest.MonkeyPatch.context() as patch:
+            patch.setitem(sys.modules,'jaxite_word',types.SimpleNamespace(Polynomial=FakePolynomial))
+>           m=t.save_ciphertext(FakePolynomial(binding),path,contract=v,role='request',tile_index=0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_transport.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+transport.py:230: in save_ciphertext
+    _bundle(bundle_raw);_payload(payload_raw,binding)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+raw = b"PK\x03\x04-\x00\x00\x00\x00\x00\x00\x00!\x00\xee#\xdd\xc0\xff\xff\xff\xff\xff\xff\xff\xff\x0b\x00\x14\x00payload.npy...00\x00\x00\x00\x80\x01\xf6\x06@\x06nsd.npyPK\x05\x06\x00\x00\x00\x00\x06\x00\x06\x00W\x01\x00\x00\xb7\x07@\x06\x00\x00"
+contract = {'context_id': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'model_id': 'bbbbbbbbbbbbbbbbbbbbbb... 'opaque_sample_X', 'request_contract_sha256': '0d7b6147f33bffd5a14a5263fedd412191a3762b5250cb14442495e35276472c', ...}
+
+    def _payload(raw, contract):
+        maximum = math.prod(contract['shape'])*4 + 65536
+        if len(raw) > maximum:
+            raise ValueError('ciphertext container exceeds public size bound')
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            entries = archive.infolist()
+            if (len(entries) != len(NPZ_FIELDS)
+                    or {entry.filename for entry in entries} != {name+'.npy' for name in NPZ_FIELDS}
+                    or any(entry.compress_type != zipfile.ZIP_STORED for entry in entries)
+                    or sum(entry.file_size for entry in entries) > maximum):
+                raise ValueError('unexpected ciphertext container inventory or compression')
+            # Validate NPY headers before np.load can allocate a claimed shape.
+            expected = {
+                'payload': (np.dtype('uint32'), contract['shape']),
+                'moduli': (np.dtype('int64'), (len(contract['moduli']),)),
+                'degree_layout': (np.dtype('int64'), (2,)),
+                'precision': (np.dtype('int64'), ()), 'nsd': (np.dtype('int64'), ()),
+                'scale': (np.dtype('float64'), ()),
+            }
+            for entry in entries:
+                name = entry.filename[:-4]
+                with archive.open(entry) as stream:
+                    version = np.lib.format.read_magic(stream)
+                    if version not in ((1,0),(2,0)):raise ValueError('unsupported NPY format')
+>                   shape, fortran, dtype = np.lib.format._read_array_header(stream,version,max_header_size=512)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   AttributeError: module 'numpy.lib.format' has no attribute '_read_array_header'. Did you mean: 'read_array_header_1_0'?
+
+transport.py:114: AttributeError
+______ ERROR at setup of test_artifact_rejections_before_backend[symlink] ______
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x743b9975afd0>, _basetemp=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-247'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope='module')
+    def request_cache(tmp_path_factory):
+        v=contract();binding=c.ciphertext_contract(v,'request',0,None,None)
+        path=tmp_path_factory.mktemp('full_transport')/'request'
+        with pytest.MonkeyPatch.context() as patch:
+            patch.setitem(sys.modules,'jaxite_word',types.SimpleNamespace(Polynomial=FakePolynomial))
+>           m=t.save_ciphertext(FakePolynomial(binding),path,contract=v,role='request',tile_index=0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_transport.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+transport.py:230: in save_ciphertext
+    _bundle(bundle_raw);_payload(payload_raw,binding)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+raw = b"PK\x03\x04-\x00\x00\x00\x00\x00\x00\x00!\x00\xee#\xdd\xc0\xff\xff\xff\xff\xff\xff\xff\xff\x0b\x00\x14\x00payload.npy...00\x00\x00\x00\x80\x01\xf6\x06@\x06nsd.npyPK\x05\x06\x00\x00\x00\x00\x06\x00\x06\x00W\x01\x00\x00\xb7\x07@\x06\x00\x00"
+contract = {'context_id': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'model_id': 'bbbbbbbbbbbbbbbbbbbbbb... 'opaque_sample_X', 'request_contract_sha256': '0d7b6147f33bffd5a14a5263fedd412191a3762b5250cb14442495e35276472c', ...}
+
+    def _payload(raw, contract):
+        maximum = math.prod(contract['shape'])*4 + 65536
+        if len(raw) > maximum:
+            raise ValueError('ciphertext container exceeds public size bound')
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            entries = archive.infolist()
+            if (len(entries) != len(NPZ_FIELDS)
+                    or {entry.filename for entry in entries} != {name+'.npy' for name in NPZ_FIELDS}
+                    or any(entry.compress_type != zipfile.ZIP_STORED for entry in entries)
+                    or sum(entry.file_size for entry in entries) > maximum):
+                raise ValueError('unexpected ciphertext container inventory or compression')
+            # Validate NPY headers before np.load can allocate a claimed shape.
+            expected = {
+                'payload': (np.dtype('uint32'), contract['shape']),
+                'moduli': (np.dtype('int64'), (len(contract['moduli']),)),
+                'degree_layout': (np.dtype('int64'), (2,)),
+                'precision': (np.dtype('int64'), ()), 'nsd': (np.dtype('int64'), ()),
+                'scale': (np.dtype('float64'), ()),
+            }
+            for entry in entries:
+                name = entry.filename[:-4]
+                with archive.open(entry) as stream:
+                    version = np.lib.format.read_magic(stream)
+                    if version not in ((1,0),(2,0)):raise ValueError('unsupported NPY format')
+>                   shape, fortran, dtype = np.lib.format._read_array_header(stream,version,max_header_size=512)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   AttributeError: module 'numpy.lib.format' has no attribute '_read_array_header'. Did you mean: 'read_array_header_1_0'?
+
+transport.py:114: AttributeError
+_______ ERROR at setup of test_artifact_rejections_before_backend[fifo] ________
+
+tmp_path_factory = TempPathFactory(_given_basetemp=None, _trace=<pluggy._tracing.TagTracerSub object at 0x743b9975afd0>, _basetemp=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-247'), _retention_count=3, _retention_policy='all')
+
+    @pytest.fixture(scope='module')
+    def request_cache(tmp_path_factory):
+        v=contract();binding=c.ciphertext_contract(v,'request',0,None,None)
+        path=tmp_path_factory.mktemp('full_transport')/'request'
+        with pytest.MonkeyPatch.context() as patch:
+            patch.setitem(sys.modules,'jaxite_word',types.SimpleNamespace(Polynomial=FakePolynomial))
+>           m=t.save_ciphertext(FakePolynomial(binding),path,contract=v,role='request',tile_index=0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_transport.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+transport.py:230: in save_ciphertext
+    _bundle(bundle_raw);_payload(payload_raw,binding)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+raw = b"PK\x03\x04-\x00\x00\x00\x00\x00\x00\x00!\x00\xee#\xdd\xc0\xff\xff\xff\xff\xff\xff\xff\xff\x0b\x00\x14\x00payload.npy...00\x00\x00\x00\x80\x01\xf6\x06@\x06nsd.npyPK\x05\x06\x00\x00\x00\x00\x06\x00\x06\x00W\x01\x00\x00\xb7\x07@\x06\x00\x00"
+contract = {'context_id': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'model_id': 'bbbbbbbbbbbbbbbbbbbbbb... 'opaque_sample_X', 'request_contract_sha256': '0d7b6147f33bffd5a14a5263fedd412191a3762b5250cb14442495e35276472c', ...}
+
+    def _payload(raw, contract):
+        maximum = math.prod(contract['shape'])*4 + 65536
+        if len(raw) > maximum:
+            raise ValueError('ciphertext container exceeds public size bound')
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            entries = archive.infolist()
+            if (len(entries) != len(NPZ_FIELDS)
+                    or {entry.filename for entry in entries} != {name+'.npy' for name in NPZ_FIELDS}
+                    or any(entry.compress_type != zipfile.ZIP_STORED for entry in entries)
+                    or sum(entry.file_size for entry in entries) > maximum):
+                raise ValueError('unexpected ciphertext container inventory or compression')
+            # Validate NPY headers before np.load can allocate a claimed shape.
+            expected = {
+                'payload': (np.dtype('uint32'), contract['shape']),
+                'moduli': (np.dtype('int64'), (len(contract['moduli']),)),
+                'degree_layout': (np.dtype('int64'), (2,)),
+                'precision': (np.dtype('int64'), ()), 'nsd': (np.dtype('int64'), ()),
+                'scale': (np.dtype('float64'), ()),
+            }
+            for entry in entries:
+                name = entry.filename[:-4]
+                with archive.open(entry) as stream:
+                    version = np.lib.format.read_magic(stream)
+                    if version not in ((1,0),(2,0)):raise ValueError('unsupported NPY format')
+>                   shape, fortran, dtype = np.lib.format._read_array_header(stream,version,max_header_size=512)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   AttributeError: module 'numpy.lib.format' has no attribute '_read_array_header'. Did you mean: 'read_array_header_1_0'?
+
+transport.py:114: AttributeError
+=================================== FAILURES ===================================
+___________________ test_response_actual_noncanonical_scale ____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-247/test_response_actual_noncanoni0')
+fake_backend = None
+
+    def test_response_actual_noncanonical_scale(tmp_path,fake_backend):
+        v=contract();scale=float(c.parameters()['scaling_factor']*1.21);d='a'*64
+        b=c.ciphertext_contract(v,'response',0,scale,d);p=tmp_path/'response'
+>       m=t.save_ciphertext(FakePolynomial(b),p,contract=v,role='response',tile_index=0,expected_scale=scale,input_digest=d)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_transport.py:140: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+transport.py:230: in save_ciphertext
+    _bundle(bundle_raw);_payload(payload_raw,binding)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+raw = b"PK\x03\x04-\x00\x00\x00\x00\x00\x00\x00!\x00iI\x1c\xdd\xff\xff\xff\xff\xff\xff\xff\xff\x0b\x00\x14\x00payload.npy\x0...00\x00\x00\x00\x80\x01\x06\x04`\x00nsd.npyPK\x05\x06\x00\x00\x00\x00\x06\x00\x06\x00W\x01\x00\x00\xc7\x04`\x00\x00\x00"
+contract = {'context_id': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'model_id': 'bbbbbbbbbbbbbbbbbbbbbb... 'opaque_sample_X', 'request_contract_sha256': '0d7b6147f33bffd5a14a5263fedd412191a3762b5250cb14442495e35276472c', ...}
+
+    def _payload(raw, contract):
+        maximum = math.prod(contract['shape'])*4 + 65536
+        if len(raw) > maximum:
+            raise ValueError('ciphertext container exceeds public size bound')
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            entries = archive.infolist()
+            if (len(entries) != len(NPZ_FIELDS)
+                    or {entry.filename for entry in entries} != {name+'.npy' for name in NPZ_FIELDS}
+                    or any(entry.compress_type != zipfile.ZIP_STORED for entry in entries)
+                    or sum(entry.file_size for entry in entries) > maximum):
+                raise ValueError('unexpected ciphertext container inventory or compression')
+            # Validate NPY headers before np.load can allocate a claimed shape.
+            expected = {
+                'payload': (np.dtype('uint32'), contract['shape']),
+                'moduli': (np.dtype('int64'), (len(contract['moduli']),)),
+                'degree_layout': (np.dtype('int64'), (2,)),
+                'precision': (np.dtype('int64'), ()), 'nsd': (np.dtype('int64'), ()),
+                'scale': (np.dtype('float64'), ()),
+            }
+            for entry in entries:
+                name = entry.filename[:-4]
+                with archive.open(entry) as stream:
+                    version = np.lib.format.read_magic(stream)
+                    if version not in ((1,0),(2,0)):raise ValueError('unsupported NPY format')
+>                   shape, fortran, dtype = np.lib.format._read_array_header(stream,version,max_header_size=512)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   AttributeError: module 'numpy.lib.format' has no attribute '_read_array_header'. Did you mean: 'read_array_header_1_0'?
+
+transport.py:114: AttributeError
+__________________ test_strict_payload_reader[payload_dtype] ___________________
+
+kind = 'payload_dtype'
+
+    @pytest.mark.parametrize('kind',['payload_dtype','payload_shape','residue','negative','scale','nsd','moduli','fortran','extra','compressed','truncated','oversized_header'])
+    def test_strict_payload_reader(kind):
+        a=payload_arrays();raw=None
+        if kind=='payload_dtype':a['payload']=a['payload'].astype(np.uint64)
+        elif kind=='payload_shape':a['payload']=a['payload'].ravel()
+        elif kind=='residue':a['payload'].flat[0]=17
+        elif kind=='negative':a['payload']=a['payload'].astype(np.int32);a['payload'].flat[0]=-1
+        elif kind=='scale':a['scale']=np.float64(np.nextafter(1.,2.))
+        elif kind=='nsd':a['nsd']=np.float64(1.)
+        elif kind=='moduli':a['moduli']=a['moduli'][::-1]
+        elif kind=='fortran':a['payload']=np.asfortranarray(a['payload'])
+        elif kind=='extra':a['private_target']=np.int64(123)
+        elif kind=='oversized_header':
+            stream=io.BytesIO()
+            with zipfile.ZipFile(io.BytesIO(npz(a))) as old,zipfile.ZipFile(stream,'w') as new:
+                for entry in old.infolist():
+                    data=old.read(entry)
+                    if entry.filename=='payload.npy':
+                        buf=io.BytesIO();np.lib.format.write_array_header_1_0(buf,dict(descr='<u4',fortran_order=False,shape=(2**60,)))
+                        data=buf.getvalue()
+                    new.writestr(entry.filename,data)
+            raw=stream.getvalue()
+        if raw is None:raw=npz(a,kind=='compressed')
+        if kind=='truncated':raw=raw[:-1]
+>       with pytest.raises((ValueError,zipfile.BadZipFile,EOFError)):t._payload(raw,small_binding())
+                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_transport.py:209: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+raw = b"PK\x03\x04-\x00\x00\x00\x00\x00\x00\x00!\x00(\x00$\xd9\xff\xff\xff\xff\xff\xff\xff\xff\x0b\x00\x14\x00payload.npy\x0...00\x00\x00\x00\x80\x01f\x04\x00\x00nsd.npyPK\x05\x06\x00\x00\x00\x00\x06\x00\x06\x00W\x01\x00\x00'\x05\x00\x00\x00\x00"
+contract = {'shape': (1, 2, 2, 2, 2), 'moduli': [17, 19], 'layout': [2, 2], 'scale': 1.0}
+
+    def _payload(raw, contract):
+        maximum = math.prod(contract['shape'])*4 + 65536
+        if len(raw) > maximum:
+            raise ValueError('ciphertext container exceeds public size bound')
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            entries = archive.infolist()
+            if (len(entries) != len(NPZ_FIELDS)
+                    or {entry.filename for entry in entries} != {name+'.npy' for name in NPZ_FIELDS}
+                    or any(entry.compress_type != zipfile.ZIP_STORED for entry in entries)
+                    or sum(entry.file_size for entry in entries) > maximum):
+                raise ValueError('unexpected ciphertext container inventory or compression')
+            # Validate NPY headers before np.load can allocate a claimed shape.
+            expected = {
+                'payload': (np.dtype('uint32'), contract['shape']),
+                'moduli': (np.dtype('int64'), (len(contract['moduli']),)),
+                'degree_layout': (np.dtype('int64'), (2,)),
+                'precision': (np.dtype('int64'), ()), 'nsd': (np.dtype('int64'), ()),
+                'scale': (np.dtype('float64'), ()),
+            }
+            for entry in entries:
+                name = entry.filename[:-4]
+                with archive.open(entry) as stream:
+                    version = np.lib.format.read_magic(stream)
+                    if version not in ((1,0),(2,0)):raise ValueError('unsupported NPY format')
+>                   shape, fortran, dtype = np.lib.format._read_array_header(stream,version,max_header_size=512)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   AttributeError: module 'numpy.lib.format' has no attribute '_read_array_header'. Did you mean: 'read_array_header_1_0'?
+
+transport.py:114: AttributeError
+__________________ test_strict_payload_reader[payload_shape] ___________________
+
+kind = 'payload_shape'
+
+    @pytest.mark.parametrize('kind',['payload_dtype','payload_shape','residue','negative','scale','nsd','moduli','fortran','extra','compressed','truncated','oversized_header'])
+    def test_strict_payload_reader(kind):
+        a=payload_arrays();raw=None
+        if kind=='payload_dtype':a['payload']=a['payload'].astype(np.uint64)
+        elif kind=='payload_shape':a['payload']=a['payload'].ravel()
+        elif kind=='residue':a['payload'].flat[0]=17
+        elif kind=='negative':a['payload']=a['payload'].astype(np.int32);a['payload'].flat[0]=-1
+        elif kind=='scale':a['scale']=np.float64(np.nextafter(1.,2.))
+        elif kind=='nsd':a['nsd']=np.float64(1.)
+        elif kind=='moduli':a['moduli']=a['moduli'][::-1]
+        elif kind=='fortran':a['payload']=np.asfortranarray(a['payload'])
+        elif kind=='extra':a['private_target']=np.int64(123)
+        elif kind=='oversized_header':
+            stream=io.BytesIO()
+            with zipfile.ZipFile(io.BytesIO(npz(a))) as old,zipfile.ZipFile(stream,'w') as new:
+                for entry in old.infolist():
+                    data=old.read(entry)
+                    if entry.filename=='payload.npy':
+                        buf=io.BytesIO();np.lib.format.write_array_header_1_0(buf,dict(descr='<u4',fortran_order=False,shape=(2**60,)))
+                        data=buf.getvalue()
+                    new.writestr(entry.filename,data)
+            raw=stream.getvalue()
+        if raw is None:raw=npz(a,kind=='compressed')
+        if kind=='truncated':raw=raw[:-1]
+>       with pytest.raises((ValueError,zipfile.BadZipFile,EOFError)):t._payload(raw,small_binding())
+                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_transport.py:209: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+raw = b"PK\x03\x04-\x00\x00\x00\x00\x00\x00\x00!\x00\xc9\xb0X!\xff\xff\xff\xff\xff\xff\xff\xff\x0b\x00\x14\x00payload.npy\x0...x00\x00\x00\x80\x01&\x04\x00\x00nsd.npyPK\x05\x06\x00\x00\x00\x00\x06\x00\x06\x00W\x01\x00\x00\xe7\x04\x00\x00\x00\x00"
+contract = {'shape': (1, 2, 2, 2, 2), 'moduli': [17, 19], 'layout': [2, 2], 'scale': 1.0}
+
+    def _payload(raw, contract):
+        maximum = math.prod(contract['shape'])*4 + 65536
+        if len(raw) > maximum:
+            raise ValueError('ciphertext container exceeds public size bound')
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            entries = archive.infolist()
+            if (len(entries) != len(NPZ_FIELDS)
+                    or {entry.filename for entry in entries} != {name+'.npy' for name in NPZ_FIELDS}
+                    or any(entry.compress_type != zipfile.ZIP_STORED for entry in entries)
+                    or sum(entry.file_size for entry in entries) > maximum):
+                raise ValueError('unexpected ciphertext container inventory or compression')
+            # Validate NPY headers before np.load can allocate a claimed shape.
+            expected = {
+                'payload': (np.dtype('uint32'), contract['shape']),
+                'moduli': (np.dtype('int64'), (len(contract['moduli']),)),
+                'degree_layout': (np.dtype('int64'), (2,)),
+                'precision': (np.dtype('int64'), ()), 'nsd': (np.dtype('int64'), ()),
+                'scale': (np.dtype('float64'), ()),
+            }
+            for entry in entries:
+                name = entry.filename[:-4]
+                with archive.open(entry) as stream:
+                    version = np.lib.format.read_magic(stream)
+                    if version not in ((1,0),(2,0)):raise ValueError('unsupported NPY format')
+>                   shape, fortran, dtype = np.lib.format._read_array_header(stream,version,max_header_size=512)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   AttributeError: module 'numpy.lib.format' has no attribute '_read_array_header'. Did you mean: 'read_array_header_1_0'?
+
+transport.py:114: AttributeError
+_____________________ test_strict_payload_reader[residue] ______________________
+
+kind = 'residue'
+
+    @pytest.mark.parametrize('kind',['payload_dtype','payload_shape','residue','negative','scale','nsd','moduli','fortran','extra','compressed','truncated','oversized_header'])
+    def test_strict_payload_reader(kind):
+        a=payload_arrays();raw=None
+        if kind=='payload_dtype':a['payload']=a['payload'].astype(np.uint64)
+        elif kind=='payload_shape':a['payload']=a['payload'].ravel()
+        elif kind=='residue':a['payload'].flat[0]=17
+        elif kind=='negative':a['payload']=a['payload'].astype(np.int32);a['payload'].flat[0]=-1
+        elif kind=='scale':a['scale']=np.float64(np.nextafter(1.,2.))
+        elif kind=='nsd':a['nsd']=np.float64(1.)
+        elif kind=='moduli':a['moduli']=a['moduli'][::-1]
+        elif kind=='fortran':a['payload']=np.asfortranarray(a['payload'])
+        elif kind=='extra':a['private_target']=np.int64(123)
+        elif kind=='oversized_header':
+            stream=io.BytesIO()
+            with zipfile.ZipFile(io.BytesIO(npz(a))) as old,zipfile.ZipFile(stream,'w') as new:
+                for entry in old.infolist():
+                    data=old.read(entry)
+                    if entry.filename=='payload.npy':
+                        buf=io.BytesIO();np.lib.format.write_array_header_1_0(buf,dict(descr='<u4',fortran_order=False,shape=(2**60,)))
+                        data=buf.getvalue()
+                    new.writestr(entry.filename,data)
+            raw=stream.getvalue()
+        if raw is None:raw=npz(a,kind=='compressed')
+        if kind=='truncated':raw=raw[:-1]
+>       with pytest.raises((ValueError,zipfile.BadZipFile,EOFError)):t._payload(raw,small_binding())
+                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_transport.py:209: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+raw = b"PK\x03\x04-\x00\x00\x00\x00\x00\x00\x00!\x00\xa4\xc7a\x0f\xff\xff\xff\xff\xff\xff\xff\xff\x0b\x00\x14\x00payload.npy...x00\x00\x00\x80\x01&\x04\x00\x00nsd.npyPK\x05\x06\x00\x00\x00\x00\x06\x00\x06\x00W\x01\x00\x00\xe7\x04\x00\x00\x00\x00"
+contract = {'shape': (1, 2, 2, 2, 2), 'moduli': [17, 19], 'layout': [2, 2], 'scale': 1.0}
+
+    def _payload(raw, contract):
+        maximum = math.prod(contract['shape'])*4 + 65536
+        if len(raw) > maximum:
+            raise ValueError('ciphertext container exceeds public size bound')
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            entries = archive.infolist()
+            if (len(entries) != len(NPZ_FIELDS)
+                    or {entry.filename for entry in entries} != {name+'.npy' for name in NPZ_FIELDS}
+                    or any(entry.compress_type != zipfile.ZIP_STORED for entry in entries)
+                    or sum(entry.file_size for entry in entries) > maximum):
+                raise ValueError('unexpected ciphertext container inventory or compression')
+            # Validate NPY headers before np.load can allocate a claimed shape.
+            expected = {
+                'payload': (np.dtype('uint32'), contract['shape']),
+                'moduli': (np.dtype('int64'), (len(contract['moduli']),)),
+                'degree_layout': (np.dtype('int64'), (2,)),
+                'precision': (np.dtype('int64'), ()), 'nsd': (np.dtype('int64'), ()),
+                'scale': (np.dtype('float64'), ()),
+            }
+            for entry in entries:
+                name = entry.filename[:-4]
+                with archive.open(entry) as stream:
+                    version = np.lib.format.read_magic(stream)
+                    if version not in ((1,0),(2,0)):raise ValueError('unsupported NPY format')
+>                   shape, fortran, dtype = np.lib.format._read_array_header(stream,version,max_header_size=512)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   AttributeError: module 'numpy.lib.format' has no attribute '_read_array_header'. Did you mean: 'read_array_header_1_0'?
+
+transport.py:114: AttributeError
+_____________________ test_strict_payload_reader[negative] _____________________
+
+kind = 'negative'
+
+    @pytest.mark.parametrize('kind',['payload_dtype','payload_shape','residue','negative','scale','nsd','moduli','fortran','extra','compressed','truncated','oversized_header'])
+    def test_strict_payload_reader(kind):
+        a=payload_arrays();raw=None
+        if kind=='payload_dtype':a['payload']=a['payload'].astype(np.uint64)
+        elif kind=='payload_shape':a['payload']=a['payload'].ravel()
+        elif kind=='residue':a['payload'].flat[0]=17
+        elif kind=='negative':a['payload']=a['payload'].astype(np.int32);a['payload'].flat[0]=-1
+        elif kind=='scale':a['scale']=np.float64(np.nextafter(1.,2.))
+        elif kind=='nsd':a['nsd']=np.float64(1.)
+        elif kind=='moduli':a['moduli']=a['moduli'][::-1]
+        elif kind=='fortran':a['payload']=np.asfortranarray(a['payload'])
+        elif kind=='extra':a['private_target']=np.int64(123)
+        elif kind=='oversized_header':
+            stream=io.BytesIO()
+            with zipfile.ZipFile(io.BytesIO(npz(a))) as old,zipfile.ZipFile(stream,'w') as new:
+                for entry in old.infolist():
+                    data=old.read(entry)
+                    if entry.filename=='payload.npy':
+                        buf=io.BytesIO();np.lib.format.write_array_header_1_0(buf,dict(descr='<u4',fortran_order=False,shape=(2**60,)))
+                        data=buf.getvalue()
+                    new.writestr(entry.filename,data)
+            raw=stream.getvalue()
+        if raw is None:raw=npz(a,kind=='compressed')
+        if kind=='truncated':raw=raw[:-1]
+>       with pytest.raises((ValueError,zipfile.BadZipFile,EOFError)):t._payload(raw,small_binding())
+                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_transport.py:209: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+raw = b"PK\x03\x04-\x00\x00\x00\x00\x00\x00\x00!\x00\xc2`\xa79\xff\xff\xff\xff\xff\xff\xff\xff\x0b\x00\x14\x00payload.npy\x0...x00\x00\x00\x80\x01&\x04\x00\x00nsd.npyPK\x05\x06\x00\x00\x00\x00\x06\x00\x06\x00W\x01\x00\x00\xe7\x04\x00\x00\x00\x00"
+contract = {'shape': (1, 2, 2, 2, 2), 'moduli': [17, 19], 'layout': [2, 2], 'scale': 1.0}
+
+    def _payload(raw, contract):
+        maximum = math.prod(contract['shape'])*4 + 65536
+        if len(raw) > maximum:
+            raise ValueError('ciphertext container exceeds public size bound')
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            entries = archive.infolist()
+            if (len(entries) != len(NPZ_FIELDS)
+                    or {entry.filename for entry in entries} != {name+'.npy' for name in NPZ_FIELDS}
+                    or any(entry.compress_type != zipfile.ZIP_STORED for entry in entries)
+                    or sum(entry.file_size for entry in entries) > maximum):
+                raise ValueError('unexpected ciphertext container inventory or compression')
+            # Validate NPY headers before np.load can allocate a claimed shape.
+            expected = {
+                'payload': (np.dtype('uint32'), contract['shape']),
+                'moduli': (np.dtype('int64'), (len(contract['moduli']),)),
+                'degree_layout': (np.dtype('int64'), (2,)),
+                'precision': (np.dtype('int64'), ()), 'nsd': (np.dtype('int64'), ()),
+                'scale': (np.dtype('float64'), ()),
+            }
+            for entry in entries:
+                name = entry.filename[:-4]
+                with archive.open(entry) as stream:
+                    version = np.lib.format.read_magic(stream)
+                    if version not in ((1,0),(2,0)):raise ValueError('unsupported NPY format')
+>                   shape, fortran, dtype = np.lib.format._read_array_header(stream,version,max_header_size=512)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   AttributeError: module 'numpy.lib.format' has no attribute '_read_array_header'. Did you mean: 'read_array_header_1_0'?
+
+transport.py:114: AttributeError
+______________________ test_strict_payload_reader[scale] _______________________
+
+kind = 'scale'
+
+    @pytest.mark.parametrize('kind',['payload_dtype','payload_shape','residue','negative','scale','nsd','moduli','fortran','extra','compressed','truncated','oversized_header'])
+    def test_strict_payload_reader(kind):
+        a=payload_arrays();raw=None
+        if kind=='payload_dtype':a['payload']=a['payload'].astype(np.uint64)
+        elif kind=='payload_shape':a['payload']=a['payload'].ravel()
+        elif kind=='residue':a['payload'].flat[0]=17
+        elif kind=='negative':a['payload']=a['payload'].astype(np.int32);a['payload'].flat[0]=-1
+        elif kind=='scale':a['scale']=np.float64(np.nextafter(1.,2.))
+        elif kind=='nsd':a['nsd']=np.float64(1.)
+        elif kind=='moduli':a['moduli']=a['moduli'][::-1]
+        elif kind=='fortran':a['payload']=np.asfortranarray(a['payload'])
+        elif kind=='extra':a['private_target']=np.int64(123)
+        elif kind=='oversized_header':
+            stream=io.BytesIO()
+            with zipfile.ZipFile(io.BytesIO(npz(a))) as old,zipfile.ZipFile(stream,'w') as new:
+                for entry in old.infolist():
+                    data=old.read(entry)
+                    if entry.filename=='payload.npy':
+                        buf=io.BytesIO();np.lib.format.write_array_header_1_0(buf,dict(descr='<u4',fortran_order=False,shape=(2**60,)))
+                        data=buf.getvalue()
+                    new.writestr(entry.filename,data)
+            raw=stream.getvalue()
+        if raw is None:raw=npz(a,kind=='compressed')
+        if kind=='truncated':raw=raw[:-1]
+>       with pytest.raises((ValueError,zipfile.BadZipFile,EOFError)):t._payload(raw,small_binding())
+                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_transport.py:209: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+raw = b"PK\x03\x04-\x00\x00\x00\x00\x00\x00\x00!\x00,\x1e;\x1e\xff\xff\xff\xff\xff\xff\xff\xff\x0b\x00\x14\x00payload.npy\x0...x00\x00\x00\x80\x01&\x04\x00\x00nsd.npyPK\x05\x06\x00\x00\x00\x00\x06\x00\x06\x00W\x01\x00\x00\xe7\x04\x00\x00\x00\x00"
+contract = {'shape': (1, 2, 2, 2, 2), 'moduli': [17, 19], 'layout': [2, 2], 'scale': 1.0}
+
+    def _payload(raw, contract):
+        maximum = math.prod(contract['shape'])*4 + 65536
+        if len(raw) > maximum:
+            raise ValueError('ciphertext container exceeds public size bound')
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            entries = archive.infolist()
+            if (len(entries) != len(NPZ_FIELDS)
+                    or {entry.filename for entry in entries} != {name+'.npy' for name in NPZ_FIELDS}
+                    or any(entry.compress_type != zipfile.ZIP_STORED for entry in entries)
+                    or sum(entry.file_size for entry in entries) > maximum):
+                raise ValueError('unexpected ciphertext container inventory or compression')
+            # Validate NPY headers before np.load can allocate a claimed shape.
+            expected = {
+                'payload': (np.dtype('uint32'), contract['shape']),
+                'moduli': (np.dtype('int64'), (len(contract['moduli']),)),
+                'degree_layout': (np.dtype('int64'), (2,)),
+                'precision': (np.dtype('int64'), ()), 'nsd': (np.dtype('int64'), ()),
+                'scale': (np.dtype('float64'), ()),
+            }
+            for entry in entries:
+                name = entry.filename[:-4]
+                with archive.open(entry) as stream:
+                    version = np.lib.format.read_magic(stream)
+                    if version not in ((1,0),(2,0)):raise ValueError('unsupported NPY format')
+>                   shape, fortran, dtype = np.lib.format._read_array_header(stream,version,max_header_size=512)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   AttributeError: module 'numpy.lib.format' has no attribute '_read_array_header'. Did you mean: 'read_array_header_1_0'?
+
+transport.py:114: AttributeError
+_______________________ test_strict_payload_reader[nsd] ________________________
+
+kind = 'nsd'
+
+    @pytest.mark.parametrize('kind',['payload_dtype','payload_shape','residue','negative','scale','nsd','moduli','fortran','extra','compressed','truncated','oversized_header'])
+    def test_strict_payload_reader(kind):
+        a=payload_arrays();raw=None
+        if kind=='payload_dtype':a['payload']=a['payload'].astype(np.uint64)
+        elif kind=='payload_shape':a['payload']=a['payload'].ravel()
+        elif kind=='residue':a['payload'].flat[0]=17
+        elif kind=='negative':a['payload']=a['payload'].astype(np.int32);a['payload'].flat[0]=-1
+        elif kind=='scale':a['scale']=np.float64(np.nextafter(1.,2.))
+        elif kind=='nsd':a['nsd']=np.float64(1.)
+        elif kind=='moduli':a['moduli']=a['moduli'][::-1]
+        elif kind=='fortran':a['payload']=np.asfortranarray(a['payload'])
+        elif kind=='extra':a['private_target']=np.int64(123)
+        elif kind=='oversized_header':
+            stream=io.BytesIO()
+            with zipfile.ZipFile(io.BytesIO(npz(a))) as old,zipfile.ZipFile(stream,'w') as new:
+                for entry in old.infolist():
+                    data=old.read(entry)
+                    if entry.filename=='payload.npy':
+                        buf=io.BytesIO();np.lib.format.write_array_header_1_0(buf,dict(descr='<u4',fortran_order=False,shape=(2**60,)))
+                        data=buf.getvalue()
+                    new.writestr(entry.filename,data)
+            raw=stream.getvalue()
+        if raw is None:raw=npz(a,kind=='compressed')
+        if kind=='truncated':raw=raw[:-1]
+>       with pytest.raises((ValueError,zipfile.BadZipFile,EOFError)):t._payload(raw,small_binding())
+                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_transport.py:209: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+raw = b"PK\x03\x04-\x00\x00\x00\x00\x00\x00\x00!\x00,\x1e;\x1e\xff\xff\xff\xff\xff\xff\xff\xff\x0b\x00\x14\x00payload.npy\x0...x00\x00\x00\x80\x01&\x04\x00\x00nsd.npyPK\x05\x06\x00\x00\x00\x00\x06\x00\x06\x00W\x01\x00\x00\xe7\x04\x00\x00\x00\x00"
+contract = {'shape': (1, 2, 2, 2, 2), 'moduli': [17, 19], 'layout': [2, 2], 'scale': 1.0}
+
+    def _payload(raw, contract):
+        maximum = math.prod(contract['shape'])*4 + 65536
+        if len(raw) > maximum:
+            raise ValueError('ciphertext container exceeds public size bound')
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            entries = archive.infolist()
+            if (len(entries) != len(NPZ_FIELDS)
+                    or {entry.filename for entry in entries} != {name+'.npy' for name in NPZ_FIELDS}
+                    or any(entry.compress_type != zipfile.ZIP_STORED for entry in entries)
+                    or sum(entry.file_size for entry in entries) > maximum):
+                raise ValueError('unexpected ciphertext container inventory or compression')
+            # Validate NPY headers before np.load can allocate a claimed shape.
+            expected = {
+                'payload': (np.dtype('uint32'), contract['shape']),
+                'moduli': (np.dtype('int64'), (len(contract['moduli']),)),
+                'degree_layout': (np.dtype('int64'), (2,)),
+                'precision': (np.dtype('int64'), ()), 'nsd': (np.dtype('int64'), ()),
+                'scale': (np.dtype('float64'), ()),
+            }
+            for entry in entries:
+                name = entry.filename[:-4]
+                with archive.open(entry) as stream:
+                    version = np.lib.format.read_magic(stream)
+                    if version not in ((1,0),(2,0)):raise ValueError('unsupported NPY format')
+>                   shape, fortran, dtype = np.lib.format._read_array_header(stream,version,max_header_size=512)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   AttributeError: module 'numpy.lib.format' has no attribute '_read_array_header'. Did you mean: 'read_array_header_1_0'?
+
+transport.py:114: AttributeError
+______________________ test_strict_payload_reader[moduli] ______________________
+
+kind = 'moduli'
+
+    @pytest.mark.parametrize('kind',['payload_dtype','payload_shape','residue','negative','scale','nsd','moduli','fortran','extra','compressed','truncated','oversized_header'])
+    def test_strict_payload_reader(kind):
+        a=payload_arrays();raw=None
+        if kind=='payload_dtype':a['payload']=a['payload'].astype(np.uint64)
+        elif kind=='payload_shape':a['payload']=a['payload'].ravel()
+        elif kind=='residue':a['payload'].flat[0]=17
+        elif kind=='negative':a['payload']=a['payload'].astype(np.int32);a['payload'].flat[0]=-1
+        elif kind=='scale':a['scale']=np.float64(np.nextafter(1.,2.))
+        elif kind=='nsd':a['nsd']=np.float64(1.)
+        elif kind=='moduli':a['moduli']=a['moduli'][::-1]
+        elif kind=='fortran':a['payload']=np.asfortranarray(a['payload'])
+        elif kind=='extra':a['private_target']=np.int64(123)
+        elif kind=='oversized_header':
+            stream=io.BytesIO()
+            with zipfile.ZipFile(io.BytesIO(npz(a))) as old,zipfile.ZipFile(stream,'w') as new:
+                for entry in old.infolist():
+                    data=old.read(entry)
+                    if entry.filename=='payload.npy':
+                        buf=io.BytesIO();np.lib.format.write_array_header_1_0(buf,dict(descr='<u4',fortran_order=False,shape=(2**60,)))
+                        data=buf.getvalue()
+                    new.writestr(entry.filename,data)
+            raw=stream.getvalue()
+        if raw is None:raw=npz(a,kind=='compressed')
+        if kind=='truncated':raw=raw[:-1]
+>       with pytest.raises((ValueError,zipfile.BadZipFile,EOFError)):t._payload(raw,small_binding())
+                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_transport.py:209: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+raw = b"PK\x03\x04-\x00\x00\x00\x00\x00\x00\x00!\x00,\x1e;\x1e\xff\xff\xff\xff\xff\xff\xff\xff\x0b\x00\x14\x00payload.npy\x0...x00\x00\x00\x80\x01&\x04\x00\x00nsd.npyPK\x05\x06\x00\x00\x00\x00\x06\x00\x06\x00W\x01\x00\x00\xe7\x04\x00\x00\x00\x00"
+contract = {'shape': (1, 2, 2, 2, 2), 'moduli': [17, 19], 'layout': [2, 2], 'scale': 1.0}
+
+    def _payload(raw, contract):
+        maximum = math.prod(contract['shape'])*4 + 65536
+        if len(raw) > maximum:
+            raise ValueError('ciphertext container exceeds public size bound')
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            entries = archive.infolist()
+            if (len(entries) != len(NPZ_FIELDS)
+                    or {entry.filename for entry in entries} != {name+'.npy' for name in NPZ_FIELDS}
+                    or any(entry.compress_type != zipfile.ZIP_STORED for entry in entries)
+                    or sum(entry.file_size for entry in entries) > maximum):
+                raise ValueError('unexpected ciphertext container inventory or compression')
+            # Validate NPY headers before np.load can allocate a claimed shape.
+            expected = {
+                'payload': (np.dtype('uint32'), contract['shape']),
+                'moduli': (np.dtype('int64'), (len(contract['moduli']),)),
+                'degree_layout': (np.dtype('int64'), (2,)),
+                'precision': (np.dtype('int64'), ()), 'nsd': (np.dtype('int64'), ()),
+                'scale': (np.dtype('float64'), ()),
+            }
+            for entry in entries:
+                name = entry.filename[:-4]
+                with archive.open(entry) as stream:
+                    version = np.lib.format.read_magic(stream)
+                    if version not in ((1,0),(2,0)):raise ValueError('unsupported NPY format')
+>                   shape, fortran, dtype = np.lib.format._read_array_header(stream,version,max_header_size=512)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   AttributeError: module 'numpy.lib.format' has no attribute '_read_array_header'. Did you mean: 'read_array_header_1_0'?
+
+transport.py:114: AttributeError
+_____________________ test_strict_payload_reader[fortran] ______________________
+
+kind = 'fortran'
+
+    @pytest.mark.parametrize('kind',['payload_dtype','payload_shape','residue','negative','scale','nsd','moduli','fortran','extra','compressed','truncated','oversized_header'])
+    def test_strict_payload_reader(kind):
+        a=payload_arrays();raw=None
+        if kind=='payload_dtype':a['payload']=a['payload'].astype(np.uint64)
+        elif kind=='payload_shape':a['payload']=a['payload'].ravel()
+        elif kind=='residue':a['payload'].flat[0]=17
+        elif kind=='negative':a['payload']=a['payload'].astype(np.int32);a['payload'].flat[0]=-1
+        elif kind=='scale':a['scale']=np.float64(np.nextafter(1.,2.))
+        elif kind=='nsd':a['nsd']=np.float64(1.)
+        elif kind=='moduli':a['moduli']=a['moduli'][::-1]
+        elif kind=='fortran':a['payload']=np.asfortranarray(a['payload'])
+        elif kind=='extra':a['private_target']=np.int64(123)
+        elif kind=='oversized_header':
+            stream=io.BytesIO()
+            with zipfile.ZipFile(io.BytesIO(npz(a))) as old,zipfile.ZipFile(stream,'w') as new:
+                for entry in old.infolist():
+                    data=old.read(entry)
+                    if entry.filename=='payload.npy':
+                        buf=io.BytesIO();np.lib.format.write_array_header_1_0(buf,dict(descr='<u4',fortran_order=False,shape=(2**60,)))
+                        data=buf.getvalue()
+                    new.writestr(entry.filename,data)
+            raw=stream.getvalue()
+        if raw is None:raw=npz(a,kind=='compressed')
+        if kind=='truncated':raw=raw[:-1]
+>       with pytest.raises((ValueError,zipfile.BadZipFile,EOFError)):t._payload(raw,small_binding())
+                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_transport.py:209: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+raw = b"PK\x03\x04-\x00\x00\x00\x00\x00\x00\x00!\x00\xf4\xad\x8a\x03\xff\xff\xff\xff\xff\xff\xff\xff\x0b\x00\x14\x00payload....x00\x00\x00\x80\x01&\x04\x00\x00nsd.npyPK\x05\x06\x00\x00\x00\x00\x06\x00\x06\x00W\x01\x00\x00\xe7\x04\x00\x00\x00\x00"
+contract = {'shape': (1, 2, 2, 2, 2), 'moduli': [17, 19], 'layout': [2, 2], 'scale': 1.0}
+
+    def _payload(raw, contract):
+        maximum = math.prod(contract['shape'])*4 + 65536
+        if len(raw) > maximum:
+            raise ValueError('ciphertext container exceeds public size bound')
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            entries = archive.infolist()
+            if (len(entries) != len(NPZ_FIELDS)
+                    or {entry.filename for entry in entries} != {name+'.npy' for name in NPZ_FIELDS}
+                    or any(entry.compress_type != zipfile.ZIP_STORED for entry in entries)
+                    or sum(entry.file_size for entry in entries) > maximum):
+                raise ValueError('unexpected ciphertext container inventory or compression')
+            # Validate NPY headers before np.load can allocate a claimed shape.
+            expected = {
+                'payload': (np.dtype('uint32'), contract['shape']),
+                'moduli': (np.dtype('int64'), (len(contract['moduli']),)),
+                'degree_layout': (np.dtype('int64'), (2,)),
+                'precision': (np.dtype('int64'), ()), 'nsd': (np.dtype('int64'), ()),
+                'scale': (np.dtype('float64'), ()),
+            }
+            for entry in entries:
+                name = entry.filename[:-4]
+                with archive.open(entry) as stream:
+                    version = np.lib.format.read_magic(stream)
+                    if version not in ((1,0),(2,0)):raise ValueError('unsupported NPY format')
+>                   shape, fortran, dtype = np.lib.format._read_array_header(stream,version,max_header_size=512)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   AttributeError: module 'numpy.lib.format' has no attribute '_read_array_header'. Did you mean: 'read_array_header_1_0'?
+
+transport.py:114: AttributeError
+_________________ test_strict_payload_reader[oversized_header] _________________
+
+kind = 'oversized_header'
+
+    @pytest.mark.parametrize('kind',['payload_dtype','payload_shape','residue','negative','scale','nsd','moduli','fortran','extra','compressed','truncated','oversized_header'])
+    def test_strict_payload_reader(kind):
+        a=payload_arrays();raw=None
+        if kind=='payload_dtype':a['payload']=a['payload'].astype(np.uint64)
+        elif kind=='payload_shape':a['payload']=a['payload'].ravel()
+        elif kind=='residue':a['payload'].flat[0]=17
+        elif kind=='negative':a['payload']=a['payload'].astype(np.int32);a['payload'].flat[0]=-1
+        elif kind=='scale':a['scale']=np.float64(np.nextafter(1.,2.))
+        elif kind=='nsd':a['nsd']=np.float64(1.)
+        elif kind=='moduli':a['moduli']=a['moduli'][::-1]
+        elif kind=='fortran':a['payload']=np.asfortranarray(a['payload'])
+        elif kind=='extra':a['private_target']=np.int64(123)
+        elif kind=='oversized_header':
+            stream=io.BytesIO()
+            with zipfile.ZipFile(io.BytesIO(npz(a))) as old,zipfile.ZipFile(stream,'w') as new:
+                for entry in old.infolist():
+                    data=old.read(entry)
+                    if entry.filename=='payload.npy':
+                        buf=io.BytesIO();np.lib.format.write_array_header_1_0(buf,dict(descr='<u4',fortran_order=False,shape=(2**60,)))
+                        data=buf.getvalue()
+                    new.writestr(entry.filename,data)
+            raw=stream.getvalue()
+        if raw is None:raw=npz(a,kind=='compressed')
+        if kind=='truncated':raw=raw[:-1]
+>       with pytest.raises((ValueError,zipfile.BadZipFile,EOFError)):t._payload(raw,small_binding())
+                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_transport.py:209: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+raw = b"PK\x03\x04\x14\x00\x00\x00\x00\x00\xedXc]\x8a\x80\x87\xcc\x80\x00\x00\x00\x80\x00\x00\x00\x0b\x00\x00\x00payload.npy...x00\x00\x00\x80\x01\x82\x03\x00\x00nsd.npyPK\x05\x06\x00\x00\x00\x00\x06\x00\x06\x00W\x01\x00\x00/\x04\x00\x00\x00\x00"
+contract = {'shape': (1, 2, 2, 2, 2), 'moduli': [17, 19], 'layout': [2, 2], 'scale': 1.0}
+
+    def _payload(raw, contract):
+        maximum = math.prod(contract['shape'])*4 + 65536
+        if len(raw) > maximum:
+            raise ValueError('ciphertext container exceeds public size bound')
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            entries = archive.infolist()
+            if (len(entries) != len(NPZ_FIELDS)
+                    or {entry.filename for entry in entries} != {name+'.npy' for name in NPZ_FIELDS}
+                    or any(entry.compress_type != zipfile.ZIP_STORED for entry in entries)
+                    or sum(entry.file_size for entry in entries) > maximum):
+                raise ValueError('unexpected ciphertext container inventory or compression')
+            # Validate NPY headers before np.load can allocate a claimed shape.
+            expected = {
+                'payload': (np.dtype('uint32'), contract['shape']),
+                'moduli': (np.dtype('int64'), (len(contract['moduli']),)),
+                'degree_layout': (np.dtype('int64'), (2,)),
+                'precision': (np.dtype('int64'), ()), 'nsd': (np.dtype('int64'), ()),
+                'scale': (np.dtype('float64'), ()),
+            }
+            for entry in entries:
+                name = entry.filename[:-4]
+                with archive.open(entry) as stream:
+                    version = np.lib.format.read_magic(stream)
+                    if version not in ((1,0),(2,0)):raise ValueError('unsupported NPY format')
+>                   shape, fortran, dtype = np.lib.format._read_array_header(stream,version,max_header_size=512)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   AttributeError: module 'numpy.lib.format' has no attribute '_read_array_header'. Did you mean: 'read_array_header_1_0'?
+
+transport.py:114: AttributeError
+_______________ test_npy_claim_rejected_before_numpy_allocation ________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x743b96e2c950>
+
+    def test_npy_claim_rejected_before_numpy_allocation(monkeypatch):
+        raw=npz(payload_arrays());calls=[]
+        def forbidden(*a,**kw):calls.append(True);raise AssertionError('np.load called')
+        monkeypatch.setattr(np,'load',forbidden)
+        wrong=small_binding();wrong['shape']=(1,2,4,4,2)
+>       with pytest.raises(ValueError):t._payload(raw,wrong)
+                                       ^^^^^^^^^^^^^^^^^^^^^
+
+test_transport.py:217: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+raw = b"PK\x03\x04-\x00\x00\x00\x00\x00\x00\x00!\x00,\x1e;\x1e\xff\xff\xff\xff\xff\xff\xff\xff\x0b\x00\x14\x00payload.npy\x0...x00\x00\x00\x80\x01&\x04\x00\x00nsd.npyPK\x05\x06\x00\x00\x00\x00\x06\x00\x06\x00W\x01\x00\x00\xe7\x04\x00\x00\x00\x00"
+contract = {'shape': (1, 2, 4, 4, 2), 'moduli': [17, 19], 'layout': [2, 2], 'scale': 1.0}
+
+    def _payload(raw, contract):
+        maximum = math.prod(contract['shape'])*4 + 65536
+        if len(raw) > maximum:
+            raise ValueError('ciphertext container exceeds public size bound')
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            entries = archive.infolist()
+            if (len(entries) != len(NPZ_FIELDS)
+                    or {entry.filename for entry in entries} != {name+'.npy' for name in NPZ_FIELDS}
+                    or any(entry.compress_type != zipfile.ZIP_STORED for entry in entries)
+                    or sum(entry.file_size for entry in entries) > maximum):
+                raise ValueError('unexpected ciphertext container inventory or compression')
+            # Validate NPY headers before np.load can allocate a claimed shape.
+            expected = {
+                'payload': (np.dtype('uint32'), contract['shape']),
+                'moduli': (np.dtype('int64'), (len(contract['moduli']),)),
+                'degree_layout': (np.dtype('int64'), (2,)),
+                'precision': (np.dtype('int64'), ()), 'nsd': (np.dtype('int64'), ()),
+                'scale': (np.dtype('float64'), ()),
+            }
+            for entry in entries:
+                name = entry.filename[:-4]
+                with archive.open(entry) as stream:
+                    version = np.lib.format.read_magic(stream)
+                    if version not in ((1,0),(2,0)):raise ValueError('unsupported NPY format')
+>                   shape, fortran, dtype = np.lib.format._read_array_header(stream,version,max_header_size=512)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   AttributeError: module 'numpy.lib.format' has no attribute '_read_array_header'. Did you mean: 'read_array_header_1_0'?
+
+transport.py:114: AttributeError
+=========================== short test summary info ============================
+FAILED test_transport.py::test_response_actual_noncanonical_scale - Attribute...
+FAILED test_transport.py::test_strict_payload_reader[payload_dtype] - Attribu...
+FAILED test_transport.py::test_strict_payload_reader[payload_shape] - Attribu...
+FAILED test_transport.py::test_strict_payload_reader[residue] - AttributeErro...
+FAILED test_transport.py::test_strict_payload_reader[negative] - AttributeErr...
+FAILED test_transport.py::test_strict_payload_reader[scale] - AttributeError:...
+FAILED test_transport.py::test_strict_payload_reader[nsd] - AttributeError: m...
+FAILED test_transport.py::test_strict_payload_reader[moduli] - AttributeError...
+FAILED test_transport.py::test_strict_payload_reader[fortran] - AttributeErro...
+FAILED test_transport.py::test_strict_payload_reader[oversized_header] - Attr...
+FAILED test_transport.py::test_npy_claim_rejected_before_numpy_allocation - A...
+ERROR test_transport.py::test_real_full_shape_uncompressed_request_checked - ...
+ERROR test_transport.py::test_artifact_rejections_before_backend[index] - Att...
+ERROR test_transport.py::test_artifact_rejections_before_backend[scale] - Att...
+ERROR test_transport.py::test_artifact_rejections_before_backend[level] - Att...
+ERROR test_transport.py::test_artifact_rejections_before_backend[nsd_extra]
+ERROR test_transport.py::test_artifact_rejections_before_backend[ctx] - Attri...
+ERROR test_transport.py::test_artifact_rejections_before_backend[nonce] - Att...
+ERROR test_transport.py::test_artifact_rejections_before_backend[contract] - ...
+ERROR test_transport.py::test_artifact_rejections_before_backend[missing] - A...
+ERROR test_transport.py::test_artifact_rejections_before_backend[extra] - Att...
+ERROR test_transport.py::test_artifact_rejections_before_backend[duplicate_json]
+ERROR test_transport.py::test_artifact_rejections_before_backend[bundle_plaintext]
+ERROR test_transport.py::test_artifact_rejections_before_backend[symlink] - A...
+ERROR test_transport.py::test_artifact_rejections_before_backend[fifo] - Attr...
+11 failed, 46 passed, 14 errors in 3.65s

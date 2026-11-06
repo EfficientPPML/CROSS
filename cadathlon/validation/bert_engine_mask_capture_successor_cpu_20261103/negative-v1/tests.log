@@ -1,0 +1,92 @@
+FFFFFFFF                                                                 [100%]
+=================================== FAILURES ===================================
+_ test_post_mutation_block_failure_restores_previous_mask[False-OSError-installation] _
+test_mask_capture.py:71: in test_post_mutation_block_failure_restores_previous_mask
+    assert signals.mask == signals.original_mask
+E   assert {<Signals.SIG....SIGTERM: 15>} == {<Signals.SIGUSR1: 10>}
+E     
+E     Extra items in the left set:
+E     <Signals.SIGHUP: 1>
+E     <Signals.SIGINT: 2>
+E     <Signals.SIGTERM: 15>
+E     Use -v to get more diff
+_ test_post_mutation_block_failure_restores_previous_mask[False-OSError-restoration] _
+test_mask_capture.py:71: in test_post_mutation_block_failure_restores_previous_mask
+    assert signals.mask == signals.original_mask
+E   assert {<Signals.SIG....SIGTERM: 15>} == {<Signals.SIGUSR1: 10>}
+E     
+E     Extra items in the left set:
+E     <Signals.SIGHUP: 1>
+E     <Signals.SIGINT: 2>
+E     <Signals.SIGTERM: 15>
+E     Use -v to get more diff
+_ test_post_mutation_block_failure_restores_previous_mask[False-KeyboardInterrupt-installation] _
+test_mask_capture.py:71: in test_post_mutation_block_failure_restores_previous_mask
+    assert signals.mask == signals.original_mask
+E   assert {<Signals.SIG....SIGTERM: 15>} == {<Signals.SIGUSR1: 10>}
+E     
+E     Extra items in the left set:
+E     <Signals.SIGHUP: 1>
+E     <Signals.SIGINT: 2>
+E     <Signals.SIGTERM: 15>
+E     Use -v to get more diff
+_ test_post_mutation_block_failure_restores_previous_mask[False-KeyboardInterrupt-restoration] _
+test_mask_capture.py:71: in test_post_mutation_block_failure_restores_previous_mask
+    assert signals.mask == signals.original_mask
+E   assert {<Signals.SIG....SIGTERM: 15>} == {<Signals.SIGUSR1: 10>}
+E     
+E     Extra items in the left set:
+E     <Signals.SIGHUP: 1>
+E     <Signals.SIGINT: 2>
+E     <Signals.SIGTERM: 15>
+E     Use -v to get more diff
+_ test_post_mutation_block_failure_restores_previous_mask[True-OSError-installation] _
+test_mask_capture.py:71: in test_post_mutation_block_failure_restores_previous_mask
+    assert signals.mask == signals.original_mask
+E   assert {<Signals.SIG....SIGTERM: 15>} == {<Signals.SIGUSR1: 10>}
+E     
+E     Extra items in the left set:
+E     <Signals.SIGHUP: 1>
+E     <Signals.SIGINT: 2>
+E     <Signals.SIGTERM: 15>
+E     Use -v to get more diff
+_ test_post_mutation_block_failure_restores_previous_mask[True-OSError-restoration] _
+test_mask_capture.py:71: in test_post_mutation_block_failure_restores_previous_mask
+    assert signals.mask == signals.original_mask
+E   assert {<Signals.SIG....SIGTERM: 15>} == {<Signals.SIGUSR1: 10>}
+E     
+E     Extra items in the left set:
+E     <Signals.SIGHUP: 1>
+E     <Signals.SIGINT: 2>
+E     <Signals.SIGTERM: 15>
+E     Use -v to get more diff
+_ test_post_mutation_block_failure_restores_previous_mask[True-KeyboardInterrupt-installation] _
+test_mask_capture.py:71: in test_post_mutation_block_failure_restores_previous_mask
+    assert signals.mask == signals.original_mask
+E   assert {<Signals.SIG....SIGTERM: 15>} == {<Signals.SIGUSR1: 10>}
+E     
+E     Extra items in the left set:
+E     <Signals.SIGHUP: 1>
+E     <Signals.SIGINT: 2>
+E     <Signals.SIGTERM: 15>
+E     Use -v to get more diff
+_ test_post_mutation_block_failure_restores_previous_mask[True-KeyboardInterrupt-restoration] _
+test_mask_capture.py:71: in test_post_mutation_block_failure_restores_previous_mask
+    assert signals.mask == signals.original_mask
+E   assert {<Signals.SIG....SIGTERM: 15>} == {<Signals.SIGUSR1: 10>}
+E     
+E     Extra items in the left set:
+E     <Signals.SIGHUP: 1>
+E     <Signals.SIGINT: 2>
+E     <Signals.SIGTERM: 15>
+E     Use -v to get more diff
+=========================== short test summary info ============================
+FAILED test_mask_capture.py::test_post_mutation_block_failure_restores_previous_mask[False-OSError-installation]
+FAILED test_mask_capture.py::test_post_mutation_block_failure_restores_previous_mask[False-OSError-restoration]
+FAILED test_mask_capture.py::test_post_mutation_block_failure_restores_previous_mask[False-KeyboardInterrupt-installation]
+FAILED test_mask_capture.py::test_post_mutation_block_failure_restores_previous_mask[False-KeyboardInterrupt-restoration]
+FAILED test_mask_capture.py::test_post_mutation_block_failure_restores_previous_mask[True-OSError-installation]
+FAILED test_mask_capture.py::test_post_mutation_block_failure_restores_previous_mask[True-OSError-restoration]
+FAILED test_mask_capture.py::test_post_mutation_block_failure_restores_previous_mask[True-KeyboardInterrupt-installation]
+FAILED test_mask_capture.py::test_post_mutation_block_failure_restores_previous_mask[True-KeyboardInterrupt-restoration]
+8 failed, 4 deselected in 0.05s

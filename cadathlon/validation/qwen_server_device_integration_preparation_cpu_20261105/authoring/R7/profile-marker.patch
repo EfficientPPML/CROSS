@@ -1,0 +1,33 @@
+--- initial-source-draft
++++ corrected-source-draft
+@@ -76,16 +76,20 @@
+                  runtime_retired=False, runtime_reentry=0, close_calls=0, original_close_calls=0,
+                  snapshot=None, cleanup_report=None, records=[])
+     original_output = f.module("keygen_output").Output
++    # Only the two declared audit/public-key recordings consume this marker;
++    # no genuine PublicProfile validation is inferred from the admitted graph.
++    profile_marker = SimpleNamespace(recording_only=True)
+ 
+     def admit(args, raw_map, expected, blobs):
+         assert expected is f.expected and blobs is f.blobs
+         assert raw_map == f.canonical(f.expected)
+         f.event("R.admit.recording")
+-        return (f.packet, f.phase.profile, f.dep, f.res, {}, (), (),
++        return (f.packet, profile_marker, f.dep, f.res, {}, (), (),
+                 dict(recording_only=True, actual_capacity=False), f.device_packet_value)
+ 
+     def authenticate_public(raw, profile, ids, *, role):
+         assert raw is f.ready.public_manifest_bytes and ids is f.ids and role == "server"
++        assert profile is profile_marker
+         f.event("R.public_binding.recording")
+         return f.key_public
+ 
+@@ -192,7 +196,7 @@
+                 raise f.marker
+ 
+     for owner, name, value, label in (
+-        (f.process, "admit", admit, "R: public scientific admission recording"),
++        (f.process, "admit", admit, "R: scientific admission recording and unvalidated profile marker"),
+         (f.process, "AccessScope", f.Audit, "R: explicit audit effects; real audit tested in A"),
+         (f.process, "hash_installed", f.installed_recording, "R: installed-source observation recording"),
+         (f.process, "imported_origins", f.origins_recording, "R: backend-origin observation recording"),

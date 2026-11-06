@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="3" time="0.034" timestamp="2026-11-04T00:18:05.920864+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_publication" name="test_body_primary_survives_final_source_and_publication_failures[KeyboardInterrupt]" time="0.004"><failure message="AssertionError: assert OSError('final publication failure') is KeyboardInterrupt('body cancellation')&#10; +  where OSError('final publication failure') = &lt;ExceptionInfo OSError('final publication failure') tblen=3&gt;.value">tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-491/test_body_primary_survives_fin0')
+kind = &lt;class 'KeyboardInterrupt'&gt;
+
+    @pytest.mark.parametrize('kind',(KeyboardInterrupt,SystemExit))
+    def test_body_primary_survives_final_source_and_publication_failures(tmp_path,kind):
+     primary=kind('body cancellation');checks=[];writes=[]
+     def check(*args,**kwargs):
+      checks.append(1)
+      if len(checks)==1:raise primary
+      raise OSError('final source failure')
+     def write(path,value):
+      writes.append(1)
+      if len(writes)&gt;1:raise OSError('final publication failure')
+      path.write_text(json.dumps(value))
+     run=actual_run(tmp_path,write,NS(capture_sources=lambda *a,**k:{},check_sources=check))
+     with pytest.raises(BaseException)as caught:run(tmp_path/'out',source_guard_tests=1)
+&gt;    assert caught.value is primary
+E    AssertionError: assert OSError('final publication failure') is KeyboardInterrupt('body cancellation')
+E     +  where OSError('final publication failure') = &lt;ExceptionInfo OSError('final publication failure') tblen=3&gt;.value
+
+/tmp/bert-combined-preflight-review-20261104/negative-v1/test_publication.py:28: AssertionError</failure></testcase><testcase classname="test_publication" name="test_body_primary_survives_final_source_and_publication_failures[SystemExit]" time="0.003"><failure message="AssertionError: assert OSError('final publication failure') is SystemExit('body cancellation')&#10; +  where OSError('final publication failure') = &lt;ExceptionInfo OSError('final publication failure') tblen=3&gt;.value">tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-491/test_body_primary_survives_fin1')
+kind = &lt;class 'SystemExit'&gt;
+
+    @pytest.mark.parametrize('kind',(KeyboardInterrupt,SystemExit))
+    def test_body_primary_survives_final_source_and_publication_failures(tmp_path,kind):
+     primary=kind('body cancellation');checks=[];writes=[]
+     def check(*args,**kwargs):
+      checks.append(1)
+      if len(checks)==1:raise primary
+      raise OSError('final source failure')
+     def write(path,value):
+      writes.append(1)
+      if len(writes)&gt;1:raise OSError('final publication failure')
+      path.write_text(json.dumps(value))
+     run=actual_run(tmp_path,write,NS(capture_sources=lambda *a,**k:{},check_sources=check))
+     with pytest.raises(BaseException)as caught:run(tmp_path/'out',source_guard_tests=1)
+&gt;    assert caught.value is primary
+E    AssertionError: assert OSError('final publication failure') is SystemExit('body cancellation')
+E     +  where OSError('final publication failure') = &lt;ExceptionInfo OSError('final publication failure') tblen=3&gt;.value
+
+/tmp/bert-combined-preflight-review-20261104/negative-v1/test_publication.py:28: AssertionError</failure></testcase><testcase classname="test_publication" name="test_outer_termination_failure_republishes_failed_record" time="0.002"><failure message="assert True is False">tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-491/test_outer_termination_failure0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7952c7aae2c0&gt;
+
+    def test_outer_termination_failure_republishes_failed_record(tmp_path,monkeypatch):
+     tree=ast.parse((HERE/'preflight_combined.py').read_bytes());node=next(n for n in tree.body if isinstance(n,ast.If)and isinstance(n.test,ast.Compare))
+     output=tmp_path/'report.json';failure=OSError('termination handler restoration')
+     @contextmanager
+     def termination():
+      yield
+      raise failure
+     def run(*args,**kwargs):
+      result=dict(passed=True,complete=True,source_count=265,groups=[],elapsed_seconds=1.)
+      output.write_text(json.dumps(result));return result
+     monkeypatch.setattr(sys,'argv',['preflight',str(tmp_path),'--source-guard-tests','36'])
+     env={'__name__':'__main__','argparse':argparse,'termination_signals':termination,'run':run,'json':json}
+     with pytest.raises(OSError):exec(compile(ast.Module(body=[node],type_ignores=[]),'exact_main','exec'),env)
+&gt;    assert json.loads(output.read_text())['passed']is False
+E    assert True is False
+
+/tmp/bert-combined-preflight-review-20261104/negative-v1/test_publication.py:43: AssertionError</failure></testcase></testsuite></testsuites>

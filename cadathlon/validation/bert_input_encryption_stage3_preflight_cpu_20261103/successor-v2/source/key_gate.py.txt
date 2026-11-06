@@ -1,0 +1,95 @@
+"""Externally pinned completed-key evidence prerequisite; public metadata only."""
+from pathlib import Path
+import hashlib,json,os,stat,sys,tarfile
+MAXIMUM=8<<20
+KEY_SOURCE_FILE=Path(__file__).with_name('key_source_manifest.json')
+KEY_SOURCE_SHA256='b98e852d6111a63bbe2f25c5e811c8b56469100e85c3a3af7a26f86688adf4c7'
+
+def canonical(value):return (json.dumps(value,sort_keys=True,separators=(',',':'),allow_nan=False)+'\n').encode()
+def parse(raw):
+    def pairs(items):
+        result={}
+        for k,v in items:
+            if k in result:raise ValueError('duplicate evidence field')
+            result[k]=v
+        return result
+    return json.loads(raw,object_pairs_hook=pairs,parse_constant=lambda v:(_ for _ in ()).throw(ValueError('nonfinite evidence')))
+def read(path,maximum=MAXIMUM):
+    fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK)
+    try:
+        info=os.fstat(fd)
+        if not stat.S_ISREG(info.st_mode) or not 0<info.st_size<=maximum:raise ValueError('bounded regular prerequisite file required')
+        with os.fdopen(os.dup(fd),'rb') as f:raw=f.read(maximum+1)
+        if len(raw)>maximum:raise ValueError('prerequisite exceeds limit')
+        return raw
+    finally:
+        active=sys.exception()
+        try:os.close(fd)
+        except BaseException as error:
+            if active is None:raise
+            active.add_note('prerequisite descriptor close: '+repr(error))
+def digest(raw):return hashlib.sha256(raw).hexdigest()
+def sha_field(value):
+    if type(value)is not str or len(value)!=64 or any(c not in '0123456789abcdef' for c in value):raise ValueError('caller-authenticated SHA256 required')
+    return value
+
+def verify_source_archive(source,before):
+    import io
+    with tarfile.open(fileobj=io.BytesIO(source)) as tar:
+        members=tar.getmembers()
+        if (len(members)!=len(before) or len({m.name for m in members})!=len(members)
+                or any(not m.isfile() or m.size<0 or m.size>8<<20 for m in members) or sum(m.size for m in members)>16<<20):raise ValueError('key source archive inventory differs')
+        if {m.name:digest(tar.extractfile(m).read()) for m in members}!=before:raise ValueError('key source archive readback differs')
+
+
+def authenticate(evidence,expected_report_sha256,workspace,*,profile_bytes,plan_bytes):
+    """Caller supplies trusted report hash; neither workspace nor report self-vouches."""
+    evidence=Path(evidence);workspace=Path(workspace)
+    expected_report_sha256=sha_field(expected_report_sha256)
+    # This check precedes every other evidence, key-directory or asset read.
+    raw=read(evidence/'report.json')
+    if digest(raw)!=expected_report_sha256:raise ValueError('external completed-key report identity differs')
+    r=parse(raw)
+    if type(r)is not dict or any(r.get(k)is not True for k in ('passed','execute','actual_key_generation','workspace_retained','all_processes_reaped','cleanup_completed','source_files_unchanged','source_archive_verified')):
+        raise ValueError('completed genuine key-generation proof required')
+    if r.get('cleanup_errors') or r.get('error') or r.get('workspace')!=str(workspace):raise ValueError('key proof errors/workspace differ')
+    owner=r.get('workspace_identity');info=workspace.lstat()
+    if (type(owner)is not list or len(owner)!=2 or any(type(x)is not int for x in owner)
+            or not stat.S_ISDIR(info.st_mode) or [info.st_dev,info.st_ino]!=owner):raise ValueError('retained key workspace identity differs')
+    before=r.get('source_hashes_start')
+    if type(before)is not dict or not before or before!=r.get('source_hashes_end'):raise ValueError('unchanged key execution source closure required')
+    pinned=read(KEY_SOURCE_FILE,1<<20)
+    if digest(pinned)!=KEY_SOURCE_SHA256 or parse(pinned)!=before:raise ValueError('fixed first-handler source inventory differs')
+    for name,value in before.items():
+        if type(name)is not str or Path(name).is_absolute() or '..' in Path(name).parts:raise ValueError('relative key source member required')
+        sha_field(value)
+    source=read(evidence/'sources.tar.gz',16<<20)
+    if digest(source)!=sha_field(r.get('source_archive_sha256')):raise ValueError('key source archive digest differs')
+    verify_source_archive(source,before)
+    process=r.get('worker_process')
+    if (type(process)is not dict or type(process.get('returncode'))is not int or process['returncode']!=0 or process.get('error')
+            or any(process.get(k)is not True for k in ('process_reaped','public_key_store_removed','owned_directory_handle_closed'))):raise ValueError('key worker terminal cleanup not proven')
+    result=process.get('result')
+    if type(result)is not dict or result.get('passed')is not True:raise ValueError('strict key worker result required')
+    worker_raw=read(evidence/'worker/worker_report.json')
+    if digest(worker_raw)!=sha_field(result.get('worker_report_sha256')):raise ValueError('key worker report linkage differs')
+    worker=parse(worker_raw)
+    if (type(worker)is not dict or any(worker.get(k)is not True for k in ('passed','actual_key_generation_started','actual_key_generation_completed','source_files_unchanged','private_binding_verified','private_permissions_verified'))
+            or type(worker.get('private_file_count'))is not int or worker['private_file_count']!=2
+            or worker.get('source_hashes_start')!=before or worker.get('source_hashes_end')!=before):raise ValueError('key worker proof incomplete')
+    public=worker.get('public_manifest')
+    if type(public)is not dict or public.get('context_id')!=r.get('context_id') or public['context_id']!=result.get('context_id'):raise ValueError('completed public context binding differs')
+    from client_keys import public_contract,inventory,_body,digest as object_digest
+    p,rotations=public_contract(profile_bytes,plan_bytes);specs=inventory(p,rotations)
+    if type(public.get('arrays'))is not dict or set(public['arrays'])!=set(specs):raise ValueError('complete public array inventory required')
+    source_hash=sha_field(public.get('keygen_source_sha256'));body=_body(p,rotations,public['arrays'],source_hash)
+    if canonical(public)!=canonical(body|dict(context_id=object_digest(body))):raise ValueError('fixed public key manifest identity differs')
+    if source_hash!=before.get('jaxite_word/key_gen.py'):raise ValueError('executed key generator identity differs')
+    public_copy=parse(read(evidence/'public_manifest.json'))
+    if canonical(public_copy)!=canonical(public):raise ValueError('public evidence manifest differs')
+    current=read(workspace/'public_keys/public_manifest.json')
+    if current!=canonical(public):raise ValueError('retained public key metadata differs')
+    # Actual server_preprocess_model subsequently authenticates every key-array
+    #byte/residue through client_keys.authenticate_public. Never read SK files.
+    return dict(context_id=public['context_id'],public_keys=workspace/'public_keys',public_manifest=public,
+                key_report_sha256=expected_report_sha256,key_source_archive_sha256=r['source_archive_sha256'])

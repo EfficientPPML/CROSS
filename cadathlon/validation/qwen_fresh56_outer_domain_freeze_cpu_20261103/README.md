@@ -1,0 +1,7 @@
+Fifty-six newly authored public texts and their exact truncated token sequences are frozen before any future selection or model evaluation:16prefills each atS8/16/32 and8four-step decode prompts initiallyS16. All56texts and full/truncated token sequences are distinct from the prior calibration, original published workload, and candidate2fresh audit. The pinned tokenizer reproduced all400 prior token records. Natural lengths are68–75tokens; no padding or artificial token repetition was used. Equality-disjointness is not a generalization guarantee.
+
+Tokenizer-only preparation passed in2.39s; session86577 exited0 and was reaped. All7asset hashes and11source members match before/archive/after/current. Ten source-bound negative tests passed. No Torch, Transformers, JAX, model weights, outputs, validation extrema, coefficients or encrypted computation were imported or evaluated. Asset hashing reads bytes only.
+
+The frozen token manifest SHA is b20f28fc66260d8bd0ec704d6138da9a60ba513a53111d789cfd10f431dd80af. This preparation does not authorize a future model run. A final replacement candidate must be independently frozen before fresh112evaluation; the original published112regression remains a separate required obligation. Candidate2calibration/originalpass and freshfailure remain unchanged.
+
+Run `python verify_archive.py` for offline source and equality-disjointness checks. The archive contains public text/token inputs, source bytes and reports only.

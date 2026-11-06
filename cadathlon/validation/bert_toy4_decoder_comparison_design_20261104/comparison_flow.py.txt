@@ -1,0 +1,38 @@
+# NON-EXECUTABLE DESIGN SKETCH: names below denote unimplemented reviewed seams.
+# No imports, source loading, grants, private reads, crypto, or output writer here.
+# The queued260 original validation remains unchanged and is not replaced.
+
+ADMISSION_ORDER = (
+    "external new-consumer manifest and explicit comparison grant",
+    "hard-pinned completed original260 setup/server and independent outer receipts",
+    "external dual-source root review plus continued owned-workspace retention",
+    "all96 ordered current opaque manifests and actual-scale replay",
+    "private key loader only after all preceding public gates",
+)
+
+# for checkpoint in fixed_order_0_through_95:
+#     value = reauthenticate_and_load_same_original_artifact(checkpoint)
+#     scale = ORIGINAL._resolve_codec_scale(value, None, ctx.output_scale)
+#     require_exact_actual_scale(scale, replay[checkpoint])
+#     retain_original_value_and_payload(value)
+#     # Original facade has the same secret-presence/context/single-batch checks.
+#     require_original_secret_presence(ctx)
+#     rns = ORIGINAL._fast_decrypt_to_rns_coeffs(value, ctx)
+#     retain_and_require_ready_owned_uint64_matrix(rns)
+#     freeze_private_coefficient_witness_and_make_read_only(rns)
+#     for branch in (ORIGINAL_DECODE, EXACT_PATCHED_DECODE):
+#         # Both call actual original CRT, noise threshold and FFT. No bypass.
+#         try:
+#             decoded = branch(rns, ctx, scale, slots_to_decode=65536,
+#                              validate_approximation=True)
+#             record_branch_with_original_finite_1e_minus6_and_final_application_gates(decoded)
+#         except (OverflowError, ORIGINAL.ApproximationErrorTooHigh) as error:
+#             retain_known_synchronous_branch_failure_without_reclassification(error)
+#         # Other errors/cancellation propagate through attempt-all quarantine.
+#         require_same_private_coefficient_witness_and_source_bindings(rns)
+#     publish_separate_metadata_only_pair_record()
+#     # Never feed decoded values, diagnostics or errors back into server/selection.
+#     retire_only_proved_ready_owned_checkpoint_resources()
+
+EXECUTION_ENABLED = False
+# This file is a sketch, not a callable implementation or launch authority.

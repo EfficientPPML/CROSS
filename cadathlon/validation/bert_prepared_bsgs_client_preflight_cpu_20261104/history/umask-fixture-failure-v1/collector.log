@@ -1,0 +1,19 @@
+Traceback (most recent call last):
+  File "/tmp/bert-prepared-bsgs-client-component-20261104/client_preflight.py", line 62, in <module>
+    r=run(a.output,expected_tests=a.expected_tests);print(json.dumps({n:r[n]for n in ('passed','source_count','test_count','installed_denials','elapsed_s')}));raise SystemExit(0 if r['passed']else 1)
+  File "/tmp/bert-prepared-bsgs-client-component-20261104/client_preflight.py", line 59, in run
+    return common.finish(output/'report.json',report,body,termination_signals,cleanup_signals)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/bert-prepared-bsgs-client-component-20261104/client_io.py", line 157, in finish
+    write(path,report);body(report)
+                       ~~~~^^^^^^^^
+  File "/tmp/bert-prepared-bsgs-client-component-20261104/client_preflight.py", line 58, in body
+    final.attempt('preflight terminal publication',lambda:common.write(output/'report.json',r));final.raise_if_failed()
+                                                                                                ~~~~~~~~~~~~~~~~~~~~~^^
+  File "/tmp/bert-prepared-bsgs-client-component-20261104/client_io.py", line 136, in raise_if_failed
+    if error is not None:raise error
+                         ^^^^^^^^^^^
+  File "/tmp/bert-prepared-bsgs-client-component-20261104/client_preflight.py", line 38, in body
+    if code!=0:raise ValueError('public preflight child failed: '+name)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: public preflight child failed: tests

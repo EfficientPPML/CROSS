@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="4" time="0.052" timestamp="2026-11-04T06:05:47.959594+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_scope_review" name="test_preflight_output_respects_borrowed_root[True]" time="0.002"><failure message="Failed: DID NOT RAISE any of (ValueError, PermissionError)">tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-681/test_preflight_output_respects0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f2e1b3e3490&gt;
+inside = True
+
+    @pytest.mark.parametrize("inside",[True,False])
+    def test_preflight_output_respects_borrowed_root(tmp_path,monkeypatch,inside):
+     protected,root,blobs=setup(tmp_path);target=(protected if inside else tmp_path)/"fresh-evidence"
+     args=SimpleNamespace(output=str(target),mode="collect-preflight",grant=None,grant_sha256=None,request=None,request_sha256=None,manifest_sha256="a"*64)
+     class Audit:
+      def __init__(self,*a):self.denials=[]
+      def install(self):pass
+     monkeypatch.setattr(p,"Audit",Audit)
+     monkeypatch.setattr(p,"supervise",lambda output,*a:(output.close(),0)[1])
+     if inside:
+&gt;     with pytest.raises((ValueError,PermissionError)):p.collect(args,b"{}",{},blobs,{},root)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E     Failed: DID NOT RAISE any of (ValueError, PermissionError)
+
+test_scope_review.py:23: Failed</failure></testcase><testcase classname="test_scope_review" name="test_preflight_output_respects_borrowed_root[False]" time="0.001" /><testcase classname="test_scope_review" name="test_public_grant_path_rejected_before_read[True]" time="0.001"><failure message="AssertionError: private grant bytes were opened before admission&#10;assert True is not True&#10; +  where True = bool(['/tmp/pytest-of-jianming_gatech/pytest-681/test_public_grant_path_rejecte0/synthetic-borrowed-private/grant.json'])">tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-681/test_public_grant_path_rejecte0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f2e1b42ef90&gt;
+inside = True
+
+    @pytest.mark.parametrize("inside",[True,False])
+    def test_public_grant_path_rejected_before_read(tmp_path,monkeypatch,inside):
+     protected,root,blobs=setup(tmp_path);target=(protected if inside else tmp_path)/"grant.json";target.write_text('{"execute":false}')
+     touched=[];real=p.read
+     def read(path,*a,**kw):touched.append(str(path));return real(path,*a,**kw)
+     monkeypatch.setattr(p,"read",read)
+     args=SimpleNamespace(output=str(tmp_path/"fresh-evidence"),mode="collect-reconstruct",grant=str(target),grant_sha256=p.sha(target.read_bytes()),request=str(tmp_path/"request.json"),request_sha256="b"*64)
+     with pytest.raises((ValueError,PermissionError)):p.public_request(args,b"{}",{},blobs)
+&gt;    assert bool(touched)is (not inside),"private grant bytes were opened before admission"
+E    AssertionError: private grant bytes were opened before admission
+E    assert True is not True
+E     +  where True = bool(['/tmp/pytest-of-jianming_gatech/pytest-681/test_public_grant_path_rejecte0/synthetic-borrowed-private/grant.json'])
+
+test_scope_review.py:36: AssertionError</failure></testcase><testcase classname="test_scope_review" name="test_public_grant_path_rejected_before_read[False]" time="0.001" /></testsuite></testsuites>

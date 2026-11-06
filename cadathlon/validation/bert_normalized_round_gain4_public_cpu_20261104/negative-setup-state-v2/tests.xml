@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="2" time="0.372" timestamp="2026-11-04T00:00:25.521371+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_gain4_failure_edges" name="test_source_snapshot_failure_does_not_leave_active" time="0.018"><failure message="AssertionError: assert (MemoryError('source snapshot') is MemoryError('source snapshot') and True is False)&#10; +  where MemoryError('source snapshot') = &lt;ExceptionInfo MemoryError('source snapshot') tblen=5&gt;.value&#10; +  and   True = &lt;encrypted_bert_normalization_gain4.BertNormalizationRoundGain4 object at 0x766effae0ec0&gt;._active">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x766effc4f100&gt;
+
+    def test_source_snapshot_failure_does_not_leave_active(monkeypatch):
+        owner,ops,source=setup();primary=MemoryError('source snapshot')
+        monkeypatch.setattr(owner,'_fingerprint',lambda v:(_ for _ in ()).throw(primary))
+        with pytest.raises(MemoryError)as seen:owner.evaluate_tile(source)
+&gt;       assert seen.value is primary and owner._active is False and not ops.calls
+E       AssertionError: assert (MemoryError('source snapshot') is MemoryError('source snapshot') and True is False)
+E        +  where MemoryError('source snapshot') = &lt;ExceptionInfo MemoryError('source snapshot') tblen=5&gt;.value
+E        +  and   True = &lt;encrypted_bert_normalization_gain4.BertNormalizationRoundGain4 object at 0x766effae0ec0&gt;._active
+
+test_gain4_failure_edges.py:8: AssertionError</failure></testcase><testcase classname="test_gain4_failure_edges" name="test_later_entered_failure_clears_previous_plan" time="0.255"><failure message="AssertionError: assert ({'key_count': 128, 'gain': 4, 'updates': 13, 'input_scale': 1.1467305003699405e+18, ...} is None)&#10; +  where {'key_count': 128, 'gain': 4, 'updates': 13, 'input_scale': 1.1467305003699405e+18, ...} = &lt;encrypted_bert_normalization_gain4.BertNormalizationRoundGain4 object at 0x766efd7779d0&gt;.last_plan">def test_later_entered_failure_clears_previous_plan():
+        fail=[False]
+        def progress(*args):
+            if fail[0]:raise KeyboardInterrupt('later invocation')
+        owner,ops,source=setup(progress=progress);owner.evaluate_tile(source)
+        assert owner.last_plan is not None;fail[0]=True
+        with pytest.raises(KeyboardInterrupt):owner.evaluate_tile(source)
+&gt;       assert owner.last_plan is None and not owner._active
+E       AssertionError: assert ({'key_count': 128, 'gain': 4, 'updates': 13, 'input_scale': 1.1467305003699405e+18, ...} is None)
+E        +  where {'key_count': 128, 'gain': 4, 'updates': 13, 'input_scale': 1.1467305003699405e+18, ...} = &lt;encrypted_bert_normalization_gain4.BertNormalizationRoundGain4 object at 0x766efd7779d0&gt;.last_plan
+
+test_gain4_failure_edges.py:17: AssertionError</failure></testcase></testsuite></testsuites>

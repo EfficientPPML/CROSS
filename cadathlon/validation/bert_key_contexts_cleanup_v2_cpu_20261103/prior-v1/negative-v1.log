@@ -1,0 +1,16 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_ test_installation_tracks_mutation_and_defers_uninstalled_signal[real_pending] _
+/tmp/bert-key-contexts-cleanup-20261103/before/test_key_contexts_signals.py:38: in test_installation_tracks_mutation_and_defers_uninstalled_signal
+    assert all(signal.getsignal(s)is original for s in SIGS)
+E   assert False
+E    +  where False = all(<generator object test_installation_tracks_mutation_and_defers_uninstalled_signal.<locals>.<genexpr> at 0x7126a6309a80>)
+_ test_installation_tracks_mutation_and_defers_uninstalled_signal[post_mutation_setter] _
+/tmp/bert-key-contexts-cleanup-20261103/before/test_key_contexts_signals.py:38: in test_installation_tracks_mutation_and_defers_uninstalled_signal
+    assert all(signal.getsignal(s)is original for s in SIGS)
+E   assert False
+E    +  where False = all(<generator object test_installation_tracks_mutation_and_defers_uninstalled_signal.<locals>.<genexpr> at 0x7126a6309b60>)
+=========================== short test summary info ============================
+FAILED ../../tmp/bert-key-contexts-cleanup-20261103/before/test_key_contexts_signals.py::test_installation_tracks_mutation_and_defers_uninstalled_signal[real_pending]
+FAILED ../../tmp/bert-key-contexts-cleanup-20261103/before/test_key_contexts_signals.py::test_installation_tracks_mutation_and_defers_uninstalled_signal[post_mutation_setter]
+2 failed, 8 deselected in 0.20s

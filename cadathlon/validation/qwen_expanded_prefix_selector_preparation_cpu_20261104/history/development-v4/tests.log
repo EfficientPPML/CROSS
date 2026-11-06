@@ -1,0 +1,17 @@
+...............................................................F.        [100%]
+=================================== FAILURES ===================================
+___________________ test_frozen23_protocol_and_policy_match ____________________
+
+    def test_frozen23_protocol_and_policy_match():
+        proof=json.loads((HERE/'inputs/protocol_report.json').read_bytes())
+        with tarfile.open(HERE/'inputs/protocol_sources.tar.gz')as t:
+            members=t.getmembers();raw={m.name:t.extractfile(m).read()for m in members}
+        assert len(raw)==23
+>       expected=proof['source_hashes_start']
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'source_hashes_start'
+
+test_selector.py:187: KeyError
+=========================== short test summary info ============================
+FAILED test_selector.py::test_frozen23_protocol_and_policy_match - KeyError: ...
+1 failed, 64 passed in 3.71s

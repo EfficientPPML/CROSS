@@ -1,0 +1,348 @@
+FFFFFFFF                                                                 [100%]
+=================================== FAILURES ===================================
+___ test_fdopen_construction_failure_never_loses_duplicate[client_requests] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-545/test_fdopen_construction_failu0')
+kind = 'client_requests'
+
+    @pytest.mark.parametrize('kind', ['client_requests', 'upload'])
+    def test_fdopen_construction_failure_never_loses_duplicate(tmp_path, kind):
+        duplicated = []
+        primary = ValueError('synthetic fdopen construction failure')
+        fake = SimpleNamespace(**{n: getattr(os, n) for n in dir(os)})
+    
+        def duplicate(fd):
+            result = os.dup(fd)
+            duplicated.append(result)
+            return result
+    
+        def fail_fdopen(*args, **kwargs):
+            raise primary
+    
+        fake.dup = duplicate
+        fake.fdopen = fail_fdopen
+        observe = actual_reader(fake)
+        try:
+            with pytest.raises(ValueError) as got:
+                observe(fixture_path(tmp_path, kind), kind, [])
+            assert got.value is primary and len(duplicated) == 1
+            leaked = []
+            for fd in duplicated:
+                try:
+                    os.fstat(fd)
+                except OSError as error:
+                    assert error.errno == errno.EBADF
+                else:
+                    leaked.append(fd)
+>           assert not leaked, 'fdopen failed with an unowned live duplicate'
+E           AssertionError: fdopen failed with an unowned live duplicate
+E           assert not [14]
+
+test_receipt_reader.py:73: AssertionError
+________ test_fdopen_construction_failure_never_loses_duplicate[upload] ________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-545/test_fdopen_construction_failu1')
+kind = 'upload'
+
+    @pytest.mark.parametrize('kind', ['client_requests', 'upload'])
+    def test_fdopen_construction_failure_never_loses_duplicate(tmp_path, kind):
+        duplicated = []
+        primary = ValueError('synthetic fdopen construction failure')
+        fake = SimpleNamespace(**{n: getattr(os, n) for n in dir(os)})
+    
+        def duplicate(fd):
+            result = os.dup(fd)
+            duplicated.append(result)
+            return result
+    
+        def fail_fdopen(*args, **kwargs):
+            raise primary
+    
+        fake.dup = duplicate
+        fake.fdopen = fail_fdopen
+        observe = actual_reader(fake)
+        try:
+            with pytest.raises(ValueError) as got:
+                observe(fixture_path(tmp_path, kind), kind, [])
+            assert got.value is primary and len(duplicated) == 1
+            leaked = []
+            for fd in duplicated:
+                try:
+                    os.fstat(fd)
+                except OSError as error:
+                    assert error.errno == errno.EBADF
+                else:
+                    leaked.append(fd)
+>           assert not leaked, 'fdopen failed with an unowned live duplicate'
+E           AssertionError: fdopen failed with an unowned live duplicate
+E           assert not [15]
+
+test_receipt_reader.py:73: AssertionError
+_ test_reader_body_primary_survives_close_failure[ValueError-client_requests] __
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-545/test_reader_body_primary_survi0')
+kind = 'client_requests', primary_type = <class 'ValueError'>
+
+    @pytest.mark.parametrize('kind', ['client_requests', 'upload'])
+    @pytest.mark.parametrize('primary_type', [ValueError, KeyboardInterrupt, SystemExit])
+    def test_reader_body_primary_survives_close_failure(tmp_path, kind, primary_type):
+        primary = primary_type('synthetic read-body primary')
+        close_errors = []
+        fake = SimpleNamespace(**{n: getattr(os, n) for n in dir(os)})
+    
+        class Stream:
+            def __init__(self, fd):
+                self.fd = fd
+    
+            def __enter__(self):
+                return self
+    
+            def read(self, maximum):
+                raise primary
+    
+            def __exit__(self, *args):
+                os.close(self.fd)
+    
+        def close(fd):
+            os.close(fd)
+            error = OSError('synthetic post-close failure')
+            close_errors.append(error)
+            raise error
+    
+        fake.fdopen = lambda fd, *args, **kwargs: Stream(fd)
+        fake.close = close
+        observe = actual_reader(fake)
+        with pytest.raises(BaseException) as got:
+            observe(fixture_path(tmp_path, kind), kind, [])
+        assert close_errors
+>       assert got.value is primary, 'descriptor close masked the original read-body primary'
+E       AssertionError: descriptor close masked the original read-body primary
+E       assert OSError('synthetic post-close failure') is ValueError('synthetic read-body primary')
+E        +  where OSError('synthetic post-close failure') = <ExceptionInfo OSError('synthetic post-close failure') tblen=3>.value
+
+test_receipt_reader.py:110: AssertionError
+______ test_reader_body_primary_survives_close_failure[ValueError-upload] ______
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-545/test_reader_body_primary_survi1')
+kind = 'upload', primary_type = <class 'ValueError'>
+
+    @pytest.mark.parametrize('kind', ['client_requests', 'upload'])
+    @pytest.mark.parametrize('primary_type', [ValueError, KeyboardInterrupt, SystemExit])
+    def test_reader_body_primary_survives_close_failure(tmp_path, kind, primary_type):
+        primary = primary_type('synthetic read-body primary')
+        close_errors = []
+        fake = SimpleNamespace(**{n: getattr(os, n) for n in dir(os)})
+    
+        class Stream:
+            def __init__(self, fd):
+                self.fd = fd
+    
+            def __enter__(self):
+                return self
+    
+            def read(self, maximum):
+                raise primary
+    
+            def __exit__(self, *args):
+                os.close(self.fd)
+    
+        def close(fd):
+            os.close(fd)
+            error = OSError('synthetic post-close failure')
+            close_errors.append(error)
+            raise error
+    
+        fake.fdopen = lambda fd, *args, **kwargs: Stream(fd)
+        fake.close = close
+        observe = actual_reader(fake)
+        with pytest.raises(BaseException) as got:
+            observe(fixture_path(tmp_path, kind), kind, [])
+        assert close_errors
+>       assert got.value is primary, 'descriptor close masked the original read-body primary'
+E       AssertionError: descriptor close masked the original read-body primary
+E       assert OSError('synthetic post-close failure') is ValueError('synthetic read-body primary')
+E        +  where OSError('synthetic post-close failure') = <ExceptionInfo OSError('synthetic post-close failure') tblen=3>.value
+
+test_receipt_reader.py:110: AssertionError
+_ test_reader_body_primary_survives_close_failure[KeyboardInterrupt-client_requests] _
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-545/test_reader_body_primary_survi2')
+kind = 'client_requests', primary_type = <class 'KeyboardInterrupt'>
+
+    @pytest.mark.parametrize('kind', ['client_requests', 'upload'])
+    @pytest.mark.parametrize('primary_type', [ValueError, KeyboardInterrupt, SystemExit])
+    def test_reader_body_primary_survives_close_failure(tmp_path, kind, primary_type):
+        primary = primary_type('synthetic read-body primary')
+        close_errors = []
+        fake = SimpleNamespace(**{n: getattr(os, n) for n in dir(os)})
+    
+        class Stream:
+            def __init__(self, fd):
+                self.fd = fd
+    
+            def __enter__(self):
+                return self
+    
+            def read(self, maximum):
+                raise primary
+    
+            def __exit__(self, *args):
+                os.close(self.fd)
+    
+        def close(fd):
+            os.close(fd)
+            error = OSError('synthetic post-close failure')
+            close_errors.append(error)
+            raise error
+    
+        fake.fdopen = lambda fd, *args, **kwargs: Stream(fd)
+        fake.close = close
+        observe = actual_reader(fake)
+        with pytest.raises(BaseException) as got:
+            observe(fixture_path(tmp_path, kind), kind, [])
+        assert close_errors
+>       assert got.value is primary, 'descriptor close masked the original read-body primary'
+E       AssertionError: descriptor close masked the original read-body primary
+E       assert OSError('synthetic post-close failure') is KeyboardInterrupt('synthetic read-body primary')
+E        +  where OSError('synthetic post-close failure') = <ExceptionInfo OSError('synthetic post-close failure') tblen=3>.value
+
+test_receipt_reader.py:110: AssertionError
+__ test_reader_body_primary_survives_close_failure[KeyboardInterrupt-upload] ___
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-545/test_reader_body_primary_survi3')
+kind = 'upload', primary_type = <class 'KeyboardInterrupt'>
+
+    @pytest.mark.parametrize('kind', ['client_requests', 'upload'])
+    @pytest.mark.parametrize('primary_type', [ValueError, KeyboardInterrupt, SystemExit])
+    def test_reader_body_primary_survives_close_failure(tmp_path, kind, primary_type):
+        primary = primary_type('synthetic read-body primary')
+        close_errors = []
+        fake = SimpleNamespace(**{n: getattr(os, n) for n in dir(os)})
+    
+        class Stream:
+            def __init__(self, fd):
+                self.fd = fd
+    
+            def __enter__(self):
+                return self
+    
+            def read(self, maximum):
+                raise primary
+    
+            def __exit__(self, *args):
+                os.close(self.fd)
+    
+        def close(fd):
+            os.close(fd)
+            error = OSError('synthetic post-close failure')
+            close_errors.append(error)
+            raise error
+    
+        fake.fdopen = lambda fd, *args, **kwargs: Stream(fd)
+        fake.close = close
+        observe = actual_reader(fake)
+        with pytest.raises(BaseException) as got:
+            observe(fixture_path(tmp_path, kind), kind, [])
+        assert close_errors
+>       assert got.value is primary, 'descriptor close masked the original read-body primary'
+E       AssertionError: descriptor close masked the original read-body primary
+E       assert OSError('synthetic post-close failure') is KeyboardInterrupt('synthetic read-body primary')
+E        +  where OSError('synthetic post-close failure') = <ExceptionInfo OSError('synthetic post-close failure') tblen=3>.value
+
+test_receipt_reader.py:110: AssertionError
+_ test_reader_body_primary_survives_close_failure[SystemExit-client_requests] __
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-545/test_reader_body_primary_survi4')
+kind = 'client_requests', primary_type = <class 'SystemExit'>
+
+    @pytest.mark.parametrize('kind', ['client_requests', 'upload'])
+    @pytest.mark.parametrize('primary_type', [ValueError, KeyboardInterrupt, SystemExit])
+    def test_reader_body_primary_survives_close_failure(tmp_path, kind, primary_type):
+        primary = primary_type('synthetic read-body primary')
+        close_errors = []
+        fake = SimpleNamespace(**{n: getattr(os, n) for n in dir(os)})
+    
+        class Stream:
+            def __init__(self, fd):
+                self.fd = fd
+    
+            def __enter__(self):
+                return self
+    
+            def read(self, maximum):
+                raise primary
+    
+            def __exit__(self, *args):
+                os.close(self.fd)
+    
+        def close(fd):
+            os.close(fd)
+            error = OSError('synthetic post-close failure')
+            close_errors.append(error)
+            raise error
+    
+        fake.fdopen = lambda fd, *args, **kwargs: Stream(fd)
+        fake.close = close
+        observe = actual_reader(fake)
+        with pytest.raises(BaseException) as got:
+            observe(fixture_path(tmp_path, kind), kind, [])
+        assert close_errors
+>       assert got.value is primary, 'descriptor close masked the original read-body primary'
+E       AssertionError: descriptor close masked the original read-body primary
+E       assert OSError('synthetic post-close failure') is SystemExit('synthetic read-body primary')
+E        +  where OSError('synthetic post-close failure') = <ExceptionInfo OSError('synthetic post-close failure') tblen=3>.value
+
+test_receipt_reader.py:110: AssertionError
+______ test_reader_body_primary_survives_close_failure[SystemExit-upload] ______
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-545/test_reader_body_primary_survi5')
+kind = 'upload', primary_type = <class 'SystemExit'>
+
+    @pytest.mark.parametrize('kind', ['client_requests', 'upload'])
+    @pytest.mark.parametrize('primary_type', [ValueError, KeyboardInterrupt, SystemExit])
+    def test_reader_body_primary_survives_close_failure(tmp_path, kind, primary_type):
+        primary = primary_type('synthetic read-body primary')
+        close_errors = []
+        fake = SimpleNamespace(**{n: getattr(os, n) for n in dir(os)})
+    
+        class Stream:
+            def __init__(self, fd):
+                self.fd = fd
+    
+            def __enter__(self):
+                return self
+    
+            def read(self, maximum):
+                raise primary
+    
+            def __exit__(self, *args):
+                os.close(self.fd)
+    
+        def close(fd):
+            os.close(fd)
+            error = OSError('synthetic post-close failure')
+            close_errors.append(error)
+            raise error
+    
+        fake.fdopen = lambda fd, *args, **kwargs: Stream(fd)
+        fake.close = close
+        observe = actual_reader(fake)
+        with pytest.raises(BaseException) as got:
+            observe(fixture_path(tmp_path, kind), kind, [])
+        assert close_errors
+>       assert got.value is primary, 'descriptor close masked the original read-body primary'
+E       AssertionError: descriptor close masked the original read-body primary
+E       assert OSError('synthetic post-close failure') is SystemExit('synthetic read-body primary')
+E        +  where OSError('synthetic post-close failure') = <ExceptionInfo OSError('synthetic post-close failure') tblen=3>.value
+
+test_receipt_reader.py:110: AssertionError
+=========================== short test summary info ============================
+FAILED test_receipt_reader.py::test_fdopen_construction_failure_never_loses_duplicate[client_requests]
+FAILED test_receipt_reader.py::test_fdopen_construction_failure_never_loses_duplicate[upload]
+FAILED test_receipt_reader.py::test_reader_body_primary_survives_close_failure[ValueError-client_requests]
+FAILED test_receipt_reader.py::test_reader_body_primary_survives_close_failure[ValueError-upload]
+FAILED test_receipt_reader.py::test_reader_body_primary_survives_close_failure[KeyboardInterrupt-client_requests]
+FAILED test_receipt_reader.py::test_reader_body_primary_survives_close_failure[KeyboardInterrupt-upload]
+FAILED test_receipt_reader.py::test_reader_body_primary_survives_close_failure[SystemExit-client_requests]
+FAILED test_receipt_reader.py::test_reader_body_primary_survives_close_failure[SystemExit-upload]
+8 failed in 0.08s

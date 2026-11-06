@@ -1,0 +1,84 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+______ test_first_signal_at_cleanup_entry_cannot_skip_owned_child[False] _______
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-433/test_first_signal_at_cleanup_e0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x78c3c923e190>
+prior_failure = False
+
+    @pytest.mark.parametrize('prior_failure',[False,True])
+    def test_first_signal_at_cleanup_entry_cannot_skip_owned_child(tmp_path,monkeypatch,prior_failure):
+        body=ValueError('synthetic child body failure');closed=[];leaders=[];output=tmp_path/'attempt'
+        monkeypatch.setattr(c,'sources',lambda:{'stub.py':b'pass\n'})
+        class Child:
+            def __init__(self,*a,**kw):
+                self.record=dict(direct_child_reaped=False,group_empty_verified=False,cleanup_completed=False);leaders.append(self)
+            def wait(self):
+                if prior_failure:raise body
+                (output/'tests.xml').write_text('<testsuites><testsuite tests="1" errors="0" failures="0" skipped="0"><testcase name="synthetic"/></testsuite></testsuites>')
+                self.record.update(direct_child_reaped=True,group_empty_verified=True,cleanup_completed=True)
+                return 0
+            def close(self,primary=None):
+                closed.append(primary);self.record.update(direct_child_reaped=True,group_empty_verified=True,cleanup_completed=True)
+        monkeypatch.setattr(c,'OwnedChild',Child)
+        lines=Path(c.__file__).read_text().splitlines()
+        target=next(i for i,line in enumerate(lines,1) if 'if child is not None:attempt(' in line)
+        delivered=[]
+        def trace(frame,event,arg):
+            if (event=='line' and frame.f_code.co_filename==c.__file__ and frame.f_lineno==target and not delivered):
+                delivered.append(True);signal.raise_signal(signal.SIGTERM)
+            return trace
+        old=sys.gettrace();sys.settrace(trace)
+        try:
+            with pytest.raises(BaseException) as got:
+                with termination_signals():c.run(output,False)
+        finally:sys.settrace(old)
+        assert delivered and leaders
+>       assert closed, 'first SIGTERM skipped the owned-child cleanup call'
+E       AssertionError: first SIGTERM skipped the owned-child cleanup call
+E       assert []
+
+test_cleanup_signal.py:36: AssertionError
+_______ test_first_signal_at_cleanup_entry_cannot_skip_owned_child[True] _______
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-433/test_first_signal_at_cleanup_e1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x78c3c945be10>
+prior_failure = True
+
+    @pytest.mark.parametrize('prior_failure',[False,True])
+    def test_first_signal_at_cleanup_entry_cannot_skip_owned_child(tmp_path,monkeypatch,prior_failure):
+        body=ValueError('synthetic child body failure');closed=[];leaders=[];output=tmp_path/'attempt'
+        monkeypatch.setattr(c,'sources',lambda:{'stub.py':b'pass\n'})
+        class Child:
+            def __init__(self,*a,**kw):
+                self.record=dict(direct_child_reaped=False,group_empty_verified=False,cleanup_completed=False);leaders.append(self)
+            def wait(self):
+                if prior_failure:raise body
+                (output/'tests.xml').write_text('<testsuites><testsuite tests="1" errors="0" failures="0" skipped="0"><testcase name="synthetic"/></testsuite></testsuites>')
+                self.record.update(direct_child_reaped=True,group_empty_verified=True,cleanup_completed=True)
+                return 0
+            def close(self,primary=None):
+                closed.append(primary);self.record.update(direct_child_reaped=True,group_empty_verified=True,cleanup_completed=True)
+        monkeypatch.setattr(c,'OwnedChild',Child)
+        lines=Path(c.__file__).read_text().splitlines()
+        target=next(i for i,line in enumerate(lines,1) if 'if child is not None:attempt(' in line)
+        delivered=[]
+        def trace(frame,event,arg):
+            if (event=='line' and frame.f_code.co_filename==c.__file__ and frame.f_lineno==target and not delivered):
+                delivered.append(True);signal.raise_signal(signal.SIGTERM)
+            return trace
+        old=sys.gettrace();sys.settrace(trace)
+        try:
+            with pytest.raises(BaseException) as got:
+                with termination_signals():c.run(output,False)
+        finally:sys.settrace(old)
+        assert delivered and leaders
+>       assert closed, 'first SIGTERM skipped the owned-child cleanup call'
+E       AssertionError: first SIGTERM skipped the owned-child cleanup call
+E       assert []
+
+test_cleanup_signal.py:36: AssertionError
+=========================== short test summary info ============================
+FAILED test_cleanup_signal.py::test_first_signal_at_cleanup_entry_cannot_skip_owned_child[False]
+FAILED test_cleanup_signal.py::test_first_signal_at_cleanup_entry_cannot_skip_owned_child[True]
+2 failed in 0.08s

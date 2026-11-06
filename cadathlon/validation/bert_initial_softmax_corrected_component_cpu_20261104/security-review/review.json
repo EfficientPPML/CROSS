@@ -1,0 +1,105 @@
+{
+  "schema": "bert-initial-softmax-corrected-security-source-review-v1",
+  "passed": true,
+  "observed_utc": "2026-11-04T09:29:26.258690+00:00",
+  "scope": "Public report/source readback and scalar integer calculations only; no producer/backend imports, tests, cryptographic operations, or ciphertext/key/model bodies.",
+  "review_script_sha256": "7e8f95e1a2f50f0e782e9b8e497130744c8e6ad3b8c34b5cb2a1f9e8d4a17ecd",
+  "report_sha256": "f4c8e201cec1b643781e42e3f8ad542cb3e48f39cdd43418e1c9ce88b56f8f3e",
+  "source_archive_sha256": "edbe516b8af583027268b54fee4b504c38cf7ba075c5a213820f90c2a58d161a",
+  "owner_terminal_sha256": "7b1a5fe063025ab07610000d5bd993aae60c0b3d4be9a0b73e824bffe473c891",
+  "owner_terminal": {
+    "session_id": 44272,
+    "tool_chunk": "e5927b",
+    "exit_code": 0,
+    "reaped": true,
+    "authority": "Producer owner receipt; reviewer independently checks current process/group absence."
+  },
+  "source_count": 113,
+  "current_before_after_archive_exact": true,
+  "reviewed_source_pins": {
+    "collect.py": "f33952a3eee45ca8432d826adaafc9886915056c8fb2d52f4ad3b7ebfe57b009",
+    "component.py": "781efe4a85da3f314c7651c8066b90c86cfabaa4ecf5084bfc69492c1c215787",
+    "public_contract.py": "223dc27b31f099a6f0da74e662bf3bd43b5e13c2495f11cedf75bbb018055ad6",
+    "lifecycle.py": "366eda604caa1179a1c6eff266071ee7f8ebbde704a3f5d24a1053419be1f914",
+    "fixtures.py": "d4b50664b845e67f437ecabf28244086e281e70467453757174aec8d2e238e32",
+    "test_component_phase.py": "92ef43ada79d656a1d72be8403a76b775e49a9032edbe57f490362b5f4291750",
+    "test_prelaunch.py": "88fe5270a171f6c73fcd87a545801496953b8e5a63812a60777ee2113e594b48",
+    "source_origin.json": "b9f192c70a7e92074a8ea7b58249851a7593849e8834d62b1e7c0ac12cf3a688",
+    "actual_profile_audit.json": "2b2457e50da73b9ccf87984c089afcb99586fde863a48e98b89a1b7ccf872a17",
+    "checkout/cadathlon/common/support.py": "458111de25dbae4418c474670cf45a2d39e8e6ba40b75c2d17ad8f96cbaaa40f",
+    "checkout/jaxite_word/__init__.py": "fc78b0845c2314a523cb20e490ded0c8ef09c9c05fa50d92eb218ef247533096",
+    "checkout/jaxite_word/he_params.py": "b34f2a938598ef9fd1f9de157db3400c48befcb60866751449742917e2e3fccc",
+    "checkout/jaxite_word/util.py": "b34c675b50ae774cdb0ad913f8fc9c2f955b60bf4745006d3f81d7c013565026",
+    "checkout/jaxite_word/ckks_ctx.py": "bc978cb7412b55416f7ed634a689ae616a263b0f47fd9eef996ba244f2505db6",
+    "checkout/jaxite_word/key_gen.py": "742e6af9e1ce9025416fa2ef68ae037bca7e772d48fbbd6ca387cc79820119c8"
+  },
+  "actual_ring": {
+    "degree": 131072,
+    "slots": 65536,
+    "physical_q": 100,
+    "physical_p": 14,
+    "dnum": 8,
+    "physical_partition_width": 13,
+    "physical_partition_count": 8,
+    "qp_bit_length": 3403,
+    "pinned_classical128_table_ceiling": 3523,
+    "log2_qp": 3402.080255733439,
+    "p_bit_length": 415,
+    "partition_bit_lengths": [
+      389,
+      387,
+      387,
+      388,
+      389,
+      390,
+      390,
+      270
+    ],
+    "minimum_p_to_partition_ratio": 42669273.93243293,
+    "all14_recorded_live_contexts_equal": true
+  },
+  "ordering": {
+    "source_order_checked": true,
+    "guarded_codecs": [
+      "encrypt",
+      "decrypt",
+      "encrypt_slots",
+      "decrypt_slots",
+      "encrypt_slots_batch",
+      "decrypt_slots_batch",
+      "decode"
+    ],
+    "keygen_aliases": [
+      "key_gen",
+      "jaxite_word.key_gen"
+    ],
+    "phase_indices": [
+      3,
+      23,
+      43,
+      44,
+      45
+    ],
+    "all14_synchronized_before_restore_and_first_client_decode": true
+  },
+  "cleanup": {
+    "reported_errors": [],
+    "reported_complete": true,
+    "key_directory_currently_absent": true,
+    "worker_and_parent_currently_absent": true,
+    "group_currently_absent": true,
+    "signal_restoration": "Collector attempts restoration before final report; collector_cleanup_errors is empty and authoritative outer exit is 0."
+  },
+  "source_review": [
+    "Actual qp_is_secure and assert_p_coverage precede key generation. Context program_initialization also validates physical P coverage/kernel modulus envelope.",
+    "require_secure_execution reads actual context Q/P/degree, checks classical-128 full-QP table, default noise and uniform-ternary assumptions, and binds ciphertext moduli to a prefix of that ring before arithmetic and at all14 client checks.",
+    "Both key_gen aliases are guarded before server initialization; the server receives evaluation/rotation keys with no secret key. Seven class codec APIs remain guarded through both complete evaluations and their synchronization.",
+    "The package unifies flat/qualified CKKSContext aliases; the producer adds its own checkout/common to import search paths. Historical report does not contain a separate loaded-module origin telemetry inventory.",
+    "Cleanup attempts provider/compiled/context caches, retained references, JAX caches, rotation store, owned key directory, and keygen restoration. This is review of the successful ordinary path, not a new universal failure-lifecycle proof."
+  ],
+  "limitations": [
+    "Security result is the frozen implementation/table and actual recorded ring check; no independent estimator or new cryptographic experiment.",
+    "One dedicated process with separate client/server objects, not an OS sandbox or three-process boundary.",
+    "Only two fixed synthetic initial-softmax fixtures and14 checkpoints; no future normalized rounds, refresh, full attention/block/model, calibrated timing, or precision transfer. Numerical gate readback is owned separately by root/producer."
+  ]
+}

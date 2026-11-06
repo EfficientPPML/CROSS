@@ -1,0 +1,140 @@
+--- /tmp/qwen-toy5-actual-checkpoint-runtime-20261104/parent/q5_checkpoint_transport.py
++++ q5_checkpoint_transport.py
+@@ -3,12 +3,28 @@
+ No key/model/private codec is imported. NumPy is supplied by an explicitly
+ admitted caller. Actual role factories remain unavailable in this source draft.
+ """
+-import hashlib,io,math,os,re,stat,struct,sys,zipfile
++import hashlib,io,math,os,re,stat,struct,sys,zipfile,weakref
+ from pathlib import Path
+ from cleanup_origin import protect_body,select
+ from q5_checkpoint_contract import canonical,parse,numerical_plan,checkpoint_row,all_checkpoints
+ from q5_actual_metadata_replay import check_refreshes
+ _QUARANTINE=[]
++_PUBLISH_OWNERS={}
++_PUBLISH_CLOSED=weakref.WeakSet()
++def _same_method(a,b):
++    return (getattr(a,'__self__',None)is getattr(b,'__self__',None)and
++            getattr(a,'__func__',a)is getattr(b,'__func__',b))
++def _publisher_owners(owner):
++    record=_PUBLISH_OWNERS.get(id(owner))
++    if record is None or record['owner']is not owner:raise ValueError('original publisher ownership record missing')
++    return record
++def _publisher_bindings(owner):
++    record=_publisher_owners(owner)
++    for name,obj,check,close in record['roots']:
++        if getattr(owner,name)is not obj or not _same_method(obj.check,check)or not _same_method(obj.close,close):
++            raise ValueError('original publisher root or callback changed')
++    return record
++
+ _FIELDS=('payload','moduli','degree_layout','precision','scale','nsd')
+ 
+ def state(info):
+@@ -180,37 +196,24 @@
+         self.np=np;self.path=path(output_path);self.parent=None;self.root=None;self.records=[];self.finished=False;self.failure=None;self.closed=False
+         if descriptor(expected_parent)['path']!=str(self.path.parent):raise ValueError('granted output parent mismatch')
+         self.input_bytes=canonical(original_input);self.bindings_bytes=canonical(bindings)
+-        primary=None
++        primary=None;record=dict(owner=self,roots=[],closed=False);_PUBLISH_OWNERS[id(self)]=record
+         try:
+-            self.parent=HeldRoot(expected_parent,parent=True);self.parent.check()
++            self.parent=HeldRoot(expected_parent,parent=True)
++            record['roots'].append(('parent',self.parent,self.parent.check,self.parent.close));self.parent.check()
+             os.mkdir(self.path.name,0o700,dir_fd=self.parent.fd)
+             observed=os.stat(self.path.name,dir_fd=self.parent.fd,follow_symlinks=False)
+             self.root=HeldRoot(canonical(directory(observed,self.path)))
++            record['roots'].append(('root',self.root,self.root.check,self.root.close))
+             self._fixed=(self.np,self.path,self.parent,self.root,self.input_bytes,self.bindings_bytes,self.records);self.check()
+         except BaseException as error:primary=protect_body(error);self.close(primary);raise
+     def check(self):
+         if self.closed:raise ValueError('exporter closed')
+         if any(a is not b for a,b in zip((self.np,self.path,self.parent,self.root,self.input_bytes,self.bindings_bytes,self.records),self._fixed)):raise ValueError('original exporter owners/bindings changed')
+         if self.failure is not None:raise self.failure
+-        self.parent.check();self.root.check()
++        for name,owner,check,close in _publisher_bindings(self)['roots']:check()
+     def _write(self,name,write,cap):
+-        self.check();fd=None;stream=None;primary=None
+-        try:
+-            fd=os.open(name,os.O_RDWR|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW|os.O_CLOEXEC,0o600,dir_fd=self.root.fd)
+-            before=os.fstat(fd)
+-            if not stat.S_ISREG(before.st_mode)or before.st_size!=0 or before.st_uid!=self.root.euid or stat.S_IMODE(before.st_mode)!=0o600:raise ValueError('fresh owned file required')
+-            stream=os.fdopen(fd,'w+b',closefd=False);write(stream);stream.flush();os.fsync(fd)
+-            after=os.fstat(fd);named=os.stat(name,dir_fd=self.root.fd,follow_symlinks=False)
+-            if not 0<after.st_size<=cap or state(after)!=state(named)or(before.st_dev,before.st_ino)!=(after.st_dev,after.st_ino):raise ValueError('owned artifact extent/identity differs')
+-            digest=_hash(fd,after.st_size);self.check();os.fsync(self.root.fd);os.fsync(self.parent.fd)
+-            return dict(name=name,sha256=digest,bytes=after.st_size,state=state(after))
+-        except BaseException as error:primary=protect_body(error);self.failure=error;raise
+-        finally:
+-            actions=[]
+-            if stream is not None:actions.append(('export stream close',stream.close,stream))
+-            if fd is not None:actions.append(('original export FD close',lambda original=fd:os.close(original),(self,fd)))
+-            try:finish(primary,actions)
+-            except BaseException as error:self.failure=error;raise
++        from q5_owned_io import publish
++        return publish(self,name,write,cap)
+     def checkpoint(self,index,value,row):
+         from q5_checkpoint_arithmetic import state as capture,same_state,metadata
+         self.check();checkpoint_row(row,index)
+@@ -246,8 +249,57 @@
+         self._write('manifest.json',lambda stream:stream.write(raw),1<<20);self.check();self.finished=True
+         return raw
+     def close(self,primary=None):
+-        if self.closed:return
+-        self.closed=True;actions=[]
+-        if self.root is not None:actions.append(('export root close',lambda:self.root.close(primary),self.root))
+-        if self.parent is not None:actions.append(('export parent close',lambda:self.parent.close(primary),self.parent))
+-        finish(primary,actions)
++        if self in _PUBLISH_CLOSED:
++            if primary is not None:raise primary
++            return
++        record=_publisher_owners(self)
++        if record['closed']:
++            if primary is not None:raise primary
++            if self.failure is not None:raise self.failure
++            return
++        record['closed']=True;self.closed=True
++        originals=tuple(record['roots']);actions=[('original exporter root bindings',lambda:_publisher_bindings(self),(self,record))]
++        for name,owner,check,close in reversed(originals):
++            actions.append(('original export '+name+' close',lambda close=close:close(primary),owner))
++            actions.append(('post-close original export bindings',lambda:_publisher_bindings(self),(self,record)))
++        try:finish(primary,actions)
++        except BaseException as error:self.failure=error;_QUARANTINE.append((self,record,originals,error));raise
++        if primary is not None or self.failure is not None:
++            self.failure=primary if primary is not None else self.failure
++            _QUARANTINE.append((self,record,originals,self.failure));return
++        self.parent=None;self.root=None;self.np=None;self.path=None;self.input_bytes=None;self.bindings_bytes=None;self.records=None;self._fixed=None
++        record.clear();_PUBLISH_OWNERS.pop(id(self));_PUBLISH_CLOSED.add(self)
++
++
++class InputWriter(Exporter):
++    """One original L49 setup artifact, same opaque six fields and ownership."""
++    def __init__(self,np,output_path,expected_parent,bindings):
++        super().__init__(np,output_path,expected_parent,{},bindings)
++    def write_input(self,value,row):
++        from q5_checkpoint_arithmetic import state as capture,same_state,metadata
++        self.check();checkpoint_row(row,0)
++        if self.records or self.finished:raise ValueError('exact one original input required')
++        held=capture(value,numerical_plan()['profile']);held[1].block_until_ready()
++        np=self.np;payload=np.array(held[1],copy=True)
++        if payload.shape!=(1,2,256,512,100)or payload.dtype!=np.dtype('uint32'):
++            raise ValueError('fresh original L49 input shape/dtype required')
++        actual=metadata(value,numerical_plan()['profile'])
++        if actual!=dict(level=49,scale=numerical_plan()['profile']['scale'],nsd=1)or any(row[k]!=actual[k]for k in actual):
++            raise ValueError('fresh canonical-scale input required')
++        fields=dict(payload=payload,moduli=np.asarray(value.moduli,dtype=np.int64),degree_layout=np.asarray((256,512),dtype=np.int64),
++                    precision=np.asarray(32,dtype=np.int64),scale=np.asarray(actual['scale'],dtype=np.float64),nsd=np.asarray(1,dtype=np.int64))
++        record=self._write('input.npz',lambda stream:np.savez(stream,**fields),payload.nbytes+128*1024)
++        record['metadata']=parse(canonical(row));reader=ArtifactReader(np,self.root.raw);primary=None
++        try:reader.read(record)
++        except BaseException as error:primary=protect_body(error);raise
++        finally:finish(primary,[('original input readback close',lambda:reader.close(primary),reader)])
++        same_state(held,numerical_plan()['profile']);self.check();self.records.append(record)
++        return dict(root=parse(self.root.raw),artifact=record)
++    def finish(self,result):
++        self.check()
++        if self.finished or len(self.records)!=1:raise ValueError('one fully written original input required')
++        original=dict(root=parse(self.root.raw),artifact=self.records[0])
++        if canonical(result)!=canonical(original):raise ValueError('original input return differs')
++        raw=canonical(dict(schema='qwen-toy5-input-manifest-v1',bindings=parse(self.bindings_bytes),original_input=original))
++        self._write('input_manifest.json',lambda stream:stream.write(raw),1<<20)
++        self.check();self.finished=True;return raw

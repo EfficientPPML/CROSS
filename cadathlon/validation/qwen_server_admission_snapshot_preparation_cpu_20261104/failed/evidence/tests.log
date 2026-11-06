@@ -1,0 +1,724 @@
+FFFFFFFFFFFFFFFFFF                                                       [100%]
+=================================== FAILURES ===================================
+_______________________ test_snapshot_guard[clean_graph] _______________________
+
+scenario = 'clean_graph'
+tmp_path = PosixPath('/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_guard_clean_grap0')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_guard(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'snapshot_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                # Immediate ownership uses the previously reviewed71/83 mechanism.
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()  # No healthy-execution deadline.
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('clean_graph', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-admission-snapshot-focused-proof-2026110...                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         ValueError: public source state changed
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py:44: AssertionError
+______________________ test_snapshot_guard[byte_replace] _______________________
+
+scenario = 'byte_replace'
+tmp_path = PosixPath('/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_guard_byte_repla0')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_guard(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'snapshot_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                # Immediate ownership uses the previously reviewed71/83 mechanism.
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()  # No healthy-execution deadline.
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('byte_replace', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-admission-snapshot-focused-proof-202611...                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         ValueError: public source state changed
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py:44: AssertionError
+______________________ test_snapshot_guard[tuple_replace] ______________________
+
+scenario = 'tuple_replace'
+tmp_path = PosixPath('/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_guard_tuple_repl0')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_guard(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'snapshot_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                # Immediate ownership uses the previously reviewed71/83 mechanism.
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()  # No healthy-execution deadline.
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('tuple_replace', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-admission-snapshot-focused-proof-20261...                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         ValueError: public source state changed
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py:44: AssertionError
+_______________________ test_snapshot_guard[extra_field] _______________________
+
+scenario = 'extra_field'
+tmp_path = PosixPath('/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_guard_extra_fiel0')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_guard(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'snapshot_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                # Immediate ownership uses the previously reviewed71/83 mechanism.
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()  # No healthy-execution deadline.
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('extra_field', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-admission-snapshot-focused-proof-2026110...                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         ValueError: public source state changed
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py:44: AssertionError
+______________________ test_snapshot_guard[dict_replace] _______________________
+
+scenario = 'dict_replace'
+tmp_path = PosixPath('/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_guard_dict_repla0')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_guard(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'snapshot_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                # Immediate ownership uses the previously reviewed71/83 mechanism.
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()  # No healthy-execution deadline.
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('dict_replace', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-admission-snapshot-focused-proof-202611...                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         ValueError: public source state changed
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py:44: AssertionError
+______________________ test_snapshot_guard[mutable_graph] ______________________
+
+scenario = 'mutable_graph'
+tmp_path = PosixPath('/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_guard_mutable_gr0')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_guard(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'snapshot_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                # Immediate ownership uses the previously reviewed71/83 mechanism.
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()  # No healthy-execution deadline.
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('mutable_graph', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-admission-snapshot-focused-proof-20261...                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         ValueError: public source state changed
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py:44: AssertionError
+_______________________ test_snapshot_guard[helper_code] _______________________
+
+scenario = 'helper_code'
+tmp_path = PosixPath('/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_guard_helper_cod0')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_guard(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'snapshot_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                # Immediate ownership uses the previously reviewed71/83 mechanism.
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()  # No healthy-execution deadline.
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('helper_code', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-admission-snapshot-focused-proof-2026110...                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         ValueError: public source state changed
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py:44: AssertionError
+______________________ test_snapshot_guard[helper_export] ______________________
+
+scenario = 'helper_export'
+tmp_path = PosixPath('/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_guard_helper_exp0')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_guard(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'snapshot_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                # Immediate ownership uses the previously reviewed71/83 mechanism.
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()  # No healthy-execution deadline.
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('helper_export', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-admission-snapshot-focused-proof-20261...                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         ValueError: public source state changed
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py:44: AssertionError
+_____________________ test_snapshot_guard[keyword_default] _____________________
+
+scenario = 'keyword_default'
+tmp_path = PosixPath('/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_guard_keyword_de0')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_guard(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'snapshot_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                # Immediate ownership uses the previously reviewed71/83 mechanism.
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()  # No healthy-execution deadline.
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('keyword_default', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-admission-snapshot-focused-proof-202...                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         ValueError: public source state changed
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py:44: AssertionError
+_______________________ test_snapshot_guard[descriptor] ________________________
+
+scenario = 'descriptor'
+tmp_path = PosixPath('/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_guard_descriptor0')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_guard(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'snapshot_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                # Immediate ownership uses the previously reviewed71/83 mechanism.
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()  # No healthy-execution deadline.
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('descriptor', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-admission-snapshot-focused-proof-20261104...                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         ValueError: public source state changed
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py:44: AssertionError
+______________________ test_snapshot_guard[wrong_packet] _______________________
+
+scenario = 'wrong_packet'
+tmp_path = PosixPath('/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_guard_wrong_pack0')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_guard(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'snapshot_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                # Immediate ownership uses the previously reviewed71/83 mechanism.
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()  # No healthy-execution deadline.
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('wrong_packet', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-admission-snapshot-focused-proof-202611...                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         ValueError: public source state changed
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py:44: AssertionError
+______________________ test_snapshot_guard[wrong_thread] _______________________
+
+scenario = 'wrong_thread'
+tmp_path = PosixPath('/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_guard_wrong_thre0')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_guard(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'snapshot_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                # Immediate ownership uses the previously reviewed71/83 mechanism.
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()  # No healthy-execution deadline.
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('wrong_thread', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-admission-snapshot-focused-proof-202611...                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         ValueError: public source state changed
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py:44: AssertionError
+____________________ test_snapshot_guard[reentry_uncaught] _____________________
+
+scenario = 'reentry_uncaught'
+tmp_path = PosixPath('/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_guard_reentry_un0')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_guard(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'snapshot_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                # Immediate ownership uses the previously reviewed71/83 mechanism.
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()  # No healthy-execution deadline.
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('reentry_uncaught', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-admission-snapshot-focused-proof-20...                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         ValueError: public source state changed
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py:44: AssertionError
+_____________________ test_snapshot_guard[reentry_caught] ______________________
+
+scenario = 'reentry_caught'
+tmp_path = PosixPath('/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_guard_reentry_ca0')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_guard(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'snapshot_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                # Immediate ownership uses the previously reviewed71/83 mechanism.
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()  # No healthy-execution deadline.
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('reentry_caught', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-admission-snapshot-focused-proof-2026...                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         ValueError: public source state changed
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py:44: AssertionError
+____________________ test_snapshot_guard[validator_failure] ____________________
+
+scenario = 'validator_failure'
+tmp_path = PosixPath('/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_guard_validator_0')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_guard(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'snapshot_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                # Immediate ownership uses the previously reviewed71/83 mechanism.
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()  # No healthy-execution deadline.
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('validator_failure', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-admission-snapshot-focused-proof-2...                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         ValueError: public source state changed
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py:44: AssertionError
+________________ test_snapshot_guard[initial_callback_failure] _________________
+
+scenario = 'initial_callback_failure'
+tmp_path = PosixPath('/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_guard_initial_ca0')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_guard(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'snapshot_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                # Immediate ownership uses the previously reviewed71/83 mechanism.
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()  # No healthy-execution deadline.
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('initial_callback_failure', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-admission-snapshot-focused-...                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         ValueError: public source state changed
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py:44: AssertionError
+_________________ test_snapshot_guard[final_callback_failure] __________________
+
+scenario = 'final_callback_failure'
+tmp_path = PosixPath('/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_guard_final_call0')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_guard(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'snapshot_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                # Immediate ownership uses the previously reviewed71/83 mechanism.
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()  # No healthy-execution deadline.
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('final_callback_failure', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-admission-snapshot-focused-pr...                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         ValueError: public source state changed
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py:44: AssertionError
+___________________ test_snapshot_guard[validator_mutation] ____________________
+
+scenario = 'validator_mutation'
+tmp_path = PosixPath('/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_guard_validator_1')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_guard(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'snapshot_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                # Immediate ownership uses the previously reviewed71/83 mechanism.
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()  # No healthy-execution deadline.
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('validator_mutation', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-admission-snapshot-focused-proof-...                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         ValueError: public source state changed
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py:44: AssertionError
+=========================== short test summary info ============================
+FAILED ../../tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py::test_snapshot_guard[clean_graph]
+FAILED ../../tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py::test_snapshot_guard[byte_replace]
+FAILED ../../tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py::test_snapshot_guard[tuple_replace]
+FAILED ../../tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py::test_snapshot_guard[extra_field]
+FAILED ../../tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py::test_snapshot_guard[dict_replace]
+FAILED ../../tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py::test_snapshot_guard[mutable_graph]
+FAILED ../../tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py::test_snapshot_guard[helper_code]
+FAILED ../../tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py::test_snapshot_guard[helper_export]
+FAILED ../../tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py::test_snapshot_guard[keyword_default]
+FAILED ../../tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py::test_snapshot_guard[descriptor]
+FAILED ../../tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py::test_snapshot_guard[wrong_packet]
+FAILED ../../tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py::test_snapshot_guard[wrong_thread]
+FAILED ../../tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py::test_snapshot_guard[reentry_uncaught]
+FAILED ../../tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py::test_snapshot_guard[reentry_caught]
+FAILED ../../tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py::test_snapshot_guard[validator_failure]
+FAILED ../../tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py::test_snapshot_guard[initial_callback_failure]
+FAILED ../../tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py::test_snapshot_guard[final_callback_failure]
+FAILED ../../tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/test_snapshot_guard.py::test_snapshot_guard[validator_mutation]
+18 failed in 1.51s

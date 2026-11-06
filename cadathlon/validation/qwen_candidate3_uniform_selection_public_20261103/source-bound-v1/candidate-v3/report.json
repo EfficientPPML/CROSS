@@ -1,0 +1,392 @@
+{
+  "passed": true,
+  "complete": true,
+  "model_evaluated": false,
+  "HE_executed": false,
+  "heldout_or_fresh56_read": false,
+  "source_hashes_before": {
+    "protocol.json": "428f4747359467737c5932f08c13b7376f3c4e6051f5eed5bb736a0c0ed5ccd9",
+    "select_rules.py": "22c04edb462ecdcba10bf35fcc382f58935aa4a7d06cda8d86c5aa68ea2e48f8",
+    "run_public.py": "bf325c27f29d5bf7985e3acdbe02ce26f861998a2280a562b1f8e80eb158eea2",
+    "certificate.py": "1283be55dad48f5569d362116c1ada3b12b6b5e8a2fef2986880e23f863db8f1",
+    "test_certificate.py": "5e172a0750cc15125ba8f0f4abd0c124d6bd456056ceb941c907c838a0b22374",
+    "test_selection.py": "8a58e5cb2460526ade715aa57b025e7d7df31ebc85448ff1bac13f906909989c",
+    "numeric.py": "5a3a39324133ae52cf4990d9fa48a6e593920e83e6114179b2d9be622bf8b6ce",
+    "old_selection.py": "78b7e56cd9296460115640be93e57fe5229fa9ba66f558319ef91f95e8124edd",
+    "inputs/candidate2_manifest.json": "0af45a8fc6d13b9d429ee1af2311b2cb6ac0aa4cde02eca56478472762482489",
+    "inputs/factor4_fallback_report.json": "2e9de6c41bafbb89f17b2eec06cb19c06a2ec16d9f85aa6ae8ac89dd3a474d46",
+    "inputs/norm_multipliers.json": "761a07e232e0bba981ba014eb6d202cce96a9471616743594fecdc6a57d67840",
+    "inputs/qwen_config.json": "660db3b73d788119c04535e48cf9be5f55bc3100841a718637ae695b442f27dd"
+  },
+  "normalization_count": 113,
+  "protected_other_rules_unchanged": true,
+  "selected_counts": {
+    "balanced64": 5,
+    "balanced256": 13,
+    "newton": 77,
+    "balanced512": 16,
+    "balanced128": 2
+  },
+  "complete_rms_depth_range": [
+    18,
+    97
+  ],
+  "sites_without_two_level_reserve_from25": [
+    "10.input.inverse_sqrt",
+    "10.k.inverse_sqrt",
+    "10.post.inverse_sqrt",
+    "10.q.inverse_sqrt",
+    "11.input.inverse_sqrt",
+    "11.k.inverse_sqrt",
+    "11.post.inverse_sqrt",
+    "11.q.inverse_sqrt",
+    "12.input.inverse_sqrt",
+    "12.k.inverse_sqrt",
+    "12.post.inverse_sqrt",
+    "12.q.inverse_sqrt",
+    "13.input.inverse_sqrt",
+    "13.k.inverse_sqrt",
+    "13.post.inverse_sqrt",
+    "13.q.inverse_sqrt",
+    "14.input.inverse_sqrt",
+    "14.k.inverse_sqrt",
+    "14.post.inverse_sqrt",
+    "14.q.inverse_sqrt",
+    "15.input.inverse_sqrt",
+    "15.post.inverse_sqrt",
+    "15.q.inverse_sqrt",
+    "16.input.inverse_sqrt",
+    "16.post.inverse_sqrt",
+    "16.q.inverse_sqrt",
+    "17.input.inverse_sqrt",
+    "17.post.inverse_sqrt",
+    "17.q.inverse_sqrt",
+    "18.input.inverse_sqrt",
+    "18.k.inverse_sqrt",
+    "18.post.inverse_sqrt",
+    "18.q.inverse_sqrt",
+    "19.input.inverse_sqrt",
+    "19.k.inverse_sqrt",
+    "19.post.inverse_sqrt",
+    "19.q.inverse_sqrt",
+    "20.input.inverse_sqrt",
+    "20.k.inverse_sqrt",
+    "20.post.inverse_sqrt",
+    "20.q.inverse_sqrt",
+    "21.input.inverse_sqrt",
+    "21.k.inverse_sqrt",
+    "21.post.inverse_sqrt",
+    "21.q.inverse_sqrt",
+    "22.input.inverse_sqrt",
+    "22.k.inverse_sqrt",
+    "22.post.inverse_sqrt",
+    "22.q.inverse_sqrt",
+    "23.input.inverse_sqrt",
+    "23.k.inverse_sqrt",
+    "23.post.inverse_sqrt",
+    "23.q.inverse_sqrt",
+    "24.input.inverse_sqrt",
+    "24.k.inverse_sqrt",
+    "24.post.inverse_sqrt",
+    "24.q.inverse_sqrt",
+    "25.input.inverse_sqrt",
+    "25.k.inverse_sqrt",
+    "25.post.inverse_sqrt",
+    "25.q.inverse_sqrt",
+    "26.input.inverse_sqrt",
+    "26.post.inverse_sqrt",
+    "26.q.inverse_sqrt",
+    "27.input.inverse_sqrt",
+    "27.post.inverse_sqrt",
+    "27.q.inverse_sqrt",
+    "3.input.inverse_sqrt",
+    "3.k.inverse_sqrt",
+    "3.post.inverse_sqrt",
+    "3.q.inverse_sqrt",
+    "4.input.inverse_sqrt",
+    "4.k.inverse_sqrt",
+    "4.post.inverse_sqrt",
+    "4.q.inverse_sqrt",
+    "5.input.inverse_sqrt",
+    "5.post.inverse_sqrt",
+    "5.q.inverse_sqrt",
+    "6.input.inverse_sqrt",
+    "6.k.inverse_sqrt",
+    "6.post.inverse_sqrt",
+    "6.q.inverse_sqrt",
+    "7.input.inverse_sqrt",
+    "7.post.inverse_sqrt",
+    "7.q.inverse_sqrt",
+    "8.input.inverse_sqrt",
+    "8.k.inverse_sqrt",
+    "8.post.inverse_sqrt",
+    "8.q.inverse_sqrt",
+    "9.input.inverse_sqrt",
+    "9.k.inverse_sqrt",
+    "9.post.inverse_sqrt",
+    "9.q.inverse_sqrt"
+  ],
+  "largest_binary64_grid_relative_error": 9.938826238675702e-07,
+  "abstract_depths": {
+    "8": 13518,
+    "16": 13956,
+    "19": 14394,
+    "32": 14394
+  },
+  "silu_radius_recheck": {
+    "0": {
+      "required_conditional_radius": 48,
+      "unchanged_domain": [
+        -48,
+        48
+      ],
+      "covered": true
+    },
+    "1": {
+      "required_conditional_radius": 74,
+      "unchanged_domain": [
+        -74,
+        74
+      ],
+      "covered": true
+    },
+    "2": {
+      "required_conditional_radius": 81,
+      "unchanged_domain": [
+        -81,
+        81
+      ],
+      "covered": true
+    },
+    "3": {
+      "required_conditional_radius": 91,
+      "unchanged_domain": [
+        -91,
+        91
+      ],
+      "covered": true
+    },
+    "4": {
+      "required_conditional_radius": 74,
+      "unchanged_domain": [
+        -74,
+        74
+      ],
+      "covered": true
+    },
+    "5": {
+      "required_conditional_radius": 69,
+      "unchanged_domain": [
+        -69,
+        69
+      ],
+      "covered": true
+    },
+    "6": {
+      "required_conditional_radius": 75,
+      "unchanged_domain": [
+        -75,
+        75
+      ],
+      "covered": true
+    },
+    "7": {
+      "required_conditional_radius": 104,
+      "unchanged_domain": [
+        -104,
+        104
+      ],
+      "covered": true
+    },
+    "8": {
+      "required_conditional_radius": 98,
+      "unchanged_domain": [
+        -98,
+        98
+      ],
+      "covered": true
+    },
+    "9": {
+      "required_conditional_radius": 90,
+      "unchanged_domain": [
+        -90,
+        90
+      ],
+      "covered": true
+    },
+    "10": {
+      "required_conditional_radius": 92,
+      "unchanged_domain": [
+        -92,
+        92
+      ],
+      "covered": true
+    },
+    "11": {
+      "required_conditional_radius": 94,
+      "unchanged_domain": [
+        -94,
+        94
+      ],
+      "covered": true
+    },
+    "12": {
+      "required_conditional_radius": 97,
+      "unchanged_domain": [
+        -97,
+        97
+      ],
+      "covered": true
+    },
+    "13": {
+      "required_conditional_radius": 117,
+      "unchanged_domain": [
+        -117,
+        117
+      ],
+      "covered": true
+    },
+    "14": {
+      "required_conditional_radius": 111,
+      "unchanged_domain": [
+        -111,
+        111
+      ],
+      "covered": true
+    },
+    "15": {
+      "required_conditional_radius": 120,
+      "unchanged_domain": [
+        -120,
+        120
+      ],
+      "covered": true
+    },
+    "16": {
+      "required_conditional_radius": 90,
+      "unchanged_domain": [
+        -90,
+        90
+      ],
+      "covered": true
+    },
+    "17": {
+      "required_conditional_radius": 115,
+      "unchanged_domain": [
+        -115,
+        115
+      ],
+      "covered": true
+    },
+    "18": {
+      "required_conditional_radius": 110,
+      "unchanged_domain": [
+        -110,
+        110
+      ],
+      "covered": true
+    },
+    "19": {
+      "required_conditional_radius": 236,
+      "unchanged_domain": [
+        -236,
+        236
+      ],
+      "covered": true
+    },
+    "20": {
+      "required_conditional_radius": 123,
+      "unchanged_domain": [
+        -123,
+        123
+      ],
+      "covered": true
+    },
+    "21": {
+      "required_conditional_radius": 135,
+      "unchanged_domain": [
+        -135,
+        135
+      ],
+      "covered": true
+    },
+    "22": {
+      "required_conditional_radius": 120,
+      "unchanged_domain": [
+        -120,
+        120
+      ],
+      "covered": true
+    },
+    "23": {
+      "required_conditional_radius": 162,
+      "unchanged_domain": [
+        -162,
+        162
+      ],
+      "covered": true
+    },
+    "24": {
+      "required_conditional_radius": 164,
+      "unchanged_domain": [
+        -164,
+        164
+      ],
+      "covered": true
+    },
+    "25": {
+      "required_conditional_radius": 211,
+      "unchanged_domain": [
+        -211,
+        211
+      ],
+      "covered": true
+    },
+    "26": {
+      "required_conditional_radius": 763,
+      "unchanged_domain": [
+        -763,
+        763
+      ],
+      "covered": true
+    },
+    "27": {
+      "required_conditional_radius": 3601,
+      "unchanged_domain": [
+        -3601,
+        3601
+      ],
+      "covered": true
+    }
+  },
+  "manifest_sha256": "7f6478a6bc710f3d2a370198e075e6ba8b0e55c144d981bca0eed59eaf176333",
+  "assessments_sha256": "fc4938af988bd5c3592d4a4cf2bf27c546353f9a3744d275f49a8c21047114b1",
+  "original_candidate2_nine_stops_remain_failures": true,
+  "calibration_or_validation_not_executed": true,
+  "source_hashes_after": {
+    "protocol.json": "428f4747359467737c5932f08c13b7376f3c4e6051f5eed5bb736a0c0ed5ccd9",
+    "select_rules.py": "22c04edb462ecdcba10bf35fcc382f58935aa4a7d06cda8d86c5aa68ea2e48f8",
+    "run_public.py": "bf325c27f29d5bf7985e3acdbe02ce26f861998a2280a562b1f8e80eb158eea2",
+    "certificate.py": "1283be55dad48f5569d362116c1ada3b12b6b5e8a2fef2986880e23f863db8f1",
+    "test_certificate.py": "5e172a0750cc15125ba8f0f4abd0c124d6bd456056ceb941c907c838a0b22374",
+    "test_selection.py": "8a58e5cb2460526ade715aa57b025e7d7df31ebc85448ff1bac13f906909989c",
+    "numeric.py": "5a3a39324133ae52cf4990d9fa48a6e593920e83e6114179b2d9be622bf8b6ce",
+    "old_selection.py": "78b7e56cd9296460115640be93e57fe5229fa9ba66f558319ef91f95e8124edd",
+    "inputs/candidate2_manifest.json": "0af45a8fc6d13b9d429ee1af2311b2cb6ac0aa4cde02eca56478472762482489",
+    "inputs/factor4_fallback_report.json": "2e9de6c41bafbb89f17b2eec06cb19c06a2ec16d9f85aa6ae8ac89dd3a474d46",
+    "inputs/norm_multipliers.json": "761a07e232e0bba981ba014eb6d202cce96a9471616743594fecdc6a57d67840",
+    "inputs/qwen_config.json": "660db3b73d788119c04535e48cf9be5f55bc3100841a718637ae695b442f27dd"
+  },
+  "source_files_unchanged": true,
+  "source_archive_verified": true,
+  "source_archive_sha256": "dd3d6403b192577f11bda163c8ac7305ac254dc67e4e08283e96bd7df3d7aec4",
+  "elapsed_s": 12.25428695899609,
+  "cpu_affinity": [
+    124,
+    125,
+    126,
+    127
+  ],
+  "numpy_version": "2.5.4",
+  "python": "3.13.18 | packaged by Anaconda, Inc. | (main, Oct 27 2026, 00:57:03) [GCC 14.3.0]"
+}

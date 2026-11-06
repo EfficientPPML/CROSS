@@ -1,0 +1,48 @@
+FFFF                                                                     [100%]
+=================================== FAILURES ===================================
+_ test_postmutation_block_failure_restores_prior_mask_and_cleans[False-installation] _
+/tmp/bert-key-contexts-cleanup-v2-20261103/before/test_mask_mutation.py:27: in test_postmutation_block_failure_restores_prior_mask_and_cleans
+    assert real_mask(signal.SIG_BLOCK,[])==mask
+E   assert {<Signals.SIG....SIGTERM: 15>} == set()
+E     
+E     Extra items in the left set:
+E     <Signals.SIGHUP: 1>
+E     <Signals.SIGINT: 2>
+E     <Signals.SIGTERM: 15>
+E     Use -v to get more diff
+_ test_postmutation_block_failure_restores_prior_mask_and_cleans[False-restoration] _
+/tmp/bert-key-contexts-cleanup-v2-20261103/before/test_mask_mutation.py:27: in test_postmutation_block_failure_restores_prior_mask_and_cleans
+    assert real_mask(signal.SIG_BLOCK,[])==mask
+E   assert {<Signals.SIG....SIGTERM: 15>} == set()
+E     
+E     Extra items in the left set:
+E     <Signals.SIGHUP: 1>
+E     <Signals.SIGINT: 2>
+E     <Signals.SIGTERM: 15>
+E     Use -v to get more diff
+_ test_postmutation_block_failure_restores_prior_mask_and_cleans[True-installation] _
+/tmp/bert-key-contexts-cleanup-v2-20261103/before/test_mask_mutation.py:27: in test_postmutation_block_failure_restores_prior_mask_and_cleans
+    assert real_mask(signal.SIG_BLOCK,[])==mask
+E   assert {<Signals.SIG....SIGTERM: 15>} == set()
+E     
+E     Extra items in the left set:
+E     <Signals.SIGHUP: 1>
+E     <Signals.SIGINT: 2>
+E     <Signals.SIGTERM: 15>
+E     Use -v to get more diff
+_ test_postmutation_block_failure_restores_prior_mask_and_cleans[True-restoration] _
+/tmp/bert-key-contexts-cleanup-v2-20261103/before/test_mask_mutation.py:27: in test_postmutation_block_failure_restores_prior_mask_and_cleans
+    assert real_mask(signal.SIG_BLOCK,[])==mask
+E   assert {<Signals.SIG....SIGTERM: 15>} == set()
+E     
+E     Extra items in the left set:
+E     <Signals.SIGHUP: 1>
+E     <Signals.SIGINT: 2>
+E     <Signals.SIGTERM: 15>
+E     Use -v to get more diff
+=========================== short test summary info ============================
+FAILED ../../tmp/bert-key-contexts-cleanup-v2-20261103/before/test_mask_mutation.py::test_postmutation_block_failure_restores_prior_mask_and_cleans[False-installation]
+FAILED ../../tmp/bert-key-contexts-cleanup-v2-20261103/before/test_mask_mutation.py::test_postmutation_block_failure_restores_prior_mask_and_cleans[False-restoration]
+FAILED ../../tmp/bert-key-contexts-cleanup-v2-20261103/before/test_mask_mutation.py::test_postmutation_block_failure_restores_prior_mask_and_cleans[True-installation]
+FAILED ../../tmp/bert-key-contexts-cleanup-v2-20261103/before/test_mask_mutation.py::test_postmutation_block_failure_restores_prior_mask_and_cleans[True-restoration]
+4 failed in 0.23s

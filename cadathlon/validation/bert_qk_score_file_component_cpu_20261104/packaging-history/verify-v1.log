@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/home/jianming_gatech/CROSS/cadathlon/validation/bert_qk_score_file_component_cpu_20261104/verify.py", line 7, in <module>
+    index=load(ROOT/'files.sha256.json');files={f.relative_to(ROOT).as_posix():f for f in ROOT.rglob('*')if f.is_file()and f.name!='files.sha256.json'and '__pycache__'not in f.parts};assert set(index)==set(files)and all(h(f.read_bytes())==index[n]for n,f in files.items())
+                                                                                                                                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

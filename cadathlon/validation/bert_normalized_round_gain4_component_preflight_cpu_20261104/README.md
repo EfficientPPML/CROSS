@@ -1,0 +1,13 @@
+# Gain4 normalized-round component preparation
+
+Both preparation runs passed415 mocked tests and10 fresh installed-library tests. The disabled162-source run completed in46.143s; the separate ready163-source successor completed in46.061s. Both authoritative tool sessions exited0 and were reaped; the two direct children in each run were waited and their owned groups verified absent. All current/start/end/execution/archive sources matched. Readiness is technical preparation, not an actual execution result or launch grant.
+
+The exact frozen gain4 owner, original two fixtures, coefficients/counts/domains and all54 checkpoints retain the original1e-6 gates. Actual proposed work is two freshL49 encryptions, genuine49→25 prefix reductions,6PT/48CT/54rescales/28rotations and54 retained outputs before any decode. No refresh, new keys, model, TPU or HE execution occurred in these preflights. The public encoder/ideal proof is a prerequisite, not encrypted accuracy evidence; the prior114-source normalized-round numerical failure remains preserved.
+
+The ready successor changes only readiness/docs/source-inventory provenance (five inherited metadata files plus one new origin file); every worker, arithmetic, contract, test and helper byte is unchanged from the disabled proof. See ready_successor_origin.json. One unused duplicate6.46MiB public key plan was retired before these preflights; duplicate_plan_readback.json records exact equality with the sole active body and the selected load paths. The old historical planner remains unused provenance, and its original complete archive is retained inside the execution source archive.
+
+The proposed three-process command and storage scope are in DESIGN.md. Reserve3244294144bytes covers raw input/output plus one100MiB temporary and1GiB margin, excluding existing shared keys and runtime memory. Each actual phase requires independent review and externally pinned successful preceding receipts. Existing authenticated130-key storage is borrowed read-only and never retired.
+
+History preserves the real source-pin rejection, a containment-test fixture failure and existing-output overwrite negative. The first two snapshots were taken after their terminal observations; only the overwrite negative has a startup archive, with no after-source claim. The final owned-directory publication repair prevents rewriting an existing or replaced output report, preserves body exceptions and cleanup cancellation priority, and publishes success only after outer signal restoration.
+
+Run `python verify.py` offline, or `python verify.py --current` for exact frozen lab readback. Verification does not read private/key/ciphertext/model bodies. No ranked, full-model, timing or memory-peak result is claimed.

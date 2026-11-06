@@ -1,0 +1,9 @@
+Genuine secure CPU factored score-routing component
+
+The canonical gain1 route and a separately encrypted noncanonical gain1/8 route both passed all65536 slots at each of six forward/inverse checkpoints (12 outputs total), fixed absolute gate1e-6. Maximum observed error: 1.6361870255746115e-10. The noncanonical input came from a real ciphertext product with encrypted1, without metadata scale relabeling. Levels were5→4→3→3→3→2→1; each weighted stage followed the actual binary64 scale recurrence.
+
+The actual common profile was N131072, depth49, p60, dnum8, Q100/P14, CD2/layout256×512, with pre-keygen actual-security/P-coverage checks. The route used54 public rotation keys,108 rotations,112 plaintext-product terms and8 composite rescales; the separate input product added1 ciphertext product and1 rescale. The proof used same-process separate client and keyless-server objects, both keygen alias guards and all seven class codec guards, and completed every server output before client decryption. It performed no refresh, QK/PV calculation, full attention/block/model, file-stage or TPU evaluation.
+
+Tool session45984 was authoritatively reaped with exit0. All recorded process IDs are absent and the owned48.09GiB public-key directory was removed. All111 exact measured source files match before/after/current/archive bytes; source archive SHA256 14cebf6ef3e1ae114d7d39293802ac1f5a0e18abf2468f103c798d9dbb42b114. Collector wall time 11826.058637s; GNU time rounded wall time 11826s and peak RSS 63453668KiB. This is a component measurement, not a matched optimization comparison. Other independent numerical jobs ran on disjoint CPU affinities; this job used152–155 with four threads.
+
+The archive includes public aggregate checks, metadata/source fingerprints, raw logs and exact source bytes only. No keys, ciphertext payloads or plaintext input arrays were copied. Preparation evidence remains separately under factored_score_routing_p60_prelaunch_cpu_20261103.

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="2" time="0.037" timestamp="2026-11-04T05:37:12.872195+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_missing_closure" name="test_multifile_reconstruction_without_source_archive_grant_binding_rejected" time="0.003"><failure message="Failed: DID NOT RAISE ValueError">def test_multifile_reconstruction_without_source_archive_grant_binding_rejected():
+        blobs,pins=pack(*skeleton())
+        assert set(pins)==set(f.PIN_FIELDS)
+        assert not any(k.startswith('reconstruction_')and k!='reconstruction_script_sha256'and k!='reconstruction_outer'for k in pins)
+&gt;       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+/tmp/qwen-freeze-issuer-security-review-20261104/negative-v1/source/test_missing_closure.py:10: Failed</failure></testcase><testcase classname="test_missing_closure" name="test_stale_script_is_rejected_control" time="0.003" /></testsuite></testsuites>

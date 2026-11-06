@@ -1,0 +1,57 @@
+--- a/jaxite_word/herot.py
++++ b/jaxite_word/herot.py
+@@ -42,7 +42,8 @@
+   # ---------------------------------------------------------------------------
+ 
+   def __init__(self, r, c, dnum, rotate_in_ciphertext_moduli, extend_moduli,
+-               finite_field_context=BarrettContext):
++               finite_field_context=BarrettContext, polynomial_factory=None):
++    self._polynomial_factory = polynomial_factory or Polynomial
+     self.r = r
+     self.c = c
+     self.dnum = dnum
+@@ -183,7 +184,7 @@
+         'num_moduli': sizeQl_in,
+         'degree_layout': degree_layout,
+     }
+-    self.ct_in = Polynomial(
++    self.ct_in = self._polynomial_factory(
+         ct_in_shapes,
+         parameters={
+             'moduli': overall_moduli[:sizeQl_in],
+@@ -192,7 +193,7 @@
+     )
+     ct_single_shapes = dict(ct_in_shapes)
+     ct_single_shapes['num_elements'] = 1
+-    self.ct_single = Polynomial(
++    self.ct_single = self._polynomial_factory(
+         ct_single_shapes,
+         parameters={
+             'moduli': overall_moduli[:sizeQl_in],
+@@ -214,7 +215,7 @@
+           'degree_layout': degree_layout,
+       }
+       self.ct_parts.append(
+-          Polynomial(
++          self._polynomial_factory(
+               ct_part_shapes,
+               parameters={
+                   'moduli': _target_moduli_list,
+@@ -231,7 +232,7 @@
+         'num_moduli': sizeQlP_in,
+         'degree_layout': degree_layout,
+     }
+-    self.ct_full = Polynomial(
++    self.ct_full = self._polynomial_factory(
+         ct_full_shapes,
+         parameters={
+             'moduli': self.overall_moduli,
+@@ -247,7 +248,7 @@
+         'num_moduli': sizeQlP_in - sizeQl_in,
+         'degree_layout': degree_layout,
+     }
+-    self.ct_approx = Polynomial(
++    self.ct_approx = self._polynomial_factory(
+         ct_approx_shapes,
+         parameters={
+             'moduli': self.extend_moduli,

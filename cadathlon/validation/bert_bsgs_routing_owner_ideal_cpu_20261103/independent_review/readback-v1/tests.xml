@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="3" time="0.093" timestamp="2026-11-03T16:11:05.673255+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_review_guards" name="test_missing_supplied_keys_rejected_before_work" time="0.001"><failure message="Failed: DID NOT RAISE ValueError">def test_missing_supplied_keys_rejected_before_work():
+        a=Arithmetic();k=a.ctx._param_cache;k.raw_rotation_keys={};k.coef_maps={};k.per_level_rotation_keys=False
+&gt;       with pytest.raises(ValueError):BSGSScoreRouting(a,FactoredScoreLayout(0,0))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+/tmp/bert-bsgs-score-routing-owner-20261103/metadata_tests/review_repros/test_review_guards.py:17: Failed</failure></testcase><testcase classname="test_review_guards" name="test_changed_field_class_rejected_before_work" time="0.001"><failure message="Failed: DID NOT RAISE ValueError">def test_changed_field_class_rejected_before_work():
+        a=Arithmetic();a.ctx._param_cache.ff_context_cls=type('OriginalBarrett',(),{})
+        owner=BSGSScoreRouting(a,FactoredScoreLayout(0,0))
+        a.ctx._param_cache.ff_context_cls=type('ChangedFamily',(),{})
+&gt;       with pytest.raises(ValueError):owner._guard()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+/tmp/bert-bsgs-score-routing-owner-20261103/metadata_tests/review_repros/test_review_guards.py:24: Failed</failure></testcase><testcase classname="test_review_guards" name="test_later_callback_cannot_leave_owned_prior_annotations" time="0.029"><failure message="AssertionError: assert not True&#10; +  where True = hasattr(&lt;test_bsgs.Value object at 0x76f2e4272030&gt;, '_public_bound')">def test_later_callback_cannot_leave_owned_prior_annotations():
+        source=Value(np.arange(SLOTS,dtype=np.float64));saved=[]
+        def callback(label,value,counts):
+            if label=='head compaction':saved.append(value)
+            else:saved[0]._public_bound='stale callback assertion'
+        owner=BSGSScoreRouting(Arithmetic(),FactoredScoreLayout(0,0),progress=callback)
+        result=owner.forward(source)
+        assert source._public_bound=='caller annotation'
+        assert not hasattr(result,'_public_bound')
+&gt;       assert not hasattr(saved[0],'_public_bound')
+E       AssertionError: assert not True
+E        +  where True = hasattr(&lt;test_bsgs.Value object at 0x76f2e4272030&gt;, '_public_bound')
+
+/tmp/bert-bsgs-score-routing-owner-20261103/metadata_tests/review_repros/test_review_guards.py:36: AssertionError</failure></testcase></testsuite></testsuites>

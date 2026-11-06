@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "/tmp/bert-fixed-q-registration-diagnosis-20261104/diagnose.py", line 160, in <module>
+    p=argparse.ArgumentParser();p.add_argument('output',type=Path);a=p.parse_args();r=run(a.output);print(json.dumps(dict(passed=r['passed'],profiles=len(r['profiles']),prefixes=sum(len(x['levels'])for x in r['profiles']),sources=len(r['source_hashes_before']),elapsed_s=r['elapsed_s'])));raise SystemExit(0 if r['passed']else 1)
+                                                                                      ~~~^^^^^^^^^^
+  File "/tmp/bert-fixed-q-registration-diagnosis-20261104/diagnose.py", line 142, in run
+    for level in range(50):row['levels'].append(construct(r,fields,level))
+                                                ~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/tmp/bert-fixed-q-registration-diagnosis-20261104/diagnose.py", line 107, in construct
+    wait_controls(kernel)
+    ~~~~~~~~~~~~~^^^^^^^^
+  File "/tmp/bert-fixed-q-registration-diagnosis-20261104/diagnose.py", line 105, in wait_controls
+    elif not isinstance(value,type)and type(value).__module__in ('finite_field','jaxite_word.finite_field','bconv','herot'):
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: type object '_HERotKernel' has no attribute '__module__in'. Did you mean: '__module__'?

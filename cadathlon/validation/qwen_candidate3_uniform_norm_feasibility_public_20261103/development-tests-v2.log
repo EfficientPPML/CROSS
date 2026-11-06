@@ -1,0 +1,42 @@
+..........FF.....                                                        [100%]
+=================================== FAILURES ===================================
+_ test_actual_rounded_first_affine_certificate_and_independent_decimal_endpoints[domain2] _
+
+domain = [0.1, 1000.0]
+
+    @pytest.mark.parametrize('domain',([1e-6,.01],[.0001,.007],[.1,1000.],[1.,1e6]))
+    def test_actual_rounded_first_affine_certificate_and_independent_decimal_endpoints(domain):
+        rule=numeric.rsqrt_contract(domain);assert assess.check_certificate(rule)['verified']
+        with localcontext() as ctx:
+            ctx.prec=90
+            for x in (domain[0],math.sqrt(domain[0]*domain[1]),domain[1]):
+                value=Decimal.from_float(x);y=value*Decimal.from_float(rule['rounded_first_weight'])+Decimal.from_float(rule['rounded_first_bias'])
+                for _ in range(rule['iterations']-1):y=y*(Decimal('1.5')-Decimal('.5')*value*y*y)
+                error=abs(y*value.sqrt()-1)
+>               assert error<=Decimal(rule['final_relative_error_bound'])
+E               AssertionError: assert Decimal('2.44636665773713408645790688469194767303027645968579364331334690483711026108957176155E-7') <= Decimal('2.446366657737134086457906884691947673030276459685793643313346904837110261089571761505360331081992899E-7')
+E                +  where Decimal('2.446366657737134086457906884691947673030276459685793643313346904837110261089571761505360331081992899E-7') = Decimal('2.446366657737134086457906884691947673030276459685793643313346904837110261089571761505360331081992899E-7')
+
+test_assess.py:29: AssertionError
+_ test_actual_rounded_first_affine_certificate_and_independent_decimal_endpoints[domain3] _
+
+domain = [1.0, 1000000.0]
+
+    @pytest.mark.parametrize('domain',([1e-6,.01],[.0001,.007],[.1,1000.],[1.,1e6]))
+    def test_actual_rounded_first_affine_certificate_and_independent_decimal_endpoints(domain):
+        rule=numeric.rsqrt_contract(domain);assert assess.check_certificate(rule)['verified']
+        with localcontext() as ctx:
+            ctx.prec=90
+            for x in (domain[0],math.sqrt(domain[0]*domain[1]),domain[1]):
+                value=Decimal.from_float(x);y=value*Decimal.from_float(rule['rounded_first_weight'])+Decimal.from_float(rule['rounded_first_bias'])
+                for _ in range(rule['iterations']-1):y=y*(Decimal('1.5')-Decimal('.5')*value*y*y)
+                error=abs(y*value.sqrt()-1)
+>               assert error<=Decimal(rule['final_relative_error_bound'])
+E               AssertionError: assert Decimal('6.088440595107617757131635768170757200250621694030615213084213218491014161401323352E-9') <= Decimal('6.088440595107617757131635768170757200250621694030615213084213218491014161401323350798508670143787690E-9')
+E                +  where Decimal('6.088440595107617757131635768170757200250621694030615213084213218491014161401323350798508670143787690E-9') = Decimal('6.088440595107617757131635768170757200250621694030615213084213218491014161401323350798508670143787690E-9')
+
+test_assess.py:29: AssertionError
+=========================== short test summary info ============================
+FAILED test_assess.py::test_actual_rounded_first_affine_certificate_and_independent_decimal_endpoints[domain2]
+FAILED test_assess.py::test_actual_rounded_first_affine_certificate_and_independent_decimal_endpoints[domain3]
+2 failed, 15 passed in 0.07s

@@ -1,0 +1,40 @@
+"""Real installed entrypoint denial probe; no context/key/model construction."""
+from pathlib import Path
+import argparse,hashlib,importlib,importlib.metadata,json,os,sys
+HERE=Path(__file__).resolve().parent
+sys.path[:0]=[str(HERE),str(HERE/'runtime/stage'),str(HERE/'runtime')]
+import boundaries
+
+
+def probe():
+    if os.environ.get('JAX_PLATFORMS')!='cpu':raise ValueError('explicit CPU environment required')
+    from jaxite_word import CKKSContext
+    model=importlib.import_module('transformers.models.bert.modeling_bert')
+    modules=[importlib.import_module(n) for n in ('key_gen','jaxite_word.key_gen')]
+    originals=[(m,n,getattr(m,n)) for m in modules for n in boundaries.KEY_METHODS]
+    originals += [(CKKSContext,n,getattr(CKKSContext,n)) for n in boundaries.DECODE_METHODS]
+    originals += [(getattr(model,n),'__init__',getattr(model,n).__init__) for n in boundaries.MODEL_CLASSES]
+    allowed=[(CKKSContext,n,getattr(CKKSContext,n)) for n in ('encrypt','encrypt_slots','encrypt_slots_batch','encode')]
+    allowed.append((model.BertEmbeddings,'__init__',model.BertEmbeddings.__init__))
+    calls=[];observations=[]
+    with boundaries.encryption_only(calls):
+        for owner,name,_ in originals:
+            try:getattr(owner,name)(None)
+            except RuntimeError as error:
+                if not str(error).startswith('forbidden client-encryption action: '):raise
+                observations.append(str(error))
+            else:raise AssertionError('forbidden entrypoint ran')
+        if any(getattr(owner,name)is not original for owner,name,original in allowed):raise AssertionError('embedding/encryption entrypoint changed')
+    if len(calls)!=21 or len(set(calls))!=21 or len(observations)!=21:raise AssertionError('all21 distinct guards required')
+    if any(getattr(owner,name)is not original for owner,name,original in originals):raise AssertionError('guard restoration differs')
+    files={str(Path(m.__file__).resolve()):hashlib.sha256(Path(m.__file__).read_bytes()).hexdigest() for m in modules+[model,boundaries]}
+    context_file=Path(importlib.import_module(CKKSContext.__module__).__file__).resolve();files[str(context_file)]=hashlib.sha256(context_file.read_bytes()).hexdigest()
+    return dict(passed=True,scope='Installed Python entrypoint denial/restoration only; no context, keys, model instantiation, asset reads, encryption or decryption.',
+        actual_entrypoints_denied=calls,denial_count=len(calls),restored_count=len(originals),allowed_entrypoints_unchanged=len(allowed),
+        keygen_modules_distinct=modules[0]is not modules[1],context_constructed=False,keys_generated=False,model_constructed=False,
+        asset_payloads_read=False,encrypt_called=False,decrypt_called=False,python=sys.executable,
+        versions={name:importlib.metadata.version(name) for name in ('numpy','jax','jaxlib','torch','transformers')},loaded_module_sha256=files)
+
+if __name__=='__main__':
+    p=argparse.ArgumentParser();p.add_argument('--output',type=Path,required=True);args=p.parse_args()
+    result=probe();args.output.write_text(json.dumps(result,indent=2,allow_nan=False)+'\n');print(json.dumps({'passed':True,'denial_count':result['denial_count']}))

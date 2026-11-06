@@ -1,0 +1,48 @@
+{
+  "scope": "Verify the integrated runtime candidate without applying it to live sources.",
+  "passed": true,
+  "pytest_passed": 362,
+  "skipped": 4,
+  "subtests_passed": 9,
+  "pytest_seconds": 199.51,
+  "external_seconds": 200.88930968500063,
+  "source_count": 325,
+  "sources_unchanged": true,
+  "exact_source_archives_verified": true,
+  "second_device_checks_passed": 2,
+  "skip_reasons": [
+    {
+      "name": "test_delayed_read_keeps_original_construction_device",
+      "reason": "requires two logical CPU devices"
+    },
+    {
+      "name": "test_guards_fall_back[other_device]",
+      "reason": "requires two logical CPU devices; run with --xla_force_host_platform_device_count=2"
+    },
+    {
+      "name": "test_actual_secure_keyless_refresh_and_continuation",
+      "reason": "opt-in large secure bootstrap"
+    },
+    {
+      "name": "test_actual_deep_profile_bounded_refresh_and_continuation",
+      "reason": "opt-in deep-profile bounded bootstrap"
+    }
+  ],
+  "secure_component_records": {
+    "test_lazy_bconv": 1,
+    "test_encrypted_tensor_only": 4,
+    "test_scoped_mul_ntt": 10,
+    "test_scoped_rescale_ntt": 10,
+    "test_scoped_nested_rescale": 13
+  },
+  "secure_component_max_abs_error": 8.115679714067528e-08,
+  "changed_files": 32,
+  "combined_patch_sha256": "5b510f61f86145678b230dab602bcabe2985dad74a352042ff095c9285a1a9c9",
+  "patch_reconstruction_verified": true,
+  "applies_to_current_live_runtime": true,
+  "applied_to_live": false,
+  "full_model_evaluated": false,
+  "accelerator_evaluated": false,
+  "ring_profiles_changed": false,
+  "core_bootstrap_arithmetic_and_stage_clears_changed": false
+}

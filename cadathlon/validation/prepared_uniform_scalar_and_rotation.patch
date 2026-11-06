@@ -1,0 +1,356 @@
+--- a/jaxite_word/ckks_ctx.py
++++ b/jaxite_word/ckks_ctx.py
+@@ -1061,6 +1061,84 @@
+   return final_res
+ 
+ 
++_UNIFORM_ENCODE_BOUND = (1 << 63) - (1 << 9) - 1
++
++
++@lru_cache(maxsize=256)
++def _uniform_encode_roots(degree, moduli):
++  # Do not accept a ring that the ordinary encoder would reject while
++  # constructing its public NTT tables. No full tables are needed here.
++  for modulus in moduli:
++    util.root_of_unity(2*degree, modulus)
++  return True
++
++
++def _try_uniform_real_encode(slots, cycl_order, q_towers, p_towers, scale,
++            noise_scale_degree=1, max_bits_in_word=61,
++            max_bits_value=_UNIFORM_ENCODE_BOUND, *, expected_slot_count=None):
++  del p_towers  # The existing encoder also ignores this compatibility arg.
++  # Preserve caller-selected floating-point warning/error semantics exactly.
++  # The original FFT contains many array operations; only its default mode
++  # is covered by the finite-intermediate argument used here.
++  if np.geterr() != dict(divide="warn", over="warn", under="ignore", invalid="warn"):
++    return None
++  if (type(slots) not in (list, tuple, np.ndarray)
++      or type(q_towers) not in (list, tuple)
++      or type(cycl_order) is not int or cycl_order < 4
++      or cycl_order & (cycl_order-1)
++      or type(noise_scale_degree) is not int or noise_scale_degree not in (1, 2)
++      or type(max_bits_in_word) is not int or not 1 <= max_bits_in_word <= 61
++      or type(max_bits_value) is not int or max_bits_value != _UNIFORM_ENCODE_BOUND
++      or type(scale) not in (float, np.float64) or not math.isfinite(scale) or scale <= 0):
++    return None
++  degree = cycl_order//2
++  try:
++    values = np.asarray(slots)
++    if (values.ndim != 1 or values.dtype.kind not in 'biufc'
++        or (expected_slot_count is not None and values.size != expected_slot_count)
++        or values.size < 1 or values.size & (values.size-1)
++        or values.size > degree//2 or degree//2 % values.size
++        or not np.isfinite(values).all()):
++      return None
++    if np.any(np.imag(values) != 0) or not np.all(values == values[0]):
++      return None
++    scalar = float(np.real(values[0]))
++    # Constant FFT butterfly intermediates can overflow even when the
++    # later scaled constant would be finite. Preserve ordinary fallback.
++    if abs(scalar) > sys.float_info.max/len(values):
++      return None
++    moduli = tuple(q_towers)
++    if not moduli or any(type(q) is not int or not 0 < q < (1 << 31) for q in moduli):
++      return None
++    with np.errstate(all='ignore'):
++      scaled = scalar*scale
++    if not math.isfinite(scaled):
++      return None
++    # A nonzero sub-half coefficient raises ScalingFactorTooSmall in
++    # the original codec. Let it retain that exact error behavior.
++    logc = int(math.ceil(math.log2(abs(scaled)))) if scaled else 0
++    if logc < 0:
++      return None
++    _uniform_encode_roots(degree, moduli)
++  except (TypeError, ValueError, OverflowError):
++    return None
++  # Preserve the original context-cache parameter updates as well as its
++  # exact log_approx quantization; no NTT tables or private keys are needed.
++  _get_or_make_encode_ctx(moduli, degree, scale, max_bits_in_word, max_bits_value)
++  shift = max(0, logc-max_bits_in_word)
++  coefficient = nearest_int(scaled/(2.**shift))
++  # The guarded bound/word pair keeps signed coefficients inside the
++  # unambiguous centered interval used by FitToNativeVector.
++  if abs(coefficient) > max_bits_value//2:
++    return None
++  multiplier = 1 << shift
++  if noise_scale_degree > 1:
++    multiplier *= pow(int(round(scale)), noise_scale_degree-1)
++  integer = coefficient*multiplier
++  residues = np.asarray([integer % q for q in moduli], dtype=np.uint64)
++  return np.broadcast_to(residues, (degree,len(moduli))).copy(order='C')
++
++
+ def _ckks_encode_array(
+     slots: List[complex],
+     cycl_order: int,
+@@ -1083,17 +1161,21 @@
+   # pk0/pk1 from the cache — only twiddles + psi_pow + q.
+   lite = _get_or_make_encode_ctx(
+       q_towers, degree, scale, max_bits_in_word, max_bits_value)
+-  arr = _fast_encode(
+-      slots,
+-      lite,
+-      scale=scale,
+-      noise_scale_degree=noise_scale_degree,
+-      allow_complex=True,
+-      # Bootstrap's sparse transforms encode a periodic slot pattern in the
+-      # same full ring. Keep the cached encode context immutable: public
+-      # context codecs still require exactly their declared slot count.
+-      slot_count=len(slots),
+-  )  # (N, M) uint64
++  arr = _try_uniform_real_encode(
++      slots, cycl_order, q_towers, p_towers, scale, noise_scale_degree,
++      max_bits_in_word, max_bits_value,
++  )
++  if arr is None:
++    arr = _fast_encode(
++        slots,
++        lite,
++        scale=scale,
++        noise_scale_degree=noise_scale_degree,
++        allow_complex=True,
++        # Bootstrap's sparse transforms encode a periodic slot pattern in the
++        # same full ring. Public codecs retain their own exact slot count.
++        slot_count=len(slots),
++    )  # (N, M) uint64
+   return arr
+ 
+ 
+@@ -2246,7 +2328,14 @@
+             'max_bits_value', (1 << 63) - (1 << 9) - 1
+         ),
+     )
+-    encoded_rns = _fast_encode(slots, encode_ctx, scale=actual_scale)
++    encoded_rns = _try_uniform_real_encode(
++        slots, 2 * encode_ctx.degree, encode_ctx.q_towers, [], actual_scale,
++        max_bits_in_word=encode_ctx.parameters['max_bits_in_word'],
++        max_bits_value=encode_ctx.parameters['max_bits_value'],
++        expected_slot_count=encode_ctx.num_slots,
++    )
++    if encoded_rns is None:
++      encoded_rns = _fast_encode(slots, encode_ctx, scale=actual_scale)
+     result = _polynomial_from_flat_array(
+         np.asarray(encoded_rns, dtype=np.uint64)[None, None, ...],
+         q_at_level,
+--- /dev/null
++++ b/jaxite_word/uniform_encoding_test.py
+@@ -0,0 +1,118 @@
++"""Focused tests for the unapplied public constant codec patch."""
++import warnings
++import numpy as np
++import pytest
++from jaxite_word import ckks_ctx
++
++
++def outcome(function, *args, **kwargs):
++    with warnings.catch_warnings(record=True) as seen:
++        warnings.simplefilter('always')
++        try:
++            result, error = function(*args, **kwargs), None
++        except Exception as exc:
++            result, error = None, (type(exc).__name__, str(exc))
++    return result, error, [(item.category.__name__, str(item.message)) for item in seen]
++
++
++@pytest.mark.parametrize('slot_count', [1, 16])
++@pytest.mark.parametrize('scalar', [-.75, .75])
++@pytest.mark.parametrize('scale', [2.**20, 2.**80])
++@pytest.mark.parametrize('nsd', [1, 2])
++@pytest.mark.parametrize('word', [31, 61])
++def test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec(monkeypatch, slot_count, scalar, scale, nsd, word):
++    args = dict(slots=[complex(scalar)]*slot_count,cycl_order=64,q_towers=[65537,114689],p_towers=[],scale=scale,
++                noise_scale_degree=nsd,max_bits_in_word=word)
++    oracle = np.asarray(ckks_ctx._ckks_encode_fall_back(**dict(args,slots=[complex(scalar)]*16)),dtype=np.uint64)
++    def forbidden(*args, **kwargs):
++        raise AssertionError('uniform public scalar rebuilt host FFT/NTT')
++    monkeypatch.setattr(ckks_ctx,'_fast_encode',forbidden)
++    actual = ckks_ctx._ckks_encode_array(**args)
++    np.testing.assert_array_equal(actual,oracle)
++    assert actual.flags.c_contiguous and actual.flags.writeable
++    historical = ckks_ctx._ckks_encode(**args)
++    assert type(historical) is list and type(historical[0]) is list and type(historical[0][0]) is int
++    np.testing.assert_array_equal(historical,oracle)
++
++
++@pytest.mark.parametrize('updates', [
++    {'slots':[1j]*16}, {'slots':np.linspace(-.75,.75,16)}, {'slots':[float('nan')]*16}, {'slots':[1.]*3},
++    {'max_bits_in_word':0}, {'max_bits_in_word':62}, {'max_bits_in_word':61.5},
++    {'max_bits_value':127}, {'max_bits_value':2**64}, {'noise_scale_degree':3},
++    {'scale':0.}, {'scale':-1.}, {'scale':float('inf')}, {'scale':1<<20},
++    {'slots':[2.**-80]*16},
++])
++def test_private_guarded_fallback_preserves_results_errors_and_warnings(monkeypatch, updates):
++    args = dict(slots=[-.75]*16,cycl_order=64,q_towers=[65537,114689],p_towers=[],scale=2.**20)
++    args.update(updates)
++    actual, error, warns = outcome(ckks_ctx._ckks_encode_array,**args)
++    monkeypatch.setattr(ckks_ctx,'_try_uniform_real_encode',lambda *a,**k:None)
++    expected, expected_error, expected_warns = outcome(ckks_ctx._ckks_encode_array,**args)
++    assert error == expected_error and warns == expected_warns
++    if error is None:np.testing.assert_array_equal(actual,expected)
++
++
++def test_nondefault_floating_error_policy_delegates(monkeypatch):
++    with np.errstate(all='raise'):
++        assert ckks_ctx._try_uniform_real_encode([.75]*16,64,[65537,114689],[],2.**20) is None
++
++
++@pytest.fixture(scope='module')
++def context():
++    import jax
++    from jaxite_word import CKKSContext,key_gen,util,he_params
++    jax.config.update('jax_enable_x64',True)
++    degree,dnum=4096,4;q=[40961,65537,114689,147457];p=util.generate_p_towers(q,dnum,degree,aux_bits=30)
++    assert he_params.qp_is_secure(q,p,degree,he_params.SecurityTarget(128,'classical'))
++    keys=key_gen.gen_pke_pair(q,[],degree);ek=key_gen.gen_evaluation_key(keys['secret_key'],q=q,P=p,dnum=dnum)
++    params=dict(degree=degree,num_slots=degree//2,scaling_factor=2.**20,output_scale=2.**20,q_towers=q,p_towers=p,
++                composite_degree=2,degree_layout=(64,64),p=20,CKKS_M_FACTOR=1,max_bits_in_word=61,noise_scale_degree=1)
++    result=CKKSContext(dict(params,evaluation_key=[jax.numpy.asarray(ek[name],dtype='uint32').transpose(0,2,1) for name in ('a','b')]))
++    result.program_initialization([],dnum=dnum,r=64,c=64,batch=1)
++    return result
++
++
++@pytest.mark.parametrize('level',[0,1])
++@pytest.mark.parametrize('scale',[None,2.**40])
++@pytest.mark.parametrize('scalar',[-.75,0.])
++def test_initialized_uniform_boundary_keeps_payload_and_metadata(monkeypatch,context,level,scale,scalar):
++    helper=ckks_ctx._try_uniform_real_encode
++    monkeypatch.setattr(ckks_ctx,'_try_uniform_real_encode',lambda *a,**k:None)
++    expected=context.encode_at_level([scalar]*context.num_slots,level,scale=scale)
++    monkeypatch.setattr(ckks_ctx,'_try_uniform_real_encode',helper)
++    def forbidden(*args,**kwargs):raise AssertionError('uniform level constant rebuilt host NTT')
++    monkeypatch.setattr(ckks_ctx,'_fast_encode',forbidden)
++    actual=context.encode_at_level([scalar]*context.num_slots,level,scale=scale)
++    np.testing.assert_array_equal(actual.polynomial,expected.polynomial)
++    assert actual._ckks_scale==expected._ckks_scale
++    assert actual.shape==expected.shape and tuple(actual.moduli)==tuple(expected.moduli)
++    assert actual.ntt_ctx is expected.ntt_ctx
++    assert actual.__dict__.keys()==expected.__dict__.keys()
++
++
++@pytest.mark.parametrize('slots',[[.75]*128,[1j]*2048,[],np.ones((1,2048)),['.75']*2048])
++def test_initialized_boundary_keeps_exact_slot_and_complex_validation(monkeypatch,context,slots):
++    actual,error,warns=outcome(context.encode_at_level,slots,1)
++    monkeypatch.setattr(ckks_ctx,'_try_uniform_real_encode',lambda *a,**k:None)
++    expected,expected_error,expected_warns=outcome(context.encode_at_level,slots,1)
++    assert error is not None and error==expected_error and warns==expected_warns
++
++
++def test_initialized_uses_normalized_context_word_parameter(monkeypatch,context):
++    monkeypatch.setitem(context.parameters,'max_bits_in_word',31.5)
++    helper=ckks_ctx._try_uniform_real_encode
++    monkeypatch.setattr(ckks_ctx,'_try_uniform_real_encode',lambda *a,**k:None)
++    expected=context.encode_at_level([-.75]*context.num_slots,1,scale=2.**100)
++    monkeypatch.setattr(ckks_ctx,'_try_uniform_real_encode',helper)
++    def forbidden(*args,**kwargs):raise AssertionError('normalized word parameter should use proven integer envelope')
++    monkeypatch.setattr(ckks_ctx,'_fast_encode',forbidden)
++    actual=context.encode_at_level([-.75]*context.num_slots,1,scale=2.**100)
++    np.testing.assert_array_equal(actual.polynomial,expected.polynomial)
++
++
++def test_other_context_codec_entrypoints_keep_existing_fast_encode(monkeypatch,context):
++    calls=[];original=ckks_ctx._fast_encode
++    def observed(*args,**kwargs):calls.append(True);return original(*args,**kwargs)
++    monkeypatch.setattr(ckks_ctx,'_fast_encode',observed)
++    context.encode([.75]*context.num_slots)
++    assert calls==[True]
+--- a/cadathlon/common/encrypted_rotation.py
++++ b/cadathlon/common/encrypted_rotation.py
+@@ -44,20 +44,51 @@
+         if len(value.polynomial.devices()) != 1:
+             raise ValueError('compiled experimental rotation requires one physical device')
+         device = next(iter(value.polynomial.devices()))
+-        operation = self.ctx.he_rot[level, index]
+-        state = operation._rotation_state()
+-        # Detach only the key/map references. The resulting arithmetic function
+-        # cannot accidentally capture a rotation key as a compilation constant.
+-        rotate = self.ctx.he_rot.take_explicit_rotation_fn((level, index))
+         signature = (level, tuple(value.shape), str(value.polynomial.dtype), device)
+         if self._binding is None or self._binding[0] != signature:
++            operation = self.ctx.he_rot[level, index]
++            state = operation._rotation_state()
++            # Only a new binding needs expensive NTT/control construction.
++            # Detaching keys prevents compilation from capturing their arrays.
++            rotate = self.ctx.he_rot.take_explicit_rotation_fn((level, index))
+             binding = self._compiler.bind(rotate, (value.polynomial, *state),
+                                           signature=signature, device=device)
+             self._binding = (signature, binding)
++        else:
++            state = rotation_state_without_controls(cache, level, index)
+         _, binding = self._binding
+         result = value._clone_with_payload(binding(value.polynomial, *state))
+         # Release transient formatted keys only after their execution finishes.
+         # Raw supplied keys remain available for subsequent rotations.
+         jax.block_until_ready(result.polynomial)
+         cache._formatted_rotation_keys.pop(index, None)
++        # Match take_explicit_rotation_fn's ownership behavior even if another
++        # serial caller preconstructed this index before a binding hit.
++        self.ctx.he_rot._instances.pop((level, index), None)
+         return result
++
++
++def rotation_state_without_controls(cache, level, index):
++    """Match facade key slicing and setup_rotation without rebuilding NTTs.
++
++    This is only used after an existing level/layout-specific binding owns its
++    controls. Key arrays remain explicit operands, with the same conversion
++    from standard residues to the configured computation representation.
++    """
++    import jax.numpy as jnp
++
++    q_at_level = cache.q_moduli_at_level(level)
++    keygen_size_q = len(q_at_level) if cache.per_level_rotation_keys else len(cache.q_towers)
++    alpha = (keygen_size_q + cache.dnum - 1) // cache.dnum
++    effective_dnum = (len(q_at_level) + alpha - 1) // alpha
++    a, b, coef_map = cache.get_rot_key(index, level)
++    field = cache.ff_context_cls(moduli=q_at_level + cache.p_towers)
++    a = field.to_computation_format(jnp.asarray(a[:effective_dnum], dtype=jnp.uint64)).astype(jnp.uint32)
++    b = field.to_computation_format(jnp.asarray(b[:effective_dnum], dtype=jnp.uint64)).astype(jnp.uint32)
++    coef_map = jnp.asarray(coef_map, dtype=jnp.int32)
++    expected = (effective_dnum, *cache.degree_layout, len(q_at_level) + len(cache.p_towers))
++    if a.shape != expected or b.shape != expected:
++        raise ValueError('rotation keys differ from initialized partition/layout contract')
++    if coef_map.shape != (cache.degree,):
++        raise ValueError('rotation map differs from initialized ring degree')
++    return a, b, coef_map
+--- a/cadathlon/tests/test_encrypted_rotation.py
++++ b/cadathlon/tests/test_encrypted_rotation.py
+@@ -13,7 +13,7 @@
+ 
+ 
+ @pytest.mark.parametrize('batch,scale_bits,nsd', [(1, 20, 1), (2, 24, 2)])
+-def test_compiled_rotation_reuses_arithmetic_across_keys_and_preserves_metadata(batch, scale_bits, nsd):
++def test_compiled_rotation_reuses_arithmetic_across_keys_and_preserves_metadata(batch, scale_bits, nsd, monkeypatch):
+     import jax
+     from jaxite_word import CKKSContext, he_params, key_gen, util
+     jax.config.update('jax_enable_x64', True)
+@@ -44,7 +44,18 @@
+     compiler = CompiledRotation(server)
+     for index in indices:
+         expected = server.he_rot[server.max_level, index].rotate(ciphertext)
+-        actual = compiler.rotate(ciphertext, index)
++        if index == indices[0]:
++            actual = compiler.rotate(ciphertext, index)
++        else:
++            # A bound level/shape only needs this key and its map. Forbid even
++            # accessor lookup: it would reconstruct discarded NTT controls.
++            def forbidden_lookup(*args, **kwargs):
++                raise AssertionError('binding hit rebuilt a keyed rotation facade')
++            with monkeypatch.context() as patch:
++                patch.setattr(type(server.he_rot), '__getitem__', forbidden_lookup)
++                actual = compiler.rotate(ciphertext, index)
++        assert (server.max_level, index) not in server.he_rot._instances
++        assert index not in server._param_cache._formatted_rotation_keys
+         np.testing.assert_array_equal(actual.polynomial, expected.polynomial)
+         assert actual._ckks_scale == ciphertext._ckks_scale
+         assert actual._ckks_nsd == nsd
+@@ -65,6 +76,8 @@
+     actual = compiler.rotate(lowered, indices[0])
+     np.testing.assert_array_equal(actual.polynomial, expected.polynomial)
+     assert compiler.compile_count == 3
++    with pytest.raises(ValueError, match='not supplied.*unavailable'):
++        compiler.rotate(lowered, 19)
+ 
+     # Bootstrap uses the no-rescale tensor/relinearize path rather than the
+     # ordinary multiply facade that consumes a composite level.

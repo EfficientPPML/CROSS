@@ -1,0 +1,29 @@
+................FF..                                                     [100%]
+=================================== FAILURES ===================================
+________ test_failed_prepare_preserves_error_and_removes_owned_private _________
+test_fixture.py:80: in test_failed_prepare_preserves_error_and_removes_owned_private
+    with pytest.raises(KeyboardInterrupt,match='primary fixture cancellation'):f.collect(tmp_path/'out')
+                                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^
+build_fixture.py:260: in collect
+    report['upstream_original_sha256_before'] = {k: sha(v['original']) for k, v in origin.items()}
+                                                    ^^^^^^^^^^^^^^^^^^
+build_fixture.py:39: in sha
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   OSError: [Errno 40] Too many levels of symbolic links: '/home/jianming_gatech/BERT_validation/submissions/params.py'
+____________ test_report_publication_failure_does_not_mask_primary _____________
+test_fixture.py:98: in test_report_publication_failure_does_not_mask_primary
+    with pytest.raises(RuntimeError,match='primary failure') as caught:f.collect(tmp_path/'out')
+                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+build_fixture.py:260: in collect
+    report['upstream_original_sha256_before'] = {k: sha(v['original']) for k, v in origin.items()}
+                                                    ^^^^^^^^^^^^^^^^^^
+build_fixture.py:39: in sha
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   OSError: [Errno 40] Too many levels of symbolic links: '/home/jianming_gatech/BERT_validation/submissions/params.py'
+E   report publication: OSError('final publication')
+=========================== short test summary info ============================
+FAILED test_fixture.py::test_failed_prepare_preserves_error_and_removes_owned_private
+FAILED test_fixture.py::test_report_publication_failure_does_not_mask_primary
+2 failed, 18 passed in 2.86s

@@ -1,0 +1,48 @@
+from pathlib import Path
+import json,hashlib,shutil,tarfile
+root=Path('/home/jianming_gatech/CROSS/cadathlon/validation/qwen_heldout_terminal_entry_preflight_cpu_20261104');root.mkdir(exist_ok=False)
+def cp(src,dest):
+ q=root/dest;q.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(src,q)
+def write(dest,text):
+ q=root/dest;q.parent.mkdir(parents=True,exist_ok=True);q.write_text(text)
+p=Path('/tmp/qwen-heldout1088-runtime-preflight-v5-20261104');lab=Path('/tmp/qwen-heldout1088-runtime-v5-20261104')
+for name in ('report.json','source_manifest.json','sources.tar.gz','stdout.log','stderr.log','worker/report.json','worker/tests.xml'):cp(p/name,Path('preflight171')/name)
+cp(str(p)+'.log','preflight171/outer.log')
+cp('/tmp/qwen-heldout1088-runtime-preflight-v5-owner-live-20261104.json','preflight171/owner-live.json');cp('/tmp/qwen-heldout1088-runtime-preflight-v5-owner-terminal-20261104.json','preflight171/owner-terminal.json')
+for name in ('TERMINAL_ENTRY_DESIGN.md','heldout_terminal_origin.json'):cp(lab/name,name)
+# Earlier171 source snapshots reconstruct from final tar plus explicit overlays;
+# no duplicate15MiB archive or generated synthetic private-format files needed.
+current=json.loads((p/'source_manifest.json').read_text())
+for v,sub,logstem in [('v3','draft171-85','v1'),('v4','testassert171-6','v2')]:
+ old=Path(f'/tmp/qwen-heldout1088-runtime-{v}-20261104');mp=Path(f'/tmp/qwen-heldout1088-runtime-sources-{v}-20261104.json');m=json.loads(mp.read_text());cp(mp,Path('history')/sub/'source_manifest.json')
+ overlays=[]
+ for n,h in m.items():
+  assert hashlib.sha256((old/n).read_bytes()).hexdigest()==h
+  if current.get(n)!=h:cp(old/n,Path('history')/sub/'overlays'/n);overlays.append(n)
+ for ext in ('log','xml'):cp(f'/tmp/qwen-heldout-terminal-successor-development-{logstem}-20261104.{ext}',Path('history')/sub/('tests.'+ext))
+ write(Path('history')/sub/'scope.json',json.dumps({'schema':'qwen-heldout-development-overlay-capsule-v1','tests':85 if v=='v3'else6,'session':68882 if v=='v3'else14875,'exit_code':0,'reaped':True,'source_count':171,'reconstruct_from':'../../preflight171/sources.tar.gz','exact_overlays':overlays,'scope':'Earlier focused synthetic checkpoint; not the final full source-bound preflight','source_archive_at_test_start':False if v=='v3'elseFalse},sort_keys=True,indent=2)+'\n')
+cp('/tmp/qwen-heldout-terminal-doc-successor-history-20261104.json','history/doc-edit-copy-restore.json')
+negative=Path('/tmp/qwen-heldout-terminal-boundary-review-20261104/negative-v1')
+for f in negative.iterdir():
+ if f.is_file()and f.name in ('review.json','before.json','after.json','source_origins.json','frozen167-manifest.json','sources.tar.gz','tests.log','tests.xml','clean-receipt.json','oserror-receipt.json','systemexit1-receipt.json'):cp(f,Path('negative167')/f.name)
+for base,dest,names in [('/tmp/qwen-heldout-runtime-root-review-20261104','root-source-review',('review-v5.json','review-v5.py')),('/tmp/qwen-heldout-terminal-successor-cnn-review-20261104','cnn-source-review',('review.json',)),('/tmp/qwen-heldout-terminal-exit-security-review-20261104','security-source-review',('review.json','review_source.py'))]:
+ for n in names:cp(Path(base)/n,Path('independent-reviews')/dest/n)
+cp('/tmp/root_qwen_heldout171_source_review_20261104_draft_v1.py','history/root-initial-count-assertion-draft.py.txt')
+cp('/tmp/root_qwen_heldout171_source_review_20261104.py','history/root-corrected-source-review.py.txt')
+write('history/root-review-correction.json',json.dumps({'scope':'Root-owned review script history; measured producer unchanged','initial_tool_chunk':'63dce2','initial_issue':'Draft assumed preparation metadata changed only numeric count; omitted legitimate appended test list','initial_receipt_created':False,'corrected_final_receipt':'../independent-reviews/root-source-review/review-v5.json'},indent=2)+'\n')
+cp(__file__,'archive-executed.py.txt')
+write('README.md','''This is a disabled heldout1088/row0 terminal-entry preparation. The final171-source proof passed563 synthetic tests (49.841 seconds) and10 installed backend-denial checks, with zero audit denials. Session97252 exited0 and was authoritatively reaped; collector PID/PGID2992574 and worker PID/PGID2992576 were absent. All original/execution/start/end/tar sources matched. No actual heldout, row0, calibration, model or private journal body was read, and no actual execution grant was issued.
+
+The entry uses the literal reviewed terminal_status guard: argument parsing stays outside; only a normal exact-int0/1 return represents scientific PASS/FAIL. An escaped BaseException or malformed status becomes reserved infrastructure70, including diagnostic-print failure. Source authentication/import/dispatch are inside that boundary; final intentional SystemExit remains outside. This repairs future terminal interpretation without changing any inherited139 file, numerical circuit, metric/domain gate, frozen workload or prior-result validator. Among the old167 files, only heldout_entry.py, preparation-count metadata and the test-only no-grant diagnostic assertion changed; four source/metadata additions carry the shared probe and lineage.
+
+`negative167` preserves two expected failures for late publication-close OSError1 and injected silent SystemExit1, plus clean scientificFAIL and independent-row0 controls. The pure prior-result probe's publication_completed=True outer is explicitly a simulated assertion, not an honest root attestation or an authenticated-root bypass. The real new entry probe covers allfour heldout/row0 worker/collector modes and the exact inherited supervisor AST. Injected SystemExit0 is abstract boundary coverage; no concrete ordinary unmodified producer late-SystemExit0 path has been identified. These tests do not run a real model workload.
+
+Reports may still be written before a late close fails. New status70 lets the unchanged validators reject stale reports; independent source/terminal/reap/group/publication evidence remains mandatory. This successor does not retroactively repair original139 or167 failed attempts. No new candidate revision, validation, row0 or reconstruction authority follows from this archive. The independent-row0 retired-attempt policy remains distinct: unknown prior cleanup/publication/read state is preserved and no prior heldout scientific result, retry or feedback is claimed.
+
+Earlier171/85 and171/6 development snapshots are retained as exact source manifests plus overlays against the final source tar; the portable verifier reconstructs their complete bytes. Their scope remains focused development, separate from the final fullproof. The v4 design sentence was briefly edited after six tests, copied into freshv5, then v4 restored exactly; the owner timing receipt discloses this. Root's initial count-metadata review assumption and corrected review are preserved separately.
+
+Only public source/metadata, synthetic test logs, receipts and review artifacts are archived. No generated synthetic private-format files, real input/model/parameter arrays, activation/logit bodies, keys or ciphertexts are included. Source-only references to private paths do not authorize reading those bodies. Python audit/held-owner and signal defenses retain their documented trusted-process limitations; no OS isolation or arbitrary process-signal atomicity is claimed.
+
+Run `python -B verify.py` for portable evidence verification, or `--current` for the final171 original/execution trees and earlier source snapshots. This is preparation verification, not a heldout result or launch authorization.
+''')
+print(root)

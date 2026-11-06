@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="4" time="0.248" timestamp="2026-11-04T06:30:09.206513+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_terminal" name="test_late_close_failure_must_not_admit_completed_scientific_result[oserror]" time="0.073"><failure message="AssertionError: Failed close was admitted as completed scientific failure&#10;assert not (True)">kind = 'oserror'
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-685/test_late_close_failure_must_n0')
+
+    @pytest.mark.parametrize('kind',['oserror','systemexit1'])
+    def test_late_close_failure_must_not_admit_completed_scientific_result(kind,tmp_path):
+        r=run(kind,tmp_path)
+        assert r['exit_code']==1 and r['actual_close']['completed']is False
+        if kind=='systemexit1':assert r['stderr_bytes']==0
+&gt;       assert not(r['accept_worker_accepted']or r['complete_scientific_prior_accepted']), 'Failed close was admitted as completed scientific failure'
+E       AssertionError: Failed close was admitted as completed scientific failure
+E       assert not (True)
+
+/tmp/qwen-heldout-terminal-boundary-review-20261104/negative-v1/sources/test_terminal.py:33: AssertionError</failure></testcase><testcase classname="test_terminal" name="test_late_close_failure_must_not_admit_completed_scientific_result[systemexit1]" time="0.067"><failure message="AssertionError: Failed close was admitted as completed scientific failure&#10;assert not (True)">kind = 'systemexit1'
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-685/test_late_close_failure_must_n1')
+
+    @pytest.mark.parametrize('kind',['oserror','systemexit1'])
+    def test_late_close_failure_must_not_admit_completed_scientific_result(kind,tmp_path):
+        r=run(kind,tmp_path)
+        assert r['exit_code']==1 and r['actual_close']['completed']is False
+        if kind=='systemexit1':assert r['stderr_bytes']==0
+&gt;       assert not(r['accept_worker_accepted']or r['complete_scientific_prior_accepted']), 'Failed close was admitted as completed scientific failure'
+E       AssertionError: Failed close was admitted as completed scientific failure
+E       assert not (True)
+
+/tmp/qwen-heldout-terminal-boundary-review-20261104/negative-v1/sources/test_terminal.py:33: AssertionError</failure></testcase><testcase classname="test_terminal" name="test_clean_scientific_fail_control_is_accepted" time="0.063" /><testcase classname="test_terminal" name="test_independent_row0_retirement_control_admits_no_scientific_result" time="0.000" /></testsuite></testsuites>

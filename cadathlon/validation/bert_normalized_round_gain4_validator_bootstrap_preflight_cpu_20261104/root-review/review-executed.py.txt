@@ -1,0 +1,56 @@
+from pathlib import Path
+import datetime,hashlib,json,os,subprocess,tarfile,xml.etree.ElementTree as ET
+repo=Path('/home/jianming_gatech/CROSS');lab=Path('/tmp/bert-normalized-round-gain4-validator-v2-20261104');out=Path('/tmp/bert-normalized-round-gain4-validator-v2-preflight-v1-20261104');a=repo/'cadathlon/validation/bert_normalized_round_gain4_validator_bootstrap_preflight_cpu_20261104';review=Path('/tmp/bert-gain4-validator-v2-root-review-20261104');review.mkdir(exist_ok=False)
+read=lambda p:json.loads(p.read_bytes());sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest();r=read(out/'report.json');h=r['source_hashes_start']
+assert sha(out/'report.json')=='ec43f2d92a51d6b66de2629b877c9fe46c1000fc60ea60735a6ec636d86c57c0'and sha(out/'sources.tar.gz')=='2c6c2d8a2cf6de65ee1c19103e54706dac2d851c897b80aba22deead7614c181'
+assert len(h)==185 and h==r['source_hashes_end']and all(sha(lab/n)==sha(out/'execution_source'/n)==v for n,v in h.items())
+with tarfile.open(out/'sources.tar.gz')as t:
+ ms=t.getmembers();assert len(ms)==len({m.name for m in ms})==185 and sum(m.size for m in ms)==16554548
+ assert all(m.isfile()and not Path(m.name).is_absolute()and '..'not in Path(m.name).parts and m.size<=8<<20 for m in ms)
+ assert {m.name:hashlib.sha256(t.extractfile(m).read()).hexdigest()for m in ms}==h
+for k in ('passed','all_direct_children_reaped','all_owned_groups_empty','process_cleanup_completed','source_files_unchanged','source_archive_verified','terminal_scope_completed','termination_scope_completed','no_encrypted_execution','no_private_or_ciphertext_payload_read'):assert r[k]is True
+assert r['execute']is False and r['stage']=='validate'and not r['cleanup_errors']
+for name,count in [('mock_tests',543),('installed_denials',10)]:
+ cases=list(ET.parse(out/(name+'.xml')).iter('testcase'));assert len(cases)==count and not any(c.findall(k)for c in cases for k in ('failure','error','skipped'))
+ assert r[name]==dict(tests=count,failures=0,errors=0,skipped=0,exit_code=0)
+g=r['fresh_source_guard'];assert g['passed']is g['fresh']is True and g['source_count']==185 and g['loaded']=={'__main__':'collect_validator.py','validator_source_guard':'validator_source_guard.py'}
+assert sha(Path('/tmp/gain4-validator-v2-sources.json'))==g['manifest_sha256']=='aa5e823a116a9d64353b9112e9e09ba03641cd2acd420f4ed8d7b8e3fac2fa8c'
+assert read(Path('/tmp/gain4-validator-v2-sources.json'))==h and all(n in h for n in g['static_imports'].values())
+old=read(lab/'producer_sources.json');assert len(old)==163 and sha(lab/'producer_sources.json')==r['producer_source_map_sha256']=='d8533cc0c770683691fb01fb078977a0e248812696ca7548edc537af2d93cbec'
+assert {n for n in old if old[n]!=h[n]}=={'runtime/stage/client_keys.py','runtime/stage/key_contexts.py','execution_authorization.json','gain4_component_overlays.json','source_inventory.json'}
+assert h['runtime/stage/client_keys.py']=='d6a2aac4e8ecf483e250a793a341cc6e451e2e9471ad8725e7699f720c7cfa76'and h['runtime/stage/key_contexts.py']=='056627ee3080f3d6ec7445ceb2f25171b49c7fc08eb256449a656b100f5853f0'
+assert h['component_protocol.py']==old['component_protocol.py']=='17dc37314a939da70c9055e8d3e75404e23628d8c9dd603fb6aceafb6f12819e'
+assert read(lab/'execution_authorization.json')=={'ready':False}and read(lab/'validator_authorization.json')==dict(schema='gain4-validator-only-authorization-v1',ready=False,stage='validate',execution_authorized=False)
+b=read(lab/'producer_bindings.json');assert b['server_report_sha256']is b['server_root_review_sha256']is None and b['fixture_report_sha256']=='aca358a292ca8cc867241e09abec18889b20b31ccc4111b4fa66b2830ff271ad'
+assert sha(lab/'producer_ready/report.json')==b['ready_report_sha256']=='6fbf898fbcb8a884e2f2c7f1e2308dfd04171be990bfde82a20200d20f00e19c'
+assert sha(lab/'producer_ready/sources.tar.gz')==b['ready_archive_sha256']=='382933c982162e6d83c7d5cc366e59b7abfd674ef408efcc529c9ba13db912ce'
+groups=set()
+for c in r['children']:
+ assert c['direct_returncode']==0 and not c['cleanup_errors']and not c['signals_sent']and all(c[k]is True for k in ('direct_child_reaped','group_empty_verified','cleanup_completed'))
+ assert not Path('/proc',str(c['pid'])).exists();groups.add(c['process_group'])
+for p in Path('/proc').iterdir():
+ if not p.name.isdigit():continue
+ try:pg=int((p/'stat').read_text().rsplit(')',1)[1].split()[2])
+ except(OSError,ValueError):continue
+ assert pg not in groups
+# Retest the original failure mechanism in two isolated copies; never import altered helpers.
+results=[]
+for entry,helper in [('validator_worker.py','validator_common.py'),('collect_validator.py','producer_gate.py')]:
+ base=review/entry.removesuffix('.py');tree=base/'execution';tree.mkdir(parents=True)
+ for n in h:
+  p=tree/n;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes((lab/n).read_bytes())
+ marker=base/'must_not_exist.txt';p=tree/helper;p.write_bytes(('from pathlib import Path as CanaryPath\nCanaryPath('+repr(str(marker))+').write_text("unverified helper ran\\n")\n').encode()+p.read_bytes())
+ before={n:sha(tree/n)for n in h};assert {n for n in h if before[n]!=h[n]}=={helper}
+ manifest=Path('/tmp/gain4-validator-v2-sources.json')
+ cmd=['/tmp/cross-pretrained-validation-env/bin/python','-I','-B',str(tree/entry),'--source-manifest',str(manifest),'--source-manifest-sha256',g['manifest_sha256']]
+ env={'PATH':'/usr/local/bin:/usr/bin:/bin','HOME':'/home/jianming_gatech','LANG':'C.UTF-8','JAX_PLATFORMS':'cpu','PYTHONDONTWRITEBYTECODE':'1','OMP_NUM_THREADS':'1','OPENBLAS_NUM_THREADS':'1','MKL_NUM_THREADS':'1'}
+ child=subprocess.Popen(cmd,cwd=tree,env=env,start_new_session=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE);stdout,stderr=child.communicate()
+ (base/'stdout.log').write_bytes(stdout);(base/'stderr.log').write_bytes(stderr)
+ assert child.returncode==1 and not marker.exists()and b'source byte identity differs: '+helper.encode()in stderr and not Path('/proc',str(child.pid)).exists()
+ after={n:sha(tree/n)for n in h};assert before==after
+ (base/'modified_helper.py.txt').write_bytes((tree/helper).read_bytes())
+ result=dict(entry=entry,helper=helper,source_overlay_sha256=before[helper],original_sources=h,source_hashes_before=before,source_hashes_after=after,exit_code=1,child_pid=child.pid,direct_child_reaped=True,child_absent=True,canary_absent=True,source_rejected_before_helper=True)
+ (base/'report.json').write_text(json.dumps(result,indent=2,sort_keys=True)+'\n');results.append({k:v for k,v in result.items()if k not in ('original_sources','source_hashes_before','source_hashes_after')})
+assert all(sha(lab/n)==v for n,v in h.items())
+receipt=dict(schema='root-gain4-validator-bootstrap-preparation-review-v1',checked_at_utc=datetime.datetime.now(datetime.timezone.utc).isoformat(),passed=True,sources=185,tests=543,installed_tests=10,current_execution_archive_equal=True,original163_producer_gate_unchanged=True,old_producer_map_separate=True,runtime_io_overlays=2,source_manifest_sha256=g['manifest_sha256'],fresh_import_admission=True,static_imports=len(g['static_imports']),independent_canary_retests=results,report_sha256=sha(out/'report.json'),archive_sha256=sha(out/'sources.tar.gz'),outer_session=46866,outer_exit_code=0,outer_reaped_attested_by_owner=True,children_groups_absent=True,execution_enabled=False,server_pin_pending=True,actual_launch_authorized=False,scope='Source-bound preparation and known startup/loader IO repairs only; old163 server terminal proof must be independently verified and pinned in a distinct ready successor before any private validation.')
+(review/'preparation.json').write_text(json.dumps(receipt,indent=2,sort_keys=True)+'\n');print(json.dumps(receipt,sort_keys=True))

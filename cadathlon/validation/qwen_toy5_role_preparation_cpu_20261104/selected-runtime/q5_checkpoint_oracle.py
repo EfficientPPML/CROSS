@@ -1,0 +1,95 @@
+"""Independent dense mapping of ALL47 selected logical points, client-only.
+
+No inherited140 semantic comparisons establish this new mapping. Its new
+focused proof remains pending. The dense reference uses original rounded
+coefficients but no packed graph/BSGS arithmetic. Refresh is ideal identity.
+"""
+from q5_checkpoint_contract import numerical_plan,canonical
+
+# These are inputs before the ORIGINAL capacity-triggering operation. In
+#layers1/2 key is transposed first, before the query/key product is formed.
+REFRESH_DENSE_KEYS=(
+ ('polynomial_before','5:inverse_sqrt'),('linear_before','6'),
+ ('polynomial_before','7:inverse_sqrt'),('polynomial_before','8:inverse_sqrt'),
+ ('polynomial_before','9:inverse_sqrt'),('rope_after','3'),('rope_after','2'),
+ ('linear_before','10'),('polynomial_before','12:inverse_sqrt'),('linear_before','13'),
+ ('polynomial_before','14:inverse_sqrt'),('polynomial_before','15:inverse_sqrt'),
+ ('polynomial_before','16:inverse_sqrt'),('rope_after','5'),('rope_after','4'),
+ ('linear_before','17'),('polynomial_before','19:inverse_sqrt'),('linear_before','20'),
+ ('polynomial_before','21:inverse_sqrt'))
+
+def mapping():
+    output=[]
+    for row in numerical_plan()['checkpoints']:
+        key=REFRESH_DENSE_KEYS[int(row['label'])] if row['kind'].startswith('refresh_') else (row['kind'],row['label'])
+        output.append({'index':row['index'],'kind':row['kind'],'label':row['label'],'dense_key':list(key),
+                       'refresh_identity_reference':row['kind'].startswith('refresh_'),
+                       'logical_feature_width':16 if row['kind']in('input','phase','normalize_after')else 24 if key in(('linear_before','6'),('linear_before','13'),('linear_before','20'))else 32})
+    return output
+
+def references(np,config,weights,embeddings,rules):
+    from reference.dense_reference import references as dense_references
+    if canonical(config)!=canonical(numerical_plan()['case']['config']):raise ValueError('original fixed config required')
+    result=dense_references(np,config,weights,embeddings,rules)
+    if not result['complete'] or result['counts']!=numerical_plan()['semantic_counts']:raise ValueError('complete independent dense graph required')
+    records=[]
+    for row in mapping():
+        period=result['records'][tuple(row['dense_key'])]
+        if type(period)is not np.ndarray or period.dtype!=np.dtype('float64') or period.shape!=(1024,) or not np.isfinite(period).all():raise ValueError('exact finite dense period required')
+        # Independent explicit replica indexing, no packed layout/permutation.
+        full=np.empty(65536,dtype=np.float64)
+        for replica in range(64):full[replica*1024:(replica+1)*1024]=period
+        full.flags.writeable=False;records.append(full)
+    return tuple(records),{'mapping':mapping(),'complete_dense47':True,'new_mapping_focused_proof':False,
+                          'original_domains':result['domains'],'refresh_accuracy_assumed':False}
+
+def diagnostics(np,decoded,reference,index):
+    if type(index)is not int or not 0<=index<47:raise ValueError('checkpoint index required')
+    for array in (decoded,reference):
+        if type(array)is not np.ndarray or array.dtype!=np.dtype('float64') or array.shape!=(65536,) or not np.isfinite(array).all():raise ValueError('full finite float64 decoded/reference slots required')
+    absolute=np.abs(decoded-reference);denominator=np.maximum(np.abs(reference),1e-12)
+    row=numerical_plan()['checkpoints'][index]
+    # No diagnostic tolerance becomes an acceptance gate; zero-reference
+    #relative values use an explicit denominator floor for reporting only.
+    width=mapping()[index]['logical_feature_width'];valid=np.zeros((64,2,4,4,32),dtype=bool);valid[...,:width]=True;valid=valid.reshape(65536)
+    report={'index':index,'kind':row['kind'],'label':row['label'],
+            'all_slot_max_abs':float(absolute.max()),'all_slot_max_relative_floor_1e_12':float((absolute/denominator).max()),
+            'replica_max_deviation':float(np.max(np.abs(decoded.reshape(64,1024)-decoded[:1024]))),
+            'first_period_max_abs':float(absolute[:1024].max()),'other_replicas_max_abs':float(absolute[1024:].max()),
+            'logical_feature_width':width,'valid_feature_max_abs':float(absolute[valid].max()),
+            'padded_feature_max_abs':None if width==32 else float(absolute[~valid].max()),
+            'scientific_threshold_selected':False}
+    if index==46:
+        # Original B2/S4/S4/F32 pair layout: querylast, physicalkeyrow0.
+        actual=np.stack([decoded[((b*4+3)*4)*32:((b*4+3)*4)*32+32]for b in range(2)])
+        expected=np.stack([reference[((b*4+3)*4)*32:((b*4+3)*4)*32+32]for b in range(2)])
+        report['dense_polynomial_final_logits_max_abs']=float(np.max(np.abs(actual-expected)))
+        report['original_native_numeric_gate']='not evaluated against dense-polynomial reference; requires separately pinned original public native fixture'
+    return report
+
+
+def original_final_gate(np,reference_root,decoded):
+    """Exact original toy runner gate, distinct from dense diagnostic errors.
+
+    Copies only the unchanged public metrics/check_output definitions. The
+    expected logits are the pinned public toy5 native fixture. No new tolerance,
+    top1 requirement, full learned-Qwen gate or relaxed decoder is introduced.
+    """
+    import hashlib
+    from q5_checkpoint_contract import parse
+    from reference.literal_graph import selected
+    pins={'frozen/cadathlon/common/support.py': '458111de25dbae4418c474670cf45a2d39e8e6ba40b75c2d17ad8f96cbaaa40f', 'frozen/cadathlon/agent_pset/p4_qwen/src/runner.py': '3d68d20d218d8145632eed8623466ad06d86f71502fd9bff64feb5c894b3c661', 'frozen/cadathlon/agent_pset/p4_qwen/test/test5.out': '5fd9d803b97f33233acc6d1172a91981d992c6b623c27db57ac74e3b03266585'}
+    for name,pin in pins.items():
+        source=reference_root/name
+        if source.is_symlink()or hashlib.sha256(source.read_bytes()).hexdigest()!=pin:raise ValueError('original public toy gate/fixture source differs')
+    if type(decoded)is not np.ndarray or decoded.dtype!=np.dtype('float64')or decoded.shape!=(65536,)or not np.isfinite(decoded).all():raise ValueError('full finite strict decode required')
+    actual=decoded[:1024].reshape(2,4,4,32)[:,3,0,:]
+    expected=np.asarray(parse((reference_root/'frozen/cadathlon/agent_pset/p4_qwen/test/test5.out').read_bytes())['logits'],dtype=np.float64)
+    ns={'np':np}
+    selected(reference_root/'frozen/cadathlon/common/support.py',['metrics'],ns)
+    selected(reference_root/'frozen/cadathlon/agent_pset/p4_qwen/src/runner.py',['check_output'],ns)
+    errors=ns['metrics'](actual,expected)
+    try:ns['check_output'](actual,expected,errors)
+    except ValueError:passed=False
+    else:passed=True
+    return {'passed':passed,'metrics':errors,'gate':'unchanged original toy: nrmse<=0.10 and max_abs<=0.20; top1 diagnostic only'}

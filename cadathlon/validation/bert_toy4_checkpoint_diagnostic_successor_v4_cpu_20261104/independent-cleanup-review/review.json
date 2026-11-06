@@ -1,0 +1,94 @@
+{
+  "actual_execution_authorized": false,
+  "existing_xml_cases": 371,
+  "full_tests_rerun": false,
+  "numerical_classes_and_exercise_try_body_ast_equal_v3": true,
+  "original199_unchanged_from_v2": true,
+  "passed": true,
+  "report_sha256": "ca68514369eaca65b4c334da3ccba1c2fc9bc1cd4cdd4e642b5ba12941d7b275",
+  "review_findings": [
+    "No concrete new blocker found in the protected-body cleanup delta.",
+    "Finalizer, both IO close states, signal scopes and loader/arithmetic body catches protect genuine exception identity before cleanup can mark a sticky rethrow.",
+    "Cleanup-only provenance is preserved across layers; later non-Exception cancellation outranks ordinary cleanup failure. Removal of the per-state errors identity fallback prevents it from overriding protected genuine-body provenance.",
+    "OwnedChild retains bounded failure-only TERM/KILL retirement and direct-child/group evidence; close protects the supplied body exception before nested signal/cleanup work.",
+    "Loader and arithmetic keep their readiness barriers and failure quarantine paths. Protected-body changes do not release uncertain key mappings or arithmetic owners.",
+    "Preimport descriptor-close paths skip marking the identical body object without importing an unauthenticated cleanup helper.",
+    "Signal masking remains main-thread scoped; this review does not establish process-wide atomicity, arbitrary hostile mutation handling, numerical HE success or actual launch permission."
+  ],
+  "reviewed_sources": {
+    "cleanup.py": {
+      "v2": "1798455cdd88d4bbac5e1769e6b3226676ccb9901e7be6faf383e7ad063c1ef6",
+      "v3": "cc48697f0108ba744bada60682594c0f2d9a9deb2bca3b8cb44b5cef3e85aa70",
+      "v4": "af2de68646d1071778479aedbf2854e91c48c3178edab95246ca0a84e7a82d7f"
+    },
+    "cleanup_origin.py": {
+      "v2": null,
+      "v3": "d6256812509b7acf241ba0ffdf49a740c77e05b5a6410f7041d259946cca1b16",
+      "v4": "4543b26bf1168e29bc21375c2f80a9aa99648205a9fd9aea6d5a8059c6d18175"
+    },
+    "collect.py": {
+      "v2": "47d2b5bab255ba46ef28ad45b6d4594cfb5b5ae9aad0b7d92607072b3611214b",
+      "v3": "4b5a26bac127130be19f84ea98fdd166bbb0cae99abf7f5e545f5d6f20af1507",
+      "v4": "56224c85474d8af532b661b63aefcab59663f94e3796fc1b63e6ed806110cbaa"
+    },
+    "component_arithmetic.py": {
+      "v2": "927d452d556b6e48d21a5d1ef0977468ed04c7ea4a7c2cfa4fa78fcc3ded840b",
+      "v3": "b88284bd05f476b234b726a8ad6ff589fac1d9e50dc703b110e18b78e6924384",
+      "v4": "d643518baab6ac6491ff89b15cb10496af217cddda808026f779d7e5bc0bb22e"
+    },
+    "component_processes.py": {
+      "v2": "5eaa3273620a7e41380eef7ae8476e83aea10614e2ffc2b9ec05a30a9c57ccc5",
+      "v3": "ae11b78183141c410e492ed00159718130187151cd5f6aede2b88d0069cbd759",
+      "v4": "9a14d59f61ae216cbe31300b483d0337eee56f314acefbff9b34980f688c0672"
+    },
+    "component_protocol.py": {
+      "v2": "993b08d7b260574aa158a9ddb4a5e5f6f96311f10dca2604b4fd45352812ce88",
+      "v3": "5d0a249085602fb3d576a50809d6b142dde647921bfdaabadd79f7dcd83ffa05",
+      "v4": "e21ae9fc9c8a1fd75b80c960c41d1f6406aaeb06c01e58c62e49a4f4e57b3955"
+    },
+    "component_transport.py": {
+      "v2": "128b810b4b900861ea063ddeffcdcc0e948dd792891626cd8561fbc8cba7dba7",
+      "v3": "5cc3001251e471c13b902cfdbe2802d4b0e31924959f17bb908bf8e632751df7",
+      "v4": "3b99602640ed3544565e6164d846081a9f0d9e6ac922a66e2257e95a280aec0f"
+    },
+    "component_worker.py": {
+      "v2": "10bda0b50471a7b6ef5e498d110a120b2917536a68e4002b25b5c7d0094a62a5",
+      "v3": "8c57e0f4ab0b2ef4025ac5606e5374d5d8221e04ae4aa7b29610ff3ac3e09eab",
+      "v4": "43477f19f827ac4c56224f590cf008b0e53dd177169f06a73fe77950f9ee157a"
+    },
+    "finish.py": {
+      "v2": "e4064110bbf1c772f97939ba4a7763a7590f78ef332c789cb5304f97904d8f8e",
+      "v3": "4cad2301fae48c5fb992866184e53a7cb3dd0d972d30a88ccbceaa4ff9c33a1c",
+      "v4": "a5bc25f697fdb2fc13b58d04578540c3924edd9749d55144f776ca6fb210e2a6"
+    },
+    "source_guard.py": {
+      "v2": "22c7af0caa04244eeb9785228b600083081beaf5e1192b1ef793dc03fb5beff4",
+      "v3": "b6b7d030676549119f4344722bfd1422e54db0f0f7e263dabb3884ab4694be90",
+      "v4": "562eeb9a1fe9b329fad1536e50b3d78b714e8857f97a72729a5877342e41f1d9"
+    },
+    "stage/client_keys.py": {
+      "v2": "fb4aef402e1bbf95b03c8469bc8718c769d8808d55c56633870f2945987f41b3",
+      "v3": "2c42617c000ec94ffcf2473e6f542970a0c876b9e8fd04057471df5d187a4aaa",
+      "v4": "1afb038ff21a4eb8d3afa5df806cc7806cee3184b84f29b9f4da6f9fddd72506"
+    },
+    "stage/key_contexts.py": {
+      "v2": "1578311baaf80fcfd0edc4edce5770fe2ac5a730ba24eb461ca4dd838b0f9c33",
+      "v3": "7ab1463240ba82363ba640ddc21c45c0669895e94f925e676ef6bc7a1eba233a",
+      "v4": "139c55bb5fc45ea865614e8bd19ee0d3baea583dedc5c3b4c16d9499ae2e2f4c"
+    },
+    "terminal.py": {
+      "v2": "dc985d38746751099511b816bbac925b15ad31a8db6caffaebeb8e9b53a9464e",
+      "v3": "2331ccae707b2091bcfb2f10073aa20c2f2e0dc3e7e2d15eba04e8ab5597676e",
+      "v4": "2331ccae707b2091bcfb2f10073aa20c2f2e0dc3e7e2d15eba04e8ab5597676e"
+    },
+    "test_sticky_cleanup.py": {
+      "v2": null,
+      "v3": null,
+      "v4": "4061f64a3edbeca24072e1519602a5296d597571a6318f6e62835624a829c7cd"
+    }
+  },
+  "scope": "Independent read-only source/proof review; no reviewed runtime imports, tests, backend, model, key or ciphertext work",
+  "session_51618_status": "exit0/reaped reported by owning Transformer; no authoritative session poll by this reviewer",
+  "source_archive_sha256": "fd937837a2ffdebc1f9403230a22060da609afb629211755db9b73c69bfc6d86",
+  "sources": 260
+}

@@ -1,0 +1,13 @@
+# Independent Qwen candidate-three certificate review
+
+Independent standard-library exact-rational recomputation passed for all **36 selected polynomial rules**. It used all ordered Chebyshev product pairs instead of the selector's triangular implementation, independent Clenshaw identities at both mapped endpoints and zero, and an independent rational Chebyshev recurrence. Exact coefficient residuals, coefficient L1 norms, endpoint-extension factors, delta and relative-error bounds match the recorded certificates.
+
+The review also checked all **113 factor-four domains**, the fixed first-passing degree ladder, **610 unsuccessful polynomial attempts**, exact preservation of **77 Newton fallback rules**, unchanged SiLU/softmax rules, and all **28** public margin-and-ceiling radius implications. The selected manifest is SHA256 `7f6478a6bc710f3d2a370198e075e6ba8b0e55c144d981bca0eed59eaf176333`. All twelve candidate files matched before, after and their measured archive. The independent review script's recorded final hash and exact bytes are preserved; it was not a separately snapshotted thirteen-source measurement. Session10261 exited zero and was reaped after273.899seconds.
+
+For positive v, the certificate bounds H(t)=vP(t)^2−1 using ||H||1 times T_degree(H)(M), with M covering the actual rounded affine endpoints. The mapped interval contains zero and P(0)>0. Since delta<1 prevents a polynomial zero, positivity holds throughout the interval. Therefore the relative multiplier error is at most delta/(1+sqrt(1−delta)), conservatively bounded by delta/(2−delta).
+
+This certifies the ideal-real polynomial with its actual stored binary64 coefficients and map constants. It does not bound the initial affine's arithmetic rounding, subsequent binary64 evaluation, CKKS/refresh noise, or whether actual variance stays within the declared domain. Newton certificate arithmetic was previously reviewed; this independent pass verifies exact fallback preservation. Ninety-three selected sites still lack a two-level reserve from capacity25.
+
+Only public rule/certificate JSON and source bytes were read. No model, tokenizer, calibration trajectory, fresh56 or held-out input, JAX or encrypted operation was loaded or run. No candidate source was changed. `public-selection/` preserves the reviewed public proof; no model weights, per-example logits, input records, keys or ciphertexts are included.
+
+The archive-time `reproduce.py --output NEW_DIRECTORY` wrapper reconstructs only the captured public selection files in a temporary directory and reruns the unchanged independent review script. It reads no external model or data paths. Exact rational recomputation takes several minutes; the wrapper itself is not part of the historical measured source set.

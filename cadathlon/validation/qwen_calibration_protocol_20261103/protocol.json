@@ -1,0 +1,201 @@
+{
+  "schema": "qwen-calibration-protocol-v1",
+  "execution_authorized_in_this_artifact": true,
+  "model_revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+  "calibration": {
+    "topics": 32,
+    "framing_variants": 3,
+    "distinct_prompts_per_bucket": 96,
+    "buckets": [
+      8,
+      16,
+      32
+    ],
+    "prefill_contexts": 288,
+    "decode_seeds": 16,
+    "decode_steps": 4,
+    "decode_seed_length": 16
+  },
+  "validation": {
+    "frozen_public_prefill_contexts": 48,
+    "frozen_public_decode_seeds": 8,
+    "steps": 4,
+    "selection_source": "qwen_native_workload_audit_20261103/fixtures.json",
+    "inputs_only_may_be_read_for_disjointness": true,
+    "old_validation_ranges_logits_and_errors_may_not_select_new_coefficients": true
+  },
+  "domain_rule": {
+    "inputs": "Union of calibration native-float32 and exact-float64 operator inputs; later calibration-only revisions may also include prior calibration approximate trajectories.",
+    "positive_inverse_sqrt": "[0.8*minimum,1.2*maximum]; fail if nonpositive/nonfinite",
+    "silu": "[floor(minimum-0.1*span),ceil(maximum+0.1*span)]",
+    "centered_scores": "[floor(minimum-0.1*span),ceil(maximum+0.1*span)]",
+    "degenerate_or_nonfinite": "preserve failure; do not clip or silently create a domain"
+  },
+  "analytic_selection": {
+    "grid_size": 16385,
+    "inverse_sqrt_relative_target": 1e-06,
+    "silu_absolute_target": 0.0001,
+    "reciprocal_ideal_residual_target": 1e-12,
+    "degrees_in_order": [
+      8,
+      12,
+      16,
+      24,
+      32,
+      48,
+      64,
+      96,
+      128,
+      192,
+      256
+    ],
+    "power_max_degree": 32,
+    "power_coefficient_L1_limit": 100000000,
+    "inverse_fallback": "Only if no supported polynomial meets the fixed grid target, use a separately costed fixed Newton count from the public interval; reject unsupported/nonfinite planning. Do not silently replace balanced Chebyshev with a deeper static Newton circuit.",
+    "silu_fallback": {
+      "identity": "x*(1+tanh(x/2))/2",
+      "base_tanh_domain": [
+        -1,
+        1
+      ],
+      "base_degrees_in_order": [
+        8,
+        12,
+        16,
+        20,
+        24
+      ],
+      "doublings": "ceil(log2(max(abs(domain))/2)), minimum0",
+      "double_angle_denominator_domain": [
+        1,
+        2.1
+      ],
+      "reciprocal_count": "fixed from public domain and residual target"
+    },
+    "target_scope": "Local analytic-function grid targets; not uniform polynomial error certificates or model/HE guarantees. Newton interval residual bounds are recorded separately.",
+    "inverse_polynomial_strategy": "Choose first supported polynomial meeting the fixed analytic grid target. Use conditioned power only when degree<=32 and power coefficient L1<=1e8; otherwise use balanced Chebyshev, with its explicit depth/cost recorded."
+  },
+  "softmax": {
+    "exp_degree": 8,
+    "exp_domain": [
+      -0.5,
+      0.5
+    ],
+    "squarings": "ceil(log2(max(1,abs(centered_domain endpoints))/0.5))",
+    "initial_mean_domain": [
+      0.5,
+      2
+    ],
+    "reciprocal_keys": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32
+    ],
+    "round_reciprocal_domain": "[0.5/K,2] for each public K",
+    "count_selection": "Smallest count meeting1e-12 directed/exact residual bound for actual rounded initial affine, before activations",
+    "K1": "Public causal singleton probability1, while manifest still supplies its explicit entry",
+    "arithmetic": "Preserve existing Qwen public C1 reciprocal and normalized-squaring graph for this repair experiment; no silent C32/HE optimization mix."
+  },
+  "sequence": [
+    "Freeze corpus, protocol, tokenizer outputs, pins and source archive before any calibration model evaluation.",
+    "Run native and independent exact calibration trajectories; preserve semantic checks, all ranges and original-model greedy calibration tokens.",
+    "Select candidate only from calibration input ranges and fixed analytic targets. Freeze manifest hash before approximate outputs.",
+    "Run complete approximate calibration prefill plus teacher-forced and free-running calibration decode; record all operator/block/logit errors and every propagated domain failure without clipping.",
+    "If calibration fails, preserve that manifest and result. At most3 candidates total including the initial candidate may use the same predeclared range rule and analytic targets on calibration trajectories; never inspect held-out metrics or use output errors to fit coefficients.",
+    "Freeze the first calibration-passing candidate before opening validation. Re-run the exact frozen48+8 validation workload, preserving all original gates and every failure.",
+    "Once validation is measured, do not feed its ranges/logits/token choices into candidate selection. Any subsequent design is separately labeled as informed by this validation and needs a new untouched validation set."
+  ],
+  "maximum_calibration_candidates": 3,
+  "gates": {
+    "exact_oracle_vs_native_max_abs": 0.001,
+    "exact_oracle_vs_native_nrmse": 1e-05,
+    "exact_oracle_vs_native_top1": true,
+    "approximate_operator_block_nrmse": 0.05,
+    "approximate_full_logit_nrmse": 0.1,
+    "nrmse_floor": 0.01,
+    "prefill_top1_aggregate_minimum": 0.9,
+    "teacher_forced_top1_minimum": 0.9,
+    "validation_complete_free_sequences_minimum": "6 of8",
+    "calibration_complete_free_sequences_minimum": "12 of16",
+    "all_propagated_domains_required_for_coverage": true,
+    "HE_gates": "Untested and not inferred; original HE-versus-approximate0.01 nRMSE/0.10 maxabs remain separate.",
+    "prefill_top1_aggregation": "Aggregate across S8/S16/S32; report each bucket separately without silently imposing a different per-bucket top1 gate.",
+    "teacher_forced_required_matches": "ceil(0.9*number_of_decisions); calibration64 decisions requires58, fixed validation32 requires29."
+  },
+  "runtime": {
+    "cpu_only": true,
+    "cores": [
+      140,
+      141,
+      142,
+      143
+    ],
+    "threads": 4,
+    "native_dtype": "float32",
+    "reference_and_approximate_dtype": "float64",
+    "network": false,
+    "jax_or_he_imports": false,
+    "model_forward_before_root_protocol_review": false,
+    "protocol_review_status": "Root approved native/exact calibration after this balanced-Chebyshev and gate-counting revision plus final source/tokenizer verification. Approximate candidate execution remains separately source-frozen."
+  },
+  "claims_excluded": [
+    "Certified bounds for unseen prompts",
+    "Encrypted operator or model completion",
+    "Refresh or same-ring precision",
+    "Hidden-suite benchmark calibration",
+    "Language-task accuracy",
+    "Learning coefficients from validation logits, extrema or generated tokens"
+  ],
+  "public_reciprocal_certificate": {
+    "file": "reciprocal_schedule.json",
+    "scope": "Actual rounded initial affine followed by exact-real Newton recurrence. No later binary64 or CKKS error certificate."
+  },
+  "refresh_planning": {
+    "native_algebra_global_norm_bound": 6144,
+    "power_two_cover": 8192,
+    "bound_source": "learned_normalization_bounds_cpu_20261103/result-v2/report.json",
+    "bound_source_sha256": "b4c6ff1b48404dc264fc88b3707b788a456eeda9679f3bc904eefc669ee8f27d",
+    "scope": "Exact-real learned RMSNorm output bound only. Public calibrated input intervals, polynomial relative error, CKKS error, and refresh magnitude/precision require separate evidence. No assumption that bound16 or64 covers all Qwen intermediates."
+  },
+  "decode_counting": {
+    "native_exact_calibration": 416,
+    "approximate_calibration": 416,
+    "teacher_contexts": "Original native preceding tokens",
+    "free_contexts": "Evaluated circuit preceding tokens; native oracle evaluated on the same context",
+    "decode_seeds_also_in_prefill_calibration": true
+  },
+  "failure_reporting": {
+    "stopped_trajectory": "Report only observed prefix coverage; label downstream sites and final logits unmeasured. Do not count an invalid/stopped example as an accuracy success.",
+    "no_substitution": "Do not remove a failed prompt, clip an activation, substitute a native output inside the approximate graph, or change a declared numeric gate.",
+    "final_pass": "Requires complete workload coverage and every applicable fixed gate; a partial trajectory is not a complete model pass."
+  }
+}

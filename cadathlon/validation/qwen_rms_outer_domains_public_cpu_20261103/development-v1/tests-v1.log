@@ -1,0 +1,17 @@
+..F........                                                              [100%]
+=================================== FAILURES ===================================
+_____________________ test_exact_normalized_rows_and_heads _____________________
+
+    def test_exact_normalized_rows_and_heads():
+        rng=np.random.default_rng(1);w=rng.normal(size=(8,4)).astype(np.float32);g=rng.normal(size=4).astype(np.float32)
+        got=list(rows(w,g));expected=normalized_linear_bounds(w,g)
+>       assert [Fraction(float(x[1])) for x in got]==list(expected)
+E       assert [Fraction(428...3685248), ...] == [Fraction(428...3685248), ...]
+E         
+E         At index 2 diff: Fraction(3221615890837117, 2251799813685248) != Fraction(6443231781674233, 4503599627370496)
+E         Use -v to get more diff
+
+/tmp/qwen-rms-outer-domains-public-20261103/test_extraction.py:33: AssertionError
+=========================== short test summary info ============================
+FAILED ../../tmp/qwen-rms-outer-domains-public-20261103/test_extraction.py::test_exact_normalized_rows_and_heads
+1 failed, 10 passed in 0.07s

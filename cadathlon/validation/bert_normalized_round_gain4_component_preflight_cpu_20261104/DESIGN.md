@@ -1,0 +1,21 @@
+# Fixed gain4 normalized-round genuine component preparation
+
+Readiness is enabled only in this separately reviewed successor; actual phase execution still awaits independent root launch authorization. This separate candidate borrows the authenticated existing full130-key p60/d8 public store read-only; it never regenerates keys, changes profile, refreshes, or retires external keys. All14 reduction rotations and the full106 refresh-key subset are present in130, although this round uses no refresh. The exact gain4 owner/ScoreReduction/fixture/manifest bytes come from the completed131-source1084-test preparation. Original failed114-source HE evidence is retained, including K128 inverse errors above1e-6.
+
+Three dedicated processes are required: fixture encrypts the two unchanged public K128rows16/K15rows9 inputs atL49; keyless server genuinely reduces49→25 and executes the actual fixed owner; validator authenticates all54 output payloads and both preceding externally pinned successful parent receipts before opening client private keys or decrypting. Server input/output transport binds ordered indices, same context, nonce, complete input digest, actual levels/scales/NSD/Qprefix and residue ranges. All54 outputs precede any decode. The final e_n square is genuinely executed and separately counted. Original checkpoint, true-inverse, relative-residual, invariant and quotient1e-6 gates remain unchanged, with all failures retained.
+
+Actual counts are2 prefix reductions,6PT,48CT (including2 diagnostic squares),54 rescales and28 rotations; no refresh.2input raw payloads total209715200 bytes and54outputs1855979520 bytes. Owned IO reserve3244294144 bytes includes one100MiB temporary plus1GiB margin. This excludes header/key/NTT/compiler/device transient memory and is not a RAM peak claim. Existing full130 public keys are borrowed in place, not copied or charged as newly generated storage.
+
+Any entered arithmetic failure quarantines owners/provider/context/original arrays and propagates through the authenticated loader. Normal cleanup barriers original arrays, retires original captured compiled helpers then provider, and only then exits the loader. Both worker and collector use the reviewed terminal/finish helpers; success requires outer signal restoration, direct child reaping and group absence. No healthy deadline is imposed. Source, mapped public key inventory and workspace identities are checked before/after, and failures retain newly owned IO for inspection. No process-wide signal atomicity is claimed.
+
+Preparation copies the completed147-source BSGS lifecycle/transport closure into this new lab and explicitly records each overlay. All30 overlapping core modules are byte-identical to the gain4 proof. The used ScoreReduction common collision is overlaid with exact gain4-proved bytes. No earlier frozen lab or live job is edited.
+
+Proposed standalone execution uses CPU124–127 and four threads, after root reviews this ready successor and authorizes the fixture phase. Proposed fixture command:
+
+```sh
+taskset -c 124-127 env JAX_PLATFORMS=cpu PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 OPENBLAS_NUM_THREADS=4 OMP_NUM_THREADS=4 MKL_NUM_THREADS=4 /tmp/cross-pretrained-validation-env/bin/python collect_component.py --execute --stage fixture --output /tmp/bert-normalized-round-gain4-component-20261104/actual-fixture-v1 --key-evidence /tmp/bert-full-key-generation-component-20261103/actual-v1 --key-workspace /dev/shm/cross-full-bert-keys-143b3f5c1573427d841760a3c9d5d33d
+```
+
+Server and validate commands use the same source closure and require prior fixture/server evidence paths plus externally pinned report SHA256; they cannot authorize themselves. No actual fixture/server/validate launch is included in preparation.
+
+Preparation history is preserved outside execution inventory: an accidentally replaced KEY_PLAN_SHA was rejected by the actual source gate before payloads; an inherited test reusing its output as evidence was rejected by the new containment guard; existing-output report overwrite was reproduced and repaired with exact directory-identity publication ownership. The retired duplicated public_plan/inputs/full_key_plan.json remains in the147-source archive; one identical active runtime key plan remains, keeping the execution closure under the inherited16MiB bound.

@@ -1,0 +1,80 @@
+{
+  "grant_path": "/tmp/bert-gain4-validator-root-launch-20261104/launch.json",
+  "grant_sha256": "c2493b48d5e38462b652004f7b7e856b4f20af6c9b83840dacce43843caecaa0",
+  "healthy_deadline": null,
+  "observed_processes": [
+    {
+      "affinity": [
+        124,
+        125,
+        126,
+        127
+      ],
+      "argv": [
+        "/tmp/cross-pretrained-validation-env/bin/python",
+        "-I",
+        "-B",
+        "/tmp/bert-normalized-round-gain4-validator-ready-20261104/collect_validator.py",
+        "--output",
+        "/tmp/bert-normalized-round-gain4-validate-actual-v1-20261104",
+        "--source-manifest",
+        "/tmp/gain4-validator-ready-sources-20261104.json",
+        "--source-manifest-sha256",
+        "e0bfcee1ab85f8750e576de24bdbdf13faf4f0b8abe66ecef55b3403a084cce0",
+        "--stage",
+        "validate",
+        "--execute",
+        "--key-evidence",
+        "/tmp/bert-full-key-generation-component-20261103/actual-v1",
+        "--key-workspace",
+        "/dev/shm/cross-full-bert-keys-143b3f5c1573427d841760a3c9d5d33d",
+        "--fixture-evidence",
+        "/tmp/bert-normalized-round-gain4-ready-20261104/actual-fixture-v1",
+        "--fixture-report-sha256",
+        "aca358a292ca8cc867241e09abec18889b20b31ccc4111b4fa66b2830ff271ad",
+        "--server-evidence",
+        "/tmp/bert-normalized-round-gain4-ready-20261104/actual-server-v1",
+        "--server-report-sha256",
+        "897fa13c99005dff41d10e192d87417a6d31a155995c3e65805922fc5326d68a"
+      ],
+      "pgid": 3859416,
+      "pid": 3859417
+    },
+    {
+      "affinity": [
+        124,
+        125,
+        126,
+        127
+      ],
+      "argv": [
+        "/tmp/cross-pretrained-validation-env/bin/python",
+        "-I",
+        "-B",
+        "/tmp/bert-normalized-round-gain4-validate-actual-v1-20261104/execution_source/validator_worker.py",
+        "--config",
+        "/tmp/bert-normalized-round-gain4-validate-actual-v1-20261104/worker_config.json",
+        "--config-sha256",
+        "d19c2dd485ff51a2f84fc763a627062b09c57a0c39d4fc64b069615183fd44c7",
+        "--source-manifest",
+        "/tmp/bert-normalized-round-gain4-validate-actual-v1-20261104/source_manifest.json",
+        "--source-manifest-sha256",
+        "906ace7dcab4b5bb7c6af32d4f80d6613f3cf64805e191746540de5b1708f121",
+        "--output",
+        "/tmp/bert-normalized-round-gain4-validate-actual-v1-20261104/worker/worker_report.json",
+        "--execute"
+      ],
+      "pgid": 3859522,
+      "pid": 3859522
+    }
+  ],
+  "output": "/tmp/bert-normalized-round-gain4-validate-actual-v1-20261104",
+  "owner_session": 32501,
+  "retry_authorized": false,
+  "schema": "gain4-validator-owner-launch-v1",
+  "source": "/tmp/bert-normalized-round-gain4-validator-ready-20261104",
+  "source_count": 187,
+  "source_manifest_sha256": "e0bfcee1ab85f8750e576de24bdbdf13faf4f0b8abe66ecef55b3403a084cce0",
+  "tool_chunk": "554f2d",
+  "utc": "2026-11-04T11:28:36.371308+00:00"
+}

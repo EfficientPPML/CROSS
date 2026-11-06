@@ -1,0 +1,141 @@
+--- device50/executed_driver.py
++++ snapshot404/executed_driver.py
+@@ -1,4 +1,4 @@
+-"""Held unrun synthetic device component driver; never auto-discovers tests.
++"""Held unrun synthetic retained-runtime integration driver; never auto-discovers tests.
+ 
+ Exact config and worker bytes are pinned. Source/test/driver review and an
+ explicit launch authorization remain external; preparation has not executed.
+@@ -7,12 +7,12 @@
+ import hashlib, json, os, signal, stat, subprocess, sys, tarfile, time
+ import xml.etree.ElementTree as ET
+ 
+-CONFIG_SHA256 = '1b3cd9318ecf5a85731da977f473ab77073fe94c3d77dfad4c69aba34bf5d154'
+-WORKER_SHA256 = 'e1cc022458245c3bc84a703bd0ef5c8b70522981d9f378ec0819536a141899d9'
++CONFIG_SHA256 = 'd804adc4a8b4f2d94bc21ec95976b5a3f43c2a003b0b03c7734e7125ad701090'
++WORKER_SHA256 = '9ee25a101d4611e17b376d9b4729dae44bcf9f804d34a72ae340096337d65361'
+ HERE = Path(__file__).resolve().parent
+ sha = lambda raw: hashlib.sha256(raw).hexdigest()
+ canonical = lambda value: (json.dumps(value, sort_keys=True, indent=2, allow_nan=False) + '\n').encode()
+-map_canonical = lambda value: (json.dumps(value, sort_keys=True, indent=2, allow_nan=False) + '\n').encode()
++map_canonical = lambda value: (json.dumps(value, sort_keys=True, separators=(',', ':'), allow_nan=False) + '\n').encode()
+ 
+ def inventory(root):
+     assert not any(p.is_symlink() for p in root.rglob('*'))
+@@ -30,7 +30,7 @@
+                 if not alias.is_symlink(): continue
+                 # Pytest's numbered tmp_path directories have owned *current
+                 # aliases. Record them once without traversing duplicate data.
+-                assert leaf == out / 'pytest-owned' and alias.parent == leaf and name.startswith('test_device_component_') and name.endswith('current')
++                assert leaf == out / 'pytest-owned' and alias.parent == leaf and name.startswith('test_snapshot_integration_') and name.endswith('current')
+                 before = alias.lstat(); target_raw = os.readlink(alias)
+                 assert stat.S_ISLNK(before.st_mode) and before.st_uid == os.geteuid() and len(target_raw) <= 4096
+                 named_target = alias.parent / target_raw
+@@ -56,12 +56,13 @@
+                 metadata[path.relative_to(out).as_posix()] = dict(kind='regular', bytes=size, sha256=sha(path.read_bytes()))
+     expected = [n.split('[', 1)[1][:-1] for n in config['selected_nodes']]
+     records = {}
+-    regular = [out / name for name, item in metadata.items() if item['kind'] == 'regular' and name.startswith('pytest-owned/')]
+-    assert type(config['expected_regular_child_files']) is int and config['expected_regular_child_files'] == 120
+-    assert len(regular) == 120
++    all_regular = [out / name for name, item in metadata.items() if item['kind'] == 'regular' and name.startswith('pytest-owned/')]
++    fixture_files = [p for p in all_regular if p.name == 'tiny-public-proof.json']
++    regular = [p for p in all_regular if p not in fixture_files]
++    assert config['expected_regular_child_files'] == 144 and len(regular) == 144
++    assert config['expected_owned_public_fixture_files'] == 6 and len(fixture_files) == 6
+     assert all(p.name in ('parent-terminal.json', 'child-terminal.json', 'result.json', 'child.log') for p in regular)
+-    early_resource_rejections = {'document_role_order', 'document_noncanonical', 'document_source_phase_join'}
+-    no_recording_jax = {n for n in expected if n.startswith('document_')} | {'binding_failure', 'lease_failure', 'reentry_caught', 'reentry_uncaught', 'initialization_failure'}
++    fixture_scenarios = []
+     for path in sorted(p for p in regular if p.name == 'child-terminal.json'):
+         terminal = json.loads(path.read_bytes())
+         result_path, log_path = path.parent / 'result.json', path.parent / 'child.log'
+@@ -69,7 +70,7 @@
+         assert all(p in regular for p in (result_path, log_path, parent_path))
+         result = json.loads(result_path.read_bytes()); parent = json.loads(parent_path.read_bytes())
+         assert type(parent) is dict and set(parent) == {'schema', 'pid', 'owned_session_pgid', 'observed_pgid', 'exit_code', 'reaped', 'group_absent', 'scenario', 'child_result_read'}
+-        assert parent['schema'] == 'qwen-device-component-owned-child-v1' and parent['child_result_read'] is False
++        assert parent['schema'] == 'qwen-snapshot-integration-owned-child-v1' and parent['child_result_read'] is False
+         scenario = terminal['scenario']
+         assert scenario in expected and scenario not in records and result['scenario'] == parent['scenario'] == scenario
+         pid, pgid = result['pid'], result['pgid']
+@@ -82,40 +83,42 @@
+         assert type(parent['owned_session_pgid']) is int and parent['owned_session_pgid'] == pid
+         assert type(terminal['child_reported_pgid']) is int and terminal['child_reported_pgid'] == pid
+         assert parent['observed_pgid'] == terminal['observed_pgid']
+-        assert terminal['runtime_scope'] == 'synthetic device policy/state only'
+-        for name in ('assertions_completed', 'recording_phase_validation', 'resource_validator_is_real', 'original_phase_identities_restored', 'original_resource_identities_preserved', 'profile_observer_restored', 'temporary_jax_removed'):
++        assert terminal['scope'] == 'synthetic retained-runtime integration only'
++        for name in ('assertions_completed', 'original_main_restored', 'temporary_names_removed', 'profile_restored', 'declared_exports_restored', 'runtime_sources_unchanged', 'definition_only_entry'):
+             assert result[name] is True
+-        for name in ('genuine_backend_imported', 'genuine_capacity_measured', 'actual_policy_or_grant', 'scientific_admission_tested', 'device_sources_modified'):
++        for name in ('genuine_cli_bootstrap', 'genuine_backend_imported', 'scientific_admission', 'capacity_measurement', 'model_key_ciphertext_body_reads', 'actual_server_execution'):
+             assert result[name] is False
+-        assert result['backend_denials'] == []
+-        assert type(result['temporary_recording_jax_used']) is bool
+-        assert result['temporary_recording_jax_used'] is (scenario not in no_recording_jax)
+-        for name in ('resource_calls', 'logical_calls'):
+-            assert type(result[name]) is int and result[name] >= 0
+-            assert (result[name] > 0) is (scenario not in early_resource_rejections)
++        assert result['source_count'] == 391 and result['backend_denials'] == []
++        assert result['entry_dispatch_excluded_sha256'] == config['excluded_entry_dispatch_ast_sha256']
++        fixture = path.parent / 'tiny-public-proof.json'
++        if scenario.startswith('process_'):
++            assert fixture in fixture_files and fixture.stat().st_size <= 1024
++            fixture_scenarios.append(scenario)
++        else: assert fixture not in all_regular
+         for group in (False, True):
+             try: (os.killpg if group else os.kill)(pid, 0)
+             except ProcessLookupError: pass
+-            else: raise ValueError('owned device test child or group remains live')
++            else: raise ValueError('owned integration test child or group remains live')
+         records[scenario] = dict(terminal=terminal, result=result, parent_terminal=parent,
+             parent_terminal_path=parent_path.relative_to(out).as_posix(), parent_terminal_sha256=sha(parent_path.read_bytes()),
+             terminal_path=path.relative_to(out).as_posix(), result_path=result_path.relative_to(out).as_posix(),
+             log_path=log_path.relative_to(out).as_posix(), log_sha256=sha(log_path.read_bytes()))
+-    assert set(records) == set(expected) and len(records) == 30
+-    assert type(config['expected_parent_records']) is int and config['expected_parent_records'] == 30
++    assert set(records) == set(expected) and len(records) == 36
++    assert set(fixture_scenarios) == {n for n in expected if n.startswith('process_')}
++    assert type(config['expected_parent_records']) is int and config['expected_parent_records'] == 36
+     for name in ('parent-terminal.json', 'child-terminal.json', 'result.json', 'child.log'):
+-        assert sum(p.name == name for p in regular) == 30
++        assert sum(p.name == name for p in regular) == 36
+     return metadata, [records[name] for name in expected]
+ 
+ 
+ def main():
+     # Reject the unfinalized template before any source, evidence or child work.
+     if not isinstance(CONFIG_SHA256, str) or not isinstance(WORKER_SHA256, str):
+-        raise ValueError('device proof pins remain unset; launch disabled')
++        raise ValueError('snapshot integration proof pins remain unset; launch disabled')
+     raw = (HERE / 'run_config.json').read_bytes()
+     assert sha(raw) == CONFIG_SHA256
+     config = json.loads(raw)
+-    assert config['schema'] == 'qwen-device-component-focused-proof-v1'
++    assert config['schema'] == 'qwen-snapshot-integration-focused-proof-v1'
+     assert config['synthetic_only'] is True and config['actual_execution_authorized'] is False
+     source = Path(config['source_root'])
+     out = Path(config['proof_root'])
+@@ -212,7 +215,7 @@
+               and type(audit['pgid']) is int and audit['pgid'] == child_pgid
+               and audit['affinity'] == [112, 113, 114, 115]
+               and audit['temporary_root'] == str(temporary) and audit['scientific_admission_tested'] is False
+-              and audit['device_component_recording_only'] is True
++              and audit['snapshot_integration_recording_only'] is True
+               and len(child_records) == config['expected_child_records']
+               and audit['runtime_sources_before'] == audit['runtime_sources_after'] == config['runtime_source_expectations']
+               and audit['runtime_module_origins'] == {n: dict(file=p, spec=p) for n,p in config['runtime_module_origins'].items()})
+@@ -227,9 +230,10 @@
+         driver_sha256=sha(Path(__file__).read_bytes()), worker_driver_sha256=WORKER_SHA256,
+         config_sha256=CONFIG_SHA256, scope=config['scope'],
+         child_records=child_records, early_parent_records_validated=len(child_records), retained_owned_files=len(owned_metadata),
+-        device_component_recording_only=True, full_scientific_admission_tested=False,
++        snapshot_integration_recording_only=True, full_scientific_admission_tested=False,
+         actual_device_initialized=False, genuine_capacity_measured=False,
+-        temporary_recording_jax_children=sum(r['result']['temporary_recording_jax_used'] for r in child_records),
++        definition_only_entry=True, genuine_cli_bootstrap=False,
++        retained_child_artifacts=144, owned_public_fixture_files=6,
+         child_origin_evidence=config['child_origin_evidence'], observed_child_module_origin_table=False,
+         actual_proofs_present=False, temporary_root=str(temporary), pytest_basetemp=str(basetemp))
+     dump('report.json', report)

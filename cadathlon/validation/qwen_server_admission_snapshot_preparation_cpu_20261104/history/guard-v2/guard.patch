@@ -1,0 +1,66 @@
+--- v1/qwen_admission_snapshot.py
++++ v2/qwen_admission_snapshot.py
+@@ -49,6 +49,7 @@
+ _FULL_PACKET_CHECK=packet_module.ServerPacket.check
+ _REGISTRY={}
+ _ISSUED=False
++_CAPTURE_ATTEMPT=None
+ 
+ 
+ def _defaults(value):
+@@ -179,8 +180,12 @@
+         if state is None:raise PermissionError('snapshot is retired or was not created here')
+         guard,original,pid,thread,bindings,graph,checker,status=state
+         if guard is not self:raise PermissionError('original snapshot identity differs')
+-        if status!='active':raise PermissionError('failed or reentrant snapshot requires process exit')
+-        _REGISTRY[id(self)]=(self,original,pid,thread,bindings,graph,checker,'checking')
++        if status!='active':
++            if status=='checking':
++                _REGISTRY[id(self)]=(self,original,pid,thread,bindings,graph,checker,'failed')
++            raise PermissionError('failed or reentrant snapshot requires process exit')
++        checking=(self,original,pid,thread,bindings,graph,checker,'checking')
++        _REGISTRY[id(self)]=checking
+         try:
+             if(packet is not original or os.getpid()!=pid or threading.get_ident()!=thread[0]
+                     or threading.current_thread()is not thread[1]):
+@@ -189,6 +194,10 @@
+             checker[0]()  # Independent caller-owned source/origin/scope gate.
+             _callback_unchanged(checker)
+             _bindings_unchanged(bindings);_graph_unchanged(graph)
++            # A callback may catch the inner rejection; the outer check must
++            # still preserve the failure instead of restoring an active state.
++            if _REGISTRY.get(id(self))is not checking:
++                raise PermissionError('snapshot reentry remains a sticky failure')
+         except BaseException:
+             _REGISTRY[id(self)]=(self,original,pid,thread,bindings,graph,checker,'failed')
+             raise
+@@ -211,9 +220,12 @@
+     process policy before capture and every callback check. A no-op supplied by
+     an untrusted caller establishes no authority. The actual role stays denied.
+     """
+-    global _ISSUED
++    global _ISSUED,_CAPTURE_ATTEMPT
+     if _ISSUED:raise PermissionError('only one admission snapshot may be issued per process')
+     _ISSUED=True
++    # Retain the original packet before any fallible callback. A failed first
++    # capture leaves its packet and later captured graph in this process only.
++    _CAPTURE_ATTEMPT=(packet,None,None,None)
+     checker=_callback(check_bindings);_callback_unchanged(checker);checker[0]()
+     if type(packet)is not _PACKET_TYPE:raise TypeError('exact fully admitted server packet required')
+     bindings=_bindings()
+@@ -221,6 +233,7 @@
+     # Snapshot before validation, then compare afterwards: a final caller
+     # binding callback cannot replace validated bytes just before capture.
+     graph=_graph(packet)
++    _CAPTURE_ATTEMPT=(packet,bindings,graph,checker)
+     _FULL_PACKET_CHECK(packet)
+     _graph_unchanged(graph)
+     _callback_unchanged(checker);checker[0]();_bindings_unchanged(bindings)
+@@ -228,6 +241,7 @@
+     guard=AdmissionSnapshot()
+     _REGISTRY[id(guard)]=(guard,packet,os.getpid(),(threading.get_ident(),threading.current_thread()),bindings,graph,checker,'active')
+     guard.check(packet)
++    _CAPTURE_ATTEMPT=None  # The successfully checked registry now owns the graph.
+     return guard
+ 
+ 

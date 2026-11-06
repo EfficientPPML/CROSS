@@ -1,0 +1,133 @@
+..........F............................................................. [100%]
+=================================== FAILURES ===================================
+___________ test_actual_public_profile_inventory_storage_and_counts ____________
+
+    def backends() -> dict[str, xla_client.Client]:
+      global _backends
+      global _backend_errors
+      global _default_backend
+      global _at_fork_handler_installed
+    
+      _discover_and_register_pjrt_plugins()
+    
+      with _backend_lock:
+        if _backends:
+          return _backends
+    
+        # os.register_at_fork only exists on Unix.
+        if not _at_fork_handler_installed and hasattr(os, "register_at_fork"):
+          os.register_at_fork(before=_at_fork)
+          _at_fork_handler_installed = True
+    
+        if jax_platforms := config.jax_platforms.value:
+          platforms = []
+          # Allow platform aliases in the list of platforms.
+          for platform in jax_platforms.split(","):
+            platforms.extend(expand_platform_alias(platform))
+          priorities = range(len(platforms), 0, -1)
+          # If the user specified a list of platforms explicitly, always fail
+          # loudly.
+          fail_quietly_list = [False] * len(platforms)
+          platform_registrations = list(
+            zip(platforms, priorities, fail_quietly_list))
+        else:
+          platform_registrations = [
+              (platform, registration.priority, registration.fail_quietly)
+              for platform, registration
+              in _backend_factories.items()
+          ]
+        default_priority = -1000
+        for platform, priority, fail_quietly in platform_registrations:
+          try:
+            if platform == "cuda" and not hardware_utils.has_visible_nvidia_gpu():
+              continue
+    
+>           backend = _init_backend(platform)
+                      ^^^^^^^^^^^^^^^^^^^^^^^
+
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/jax/_src/xla_bridge.py:851: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/jax/_src/xla_bridge.py:935: in _init_backend
+    backend = registration.factory()
+              ^^^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/jax/_src/xla_bridge.py:236: in tpu_client_timer_callback
+    client = make_tpu_client(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+library_path = '/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/libtpu/libtpu.so'
+options = {'ml_framework_name': 'JAX', 'ml_framework_version': '0.12.0.1'}
+
+    def make_tpu_client(
+        library_path: str | None = None, options: _NameValueMapping | None = None
+    ):
+      """Returns a TPU client. Defaults to allowing 32 in-flight computations."""
+      if not _jax.pjrt_plugin_loaded('tpu'):
+        c_api = xla_client.load_pjrt_plugin_dynamically(
+            "tpu", library_path or "libtpu.so"
+        )
+        _profiler.register_plugin_profiler(c_api)
+        assert _jax.pjrt_plugin_loaded('tpu')
+      if not _jax.pjrt_plugin_initialized('tpu'):
+>       _jax.initialize_pjrt_plugin('tpu')
+E       jax.errors.JaxRuntimeError: ABORTED: The TPU is already in use by process with pid 1875613. Not attempting to load libtpu.so in this process.
+
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/jax/_src/xla_bridge.py:210: JaxRuntimeError
+
+During handling of the above exception, another exception occurred:
+
+    def test_actual_public_profile_inventory_storage_and_counts():
+>       plan=p.plan((HERE/'runtime/stage/server_inputs/p60_profile_and_refresh.json').read_bytes(),(HERE/'runtime/stage/server_inputs/twelve_layer_plan.json').read_bytes())
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_group_protocol.py:8: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+group_protocol.py:40: in plan
+    p,keys=client_keys.public_contract(profile_bytes,plan_bytes);client_keys._security_check(p)
+                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+runtime/stage/client_keys.py:44: in _security_check
+    from jaxite_word import he_params
+runtime/jaxite_word/he_params.py:33: in <module>
+    import bconv
+runtime/jaxite_word/bconv.py:12: in <module>
+    import util
+runtime/jaxite_word/util.py:171: in <module>
+    BYTE_SHIFTS = jnp.arange(NUM_BYTES, dtype=jnp.uint32) * 8
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/jax/_src/numpy/lax_numpy.py:5945: in arange
+    return _arange(start, stop=stop, step=step, dtype=dtype,
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/jax/_src/numpy/lax_numpy.py:6009: in _arange
+    return lax.broadcasted_iota(dtype, (size,), 0, out_sharding=out_sharding)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/jax/_src/lax/lax.py:3751: in broadcasted_iota
+    return iota_p.bind(dtype=dtype, shape=shape,
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/jax/_src/core.py:732: in bind
+    return self.bind_with_trace(prev_trace, args, avals, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/jax/_src/core.py:740: in bind_with_trace
+    return trace.process_primitive(self, args, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/jax/_src/core.py:1321: in process_primitive
+    return primitive.impl(*args, **params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+prim = iota, args = ()
+params = {'dtype': dtype('uint32'), 'shape': (4,), 'dimension': 0, 'sharding': None}
+
+    def apply_primitive(prim, *args, **params):
+      """Impl rule that compiles and runs a single primitive 'prim' using XLA."""
+      fun = xla_primitive_callable(prim, **params)
+      # TODO(yashkatariya): Investigate adding is_primitive to jit and never
+      # triggering the disable jit path instead of messing around with it here.
+      prev = config.disable_jit.swap_local(False)
+      try:
+>       outs = fun(*args)
+               ^^^^^^^^^^
+E       RuntimeError: Unable to initialize backend 'tpu': ABORTED: The TPU is already in use by process with pid 1875613. Not attempting to load libtpu.so in this process. (set JAX_PLATFORMS='' to automatically choose an available backend)
+E       --------------------
+E       For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.
+
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/jax/_src/dispatch.py:89: RuntimeError
+=========================== short test summary info ============================
+FAILED test_group_protocol.py::test_actual_public_profile_inventory_storage_and_counts
+1 failed, 71 passed in 1.13s

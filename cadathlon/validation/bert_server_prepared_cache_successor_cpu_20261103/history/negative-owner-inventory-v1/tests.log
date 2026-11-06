@@ -1,0 +1,22 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+_________________ test_retirement_inventory_cannot_be_cleared __________________
+/tmp/bert-prepared-engine-review-20261103/negative-owner-inventory-v1/test_owner_inventory.py:6: in test_retirement_inventory_cannot_be_cleared
+    with pytest.raises(ValueError):control.check()
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+__________ test_truncated_inventory_cannot_allocate_third_cache_owner __________
+/tmp/bert-prepared-engine-review-20261103/negative-owner-inventory-v1/test_owner_inventory.py:10: in test_truncated_inventory_cannot_allocate_third_cache_owner
+    with pytest.raises(ValueError):control.create('linear',rig.ctx,low_memory=True,preserve_dispatch_cache=True)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+_______________ test_clear_cannot_silently_skip_original_owners ________________
+/tmp/bert-prepared-engine-review-20261103/negative-owner-inventory-v1/test_owner_inventory.py:15: in test_clear_cannot_silently_skip_original_owners
+    with pytest.raises(ValueError):control.close()
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+=========================== short test summary info ============================
+FAILED ../../tmp/bert-prepared-engine-review-20261103/negative-owner-inventory-v1/test_owner_inventory.py::test_retirement_inventory_cannot_be_cleared
+FAILED ../../tmp/bert-prepared-engine-review-20261103/negative-owner-inventory-v1/test_owner_inventory.py::test_truncated_inventory_cannot_allocate_third_cache_owner
+FAILED ../../tmp/bert-prepared-engine-review-20261103/negative-owner-inventory-v1/test_owner_inventory.py::test_clear_cannot_silently_skip_original_owners
+3 failed in 0.03s

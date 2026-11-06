@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="4" time="0.033" timestamp="2026-11-03T13:33:56.026495+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_terminal_main" name="test_zero_exit_is_raised_after_termination_scope[False-worker.py]" time="0.002" /><testcase classname="test_terminal_main" name="test_zero_exit_is_raised_after_termination_scope[False-collect.py]" time="0.003" /><testcase classname="test_terminal_main" name="test_zero_exit_is_raised_after_termination_scope[True-worker.py]" time="0.002"><failure message="AssertionError: assert SystemExit(0) is OSError('termination restoration failed')">name = 'worker.py', restore_failure = True
+
+    @pytest.mark.parametrize('name',['worker.py','collect.py'])
+    @pytest.mark.parametrize('restore_failure',[False,True])
+    def test_zero_exit_is_raised_after_termination_scope(name,restore_failure):
+        path=Path(__file__).parent/name
+        node=ast.parse(path.read_text()).body[-1]
+        assert isinstance(node,ast.If)
+        failure=OSError('termination restoration failed')
+        @contextmanager
+        def scope():
+            primary=None
+            try:yield
+            except BaseException as error:primary=error
+            if primary is not None:raise primary
+            if restore_failure:raise failure
+        class Parser:
+            def add_argument(self,*args,**kwargs):pass
+            def parse_args(self):return SimpleNamespace()
+        namespace=dict(__name__='__main__',Path=Path,argparse=SimpleNamespace(ArgumentParser=Parser),
+            termination_signals=scope,run=lambda **kwargs:0 if name=='worker.py' else {'passed':True})
+        caught=None
+        try:exec(compile(ast.Module(body=[node],type_ignores=[]),str(path),'exec'),namespace)
+        except BaseException as error:caught=error
+&gt;       if restore_failure:assert caught is failure
+                           ^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert SystemExit(0) is OSError('termination restoration failed')
+
+test_terminal_main.py:34: AssertionError</failure></testcase><testcase classname="test_terminal_main" name="test_zero_exit_is_raised_after_termination_scope[True-collect.py]" time="0.003"><failure message="AssertionError: assert SystemExit(0) is OSError('termination restoration failed')">name = 'collect.py', restore_failure = True
+
+    @pytest.mark.parametrize('name',['worker.py','collect.py'])
+    @pytest.mark.parametrize('restore_failure',[False,True])
+    def test_zero_exit_is_raised_after_termination_scope(name,restore_failure):
+        path=Path(__file__).parent/name
+        node=ast.parse(path.read_text()).body[-1]
+        assert isinstance(node,ast.If)
+        failure=OSError('termination restoration failed')
+        @contextmanager
+        def scope():
+            primary=None
+            try:yield
+            except BaseException as error:primary=error
+            if primary is not None:raise primary
+            if restore_failure:raise failure
+        class Parser:
+            def add_argument(self,*args,**kwargs):pass
+            def parse_args(self):return SimpleNamespace()
+        namespace=dict(__name__='__main__',Path=Path,argparse=SimpleNamespace(ArgumentParser=Parser),
+            termination_signals=scope,run=lambda **kwargs:0 if name=='worker.py' else {'passed':True})
+        caught=None
+        try:exec(compile(ast.Module(body=[node],type_ignores=[]),str(path),'exec'),namespace)
+        except BaseException as error:caught=error
+&gt;       if restore_failure:assert caught is failure
+                           ^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert SystemExit(0) is OSError('termination restoration failed')
+
+test_terminal_main.py:34: AssertionError</failure></testcase></testsuite></testsuites>

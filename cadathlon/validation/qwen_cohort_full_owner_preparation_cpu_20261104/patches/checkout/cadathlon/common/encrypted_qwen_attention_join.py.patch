@@ -1,0 +1,22 @@
+--- parent199/checkout/cadathlon/common/encrypted_qwen_attention_join.py
++++ current208/checkout/cadathlon/common/encrypted_qwen_attention_join.py
+@@ -11,8 +11,9 @@
+ from encrypted_qwen_head_routing import QwenHeadRouting,typed,MANIFEST,CONFIG
+ from encrypted_qwen_rmsnorm import QwenRMSContract,QwenRMSNorm
+ from encrypted_qwen_rms_refresh import QwenInverseRefreshBinding,accessor
+-from encrypted_qwen_causal_softmax import (QwenCausalSoftmaxContract,QwenCausalSoftmax,
++from encrypted_qwen_causal_softmax import (QwenCausalSoftmaxContract,
+     complete_fingerprint,validate_structure,require_synchronous)
++from encrypted_qwen_causal_softmax_batched import QwenCausalSoftmaxBatched
+ from encrypted_qwen_attention_bypass import QwenAttentionRoutingWithBypass
+ from encrypted_chained_streaming_linear import ChainedStreamingLinear
+ from encrypted_streaming_linear import RowTileLayout
+@@ -153,7 +154,7 @@
+             refresher=refresher if QwenRMSContract(contract.manifest_bytes,contract.site_metadata_bytes,f'{contract.layer}.{kind}.inverse_sqrt').events else None,
+             progress=self._child_progress) for kind in ('input','q','k'))
+         self.head=_CompleteHead(arithmetic,contract.manifest_bytes,config_bytes,positions=positions,progress=self._child_progress)
+-        self.softmax=QwenCausalSoftmax(arithmetic,QwenCausalSoftmaxContract(contract.manifest_bytes,contract.certificate_bytes,contract.layer),config_bytes,
++        self.softmax=QwenCausalSoftmaxBatched(arithmetic,QwenCausalSoftmaxContract(contract.manifest_bytes,contract.certificate_bytes,contract.layer),config_bytes,
+             positions=positions,refresher=refresher if len(positions)>1 else None,progress=self._child_progress)
+         self.pv=QwenAttentionRoutingWithBypass(arithmetic,contract.manifest_bytes,config_bytes,positions=positions,progress=self._child_progress)
+         self.outer=QwenOuterRefreshBinding(self,refresher)

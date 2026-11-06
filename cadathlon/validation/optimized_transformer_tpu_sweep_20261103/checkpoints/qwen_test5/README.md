@@ -1,0 +1,17 @@
+# Optimized toy Qwen test 5 failure
+
+The original case **failed** with `ApproximationErrorTooHigh`: estimated standard deviation `4.099e48` exceeded the unchanged `0.03125` decode limit. The collector records child 2992744 exiting 1 after 30,241.931948903977 seconds, reaped with its owned public-key directory removed and directory handle closed. Root independently observed the child PID/group absent. This archiver did not poll or reap the TPU sweep.
+
+This is the tenth completed case in an incomplete twelve-case sweep: seven passes and three failures (BERT4, BERT5 and Qwen5). Qwen6 was the current phase in root's preserved observation; BERT6 was also pending. Root retains session12657 and final reaping responsibility. The saved parent checkpoint is a historical snapshot, not a terminal sweep report or current queue assertion.
+
+The public synthetic fixture has batch2, sequence4, hidden width16, intermediate width24, four query heads/two KV heads, head dimension8, three layers, vocabulary32 and seed9105. It is not full pretrained Qwen, calibration or ranked execution. There are no decoded logits, nRMSE, maximum absolute error or successful runner timings in this failed result. External process duration is not a passing benchmark.
+
+The log records six layer attention/MLP-ready messages and19 matched refresh starts/completions, ending at elapsed30,141.3s. Both input and output security metadata boundaries were captured on TPU v6 lite. The unchanged ring has degree131072,Q100/P24,dnum4 and classical128-bit metadata, with log2(QP)3490.161581 under3523. Output metadata has12Q limbs (L5 for CD2), scale6.89940115708969e16,NSD1 and12,582,912 payload bytes. These observations do not establish numerical correctness. The security report remains passed:false/SystemExit1.
+
+Source tracing places the observed rejection at client approximation validation after synchronized evaluation and the output security gate, before feature extraction and toy metrics. The saved log has no intermediate decode/range evidence establishing the first corrupting operation. Layer and refresh completion do not prove numeric or domain acceptance; the separate proposed diagnostic is not executed or admitted by this checkpoint.
+
+There are28,916 nominal one-second resource samples. Sampled process-tree RSS peaks at83,863,691,264B; shared pages can be counted twice and transient peaks missed. The output-device checkpoint records peak_bytes_in_use26,685,207,040B. Neither is a continuous peak-HBM or memory-limit guarantee.
+
+All199 current source files and archive members were checked against the enclosing frozen source manifest. The shared source archive remains SHA256 `bc0ad1b2a3796fe4ecb5944d68f3ca65561ad5740357470a1e634cc243ec387b`; it is not duplicated in this checkpoint. Six fixed case files were copied exactly and checked before/after. Root's negative observation and its pinned parent snapshot are retained unchanged. No key/ciphertext/model/private bodies, numerical rerun, source change, restart or new role is included.
+
+`artifact_hashes.json` is the closed checkpoint index. After placement under the enclosing sweep's `checkpoints/qwen_test5`, run `python -I -B verify.py`; add `--current` to compare the frozen current source and six completed case files. Before placement, pass `--source-proof-root` pointing to the existing public sweep archive directory. Verification imports no backend and follows no payload/key descriptors; it verifies negative evidence, not a successful case or terminal sweep.

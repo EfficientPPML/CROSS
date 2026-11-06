@@ -1,0 +1,15 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_legacy_multifile_proof_without_helper_source_archive_grant_pins_rejected _
+
+    def test_legacy_multifile_proof_without_helper_source_archive_grant_pins_rejected():
+        bundle=json.loads((Path(__file__).parent/'legacy_bundle.json').read_bytes())
+        blobs={n:base64.b64decode(raw,validate=True)for n,raw in bundle['blobs'].items()}
+>       with pytest.raises(ValueError):f.issue(blobs,bundle['pins'])
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+/tmp/qwen-freeze-issuer-security-review-20261104/corrected-negative-v1/source/test_legacy_closure.py:10: Failed
+=========================== short test summary info ============================
+FAILED ../../tmp/qwen-freeze-issuer-security-review-20261104/corrected-negative-v1/source/test_legacy_closure.py::test_legacy_multifile_proof_without_helper_source_archive_grant_pins_rejected
+1 failed in 0.02s

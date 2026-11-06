@@ -1,0 +1,33 @@
+.............................................EE......................... [ 32%]
+........................................................................ [ 64%]
+........................................................................ [ 96%]
+........                                                                 [100%]
+==================================== ERRORS ====================================
+_ ERROR at setup of test_combined286_source_producer_cannot_replace_original217[False] _
+file /tmp/bert-original-stage5-io-successor-20261104/test_original_default.py, line 41
+  @pytest.mark.parametrize('rewrite_inventory',[False,True])
+  def test_combined286_source_producer_cannot_replace_original217(case,monkeypatch,rewrite_inventory):
+file /tmp/bert-original-stage5-io-successor-20261104/test_stage4_gate.py, line 9
+  @pytest.fixture
+  def case(stage3_case,tmp_path,monkeypatch):
+E       fixture 'stage3_case' not found
+>       available fixtures: cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, case, doctest_namespace, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, subtests, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+/tmp/bert-original-stage5-io-successor-20261104/test_stage4_gate.py:9
+_ ERROR at setup of test_combined286_source_producer_cannot_replace_original217[True] _
+file /tmp/bert-original-stage5-io-successor-20261104/test_original_default.py, line 41
+  @pytest.mark.parametrize('rewrite_inventory',[False,True])
+  def test_combined286_source_producer_cannot_replace_original217(case,monkeypatch,rewrite_inventory):
+file /tmp/bert-original-stage5-io-successor-20261104/test_stage4_gate.py, line 9
+  @pytest.fixture
+  def case(stage3_case,tmp_path,monkeypatch):
+E       fixture 'stage3_case' not found
+>       available fixtures: cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, case, doctest_namespace, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, subtests, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+/tmp/bert-original-stage5-io-successor-20261104/test_stage4_gate.py:9
+=========================== short test summary info ============================
+ERROR ../../tmp/bert-original-stage5-io-successor-20261104/test_original_default.py::test_combined286_source_producer_cannot_replace_original217[False]
+ERROR ../../tmp/bert-original-stage5-io-successor-20261104/test_original_default.py::test_combined286_source_producer_cannot_replace_original217[True]
+222 passed, 2 errors in 11.47s

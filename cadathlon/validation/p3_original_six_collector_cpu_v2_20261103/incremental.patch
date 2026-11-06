@@ -1,0 +1,35 @@
+--- a/check_p3_original_six.py
++++ b/check_p3_original_six.py
+@@ -134,8 +134,8 @@
+         warmups=0,repeats=1,healthy_case_timeout_s=None,cleanup_grace_s=30.,
+         collector_pid=os.getpid(),cpu_affinity=sorted(os.sched_getaffinity(0)),
+         started_utc=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()))
+-    helpers.write_json(output/'report.json',report)
+     try:
++        helpers.write_json(output/'report.json',report)
+         raw=source_bytes(repo);before=hashes(raw)
+         report['source_hashes_start']=before;report['source_archive_sha256']=snapshot(output,raw)
+         if hashes(source_bytes(repo))!=before:raise RuntimeError('source changed during startup archive')
+--- a/test_collector.py
++++ b/test_collector.py
+@@ -137,3 +137,20 @@
+         if started.exists():
+             try:os.kill(int(started.read_text()),signal.SIGKILL)
+             except ProcessLookupError:pass
++
++
++def test_initial_report_write_failure_recovers_failed_attempt_metadata(prepared,monkeypatch):
++    repo,out,h=prepared;original=h.write_json;writes=[]
++    def write(path,obj):
++        if path.name=='report.json':
++            writes.append(path)
++            if len(writes)==1:raise OSError('transient first publication failure')
++        return original(path,obj)
++    def no_process(*a,**kw):raise AssertionError('no child should start after metadata failure')
++    monkeypatch.setattr(h,'write_json',write);monkeypatch.setattr(h,'run_case',no_process)
++    with pytest.raises(OSError,match='transient first publication failure'):
++        m.evaluate(repo,out,h)
++    report=json.loads((out/'report.json').read_text())
++    assert len(writes)==2 and not report['passed'] and not report['complete']
++    assert not report['cases'] and 'transient first publication failure' in report['error']
++    assert report['source_hashes_end'] and report['source_files_unchanged'] is False

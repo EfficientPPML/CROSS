@@ -1,0 +1,137 @@
+--- producer163/runtime/stage/client_keys.py
++++ consumer181/runtime/stage/client_keys.py
+@@ -5,6 +5,7 @@
+ _crypto and storage seams, and must never present mocked results as real keys.
+ """
+ from pathlib import Path
++from contextlib import contextmanager
+ import hashlib,json,math,os,re,shutil,stat,sys
+ import numpy as np
+ PROFILE_SHA256='fe2408637f9d6de19ac6aef9f6f749aaef9dd56ccbb37b5334293cd223ede035'
+@@ -135,9 +136,47 @@
+         if np.any(x<0) or np.any(x>=modulus):raise ValueError('key residue outside declared modulus before uint32 conversion')
+     return a.astype(np.uint32,copy=False)
+ 
++_IO_FAILURE_QUARANTINE=[]
++
++
++class _CloseState:
++    """Share cleanup-origin state across nested metadata handles.
++
++    Genuine body failures remain primary. Cleanup-only cancellation outranks
++    ordinary cleanup errors. Uncertain resources are retained, never retried.
++    This is dedicated-process failure handling, not process-wide atomicity.
++    """
++    def __init__(self):self.errors=[]
++    def cleanup(self,label,action,owner=None):
++        primary=sys.exception();cleanup_only=any(primary is error for error in self.errors)
++        try:action()
++        except BaseException as error:
++            self.errors.append(error)
++            if owner is not None:_IO_FAILURE_QUARANTINE.append((owner,error))
++            if primary is None:raise
++            if cleanup_only and isinstance(primary,Exception)and not isinstance(error,Exception):
++                error.add_note('earlier metadata cleanup: '+repr(primary));raise
++            if error is not primary:primary.add_note(label+': '+repr(error))
++    def close(self,fd):
++        self.cleanup('metadata descriptor close',lambda:os.close(fd),('descriptor',fd))
++
++
++@contextmanager
++def _stream(fd,mode,state):
++    # The caller retains the descriptor even if stream construction fails.
++    stream=os.fdopen(fd,mode,closefd=False)
++    try:yield stream
++    finally:state.cleanup('metadata stream close',stream.close,stream)
++
++
+ def _sha_fd(fd):
+-    os.lseek(fd,0,os.SEEK_SET)
+-    with os.fdopen(os.dup(fd),'rb') as f:return hashlib.file_digest(f,'sha256').hexdigest()
++    # Borrow the original descriptor; no transfer/duplication is required.
++    os.lseek(fd,0,os.SEEK_SET);digest=hashlib.sha256()
++    while True:
++        block=os.read(fd,1<<20)
++        if not block:break
++        digest.update(block)
++    return digest.hexdigest()
+ 
+ def _store(owner,name,value,shape,moduli):
+     owner.check();a=_array(value,shape,moduli)
+@@ -154,15 +193,23 @@
+     with os.fdopen(fd,'wb') as f:f.write(canonical(value));f.flush();os.fsync(f.fileno())
+     owner.check();os.fsync(owner.fd)
+ 
+-def _read(directory_fd,name,maximum):
++def _read(directory_fd,name,maximum,*,_close_state=None):
++    state=_CloseState()if _close_state is None else _close_state
+     fd=os.open(name,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=directory_fd)
+     try:
+         info=os.fstat(fd)
+         if not stat.S_ISREG(info.st_mode) or info.st_size>maximum:raise ValueError('regular bounded key file required')
+-        with os.fdopen(os.dup(fd),'rb') as f:raw=f.read(maximum+1)
++        chunks=[];remaining=maximum+1
++        while remaining:
++            block=os.read(fd,min(remaining,1<<20))
++            if not block:break
++            chunks.append(block);remaining-=len(block)
++        raw=b''.join(chunks)
+         if len(raw)>maximum:raise ValueError('key metadata exceeds limit')
++        fields=('st_dev','st_ino','st_size','st_mtime_ns','st_ctime_ns');after=os.fstat(fd)
++        if len(raw)!=info.st_size or any(getattr(after,n)!=getattr(info,n)for n in fields):raise ValueError('key metadata changed during descriptor read')
+         return raw
+-    finally:os.close(fd)
++    finally:state.close(fd)
+ 
+ def _authenticate_array(directory_fd,name,description,shape,moduli):
+     if (type(description)is not dict or set(description)!={'sha256','dtype','shape','bytes'}
+--- producer163/runtime/stage/key_contexts.py
++++ consumer181/runtime/stage/key_contexts.py
+@@ -49,13 +49,13 @@
+             or description['dtype']!='uint32' or type(description['bytes'])is not int
+             or type(description['shape'])is not list or any(type(x)is not int for x in description['shape']) or tuple(description['shape'])!=shape):
+         raise ValueError('strict key array descriptor differs')
+-    owner.check();fd=os.open(name,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=owner.fd);mapped=None
++    owner.check();state=keys._CloseState();fd=os.open(name,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=owner.fd);mapped=None
+     try:
+         info=os.fstat(fd)
+         if (not stat.S_ISREG(info.st_mode) or info.st_size!=description['bytes'] or info.st_size>math.prod(shape)*4+4096
+                 or (owner.private and stat.S_IMODE(info.st_mode)!=0o600)):
+             raise ValueError('bounded regular key array or private permissions differ')
+-        with os.fdopen(os.dup(fd),'rb') as f:
++        with keys._stream(fd,'rb',state) as f:
+             version=np.lib.format.read_magic(f)
+             if version not in ((1,0),(2,0)):raise ValueError('unsupported NPY key version')
+             reader=np.lib.format.read_array_header_1_0 if version==(1,0) else np.lib.format.read_array_header_2_0
+@@ -63,25 +63,18 @@
+         if (type(stored)is not tuple or any(type(x)is not int for x in stored) or stored!=shape or fortran
+                 or dtype!=np.dtype('uint32') or offset+math.prod(shape)*4!=info.st_size):raise ValueError('key NPY header differs before mapping')
+         if keys._sha_fd(fd)!=description['sha256']:raise ValueError('key array byte identity differs')
+-        with os.fdopen(os.dup(fd),'rb') as f:mapped=np.memmap(f,mode='r',dtype=np.uint32,shape=shape,offset=offset)
++        with keys._stream(fd,'rb',state) as f:mapped=np.memmap(f,mode='r',dtype=np.uint32,shape=shape,offset=offset)
+         for limb,modulus in enumerate(moduli):
+             if np.any(mapped[...,limb,:]>=modulus):raise ValueError('key residue outside declared modulus')
+         owner.check()
+         if _file_state(os.fstat(fd))!=_file_state(info):raise ValueError('key file changed while mapping')
+         result=(mapped,_file_state(info))
+     finally:
+-        active=sys.exception();failure=None
+-        try:os.close(fd)
+-        except BaseException as error:
+-            if active is not None:active.add_note('key descriptor close: '+repr(error))
+-            else:failure=error
+-        if mapped is not None and (active is not None or failure is not None):
+-            try:mapped._mmap.close()
+-            except BaseException as error:
+-                if active is not None:active.add_note('key mapping cleanup: '+repr(error))
+-                elif failure is None:failure=error
+-                else:failure.add_note('key mapping cleanup: '+repr(error))
+-        if active is None and failure is not None:raise failure
++        active=sys.exception()
++        try:state.close(fd)
++        finally:
++            if mapped is not None and (active is not None or sys.exception()is not None):
++                state.cleanup('key mapping cleanup',lambda:mapped._mmap.close(),mapped)
+     return result
+ 
+ 

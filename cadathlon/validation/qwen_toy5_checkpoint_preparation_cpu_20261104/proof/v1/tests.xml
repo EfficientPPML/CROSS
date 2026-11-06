@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="6" skipped="0" tests="48" time="2.243" timestamp="2026-11-04T20:12:24.821772+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_q5_mapping" name="test_all47_new_literal_to_independent_dense_mapping" time="1.778"><failure message="assert (0, 31, 34, 35, 36, 37, ...) == (0, 31, 35, 36, 48, 49, ...)&#10;  &#10;  At index 2 diff: 34 != 35&#10;  Left contains 38 more items, first extra item: 133&#10;  Use -v to get more diff">math_fixture = namespace(np=&lt;module 'numpy' from '/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/numpy/__i...8622397235e+16, 7.239184557277184e+16), result=&lt;reference.literal_graph.build.&lt;locals&gt;.Value object at 0x7c20b07fea50&gt;)
+
+    def test_all47_new_literal_to_independent_dense_mapping(math_fixture):
+        f=math_fixture
+        actual_indices=tuple(i for i,_ in f.captures)
+&gt;       assert actual_indices==EXPECTED_SELECTED_TRACE_INDICES
+E       assert (0, 31, 34, 35, 36, 37, ...) == (0, 31, 35, 36, 48, 49, ...)
+E         
+E         At index 2 diff: 34 != 35
+E         Left contains 38 more items, first extra item: 133
+E         Use -v to get more diff
+
+/tmp/qwen-toy5-checkpoint-focused-proof-20261104/preparation-v1/execution/test_q5_mapping.py:12: AssertionError</failure></testcase><testcase classname="test_q5_mapping" name="test_key_before_query_refreshes_have_distinguishable_oracles" time="0.002" /><testcase classname="test_q5_mapping" name="test_client_replay_consumes_all19_synthetic_observed_return_scales" time="0.000"><failure message="ValueError: complete ordered47 required; partial server never admitted">math_fixture = namespace(np=&lt;module 'numpy' from '/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/numpy/__i...8622397235e+16, 7.239184557277184e+16), result=&lt;reference.literal_graph.build.&lt;locals&gt;.Value object at 0x7c20b07fea50&gt;)
+
+    def test_client_replay_consumes_all19_synthetic_observed_return_scales(math_fixture):
+        f=math_fixture
+        scales=[r['after']['scale']for r in f.observations]
+        assert len(scales)==19 and len(set(scales))&gt;=2
+        assert any(scale!=f.plan['profile']['scale']for scale in scales)
+&gt;       report=client_replay(np,f.reference_root,f.weights,f.embeddings,f.rows,f.observations)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/qwen-toy5-checkpoint-focused-proof-20261104/preparation-v1/execution/test_q5_mapping.py:54: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/tmp/qwen-toy5-checkpoint-focused-proof-20261104/preparation-v1/execution/runtime/q5_actual_metadata_replay.py:86: in client_replay
+    scales=check_refreshes(observations,rows);plan=numerical_plan()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/qwen-toy5-checkpoint-focused-proof-20261104/preparation-v1/execution/runtime/q5_actual_metadata_replay.py:71: in check_refreshes
+    all_checkpoints(rows)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+rows = [{'kind': 'input', 'label': 'original_embeddings', 'stack': [], 'level': 49, ...}, {'kind': 'phase', 'label': 'packed ... 'bounded homomorphic refresh complete', 'stack': ['normalize:1', 'polynomial:5:inverse_sqrt'], 'level': 25, ...}, ...]
+
+    def all_checkpoints(rows):
+&gt;       if type(rows)is not list or len(rows)!=47:raise ValueError('complete ordered47 required; partial server never admitted')
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       ValueError: complete ordered47 required; partial server never admitted
+
+/tmp/qwen-toy5-checkpoint-focused-proof-20261104/preparation-v1/execution/runtime/q5_checkpoint_contract.py:69: ValueError</failure></testcase><testcase classname="test_q5_mapping" name="test_diagnostic_indices_do_not_hide_replica_or_padding_errors[padded_other_replica]" time="0.003" /><testcase classname="test_q5_mapping" name="test_diagnostic_indices_do_not_hide_replica_or_padding_errors[logical_first_period]" time="0.002" /><testcase classname="test_q5_mapping" name="test_diagnostic_indices_do_not_hide_replica_or_padding_errors[final_selected_row]" time="0.002" /><testcase classname="test_q5_mapping" name="test_original_final_gate_remains_separate_from_dense_diagnostics" time="0.004" /><testcase classname="test_q5_metadata" name="test_binary64_recurrences_preserve_original_operation_order[L2]" time="0.002" /><testcase classname="test_q5_metadata" name="test_binary64_recurrences_preserve_original_operation_order[L6]" time="0.001" /><testcase classname="test_q5_metadata" name="test_binary64_recurrences_preserve_original_operation_order[L26]" time="0.001" /><testcase classname="test_q5_metadata" name="test_binary64_recurrences_preserve_original_operation_order[L49]" time="0.001" /><testcase classname="test_q5_metadata" name="test_final26_to25_enclosure_is_independently_rounded" time="0.017" /><testcase classname="test_q5_metadata" name="test_alignment_requires_observed_level26[not25]" time="0.000" /><testcase classname="test_q5_metadata" name="test_alignment_requires_observed_level26[not27]" time="0.000" /><testcase classname="test_q5_metadata" name="test_alignment_requires_observed_level26[notbool]" time="0.000" /><testcase classname="test_q5_metadata" name="test_refresh_semantic_corruptions_reach_specific_checks[index_bool]" time="0.001" /><testcase classname="test_q5_metadata" name="test_refresh_semantic_corruptions_reach_specific_checks[wrong_bound]" time="0.001" /><testcase classname="test_q5_metadata" name="test_refresh_semantic_corruptions_reach_specific_checks[missing_call]" time="0.001" /><testcase classname="test_q5_metadata" name="test_refresh_semantic_corruptions_reach_specific_checks[precondition_weight]" time="0.001" /><testcase classname="test_q5_metadata" name="test_refresh_semantic_corruptions_reach_specific_checks[restore_weight]" time="0.001" /><testcase classname="test_q5_metadata" name="test_refresh_semantic_corruptions_reach_specific_checks[rounded_output]" time="0.001" /><testcase classname="test_q5_metadata" name="test_refresh_semantic_corruptions_reach_specific_checks[late_level27]" time="0.001" /><testcase classname="test_q5_metadata" name="test_refresh_semantic_corruptions_reach_specific_checks[subnormal_input]" time="0.001" /><testcase classname="test_q5_metadata" name="test_complete_order_and_export_metadata_are_required[partial47]" time="0.001" /><testcase classname="test_q5_metadata" name="test_complete_order_and_export_metadata_are_required[reordered_rows]" time="0.001"><failure message="AssertionError: Regex pattern did not match.&#10;  Expected regex: 'checkpoint contract differs'&#10;  Actual message: 'complete ordered47 required; partial server never admitted'">math_fixture = namespace(np=&lt;module 'numpy' from '/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/numpy/__i...8622397235e+16, 7.239184557277184e+16), result=&lt;reference.literal_graph.build.&lt;locals&gt;.Value object at 0x7c20b07fea50&gt;)
+case = 'reordered_rows'
+
+    @pytest.mark.parametrize('case',['partial47','reordered_rows','missing19','export_scale'],ids=['partial47','reordered_rows','missing19','export_scale'])
+    def test_complete_order_and_export_metadata_are_required(math_fixture,case):
+        f=math_fixture;rows=copy.deepcopy(f.rows);observations=copy.deepcopy(f.observations)
+        if case=='partial47':rows.pop();message='complete ordered47'
+        elif case=='reordered_rows':rows[13],rows[15]=rows[15],rows[13];message='checkpoint contract differs'
+        elif case=='missing19':observations.pop();message='complete ordered19'
+        else:
+            rows[3]['scale']=math.nextafter(rows[3]['scale'],math.inf);message='export/observed refresh metadata differs'
+&gt;       with pytest.raises(ValueError,match=message):check_refreshes(observations,rows)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'checkpoint contract differs'
+E         Actual message: 'complete ordered47 required; partial server never admitted'
+
+/tmp/qwen-toy5-checkpoint-focused-proof-20261104/preparation-v1/execution/test_q5_metadata.py:73: AssertionError</failure></testcase><testcase classname="test_q5_metadata" name="test_complete_order_and_export_metadata_are_required[missing19]" time="0.001"><failure message="AssertionError: Regex pattern did not match.&#10;  Expected regex: 'complete ordered19'&#10;  Actual message: 'complete ordered47 required; partial server never admitted'">math_fixture = namespace(np=&lt;module 'numpy' from '/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/numpy/__i...8622397235e+16, 7.239184557277184e+16), result=&lt;reference.literal_graph.build.&lt;locals&gt;.Value object at 0x7c20b07fea50&gt;)
+case = 'missing19'
+
+    @pytest.mark.parametrize('case',['partial47','reordered_rows','missing19','export_scale'],ids=['partial47','reordered_rows','missing19','export_scale'])
+    def test_complete_order_and_export_metadata_are_required(math_fixture,case):
+        f=math_fixture;rows=copy.deepcopy(f.rows);observations=copy.deepcopy(f.observations)
+        if case=='partial47':rows.pop();message='complete ordered47'
+        elif case=='reordered_rows':rows[13],rows[15]=rows[15],rows[13];message='checkpoint contract differs'
+        elif case=='missing19':observations.pop();message='complete ordered19'
+        else:
+            rows[3]['scale']=math.nextafter(rows[3]['scale'],math.inf);message='export/observed refresh metadata differs'
+&gt;       with pytest.raises(ValueError,match=message):check_refreshes(observations,rows)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'complete ordered19'
+E         Actual message: 'complete ordered47 required; partial server never admitted'
+
+/tmp/qwen-toy5-checkpoint-focused-proof-20261104/preparation-v1/execution/test_q5_metadata.py:73: AssertionError</failure></testcase><testcase classname="test_q5_metadata" name="test_complete_order_and_export_metadata_are_required[export_scale]" time="0.002"><failure message="AssertionError: Regex pattern did not match.&#10;  Expected regex: 'export/observed refresh metadata differs'&#10;  Actual message: 'complete ordered47 required; partial server never admitted'">math_fixture = namespace(np=&lt;module 'numpy' from '/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/numpy/__i...8622397235e+16, 7.239184557277184e+16), result=&lt;reference.literal_graph.build.&lt;locals&gt;.Value object at 0x7c20b07fea50&gt;)
+case = 'export_scale'
+
+    @pytest.mark.parametrize('case',['partial47','reordered_rows','missing19','export_scale'],ids=['partial47','reordered_rows','missing19','export_scale'])
+    def test_complete_order_and_export_metadata_are_required(math_fixture,case):
+        f=math_fixture;rows=copy.deepcopy(f.rows);observations=copy.deepcopy(f.observations)
+        if case=='partial47':rows.pop();message='complete ordered47'
+        elif case=='reordered_rows':rows[13],rows[15]=rows[15],rows[13];message='checkpoint contract differs'
+        elif case=='missing19':observations.pop();message='complete ordered19'
+        else:
+            rows[3]['scale']=math.nextafter(rows[3]['scale'],math.inf);message='export/observed refresh metadata differs'
+&gt;       with pytest.raises(ValueError,match=message):check_refreshes(observations,rows)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'export/observed refresh metadata differs'
+E         Actual message: 'complete ordered47 required; partial server never admitted'
+
+/tmp/qwen-toy5-checkpoint-focused-proof-20261104/preparation-v1/execution/test_q5_metadata.py:73: AssertionError</failure></testcase><testcase classname="test_q5_metadata" name="test_later_event_scale_cannot_bypass_actual_scalar_replay" time="0.001"><failure message="ValueError: complete ordered47 required; partial server never admitted">math_fixture = namespace(np=&lt;module 'numpy' from '/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/numpy/__i...8622397235e+16, 7.239184557277184e+16), result=&lt;reference.literal_graph.build.&lt;locals&gt;.Value object at 0x7c20b07fea50&gt;)
+
+    def test_later_event_scale_cannot_bypass_actual_scalar_replay(math_fixture):
+        f=math_fixture;rows=copy.deepcopy(f.rows)
+        # Refresh boundaries remain cross-consistent. Change only a later ordinary
+        # event to force the full original-graph scalar replay rejection, not the
+        # earlier refresh-export gate.
+        rows[-1]['scale']=math.nextafter(rows[-1]['scale'],math.inf)
+&gt;       check_refreshes(f.observations,rows)
+
+/tmp/qwen-toy5-checkpoint-focused-proof-20261104/preparation-v1/execution/test_q5_metadata.py:82: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/tmp/qwen-toy5-checkpoint-focused-proof-20261104/preparation-v1/execution/runtime/q5_actual_metadata_replay.py:71: in check_refreshes
+    all_checkpoints(rows)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+rows = [{'kind': 'input', 'label': 'original_embeddings', 'stack': [], 'level': 49, ...}, {'kind': 'phase', 'label': 'packed ... 'bounded homomorphic refresh complete', 'stack': ['normalize:1', 'polynomial:5:inverse_sqrt'], 'level': 25, ...}, ...]
+
+    def all_checkpoints(rows):
+&gt;       if type(rows)is not list or len(rows)!=47:raise ValueError('complete ordered47 required; partial server never admitted')
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       ValueError: complete ordered47 required; partial server never admitted
+
+/tmp/qwen-toy5-checkpoint-focused-proof-20261104/preparation-v1/execution/runtime/q5_checkpoint_contract.py:69: ValueError</failure></testcase><testcase classname="test_q5_checkpoint_state" name="test_original_payload_barrier_precedes_callback_and_owner_is_held" time="0.003" /><testcase classname="test_q5_checkpoint_state" name="test_checkpoint_callback_cannot_silently_rebind_diagnostic_state[row]" time="0.003" /><testcase classname="test_q5_checkpoint_state" name="test_checkpoint_callback_cannot_silently_rebind_diagnostic_state[payload]" time="0.003" /><testcase classname="test_q5_checkpoint_state" name="test_checkpoint_callback_cannot_silently_rebind_diagnostic_state[scale]" time="0.003" /><testcase classname="test_q5_checkpoint_state" name="test_checkpoint_callback_cannot_silently_rebind_diagnostic_state[moduli]" time="0.003" /><testcase classname="test_q5_checkpoint_state" name="test_checkpoint_callback_cannot_silently_rebind_diagnostic_state[public_bound]" time="0.003" /><testcase classname="test_q5_checkpoint_state" name="test_checkpoint_callback_cannot_silently_rebind_diagnostic_state[working_cache]" time="0.004" /><testcase classname="test_q5_checkpoint_state" name="test_callback_primary_identity_retains_original_payload" time="0.003" /><testcase classname="test_q5_checkpoint_state" name="test_wrong_trace_attribution_rejects_before_export_callback[kind]" time="0.002" /><testcase classname="test_q5_checkpoint_state" name="test_wrong_trace_attribution_rejects_before_export_callback[label]" time="0.002" /><testcase classname="test_q5_checkpoint_state" name="test_wrong_trace_attribution_rejects_before_export_callback[stack]" time="0.002" /><testcase classname="test_q5_checkpoint_state" name="test_wrong_trace_attribution_rejects_before_export_callback[level]" time="0.002" /><testcase classname="test_q5_entry" name="test_actual_dispatch_immediately_denies_without_helper_import[setup]" time="0.000" /><testcase classname="test_q5_entry" name="test_actual_dispatch_immediately_denies_without_helper_import[server]" time="0.000" /><testcase classname="test_q5_entry" name="test_actual_dispatch_immediately_denies_without_helper_import[client]" time="0.000" /><testcase classname="test_q5_entry" name="test_terminal_boundary_does_not_promote_escaped_failures[late_oserror]" time="0.000" /><testcase classname="test_q5_entry" name="test_terminal_boundary_does_not_promote_escaped_failures[systemexit0]" time="0.000" /><testcase classname="test_q5_entry" name="test_terminal_boundary_does_not_promote_escaped_failures[systemexit1]" time="0.000" /><testcase classname="test_q5_entry" name="test_terminal_boundary_does_not_promote_escaped_failures[keyboardinterrupt]" time="0.000" /><testcase classname="test_q5_entry" name="test_terminal_boundary_does_not_promote_escaped_failures[malformed_bool]" time="0.000" /></testsuite></testsuites>

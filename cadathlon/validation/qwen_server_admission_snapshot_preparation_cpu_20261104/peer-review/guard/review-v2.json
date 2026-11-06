@@ -1,0 +1,48 @@
+{
+  "candidate_imports": false,
+  "checks": {
+    "all_reviewed_bytes_unchanged_at_end": true,
+    "field_module_and_helper_binding_code_unchanged": true,
+    "five_current_and_tar_exact": true,
+    "old_four_preserved": true,
+    "only_declared_guard_design_history_delta": true,
+    "same_retire_and_default_denial": true
+  },
+  "execution_authorized": false,
+  "guard_patch_sha256": "e46a0e8474014366caf895579436d46f95b0801b9dfe42e9cb3b7074991234b4",
+  "guard_sha256": "8790711a1a402f4c21ef444ccdb76f773b4c62cd334f5be07a49d2cd4535b395",
+  "integration": false,
+  "limitations": [
+    "Source-only correction, not a runtime negative/successor replay or actual proof admission.",
+    "Prior exact13 graph coverage and module/class/function binding review applies because those ASTs and14-source reference inventory are unchanged.",
+    "Mutable pure-helper globals, closure-cell contents and arbitrary snapshot-private-state/interpreter mutation remain outside the declared trusted-source callback contract.",
+    "Full process integration, terminal full reauthentication, independently retained check/retire callbacks and live file/resource/backend/ownership checks remain required; this guard grants no authority."
+  ],
+  "no_additional_concrete_blocker_in_delta": true,
+  "parent_receipt_sha256": "b44310718a631c1231a623f6f503a168967a89e7f5e3d9c44816447b92540398",
+  "passed": true,
+  "proof_or_body_reads": false,
+  "resolved_source_findings": [
+    {
+      "id": "SNAPSHOT-REENTRY",
+      "resolution": "A nested check observing checking writes failed before raising. The outer invocation retains its exact checking tuple and rejects if the registry no longer contains that tuple, so a caught inner rejection cannot restore active."
+    },
+    {
+      "id": "SNAPSHOT-CAPTURE-RETENTION",
+      "resolution": "The initial packet is retained before the first fallible callback. The completed original graph/bindings/checker are retained before full validation. Attempt references clear only after registry insertion and a successful original guard check; failed capture leaves the attempt retained."
+    }
+  ],
+  "review_script_sha256": "89706c95efcc04244567d2d2258cf7fdae4db3b31814802c447512cbe98ca09e",
+  "runtime_probes": false,
+  "schema": "qwen-admission-snapshot-v2-source-peer-review-v1",
+  "source_archive_sha256": "b211059616c5923c2bc15acb0aa5b387d6afa31bbe7b4394773dcc0548b75ce9",
+  "source_hashes": {
+    "CALL_HIERARCHY.md": "1bc3f96e12ed030499e498c7e35f33c007160bdd5b2ec04db1618c54955b27a2",
+    "DESIGN.md": "63488889e841799c2ecd8e06cff40a3a569be4b7590e12223187792818baa822",
+    "qwen_admission_snapshot.py": "8790711a1a402f4c21ef444ccdb76f773b4c62cd334f5be07a49d2cd4535b395",
+    "source_refs.json": "b47d40ad7a817dc24aad236b6745684ee0a4ba84512e544570dbd45cb65c257a",
+    "successor_history.json": "69bce97a85fd3a006623e526eb5979ccbcfee0b73eb58b7f46ee3d4c2aa85f73"
+  },
+  "source_manifest_sha256": "dd990a97b71b9e9858843ee4156c30d6c2b4522b3bd7b59b5324af9e50a10bf8",
+  "tests_or_collection": false
+}

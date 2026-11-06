@@ -1,0 +1,29 @@
+--- measured/proof.py
++++ separate/readback.py
+@@ -9,7 +9,7 @@
+ import tarfile
+ import xml.etree.ElementTree as ET
+ 
+-ROOT = Path(__file__).resolve().parent
++ROOT = Path('/tmp/ckks-scaled-crt-decoder-candidate-v2-20261104')
+ EXTRA = ['before/ckks_ctx.py', 'source_origin.json', 'public_geometry.json',
+          'candidate.patch', 'test_real_decode.py', 'run_cpu.py', 'DESIGN.md', 'proof.py']
+ 
+@@ -82,7 +82,7 @@
+     assert all(case.find('failure') is None and case.find('error') is None and case.find('skipped') is None for case in cases)
+     assert absent(worker['pid']) and absent(worker['pgid'], group=True)
+     original = json.loads((ROOT / 'source_origin.json').read_bytes())
+-    original_root = Path(original['source_root'])
++    original_root = Path('/tmp/cross-optimized-twelve-20261103/checkout')
+     readback(original_root, original['source_hashes'])
+     dump(output / 'sources-after.json', after)
+     result = {'passed': True, 'source_count': len(expected), 'tests': len(cases),
+@@ -93,7 +93,7 @@
+               'owner_reported_reaped': True, 'reap_tool_chunk': reap_tool,
+               'observed_pid': worker['pid'], 'observed_pgid': worker['pgid'],
+               'pid_absent': True, 'group_absent': True,
+-              'original199_current_unchanged': True, 'current_execution_archive_equal': True,
++              'frozen199_current_unchanged': True, 'frozen199_root': str(original_root), 'current_execution_archive_equal': True,
+               'scope': 'clear synthetic CPU CRT/FFT arithmetic; no HE/model result',
+               'actual_toy5_throw_site_proved': False, 'actual_toy5_recovered': False}
+     dump(output / 'report.json', result)

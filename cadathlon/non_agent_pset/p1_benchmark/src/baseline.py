@@ -17,10 +17,10 @@ path builds just the codec context and the `Mapping` is built on first
 class BaselineService:
     """Encrypt / execute / decrypt for a batch, one image per ciphertext."""
 
-    def __init__(self, model, input_shape, batch, devices, keys=None):
+    def __init__(self, model, input_shape, batch, devices, keys=None, *, policy=None):
         from jaxite_word import nn, packing
         program = nn.vectorize(model, input_shape, warn=False)
-        self.packed = packing.pack(program, packing.PackingPolicy(lazy_constants=True))
+        self.packed = packing.pack(program, policy or packing.PackingPolicy(lazy_constants=True))
         self.batch = batch
         self.devices = tuple(devices)
         self.lanes = len(self.devices)

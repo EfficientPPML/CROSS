@@ -1,0 +1,5 @@
+# Narrow keygen kernel metadata successor
+
+Only three exact observed strings /proc/self/status,cgroup,mountinfo get readonly alias handling. os.open rejects bytes/PathLike/noncanonical/relative/dirfd forms before normalization; direct builtin audit can only attest the observed event string. Allowed flags subset O_CLOEXEC|O_NOFOLLOW|O_NONBLOCK; resolution must equal current /proc/PID/leaf, but explicit PID callers remain unselected. Protected checks and all other aliases remain rejected. TLS carries the original literal decision to the original matching audit event. No current proc read, imports, tests, capacity measurement or actual grant. Prior61 proof is unchanged and does not cover this new integration.
+
+The runtime inventory remains85 with84 exact parent files. No phase, arithmetic, owner, key format, grant or source-prerequisite semantics change. The external patch and correction preserve the old source finding. New targeted test authoring is separate; no inherited suite is selected by this capture.

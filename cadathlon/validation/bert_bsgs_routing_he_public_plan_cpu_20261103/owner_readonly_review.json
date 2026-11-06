@@ -1,0 +1,22 @@
+{
+  "actual_loader_source_root": "/tmp/bert-ordinary-group-parity-ready-20261103/runtime",
+  "actual_loader_source_sha256": {
+    "jaxite_word/ckks_ctx.py": "bc978cb7412b55416f7ed634a689ae616a263b0f47fd9eef996ba244f2505db6",
+    "jaxite_word/finite_field.py": "54418625f76e303d77a3055f93419e07895bdf71f706acc20ab0f6fe7c8def5e",
+    "jaxite_word/he_params.py": "b34f2a938598ef9fd1f9de157db3400c48befcb60866751449742917e2e3fccc",
+    "jaxite_word/ntt_mm.py": "5a0cbff087f48f20c98cb5975f7894756a83d61fbdaaf5af358a1c7c192a1263",
+    "jaxite_word/polynomial.py": "043e1dcdf9aca02f2df9435ac610c1561859b7d29a7dee1b7254bf9bc3c89a5b",
+    "stage/key_contexts.py": "6b1282e7749bef8b15ee4232e8ee166df64d3b174711db1d2fcb25fe9535aa02"
+  },
+  "assumptions": [
+    "Authenticated reusable rotation key arrays are read-only NumPy memmaps of shape [8,114,131072], uint32; public coefficient maps are immutable JAX arrays of shape [131072], int32. External mmap content authentication/no-write lifetime remains the loader obligation.",
+    "JSON Q/P lists flow unchanged into CKKSContext and as list copies into HEParameterCache. Polynomial r/c are exact Python ints from the pinned tuple. NTT and field prefixes are ordered Python ints; Barrett standard-format flag is Python True.",
+    "Required low_memory ordinary CompiledArithmetic completes each returned payload through _finish before stage-local references retire. The owner retains original arrays independently of mutable wrappers and quarantines retained arrays when failure synchronization raises.",
+    "Ideal BSGS arithmetic changes operation order and requires its own future encrypted accuracy proof. No HE, performance, physical memory or current live parity result is inferred."
+  ],
+  "findings": "No remaining concrete blocker found for public source-bound ideal/metadata validation. This is read-only source review, not an encrypted execution or completeness guarantee.",
+  "metadata_evidence": "../source-bound-v2/report.json (46 tests, 21 production AST methods, 14 unchanged sources)",
+  "negative_evidence": "readback-v1/report.json (three expected failures of coherent pre-fix owner; pytest exit 1)",
+  "reviewed_owner_sha256": "f7d9492c5ca959bb09c7c7dfe2b4062ce33b2c64678558df261b1ed92ddd8fde",
+  "schema": "bsgs-final-readonly-review-v1"
+}

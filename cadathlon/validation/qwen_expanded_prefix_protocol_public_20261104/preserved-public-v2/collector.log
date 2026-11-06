@@ -1,0 +1,18 @@
+Traceback (most recent call last):
+  File "/tmp/qwen-expanded-prefix-protocol-20261104/collect.py", line 104, in <module>
+    if __name__=='__main__':raise SystemExit(main())
+                                             ~~~~^^
+  File "/tmp/qwen-expanded-prefix-protocol-20261104/collect.py", line 101, in main
+    report=finish(args.output/'report.json',lambda:collect(args.output),write,lambda p:p.read_bytes(),termination=termination_signals,shield=cleanup_signals)
+  File "/tmp/qwen-expanded-prefix-protocol-20261104/finish.py", line 8, in finish
+    with termination():report=call()
+                              ~~~~^^
+  File "/tmp/qwen-expanded-prefix-protocol-20261104/collect.py", line 101, in <lambda>
+    report=finish(args.output/'report.json',lambda:collect(args.output),write,lambda p:p.read_bytes(),termination=termination_signals,shield=cleanup_signals)
+                                                   ~~~~~~~^^^^^^^^^^^^^
+  File "/tmp/qwen-expanded-prefix-protocol-20261104/collect.py", line 94, in collect
+    raise primary
+  File "/tmp/qwen-expanded-prefix-protocol-20261104/collect.py", line 66, in collect
+    if report['tests']!=dict(tests=expected,errors=0,failures=0,skipped=0):raise ValueError('complete public preflight suite required')
+                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: complete public preflight suite required

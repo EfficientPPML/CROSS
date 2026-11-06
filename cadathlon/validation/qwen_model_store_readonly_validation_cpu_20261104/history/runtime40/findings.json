@@ -1,0 +1,27 @@
+{
+  "actual_runs_affected": "None: new40 source has not been imported, tested or granted.",
+  "findings": [
+    {
+      "function": "origins",
+      "id": "critical_entry_origin",
+      "observation": "Outside-ROOT __main__ file/spec values do not enter the local-alias branch; canonical model_entry is excluded from the postcheck. This falls short of independent critical-origin validation.",
+      "repair": "Require exact direct-script __main__.__file__ and None __spec__; require both file/spec origins for every loaded canonical helper, including model_entry.",
+      "sha256": "da5419d98165734208606d1edba90df2cf35e977714a32b99ff2f74ac96e45ba",
+      "source": "model_entry.py"
+    },
+    {
+      "function": "run terminal publication",
+      "id": "late_sticky_audit",
+      "observation": "Success and audit_denials are snapshotted before publication. A denied event swallowed during that late phase would not be vetoed by audit.close, which only checks wrapper identity.",
+      "repair": "Attempt audit.check after the publication shield/close and before original open-wrapper restoration. Late failures remain exit70 and cannot be admitted by independent exit0 receipt.",
+      "sha256": "d18a767e1e4e4de7c77e02e64e549eb1d57889d70e5aa42eaed186a9163bf1b2",
+      "source": "model_validation_process.py"
+    }
+  ],
+  "old_source_unchanged": true,
+  "parent40_manifest_sha256": "a089a3906d2cd6a6f823f1c9c6f5084faeafc70b9bb08ece1cd63c04da0aa3b7",
+  "parent_archive": "/tmp/qwen-model-store-readonly-source-handoff-20261104/sources.tar.gz",
+  "reviewer": "root; acknowledged by security_review",
+  "schema": "qwen-model-readonly-source-findings-v1",
+  "scope": "Source-only review; no candidate function executed, no negative test or body access"
+}

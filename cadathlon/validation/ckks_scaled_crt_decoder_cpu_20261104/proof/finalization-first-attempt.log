@@ -1,0 +1,17 @@
+Traceback (most recent call last):
+  File "/tmp/ckks-scaled-crt-decoder-candidate-v2-20261104/proof.py", line 113, in <module>
+    finalize(args.output, args.session, args.exit_code, args.reap_tool)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/ckks-scaled-crt-decoder-candidate-v2-20261104/proof.py", line 86, in finalize
+    readback(original_root, original['source_hashes'])
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/ckks-scaled-crt-decoder-candidate-v2-20261104/proof.py", line 27, in readback
+    got = {name: digest((root / name).read_bytes()) for name in expected}
+                        ~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_abc.py", line 625, in read_bytes
+    with self.open(mode='rb') as f:
+         ~~~~~~~~~^^^^^^^^^^^
+  File "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/jianming_gatech/CROSS/validation_sweep.py'

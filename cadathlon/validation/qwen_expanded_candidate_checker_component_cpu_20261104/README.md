@@ -1,0 +1,9 @@
+The expanded Qwen candidate checker component passed79 synthetic dispatcher/capture checks and7 provenance-harness checks. Session1100 exited0 and was reaped. All29 source files matched original, fresh execution, and archive bytes before/after; both direct children and their owned groups were absent. The producer report SHA256 is57897e765ef7b05faebb102fa62d1b55e903ec102b4feec3615df37488451d98; source archive SHA256 isc057ec82f03e92dbccb015af526556c8264b97c4fea959b58cce1a82c53d55af.
+
+This is a pure component proof. Tensor/module fixtures are synthetic; no actual model, calibration/validation/row0 bodies, observed ranges, coefficient selection, or HE ran. The actual strict numerical/domain context adapter, authenticated candidate admission and actual worker/collector remain unimplemented. The exact original numerical arithmetic/reference sources are retained unchanged. See SCOPE.md.
+
+History preserves the original46-pass/3-fail test-only float32 expectation,49-test source state, independently reproduced fabricated-ledger failures and exact repaired3-case retest, plus the harness-only syntax error. The final component validates typed measured records and causal stop/argmax continuation before revision. Native nonfinite output failures are distinct from structural capture failures. These changes do not alter any numerical threshold or coefficient.
+
+Run python -B verify.py for portable public verification. Outer exit/reap observation is separate from the producer JSON; it is required because final report publication alone cannot prove descriptor close success. No tensor/key/ciphertext/model arrays are archived.
+
+Wording clarification: the frozen SCOPE.md phrase “49-source-state development” refers to the preserved49-test development source state, not a count of49 files. The final proof inventory contains29 files. Measured source bytes remain unchanged.

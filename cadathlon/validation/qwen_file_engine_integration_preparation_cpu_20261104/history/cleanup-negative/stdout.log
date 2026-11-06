@@ -1,0 +1,48 @@
+FF...                                                                    [100%]
+=================================== FAILURES ===================================
+_ test_marked_incoming_cleanup_yields_to_later_cancellation[KeyboardInterrupt] _
+
+cancel = <class 'KeyboardInterrupt'>
+
+    @pytest.mark.parametrize("cancel",[KeyboardInterrupt,SystemExit])
+    def test_marked_incoming_cleanup_yields_to_later_cancellation(cancel):
+        ordinary=policy["mark"](OSError("publisher close"));later=cancel("later cleanup")
+        final=Finalizer({},ordinary);final.attempt("later",lambda:fail(later))
+>       with pytest.raises(cancel)as caught:final.raise_if_failed()
+                                            ^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/qwen-cleanup-alignment-negative-20261104/test_alignment.py:13: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Finalizer object at 0x700d27044980>
+
+>   ???
+E   OSError: publisher close
+E   later: KeyboardInterrupt('later cleanup')
+
+exact-Finalizer-AST:136: OSError
+____ test_marked_incoming_cleanup_yields_to_later_cancellation[SystemExit] _____
+
+cancel = <class 'SystemExit'>
+
+    @pytest.mark.parametrize("cancel",[KeyboardInterrupt,SystemExit])
+    def test_marked_incoming_cleanup_yields_to_later_cancellation(cancel):
+        ordinary=policy["mark"](OSError("publisher close"));later=cancel("later cleanup")
+        final=Finalizer({},ordinary);final.attempt("later",lambda:fail(later))
+>       with pytest.raises(cancel)as caught:final.raise_if_failed()
+                                            ^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/qwen-cleanup-alignment-negative-20261104/test_alignment.py:13: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Finalizer object at 0x700d271fb750>
+
+>   ???
+E   OSError: publisher close
+E   later: SystemExit('later cleanup')
+
+exact-Finalizer-AST:136: OSError
+=========================== short test summary info ============================
+FAILED ../../tmp/qwen-cleanup-alignment-negative-20261104/test_alignment.py::test_marked_incoming_cleanup_yields_to_later_cancellation[KeyboardInterrupt]
+FAILED ../../tmp/qwen-cleanup-alignment-negative-20261104/test_alignment.py::test_marked_incoming_cleanup_yields_to_later_cancellation[SystemExit]
+2 failed, 3 passed in 0.02s

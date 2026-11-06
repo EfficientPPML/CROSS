@@ -1,0 +1,10 @@
+"""Public fixed component identity; no plaintext/client loaders."""
+REVISION='f150c1d609d1e50dd5e2e5408661cfac8339277c'
+ASSETS={'config.json':'ec2b6cd6ce741dda6c972aea96f9d1a449cbb4b5349e688c5370a9b2f6872d30','model.safetensors':'e1f8085ef673c9eb8a1a93a84270742e8aa0ccbceadef01eef15e26c44b46034','tokenizer.json':'5b3360be30cdf39081153cf9d30bfb0503c011462fc9f77f097127c83ef0f4d9','tokenizer_config.json':'0f6d13e6f4da6f9e24f22ada6bc3be571123d858d7c0c05a8a7cd55a9c23c2e8','vocab.txt':'eeaa9875b23b04b4c54ef759d03db9d1ba1554838f8fb26c5d96fa551df93d02'}
+EXAMPLE=('The committee approved the proposal.','The committee approved the proposal.')
+KINDS=('query','key','value')
+Q=[2147352577,1073643521,268271617,268369921]
+P=[1073479681,1073184769,1073053697]
+ROTATIONS=list(range(1,64))+list(range(64,768,64))+list(range(7424,8192,64))
+def parameters():
+ return dict(degree=16384,num_slots=8192,q_towers=Q,p_towers=P,composite_degree=2,degree_layout=[128,128],precision=32,max_level=1,scaling_factor=float(Q[-2])*Q[-1],output_scale=float(Q[-2])*Q[-1],dnum=2,batch=1,sigma=3.190000057220458984375,secret_distribution='uniform_ternary')

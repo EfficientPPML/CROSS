@@ -1,0 +1,2741 @@
+{
+  "passed": false,
+  "pytest_exit_code": 1,
+  "source_files_unchanged": true,
+  "scope": "Combined isolated candidate CPU tests; secure component tests enabled; large secure bootstrap remains skipped; no TPU/full-model performance claim",
+  "backend": "cpu",
+  "affinity": [
+    152,
+    153,
+    154,
+    155
+  ],
+  "python": "3.13.18",
+  "versions": {
+    "jax": "0.12.0.1",
+    "jaxlib": "0.12.0.1",
+    "numpy": "2.5.4",
+    "torch": "2.15.0+cpu"
+  },
+  "seconds": 1006.2237476750015,
+  "max_rss_kib": 8731344,
+  "source_sha256": {
+    "checkout/cadathlon/agent_pset/p2_bert/src/benchmark.py": "acb6c5679106e00dd1c482dd750ca4620423f13c9b37e7c7bbce1781b8e76aec",
+    "checkout/cadathlon/agent_pset/p2_bert/src/bert_bounded_reference.py": "51a04ece5bfe45fe8bde0a925f7d88211fd3074b79917922f970112a81ef4067",
+    "checkout/cadathlon/agent_pset/p2_bert/src/bert_he.py": "416318023bdd7bd39fab5cc454c1f6fefa813f943f74940c2a5820b9838f561b",
+    "checkout/cadathlon/agent_pset/p2_bert/src/bert_packed_reference.py": "16952ff0d69b0a321c3cc2f39c1a864e30595294fa33ea16a095a2db130d5207",
+    "checkout/cadathlon/agent_pset/p2_bert/src/bert_reference.py": "d838b81d7042ee82213bd855ef904c86be924d9f73a2cf09f469c6ed2b460b96",
+    "checkout/cadathlon/agent_pset/p2_bert/src/check_result.py": "45f71e0e78f24f1d92374d3daf428d3dbde4a0f8723632f0ac85565bb32c41ff",
+    "checkout/cadathlon/agent_pset/p2_bert/src/client_decrypt_decode.py": "0900228eee669692bf423ef731dab548f6cfc1693242a0640c0cf67984202655",
+    "checkout/cadathlon/agent_pset/p2_bert/src/client_encode_encrypt_input.py": "58d797a2a5fb4e8b71a2645d330d19ebce2ffcfa9e7224731e0c601864132cf5",
+    "checkout/cadathlon/agent_pset/p2_bert/src/client_key_generation.py": "a4024a1943f322cf66036de4be945152d7dbfeba2d86a7fba1c6577d04598ef4",
+    "checkout/cadathlon/agent_pset/p2_bert/src/client_postprocess.py": "fb9edd5136b8edf73a3dd88ef9dc371966e35a23b8a3f97cfc68d0959ecbc67c",
+    "checkout/cadathlon/agent_pset/p2_bert/src/client_preprocess_input.py": "0d40434a92a3f1dc01fc35ce150b2bbfefe5d52433bf6edb6d21790175b85f93",
+    "checkout/cadathlon/agent_pset/p2_bert/src/reference.py": "6d254c92b70257e773d1701a6f85fb592365e67d037b231b9e5a1589e64e7a04",
+    "checkout/cadathlon/agent_pset/p2_bert/src/runner.py": "75178aaa310dcda2d92ea3a94d73c7e7107be0f5167e55ea1f7b24bb8f079abc",
+    "checkout/cadathlon/agent_pset/p2_bert/src/server_encrypted_compute.py": "e6ab46683c73bd74b0c91bb1938af94b83bf6ab5b3b59c76e0d052f37814c191",
+    "checkout/cadathlon/agent_pset/p2_bert/src/server_preprocess_model.py": "ba76ffe9c67f3fea7777fa33d27d8348a72222df9fae2f5c303d19a27e1730af",
+    "checkout/cadathlon/agent_pset/p2_bert/src/stage_benchmark.py": "11f3e0f4f9ba67126941dfea16604e1a2446e49d9a3b21a65b93937f0f01e480",
+    "checkout/cadathlon/agent_pset/p2_bert/src/stages.py": "3afd68d794eb2afa3a74536277398118a4dc34a7d3d6a099ae10f6436adbe3c0",
+    "checkout/cadathlon/agent_pset/p2_bert/test/test1.in": "91e26d127826b649b3470b3303154a8358aecf027e22ec54c0e31bf9a4240acb",
+    "checkout/cadathlon/agent_pset/p2_bert/test/test1.out": "7c949b1e50b4c42724f80c65711ca68e10e8da05fb7efb95807f86deb79c8b81",
+    "checkout/cadathlon/agent_pset/p2_bert/test/test2.in": "72e033b6ea3f81ed554fc11206fbe1321de99e9b4b82b240b3f04a3ba879557e",
+    "checkout/cadathlon/agent_pset/p2_bert/test/test2.out": "78a8048f007f62debe7ac64758e55f4ea691842e6206c30f6bce43fe18489e6c",
+    "checkout/cadathlon/agent_pset/p2_bert/test/test3.in": "3707189846653778b8338839229ed5c79233c8af3011223a43f88174f44febfe",
+    "checkout/cadathlon/agent_pset/p2_bert/test/test3.out": "1335ed4408c8734aa87d5b5ad6a235c9dcf46f6079b018b7b52ebf733772117c",
+    "checkout/cadathlon/agent_pset/p2_bert/test/test4.in": "97688631dc250c1caa66ada50f30a7cf9685ab6f5df5c05566bcba97fb7cdaf2",
+    "checkout/cadathlon/agent_pset/p2_bert/test/test4.out": "76d841b882cd1e069bf827ed0f9d6633369558236704e02afb6628ddb8db7418",
+    "checkout/cadathlon/agent_pset/p2_bert/test/test5.in": "6943da7d806c16740c920d228ed22514f34fa8665b81522c1c7932cc7120735c",
+    "checkout/cadathlon/agent_pset/p2_bert/test/test5.out": "0f7457daa9ca77de42665f6b7f2b5b217a2ae5f6731ec2fbf4540263ae814532",
+    "checkout/cadathlon/agent_pset/p2_bert/test/test6.in": "839baf64ae3256fadbbd7c35e7101a033d60191d7b8fa45ee45abcf0e7ec658a",
+    "checkout/cadathlon/agent_pset/p2_bert/test/test6.out": "d2e910f69eb792a43f2273d62aa76c1812f52b7e2d36e8a1d45934115d428057",
+    "checkout/cadathlon/agent_pset/p4_qwen/src/export_weights.py": "f66f131f4fdc084c836312e4a9287f107ed15f36b5b1b0dcc55b323d217bdbcb",
+    "checkout/cadathlon/agent_pset/p4_qwen/src/qwen_bounded_reference.py": "0f2bf10fe6c4870f95070b1d6f14994ac77744b494472a2c6faf555b5b39b1e1",
+    "checkout/cadathlon/agent_pset/p4_qwen/src/qwen_he.py": "00c0b432e36dcec0d76e5fc47716238fce92aed498dd04b5d868aee7544b87b2",
+    "checkout/cadathlon/agent_pset/p4_qwen/src/qwen_packed_pair_reference.py": "82f78f50706d099149f6c8ed287b931281da7d7fb80fc6eb89f017cb51cb48d1",
+    "checkout/cadathlon/agent_pset/p4_qwen/src/qwen_packed_reference.py": "5f0c1d1d2e27044c0dbe4a36bffce2da841c981026a4028f14b852699d44b306",
+    "checkout/cadathlon/agent_pset/p4_qwen/src/qwen_reference.py": "1a6eeaf0ec3c5517f3287bca5a4f0f8d02eae7b44d5bc6426af6be3019840d4c",
+    "checkout/cadathlon/agent_pset/p4_qwen/src/reference.py": "667c8483648adcf583212b0f828347614423c1c1401807f4f9512612f74aa147",
+    "checkout/cadathlon/agent_pset/p4_qwen/src/runner.py": "3d68d20d218d8145632eed8623466ad06d86f71502fd9bff64feb5c894b3c661",
+    "checkout/cadathlon/agent_pset/p4_qwen/test/model_source.json": "bf46705152742e6b63ef7cc4a9474c1b63bc6578177956da6602a4cd599712e9",
+    "checkout/cadathlon/agent_pset/p4_qwen/test/qwen3_config.json": "660db3b73d788119c04535e48cf9be5f55bc3100841a718637ae695b442f27dd",
+    "checkout/cadathlon/agent_pset/p4_qwen/test/test1.in": "2e48f785cc4da8a47dd5e661b65d0b7e2f407ea413c1e9bab5a9e66dd0567c67",
+    "checkout/cadathlon/agent_pset/p4_qwen/test/test1.out": "9f1c877b620f66faa5eda9ef1a67987c6aabda279e131f9efc65799a99211a48",
+    "checkout/cadathlon/agent_pset/p4_qwen/test/test2.in": "afa2249ba74cc0b23548430ab60d0dacf42cc0ea4eead7d4465e21fe648fe592",
+    "checkout/cadathlon/agent_pset/p4_qwen/test/test2.out": "3e443497b9afd6f147a54d9d5a044a763b64f7c38022c5dec55f02b60ac1d79d",
+    "checkout/cadathlon/agent_pset/p4_qwen/test/test3.in": "f68ea67dd9828e0aa82f705edd74589c20168bdbc551153cb586b7fe0fb47a91",
+    "checkout/cadathlon/agent_pset/p4_qwen/test/test3.out": "9110fe012ddb1b1dbc8586d0035f4275f49129221e6385ac6953076b0a84aae6",
+    "checkout/cadathlon/agent_pset/p4_qwen/test/test4.in": "4a7cfe8f27f41598ea5776e7a24328e3f1514ec74b3c578873cc9c99ca094a63",
+    "checkout/cadathlon/agent_pset/p4_qwen/test/test4.out": "d25b560fb9723a98580d4cf2df8d11fe6ad4fc6d7b780bf6ee46166dd6c2dc72",
+    "checkout/cadathlon/agent_pset/p4_qwen/test/test5.in": "df67a2c4e59030d923b019c9d57a2eedd96d11ad1e4eb31bbbddee69d460c018",
+    "checkout/cadathlon/agent_pset/p4_qwen/test/test5.out": "5fd9d803b97f33233acc6d1172a91981d992c6b623c27db57ac74e3b03266585",
+    "checkout/cadathlon/agent_pset/p4_qwen/test/test6.in": "771bebbcace1bf4a3661f5918249ab8b335d27812acb182409538ab57302e6e7",
+    "checkout/cadathlon/agent_pset/p4_qwen/test/test6.out": "43c12ab0fb8a9290fe843bf3c0ff8d83c1c3e8a335bf8f588afa196da61e6ba2",
+    "checkout/cadathlon/common/check_bert_contract.py": "c5a016691e03296d48be20ee107c21cbcce6b1a0c23d73d1e721bbac41cd499f",
+    "checkout/cadathlon/common/check_upstream_bert.py": "4509748c1fd7d728f81a1b826b15fdcc44fd03f33ecd2ea23a674a81beccf5ae",
+    "checkout/cadathlon/common/check_upstream_qwen.py": "eae5ab6627c14dd5dddd2bfdfba2c06f442ee2a38cfeb477b8874827cd6c339b",
+    "checkout/cadathlon/common/encrypted_bounded_arithmetic.py": "31ff2dc39c442654fc3b89039762de3f0fbe707ae00c78bed25beb485cb00538",
+    "checkout/cadathlon/common/encrypted_bounded_transformer.py": "ae6652c918248f802f0537577570342fbe2bb1868d7e9ff320317055767b21c5",
+    "checkout/cadathlon/common/encrypted_compilation.py": "4518d5f1cebba64fd1f5e1fb162da95fa7dde10936b01f274b0cdc6a31486fb2",
+    "checkout/cadathlon/common/encrypted_packed_qwen.py": "3de3dbc8d6f7adb843387b1160346c4dab33d13e785d613df5b1560b26862cbd",
+    "checkout/cadathlon/common/encrypted_packed_transformer.py": "f0467c3fdfdee9be2d51978c07e93b8fb3e9025f46af0c32388c2d1484d0804c",
+    "checkout/cadathlon/common/encrypted_polynomial.py": "d01cbcf26897c9b190919bb6b279e731716d7dcc4e687bbdfbc4e2e4baf5975e",
+    "checkout/cadathlon/common/encrypted_primitives.py": "2f094239cfa07c935b919c18a0cd97ccad7a9ccb487e0ccd85e17b808d231f89",
+    "checkout/cadathlon/common/encrypted_reference.py": "7217416d6d19198d0131cc7d7ba4897a2b14c2e925b45649a34ed1f78ee52e84",
+    "checkout/cadathlon/common/encrypted_refresh.py": "9e7992c1c7cd47e31dc9914cbcdb6c03fe907158e6cce128b006f8500302836e",
+    "checkout/cadathlon/common/encrypted_rotation.py": "e83c7314a99b761efcde360283ce98ca4a2c1bf28cbbdc0cc26ffcfecf56c9f3",
+    "checkout/cadathlon/common/encrypted_transformer.py": "18846a05ad6076997eea70454c775a9a038c46f95b5c97687a08ac682e5501de",
+    "checkout/cadathlon/common/generate_bert_cases.py": "3ae2561ab58974c7ee758bb65a694eac7108b85ddbb1f3897bec560cc3b8aa9b",
+    "checkout/cadathlon/common/generate_cases.py": "06d3b8a53218c381e2c611f51278b7fc4cbeaf87c00a0e1c26677a10c7436ded",
+    "checkout/cadathlon/common/package.py": "bc0a9ddcb364da8af2b998e264370738ca3311b2e70f7381d7a5c54d154b7c8f",
+    "checkout/cadathlon/common/render_docs.py": "66cfd0766a0683159f3c1c10b18582e5d90d16ec8518782d3f192026af1a9757",
+    "checkout/cadathlon/common/support.py": "458111de25dbae4418c474670cf45a2d39e8e6ba40b75c2d17ad8f96cbaaa40f",
+    "checkout/cadathlon/common/transformer_runner.py": "051f07690b5de33dde7082e9998a5fcc07870676040fd681d51c320b47a9112c",
+    "checkout/cadathlon/tests/test_baseline_keys.py": "5bedae148a7ac6d9a85df706a058712fab95c7357be9cb027d394e13ee93942a",
+    "checkout/cadathlon/tests/test_baseline_warmup.py": "aabc29b3684dcab686a02e92e81789408801fdf6ae1d7df2505073c830b35d87",
+    "checkout/cadathlon/tests/test_bounded_contracts.py": "c7ef9cf7f47a3cd39ef69c051bf646c26d8e15e3b09b0ea571edf081e23ac8a6",
+    "checkout/cadathlon/tests/test_bounded_reference_preflight.py": "f7fcc1bc3db1d52aafd0bd4e47a6dd89466b7ce41f5fd6026df54dad054dc269",
+    "checkout/cadathlon/tests/test_bounded_shared_preparation.py": "d7984f4f110e919093783f1d65eea65d9df770e546953a4240c82be48c38fcc1",
+    "checkout/cadathlon/tests/test_bounded_transformer_plan.py": "aa2945cf2e310d90b3b0ef85cc1af9ab984504af7804b9766152d6aa853a566f",
+    "checkout/cadathlon/tests/test_cnn_evaluation.py": "7eef382ac120f9fa75642f0967273b568f57d42152a267d4218efbfd160dbd26",
+    "checkout/cadathlon/tests/test_cnn_mapping_lifecycle.py": "18392af25488ef0be42b0c3bc2e2d1de5af090696a1b71e3358b17627ab30d31",
+    "checkout/cadathlon/tests/test_compact_cnn.py": "4082ff0cf082dd38024acf4ddf562138d9e8e5a5f2b0b1e67559e3cf080ca56e",
+    "checkout/cadathlon/tests/test_compact_scoring.py": "a24e970f3a2d56d514de6cc98f9ec8a153d3aebc1770329d19e9859aaddcd720",
+    "checkout/cadathlon/tests/test_daemon_control.py": "f68358f2b3ab409ff3071880c611686c0f3a2f0c21fa576e3903f08802b57db1",
+    "checkout/cadathlon/tests/test_encrypted_bounded_metadata.py": "925d8587d4299f2ce7ce6afad4e813acd10c6e6480b320d36b6b072a6a43dc8b",
+    "checkout/cadathlon/tests/test_encrypted_compilation.py": "bc938e5fa5b1b8dc9409ea2c3f04749de09f388092f0830e90a2f5cda0ecafb6",
+    "checkout/cadathlon/tests/test_encrypted_polynomial.py": "d6c73c7dea3470223b4d33f216659e47b0587b9203b1fe22553ecc3dab228274",
+    "checkout/cadathlon/tests/test_encrypted_primitives.py": "bec74627015c23118f673e5e85c5577af5bd0175f737380bdc3ecde11065e663",
+    "checkout/cadathlon/tests/test_encrypted_reference_lifecycle.py": "696cea65e790b0e1f89b8db7e79b756c7d282c9807b1b99648106833b99c56ba",
+    "checkout/cadathlon/tests/test_encrypted_refresh.py": "a949b7304bdd514f8fcb5f535b42e201281f0768ac8e972c0c3327190f80e044",
+    "checkout/cadathlon/tests/test_encrypted_rotation.py": "3f5395ec0ef922cc24bd3d1dc8328a1229d547741f104e70bb19b3d5ee7209ec",
+    "checkout/cadathlon/tests/test_encrypted_tensor_only.py": "df945da6b72b96beab2af82549da3a05dcc063118cd8478db796321662186b77",
+    "checkout/cadathlon/tests/test_evaluation_schedule.py": "cdd242bd8d6d45d91f6d680ef8bba82aef7e7634b278ba185b260ea5557f9647",
+    "checkout/cadathlon/tests/test_inspect_plan.py": "6b8b7c0cb147bd388e19467d43273ba7a440fed29991e5c4d03cf32084df98ac",
+    "checkout/cadathlon/tests/test_module_loading.py": "cc29e325f3f11dbe034d942f6ecb7e336b0e6480789542ebec0eb7591b6757e9",
+    "checkout/cadathlon/tests/test_package.py": "0baa95cb2d0aebe0fb6b80aa676f2be60feb2e1c1398963132ad636d176ffb61",
+    "checkout/cadathlon/tests/test_packed_qwen.py": "8ee88b307a088c5e54535737b96b62c040ba20219ab41a5afa1e480bc3889fcd",
+    "checkout/cadathlon/tests/test_packed_transformer.py": "ee82fb62048d9eb85901f5615f2cc006f4dc78cee05ff670e2b1e93f9fabf283",
+    "checkout/cadathlon/tests/test_refresh_validation.py": "c8ebdfc1241426a39893cf425dc23a80ee4021e0e17aa711e4a46fe9a7b14645",
+    "checkout/cadathlon/tests/test_runner_devices.py": "268232038fa9d236798a135fcbf160ffbef4962972a602d12170229965defea5",
+    "checkout/cadathlon/tests/test_runner_timing.py": "a87c9973b8c0cf299e6862d51942583ee1388b3d9871a8b96f5d2ba40088e249",
+    "checkout/cadathlon/tests/test_scoring.py": "150c85a06f670bb86dd06cb444432855b53bc2c82fc6c0bbbe822dec64f0e249",
+    "checkout/cadathlon/tests/test_security.py": "f78d2e5337a2b33de308bd1e17da37272d543e3ee22d3beccf7866c0e61ff58d",
+    "checkout/cadathlon/tests/test_student_evidence.py": "10f533d4212b5e4157a5e969b4fb083f8c18afef71ce6c665ffc4f3c7bcee4ed",
+    "checkout/cadathlon/tests/test_suite_profiles.py": "a00be81005bf5c4bdce5455510dc9eeadecc4413e0f65ecabd9f8f8ec1f5bd5d",
+    "checkout/cadathlon/tests/test_transformer_layout.py": "486a5cec5f1d876617fc2d493622031a114d425f48c1d4b0d01d2b409d447ceb",
+    "checkout/cadathlon/tests/test_transformer_planning_metadata.py": "6688f0a89a3c7534caebc5c5bcb558f412a93259dd66772af42b75da5888dd08",
+    "checkout/cadathlon/tests/test_transformer_runner.py": "1f78b388a7b96570c881e6cbea271a7eeeb3bb08f94737bafd9054aa255cdbbf",
+    "checkout/cadathlon/tests/test_transformer_suite.py": "22c6a11de0904da653ded26cb31f342ccac3ad53c83113c1d29b4c90af00cea1",
+    "checkout/cadathlon/validation/check_secure_refresh.py": "7386a49d5e8e476913a2c96c1a540e6533897a6fbedf00be2b4d88594848e8c8",
+    "checkout/jaxite_word/__init__.py": "fc78b0845c2314a523cb20e490ded0c8ef09c9c05fa50d92eb218ef247533096",
+    "checkout/jaxite_word/bconv.py": "53ac0665cf3803fc72672657146ef7c19c823f48f326cf7d54ae87a15ae92f82",
+    "checkout/jaxite_word/bconv_perf_test.py": "6d9a7083218b483c861441f8320522156793e8331245d4c1633401c61417a42f",
+    "checkout/jaxite_word/bconv_test.py": "2e6bc6acec05d26a02a0316e0963976050695ce0cb6ccf5e8113f79c0e05e252",
+    "checkout/jaxite_word/bootstrapping.py": "e44f748f5ef51ec68be0f224f4d8ff1068fe6c449f09c04532900a3ac4fcfc49",
+    "checkout/jaxite_word/bootstrapping_montgomery_test.py": "a21b00ec430a9a95809ef2f62530c0fb62871152dc1b2677f465f28e8e9c4971",
+    "checkout/jaxite_word/bootstrapping_openfhe_crosscheck.py": "4f9b9ea005d46ab15f4530f689d096b112fca4f09ffa46dcd3990a03d5159ecb",
+    "checkout/jaxite_word/bootstrapping_perf_test.py": "893703aaa8d347ead2b18952d9d366f503fbc84baed81ddf0dcb38de1f4dcadc",
+    "checkout/jaxite_word/bootstrapping_test.py": "9ac3e6c48d02093533720340c5494a7859359abb6a4da7149e71e6465eda2b19",
+    "checkout/jaxite_word/bsgs.py": "52a1027be9bf704fd3ffd453251d2b3136ab31a3242c12d341ca1374b1b82aed",
+    "checkout/jaxite_word/bsgs_perf_test.py": "b48c386ca26f247633525d6b554c8aad6da481ac8deaae811955d937f05a3e87",
+    "checkout/jaxite_word/bsgs_test.py": "11661f59f1f918d8025f5f7997d626618d4a047d234d9ff5323cf10534c7cca9",
+    "checkout/jaxite_word/ckks_composite_ctx_test.py": "aada892cc16abf8a88a32cb35c0a71bb42f73f70364b9c1ef9e800c4e7986eb9",
+    "checkout/jaxite_word/ckks_ctx.py": "bc978cb7412b55416f7ed634a689ae616a263b0f47fd9eef996ba244f2505db6",
+    "checkout/jaxite_word/ckks_ctx_test.py": "e4545b1ce8510c96f18915d65a9a52b7251d55dfede0839bb921e0dc0566cb24",
+    "checkout/jaxite_word/ckks_level_ops_test.py": "21b919433fb433a750970808fb1f5697e2eb6fa52f1fafd30caf7d1b30dc6a51",
+    "checkout/jaxite_word/codec_preparation_test.py": "18d0692ffe2d09d33973d14c64dba61147cbc5ea0f5269640bdee2d559a6c1d3",
+    "checkout/jaxite_word/composite_prime_gen.py": "e3e689237d2b8449333774e84fa271a15a5c54ad603a32f7fcbe60ecb26f0317",
+    "checkout/jaxite_word/composite_prime_gen_test.py": "cde4424ace2598d38223aea87c838a35c77a2a4f238d0bea1fa3146dee54f18b",
+    "checkout/jaxite_word/fast_encryption_decryption_test.py": "0a191fc7ef7ad26a2ca4b8e6efd9e3d09fbbacba2d8572d2e82aafb0b5b8c789",
+    "checkout/jaxite_word/finite_field.py": "54418625f76e303d77a3055f93419e07895bdf71f706acc20ab0f6fe7c8def5e",
+    "checkout/jaxite_word/finite_field_perf_test.py": "55ae7be859879dbb409d00a2fc84706592d5b3bc04f84b217f7971dd9b3398bf",
+    "checkout/jaxite_word/finite_field_test.py": "303fd344cfd9910366db56b12e6fea44686bf69afcd6f9e6fffb51a9584c0c83",
+    "checkout/jaxite_word/he_ops.py": "bd0fb682b936a30c3faad9c09aad1337daa61657be744323605e73c875c99650",
+    "checkout/jaxite_word/he_params.py": "714d3227f65d2369976a798a13584cb8629c468f3b6c005d7193eac1f072948b",
+    "checkout/jaxite_word/headd.py": "53a691d7dc5d330886cfa11a990087d5ad4bb6dbabac47f3b85a281acc395d37",
+    "checkout/jaxite_word/headd_perf_test.py": "f813a1bd37afb4b024bf995153082b2edc5981c6de7c7eaefa84d3ad937e84c5",
+    "checkout/jaxite_word/headd_test.py": "b2e64d0d49f1148955ecac913629b81ef71a0fe76e06b71b7d8f65e45c38216e",
+    "checkout/jaxite_word/hemul.py": "49a87eed37de76b7b3ab31f1d19dd23a39035f031cfee41c4d9a204064502803",
+    "checkout/jaxite_word/hemul_double_rescaling_test.py": "0b0a0de67dcd4c241fabb5caf6c288cc11ff772832efcb805dee3fa17cdb2830",
+    "checkout/jaxite_word/hemul_perf_test.py": "20aa5093f23d67598013f9b10339f3bc61a5a746d2f30adda9ddd1bb3d2849b3",
+    "checkout/jaxite_word/hemul_test.py": "59c25e1032cfb4edfde8848cd101629891c7e8dec946d341392bd8671f1733bd",
+    "checkout/jaxite_word/herot.py": "bdb1ef0604150246b052cbc63dd41f6d92478505672d116aa13ce3bf4726eb89",
+    "checkout/jaxite_word/herot_perf_test.py": "cd77044bebe256dcd654047c80f1158765ea16eda1cdc9514b22a398ebf3db21",
+    "checkout/jaxite_word/herot_test.py": "f063f90b2a2eff3153eb44b37e2a6c2599a749277a28654e437b303a8b45a253",
+    "checkout/jaxite_word/hesub.py": "baad1322793dd239cb4e66749f05bf4982f58d0932b098abbd305ff2402cbf5e",
+    "checkout/jaxite_word/hesub_perf_test.py": "586d43858643665cf731c7d6b3adfe8a7f96399b78539aad35524f87b13dae27",
+    "checkout/jaxite_word/hesub_test.py": "894710564c6f6269b3bd89e13ab010418b9bce7e23b4f494e50f117fac31aa27",
+    "checkout/jaxite_word/key_gen.py": "4f5e53e421423e77757ca0596ae2607dbc2c6f80d21536b2e1c3f57a226b0fad",
+    "checkout/jaxite_word/key_gen_test.py": "65b0b60974ab5eea56cdeab4c4a8a30a132bf52d963682639b8842fea3e44dc7",
+    "checkout/jaxite_word/mapping.py": "c8d035d4b7d743b18324830eeb09b6cd2a562bc4862e6af2ee10702922f6816f",
+    "checkout/jaxite_word/mapping_compile_test.py": "985346d2677ff0296a63b032e0009d085d7b9d232a708454cd4bbaeeb3996964",
+    "checkout/jaxite_word/nn.py": "189cb48dff9124d32f84e6154b5e8403082d3eed87ab12d5fb1e80f1e21213de",
+    "checkout/jaxite_word/nn_test.py": "c1cd8502f110a4a15b44e8d781f5a5c6462b241f97d08bc26f52c0c484e02e37",
+    "checkout/jaxite_word/ntt_mm.py": "5a0cbff087f48f20c98cb5975f7894756a83d61fbdaaf5af358a1c7c192a1263",
+    "checkout/jaxite_word/ntt_mm_perf_test.py": "6bb76af76a637f766d431cd78486a4f168e1553823d72210e248e6b4aebc6054",
+    "checkout/jaxite_word/ntt_mm_test.py": "b19d63e3698a2c79e586bcf714d7474b3ca43c4a132ddab8aae6b27efbb8704a",
+    "checkout/jaxite_word/ntt_sm.py": "b57ebe4c8c1037288e3d50c9d3e443c4656a31d57bcb215ed7a302717d498a65",
+    "checkout/jaxite_word/ntt_sm_test.py": "ee1af34f58fc666438ea80442a66944dc5e3d50c2a26ec14a178c616752d7c63",
+    "checkout/jaxite_word/packing.py": "7496f37b7116b883c14f8e3d5cae6bd1ed7375d0a8d2425f78c8f84e347c0206",
+    "checkout/jaxite_word/packing_test.py": "ce1e1efcc57d931548a80aaf1e9e5b0f7e56e2bb9e4f9a385ea90a6b19102a43",
+    "checkout/jaxite_word/pedagagy/bat.py": "429786d49ba01b6343a3b0ebde1807f5739cdbfcc7209ffbe55d89cdd74bc1c5",
+    "checkout/jaxite_word/pedagagy/bat_test.py": "20c2b0318df986e8eaf635548bd6925db5508c934902ad29da0d36f3c655fd07",
+    "checkout/jaxite_word/pedagagy/modular_reduction.py": "87e2e57cbc99e47bae1a81e99a34b93a9a7d41bddc6b0d3a874b5e0415289da0",
+    "checkout/jaxite_word/pedagagy/ntt.py": "8dc8e58c3e17ba8218e51422e0974d038377f3dc5deac66f30ae909aaa1a2cfa",
+    "checkout/jaxite_word/pedagagy/ntt_test.py": "feff5599e1fbeebf83316712af0edc625b8418fb7d9edb4bec6ffacfb5020392",
+    "checkout/jaxite_word/pedagagy/util.py": "38c500e8f2af30ac37d5753de176777bbf0f0cde471d7fdf42e214c09e19ca9a",
+    "checkout/jaxite_word/polynomial.py": "043e1dcdf9aca02f2df9435ac610c1561859b7d29a7dee1b7254bf9bc3c89a5b",
+    "checkout/jaxite_word/polynomial_test.py": "347a86e9495ace43af81c218a29fcc29c19b6341f0d0067193f443ffa1bb0dc1",
+    "checkout/jaxite_word/profiler.py": "440c7aa2026cfd6b29c37f4b9db78984f1dfbf484c1f7f841caab82ece9da543",
+    "checkout/jaxite_word/profiler_test.py": "5b0740511fb21d0f1a4f4a03947aca406d4808e6dc65cfbd916ce969ffcd77df",
+    "checkout/jaxite_word/ptct_mul.py": "2780cb5d261cbf3da611f79fc9a6b6ef98d4759c7508cad26ed5995699f5bf11",
+    "checkout/jaxite_word/ptct_mul_perf_test.py": "0136112ed02ef35fea3483bb4edbc4aa499eaed3d30e35ba0a47d4f8cdbaa626",
+    "checkout/jaxite_word/ptct_mul_test.py": "1a4895ef5ea02eb0242278607b8ff08393025944def0a44d01cdd6e746d6d382",
+    "checkout/jaxite_word/rescale.py": "7244fd87e9cf00168201e3a85d7a7c17259525f68ba82b4cebf64fe84757c73c",
+    "checkout/jaxite_word/rescale_double_rescaling_test.py": "f4709369e2595f3fde7f8fc9b9ae4fcbbcf45a8ece59bbd570202d48c69c980a",
+    "checkout/jaxite_word/rescale_perf_test.py": "c701da370637dc2ff2d2f65d5f1f182ca423ea372defc29a6f16c131d51120e2",
+    "checkout/jaxite_word/rescale_test.py": "96c5d2d5651c390062cb0f09ee4c613f6ae8f88f9416ee383c15c012567fe622",
+    "checkout/jaxite_word/rns.py": "41db559ea26e3149ada36ec8369cfa4a5a79876ae9253e0dbabe32c9c09ef158",
+    "checkout/jaxite_word/rns_test.py": "0194634e2e4a6f1d61da27cc158ba35872ae5922a5868bba54bb65b17de369a0",
+    "checkout/jaxite_word/tabIX.py": "8abf557fd986782a92d8b3517bf0d3470e1ae0ddc135eddd69efee87aabc78b6",
+    "checkout/jaxite_word/tabV.py": "385cda2816d6c2342ab39e57367b5a078d49102fdc7deaf165db4faa58fc20b0",
+    "checkout/jaxite_word/tabVI.py": "29cae4e85987d894c6944b050677d560340f1d214b329f9f02cab2c6db531310",
+    "checkout/jaxite_word/tabVII.py": "90b5f99e6ad2e2e156ea7cd167ec40c7186e99ffbc259edbac7f70668fa83e18",
+    "checkout/jaxite_word/uniform_encoding_test.py": "7a892f3e0a8f4799b683b3a520479a035dd2290825b3215f2f504624219b41c4",
+    "checkout/jaxite_word/util.py": "b34c675b50ae774cdb0ad913f8fc9c2f955b60bf4745006d3f81d7c013565026",
+    "checkout/jaxite_word/util_test.py": "9fbde79b0154169947608c11bbc8e50b3c104effee206747c2c71a4ced95424e",
+    "evidence/1-uniform-scalar-integration.patch": "07186092944c8dd4f52f9fe771011dd427745b0681f71805fe0b9e233d7e99b5",
+    "evidence/2-rotation-binding-hit-lab.patch": "13f2ff6499f189bac4ac9844d03cb95190a85ea8af25d0e2a27c3a3f3012c788",
+    "evidence/3-tensor-only-candidate.patch": "13b93da2947b634beef25a9d1e5371c5e76e813588ab90538594c5f0aaae2158",
+    "evidence/4-bounded-integration-ready.patch": "5eb76dec6796d157b2ceb3819a642e18d15677db2e067a3deeb8a63702b45934",
+    "evidence/check_full_bootstrap.py": "bd528c45953e952bf13eb776fe41e4c6e4f2d06ffe5b61ffe614b6c7d6913ea6",
+    "evidence/run_bootstrap.py": "5e424927e67180dae0097e40adddd311948e1ed8335834e5c5803b09587b89a6",
+    "evidence/run_targeted.py": "acc108d9b51e73df7d3137acd814794fbeada1daecf13a573b1b2d4fa4db019f"
+  },
+  "source_sha256_after": {
+    "checkout/cadathlon/agent_pset/p2_bert/src/benchmark.py": "acb6c5679106e00dd1c482dd750ca4620423f13c9b37e7c7bbce1781b8e76aec",
+    "checkout/cadathlon/agent_pset/p2_bert/src/bert_bounded_reference.py": "51a04ece5bfe45fe8bde0a925f7d88211fd3074b79917922f970112a81ef4067",
+    "checkout/cadathlon/agent_pset/p2_bert/src/bert_he.py": "416318023bdd7bd39fab5cc454c1f6fefa813f943f74940c2a5820b9838f561b",
+    "checkout/cadathlon/agent_pset/p2_bert/src/bert_packed_reference.py": "16952ff0d69b0a321c3cc2f39c1a864e30595294fa33ea16a095a2db130d5207",
+    "checkout/cadathlon/agent_pset/p2_bert/src/bert_reference.py": "d838b81d7042ee82213bd855ef904c86be924d9f73a2cf09f469c6ed2b460b96",
+    "checkout/cadathlon/agent_pset/p2_bert/src/check_result.py": "45f71e0e78f24f1d92374d3daf428d3dbde4a0f8723632f0ac85565bb32c41ff",
+    "checkout/cadathlon/agent_pset/p2_bert/src/client_decrypt_decode.py": "0900228eee669692bf423ef731dab548f6cfc1693242a0640c0cf67984202655",
+    "checkout/cadathlon/agent_pset/p2_bert/src/client_encode_encrypt_input.py": "58d797a2a5fb4e8b71a2645d330d19ebce2ffcfa9e7224731e0c601864132cf5",
+    "checkout/cadathlon/agent_pset/p2_bert/src/client_key_generation.py": "a4024a1943f322cf66036de4be945152d7dbfeba2d86a7fba1c6577d04598ef4",
+    "checkout/cadathlon/agent_pset/p2_bert/src/client_postprocess.py": "fb9edd5136b8edf73a3dd88ef9dc371966e35a23b8a3f97cfc68d0959ecbc67c",
+    "checkout/cadathlon/agent_pset/p2_bert/src/client_preprocess_input.py": "0d40434a92a3f1dc01fc35ce150b2bbfefe5d52433bf6edb6d21790175b85f93",
+    "checkout/cadathlon/agent_pset/p2_bert/src/reference.py": "6d254c92b70257e773d1701a6f85fb592365e67d037b231b9e5a1589e64e7a04",
+    "checkout/cadathlon/agent_pset/p2_bert/src/runner.py": "75178aaa310dcda2d92ea3a94d73c7e7107be0f5167e55ea1f7b24bb8f079abc",
+    "checkout/cadathlon/agent_pset/p2_bert/src/server_encrypted_compute.py": "e6ab46683c73bd74b0c91bb1938af94b83bf6ab5b3b59c76e0d052f37814c191",
+    "checkout/cadathlon/agent_pset/p2_bert/src/server_preprocess_model.py": "ba76ffe9c67f3fea7777fa33d27d8348a72222df9fae2f5c303d19a27e1730af",
+    "checkout/cadathlon/agent_pset/p2_bert/src/stage_benchmark.py": "11f3e0f4f9ba67126941dfea16604e1a2446e49d9a3b21a65b93937f0f01e480",
+    "checkout/cadathlon/agent_pset/p2_bert/src/stages.py": "3afd68d794eb2afa3a74536277398118a4dc34a7d3d6a099ae10f6436adbe3c0",
+    "checkout/cadathlon/agent_pset/p2_bert/test/test1.in": "91e26d127826b649b3470b3303154a8358aecf027e22ec54c0e31bf9a4240acb",
+    "checkout/cadathlon/agent_pset/p2_bert/test/test1.out": "7c949b1e50b4c42724f80c65711ca68e10e8da05fb7efb95807f86deb79c8b81",
+    "checkout/cadathlon/agent_pset/p2_bert/test/test2.in": "72e033b6ea3f81ed554fc11206fbe1321de99e9b4b82b240b3f04a3ba879557e",
+    "checkout/cadathlon/agent_pset/p2_bert/test/test2.out": "78a8048f007f62debe7ac64758e55f4ea691842e6206c30f6bce43fe18489e6c",
+    "checkout/cadathlon/agent_pset/p2_bert/test/test3.in": "3707189846653778b8338839229ed5c79233c8af3011223a43f88174f44febfe",
+    "checkout/cadathlon/agent_pset/p2_bert/test/test3.out": "1335ed4408c8734aa87d5b5ad6a235c9dcf46f6079b018b7b52ebf733772117c",
+    "checkout/cadathlon/agent_pset/p2_bert/test/test4.in": "97688631dc250c1caa66ada50f30a7cf9685ab6f5df5c05566bcba97fb7cdaf2",
+    "checkout/cadathlon/agent_pset/p2_bert/test/test4.out": "76d841b882cd1e069bf827ed0f9d6633369558236704e02afb6628ddb8db7418",
+    "checkout/cadathlon/agent_pset/p2_bert/test/test5.in": "6943da7d806c16740c920d228ed22514f34fa8665b81522c1c7932cc7120735c",
+    "checkout/cadathlon/agent_pset/p2_bert/test/test5.out": "0f7457daa9ca77de42665f6b7f2b5b217a2ae5f6731ec2fbf4540263ae814532",
+    "checkout/cadathlon/agent_pset/p2_bert/test/test6.in": "839baf64ae3256fadbbd7c35e7101a033d60191d7b8fa45ee45abcf0e7ec658a",
+    "checkout/cadathlon/agent_pset/p2_bert/test/test6.out": "d2e910f69eb792a43f2273d62aa76c1812f52b7e2d36e8a1d45934115d428057",
+    "checkout/cadathlon/agent_pset/p4_qwen/src/export_weights.py": "f66f131f4fdc084c836312e4a9287f107ed15f36b5b1b0dcc55b323d217bdbcb",
+    "checkout/cadathlon/agent_pset/p4_qwen/src/qwen_bounded_reference.py": "0f2bf10fe6c4870f95070b1d6f14994ac77744b494472a2c6faf555b5b39b1e1",
+    "checkout/cadathlon/agent_pset/p4_qwen/src/qwen_he.py": "00c0b432e36dcec0d76e5fc47716238fce92aed498dd04b5d868aee7544b87b2",
+    "checkout/cadathlon/agent_pset/p4_qwen/src/qwen_packed_pair_reference.py": "82f78f50706d099149f6c8ed287b931281da7d7fb80fc6eb89f017cb51cb48d1",
+    "checkout/cadathlon/agent_pset/p4_qwen/src/qwen_packed_reference.py": "5f0c1d1d2e27044c0dbe4a36bffce2da841c981026a4028f14b852699d44b306",
+    "checkout/cadathlon/agent_pset/p4_qwen/src/qwen_reference.py": "1a6eeaf0ec3c5517f3287bca5a4f0f8d02eae7b44d5bc6426af6be3019840d4c",
+    "checkout/cadathlon/agent_pset/p4_qwen/src/reference.py": "667c8483648adcf583212b0f828347614423c1c1401807f4f9512612f74aa147",
+    "checkout/cadathlon/agent_pset/p4_qwen/src/runner.py": "3d68d20d218d8145632eed8623466ad06d86f71502fd9bff64feb5c894b3c661",
+    "checkout/cadathlon/agent_pset/p4_qwen/test/model_source.json": "bf46705152742e6b63ef7cc4a9474c1b63bc6578177956da6602a4cd599712e9",
+    "checkout/cadathlon/agent_pset/p4_qwen/test/qwen3_config.json": "660db3b73d788119c04535e48cf9be5f55bc3100841a718637ae695b442f27dd",
+    "checkout/cadathlon/agent_pset/p4_qwen/test/test1.in": "2e48f785cc4da8a47dd5e661b65d0b7e2f407ea413c1e9bab5a9e66dd0567c67",
+    "checkout/cadathlon/agent_pset/p4_qwen/test/test1.out": "9f1c877b620f66faa5eda9ef1a67987c6aabda279e131f9efc65799a99211a48",
+    "checkout/cadathlon/agent_pset/p4_qwen/test/test2.in": "afa2249ba74cc0b23548430ab60d0dacf42cc0ea4eead7d4465e21fe648fe592",
+    "checkout/cadathlon/agent_pset/p4_qwen/test/test2.out": "3e443497b9afd6f147a54d9d5a044a763b64f7c38022c5dec55f02b60ac1d79d",
+    "checkout/cadathlon/agent_pset/p4_qwen/test/test3.in": "f68ea67dd9828e0aa82f705edd74589c20168bdbc551153cb586b7fe0fb47a91",
+    "checkout/cadathlon/agent_pset/p4_qwen/test/test3.out": "9110fe012ddb1b1dbc8586d0035f4275f49129221e6385ac6953076b0a84aae6",
+    "checkout/cadathlon/agent_pset/p4_qwen/test/test4.in": "4a7cfe8f27f41598ea5776e7a24328e3f1514ec74b3c578873cc9c99ca094a63",
+    "checkout/cadathlon/agent_pset/p4_qwen/test/test4.out": "d25b560fb9723a98580d4cf2df8d11fe6ad4fc6d7b780bf6ee46166dd6c2dc72",
+    "checkout/cadathlon/agent_pset/p4_qwen/test/test5.in": "df67a2c4e59030d923b019c9d57a2eedd96d11ad1e4eb31bbbddee69d460c018",
+    "checkout/cadathlon/agent_pset/p4_qwen/test/test5.out": "5fd9d803b97f33233acc6d1172a91981d992c6b623c27db57ac74e3b03266585",
+    "checkout/cadathlon/agent_pset/p4_qwen/test/test6.in": "771bebbcace1bf4a3661f5918249ab8b335d27812acb182409538ab57302e6e7",
+    "checkout/cadathlon/agent_pset/p4_qwen/test/test6.out": "43c12ab0fb8a9290fe843bf3c0ff8d83c1c3e8a335bf8f588afa196da61e6ba2",
+    "checkout/cadathlon/common/check_bert_contract.py": "c5a016691e03296d48be20ee107c21cbcce6b1a0c23d73d1e721bbac41cd499f",
+    "checkout/cadathlon/common/check_upstream_bert.py": "4509748c1fd7d728f81a1b826b15fdcc44fd03f33ecd2ea23a674a81beccf5ae",
+    "checkout/cadathlon/common/check_upstream_qwen.py": "eae5ab6627c14dd5dddd2bfdfba2c06f442ee2a38cfeb477b8874827cd6c339b",
+    "checkout/cadathlon/common/encrypted_bounded_arithmetic.py": "31ff2dc39c442654fc3b89039762de3f0fbe707ae00c78bed25beb485cb00538",
+    "checkout/cadathlon/common/encrypted_bounded_transformer.py": "ae6652c918248f802f0537577570342fbe2bb1868d7e9ff320317055767b21c5",
+    "checkout/cadathlon/common/encrypted_compilation.py": "4518d5f1cebba64fd1f5e1fb162da95fa7dde10936b01f274b0cdc6a31486fb2",
+    "checkout/cadathlon/common/encrypted_packed_qwen.py": "3de3dbc8d6f7adb843387b1160346c4dab33d13e785d613df5b1560b26862cbd",
+    "checkout/cadathlon/common/encrypted_packed_transformer.py": "f0467c3fdfdee9be2d51978c07e93b8fb3e9025f46af0c32388c2d1484d0804c",
+    "checkout/cadathlon/common/encrypted_polynomial.py": "d01cbcf26897c9b190919bb6b279e731716d7dcc4e687bbdfbc4e2e4baf5975e",
+    "checkout/cadathlon/common/encrypted_primitives.py": "2f094239cfa07c935b919c18a0cd97ccad7a9ccb487e0ccd85e17b808d231f89",
+    "checkout/cadathlon/common/encrypted_reference.py": "7217416d6d19198d0131cc7d7ba4897a2b14c2e925b45649a34ed1f78ee52e84",
+    "checkout/cadathlon/common/encrypted_refresh.py": "9e7992c1c7cd47e31dc9914cbcdb6c03fe907158e6cce128b006f8500302836e",
+    "checkout/cadathlon/common/encrypted_rotation.py": "e83c7314a99b761efcde360283ce98ca4a2c1bf28cbbdc0cc26ffcfecf56c9f3",
+    "checkout/cadathlon/common/encrypted_transformer.py": "18846a05ad6076997eea70454c775a9a038c46f95b5c97687a08ac682e5501de",
+    "checkout/cadathlon/common/generate_bert_cases.py": "3ae2561ab58974c7ee758bb65a694eac7108b85ddbb1f3897bec560cc3b8aa9b",
+    "checkout/cadathlon/common/generate_cases.py": "06d3b8a53218c381e2c611f51278b7fc4cbeaf87c00a0e1c26677a10c7436ded",
+    "checkout/cadathlon/common/package.py": "bc0a9ddcb364da8af2b998e264370738ca3311b2e70f7381d7a5c54d154b7c8f",
+    "checkout/cadathlon/common/render_docs.py": "66cfd0766a0683159f3c1c10b18582e5d90d16ec8518782d3f192026af1a9757",
+    "checkout/cadathlon/common/support.py": "458111de25dbae4418c474670cf45a2d39e8e6ba40b75c2d17ad8f96cbaaa40f",
+    "checkout/cadathlon/common/transformer_runner.py": "051f07690b5de33dde7082e9998a5fcc07870676040fd681d51c320b47a9112c",
+    "checkout/cadathlon/tests/test_baseline_keys.py": "5bedae148a7ac6d9a85df706a058712fab95c7357be9cb027d394e13ee93942a",
+    "checkout/cadathlon/tests/test_baseline_warmup.py": "aabc29b3684dcab686a02e92e81789408801fdf6ae1d7df2505073c830b35d87",
+    "checkout/cadathlon/tests/test_bounded_contracts.py": "c7ef9cf7f47a3cd39ef69c051bf646c26d8e15e3b09b0ea571edf081e23ac8a6",
+    "checkout/cadathlon/tests/test_bounded_reference_preflight.py": "f7fcc1bc3db1d52aafd0bd4e47a6dd89466b7ce41f5fd6026df54dad054dc269",
+    "checkout/cadathlon/tests/test_bounded_shared_preparation.py": "d7984f4f110e919093783f1d65eea65d9df770e546953a4240c82be48c38fcc1",
+    "checkout/cadathlon/tests/test_bounded_transformer_plan.py": "aa2945cf2e310d90b3b0ef85cc1af9ab984504af7804b9766152d6aa853a566f",
+    "checkout/cadathlon/tests/test_cnn_evaluation.py": "7eef382ac120f9fa75642f0967273b568f57d42152a267d4218efbfd160dbd26",
+    "checkout/cadathlon/tests/test_cnn_mapping_lifecycle.py": "18392af25488ef0be42b0c3bc2e2d1de5af090696a1b71e3358b17627ab30d31",
+    "checkout/cadathlon/tests/test_compact_cnn.py": "4082ff0cf082dd38024acf4ddf562138d9e8e5a5f2b0b1e67559e3cf080ca56e",
+    "checkout/cadathlon/tests/test_compact_scoring.py": "a24e970f3a2d56d514de6cc98f9ec8a153d3aebc1770329d19e9859aaddcd720",
+    "checkout/cadathlon/tests/test_daemon_control.py": "f68358f2b3ab409ff3071880c611686c0f3a2f0c21fa576e3903f08802b57db1",
+    "checkout/cadathlon/tests/test_encrypted_bounded_metadata.py": "925d8587d4299f2ce7ce6afad4e813acd10c6e6480b320d36b6b072a6a43dc8b",
+    "checkout/cadathlon/tests/test_encrypted_compilation.py": "bc938e5fa5b1b8dc9409ea2c3f04749de09f388092f0830e90a2f5cda0ecafb6",
+    "checkout/cadathlon/tests/test_encrypted_polynomial.py": "d6c73c7dea3470223b4d33f216659e47b0587b9203b1fe22553ecc3dab228274",
+    "checkout/cadathlon/tests/test_encrypted_primitives.py": "bec74627015c23118f673e5e85c5577af5bd0175f737380bdc3ecde11065e663",
+    "checkout/cadathlon/tests/test_encrypted_reference_lifecycle.py": "696cea65e790b0e1f89b8db7e79b756c7d282c9807b1b99648106833b99c56ba",
+    "checkout/cadathlon/tests/test_encrypted_refresh.py": "a949b7304bdd514f8fcb5f535b42e201281f0768ac8e972c0c3327190f80e044",
+    "checkout/cadathlon/tests/test_encrypted_rotation.py": "3f5395ec0ef922cc24bd3d1dc8328a1229d547741f104e70bb19b3d5ee7209ec",
+    "checkout/cadathlon/tests/test_encrypted_tensor_only.py": "df945da6b72b96beab2af82549da3a05dcc063118cd8478db796321662186b77",
+    "checkout/cadathlon/tests/test_evaluation_schedule.py": "cdd242bd8d6d45d91f6d680ef8bba82aef7e7634b278ba185b260ea5557f9647",
+    "checkout/cadathlon/tests/test_inspect_plan.py": "6b8b7c0cb147bd388e19467d43273ba7a440fed29991e5c4d03cf32084df98ac",
+    "checkout/cadathlon/tests/test_module_loading.py": "cc29e325f3f11dbe034d942f6ecb7e336b0e6480789542ebec0eb7591b6757e9",
+    "checkout/cadathlon/tests/test_package.py": "0baa95cb2d0aebe0fb6b80aa676f2be60feb2e1c1398963132ad636d176ffb61",
+    "checkout/cadathlon/tests/test_packed_qwen.py": "8ee88b307a088c5e54535737b96b62c040ba20219ab41a5afa1e480bc3889fcd",
+    "checkout/cadathlon/tests/test_packed_transformer.py": "ee82fb62048d9eb85901f5615f2cc006f4dc78cee05ff670e2b1e93f9fabf283",
+    "checkout/cadathlon/tests/test_refresh_validation.py": "c8ebdfc1241426a39893cf425dc23a80ee4021e0e17aa711e4a46fe9a7b14645",
+    "checkout/cadathlon/tests/test_runner_devices.py": "268232038fa9d236798a135fcbf160ffbef4962972a602d12170229965defea5",
+    "checkout/cadathlon/tests/test_runner_timing.py": "a87c9973b8c0cf299e6862d51942583ee1388b3d9871a8b96f5d2ba40088e249",
+    "checkout/cadathlon/tests/test_scoring.py": "150c85a06f670bb86dd06cb444432855b53bc2c82fc6c0bbbe822dec64f0e249",
+    "checkout/cadathlon/tests/test_security.py": "f78d2e5337a2b33de308bd1e17da37272d543e3ee22d3beccf7866c0e61ff58d",
+    "checkout/cadathlon/tests/test_student_evidence.py": "10f533d4212b5e4157a5e969b4fb083f8c18afef71ce6c665ffc4f3c7bcee4ed",
+    "checkout/cadathlon/tests/test_suite_profiles.py": "a00be81005bf5c4bdce5455510dc9eeadecc4413e0f65ecabd9f8f8ec1f5bd5d",
+    "checkout/cadathlon/tests/test_transformer_layout.py": "486a5cec5f1d876617fc2d493622031a114d425f48c1d4b0d01d2b409d447ceb",
+    "checkout/cadathlon/tests/test_transformer_planning_metadata.py": "6688f0a89a3c7534caebc5c5bcb558f412a93259dd66772af42b75da5888dd08",
+    "checkout/cadathlon/tests/test_transformer_runner.py": "1f78b388a7b96570c881e6cbea271a7eeeb3bb08f94737bafd9054aa255cdbbf",
+    "checkout/cadathlon/tests/test_transformer_suite.py": "22c6a11de0904da653ded26cb31f342ccac3ad53c83113c1d29b4c90af00cea1",
+    "checkout/cadathlon/validation/check_secure_refresh.py": "7386a49d5e8e476913a2c96c1a540e6533897a6fbedf00be2b4d88594848e8c8",
+    "checkout/jaxite_word/__init__.py": "fc78b0845c2314a523cb20e490ded0c8ef09c9c05fa50d92eb218ef247533096",
+    "checkout/jaxite_word/bconv.py": "53ac0665cf3803fc72672657146ef7c19c823f48f326cf7d54ae87a15ae92f82",
+    "checkout/jaxite_word/bconv_perf_test.py": "6d9a7083218b483c861441f8320522156793e8331245d4c1633401c61417a42f",
+    "checkout/jaxite_word/bconv_test.py": "2e6bc6acec05d26a02a0316e0963976050695ce0cb6ccf5e8113f79c0e05e252",
+    "checkout/jaxite_word/bootstrapping.py": "e44f748f5ef51ec68be0f224f4d8ff1068fe6c449f09c04532900a3ac4fcfc49",
+    "checkout/jaxite_word/bootstrapping_montgomery_test.py": "a21b00ec430a9a95809ef2f62530c0fb62871152dc1b2677f465f28e8e9c4971",
+    "checkout/jaxite_word/bootstrapping_openfhe_crosscheck.py": "4f9b9ea005d46ab15f4530f689d096b112fca4f09ffa46dcd3990a03d5159ecb",
+    "checkout/jaxite_word/bootstrapping_perf_test.py": "893703aaa8d347ead2b18952d9d366f503fbc84baed81ddf0dcb38de1f4dcadc",
+    "checkout/jaxite_word/bootstrapping_test.py": "9ac3e6c48d02093533720340c5494a7859359abb6a4da7149e71e6465eda2b19",
+    "checkout/jaxite_word/bsgs.py": "52a1027be9bf704fd3ffd453251d2b3136ab31a3242c12d341ca1374b1b82aed",
+    "checkout/jaxite_word/bsgs_perf_test.py": "b48c386ca26f247633525d6b554c8aad6da481ac8deaae811955d937f05a3e87",
+    "checkout/jaxite_word/bsgs_test.py": "11661f59f1f918d8025f5f7997d626618d4a047d234d9ff5323cf10534c7cca9",
+    "checkout/jaxite_word/ckks_composite_ctx_test.py": "aada892cc16abf8a88a32cb35c0a71bb42f73f70364b9c1ef9e800c4e7986eb9",
+    "checkout/jaxite_word/ckks_ctx.py": "bc978cb7412b55416f7ed634a689ae616a263b0f47fd9eef996ba244f2505db6",
+    "checkout/jaxite_word/ckks_ctx_test.py": "e4545b1ce8510c96f18915d65a9a52b7251d55dfede0839bb921e0dc0566cb24",
+    "checkout/jaxite_word/ckks_level_ops_test.py": "21b919433fb433a750970808fb1f5697e2eb6fa52f1fafd30caf7d1b30dc6a51",
+    "checkout/jaxite_word/codec_preparation_test.py": "18d0692ffe2d09d33973d14c64dba61147cbc5ea0f5269640bdee2d559a6c1d3",
+    "checkout/jaxite_word/composite_prime_gen.py": "e3e689237d2b8449333774e84fa271a15a5c54ad603a32f7fcbe60ecb26f0317",
+    "checkout/jaxite_word/composite_prime_gen_test.py": "cde4424ace2598d38223aea87c838a35c77a2a4f238d0bea1fa3146dee54f18b",
+    "checkout/jaxite_word/fast_encryption_decryption_test.py": "0a191fc7ef7ad26a2ca4b8e6efd9e3d09fbbacba2d8572d2e82aafb0b5b8c789",
+    "checkout/jaxite_word/finite_field.py": "54418625f76e303d77a3055f93419e07895bdf71f706acc20ab0f6fe7c8def5e",
+    "checkout/jaxite_word/finite_field_perf_test.py": "55ae7be859879dbb409d00a2fc84706592d5b3bc04f84b217f7971dd9b3398bf",
+    "checkout/jaxite_word/finite_field_test.py": "303fd344cfd9910366db56b12e6fea44686bf69afcd6f9e6fffb51a9584c0c83",
+    "checkout/jaxite_word/he_ops.py": "bd0fb682b936a30c3faad9c09aad1337daa61657be744323605e73c875c99650",
+    "checkout/jaxite_word/he_params.py": "714d3227f65d2369976a798a13584cb8629c468f3b6c005d7193eac1f072948b",
+    "checkout/jaxite_word/headd.py": "53a691d7dc5d330886cfa11a990087d5ad4bb6dbabac47f3b85a281acc395d37",
+    "checkout/jaxite_word/headd_perf_test.py": "f813a1bd37afb4b024bf995153082b2edc5981c6de7c7eaefa84d3ad937e84c5",
+    "checkout/jaxite_word/headd_test.py": "b2e64d0d49f1148955ecac913629b81ef71a0fe76e06b71b7d8f65e45c38216e",
+    "checkout/jaxite_word/hemul.py": "49a87eed37de76b7b3ab31f1d19dd23a39035f031cfee41c4d9a204064502803",
+    "checkout/jaxite_word/hemul_double_rescaling_test.py": "0b0a0de67dcd4c241fabb5caf6c288cc11ff772832efcb805dee3fa17cdb2830",
+    "checkout/jaxite_word/hemul_perf_test.py": "20aa5093f23d67598013f9b10339f3bc61a5a746d2f30adda9ddd1bb3d2849b3",
+    "checkout/jaxite_word/hemul_test.py": "59c25e1032cfb4edfde8848cd101629891c7e8dec946d341392bd8671f1733bd",
+    "checkout/jaxite_word/herot.py": "bdb1ef0604150246b052cbc63dd41f6d92478505672d116aa13ce3bf4726eb89",
+    "checkout/jaxite_word/herot_perf_test.py": "cd77044bebe256dcd654047c80f1158765ea16eda1cdc9514b22a398ebf3db21",
+    "checkout/jaxite_word/herot_test.py": "f063f90b2a2eff3153eb44b37e2a6c2599a749277a28654e437b303a8b45a253",
+    "checkout/jaxite_word/hesub.py": "baad1322793dd239cb4e66749f05bf4982f58d0932b098abbd305ff2402cbf5e",
+    "checkout/jaxite_word/hesub_perf_test.py": "586d43858643665cf731c7d6b3adfe8a7f96399b78539aad35524f87b13dae27",
+    "checkout/jaxite_word/hesub_test.py": "894710564c6f6269b3bd89e13ab010418b9bce7e23b4f494e50f117fac31aa27",
+    "checkout/jaxite_word/key_gen.py": "4f5e53e421423e77757ca0596ae2607dbc2c6f80d21536b2e1c3f57a226b0fad",
+    "checkout/jaxite_word/key_gen_test.py": "65b0b60974ab5eea56cdeab4c4a8a30a132bf52d963682639b8842fea3e44dc7",
+    "checkout/jaxite_word/mapping.py": "c8d035d4b7d743b18324830eeb09b6cd2a562bc4862e6af2ee10702922f6816f",
+    "checkout/jaxite_word/mapping_compile_test.py": "985346d2677ff0296a63b032e0009d085d7b9d232a708454cd4bbaeeb3996964",
+    "checkout/jaxite_word/nn.py": "189cb48dff9124d32f84e6154b5e8403082d3eed87ab12d5fb1e80f1e21213de",
+    "checkout/jaxite_word/nn_test.py": "c1cd8502f110a4a15b44e8d781f5a5c6462b241f97d08bc26f52c0c484e02e37",
+    "checkout/jaxite_word/ntt_mm.py": "5a0cbff087f48f20c98cb5975f7894756a83d61fbdaaf5af358a1c7c192a1263",
+    "checkout/jaxite_word/ntt_mm_perf_test.py": "6bb76af76a637f766d431cd78486a4f168e1553823d72210e248e6b4aebc6054",
+    "checkout/jaxite_word/ntt_mm_test.py": "b19d63e3698a2c79e586bcf714d7474b3ca43c4a132ddab8aae6b27efbb8704a",
+    "checkout/jaxite_word/ntt_sm.py": "b57ebe4c8c1037288e3d50c9d3e443c4656a31d57bcb215ed7a302717d498a65",
+    "checkout/jaxite_word/ntt_sm_test.py": "ee1af34f58fc666438ea80442a66944dc5e3d50c2a26ec14a178c616752d7c63",
+    "checkout/jaxite_word/packing.py": "7496f37b7116b883c14f8e3d5cae6bd1ed7375d0a8d2425f78c8f84e347c0206",
+    "checkout/jaxite_word/packing_test.py": "ce1e1efcc57d931548a80aaf1e9e5b0f7e56e2bb9e4f9a385ea90a6b19102a43",
+    "checkout/jaxite_word/pedagagy/bat.py": "429786d49ba01b6343a3b0ebde1807f5739cdbfcc7209ffbe55d89cdd74bc1c5",
+    "checkout/jaxite_word/pedagagy/bat_test.py": "20c2b0318df986e8eaf635548bd6925db5508c934902ad29da0d36f3c655fd07",
+    "checkout/jaxite_word/pedagagy/modular_reduction.py": "87e2e57cbc99e47bae1a81e99a34b93a9a7d41bddc6b0d3a874b5e0415289da0",
+    "checkout/jaxite_word/pedagagy/ntt.py": "8dc8e58c3e17ba8218e51422e0974d038377f3dc5deac66f30ae909aaa1a2cfa",
+    "checkout/jaxite_word/pedagagy/ntt_test.py": "feff5599e1fbeebf83316712af0edc625b8418fb7d9edb4bec6ffacfb5020392",
+    "checkout/jaxite_word/pedagagy/util.py": "38c500e8f2af30ac37d5753de176777bbf0f0cde471d7fdf42e214c09e19ca9a",
+    "checkout/jaxite_word/polynomial.py": "043e1dcdf9aca02f2df9435ac610c1561859b7d29a7dee1b7254bf9bc3c89a5b",
+    "checkout/jaxite_word/polynomial_test.py": "347a86e9495ace43af81c218a29fcc29c19b6341f0d0067193f443ffa1bb0dc1",
+    "checkout/jaxite_word/profiler.py": "440c7aa2026cfd6b29c37f4b9db78984f1dfbf484c1f7f841caab82ece9da543",
+    "checkout/jaxite_word/profiler_test.py": "5b0740511fb21d0f1a4f4a03947aca406d4808e6dc65cfbd916ce969ffcd77df",
+    "checkout/jaxite_word/ptct_mul.py": "2780cb5d261cbf3da611f79fc9a6b6ef98d4759c7508cad26ed5995699f5bf11",
+    "checkout/jaxite_word/ptct_mul_perf_test.py": "0136112ed02ef35fea3483bb4edbc4aa499eaed3d30e35ba0a47d4f8cdbaa626",
+    "checkout/jaxite_word/ptct_mul_test.py": "1a4895ef5ea02eb0242278607b8ff08393025944def0a44d01cdd6e746d6d382",
+    "checkout/jaxite_word/rescale.py": "7244fd87e9cf00168201e3a85d7a7c17259525f68ba82b4cebf64fe84757c73c",
+    "checkout/jaxite_word/rescale_double_rescaling_test.py": "f4709369e2595f3fde7f8fc9b9ae4fcbbcf45a8ece59bbd570202d48c69c980a",
+    "checkout/jaxite_word/rescale_perf_test.py": "c701da370637dc2ff2d2f65d5f1f182ca423ea372defc29a6f16c131d51120e2",
+    "checkout/jaxite_word/rescale_test.py": "96c5d2d5651c390062cb0f09ee4c613f6ae8f88f9416ee383c15c012567fe622",
+    "checkout/jaxite_word/rns.py": "41db559ea26e3149ada36ec8369cfa4a5a79876ae9253e0dbabe32c9c09ef158",
+    "checkout/jaxite_word/rns_test.py": "0194634e2e4a6f1d61da27cc158ba35872ae5922a5868bba54bb65b17de369a0",
+    "checkout/jaxite_word/tabIX.py": "8abf557fd986782a92d8b3517bf0d3470e1ae0ddc135eddd69efee87aabc78b6",
+    "checkout/jaxite_word/tabV.py": "385cda2816d6c2342ab39e57367b5a078d49102fdc7deaf165db4faa58fc20b0",
+    "checkout/jaxite_word/tabVI.py": "29cae4e85987d894c6944b050677d560340f1d214b329f9f02cab2c6db531310",
+    "checkout/jaxite_word/tabVII.py": "90b5f99e6ad2e2e156ea7cd167ec40c7186e99ffbc259edbac7f70668fa83e18",
+    "checkout/jaxite_word/uniform_encoding_test.py": "7a892f3e0a8f4799b683b3a520479a035dd2290825b3215f2f504624219b41c4",
+    "checkout/jaxite_word/util.py": "b34c675b50ae774cdb0ad913f8fc9c2f955b60bf4745006d3f81d7c013565026",
+    "checkout/jaxite_word/util_test.py": "9fbde79b0154169947608c11bbc8e50b3c104effee206747c2c71a4ced95424e",
+    "evidence/1-uniform-scalar-integration.patch": "07186092944c8dd4f52f9fe771011dd427745b0681f71805fe0b9e233d7e99b5",
+    "evidence/2-rotation-binding-hit-lab.patch": "13f2ff6499f189bac4ac9844d03cb95190a85ea8af25d0e2a27c3a3f3012c788",
+    "evidence/3-tensor-only-candidate.patch": "13b93da2947b634beef25a9d1e5371c5e76e813588ab90538594c5f0aaae2158",
+    "evidence/4-bounded-integration-ready.patch": "5eb76dec6796d157b2ceb3819a642e18d15677db2e067a3deeb8a63702b45934",
+    "evidence/check_full_bootstrap.py": "bd528c45953e952bf13eb776fe41e4c6e4f2d06ffe5b61ffe614b6c7d6913ea6",
+    "evidence/run_bootstrap.py": "5e424927e67180dae0097e40adddd311948e1ed8335834e5c5803b09587b89a6",
+    "evidence/run_targeted.py": "acc108d9b51e73df7d3137acd814794fbeada1daecf13a573b1b2d4fa4db019f"
+  },
+  "module_origins": {
+    "ckks_ctx": "/tmp/cross-combined-cpu-20261102/checkout/jaxite_word/ckks_ctx.py",
+    "encrypted_rotation": "/tmp/cross-combined-cpu-20261102/checkout/cadathlon/common/encrypted_rotation.py",
+    "encrypted_primitives": "/tmp/cross-combined-cpu-20261102/checkout/cadathlon/common/encrypted_primitives.py",
+    "encrypted_refresh": "/tmp/cross-combined-cpu-20261102/checkout/cadathlon/common/encrypted_refresh.py",
+    "encrypted_reference": "/tmp/cross-combined-cpu-20261102/checkout/cadathlon/common/encrypted_reference.py",
+    "encrypted_bounded_transformer": "/tmp/cross-combined-cpu-20261102/checkout/cadathlon/common/encrypted_bounded_transformer.py"
+  },
+  "tests": [
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_matches_scalar_fit_and_arbitrary_precision_scaling0",
+      "outcome": "passed",
+      "seconds": 0.0027311800004099496,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_matches_scalar_fit_and_arbitrary_precision_scaling1",
+      "outcome": "passed",
+      "seconds": 0.00029768999957013875,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_matches_scalar_fit_and_arbitrary_precision_scaling10",
+      "outcome": "passed",
+      "seconds": 0.0002719900003285147,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_matches_scalar_fit_and_arbitrary_precision_scaling11",
+      "outcome": "passed",
+      "seconds": 0.00026387999969301745,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_matches_scalar_fit_and_arbitrary_precision_scaling12",
+      "outcome": "passed",
+      "seconds": 0.0002551400029915385,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_matches_scalar_fit_and_arbitrary_precision_scaling13",
+      "outcome": "passed",
+      "seconds": 0.0002714399997785222,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_matches_scalar_fit_and_arbitrary_precision_scaling14",
+      "outcome": "passed",
+      "seconds": 0.000252990001172293,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_matches_scalar_fit_and_arbitrary_precision_scaling15",
+      "outcome": "passed",
+      "seconds": 0.000268129999312805,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_matches_scalar_fit_and_arbitrary_precision_scaling16",
+      "outcome": "passed",
+      "seconds": 0.0002647399996931199,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_matches_scalar_fit_and_arbitrary_precision_scaling17",
+      "outcome": "passed",
+      "seconds": 0.0002782499977911357,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_matches_scalar_fit_and_arbitrary_precision_scaling18",
+      "outcome": "passed",
+      "seconds": 0.00024416000087512657,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_matches_scalar_fit_and_arbitrary_precision_scaling19",
+      "outcome": "passed",
+      "seconds": 0.0002560399989306461,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_matches_scalar_fit_and_arbitrary_precision_scaling2",
+      "outcome": "passed",
+      "seconds": 0.0002479600007063709,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_matches_scalar_fit_and_arbitrary_precision_scaling20",
+      "outcome": "passed",
+      "seconds": 0.00025938000180758536,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_matches_scalar_fit_and_arbitrary_precision_scaling21",
+      "outcome": "passed",
+      "seconds": 0.00024417000167886727,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_matches_scalar_fit_and_arbitrary_precision_scaling22",
+      "outcome": "passed",
+      "seconds": 0.0002466299993102439,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_matches_scalar_fit_and_arbitrary_precision_scaling23",
+      "outcome": "passed",
+      "seconds": 0.0002515600026526954,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_matches_scalar_fit_and_arbitrary_precision_scaling24",
+      "outcome": "passed",
+      "seconds": 0.00024716000189073384,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_matches_scalar_fit_and_arbitrary_precision_scaling25",
+      "outcome": "passed",
+      "seconds": 0.0002707800013013184,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_matches_scalar_fit_and_arbitrary_precision_scaling26",
+      "outcome": "passed",
+      "seconds": 0.0002621200001158286,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_matches_scalar_fit_and_arbitrary_precision_scaling3",
+      "outcome": "passed",
+      "seconds": 0.00025177000134135596,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_matches_scalar_fit_and_arbitrary_precision_scaling4",
+      "outcome": "passed",
+      "seconds": 0.00024124999981722794,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_matches_scalar_fit_and_arbitrary_precision_scaling5",
+      "outcome": "passed",
+      "seconds": 0.00025446000290685333,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_matches_scalar_fit_and_arbitrary_precision_scaling6",
+      "outcome": "passed",
+      "seconds": 0.00024026999744819477,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_matches_scalar_fit_and_arbitrary_precision_scaling7",
+      "outcome": "passed",
+      "seconds": 0.00025658000231487677,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_matches_scalar_fit_and_arbitrary_precision_scaling8",
+      "outcome": "passed",
+      "seconds": 0.0002498100002412684,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_matches_scalar_fit_and_arbitrary_precision_scaling9",
+      "outcome": "passed",
+      "seconds": 0.0002366799999435898,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_preserves_scalar_fallback0",
+      "outcome": "passed",
+      "seconds": 6.763999772374518e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_preserves_scalar_fallback1",
+      "outcome": "passed",
+      "seconds": 5.697999949916266e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_preserves_scalar_fallback2",
+      "outcome": "passed",
+      "seconds": 5.383000097936019e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_preserves_scalar_fallback3",
+      "outcome": "passed",
+      "seconds": 5.2340001275297254e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeEncodeResiduesTest::test_sparse_slot_encoding_preserves_ring_degree",
+      "outcome": "passed",
+      "seconds": 0.00014617999840993434,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeInverseFFTTest::test_is_bit_exact_with_scalar_butterflies0",
+      "outcome": "passed",
+      "seconds": 0.0002633399999467656,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeInverseFFTTest::test_is_bit_exact_with_scalar_butterflies1",
+      "outcome": "passed",
+      "seconds": 0.00018356000146013685,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeInverseFFTTest::test_is_bit_exact_with_scalar_butterflies2",
+      "outcome": "passed",
+      "seconds": 0.00027057999977841973,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeInverseFFTTest::test_is_bit_exact_with_scalar_butterflies3",
+      "outcome": "passed",
+      "seconds": 0.000243309998040786,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeInverseFFTTest::test_is_bit_exact_with_scalar_butterflies4",
+      "outcome": "passed",
+      "seconds": 0.0006284500013862271,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeInverseFFTTest::test_is_bit_exact_with_scalar_butterflies5",
+      "outcome": "passed",
+      "seconds": 0.00040394000097876415,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeInverseFFTTest::test_is_bit_exact_with_scalar_butterflies6",
+      "outcome": "passed",
+      "seconds": 0.015733520001958823,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeInverseFFTTest::test_is_bit_exact_with_scalar_butterflies7",
+      "outcome": "passed",
+      "seconds": 0.00875172000087332,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeInverseFFTTest::test_is_bit_exact_with_scalar_butterflies8",
+      "outcome": "passed",
+      "seconds": 0.06990502900225692,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::NativeInverseFFTTest::test_is_bit_exact_with_scalar_butterflies9",
+      "outcome": "passed",
+      "seconds": 0.03963079900131561,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::SparsePrivateEncoderTest::test_full_slot_wrapper_stays_bit_exact_with_scalar_encoder",
+      "outcome": "passed",
+      "seconds": 0.0009130600010394119,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::SparsePrivateEncoderTest::test_invalid_private_sparse_counts_rejected0",
+      "outcome": "passed",
+      "seconds": 0.0001895200002763886,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::SparsePrivateEncoderTest::test_invalid_private_sparse_counts_rejected1",
+      "outcome": "passed",
+      "seconds": 8.974999946076423e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::SparsePrivateEncoderTest::test_invalid_private_sparse_counts_rejected2",
+      "outcome": "passed",
+      "seconds": 0.00011245999849052168,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::SparsePrivateEncoderTest::test_invalid_private_sparse_counts_rejected3",
+      "outcome": "passed",
+      "seconds": 8.050999895203859e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::SparsePrivateEncoderTest::test_sparse_private_encoding_matches_full_periodic_encoding0",
+      "outcome": "passed",
+      "seconds": 0.0005737000028602779,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::SparsePrivateEncoderTest::test_sparse_private_encoding_matches_full_periodic_encoding1",
+      "outcome": "passed",
+      "seconds": 0.0006844099989393726,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::SparsePrivateEncoderTest::test_sparse_private_encoding_matches_full_periodic_encoding2",
+      "outcome": "passed",
+      "seconds": 0.0006712299982609693,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::SparsePrivateEncoderTest::test_sparse_private_encoding_matches_full_periodic_encoding3",
+      "outcome": "passed",
+      "seconds": 0.0006438399977923837,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::SparsePrivateEncoderTest::test_sparse_private_encoding_matches_full_periodic_encoding4",
+      "outcome": "passed",
+      "seconds": 0.0006977299999562092,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::SparsePrivateEncoderTest::test_sparse_private_encoding_matches_full_periodic_encoding5",
+      "outcome": "passed",
+      "seconds": 0.0006465900005423464,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::SparsePrivateEncoderTest::test_sparse_private_encoding_matches_full_periodic_encoding6",
+      "outcome": "passed",
+      "seconds": 0.0007132099999580532,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::SparsePrivateEncoderTest::test_sparse_private_encoding_matches_full_periodic_encoding7",
+      "outcome": "passed",
+      "seconds": 0.0006592600002477411,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::SparsePrivateEncoderTest::test_sparse_private_encoding_matches_full_periodic_encoding8",
+      "outcome": "passed",
+      "seconds": 0.0006555399995704647,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::SparsePrivateEncoderTest::test_sparse_private_encoding_matches_full_periodic_encoding9",
+      "outcome": "passed",
+      "seconds": 0.0006482399985543452,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_bootstrap_diagonal_uses_array_interface",
+      "outcome": "passed",
+      "seconds": 0.02307722000114154,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_bootstrap_scalar_add_uses_array_interface_at_both_noise_degrees0",
+      "outcome": "passed",
+      "seconds": 0.14201503799995407,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_bootstrap_scalar_add_uses_array_interface_at_both_noise_degrees1",
+      "outcome": "passed",
+      "seconds": 0.046135819000483025,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api0",
+      "outcome": "passed",
+      "seconds": 0.00047868999899947084,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api1",
+      "outcome": "passed",
+      "seconds": 0.00035880999712389894,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api10",
+      "outcome": "passed",
+      "seconds": 0.00042581000161590055,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api11",
+      "outcome": "passed",
+      "seconds": 0.0004076000004715752,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api12",
+      "outcome": "passed",
+      "seconds": 0.00039370999729726464,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api13",
+      "outcome": "passed",
+      "seconds": 0.00037567999970633537,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api14",
+      "outcome": "passed",
+      "seconds": 0.00039756000114721246,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api15",
+      "outcome": "passed",
+      "seconds": 0.00039042999924276955,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api16",
+      "outcome": "passed",
+      "seconds": 0.0005633900000248104,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api17",
+      "outcome": "passed",
+      "seconds": 0.0005063500029791612,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api18",
+      "outcome": "passed",
+      "seconds": 0.0005269699977361597,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api19",
+      "outcome": "passed",
+      "seconds": 0.0005371099978219718,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api2",
+      "outcome": "passed",
+      "seconds": 0.0003259799996158108,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api20",
+      "outcome": "passed",
+      "seconds": 0.0005166199989616871,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api21",
+      "outcome": "passed",
+      "seconds": 0.0005067199999757577,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api22",
+      "outcome": "passed",
+      "seconds": 0.0005301099990902003,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api23",
+      "outcome": "passed",
+      "seconds": 0.0005338000009942334,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api24",
+      "outcome": "passed",
+      "seconds": 0.0006102000006649178,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api25",
+      "outcome": "passed",
+      "seconds": 0.0006079699996917043,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api26",
+      "outcome": "passed",
+      "seconds": 0.0006011500008753501,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api27",
+      "outcome": "passed",
+      "seconds": 0.0005985300012980588,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api28",
+      "outcome": "passed",
+      "seconds": 0.0006035299993527588,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api29",
+      "outcome": "passed",
+      "seconds": 0.0006040299995220266,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api3",
+      "outcome": "passed",
+      "seconds": 0.00034485000287531875,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api30",
+      "outcome": "passed",
+      "seconds": 0.0006265900010475889,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api31",
+      "outcome": "passed",
+      "seconds": 0.0006194300003699027,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api32",
+      "outcome": "passed",
+      "seconds": 0.0005781500003649853,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api33",
+      "outcome": "passed",
+      "seconds": 0.0005515399971045554,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api34",
+      "outcome": "passed",
+      "seconds": 0.0005551100002776366,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api35",
+      "outcome": "passed",
+      "seconds": 0.0005571399997279514,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api36",
+      "outcome": "passed",
+      "seconds": 0.0005718100001104176,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api37",
+      "outcome": "passed",
+      "seconds": 0.0005712700003641658,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api38",
+      "outcome": "passed",
+      "seconds": 0.0005786399997305125,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api39",
+      "outcome": "passed",
+      "seconds": 0.0005827599998156074,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api4",
+      "outcome": "passed",
+      "seconds": 0.0003370000013092067,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api40",
+      "outcome": "passed",
+      "seconds": 0.000636500000837259,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api41",
+      "outcome": "passed",
+      "seconds": 0.0006316700018942356,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api42",
+      "outcome": "passed",
+      "seconds": 0.0006446999977924861,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api43",
+      "outcome": "passed",
+      "seconds": 0.0006439800017687958,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api44",
+      "outcome": "passed",
+      "seconds": 0.0006445299986808095,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api45",
+      "outcome": "passed",
+      "seconds": 0.0006457300005422439,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api46",
+      "outcome": "passed",
+      "seconds": 0.0006527400000777561,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api47",
+      "outcome": "passed",
+      "seconds": 0.000659569999697851,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api5",
+      "outcome": "passed",
+      "seconds": 0.0003254100010963157,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api6",
+      "outcome": "passed",
+      "seconds": 0.0003245699990657158,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api7",
+      "outcome": "passed",
+      "seconds": 0.0003351699997438118,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api8",
+      "outcome": "passed",
+      "seconds": 0.00037893999979132786,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/codec_preparation_test.py::ArrayPrivateEncoderTest::test_matches_independent_scalar_codec_and_preserves_list_api9",
+      "outcome": "passed",
+      "seconds": 0.0003623999982664827,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[31-1-1048576.0--0.75-1]",
+      "outcome": "passed",
+      "seconds": 0.0005631300009554252,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[31-1-1048576.0--0.75-16]",
+      "outcome": "passed",
+      "seconds": 0.0003822600010607857,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[31-1-1048576.0-0.75-1]",
+      "outcome": "passed",
+      "seconds": 0.0003720399981830269,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[31-1-1048576.0-0.75-16]",
+      "outcome": "passed",
+      "seconds": 0.00038780999966547824,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[31-1-1.2089258196146292e+24--0.75-1]",
+      "outcome": "passed",
+      "seconds": 0.00039431000186596066,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[31-1-1.2089258196146292e+24--0.75-16]",
+      "outcome": "passed",
+      "seconds": 0.0003786590023082681,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[31-1-1.2089258196146292e+24-0.75-1]",
+      "outcome": "passed",
+      "seconds": 0.00037537000025622547,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[31-1-1.2089258196146292e+24-0.75-16]",
+      "outcome": "passed",
+      "seconds": 0.00037478000012924895,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[31-2-1048576.0--0.75-1]",
+      "outcome": "passed",
+      "seconds": 0.0003715290004038252,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[31-2-1048576.0--0.75-16]",
+      "outcome": "passed",
+      "seconds": 0.0003858899981423747,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[31-2-1048576.0-0.75-1]",
+      "outcome": "passed",
+      "seconds": 0.0003917399990314152,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[31-2-1048576.0-0.75-16]",
+      "outcome": "passed",
+      "seconds": 0.00037146899921935983,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[31-2-1.2089258196146292e+24--0.75-1]",
+      "outcome": "passed",
+      "seconds": 0.0003824599989457056,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[31-2-1.2089258196146292e+24--0.75-16]",
+      "outcome": "passed",
+      "seconds": 0.00038100000165286474,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[31-2-1.2089258196146292e+24-0.75-1]",
+      "outcome": "passed",
+      "seconds": 0.0003743390007002745,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[31-2-1.2089258196146292e+24-0.75-16]",
+      "outcome": "passed",
+      "seconds": 0.0003915599991159979,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[61-1-1048576.0--0.75-1]",
+      "outcome": "passed",
+      "seconds": 0.0003807199973380193,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[61-1-1048576.0--0.75-16]",
+      "outcome": "passed",
+      "seconds": 0.0003665100011858158,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[61-1-1048576.0-0.75-1]",
+      "outcome": "passed",
+      "seconds": 0.000366960000974359,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[61-1-1048576.0-0.75-16]",
+      "outcome": "passed",
+      "seconds": 0.000366659998690011,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[61-1-1.2089258196146292e+24--0.75-1]",
+      "outcome": "passed",
+      "seconds": 0.000368029999663122,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[61-1-1.2089258196146292e+24--0.75-16]",
+      "outcome": "passed",
+      "seconds": 0.0003864700011035893,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[61-1-1.2089258196146292e+24-0.75-1]",
+      "outcome": "passed",
+      "seconds": 0.00038146999941091053,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[61-1-1.2089258196146292e+24-0.75-16]",
+      "outcome": "passed",
+      "seconds": 0.00036982000165153295,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[61-2-1048576.0--0.75-1]",
+      "outcome": "passed",
+      "seconds": 0.00037666000207536854,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[61-2-1048576.0--0.75-16]",
+      "outcome": "passed",
+      "seconds": 0.00036732000080519356,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[61-2-1048576.0-0.75-1]",
+      "outcome": "passed",
+      "seconds": 0.00038254000173765235,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[61-2-1048576.0-0.75-16]",
+      "outcome": "passed",
+      "seconds": 0.00038347000008798204,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[61-2-1.2089258196146292e+24--0.75-1]",
+      "outcome": "passed",
+      "seconds": 0.00039056999958120286,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[61-2-1.2089258196146292e+24--0.75-16]",
+      "outcome": "passed",
+      "seconds": 0.00037863000034121796,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[61-2-1.2089258196146292e+24-0.75-1]",
+      "outcome": "passed",
+      "seconds": 0.000376839998352807,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_uniform_avoids_ntt_and_matches_independent_scalar_codec[61-2-1.2089258196146292e+24-0.75-16]",
+      "outcome": "passed",
+      "seconds": 0.0003686399977596011,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_guarded_fallback_preserves_results_errors_and_warnings[updates0]",
+      "outcome": "passed",
+      "seconds": 0.0004871199998888187,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_guarded_fallback_preserves_results_errors_and_warnings[updates1]",
+      "outcome": "passed",
+      "seconds": 0.00045524999950430356,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_guarded_fallback_preserves_results_errors_and_warnings[updates2]",
+      "outcome": "passed",
+      "seconds": 9.621000208426267e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_guarded_fallback_preserves_results_errors_and_warnings[updates3]",
+      "outcome": "passed",
+      "seconds": 6.981000115047209e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_guarded_fallback_preserves_results_errors_and_warnings[updates4]",
+      "outcome": "passed",
+      "seconds": 0.0004256899992469698,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_guarded_fallback_preserves_results_errors_and_warnings[updates5]",
+      "outcome": "passed",
+      "seconds": 0.0004099100005987566,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_guarded_fallback_preserves_results_errors_and_warnings[updates6]",
+      "outcome": "passed",
+      "seconds": 0.0004100400001334492,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_guarded_fallback_preserves_results_errors_and_warnings[updates7]",
+      "outcome": "passed",
+      "seconds": 0.000397659998270683,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_guarded_fallback_preserves_results_errors_and_warnings[updates8]",
+      "outcome": "passed",
+      "seconds": 0.00038094999763416126,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_guarded_fallback_preserves_results_errors_and_warnings[updates9]",
+      "outcome": "passed",
+      "seconds": 0.000417330000345828,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_guarded_fallback_preserves_results_errors_and_warnings[updates10]",
+      "outcome": "passed",
+      "seconds": 0.00040303000059793703,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_guarded_fallback_preserves_results_errors_and_warnings[updates11]",
+      "outcome": "passed",
+      "seconds": 0.00039047000245773233,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_guarded_fallback_preserves_results_errors_and_warnings[updates12]",
+      "outcome": "passed",
+      "seconds": 0.00020470000163186342,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_guarded_fallback_preserves_results_errors_and_warnings[updates13]",
+      "outcome": "passed",
+      "seconds": 0.0003960900030506309,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_private_guarded_fallback_preserves_results_errors_and_warnings[updates14]",
+      "outcome": "passed",
+      "seconds": 0.00023164999947766773,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_nondefault_floating_error_policy_delegates",
+      "outcome": "passed",
+      "seconds": 4.771000021719374e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_initialized_uniform_boundary_keeps_payload_and_metadata[-0.75-None-0]",
+      "outcome": "passed",
+      "seconds": 0.1444316480010457,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_initialized_uniform_boundary_keeps_payload_and_metadata[-0.75-None-1]",
+      "outcome": "passed",
+      "seconds": 0.07443111900283839,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_initialized_uniform_boundary_keeps_payload_and_metadata[-0.75-1099511627776.0-0]",
+      "outcome": "passed",
+      "seconds": 0.003768070000660373,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_initialized_uniform_boundary_keeps_payload_and_metadata[-0.75-1099511627776.0-1]",
+      "outcome": "passed",
+      "seconds": 0.0041520900012983475,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_initialized_uniform_boundary_keeps_payload_and_metadata[0.0-None-0]",
+      "outcome": "passed",
+      "seconds": 0.003672060000099009,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_initialized_uniform_boundary_keeps_payload_and_metadata[0.0-None-1]",
+      "outcome": "passed",
+      "seconds": 0.0040550500016252045,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_initialized_uniform_boundary_keeps_payload_and_metadata[0.0-1099511627776.0-0]",
+      "outcome": "passed",
+      "seconds": 0.0036310399991634768,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_initialized_uniform_boundary_keeps_payload_and_metadata[0.0-1099511627776.0-1]",
+      "outcome": "passed",
+      "seconds": 0.004022059998533223,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_initialized_boundary_keeps_exact_slot_and_complex_validation[slots0]",
+      "outcome": "passed",
+      "seconds": 0.00011622999954852276,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_initialized_boundary_keeps_exact_slot_and_complex_validation[slots1]",
+      "outcome": "passed",
+      "seconds": 0.00033642999915173277,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_initialized_boundary_keeps_exact_slot_and_complex_validation[slots2]",
+      "outcome": "passed",
+      "seconds": 9.782000051927753e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_initialized_boundary_keeps_exact_slot_and_complex_validation[slots3]",
+      "outcome": "passed",
+      "seconds": 7.340999945881777e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_initialized_boundary_keeps_exact_slot_and_complex_validation[slots4]",
+      "outcome": "passed",
+      "seconds": 0.0005072399981145281,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_initialized_uses_normalized_context_word_parameter",
+      "outcome": "passed",
+      "seconds": 0.004194810000626603,
+      "phase": "call"
+    },
+    {
+      "nodeid": "jaxite_word/uniform_encoding_test.py::test_other_context_codec_entrypoints_keep_existing_fast_encode",
+      "outcome": "passed",
+      "seconds": 0.00690143999963766,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_compilation.py::test_code_reuse_survives_global_cache_clear_without_retaining_control_buffers",
+      "outcome": "passed",
+      "seconds": 0.29071992600074736,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_rotation.py::test_compiled_rotation_reuses_arithmetic_across_keys_and_preserves_metadata[1-20-1]",
+      "outcome": "passed",
+      "seconds": 11.344267395001225,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_rotation.py::test_compiled_rotation_reuses_arithmetic_across_keys_and_preserves_metadata[2-24-2]",
+      "outcome": "passed",
+      "seconds": 12.087899255999218,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_tensor_only.py::test_secure_raw_tensor_and_bootstrap_parity[1]",
+      "outcome": "passed",
+      "seconds": 16.25967898899762,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_tensor_only.py::test_secure_raw_tensor_and_bootstrap_parity[2]",
+      "outcome": "passed",
+      "seconds": 24.204014640999958,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_tensor_only.py::test_accessor_does_not_construct_unused_eager_facade",
+      "outcome": "passed",
+      "seconds": 0.00011731999984476715,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_primitives.py::test_secure_compiled_primitives_match_facades_and_release_controls",
+      "outcome": "passed",
+      "seconds": 21.40404955899794,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_refresh_profile_actual_ring_is_secure[profile0]",
+      "outcome": "passed",
+      "seconds": 0.024168150001059985,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_refresh_profile_actual_ring_is_secure[profile1]",
+      "outcome": "passed",
+      "seconds": 0.009413629999471596,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_refresh_profile_actual_ring_is_secure[profile2]",
+      "outcome": "passed",
+      "seconds": 0.020766809000633657,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_insecure_actual_refresh_chain_is_rejected",
+      "outcome": "passed",
+      "seconds": 0.007089390001056017,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_lower_key_memory_profile_preserves_usable_refresh_capacity",
+      "outcome": "passed",
+      "seconds": 0.00013373999900068156,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_sparse_plan_includes_fold_reconstruction_and_conjugation_keys[1]",
+      "outcome": "passed",
+      "seconds": 7.529999857069924e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_sparse_plan_includes_fold_reconstruction_and_conjugation_keys[2]",
+      "outcome": "passed",
+      "seconds": 6.67000022076536e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_sparse_plan_includes_fold_reconstruction_and_conjugation_keys[4]",
+      "outcome": "passed",
+      "seconds": 6.152000059955753e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_sparse_plan_includes_fold_reconstruction_and_conjugation_keys[8]",
+      "outcome": "passed",
+      "seconds": 6.411999856936745e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_sparse_plan_includes_fold_reconstruction_and_conjugation_keys[16]",
+      "outcome": "passed",
+      "seconds": 6.752999979653396e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_sparse_plan_includes_fold_reconstruction_and_conjugation_keys[32]",
+      "outcome": "passed",
+      "seconds": 7.054999878164381e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_sparse_plan_includes_fold_reconstruction_and_conjugation_keys[64]",
+      "outcome": "passed",
+      "seconds": 7.33599990780931e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_sparse_plan_includes_fold_reconstruction_and_conjugation_keys[128]",
+      "outcome": "passed",
+      "seconds": 0.00010289999772794545,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_sparse_plan_includes_fold_reconstruction_and_conjugation_keys[256]",
+      "outcome": "passed",
+      "seconds": 9.841000064625405e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_sparse_plan_includes_fold_reconstruction_and_conjugation_keys[512]",
+      "outcome": "passed",
+      "seconds": 0.00012472999878809787,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_sparse_plan_includes_fold_reconstruction_and_conjugation_keys[1024]",
+      "outcome": "passed",
+      "seconds": 0.000151379997987533,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_bounded_refresh_rejects_invalid_public_domain_before_setup[0.0]",
+      "outcome": "passed",
+      "seconds": 0.00010975000259350054,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_bounded_refresh_rejects_invalid_public_domain_before_setup[-1.0]",
+      "outcome": "passed",
+      "seconds": 5.480999971041456e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_bounded_refresh_rejects_invalid_public_domain_before_setup[inf]",
+      "outcome": "passed",
+      "seconds": 5.0170001486549154e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_bounded_refresh_rejects_invalid_public_domain_before_setup[nan]",
+      "outcome": "passed",
+      "seconds": 4.8210000386461616e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_bounded_refresh_rejects_invalid_public_domain_before_setup[True]",
+      "outcome": "passed",
+      "seconds": 4.937000267091207e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_bounded_refresh_rejects_invalid_public_domain_before_setup[16]",
+      "outcome": "passed",
+      "seconds": 4.921999789075926e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_meta_precision_rejected_before_context_setup[0]",
+      "outcome": "passed",
+      "seconds": 8.270000034826808e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_meta_precision_rejected_before_context_setup[63]",
+      "outcome": "passed",
+      "seconds": 5.061000047135167e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_meta_precision_rejected_before_context_setup[True]",
+      "outcome": "passed",
+      "seconds": 5.0310001824982464e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_meta_precision_rejected_before_context_setup[1.5]",
+      "outcome": "passed",
+      "seconds": 4.864000220550224e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_invalid_or_exhausted_refresh_plan_rejected[3-budget0-52]",
+      "outcome": "passed",
+      "seconds": 4.9250000301981345e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_invalid_or_exhausted_refresh_plan_rejected[4-budget1-52]",
+      "outcome": "passed",
+      "seconds": 5.018999945605174e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_invalid_or_exhausted_refresh_plan_rejected[4-budget2-52]",
+      "outcome": "passed",
+      "seconds": 4.86999997519888e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_invalid_or_exhausted_refresh_plan_rejected[4-budget3-19]",
+      "outcome": "passed",
+      "seconds": 4.943000021739863e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_client_public_key_store_uses_readonly_arrays_and_cleans_up",
+      "outcome": "passed",
+      "seconds": 0.03340391999881831,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_public_key_store_partial_failure_removes_files",
+      "outcome": "passed",
+      "seconds": 0.002104760002112016,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_public_key_store_space_check_precedes_generation",
+      "outcome": "passed",
+      "seconds": 0.0001727900016703643,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_actual_secure_keyless_refresh_and_continuation",
+      "outcome": "skipped",
+      "seconds": 6.058999861124903e-05,
+      "phase": "setup"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_refresh.py::test_actual_deep_profile_bounded_refresh_and_continuation",
+      "outcome": "skipped",
+      "seconds": 4.448999970918521e-05,
+      "phase": "setup"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_refresh_validation.py::test_disk_public_keys_close_after_partial_context_setup[1]",
+      "outcome": "passed",
+      "seconds": 0.08265797900094185,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_refresh_validation.py::test_disk_public_keys_close_after_partial_context_setup[2]",
+      "outcome": "passed",
+      "seconds": 0.07979768799850717,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_refresh_validation.py::test_cleanup_attempts_every_context_and_key_store[None]",
+      "outcome": "passed",
+      "seconds": 0.046401890002016444,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_refresh_validation.py::test_cleanup_attempts_every_context_and_key_store[primary_error1]",
+      "outcome": "passed",
+      "seconds": 0.04610470899933716,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_polynomial.py::test_inverse_sqrt_domain_and_grid_accuracy",
+      "outcome": "passed",
+      "seconds": 0.003418500000407221,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_polynomial.py::test_invalid_domains_are_rejected[inverse_sqrt-domain0]",
+      "outcome": "passed",
+      "seconds": 6.470999869634397e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_polynomial.py::test_invalid_domains_are_rejected[reciprocal-domain1]",
+      "outcome": "passed",
+      "seconds": 5.3709998610429466e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_polynomial.py::test_invalid_domains_are_rejected[gelu-domain2]",
+      "outcome": "passed",
+      "seconds": 6.363000284181908e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_polynomial.py::test_nonlinear_public_approximation[gelu-<lambda>-0.0001]",
+      "outcome": "passed",
+      "seconds": 0.0015603900028509088,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_polynomial.py::test_nonlinear_public_approximation[silu-<lambda>-0.0001]",
+      "outcome": "passed",
+      "seconds": 0.00039140000080806203,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_polynomial.py::test_nonlinear_public_approximation[tanh-tanh-0.001]",
+      "outcome": "passed",
+      "seconds": 0.00034934999712277204,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_polynomial.py::test_input_power_basis_is_limited_to_bounded_centered_quadratics",
+      "outcome": "passed",
+      "seconds": 0.0005362400006561074,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_polynomial.py::test_refresh_scheduler_preserves_capacity_and_deduplicates_square_operand",
+      "outcome": "passed",
+      "seconds": 0.00011002999963238835,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_polynomial.py::test_refresh_scheduler_rejects_short_output",
+      "outcome": "passed",
+      "seconds": 9.110999963013455e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_polynomial.py::test_secure_inverse_sqrt_and_rmsnorm_ciphertexts",
+      "outcome": "passed",
+      "seconds": 813.8509947910024,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_polynomial.py::test_uniform_constants_match_generic_encoder_bit_for_bit",
+      "outcome": "passed",
+      "seconds": 0.9883948649985541,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_polynomial.py::test_balanced_power_inverse_sqrt_with_bounded_caches",
+      "outcome": "passed",
+      "seconds": 53.64897411399943,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_polynomial.py::test_secure_compiled_linear_scalar_eviction_residual_and_quadratic_depth",
+      "outcome": "passed",
+      "seconds": 26.850136405999365,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_reference_lifecycle.py::test_close_attempts_all_resources_and_is_idempotent[None]",
+      "outcome": "passed",
+      "seconds": 0.0002673700000741519,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_reference_lifecycle.py::test_close_attempts_all_resources_and_is_idempotent[client]",
+      "outcome": "passed",
+      "seconds": 0.00025196000206051394,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_reference_lifecycle.py::test_close_attempts_all_resources_and_is_idempotent[server]",
+      "outcome": "passed",
+      "seconds": 0.0002068699977826327,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_reference_lifecycle.py::test_close_attempts_all_resources_and_is_idempotent[jax]",
+      "outcome": "passed",
+      "seconds": 0.00019111999790766276,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_reference_lifecycle.py::test_close_attempts_all_resources_and_is_idempotent[keys]",
+      "outcome": "passed",
+      "seconds": 0.00018927999917650595,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_reference_lifecycle.py::test_setup_error_survives_multiple_cleanup_errors",
+      "outcome": "passed",
+      "seconds": 0.0001296499976888299,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_layout.py::test_exact_transformer_profiles_generate_secure_covered_rings[38-2-78-37]",
+      "outcome": "passed",
+      "seconds": 0.017658819997450337,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_layout.py::test_exact_transformer_profiles_generate_secure_covered_rings[50-5-102-20]",
+      "outcome": "passed",
+      "seconds": 0.0207987489993684,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_layout.py::test_exact_transformer_profiles_generate_secure_covered_rings[67-4-100-24]",
+      "outcome": "passed",
+      "seconds": 0.02062664000186487,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_layout.py::test_unsharded_reference_rejects_proven_impossible_pretrained_payloads",
+      "outcome": "passed",
+      "seconds": 0.00019554000027710572,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_layout.py::test_linear_refreshes_shared_depleted_features_once_for_all_output_rows",
+      "outcome": "passed",
+      "seconds": 0.0003550000001268927,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_layout.py::test_packing_transpose_and_key_sum_with_non_power_of_two_dimensions",
+      "outcome": "passed",
+      "seconds": 0.0009134800020547118,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_layout.py::test_grouped_attention_layout_matches_independent_dense_oracle[False]",
+      "outcome": "passed",
+      "seconds": 0.003464819998043822,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_layout.py::test_grouped_attention_layout_matches_independent_dense_oracle[True]",
+      "outcome": "passed",
+      "seconds": 0.0030986899982963223,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_layout.py::test_rope_preserves_qwen_half_rotation_convention",
+      "outcome": "passed",
+      "seconds": 0.0004920399987895507,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_layout.py::test_attention_rejects_fully_masked_rows",
+      "outcome": "passed",
+      "seconds": 0.00010664000001270324,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_layout.py::test_softmax_planner_observes_actual_masked_and_padded_polynomial_inputs[2]",
+      "outcome": "failed",
+      "seconds": 0.00019936000171583146,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_layout.py::test_softmax_planner_observes_actual_masked_and_padded_polynomial_inputs[3]",
+      "outcome": "failed",
+      "seconds": 0.00017330999980913475,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_layout.py::test_softmax_planner_observes_actual_masked_and_padded_polynomial_inputs[4]",
+      "outcome": "failed",
+      "seconds": 0.00015847000031499192,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_layout.py::test_softmax_planner_observes_actual_masked_and_padded_polynomial_inputs[5]",
+      "outcome": "failed",
+      "seconds": 0.00013844999921275303,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_layout.py::test_softmax_planner_observes_actual_masked_and_padded_polynomial_inputs[6]",
+      "outcome": "failed",
+      "seconds": 0.0001347600009466987,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_layout.py::test_complete_ciphertext_operator_graph_public_planning[1-bert]",
+      "outcome": "passed",
+      "seconds": 0.009559130001434823,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_layout.py::test_complete_ciphertext_operator_graph_public_planning[1-qwen]",
+      "outcome": "passed",
+      "seconds": 0.004526669999904698,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_layout.py::test_complete_ciphertext_operator_graph_public_planning[2-bert]",
+      "outcome": "passed",
+      "seconds": 0.012053670001478167,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_layout.py::test_complete_ciphertext_operator_graph_public_planning[2-qwen]",
+      "outcome": "passed",
+      "seconds": 0.00886917000025278,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_layout.py::test_complete_ciphertext_operator_graph_public_planning[3-bert]",
+      "outcome": "passed",
+      "seconds": 0.022135520001029363,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_layout.py::test_complete_ciphertext_operator_graph_public_planning[3-qwen]",
+      "outcome": "passed",
+      "seconds": 0.019828200001938967,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_layout.py::test_complete_ciphertext_operator_graph_public_planning[4-bert]",
+      "outcome": "passed",
+      "seconds": 0.03654055900187814,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_layout.py::test_complete_ciphertext_operator_graph_public_planning[4-qwen]",
+      "outcome": "passed",
+      "seconds": 0.026614020000124583,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_layout.py::test_complete_ciphertext_operator_graph_public_planning[5-bert]",
+      "outcome": "passed",
+      "seconds": 0.08814565800275886,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_layout.py::test_complete_ciphertext_operator_graph_public_planning[5-qwen]",
+      "outcome": "passed",
+      "seconds": 0.029757519001577748,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_layout.py::test_complete_ciphertext_operator_graph_public_planning[6-bert]",
+      "outcome": "passed",
+      "seconds": 0.0970768089973717,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_layout.py::test_complete_ciphertext_operator_graph_public_planning[6-qwen]",
+      "outcome": "passed",
+      "seconds": 0.05846756900064065,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_runner.py::test_timing_separates_cold_request_and_warmups[0]",
+      "outcome": "passed",
+      "seconds": 0.00034254999991389923,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_runner.py::test_timing_separates_cold_request_and_warmups[1]",
+      "outcome": "passed",
+      "seconds": 0.00023522999981651083,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_runner.py::test_invalid_counts_fail_before_setup[invalid0]",
+      "outcome": "passed",
+      "seconds": 7.686000026296824e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_runner.py::test_invalid_counts_fail_before_setup[invalid1]",
+      "outcome": "passed",
+      "seconds": 6.845000098110177e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_runner.py::test_invalid_counts_fail_before_setup[invalid2]",
+      "outcome": "passed",
+      "seconds": 6.424999810406007e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_runner.py::test_invalid_counts_fail_before_setup[invalid3]",
+      "outcome": "passed",
+      "seconds": 6.301000030362047e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_runner.py::test_require_tpu_prevents_cpu_calibration",
+      "outcome": "passed",
+      "seconds": 0.00012674999743467197,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_runner.py::test_smoke_retains_experimental_status_without_claiming_device_utilization",
+      "outcome": "passed",
+      "seconds": 0.00018944999828818254,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_runner.py::test_all_failure_paths_close_session[encrypt]",
+      "outcome": "passed",
+      "seconds": 0.0001420799999323208,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_runner.py::test_all_failure_paths_close_session[evaluate]",
+      "outcome": "passed",
+      "seconds": 0.00012257999696885236,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_runner.py::test_all_failure_paths_close_session[decrypt]",
+      "outcome": "passed",
+      "seconds": 0.0001202000021294225,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_runner.py::test_all_failure_paths_close_session[security]",
+      "outcome": "passed",
+      "seconds": 0.00012063999747624621,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_runner.py::test_all_failure_paths_close_session[numerical]",
+      "outcome": "passed",
+      "seconds": 0.00017626000044401735,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_runner.py::test_warmups_must_also_pass_numeric_gates",
+      "outcome": "passed",
+      "seconds": 0.00013791999663226306,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_runner.py::test_completed_request_ciphertexts_are_released_before_next_encryption",
+      "outcome": "passed",
+      "seconds": 0.0002419400007056538,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_runner.py::test_cleanup_does_not_hide_primary_failure",
+      "outcome": "passed",
+      "seconds": 0.0005272199996397831,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_runner.py::test_starter_and_oracle_preflight_are_explicit[p2_bert-bert_he.py]",
+      "outcome": "failed",
+      "seconds": 0.15668786699825432,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_runner.py::test_starter_and_oracle_preflight_are_explicit[p4_qwen-qwen_he.py]",
+      "outcome": "failed",
+      "seconds": 0.1549149780003063,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_runner.py::test_goldens_fail_with_oracle_diagnostic_before_jax[p2_bert-bert_he.py]",
+      "outcome": "failed",
+      "seconds": 0.08538354900156264,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_runner.py::test_goldens_fail_with_oracle_diagnostic_before_jax[p4_qwen-qwen_he.py]",
+      "outcome": "failed",
+      "seconds": 0.0843922880012542,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_transformer_runner.py::test_stale_starter_marker_does_not_block_implemented_session",
+      "outcome": "passed",
+      "seconds": 0.00044811000043409877,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_qwen.py::test_unsupported_packed_session_fails_before_client_key_generation[changes0-2-1]",
+      "outcome": "passed",
+      "seconds": 0.14266667800256982,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_qwen.py::test_unsupported_packed_session_fails_before_client_key_generation[changes1-1-2]",
+      "outcome": "passed",
+      "seconds": 0.09112463900237344,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_qwen.py::test_unsupported_packed_session_fails_before_client_key_generation[changes2-1-1]",
+      "outcome": "passed",
+      "seconds": 0.08746773900202243,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_qwen.py::test_unsupported_packed_session_fails_before_client_key_generation[changes3-1-1]",
+      "outcome": "passed",
+      "seconds": 0.0840001079996,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_qwen.py::test_unsupported_packed_session_fails_before_client_key_generation[changes4-1-1]",
+      "outcome": "passed",
+      "seconds": 0.08420406900040689,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_qwen.py::test_unsupported_packed_session_fails_before_client_key_generation[changes5-1-1]",
+      "outcome": "passed",
+      "seconds": 0.08578182899873354,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_qwen.py::test_single_token_client_codec_has_one_periodic_input_and_one_output",
+      "outcome": "passed",
+      "seconds": 0.0004612500015355181,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_qwen.py::test_rectangular_signed_diagonals_keep_feature_blocks_separate[16-24]",
+      "outcome": "passed",
+      "seconds": 0.0010945100002572872,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_qwen.py::test_rectangular_signed_diagonals_keep_feature_blocks_separate[24-16]",
+      "outcome": "passed",
+      "seconds": 0.0009153999999398366,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_qwen.py::test_rectangular_signed_diagonals_keep_feature_blocks_separate[16-32]",
+      "outcome": "passed",
+      "seconds": 0.0009897900017676875,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_qwen.py::test_rectangular_signed_diagonals_keep_feature_blocks_separate[32-16]",
+      "outcome": "passed",
+      "seconds": 0.0009957399997801986,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_qwen.py::test_complete_packed_graph_matches_feature_graph_and_original_fixture_at_depth38",
+      "outcome": "passed",
+      "seconds": 0.011508218998642405,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_transformer.py::test_packed_pair_client_codec_preserves_nonpower_padding_and_feature_zeros",
+      "outcome": "passed",
+      "seconds": 0.0003420899993216153,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_transformer.py::test_packed_linear_input_mask_uses_source_feature_coordinates[5-7]",
+      "outcome": "passed",
+      "seconds": 0.0007073600027069915,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_transformer.py::test_packed_linear_input_mask_uses_source_feature_coordinates[7-5]",
+      "outcome": "passed",
+      "seconds": 0.0006524199998239055,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_transformer.py::test_all_public_packed_graphs_match_feature_oracle_and_domain_contracts[bert-1]",
+      "outcome": "passed",
+      "seconds": 0.03177842999866698,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_transformer.py::test_all_public_packed_graphs_match_feature_oracle_and_domain_contracts[bert-2]",
+      "outcome": "passed",
+      "seconds": 0.03800655899976846,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_transformer.py::test_all_public_packed_graphs_match_feature_oracle_and_domain_contracts[bert-3]",
+      "outcome": "passed",
+      "seconds": 0.0675295989967708,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_transformer.py::test_all_public_packed_graphs_match_feature_oracle_and_domain_contracts[bert-4]",
+      "outcome": "passed",
+      "seconds": 0.12063122899780865,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_transformer.py::test_all_public_packed_graphs_match_feature_oracle_and_domain_contracts[bert-5]",
+      "outcome": "passed",
+      "seconds": 0.3769065540000156,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_transformer.py::test_all_public_packed_graphs_match_feature_oracle_and_domain_contracts[bert-6]",
+      "outcome": "passed",
+      "seconds": 0.5683432820005692,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_transformer.py::test_all_public_packed_graphs_match_feature_oracle_and_domain_contracts[qwen-1]",
+      "outcome": "passed",
+      "seconds": 0.016146739999385318,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_transformer.py::test_all_public_packed_graphs_match_feature_oracle_and_domain_contracts[qwen-2]",
+      "outcome": "passed",
+      "seconds": 0.029693299999053124,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_transformer.py::test_all_public_packed_graphs_match_feature_oracle_and_domain_contracts[qwen-3]",
+      "outcome": "passed",
+      "seconds": 0.05954567899971153,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_transformer.py::test_all_public_packed_graphs_match_feature_oracle_and_domain_contracts[qwen-4]",
+      "outcome": "passed",
+      "seconds": 0.07470137899872498,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_transformer.py::test_all_public_packed_graphs_match_feature_oracle_and_domain_contracts[qwen-5]",
+      "outcome": "passed",
+      "seconds": 0.09039237900287844,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_transformer.py::test_all_public_packed_graphs_match_feature_oracle_and_domain_contracts[qwen-6]",
+      "outcome": "passed",
+      "seconds": 0.17028251699957764,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_transformer.py::test_unvalidated_refresh_graphs_fail_before_key_generation[False-bert-3]",
+      "outcome": "passed",
+      "seconds": 0.10375344900239725,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_transformer.py::test_unvalidated_refresh_graphs_fail_before_key_generation[False-qwen-2]",
+      "outcome": "passed",
+      "seconds": 0.0900732079971931,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_transformer.py::test_unvalidated_refresh_graphs_fail_before_key_generation[True-bert-3]",
+      "outcome": "passed",
+      "seconds": 0.09852816899729078,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_packed_transformer.py::test_unvalidated_refresh_graphs_fail_before_key_generation[True-qwen-2]",
+      "outcome": "passed",
+      "seconds": 0.09454802900290815,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_message_changing_operations_discard_cloned_correlations[add]",
+      "outcome": "passed",
+      "seconds": 0.0003410600002098363,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_message_changing_operations_discard_cloned_correlations[subtract]",
+      "outcome": "passed",
+      "seconds": 0.0001884299999801442,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_message_changing_operations_discard_cloned_correlations[multiply]",
+      "outcome": "passed",
+      "seconds": 0.00015963999976520427,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_message_changing_operations_discard_cloned_correlations[weighted_sum]",
+      "outcome": "passed",
+      "seconds": 0.00021039000057498924,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_message_changing_operations_discard_cloned_correlations[rotate]",
+      "outcome": "passed",
+      "seconds": 0.00018730900046648458,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_message_changing_operations_discard_cloned_correlations[polynomial]",
+      "outcome": "passed",
+      "seconds": 0.0012499600015871692,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_identity_rotation_keeps_message_correlations[0]",
+      "outcome": "passed",
+      "seconds": 6.785000005038455e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_identity_rotation_keeps_message_correlations[4]",
+      "outcome": "passed",
+      "seconds": 6.094000127632171e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_identity_rotation_keeps_message_correlations[-8]",
+      "outcome": "passed",
+      "seconds": 6.035999831510708e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_level_reduction_preserves_message_and_correlations[10]",
+      "outcome": "passed",
+      "seconds": 9.838999903877266e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_level_reduction_preserves_message_and_correlations[4]",
+      "outcome": "passed",
+      "seconds": 0.00010103000022354536,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_hypothetical_fresh_wrapper_refresh_preserves_only_source_correlations[False]",
+      "outcome": "passed",
+      "seconds": 0.00012031000005663373,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_hypothetical_fresh_wrapper_refresh_preserves_only_source_correlations[True]",
+      "outcome": "passed",
+      "seconds": 0.00011593000090215355,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_basic_bounds_round_outward_including_underflow[add]",
+      "outcome": "passed",
+      "seconds": 0.00010612999903969467,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_basic_bounds_round_outward_including_underflow[multiply]",
+      "outcome": "passed",
+      "seconds": 8.302999776788056e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_basic_bounds_round_outward_including_underflow[weighted_sum]",
+      "outcome": "passed",
+      "seconds": 0.00010490999920875765,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_refresh_rounding_near_binary_powers_covers_exact_slack[-1000]",
+      "outcome": "passed",
+      "seconds": 7.222999920486473e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_refresh_rounding_near_binary_powers_covers_exact_slack[-11]",
+      "outcome": "passed",
+      "seconds": 5.655999848386273e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_refresh_rounding_near_binary_powers_covers_exact_slack[-10]",
+      "outcome": "passed",
+      "seconds": 5.663000047206879e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_refresh_rounding_near_binary_powers_covers_exact_slack[-9]",
+      "outcome": "passed",
+      "seconds": 7.153999831643887e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_refresh_rounding_near_binary_powers_covers_exact_slack[0]",
+      "outcome": "passed",
+      "seconds": 5.376000262913294e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_refresh_rounding_near_binary_powers_covers_exact_slack[1]",
+      "outcome": "passed",
+      "seconds": 6.40399994153995e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_refresh_rounding_near_binary_powers_covers_exact_slack[30]",
+      "outcome": "passed",
+      "seconds": 5.2760002290597185e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_refresh_rounding_near_binary_powers_covers_exact_slack[500]",
+      "outcome": "passed",
+      "seconds": 5.50600016140379e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_refresh_rounding_near_binary_powers_covers_exact_slack[1000]",
+      "outcome": "passed",
+      "seconds": 5.584999962593429e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_refresh_floor",
+      "outcome": "passed",
+      "seconds": 4.088000059709884e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_refresh_invalid_or_overflow_range_is_rejected[-1.0]",
+      "outcome": "passed",
+      "seconds": 5.3589999879477546e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_refresh_invalid_or_overflow_range_is_rejected[inf]",
+      "outcome": "passed",
+      "seconds": 4.3849999201484025e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_refresh_invalid_or_overflow_range_is_rejected[-inf]",
+      "outcome": "passed",
+      "seconds": 4.194999928586185e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_refresh_invalid_or_overflow_range_is_rejected[nan]",
+      "outcome": "passed",
+      "seconds": 4.1320003219880164e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_refresh_invalid_or_overflow_range_is_rejected[1.7976931348623157e+308]",
+      "outcome": "passed",
+      "seconds": 4.2859999666688964e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_row_norm_is_not_operator_norm_and_root_rounds_outward",
+      "outcome": "passed",
+      "seconds": 0.0004066799992870074,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_root_scaling_handles_underflow_and_large_rationals[-3000]",
+      "outcome": "passed",
+      "seconds": 7.167999865487218e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_root_scaling_handles_underflow_and_large_rationals[-1500]",
+      "outcome": "passed",
+      "seconds": 6.064999979571439e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_root_scaling_handles_underflow_and_large_rationals[0]",
+      "outcome": "passed",
+      "seconds": 5.468000017572194e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_root_scaling_handles_underflow_and_large_rationals[1000]",
+      "outcome": "passed",
+      "seconds": 5.804000102216378e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_root_scaling_handles_underflow_and_large_rationals[2046]",
+      "outcome": "passed",
+      "seconds": 5.810999937239103e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_root_rejects_negative_or_overflow[value0]",
+      "outcome": "passed",
+      "seconds": 4.975999763701111e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_root_rejects_negative_or_overflow[value1]",
+      "outcome": "passed",
+      "seconds": 5.8639998314902186e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_affine_bound_includes_gamma_beta_and_bias",
+      "outcome": "passed",
+      "seconds": 0.0004016800012323074,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_segmented_windows_need_absolute_group_bounds_before_masking",
+      "outcome": "passed",
+      "seconds": 0.0005469999996421393,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_exact_power_pullback_and_difference_bound[inverse_sqrt-1.0]",
+      "outcome": "passed",
+      "seconds": 0.008535080000001471,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_exact_power_pullback_and_difference_bound[reciprocal-0.3333333333333333]",
+      "outcome": "passed",
+      "seconds": 0.003434270001889672,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_exact_power_pullback_and_difference_bound[reciprocal-0.14285714285714285]",
+      "outcome": "passed",
+      "seconds": 0.003375829997821711,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_exact_power_pullback_and_difference_bound[silu-1.0]",
+      "outcome": "passed",
+      "seconds": 0.000747689999116119,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_contracts.py::test_fraction_bound_preserves_a_positive_subnormal_result",
+      "outcome": "passed",
+      "seconds": 5.42800007679034e-05,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_shared_preparation.py::test_centered_normalization_reuses_prepared_input_for_mean_and_subtraction",
+      "outcome": "passed",
+      "seconds": 0.0004632900017895736,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_shared_preparation.py::test_attention_reuses_prepared_scores_for_mean_and_centering",
+      "outcome": "passed",
+      "seconds": 0.0029091699980199337,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_reference_preflight.py::test_deep_opt_in_is_explicit_and_packed_only[bert-3]",
+      "outcome": "passed",
+      "seconds": 0.3105248949977977,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_reference_preflight.py::test_deep_opt_in_is_explicit_and_packed_only[bert-4]",
+      "outcome": "passed",
+      "seconds": 0.30706769599783,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_reference_preflight.py::test_deep_opt_in_is_explicit_and_packed_only[bert-5]",
+      "outcome": "passed",
+      "seconds": 0.3275203949997376,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_reference_preflight.py::test_deep_opt_in_is_explicit_and_packed_only[bert-6]",
+      "outcome": "passed",
+      "seconds": 0.3284305550005229,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_reference_preflight.py::test_deep_opt_in_is_explicit_and_packed_only[qwen-2]",
+      "outcome": "passed",
+      "seconds": 0.2829824760010524,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_reference_preflight.py::test_deep_opt_in_is_explicit_and_packed_only[qwen-3]",
+      "outcome": "passed",
+      "seconds": 0.31001653600105783,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_reference_preflight.py::test_deep_opt_in_is_explicit_and_packed_only[qwen-4]",
+      "outcome": "passed",
+      "seconds": 0.3099921249995532,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_reference_preflight.py::test_deep_opt_in_is_explicit_and_packed_only[qwen-5]",
+      "outcome": "passed",
+      "seconds": 0.31689984499826096,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_reference_preflight.py::test_deep_opt_in_is_explicit_and_packed_only[qwen-6]",
+      "outcome": "passed",
+      "seconds": 0.3330776650000189,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_transformer_plan.py::test_complete_bounded_graph_preserves_ideal_contracts_and_fixture_gate[bert-1]",
+      "outcome": "passed",
+      "seconds": 0.2041485570007353,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_transformer_plan.py::test_complete_bounded_graph_preserves_ideal_contracts_and_fixture_gate[bert-2]",
+      "outcome": "passed",
+      "seconds": 0.20476016700195032,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_transformer_plan.py::test_complete_bounded_graph_preserves_ideal_contracts_and_fixture_gate[bert-3]",
+      "outcome": "passed",
+      "seconds": 0.38898413499919116,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_transformer_plan.py::test_complete_bounded_graph_preserves_ideal_contracts_and_fixture_gate[bert-4]",
+      "outcome": "passed",
+      "seconds": 1.1842453220015159,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_transformer_plan.py::test_complete_bounded_graph_preserves_ideal_contracts_and_fixture_gate[bert-5]",
+      "outcome": "passed",
+      "seconds": 1.9356066820000706,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_transformer_plan.py::test_complete_bounded_graph_preserves_ideal_contracts_and_fixture_gate[bert-6]",
+      "outcome": "passed",
+      "seconds": 2.1807414579998294,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_transformer_plan.py::test_complete_bounded_graph_preserves_ideal_contracts_and_fixture_gate[qwen-1]",
+      "outcome": "passed",
+      "seconds": 0.24315527599901543,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_transformer_plan.py::test_complete_bounded_graph_preserves_ideal_contracts_and_fixture_gate[qwen-2]",
+      "outcome": "passed",
+      "seconds": 0.3764270649990067,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_transformer_plan.py::test_complete_bounded_graph_preserves_ideal_contracts_and_fixture_gate[qwen-3]",
+      "outcome": "passed",
+      "seconds": 0.6808289099972171,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_transformer_plan.py::test_complete_bounded_graph_preserves_ideal_contracts_and_fixture_gate[qwen-4]",
+      "outcome": "passed",
+      "seconds": 0.6912221800012048,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_transformer_plan.py::test_complete_bounded_graph_preserves_ideal_contracts_and_fixture_gate[qwen-5]",
+      "outcome": "passed",
+      "seconds": 0.9931880450021708,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_bounded_transformer_plan.py::test_complete_bounded_graph_preserves_ideal_contracts_and_fixture_gate[qwen-6]",
+      "outcome": "passed",
+      "seconds": 1.0508364950001123,
+      "phase": "call"
+    },
+    {
+      "nodeid": "cadathlon/tests/test_encrypted_bounded_metadata.py::test_secure_arithmetic_invalidates_only_unsupported_specialized_contracts",
+      "outcome": "passed",
+      "seconds": 5.6114833380015625,
+      "phase": "call"
+    }
+  ],
+  "counts": {
+    "passed": 375,
+    "failed": 9,
+    "skipped": 2
+  }
+}

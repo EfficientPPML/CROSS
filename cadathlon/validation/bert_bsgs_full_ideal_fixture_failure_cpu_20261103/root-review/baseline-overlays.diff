@@ -1,0 +1,126 @@
+--- baseline/encrypted_bert_full_model.py
++++ candidate/encrypted_bert_full_model.py
+@@ -13,7 +13,7 @@
+ from encrypted_bert_layer_attention import BertLayerAttention
+ from encrypted_bert_all_ffn import BertFFNTile
+ from encrypted_bert_pooler_head import BertPoolerHead
+-from encrypted_bert_attention_tile import BertAttentionTile
++from encrypted_bert_bsgs_attention import BertBSGSAttentionTile as BertAttentionTile
+ from encrypted_bert_all_row_norm import BertRowLayerNorm
+ from encrypted_chained_streaming_linear import ChainedStreamingLinear, require_chained_rotation_keys
+ from encrypted_fullslot_refresh_binding import FullSlotRefreshBinding, typed
+
+--- baseline/encrypted_bert_layer_attention.py
++++ candidate/encrypted_bert_layer_attention.py
+@@ -9,7 +9,7 @@
+ from types import MappingProxyType
+ import hashlib,json,math
+ import numpy as np
+-from encrypted_bert_attention_tile import BertAttentionTile
++from encrypted_bert_bsgs_attention import BertBSGSAttentionTile as BertAttentionTile
+ from encrypted_bert_layer_softmax import BertLayerSoftmax
+ from encrypted_bert_all_row_norm import BertRowLayerNorm
+ from encrypted_chained_streaming_linear import ChainedStreamingLinear
+
+--- baseline/ideal_primitives.py
++++ candidate/ideal_primitives.py
+@@ -11,16 +11,33 @@
+ from encrypted_polynomial import EncryptedPolynomialEvaluator
+ HERE=Path(__file__).resolve().parent
+ 
++class Barrett:
++    computation_format_is_standard=True
++    def __init__(self,moduli):self.moduli=tuple(moduli)
++
++class Payload:
++    dtype=np.dtype('uint32')
++    def __init__(self,level):self.shape=(1,2,256,512,2*(level+1))
++    def devices(self):return {'ideal-cpu'}
++
++class Helper:
++    def __init__(self,ctx):self.ctx=ctx
++    def forbidden(self,*args,**kwargs):raise AssertionError('ideal facade handles payload')
++    rotate=multiply=multiply_encoded=rescale=forbidden
++    def clear(self):pass
++
+ class Value(BaseValue):
++    r,c,precision=256,512,32
+     degree_layout=(256,512)
+     def __init__(self,data,level=49,scale=DELTA):
+         super().__init__(data,level,scale)
+         # A public payload-shape placeholder exercises the existing queue
+         # planner. No limb array or ciphertext is represented by this object.
+-        self.polynomial=SimpleNamespace(shape=(1,2,256,512,2*(level+1)),dtype='uint32')
++        self.polynomial=Payload(level)
++        self.num_moduli=len(self.moduli);self.ntt_ctx=SimpleNamespace(moduli=self.moduli,ff_ctx=Barrett(self.moduli))
+ 
+ class Arithmetic(BaseArithmetic):
+-    strategy='power'
++    strategy='power';low_memory=True;progress=None
+     polynomial_depth=EncryptedPolynomialEvaluator.polynomial_depth
+     evaluate=EncryptedPolynomialEvaluator.evaluate
+     def __init__(self):
+@@ -29,10 +46,14 @@
+         cache=self.ctx._param_cache;cache.degree=131072;cache.dnum=8;cache.degree_layout=(256,512);cache.composite_degree=2
+         cache.num_q_at_level=lambda level:2*(level+1)
+         self.ctx.he_add=AddAccessor(self)
++        self.ctx.scaling_factor=DELTA;cache.ff_context_cls=Barrett
++        self.rotation=Helper(self.ctx);self._plaintext_multiply=Helper(self.ctx);self._rescale=Helper(self.ctx)
+     def _ensure_capacity(self,values,required):
+         if any(v.level<required for v in values):raise ValueError('ideal static capacity exhausted')
+         return tuple(values)
+     def _prepare(self,level):pass
++    def _lower(self,*args):pass
++    def _clear_working_caches(self):pass
+     def _finish(self,value):return value
+     def _public_slots(self,value):return np.broadcast_to(np.asarray(value,dtype=np.float64),(65536,))
+     def _encode_public(self,slots,level,scale):return Value(slots,level,scale)
+
+--- baseline/test_full_model_owner.py
++++ candidate/test_full_model_owner.py
+@@ -9,7 +9,7 @@
+ from test_softmax_tile import refresh_and_tracked
+ from ideal_refresh import IdentityRefresh,install_public_bootstrap_plan
+ from ideal_primitives import Arithmetic,Value,IdealLinear,install_matrix_class,DELTA
+-from encrypted_bert_attention_tile import BertAttentionTile
++from encrypted_bert_bsgs_attention import BertBSGSAttentionTile as BertAttentionTile
+ from encrypted_bert_all_row_norm import BertRowLayerNorm
+ from encrypted_bert_layer_attention import BertLayerAttention
+ from encrypted_bert_all_ffn import BertFFNTile
+@@ -37,6 +37,13 @@
+     monkeypatch.setattr(newton,'affine_at_scale',affine)
+     monkeypatch.setattr(newton,'integer_affine',integer)
+     monkeypatch.setattr(tanh,'integer_affine',integer)
++    import sys
++    from ideal_primitives import Barrett
++    monkeypatch.setitem(sys.modules,'finite_field',SimpleNamespace(BarrettContext=Barrett))
++    monkeypatch.setitem(sys.modules,'jax',SimpleNamespace(block_until_ready=lambda arrays:None,_ideal_test_double=True))
++    import encrypted_bert_bsgs_attention as bsgs_attention
++    yield
++    bsgs_attention._QUARANTINE.clear()
+ 
+ @pytest.fixture(scope='module')
+ def fixtures():
+@@ -48,8 +55,9 @@
+     keys=set(BertAttentionTile.required_rotation_indices())|set(BertRowLayerNorm.required_rotation_indices())
+     for a in weights.values():
+         if a.ndim==2:keys.update(linear.required_rotation_indices(a,linear.layout))
+-    for key in keys:
+-        if key not in cache.raw_rotation_keys:cache.raw_rotation_keys[key]={'a':object(),'b':object()};cache.coef_maps[key]=object()
++    for key in keys|set(cache.raw_rotation_keys):
++        cache.raw_rotation_keys[key]={n:SimpleNamespace(shape=(8,114,131072),dtype=np.dtype('uint32')) for n in ('a','b')}
++        cache.coef_maps[key]=SimpleNamespace(shape=(131072,),dtype=np.dtype('int32'))
+     cache.eval_key_a_full=SimpleNamespace(shape=(8,131072,114),dtype=np.dtype('uint32'))
+     cache.eval_key_b_full=SimpleNamespace(shape=(8,131072,114),dtype=np.dtype('uint32'))
+     positions=tuple(map(int,native[f'K{K}_positions']))
+@@ -176,8 +184,8 @@
+     for layer in range(12):
+         n=MANIFEST['normalization_reciprocal_by_public_K'][str(K)]['iterations'];s=MANIFEST['softmax'][str(layer)]['squarings']
+         products,count,_=terms(MANIFEST['norms'][f'{layer}.attention']);maps=16+2*T
+-        row=Counter(rotate=86*maps+T*(8656+28+14*s+42),multiply=T*(256+18+2*n*s+products+2),
+-            pt_products=1535*maps+T*(7168+17+3*s+4+count),rescales=24*maps+T*(768+27+(2*n+3)*s+products+7))
++        row=Counter(rotate=86*maps+T*(4816+28+14*s+42),multiply=T*(256+18+2*n*s+products+2),
++            pt_products=1535*maps+T*(7168+17+3*s+4+count),rescales=24*maps+T*(2048+27+(2*n+3)*s+products+7))
+         level=23 if layer==0 else 6;soft_refresh=int(layer!=0)+1
+         for _ in range(s):
+             if level<n+7:level=25;soft_refresh+=1

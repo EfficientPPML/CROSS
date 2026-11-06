@@ -1,0 +1,62 @@
+{
+  "live": {
+    "command": [
+      "taskset",
+      "-c",
+      "108-111",
+      "/tmp/cross-pretrained-validation-env/bin/python",
+      "-I",
+      "-B",
+      "/tmp/qwen-model-stage-boundary-proof-20261104/preparation-v1/worker_driver.py",
+      "/tmp/qwen-model-stage-boundary-proof-20261104/preparation-v1/run_config.json",
+      "da8269a2002ebeb55cb8084b27e26c592d95aee53e1f2c78cd168242c64a4137"
+    ],
+    "config_sha256": "da8269a2002ebeb55cb8084b27e26c592d95aee53e1f2c78cd168242c64a4137",
+    "environment": {
+      "HOME": "/home/jianming_gatech",
+      "LANG": "C.UTF-8",
+      "MKL_NUM_THREADS": "4",
+      "OMP_NUM_THREADS": "4",
+      "OPENBLAS_NUM_THREADS": "4",
+      "PATH": "/usr/bin:/bin",
+      "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "1",
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "TZ": "UTC"
+    },
+    "outer_pgid": 4111845,
+    "outer_pid": 4111845,
+    "worker_pgid": 4111846,
+    "worker_pid": 4111846
+  },
+  "live_path": "/tmp/qwen-model-stage-boundary-proof-20261104/preparation-v1/live-observation.json",
+  "live_sha256": "a98db1cbd14c3458a37a47b27a319b2834de10cc626d65230ba625132804714e",
+  "passed": true,
+  "processes": {
+    "4111845": {
+      "affinity": [
+        108,
+        109,
+        110,
+        111
+      ],
+      "cmdline": "/tmp/cross-pretrained-validation-env/bin/python -I -B /tmp/qwen-model-stage-boundary-proof-20261104/preparation-v1/executed_driver.py ",
+      "pgid": 4111845,
+      "pid": 4111845,
+      "stat": "4111845 (python) S 16918 4111845 4111845 0 -1 4194304 8776 0 0 0 8 2 0 0 20 0 1 0 16332540 29786112 4779 18446744073709551615 104808270487552 104808273152145 140734549003216 0 0 0 0 16781312 2 1 0 0 17 108 0 0 0 0 0 104808274656544 104808275496688 104808288133120 140734549003914 140734549004048 140734549004048 140734549004232 0\n"
+    },
+    "4111846": {
+      "affinity": [
+        108,
+        109,
+        110,
+        111
+      ],
+      "cmdline": "/tmp/cross-pretrained-validation-env/bin/python -I -B /tmp/qwen-model-stage-boundary-proof-20261104/preparation-v1/worker_driver.py /tmp/qwen-model-stage-boundary-proof-20261104/preparation-v1/run_config.json da8269a2002ebeb55cb8084b27e26c592d95aee53e1f2c78cd168242c64a4137 ",
+      "pgid": 4111846,
+      "pid": 4111846,
+      "stat": "4111846 (python) R 4111845 4111846 4111846 0 -1 4194304 21255 0 0 0 1944 5 0 0 20 0 4 0 16332551 266027008 14454 18446744073709551615 96536090640384 96536093304977 140729435202208 0 0 0 0 16781312 134218986 0 0 0 17 109 0 0 0 0 0 96536094809376 96536095649520 96536102625280 140729435205118 140729435205392 140729435205392 140729435205576 0\n"
+    }
+  },
+  "schema": "qwen-model-stage-root-live-observation-v1",
+  "utc": "2026-11-04T13:42:27.826657+00:00"
+}

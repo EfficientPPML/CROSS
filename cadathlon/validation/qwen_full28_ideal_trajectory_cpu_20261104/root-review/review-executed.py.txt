@@ -1,0 +1,65 @@
+from pathlib import Path
+import json,hashlib,tarfile,math,datetime
+lab=Path('/tmp/qwen-full-model-trajectory-v2-20261104'); out=lab/'actual-v1'
+sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+read=lambda p:json.loads(p.read_bytes())
+r=read(out/'report.json'); s1=read(out/'S1/report.json'); s8=read(out/'S8/report.json'); expected=r['source_hashes_before']
+assert r['passed'] is False and r['complete'] is True
+for n in ('cleanup_completed','termination_scope_completed','terminal_scope_completed','source_files_unchanged','execution_files_unchanged'):assert r[n] is True
+assert r['HE_executed'] is r['model_forward'] is False
+assert len(expected)==101 and expected==r['source_hashes_after']==r['execution_source_hashes_before']==r['execution_source_hashes_after']
+assert all(sha(lab/n)==sha(out/'execution'/n)==h for n,h in expected.items())
+with tarfile.open(out/'sources.tar.gz') as tar:
+ members=tar.getmembers();assert len(members)==len({m.name for m in members})==101 and all(m.isfile() and not Path(m.name).is_absolute() and '..'not in Path(m.name).parts for m in members)
+ assert {m.name:hashlib.sha256(tar.extractfile(m).read()).hexdigest() for m in members}==expected
+assert sha(out/'sources.tar.gz')==r['source_archive_sha256']=='502ec90b0d9bc34c2418b04ada3dd1a65eaab01c9873c194f86a1a39122d12ae'
+for i,s in enumerate((s1,s8)):
+ assert expected==s['source_hashes_before']==s['source_hashes_after'] and s['source_files_unchanged'] and s['assets_unchanged'] and s['cleanup_completed']
+ assert s['asset_sha256_before']==s['asset_sha256_after']
+ assert s['HE_executed'] is s['model_forward'] is s['coefficient_changes'] is False
+ assert sha(out/('S1'if i==0 else'S8')/'report.json')==r['fixtures'][i]['report_sha256']
+ p=r['children'][i];assert p['direct_returncode']==(1 if i==0 else 0) and all(p[n]is True for n in ('direct_child_reaped','group_empty_verified','cleanup_completed'))and not p['cleanup_errors']and not p['signals_sent']
+ assert not Path('/proc',str(p['pid'])).exists()
+assert not Path('/proc/2564971').exists()
+groups={p['process_group'] for p in r['children']}
+for p in Path('/proc').iterdir():
+ if not p.name.isdigit():continue
+ try:pg=int((p/'stat').read_text().rsplit(')',1)[1].split()[2])
+ except (OSError,ValueError):continue
+ assert pg not in groups
+assert s1['passed']is False and s1['complete']is False and s1['terminal_scope_completed']is False and s1['termination_scope_completed']is False
+assert s1['fixture']==dict(name='checkpoint_embedding_row0_S1',sequence=1,selector='embedding_row0',positions=[0])
+d=s1['failure_detail'];assert d['type']=='DomainFailure'and d['label']=='final.inverse_sqrt'
+f=d['record'];assert f==dict(domain=[29.88948209636508,2923.83603515625],count=1,minimum=3391.698360993511,maximum=3391.698360993511,below=0,above=1,nonfinite=0)
+assert not any(n in s1 for n in ('owner_observations','coverage','logit_metrics'))
+assert all(s8[n]is True for n in ('passed','complete','terminal_scope_completed','termination_scope_completed'))
+assert s8['backend_modules']==[] and s8['refresh_count']==s8['expected_refresh_count']==3270
+coverage=dict(passed=True,operators=421,blocks=28,logit_blocks=38,logits=151936,physical_metric_slots=31916032,domains=1918);assert s8['coverage']==coverage
+ops={f'{i}.{n}'for i in range(28)for n in ('input.inverse_sqrt','q_linear','k_linear','v_linear','q.inverse_sqrt','k.inverse_sqrt','q_rope','k_rope','gqa','output_linear','post.inverse_sqrt','gate_linear','up_linear','silu','gated_mlp')}|{'final.inverse_sqrt'}
+obs=s8['owner_observations'];assert set(obs['operators'])==ops and set(obs['blocks'])=={str(i)for i in range(28)} and set(obs['logits'])=={str(i)for i in range(38)}
+assert obs['duplicates']=={'final.inverse_sqrt':1} and obs['callbacks']==75335 and obs['last_label']=='logits.37'
+def metric(m,physical=False):
+ assert m['passed']is True and m['finite']is True and m['shape_valid']is True and m['gate']==1e-8
+ assert type(m['count'])is int and m['count']>0 and type(m['max_abs_error'])in(int,float)and math.isfinite(m['max_abs_error'])and 0<=m['max_abs_error']<=1e-8
+ if physical:assert m['count']==65536
+for group in ('operators','blocks','logits'):
+ for m in obs[group].values():metric(m,True)
+frozen=s8['frozen_reference_comparison'];assert set(frozen['operators'])==ops and set(frozen['blocks'])=={str(i)for i in range(28)}
+for m in [frozen['logits'],*frozen['operators'].values(),*frozen['blocks'].values()]:metric(m)
+for group in (obs['domains'],s8['independent_reference_domains'],s8['frozen_reference_domains']):
+ assert len(group)==1918
+ for name,d in group.items():
+  assert type(d['count'])is int and d['count']>0
+  assert all(type(d[n])is int and d[n]==0 for n in ('below','above','nonfinite'))
+  assert all(type(v)in(int,float)and math.isfinite(v)for v in (*d['domain'],d['minimum'],d['maximum']))
+  assert d['domain'][0]<=d['minimum']<=d['maximum']<=d['domain'][1]
+assert len([n for n in obs['domains']if n.endswith('.variance')])==113
+lm=s8['logit_metrics'];assert lm['passed'] and lm['gate']==1e-8 and lm['finite']and lm['shape_valid'] and lm['physical_slots_checked']==2490368 and lm['all_logits']==151936 and lm['max_abs_error']<=1e-8 and lm['predicted_token']==lm['reference_token']
+assert len(s8['actual_logit_metadata'])==38
+for i,m in enumerate(s8['actual_logit_metadata']):assert m==dict(block=i,start=i*4096,stop=min((i+1)*4096,151936),level=6,scale=1.1467305003699405e18,last_position=7)
+assets=Path('/home/jianming_gatech/cross_validation_assets/qwen/c1899de289a04d12100db370d81485cdf75e47ca')
+assert s1['asset_sha256_before']==s8['asset_sha256_before'] and all(sha(assets/n)==h for n,h in s8['asset_sha256_before'].items())
+maxima={k:max(m['max_abs_error'] for m in obs[k].values()) for k in ('operators','blocks','logits')}
+receipt=dict(schema='root-qwen-full28-trajectory-terminal-review-v1',time_utc=datetime.datetime.now(datetime.timezone.utc).isoformat(),evidence_verified=True,aggregate_passed=False,outer_session=18102,outer_exit_code=1,outer_reaped_attested_by_owner=True,producer_and_owned_groups_absent=True,report_sha256=sha(out/'report.json'),source_archive_sha256=sha(out/'sources.tar.gz'),source_count=101,current_execution_archive_sources_equal=True,original_assets_rehashed=True,S1=dict(passed=False,complete=False,report_sha256=sha(out/'S1/report.json'),failure=s1['failure_detail'],terminal_scope_completed=False,termination_scope_completed=False,packed_owner_not_reached=True,generic_input_provenance_scope='shared S8 selection metadata; actual S1 fixture is separately declared checkpoint row0'),S8=dict(passed=True,report_sha256=sha(out/'S8/report.json'),coverage=coverage,maximum_physical_metric_error=maxima,logit_max_abs_error=lm['max_abs_error'],identity_refreshes=3270,actual_domains=1918,independent_domains=1918,frozen_reference_domains=1918),scope='Full28 S8 ideal packed trajectory only; S1 fails; no HE or native/model-forward result')
+p=lab/'root-review/terminal.json';p.parent.mkdir(exist_ok=True);assert not p.exists();p.write_text(json.dumps(receipt,sort_keys=True,indent=2)+'\n')
+print(json.dumps(receipt,sort_keys=True))

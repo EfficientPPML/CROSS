@@ -1,0 +1,66 @@
+.F.F.......                                                              [100%]
+=================================== FAILURES ===================================
+____ test_head_bound_has_final_epsilon_and_contains_zero_and_extreme_inputs ____
+
+    def test_head_bound_has_final_epsilon_and_contains_zero_and_extreme_inputs():
+        W=np.array([[1.,-2.,.5],[2.,1.,-1.],[.25,2.,1.],[-3.,.5,.75]]);g=np.array([2.,.5,-1.]);eps=1e-6
+>       limits=head_variance_bounds(W,g,2,eps)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_bounds.py:16: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+bounds.py:40: in head_variance_bounds
+    gamma=tuple(rational(x) for x in gamma);rows=tuple(tuple(rational(x) for x in row) for row in matrix)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+bounds.py:40: in <genexpr>
+    gamma=tuple(rational(x) for x in gamma);rows=tuple(tuple(rational(x) for x in row) for row in matrix)
+                ^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = np.float64(2.0)
+
+    def rational(value):
+        if type(value)is int:return Fraction(value)
+        if type(value)is float and math.isfinite(value):return Fraction.from_float(value)
+        if type(value)is Fraction:return value
+>       raise TypeError('finite public real scalar required')
+E       TypeError: finite public real scalar required
+
+bounds.py:10: TypeError
+_ test_attention_convex_mix_and_mlp_envelopes_cover_independent_small_circuit __
+
+    def test_attention_convex_mix_and_mlp_envelopes_cover_independent_small_circuit():
+        rng=np.random.default_rng(19);D=4;S=7;hd=2;nkv=2;heads=4;eps=1e-6
+        embedding=rng.normal(size=(S,D));gamma=rng.normal(size=D);V=rng.normal(size=(nkv*hd,D));O=rng.normal(size=(D,heads*hd))
+        z=embedding/np.sqrt(np.mean(embedding**2,axis=-1,keepdims=True)+eps)*gamma
+        values=(z@V.T).reshape(S,nkv,hd);values=np.repeat(values,2,axis=1)
+        probability=rng.uniform(size=(S,heads,S));probability/=probability.sum(axis=-1,keepdims=True)
+        context=np.einsum('qhk,khd->qhd',probability,values).reshape(S,heads*hd)
+        attention=context@O.T
+>       v_bound=normalized_linear_bounds(V,gamma);attention_bound=linear_envelope(O,repeat_kv_bounds(v_bound,hd,2))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_bounds.py:37: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+bounds.py:30: in normalized_linear_bounds
+    gamma=tuple(rational(x) for x in gamma);D=len(gamma)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+bounds.py:30: in <genexpr>
+    gamma=tuple(rational(x) for x in gamma);D=len(gamma)
+                ^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = np.float64(-1.809912000528707)
+
+    def rational(value):
+        if type(value)is int:return Fraction(value)
+        if type(value)is float and math.isfinite(value):return Fraction.from_float(value)
+        if type(value)is Fraction:return value
+>       raise TypeError('finite public real scalar required')
+E       TypeError: finite public real scalar required
+
+bounds.py:10: TypeError
+=========================== short test summary info ============================
+FAILED test_bounds.py::test_head_bound_has_final_epsilon_and_contains_zero_and_extreme_inputs
+FAILED test_bounds.py::test_attention_convex_mix_and_mlp_envelopes_cover_independent_small_circuit
+2 failed, 9 passed in 0.08s

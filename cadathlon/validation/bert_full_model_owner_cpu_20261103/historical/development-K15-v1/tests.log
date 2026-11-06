@@ -1,0 +1,25 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________ test_joined_all12_actual_ciphertext_connections_all_slots[15] _________
+development-K15-v1/snapshot/test_full_model_owner.py:233: in test_joined_all12_actual_ciphertext_connections_all_slots
+    result=owner.evaluate(sources,capture_checkpoints=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+development-K15-v1/snapshot/encrypted_bert_full_model.py:208: in evaluate
+    self._install_child(head);result=head.evaluate_tile(current[0],capture_checkpoints=capture_checkpoints)
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+development-K15-v1/snapshot/test_full_model_owner.py:229: in head
+    return head_impl(child,value,**kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+development-K15-v1/snapshot/checkout/cadathlon/common/encrypted_bert_pooler_head.py:95: in evaluate_tile
+    activated,tanh_checkpoints=self.tanh.evaluate_tile(pooled,capture_checkpoints=capture_checkpoints)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+development-K15-v1/snapshot/checkout/cadathlon/common/encrypted_bert_rational_tanh.py:143: in evaluate_tile
+    denom=integer_affine(a,squared,1,bias=1.);counts['integer_affines']+=1;denom=note(label+'.denominator',denom);keep('denominator',denom)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+development-K15-v1/snapshot/checkout/cadathlon/common/encrypted_integer_affine.py:92: in integer_affine
+    zero = context.he_sub[level].sub(value, value)
+           ^^^^^^^^^^^^^^
+E   AttributeError: 'types.SimpleNamespace' object has no attribute 'he_sub'
+=========================== short test summary info ============================
+FAILED development-K15-v1/snapshot/test_full_model_owner.py::test_joined_all12_actual_ciphertext_connections_all_slots[15]
+1 failed in 329.25s (0:05:29)

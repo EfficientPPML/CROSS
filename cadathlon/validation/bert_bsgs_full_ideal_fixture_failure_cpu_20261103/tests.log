@@ -1,0 +1,87 @@
+...............................FF....................................... [ 90%]
+........                                                                 [100%]
+=================================== FAILURES ===================================
+________ test_joined_all12_actual_ciphertext_connections_all_slots[15] _________
+test_full_model_owner.py:278: in test_joined_all12_actual_ciphertext_connections_all_slots
+    result=owner.evaluate(sources,capture_checkpoints=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+encrypted_bert_full_model.py:181: in evaluate
+    attention_result=child.evaluate(current)
+                     ^^^^^^^^^^^^^^^^^^^^^^^
+test_full_model_owner.py:268: in attention
+    result=attention_impl(child,inputs);trace['attention'][child.layer]=result.outputs;return result
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+encrypted_bert_layer_attention.py:184: in evaluate
+    probabilities=self.softmaxes[index].evaluate_tile(scores);del scores
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_bert_layer_softmax.py:132: in evaluate_tile
+    value=self._note('round'+str(row['index']),self.round.evaluate_tile(value),row['output_level'],actual)
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_bert_normalization_round.py:158: in evaluate_tile
+    guard();reduction._note(f'normalization inverse y{update}',estimate);guard();reduction._forget(estimate)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_score_reduction.py:206: in _note
+    self.progress(label,value,dict(self.counts))
+checkout/cadathlon/common/encrypted_bert_normalization_round.py:139: in observed
+    def observed(*args):callback(*args);guard()
+                        ^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_bert_layer_softmax.py:75: in _callback
+    if self.progress is not None:self.progress(label,value,dict(counts))
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+encrypted_bert_layer_attention.py:109: in _callback
+    self._guard();state=self._fingerprint(value)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^
+encrypted_bert_layer_attention.py:106: in _fingerprint
+    def _fingerprint(self,value):return self.attention._fingerprint(value)
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+encrypted_bert_bsgs_attention.py:81: in _fingerprint
+    return self._guard_owner._fingerprint(value)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+encrypted_bsgs_score_routing.py:194: in _fingerprint
+    field = ntt.ff_ctx
+            ^^^^^^^^^^
+E   AttributeError: 'NoneType' object has no attribute 'ff_ctx'
+________ test_joined_all12_actual_ciphertext_connections_all_slots[128] ________
+test_full_model_owner.py:278: in test_joined_all12_actual_ciphertext_connections_all_slots
+    result=owner.evaluate(sources,capture_checkpoints=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+encrypted_bert_full_model.py:181: in evaluate
+    attention_result=child.evaluate(current)
+                     ^^^^^^^^^^^^^^^^^^^^^^^
+test_full_model_owner.py:268: in attention
+    result=attention_impl(child,inputs);trace['attention'][child.layer]=result.outputs;return result
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+encrypted_bert_layer_attention.py:184: in evaluate
+    probabilities=self.softmaxes[index].evaluate_tile(scores);del scores
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_bert_layer_softmax.py:132: in evaluate_tile
+    value=self._note('round'+str(row['index']),self.round.evaluate_tile(value),row['output_level'],actual)
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_bert_normalization_round.py:158: in evaluate_tile
+    guard();reduction._note(f'normalization inverse y{update}',estimate);guard();reduction._forget(estimate)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_score_reduction.py:206: in _note
+    self.progress(label,value,dict(self.counts))
+checkout/cadathlon/common/encrypted_bert_normalization_round.py:139: in observed
+    def observed(*args):callback(*args);guard()
+                        ^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_bert_layer_softmax.py:75: in _callback
+    if self.progress is not None:self.progress(label,value,dict(counts))
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+encrypted_bert_layer_attention.py:109: in _callback
+    self._guard();state=self._fingerprint(value)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^
+encrypted_bert_layer_attention.py:106: in _fingerprint
+    def _fingerprint(self,value):return self.attention._fingerprint(value)
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+encrypted_bert_bsgs_attention.py:81: in _fingerprint
+    return self._guard_owner._fingerprint(value)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+encrypted_bsgs_score_routing.py:194: in _fingerprint
+    field = ntt.ff_ctx
+            ^^^^^^^^^^
+E   AttributeError: 'NoneType' object has no attribute 'ff_ctx'
+=========================== short test summary info ============================
+FAILED test_full_model_owner.py::test_joined_all12_actual_ciphertext_connections_all_slots[15]
+FAILED test_full_model_owner.py::test_joined_all12_actual_ciphertext_connections_all_slots[128]
+2 failed, 78 passed, 13 deselected in 101.63s (0:01:41)

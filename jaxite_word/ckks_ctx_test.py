@@ -160,6 +160,26 @@ class CKKSContextTest(parameterized.TestCase):
     self.assertIs(rebuilt_d._sk_ref, ctx.secret_key)
 
   # @absltest.skip("test a single experiment")
+  def test_host_constant_encoding_matches_polynomial_without_device_transfer(self):
+    values = np.linspace(-0.75, 0.75, self.num_slots)
+    for backend in (None, finite_field.MontgomeryContext):
+      with self.subTest(backend=backend):
+        ctx = ckks_ctx.CKKSContext(self.params)
+        if backend is not None:
+          ctx.program_initialization(
+              total_rotation_indices=[], dnum=self.dnum, r=self.r, c=self.c,
+              batch=1, finite_field_context=backend,
+          )
+        expected = np.asarray(ctx.encode(values).polynomial[0, 0])
+        with mock.patch.object(
+            ckks_ctx, '_polynomial_from_flat_array',
+            side_effect=AssertionError('host encoding must not stage a Polynomial'),
+        ):
+          actual = ctx._encode_host_array(values)
+        self.assertIsInstance(actual, np.ndarray)
+        self.assertEqual(actual.dtype, np.uint32)
+        np.testing.assert_array_equal(actual, expected)
+
   def test_ckks_context_encode_decode(self):
     # Paramters Setup
     ctx = ckks_ctx.CKKSContext(self.params)

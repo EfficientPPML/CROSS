@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "/tmp/bert-approximate-norm-output-bounds-20261103/derive.py", line 75, in <module>
+    if __name__=='__main__':main()
+                            ~~~~^^
+  File "/tmp/bert-approximate-norm-output-bounds-20261103/derive.py", line 52, in main
+    squared_relative_envelope=record(contract['squared_relative_envelope']),inverse_energy_factor=record(contract['normalization_factor']),
+                              ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/bert-approximate-norm-output-bounds-20261103/derive.py", line 19, in record
+    def record(x):return dict(exact_fraction=fraction(x),upper_binary64=ceil_float(x))
+                                             ~~~~~~~~^^^
+  File "/tmp/bert-approximate-norm-output-bounds-20261103/derive.py", line 18, in fraction
+    def fraction(x):x=F(x);return [str(x.numerator),str(x.denominator)]
+                                   ~~~^^^^^^^^^^^^^
+ValueError: Exceeds the limit (4300 digits) for integer string conversion; use sys.set_int_max_str_digits() to increase the limit

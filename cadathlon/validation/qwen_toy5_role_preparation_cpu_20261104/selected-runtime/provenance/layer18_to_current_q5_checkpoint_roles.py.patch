@@ -1,0 +1,36 @@
+--- /tmp/qwen-toy5-actual-key-io-layer-20261104/q5_checkpoint_roles.py
++++ q5_checkpoint_roles.py
+@@ -121,13 +121,14 @@
+                 if live and original_input is not None and input_owner.value is not original_input:raise ValueError('original input ciphertext changed')
+                 if live and weights is not None and weight_owner.weights is not weights:raise ValueError('original public weight owner changed')
+             try:
++                selected_dependencies=dependencies(handle)if callable(dependencies)else dependencies
+                 weight_owner=weight_owner_factory(handle);weight_methods=acquire(weight_owner,('load','check'))
+                 weights=weight_methods['load']();weight_methods['check']()
+                 input_owner=input_owner_factory(handle);input_methods=acquire(input_owner,('load','check'))
+                 original_input=input_methods['load']();input_methods['check']()
+                 publisher=publisher_factory();pub=acquire(publisher,('check','finish','checkpoint'));guard()
+                 def checkpoint(index,value,row):guard();pub['checkpoint'](index,value,row);guard()
+-                result=exercise(original_ctx,original_input,weights,checkpoint=checkpoint,dependencies=dependencies)
++                result=exercise(original_ctx,original_input,weights,checkpoint=checkpoint,dependencies=selected_dependencies)
+                 guard();raw=pub['finish'](result);guard()
+             except BaseException as error:primary=protect_body(error)
+             finally:
+@@ -143,7 +144,7 @@
+             if raw is None:raise RuntimeError('server did not complete original47 checkpoint manifest')
+             guard(live=False);return raw
+ 
+-def client_bound(np,public,private_loader,weights,embeddings,rules,reference_root,*,admission_check):
++def client_bound(np,public,private_loader,weights,embeddings,rules,reference_root,*,admission_check,failure_note=None):
+     """Full public auth before private; fail-fast decoding with whole-owner quarantine.
+ 
+     Expected private-handle API is a source proposal: check(), ctx,
+@@ -191,6 +192,8 @@
+                         results.append(diagnostics(np,snapshot,dense[index],index))
+                     except BaseException as error:
+                         body=protect_body(error)
++                        if failure_note is not None:
++                            finish(body,[('owned public failure checkpoint note',lambda:failure_note(index,type(error).__name__),failure_note)])
+                         _QUARANTINE.append((handle,ctx,decode,factory,tuple(retained),tuple(results),index,body))
+                         # Includes known ApproximationErrorTooHigh: stop, retain,
+                         #and cross the key scope. No continue/normal-failure

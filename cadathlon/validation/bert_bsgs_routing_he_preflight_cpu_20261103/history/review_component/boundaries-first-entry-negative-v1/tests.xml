@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="9" time="1.734" timestamp="2026-11-03T16:55:01.192398+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_component_boundaries_installed" name="test_real_entrypoints_denied_restored_without_instances[fixture]" time="0.660" /><testcase classname="test_component_boundaries_installed" name="test_real_entrypoints_denied_restored_without_instances[server]" time="0.001" /><testcase classname="test_component_boundaries_installed" name="test_real_entrypoints_denied_restored_without_instances[validate]" time="0.001" /><testcase classname="test_component_boundaries_installed" name="test_real_native_import_denial_does_not_import_native_package[fixture]" time="0.001" /><testcase classname="test_component_boundaries_installed" name="test_real_native_import_denial_does_not_import_native_package[server]" time="0.001" /><testcase classname="test_component_boundaries_installed" name="test_real_native_import_denial_does_not_import_native_package[validate]" time="0.001" /><testcase classname="test_component_boundaries_installed" name="test_fresh_first_entry_installs_guards_before_core_import[fixture]" time="0.333"><failure message="AssertionError: &#10;  Traceback (most recent call last):&#10;    File &quot;&lt;string&gt;&quot;, line 23, in &lt;module&gt;&#10;      with boundary.role_scope(role,calls=calls):&#10;           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^&#10;    File &quot;/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/contextlib.py&quot;, line 141, in __enter__&#10;      return next(self.gen)&#10;    File &quot;/tmp/bert-bsgs-routing-he-proof-20261103/component_boundaries.py&quot;, line 120, in role_scope&#10;[+8 more lines; full report in element text]">role = 'fixture'
+record_property = &lt;function record_property.&lt;locals&gt;.append_property at 0x7e32fbdd00e0&gt;
+
+    @pytest.mark.parametrize('role',b.ROLES)
+    def test_fresh_first_entry_installs_guards_before_core_import(role,record_property):
+        """Exercise the actual first-entry order in an otherwise fresh interpreter."""
+        import json,subprocess,textwrap
+        script=textwrap.dedent('''
+            from pathlib import Path
+            import json,os,sys
+            root=Path(sys.argv[1]);role=sys.argv[2]
+            sys.path[:0]=[str(root),str(root/'runtime/stage'),str(root/'common'),str(root/'runtime')]
+            import component_boundaries as boundary
+            assert 'jax' not in sys.modules and 'jaxite_word' not in sys.modules
+            forbidden=[]
+            def audit(event,args):
+                if event=='open' and args and isinstance(args[0],(str,bytes,os.PathLike)):
+                    p=Path(os.fsdecode(args[0]))
+                    if p.suffix in ('.npy','.npz','.safetensors') or 'client_private' in p.parts or p.name=='client_preprocessed_input':
+                        forbidden.append('payload');raise AssertionError('no payload read in fresh entry probe')
+            def profile(frame,event,arg):
+                if event!='call':return
+                filename=Path(frame.f_code.co_filename).name;name=frame.f_code.co_name
+                if ((filename=='key_gen.py' and name in boundary.KEY_METHODS) or
+                    (filename in ('ckks_ctx.py','polynomial.py') and name=='__init__')):
+                    forbidden.append(filename+':'+name);raise AssertionError('no crypto constructor/keygen in fresh probe')
+            sys.addaudithook(audit);sys.setprofile(profile)
+            calls=[]
+            try:
+                with boundary.role_scope(role,calls=calls):
+                    entries=boundary._entries(role) # now AFTER the guarded first import
+                    for owner,name,label in entries:
+                        try:getattr(owner,name)(None)
+                        except RuntimeError as e:assert str(e)=='forbidden BSGS '+role+' action: '+label
+                        else:raise AssertionError('real entrypoint was not denied')
+                bridge=sys.modules.get('jax._src.xla_bridge')
+                backends={} if bridge is None else dict(getattr(bridge,'_backends',{}))
+                result=dict(role=role,denied=len(calls),native_modules=[n for n in sys.modules if boundary._native(n)],
+                    jax_imported='jax' in sys.modules,backend_initialized=bool(backends),backend_names=sorted(backends),
+                    forbidden=forbidden,lock_released=not boundary._ACTIVE.locked())
+                assert not result['native_modules'] and not forbidden and result['lock_released']
+            finally:sys.setprofile(None)
+            print(json.dumps(result,sort_keys=True))
+        ''')
+        environment=dict(os.environ,JAX_PLATFORMS='cpu',OPENBLAS_NUM_THREADS='1',OMP_NUM_THREADS='1')
+        for name in ('TPU_VISIBLE_CHIPS','CROSS_EAGER_LEVEL_PARAMS','XLA_FLAGS'):environment.pop(name,None)
+        result=subprocess.run([sys.executable,'-c',script,str(HERE),role],env=environment,text=True,capture_output=True,check=False)
+&gt;       assert result.returncode==0,result.stdout+'\n'+result.stderr
+E       AssertionError: 
+E         Traceback (most recent call last):
+E           File "&lt;string&gt;", line 23, in &lt;module&gt;
+E             with boundary.role_scope(role,calls=calls):
+E                  ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+E           File "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/contextlib.py", line 141, in __enter__
+E             return next(self.gen)
+E           File "/tmp/bert-bsgs-routing-he-proof-20261103/component_boundaries.py", line 120, in role_scope
+E             for owner, name, label in _entries(role): patch(owner, name, stop(label))
+E                                       ~~~~~~~~^^^^^^
+E           File "/tmp/bert-bsgs-routing-he-proof-20261103/component_boundaries.py", line 33, in _entries
+E             from jaxite_word import CKKSContext
+E         ImportError: cannot import name 'CKKSContext' from 'jaxite_word' (/tmp/bert-bsgs-routing-he-proof-20261103/runtime/jaxite_word/__init__.py)
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/home/jianming_gatech/miniconda3/envs/jaxite/bin/python', '-c', "\nfrom pathlib import Path\ni...ame \'CKKSContext\' from \'jaxite_word\' (/tmp/bert-bsgs-routing-he-proof-20261103/runtime/jaxite_word/__init__.py)\n').returncode
+
+test_component_boundaries_installed.py:117: AssertionError</failure></testcase><testcase classname="test_component_boundaries_installed" name="test_fresh_first_entry_installs_guards_before_core_import[server]" time="0.329"><failure message="AssertionError: &#10;  Traceback (most recent call last):&#10;    File &quot;&lt;string&gt;&quot;, line 23, in &lt;module&gt;&#10;      with boundary.role_scope(role,calls=calls):&#10;           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^&#10;    File &quot;/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/contextlib.py&quot;, line 141, in __enter__&#10;      return next(self.gen)&#10;    File &quot;/tmp/bert-bsgs-routing-he-proof-20261103/component_boundaries.py&quot;, line 120, in role_scope&#10;[+8 more lines; full report in element text]">role = 'server'
+record_property = &lt;function record_property.&lt;locals&gt;.append_property at 0x7e32fb734a40&gt;
+
+    @pytest.mark.parametrize('role',b.ROLES)
+    def test_fresh_first_entry_installs_guards_before_core_import(role,record_property):
+        """Exercise the actual first-entry order in an otherwise fresh interpreter."""
+        import json,subprocess,textwrap
+        script=textwrap.dedent('''
+            from pathlib import Path
+            import json,os,sys
+            root=Path(sys.argv[1]);role=sys.argv[2]
+            sys.path[:0]=[str(root),str(root/'runtime/stage'),str(root/'common'),str(root/'runtime')]
+            import component_boundaries as boundary
+            assert 'jax' not in sys.modules and 'jaxite_word' not in sys.modules
+            forbidden=[]
+            def audit(event,args):
+                if event=='open' and args and isinstance(args[0],(str,bytes,os.PathLike)):
+                    p=Path(os.fsdecode(args[0]))
+                    if p.suffix in ('.npy','.npz','.safetensors') or 'client_private' in p.parts or p.name=='client_preprocessed_input':
+                        forbidden.append('payload');raise AssertionError('no payload read in fresh entry probe')
+            def profile(frame,event,arg):
+                if event!='call':return
+                filename=Path(frame.f_code.co_filename).name;name=frame.f_code.co_name
+                if ((filename=='key_gen.py' and name in boundary.KEY_METHODS) or
+                    (filename in ('ckks_ctx.py','polynomial.py') and name=='__init__')):
+                    forbidden.append(filename+':'+name);raise AssertionError('no crypto constructor/keygen in fresh probe')
+            sys.addaudithook(audit);sys.setprofile(profile)
+            calls=[]
+            try:
+                with boundary.role_scope(role,calls=calls):
+                    entries=boundary._entries(role) # now AFTER the guarded first import
+                    for owner,name,label in entries:
+                        try:getattr(owner,name)(None)
+                        except RuntimeError as e:assert str(e)=='forbidden BSGS '+role+' action: '+label
+                        else:raise AssertionError('real entrypoint was not denied')
+                bridge=sys.modules.get('jax._src.xla_bridge')
+                backends={} if bridge is None else dict(getattr(bridge,'_backends',{}))
+                result=dict(role=role,denied=len(calls),native_modules=[n for n in sys.modules if boundary._native(n)],
+                    jax_imported='jax' in sys.modules,backend_initialized=bool(backends),backend_names=sorted(backends),
+                    forbidden=forbidden,lock_released=not boundary._ACTIVE.locked())
+                assert not result['native_modules'] and not forbidden and result['lock_released']
+            finally:sys.setprofile(None)
+            print(json.dumps(result,sort_keys=True))
+        ''')
+        environment=dict(os.environ,JAX_PLATFORMS='cpu',OPENBLAS_NUM_THREADS='1',OMP_NUM_THREADS='1')
+        for name in ('TPU_VISIBLE_CHIPS','CROSS_EAGER_LEVEL_PARAMS','XLA_FLAGS'):environment.pop(name,None)
+        result=subprocess.run([sys.executable,'-c',script,str(HERE),role],env=environment,text=True,capture_output=True,check=False)
+&gt;       assert result.returncode==0,result.stdout+'\n'+result.stderr
+E       AssertionError: 
+E         Traceback (most recent call last):
+E           File "&lt;string&gt;", line 23, in &lt;module&gt;
+E             with boundary.role_scope(role,calls=calls):
+E                  ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+E           File "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/contextlib.py", line 141, in __enter__
+E             return next(self.gen)
+E           File "/tmp/bert-bsgs-routing-he-proof-20261103/component_boundaries.py", line 120, in role_scope
+E             for owner, name, label in _entries(role): patch(owner, name, stop(label))
+E                                       ~~~~~~~~^^^^^^
+E           File "/tmp/bert-bsgs-routing-he-proof-20261103/component_boundaries.py", line 33, in _entries
+E             from jaxite_word import CKKSContext
+E         ImportError: cannot import name 'CKKSContext' from 'jaxite_word' (/tmp/bert-bsgs-routing-he-proof-20261103/runtime/jaxite_word/__init__.py)
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/home/jianming_gatech/miniconda3/envs/jaxite/bin/python', '-c', "\nfrom pathlib import Path\ni...ame \'CKKSContext\' from \'jaxite_word\' (/tmp/bert-bsgs-routing-he-proof-20261103/runtime/jaxite_word/__init__.py)\n').returncode
+
+test_component_boundaries_installed.py:117: AssertionError</failure></testcase><testcase classname="test_component_boundaries_installed" name="test_fresh_first_entry_installs_guards_before_core_import[validate]" time="0.330"><failure message="AssertionError: &#10;  Traceback (most recent call last):&#10;    File &quot;&lt;string&gt;&quot;, line 23, in &lt;module&gt;&#10;      with boundary.role_scope(role,calls=calls):&#10;           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^&#10;    File &quot;/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/contextlib.py&quot;, line 141, in __enter__&#10;      return next(self.gen)&#10;    File &quot;/tmp/bert-bsgs-routing-he-proof-20261103/component_boundaries.py&quot;, line 120, in role_scope&#10;[+8 more lines; full report in element text]">role = 'validate'
+record_property = &lt;function record_property.&lt;locals&gt;.append_property at 0x7e32fb735260&gt;
+
+    @pytest.mark.parametrize('role',b.ROLES)
+    def test_fresh_first_entry_installs_guards_before_core_import(role,record_property):
+        """Exercise the actual first-entry order in an otherwise fresh interpreter."""
+        import json,subprocess,textwrap
+        script=textwrap.dedent('''
+            from pathlib import Path
+            import json,os,sys
+            root=Path(sys.argv[1]);role=sys.argv[2]
+            sys.path[:0]=[str(root),str(root/'runtime/stage'),str(root/'common'),str(root/'runtime')]
+            import component_boundaries as boundary
+            assert 'jax' not in sys.modules and 'jaxite_word' not in sys.modules
+            forbidden=[]
+            def audit(event,args):
+                if event=='open' and args and isinstance(args[0],(str,bytes,os.PathLike)):
+                    p=Path(os.fsdecode(args[0]))
+                    if p.suffix in ('.npy','.npz','.safetensors') or 'client_private' in p.parts or p.name=='client_preprocessed_input':
+                        forbidden.append('payload');raise AssertionError('no payload read in fresh entry probe')
+            def profile(frame,event,arg):
+                if event!='call':return
+                filename=Path(frame.f_code.co_filename).name;name=frame.f_code.co_name
+                if ((filename=='key_gen.py' and name in boundary.KEY_METHODS) or
+                    (filename in ('ckks_ctx.py','polynomial.py') and name=='__init__')):
+                    forbidden.append(filename+':'+name);raise AssertionError('no crypto constructor/keygen in fresh probe')
+            sys.addaudithook(audit);sys.setprofile(profile)
+            calls=[]
+            try:
+                with boundary.role_scope(role,calls=calls):
+                    entries=boundary._entries(role) # now AFTER the guarded first import
+                    for owner,name,label in entries:
+                        try:getattr(owner,name)(None)
+                        except RuntimeError as e:assert str(e)=='forbidden BSGS '+role+' action: '+label
+                        else:raise AssertionError('real entrypoint was not denied')
+                bridge=sys.modules.get('jax._src.xla_bridge')
+                backends={} if bridge is None else dict(getattr(bridge,'_backends',{}))
+                result=dict(role=role,denied=len(calls),native_modules=[n for n in sys.modules if boundary._native(n)],
+                    jax_imported='jax' in sys.modules,backend_initialized=bool(backends),backend_names=sorted(backends),
+                    forbidden=forbidden,lock_released=not boundary._ACTIVE.locked())
+                assert not result['native_modules'] and not forbidden and result['lock_released']
+            finally:sys.setprofile(None)
+            print(json.dumps(result,sort_keys=True))
+        ''')
+        environment=dict(os.environ,JAX_PLATFORMS='cpu',OPENBLAS_NUM_THREADS='1',OMP_NUM_THREADS='1')
+        for name in ('TPU_VISIBLE_CHIPS','CROSS_EAGER_LEVEL_PARAMS','XLA_FLAGS'):environment.pop(name,None)
+        result=subprocess.run([sys.executable,'-c',script,str(HERE),role],env=environment,text=True,capture_output=True,check=False)
+&gt;       assert result.returncode==0,result.stdout+'\n'+result.stderr
+E       AssertionError: 
+E         Traceback (most recent call last):
+E           File "&lt;string&gt;", line 23, in &lt;module&gt;
+E             with boundary.role_scope(role,calls=calls):
+E                  ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+E           File "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/contextlib.py", line 141, in __enter__
+E             return next(self.gen)
+E           File "/tmp/bert-bsgs-routing-he-proof-20261103/component_boundaries.py", line 120, in role_scope
+E             for owner, name, label in _entries(role): patch(owner, name, stop(label))
+E                                       ~~~~~~~~^^^^^^
+E           File "/tmp/bert-bsgs-routing-he-proof-20261103/component_boundaries.py", line 33, in _entries
+E             from jaxite_word import CKKSContext
+E         ImportError: cannot import name 'CKKSContext' from 'jaxite_word' (/tmp/bert-bsgs-routing-he-proof-20261103/runtime/jaxite_word/__init__.py)
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/home/jianming_gatech/miniconda3/envs/jaxite/bin/python', '-c', "\nfrom pathlib import Path\ni...ame \'CKKSContext\' from \'jaxite_word\' (/tmp/bert-bsgs-routing-he-proof-20261103/runtime/jaxite_word/__init__.py)\n').returncode
+
+test_component_boundaries_installed.py:117: AssertionError</failure></testcase></testsuite></testsuites>

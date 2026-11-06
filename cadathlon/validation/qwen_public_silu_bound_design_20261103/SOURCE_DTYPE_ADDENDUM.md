@@ -1,0 +1,3 @@
+The earlier public normalization archive records Qwen gamma source tensors as BF16. The native audit evaluates the checkpoint after exact promotion to binary32. Therefore the proposed extractor must verify source dtype and raw tensor bytes, promote BF16/binary32 values exactly to binary32, verify the source-dtype roundtrip, and hash both source and promoted representations before calling `public_bound.py`. The helper's binary32 input contract describes those native-evaluation values, not a byte reinterpretation of the checkpoint. Gate tensor source dtypes still require explicit inventory verification.
+
+This clarification uses the prior public report only. No model or checkpoint tensor extraction occurred, and the frozen seven-source design/test snapshot is unchanged.

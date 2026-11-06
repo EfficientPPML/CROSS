@@ -5,16 +5,16 @@ come from the handshake client_key_generation wrote.
 """
 import json
 import os
-import signal
 import subprocess
 import sys
 import time
 from pathlib import Path
 
-sys.path.insert(0, os.environ["P3_SUITE_DIR"])
+sys.path.insert(0, str(Path(os.environ["P3_SUITE_DIR"]).resolve()))
 import stage_lib as lib
+from daemon_control import stop_daemon
 
-SUITE_DIR = Path(os.environ["P3_SUITE_DIR"])
+SUITE_DIR = Path(os.environ["P3_SUITE_DIR"]).resolve()
 STARTUP_TIMEOUT = float(os.environ.get("P3_STARTUP_TIMEOUT", "3600"))
 
 
@@ -29,31 +29,46 @@ def stop_existing(paths):
         except (ValueError, OSError):
             pidfile.unlink(missing_ok=True)
             continue
-        try:
-            os.kill(pid, signal.SIGTERM)
-        except (ProcessLookupError, PermissionError):
-            pidfile.unlink(missing_ok=True)
-            continue
-        print(f"         [p3] stopping resident service pid {pid}")
-        for _ in range(150):
-            time.sleep(0.2)
-            try:
-                os.kill(pid, 0)
-            except ProcessLookupError:
-                break
-        else:
-            try:
-                os.kill(pid, signal.SIGKILL)
-            except ProcessLookupError:
-                pass
+        if stop_daemon(pid):
+            print(f"         [p3] stopped resident service pid {pid}")
         pidfile.unlink(missing_ok=True)
-    time.sleep(3)
-    lock = Path("/tmp/libtpu_lockfile")
+
+
+def reap_failed_daemon(daemon):
+    """Let a failed constructor finish teardown; kill and reap if it stalls."""
     try:
-        if lock.exists():
-            lock.unlink()
-    except OSError:
-        pass
+        daemon.wait(timeout=5.0)
+        return
+    except subprocess.TimeoutExpired:
+        stop_daemon(daemon.pid, timeout=5.0)
+    daemon.wait(timeout=10.0)
+
+
+def wait_for_ready(daemon, paths, started):
+    while True:
+        # A marker alone cannot prove that its writer is still alive.
+        code = daemon.poll()
+        if code is not None:
+            try:
+                tail = "".join(paths.daemon_log.read_text(errors="replace")
+                               .splitlines(keepends=True)[-25:])
+                print(tail, file=sys.stderr)
+            except OSError:
+                pass
+            sys.exit(f"[p3] service exited with {code} before ready "
+                     f"(see {paths.daemon_log})")
+        if paths.failed.exists():
+            detail = paths.failed.read_text()
+            reap_failed_daemon(daemon)
+            print(detail, file=sys.stderr)
+            sys.exit("[p3] service build failed")
+        if paths.ready.exists():
+            return
+        if time.perf_counter() - started > STARTUP_TIMEOUT:
+            stop_daemon(daemon.pid, timeout=5.0)
+            daemon.wait(timeout=10.0)
+            sys.exit(f"[p3] timed out after {STARTUP_TIMEOUT:.0f}s building the service")
+        time.sleep(0.5)
 
 
 def main():
@@ -73,33 +88,14 @@ def main():
         batch = _json.loads((SUITE_DIR / "suite_config.json").read_text())
         batch = next(c["batch"] for c in batch["cases"] if c["instance"] == size)
 
-    log = open(paths.daemon_log, "w")
     started = time.perf_counter()
-    daemon = subprocess.Popen(
-        [sys.executable, str(SUITE_DIR / "service_daemon.py"), str(size),
-         "--devices", str(devices), "--batch", str(batch)],
-        stdout=log, stderr=subprocess.STDOUT, start_new_session=True,
-        env=dict(os.environ))
-    while True:
-        if paths.ready.exists():
-            break
-        if paths.failed.exists():
-            print(paths.failed.read_text(), file=sys.stderr)
-            sys.exit("[p3] service build failed")
-        code = daemon.poll()
-        if code is not None:
-            try:
-                tail = "".join(paths.daemon_log.read_text(errors="replace")
-                               .splitlines(keepends=True)[-25:])
-                print(tail, file=sys.stderr)
-            except OSError:
-                pass
-            sys.exit(f"[p3] service exited with {code} before ready "
-                     f"(see {paths.daemon_log})")
-        if time.perf_counter() - started > STARTUP_TIMEOUT:
-            daemon.terminate()
-            sys.exit(f"[p3] timed out after {STARTUP_TIMEOUT:.0f}s building the service")
-        time.sleep(0.5)
+    with open(paths.daemon_log, "w") as log:
+        daemon = subprocess.Popen(
+            [sys.executable, str(SUITE_DIR / "service_daemon.py"), str(size),
+             "--devices", str(devices), "--batch", str(batch)],
+            stdout=log, stderr=subprocess.STDOUT, start_new_session=True,
+            env=dict(os.environ))
+    wait_for_ready(daemon, paths, started)
 
     elapsed = time.perf_counter() - started
     manifest = json.loads(paths.manifest.read_text())

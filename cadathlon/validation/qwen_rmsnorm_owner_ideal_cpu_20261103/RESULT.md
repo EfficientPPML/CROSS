@@ -1,0 +1,9 @@
+# Source-bound result
+
+295 owner/public/guard checks and6 separate gamma-fixture checks passed. The main suite took114.03s and the complete collector119.00s. Session36191 exited0 and was reaped; all three owned children were explicitly reaped with0, and all four PIDs are absent. All36 before/archive/after/current source hashes and the local public gamma fixture digest agree. Cleanup and terminal-publication flags are true. Offline `verify.py` passes without the gamma NPZ.
+
+Every one of the113 frozen rules was evaluated over all65536 physical slots using real authenticated public gamma vectors, independent moments plus Clenshaw/original-Newton oracles, and primitive/type/security/identity-refresh doubles. Exact selected methods, iteration/degree counts, unchanged260 inverse-only refresh events and all stage metadata were checked. Maximum per-site normalization+bootstrap union is106 rotation keys; this excludes other model components and is not a full-model inventory.
+
+Two accessor-replacement negative failures and the later typed-width ordering failure are preserved with exact source snapshots and failure facts. Raw failing pytest traces contain abbreviated public gamma arrays and remain locally retained under the paths/hashes in failure_summary.json; those arrays and the gamma NPZ are intentionally absent from this archive. Development-v1's228-pass source copies were captured after termination and do not have a startup source-bound claim.
+
+No actual crypto security gate, refresh, key generation, ciphertext operation or model forward was executed. Public coefficient/domain assumptions, floating-point/CKKS/refresh error, input bounds up to32768 and normalized-output bounds up to8192 remain separate. This is an unpromoted component implementation and ideal proof, not full Qwen encrypted readiness.

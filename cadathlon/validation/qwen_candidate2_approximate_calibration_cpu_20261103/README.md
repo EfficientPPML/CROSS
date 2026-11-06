@@ -1,0 +1,11 @@
+Frozen candidate2 full approximate calibration: PASS.
+
+This is the unchanged 416-context calibration workload: 288 prefills (96 each at S8/S16/S32), 64 teacher-forced contexts and 64 free-running contexts from 16 seeds. All comparisons use native operations on the actual same token prefix; uncomputable free suffixes remain failed/unmeasured. The selected manifest is `0af45a8fc6d13b9d429ee1af2311b2cb6ac0aa4cde02eca56478472762482489`. No coefficient/domain selection or validation was performed during this run.
+
+Session88531 was observed exit0 and reaped; shell1193132/time1193137/python1193139 are absent. All53 run source bytes match preflight, archive, before/after and current files; all seven pinned model assets match before/after. The source closure includes exact model-library Python files but is not a binary/container reproducibility claim. Linux time/RSS in run.time is process resource evidence, not accelerator or physical unique-memory evidence.
+
+416 of416 approximate contexts completed. The fixed gates require every declared domain and numerical comparison, aggregate prefill top1 at least260/288 (per bucket separately reported), teacher top1 at least58/64, and at least12/16 complete free sequences. Completed contexts compare all421 actual native operators,28 block outputs and151936 final logits. The report and summary preserve all failures and exact measured maxima; no gate was relaxed.
+
+Candidate2 differs from candidate1 only in public-bound-based SiLU rules, with all113 norms and softmax rules unchanged. Its selection evidence is in `qwen_calibration_candidate2_cpu_20261103`; collector v1 and the real-dtype correction/preflight remain separate historical archives. Candidate1's successful calibration and failed original public validation remain preserved. This result is calibration evidence only, not fresh/public validation, language-task accuracy, full encrypted inference, refresh precision or timing calibration. Future fresh112 and original published112 evaluations remain separate required tasks.
+
+Offline source/count/trajectory verification: `python verify_archive.py`. This archive contains aggregate diagnostics, public token sequences and exact source/input manifests only; no model weights, hidden activations, secret keys or ciphertexts.

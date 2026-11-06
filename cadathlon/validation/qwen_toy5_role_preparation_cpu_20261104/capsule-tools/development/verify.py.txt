@@ -1,0 +1,147 @@
+"""Portable public readback only. No candidate imports, tests or fixture access."""
+from pathlib import Path
+import argparse,hashlib,json,stat,tarfile,xml.etree.ElementTree as ET
+
+ROOT=Path(__file__).resolve().parent
+sha=lambda b:hashlib.sha256(b).hexdigest()
+def raw(name):
+    p=ROOT/name;assert '..'not in Path(name).parts and not Path(name).is_absolute()
+    before=p.lstat();assert stat.S_ISREG(before.st_mode)and not p.is_symlink()
+    value=p.read_bytes();assert len(value)==before.st_size and p.lstat()==before
+    return value
+def j(name):return json.loads(raw(name))
+def main(current=False):
+    whitelist=j('WHITELIST.json')['files'];assert whitelist==sorted(set(whitelist))
+    assert not any(p.is_symlink()for p in ROOT.rglob('*'))
+    actual=sorted(p.relative_to(ROOT).as_posix()for p in ROOT.rglob('*')if p.is_file())
+    assert actual==whitelist and not any(n.endswith('.pyc')for n in actual)
+    index={}
+    for line in raw('SHA256SUMS').decode().splitlines():
+        digest,name=line.split('  ',1);assert name not in index;index[name]=digest
+    assert set(index)==set(whitelist)-{'SHA256SUMS'}
+    assert all(sha(raw(n))==v for n,v in index.items())
+    origins=j('copy_origins.json')
+    for dest,row in origins.items():assert sha(raw(dest))==row['sha256']and len(raw(dest))==row['bytes']
+    summary=j('summary.json');assert summary['passed']is True
+    source=j('sources/final427.json');runtime=j('sources/runtime389.json')
+    assert len(source)==427 and len(runtime)==389
+    assert sha(raw('sources/final427.json'))==summary['source_manifest_sha256']=='43a7e90b04a2b99edfb953a7724c3a50580dcff844c2da987a32ec1da7a41df9'
+    assert sha(raw('sources/final427.tar.gz'))==summary['source_archive_sha256']=='269a3661b3a84309bed36c7527c7ccedf06c086b1dd9e907e269b0a03b87380b'
+    with tarfile.open(ROOT/'sources/final427.tar.gz')as archive:
+        members=archive.getmembers()
+        assert len(members)==len({m.name for m in members})==427
+        assert all(m.isfile()and not Path(m.name).is_absolute()and '..'not in Path(m.name).parts for m in members)
+        bodies={m.name:archive.extractfile(m).read()for m in members}
+    assert {n:sha(b)for n,b in bodies.items()}==source
+    base={n.removeprefix('runtime/'):b for n,b in bodies.items()if n.startswith('runtime/')}
+    assert {n:sha(b)for n,b in base.items()}==runtime
+    for dest,member in summary['readable_source_members'].items():assert raw(dest)==bodies[member]
+    for lineage in summary['lineages']:
+        table=j(lineage['map']);assert len(table)==lineage['count']
+        assert sha(raw(lineage['map']))==lineage['map_sha256']
+        assert lineage['original_tar_included']is False
+        rebuilt={n:raw(lineage['overrides'][n])if n in lineage['overrides']else base[n]for n in table}
+        assert {n:sha(b)for n,b in rebuilt.items()}==table
+    assert j('proof/sources-after.json')==j('proof/execution-after.json')==source
+    config=j('proof/run_config.json');report=j('proof/report.json');audit=j('proof/worker-audit.json')
+    grant=j('reviews/root-harness-terminal/review.json');terminal_root=j('reviews/root-harness-terminal/terminal-review.json')
+    peer=j('reviews/peer-terminal/review.json');artifact=j('proof/child-artifact-review.json')
+    assert report['passed']is terminal_root['passed']is peer['passed']is artifact['passed']is True
+    assert grant['launch_authorized']is True and grant['selection55_and56children_exact']is True
+    assert sha(raw('proof/report.json'))==summary['report_sha256']==terminal_root['report_sha256']==peer['report_sha256']=='8cb363c0cb94424c7c2a814800f88ffc9104739aa1da89fd253e06205fedfc71'
+    assert sha(raw('reviews/root-harness-terminal/terminal-review.json'))==summary['root_terminal_sha256']=='72b3f644faab265021fbdb563522feb7321952b6dc3a009654cc5d67b45c9e80'
+    assert sha(raw('proof/child-artifact-review.json'))==report['artifact_review_sha256']==terminal_root['artifact_review_sha256']
+    assert sha(raw('proof/run_config.json'))==report['config_sha256']==grant['config_sha256']
+    for file,key in [('executed_driver.py','driver_sha256'),('worker_driver.py','worker_driver_sha256'),('inspect_children.py','inspector_sha256')]:
+        assert sha(raw('proof/'+file))==report[key]
+    assert config['cpu_affinity']==[108,109,110,111]and config['python']=='/home/jianming_gatech/miniconda3/envs/jaxite/bin/python'
+    assert config['pytest_config']=='/dev/null'and config['source_count']==427 and config['runtime_count']==389
+    xml=ET.fromstring(raw('proof/tests.xml'));cases=list(xml.iter('testcase'))
+    assert len(cases)==55 and not any(list(xml.iter(n))for n in('failure','error','skipped'))
+    observed=[dict(classname=x.attrib['classname'],name=x.attrib['name'])for x in cases]
+    assert observed==config['selected_xml_cases']==report['selected_xml_cases']
+    assert audit['collected_nodes']==config['selected_nodes']==report['selected_nodes']==j('selected-tests/selected_tests.json')['nodes']
+    assert len(audit['collected_nodes'])==len(set(audit['collected_nodes']))==55
+    assert audit['denied']==audit['loaded_backend']==[]and audit['runtime_module_origins']=={}
+    assert audit['numpy_imported']is False and audit['pytest_exit_code']==audit['planned_exit_code']==0
+    assert audit['runtime_sources_before']==audit['runtime_sources_after']==runtime
+    assert audit['numpy_sources_before']==audit['numpy_sources_after']==config['numpy_pins']['sources']
+    assert len(config['numpy_pins']['sources'])==4 and len(config['numpy_pins']['origins'])==3
+    assert report['tests']==dict(tests=55,failures=0,errors=0,skipped=0)
+    assert report['sources_unchanged']is True and report['child_reaped']is True and report['child_group_absent']is True
+    for field in('actual_execution_authorized','actual_key_generation','actual_model_execution','backend_context_construction','encrypted_execution','genuine_capacity_measured','fixture_bodies_copied','aliases_followed'):
+        assert report[field]is False
+    plan=config['artifact_plan'];expected={(r['nodeid'],r['variant']):r for r in plan['children']}
+    assert len(expected)==56 and len(artifact['records'])==56 and len(artifact['files'])==392 and artifact['errors']==[]
+    assert artifact['fixture_bodies_read']is artifact['aliases_followed']is False
+    names=set(plan['fixed_child_file_names']);assert len(names)==7
+    seen=set();file_names=set();pids=set();numpy_children=0
+    pin_map=j('reviews/peer-terminal/child-files.json')
+    for record in artifact['records']:
+        key=(record['nodeid'],record['variant']);assert key in expected and key not in seen;seen.add(key)
+        parent=record['parent_terminal'];early=record['child_early'];terminal=record['child_terminal'];result=record['result'];live=record['parent_live']
+        pid=parent['pid'];assert type(pid)is int and pid>0 and pid not in pids;pids.add(pid)
+        assert type(early['pgid'])is int and early['pgid']==terminal['pgid']==pid
+        assert early['pid']==terminal['pid']==live['pid']==pid
+        assert type(early['start_ticks'])is int and early['start_ticks']>0 and early['start_ticks']==terminal['start_ticks']
+        assert parent['start_ticks']is None or parent['start_ticks']==early['start_ticks']
+        assert parent['observed_pgid']is None or parent['observed_pgid']==pid
+        assert parent['exit_code']==expected[key]['expected_exit']and type(parent['exit_code'])is int
+        assert parent['direct_wait_completed']is parent['group_absent']is True and parent['primary_type']is None and parent['cleanup_types']==[]
+        assert result['passed']is terminal['passed']is True and terminal['forbidden_imports']==[]
+        assert result['runtime_map_sha256']==config['runtime_map_sha256']
+        assert set(record['files'])==names
+        for name,pin in record['files'].items():
+            relative=pin['path'];assert relative.startswith('pytest-owned/')and Path(relative).name==name and '..'not in Path(relative).parts
+            assert '/owned_io/'not in relative and '/owned_assets/'not in relative
+            dest='children/'+relative;value=raw(dest);assert len(value)==pin['bytes']<=1048576
+            assert sha(value)==pin['sha256']==artifact['files'][relative]['sha256']==pin_map[relative]['sha256']
+            file_names.add(relative)
+        for name,value in [('parent-live.json',live),('parent-terminal.json',parent),('child-early.json',early),('child-terminal.json',terminal),('result.json',result)]:
+            assert j('children/'+record['files'][name]['path'])==value
+        assert terminal['recording_only']is True and terminal['actual_authority']is False
+        if terminal['numpy_source_pins_checked']:
+            numpy_children+=1;assert terminal['numpy_origins'].get('numpy')==config['numpy_pins']['origins']['numpy']
+        else:assert terminal['numpy_origins']=={}
+        for name,value in terminal['numpy_origins'].items():assert value==config['numpy_pins']['origins'][name]
+        assert set(terminal['helper_origins'])<=set(config['selected_helpers'])
+    assert seen==set(expected)and file_names==set(artifact['files'])==set(pin_map)and numpy_children==10
+    for item in artifact['fixture_metadata']:assert item['body_read']is False
+    fifo=[r['path']for r in artifact['fixture_metadata']if r['kind']=='fifo_metadata_only'];assert len(fifo)==1
+    assert fifo==summary['fifo_metadata_only']==terminal_root['FIFO_metadata_only']
+    assert not any('/owned_io/'in n or '/owned_assets/'in n for n in whitelist)
+    worker=j('proof/worker-owner-terminal.json');we=j('proof/worker-early.json');wt=j('proof/worker-terminal.json');collector=j('proof/collector-terminal.json')
+    assert worker['direct_wait_completed']is worker['child_reaped']is worker['pid_absent']is worker['group_absent']is True
+    assert worker['exit_code']==0 and worker['primary_type']is None and worker['cleanup_types']==[]
+    assert we['pid']==we['pgid']==worker['worker_pid']==worker['owned_session_pgid']==audit['pid']==audit['pgid']==wt['pid']==wt['pgid']
+    assert we['start_ticks']==worker['start_ticks']==audit['start_ticks']==wt['start_ticks']
+    assert collector['normal_main_return']is True and collector['planned_exit_code']==0
+    assert terminal_root['session']==79231 and terminal_root['terminal_tool']=='ecf1c0'and terminal_root['tool_reaped_collector']is True
+    assert terminal_root['actual_collector_exit_code']==0 and terminal_root['all58_original_pids_and_groups_absent']is True
+    assert terminal_root['collector_pid_pgid']==collector['pid']==collector['pgid']
+    root_live=j('reviews/root-harness-terminal/owner-live.json')
+    for role,row in root_live['root_process_observations'].items():
+        value=collector if role=='collector'else we
+        assert row['pid']==value['pid']and row['pgid']==value['pgid']and row['start_ticks']==value['start_ticks']
+    pids.update((collector['pid'],we['pid']));assert len(pids)==58
+    absence=j('reviews/peer-terminal/process-absence.json')
+    assert {r['pid']for r in absence}==pids and all(r['pid']==r['pgid']and r['pid_absent']is True and r['pgid_absent']is True for r in absence)
+    if current:
+        # Only the explicit provenance whitelist and declared source maps.
+        # Never enumerate/read/stat child fixture roots or alias targets.
+        for dest,row in origins.items():
+            p=Path(row['source']);assert p.resolve()==p and not p.is_symlink()
+            before=p.lstat();assert stat.S_ISREG(before.st_mode)and before.st_size==row['bytes']
+            value=p.read_bytes();assert p.lstat()==before and sha(value)==row['sha256']
+        for root in(Path(config['source_root']),Path(config['proof_root'])/'execution'):
+            assert not any(p.is_symlink()for p in root.rglob('*'))
+            table={p.relative_to(root).as_posix():sha(p.read_bytes())for p in root.rglob('*')if p.is_file()}
+            assert table==source
+        for p,digest in config['numpy_pins']['sources'].items():assert sha(Path(p).read_bytes())==digest
+    print(json.dumps(dict(passed=True,files=len(whitelist),indexed=len(index),source_count=427,runtime_count=389,
+        tests=55,children=56,child_files=392,historical_file_maps_reconstructed=[x['label']for x in summary['lineages']],
+        original_historical_tar_bytes_verified=False,current=current,candidate_imports=False,tests_rerun=False,
+        fixture_bodies_accessed=False,aliases_followed=False),sort_keys=True))
+
+if __name__=='__main__':
+    parser=argparse.ArgumentParser();parser.add_argument('--current',action='store_true');args=parser.parse_args();main(args.current)

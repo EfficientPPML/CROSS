@@ -1,0 +1,124 @@
+F.....................................................FFFF.............. [ 81%]
+................                                                         [100%]
+=================================== FAILURES ===================================
+____________ test_real_consumer_and_producer_closures_are_distinct _____________
+
+    def test_real_consumer_and_producer_closures_are_distinct():
+        expected=c.protocol.hashes(c.protocol.sources())
+>       profile,plan,checked=c.inspect_sources(expected)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_validator_common.py:10: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+validator_common.py:30: in inspect_sources
+    profile,plan=protocol.check_sources(expected)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+component_protocol.py:78: in check_sources
+    check_predecessor()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def check_predecessor():
+        raw=key_gate.read(HERE/'routing_predecessor/report.json')
+        if sha(raw)!=PREDECESSOR_REPORT:raise ValueError('exact disabled predecessor proof required')
+        report=key_gate.parse(raw);before=report['source_hashes_start']
+        if (report['passed']is not True or report['execute']is not False or len(before)!=147
+                or before!=report['source_hashes_end']):raise ValueError('completed unchanged disabled predecessor required')
+        archive=key_gate.read(HERE/'routing_predecessor/sources.tar.gz',16<<20)
+        if sha(archive)!=report['source_archive_sha256']:raise ValueError('disabled predecessor archive differs')
+        key_gate.verify_source_archive(archive,before)
+        overlays=key_gate.parse(key_gate.read(HERE/'gain4_component_overlays.json'))
+        if type(overlays)is not dict or not overlays or not set(overlays)<=set(before):
+            raise ValueError('explicit predecessor source overlays required')
+        for name,old in before.items():
+            if name in RETIRED_PARENT_SOURCES:
+                if (HERE/name).exists():raise ValueError('retired duplicate key plan must remain outside execution closure')
+                continue
+            expected=overlays.get(name,old);key_gate.sha_field(expected)
+>           if sha((HERE/relative(name)).read_bytes())!=expected:raise ValueError('unreviewed predecessor source drift: '+name)
+                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           ValueError: unreviewed predecessor source drift: execution_authorization.json
+
+component_protocol.py:71: ValueError
+_________ test_output_cannot_modify_retained_public_roots[keys-False] __________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-566/test_output_cannot_modify_reta0')
+protected = 'keys', alias = False
+
+    @pytest.mark.parametrize('protected,alias', [('keys',False),('keys',True),('evidence',False),('evidence',True)])
+    def test_output_cannot_modify_retained_public_roots(tmp_path,protected,alias):
+        keys=tmp_path/'keys';evidence=tmp_path/'evidence';keys.mkdir();evidence.mkdir()
+        target=keys if protected=='keys'else evidence
+        if alias:
+            link=tmp_path/'alias';link.symlink_to(target,target_is_directory=True);output=link/'attempt'
+        else:output=target/'attempt'
+>       with pytest.raises(ValueError,match='before any write'):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'before any write'
+E         Actual message: 'validator output must be separate from every retained/source/evidence root before publication'
+
+test_collect_validator.py:17: AssertionError
+__________ test_output_cannot_modify_retained_public_roots[keys-True] __________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-566/test_output_cannot_modify_reta1')
+protected = 'keys', alias = True
+
+    @pytest.mark.parametrize('protected,alias', [('keys',False),('keys',True),('evidence',False),('evidence',True)])
+    def test_output_cannot_modify_retained_public_roots(tmp_path,protected,alias):
+        keys=tmp_path/'keys';evidence=tmp_path/'evidence';keys.mkdir();evidence.mkdir()
+        target=keys if protected=='keys'else evidence
+        if alias:
+            link=tmp_path/'alias';link.symlink_to(target,target_is_directory=True);output=link/'attempt'
+        else:output=target/'attempt'
+>       with pytest.raises(ValueError,match='before any write'):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'before any write'
+E         Actual message: 'validator output must be separate from every retained/source/evidence root before publication'
+
+test_collect_validator.py:17: AssertionError
+_______ test_output_cannot_modify_retained_public_roots[evidence-False] ________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-566/test_output_cannot_modify_reta2')
+protected = 'evidence', alias = False
+
+    @pytest.mark.parametrize('protected,alias', [('keys',False),('keys',True),('evidence',False),('evidence',True)])
+    def test_output_cannot_modify_retained_public_roots(tmp_path,protected,alias):
+        keys=tmp_path/'keys';evidence=tmp_path/'evidence';keys.mkdir();evidence.mkdir()
+        target=keys if protected=='keys'else evidence
+        if alias:
+            link=tmp_path/'alias';link.symlink_to(target,target_is_directory=True);output=link/'attempt'
+        else:output=target/'attempt'
+>       with pytest.raises(ValueError,match='before any write'):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'before any write'
+E         Actual message: 'validator output must be separate from every retained/source/evidence root before publication'
+
+test_collect_validator.py:17: AssertionError
+________ test_output_cannot_modify_retained_public_roots[evidence-True] ________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-566/test_output_cannot_modify_reta3')
+protected = 'evidence', alias = True
+
+    @pytest.mark.parametrize('protected,alias', [('keys',False),('keys',True),('evidence',False),('evidence',True)])
+    def test_output_cannot_modify_retained_public_roots(tmp_path,protected,alias):
+        keys=tmp_path/'keys';evidence=tmp_path/'evidence';keys.mkdir();evidence.mkdir()
+        target=keys if protected=='keys'else evidence
+        if alias:
+            link=tmp_path/'alias';link.symlink_to(target,target_is_directory=True);output=link/'attempt'
+        else:output=target/'attempt'
+>       with pytest.raises(ValueError,match='before any write'):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'before any write'
+E         Actual message: 'validator output must be separate from every retained/source/evidence root before publication'
+
+test_collect_validator.py:17: AssertionError
+=========================== short test summary info ============================
+FAILED test_validator_common.py::test_real_consumer_and_producer_closures_are_distinct
+FAILED test_collect_validator.py::test_output_cannot_modify_retained_public_roots[keys-False]
+FAILED test_collect_validator.py::test_output_cannot_modify_retained_public_roots[keys-True]
+FAILED test_collect_validator.py::test_output_cannot_modify_retained_public_roots[evidence-False]
+FAILED test_collect_validator.py::test_output_cannot_modify_retained_public_roots[evidence-True]
+5 failed, 83 passed in 1.35s

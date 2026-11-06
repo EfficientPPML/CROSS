@@ -25,6 +25,7 @@ import stage_lib as lib
 ACCEPT_TIMEOUT = 5.0
 IDLE_TIMEOUT = float(os.environ.get("P3_IDLE_TIMEOUT", "3600"))
 MAX_MESSAGE = 4 << 20
+READ_TIMEOUT = 10.0
 
 
 def read_message(conn):
@@ -39,9 +40,16 @@ def read_message(conn):
         size += len(chunk)
         if size > MAX_MESSAGE:
             raise ValueError("request too large")
-        if chunk.endswith(b"\n"):
+        if b"\n" in chunk:
             break
-    return json.loads(b"".join(chunks).decode())
+    payload = b"".join(chunks)
+    line, _, remainder = payload.partition(b"\n")
+    if remainder.strip():
+        raise ValueError("one request per connection is required")
+    request = json.loads(line.decode())
+    if not isinstance(request, dict):
+        raise ValueError("request must be a JSON object")
+    return request
 
 
 class Server:
@@ -58,6 +66,8 @@ class Server:
         import jax
         started = time.perf_counter()
         available = jax.devices()
+        if os.environ.get("P1_REQUIRE_TPU") == "1" and any(d.platform != "tpu" for d in available):
+            raise RuntimeError("This evaluation requires TPU devices; CPU/GPU fallback is disabled")
         if len(available) < self.devices:
             raise RuntimeError(f"need {self.devices} chips, found {len(available)}")
         chips = tuple(available[: self.devices])
@@ -100,6 +110,7 @@ class Server:
         self.paths.manifest.write_text(json.dumps({
             **actual_rings[0], "execution_rings": actual_rings,
             "devices": [str(d) for d in chips], "batch": batch,
+            "device_kinds": [getattr(d, 'device_kind', 'unknown') for d in chips],
             "setup": self.setup}, indent=2))
         self.ready = True
 
@@ -162,13 +173,15 @@ class Server:
             listener.bind(str(path))
             listener.listen(8)
             listener.settimeout(ACCEPT_TIMEOUT)
+            # Publish readiness only when a client can actually connect.
+            self.paths.ready.write_text("ready\n")
             print("[p3-service] listening", flush=True)
-            last = time.time()
+            last = time.monotonic()
             while not self._stop:
                 try:
                     conn, _ = listener.accept()
                 except socket.timeout:
-                    if time.time() - last > IDLE_TIMEOUT:
+                    if time.monotonic() - last > IDLE_TIMEOUT:
                         print("[p3-service] idle timeout", flush=True)
                         break
                     continue
@@ -176,8 +189,9 @@ class Server:
                     if self._stop:
                         break
                     continue
-                last = time.time()
+                last = time.monotonic()
                 with conn:
+                    conn.settimeout(READ_TIMEOUT)
                     try:
                         request = read_message(conn)
                     except Exception as error:
@@ -197,7 +211,7 @@ class Server:
                         conn.sendall((json.dumps(response) + "\n").encode())
                     except OSError:
                         pass
-                last = time.time()
+                last = time.monotonic()
         finally:
             listener.close()
             self.shutdown()
@@ -228,7 +242,6 @@ def main():
     try:
         server.materialize(args.batch)
         print(f"[p3-service] ready {json.dumps(server.setup)}", flush=True)
-        paths.ready.write_text("ready\n")
         server.serve()
     except BaseException:
         detail = traceback.format_exc()

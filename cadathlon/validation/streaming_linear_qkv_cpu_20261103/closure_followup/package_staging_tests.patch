@@ -1,0 +1,46 @@
+--- a/cadathlon/tests/test_package.py
++++ b/cadathlon/tests/test_package.py
+@@ -33,3 +33,3 @@
+                  "encrypted_packed_qwen.py", "encrypted_packed_transformer.py",
+-                 "encrypted_bounded_arithmetic.py", "encrypted_bounded_transformer.py"):
++                 "encrypted_bounded_arithmetic.py", "encrypted_bounded_transformer.py", "encrypted_streaming_linear.py"):
+         (common / name).write_text("")
+@@ -51,2 +51,3 @@
+     assert "common/encrypted_bounded_transformer.py" in names
++    assert "common/encrypted_streaming_linear.py" in names
+     assert "common/encrypted_transformer.py" in names
+@@ -130,2 +131,3 @@
+         assert "common/encrypted_bounded_transformer.py" in names
++        assert "common/encrypted_streaming_linear.py" in names
+         assert "validation/p1_student_suite.json" in names
+--- a/cadathlon/tests/test_bert_staging.py
++++ b/cadathlon/tests/test_bert_staging.py
+@@ -52,3 +52,4 @@
+     assert {'support.py','transformer_runner.py','encrypted_reference.py','encrypted_compilation.py',
+-            'encrypted_primitives.py','encrypted_bounded_transformer.py','encrypted_ntt.py'} <= names
++            'encrypted_primitives.py','encrypted_bounded_transformer.py','encrypted_ntt.py',
++            'encrypted_streaming_linear.py'} <= names
+     for name, expected in manifest['common_sha256'].items():
+@@ -81,7 +82,8 @@
+ 
++@pytest.mark.parametrize('helper_name', ['encrypted_primitives.py','encrypted_streaming_linear.py'])
+ @pytest.mark.parametrize('damage', ['changed','missing','no-manifest'])
+-def test_staged_provenance_failure_never_falls_back_to_checkout(staging, damage):
++def test_staged_provenance_failure_never_falls_back_to_checkout(staging, damage, helper_name):
+     stage, upstream, destination = staging
+     stage.stage(upstream, destination)
+-    helper = destination/'submissions/_cross_common/encrypted_primitives.py'
++    helper = destination/'submissions/_cross_common'/helper_name
+     if damage == 'changed':
+@@ -105,5 +107,6 @@
+ import encrypted_reference
++import encrypted_streaming_linear
+ 
+ def server_preprocess_model(paths):
+-    print(json.dumps({'import_only': True, 'helper': encrypted_reference.__file__, 'paths': sorted(paths)}))
++    print(json.dumps({'import_only': True, 'helper': encrypted_reference.__file__, 'streaming_helper': encrypted_streaming_linear.__file__, 'paths': sorted(paths)}))
+ ''')
+@@ -116,2 +119,3 @@
+     assert Path(report['helper']) == destination/'submissions/_cross_common/encrypted_reference.py'
++    assert Path(report['streaming_helper']) == destination/'submissions/_cross_common/encrypted_streaming_linear.py'
+     assert {'client_private','test_input','preprocessed_input','decrypted_results'}.isdisjoint(report['paths'])

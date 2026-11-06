@@ -1,0 +1,13 @@
+# Qwen full28 continuation and final-head public proof
+
+**PASS:114 public/packing/guard/lifecycle checks,68 exact sources.** All sequence lengths1–32 have explicit layer-entry and final-head schedules. Synthetic last-row extraction checks all65,536 physical slots for each length. No model, reference trajectory, parameter/prompt body, backend or HE was executed/read; both ordinary-Python audit records have zero denied attempts and no forbidden modules. This is not an OS isolation claim.
+
+Every actual decoder tail ends atL4. Layers1–27 require explicit next-site entry refreshes4→25 under the unchanged conditional public bounds. All113 RMS sites and original SiLU/softmax methods/counts remain frozen. After layer27, a real hidden1024/last-row mask4→3 followed by its existing rotation moves only the last valid row to physicalrow0. ExplicitB2048 refresh3→25 feeds the exact final degree64 balanced RMS25→7. All38 vocabulary maps consume that actual result7→6:37 full4096 blocks plus384 cover every151936 logit. There is no extra postnorm refresh. Original last-position identity and immutable final gamma/tied vocabulary descriptors are bound.
+
+The verified actual166-key inventory already includes all last-row rotations. It entails147.84375GiB raw rotation-key storage;38 finalL6 ciphertexts total532MiB. S32 retains12931 literal refreshes. Storage is not resident memory, and this proof establishes neither the128GiB host limit nor any key-generation/online timing ceiling. Nine hypothetical actual-returned-scale cases replay the exact production metadata formulas; they are not an exhaustive scale set or numerical proof.
+
+Wholegraph runtime/ideal execution remains pending root review. The proposed independent reference begins only from original embeddings and authenticated public weights, never native or owner intermediate activations. Initial fixtures are predeclared checkpoint row0 atS1 and the first authenticated original-calibration S8 prefix; no fresh/held-out outcome is used for selection. Declared-domain failures must remain failures. Conditional refresh/error and868 unproved centered-domain implications remain explicit. Full file-stage privacy, all-suite numerical/argmax gates and actual HE remain outstanding.
+
+Session47717 exited0/reaped. Tests took118.23s; collector181.02s. Direct children and owned groups are absent; all68 startup/archive/final/current bytes match. Run `python verify.py` for portable public evidence verification. No runtime/release promotion occurred.
+
+Root independently checked all68 current/archive sources, all114 tests, zero body/backend audits and all32 public schedules; receipt: `root-review/public-plan.json`.

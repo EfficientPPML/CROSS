@@ -9,69 +9,60 @@ import time
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "common"))
-from support import cross_root, load_module, metrics, read_json, require_ciphertexts, require_secure_execution, synchronize
+from support import cross_root, metrics, read_json
+from transformer_runner import (add_arguments, benchmark_session,
+                                implementation_preflight, load_encrypted_implementation)
 from reference import make_case
 
 
+def check_output(actual, expected, errors):
+    if errors["nrmse"] > 0.10 or errors["max_abs_error"] > 0.20:
+        raise ValueError(f"Toy numeric gate failed: {errors}")
+
+
 def run(args):
+    total_started = time.perf_counter()
     case = read_json(args.case)
     weights, embeddings, oracle = make_case(case)
     expected = np.asarray(read_json(args.case.with_suffix(".out"))["logits"])
     if not np.allclose(oracle, expected, atol=1e-10, rtol=1e-10):
         raise ValueError("Reference fixture drift")
+    result = {"case": args.case.name, "full_qwen_evaluated": False}
     if args.reference:
-        return {"case": args.case.name, "mode": "plaintext-reference",
-                "full_qwen_evaluated": False, **metrics(oracle, expected)}
-    devices = ()
-    if not args.reference:
-        cross_root()
-        import jax
-        jax.config.update("jax_enable_x64", True)
-        devices = tuple(jax.devices()[:1])
-    impl = load_module(Path(__file__).with_name("qwen_he.py"))
-    started = time.perf_counter()
-    session = impl.create_session(case["config"], weights, batch=len(embeddings),
-                                  sequence_length=embeddings.shape[1], devices=devices)
-    setup = time.perf_counter() - started
-    try:
-        started = time.perf_counter()
-        encrypted = session.encrypt(embeddings)
-        if not args.reference:
-            require_ciphertexts(encrypted)
-            require_secure_execution(session, encrypted)
-            synchronize(encrypted)
-        server_started = time.perf_counter()
-        result = session.evaluate(encrypted)
-        if not args.reference:
-            require_ciphertexts(result)
-            synchronize(result)
-        server = time.perf_counter() - server_started
-        require_secure_execution(session, result)
-        output = session.decrypt(result)
-        elapsed = time.perf_counter() - started
-        errors = metrics(output, expected)
-        if errors["nrmse"] > 0.10 or errors["max_abs_error"] > 0.20:
-            raise ValueError(f"Toy numeric gate failed: {errors}")
-        return {"case": args.case.name, "mode": "plaintext-reference" if args.reference else "HE-toy-smoke",
-                "full_qwen_evaluated": False, "setup_s": setup, "server_s": server,
-                "end_to_end_s": elapsed, **errors}
-    finally:
-        session.close()
+        return dict(result, mode="plaintext-reference", passed=True, **metrics(oracle, expected))
+    cross_root()
+    implementation = load_encrypted_implementation(args.implementation)
+    import jax
+    jax.config.update("jax_enable_x64", True)
+    measured = benchmark_session(
+        implementation, config=case["config"], weights=weights,
+        embeddings=embeddings, expected=expected, devices=tuple(jax.devices()[:1]),
+        evaluate_kwargs={}, check_output=check_output,
+        warmups=args.warmups, repeats=args.repeats, require_tpu=args.require_tpu)
+    return dict(result, mode="HE-toy-smoke", total_s=time.perf_counter() - total_started, **measured)
 
 
 def main():
-    p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--case", type=Path, required=True)
-    p.add_argument("--reference", action="store_true")
-    args = p.parse_args()
+    parser = argparse.ArgumentParser(description=__doc__)
+    add_arguments(parser, Path(__file__).with_name("qwen_he.py"))
+    args = parser.parse_args()
+    if args.case is None and not args.preflight:
+        parser.error("--case is required unless --preflight is used")
     try:
         with contextlib.redirect_stdout(sys.stderr):
-            result = run(args)
+            if args.preflight:
+                _, result = implementation_preflight(args.implementation, bert=False)
+                result["passed"] = result["ready_for_execution"]
+            else:
+                result = run(args)
         print(json.dumps(result, allow_nan=False))
     except Exception as exc:
-        print(json.dumps({"case": args.case.name, "passed": False, "error": str(exc)}))
+        print(json.dumps({"case": args.case.name if args.case else None,
+                          "passed": False, "error": str(exc),
+                          "error_type": type(exc).__name__,
+                          "notes": getattr(exc, "__notes__", [])}))
         return 1
-    return 0
+    return 0 if result["passed"] else 1
 
 
 if __name__ == "__main__":

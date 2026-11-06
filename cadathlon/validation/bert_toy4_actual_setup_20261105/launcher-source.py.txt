@@ -1,0 +1,156 @@
+"""Launch one queued Toy4 setup role after source review and P3 retirement.
+
+This launcher never starts server/validate and never deletes its retained workspace.
+"""
+import argparse
+import hashlib
+import io
+import json
+import os
+import re
+import stat
+import subprocess
+import tarfile
+import tempfile
+from datetime import datetime, timezone
+from pathlib import Path
+
+BASE=Path('/tmp/bert-toy4-activation-preparation-20261105')
+SRC=BASE/'execution_source'
+OUTPUT=BASE/'setup-v1'
+RECEIPT=BASE/'setup-launch-v1.json'
+P3=Path('/tmp/p3-original-six-preparation-20261105/root-terminal-admission-20261105.json')
+sha=lambda b:hashlib.sha256(b).hexdigest()
+def read(p,h=None):
+ p=Path(p);assert stat.S_ISREG(p.lstat().st_mode)
+ b=p.read_bytes();assert h is None or sha(b)==h,str(p)
+ return b
+def absent(pid):
+ try:os.kill(pid,0)
+ except ProcessLookupError:return
+ raise AssertionError('Previous process/group is still live: '+str(pid))
+
+parser=argparse.ArgumentParser()
+parser.add_argument('--activation-review',type=Path,required=True)
+parser.add_argument('--activation-review-sha256',required=True)
+parser.add_argument('--p3-admission-sha256',required=True)
+a=parser.parse_args()
+assert re.fullmatch('[0-9a-f]{64}',a.activation_review_sha256)
+assert re.fullmatch('[0-9a-f]{64}',a.p3_admission_sha256)
+assert not OUTPUT.exists() and not RECEIPT.exists(),'No restart or overwrite of an earlier launch'
+review=read(a.activation_review,a.activation_review_sha256)
+review_record=json.loads(review)
+prior_raw=read(P3,a.p3_admission_sha256);prior=json.loads(prior_raw)
+assert prior['original_session']==81235 and prior['complete'] is True and prior['passed'] is True and prior['exit_code']==0
+assert len(prior['cases'])==6 and all(r['passed'] is True for r in prior['cases'])
+assert not os.path.lexists(prior['owned_key_parent_removed'])
+for pid in (1598331,-1598331):absent(pid)
+for row in prior['cases']:
+ for pid in (row['wrapper_pid'],-row['wrapper_pid']):absent(pid)
+ assert not os.path.lexists(row['child_directory_absent'])
+
+prep_raw=read(BASE/'preparation.json','3e1b336e0fdd3df475e2cc9ceba95cb39e52aedfa8dbd8d6de2b0e0fae3d60d1')
+prep=json.loads(prep_raw)
+assert review_record['passed_source_delta_review'] is True
+assert review_record['runtime_launch_admitted_by_this_review'] is False
+assert review_record['preparation']==str(BASE/'preparation.json') and review_record['preparation_sha256']==sha(prep_raw)
+assert review_record['source_root']==str(SRC) and review_record['source_count']==260
+assert review_record['source_manifest_sha256']==prep['source_manifest_sha256']
+assert review_record['source_archive_sha256']==prep['source_archive_sha256']
+assert review_record['changed_files']==prep['changed_files'] and review_record['unchanged_parent_files']==259
+assert review_record['source_gate_ready'] is True and review_record['archive_exact'] is True
+manifest_raw=read(BASE/'source_manifest.json',prep['source_manifest_sha256']);manifest=json.loads(manifest_raw)
+assert len(manifest)==260 and prep['source_manifest_sha256']=='ec2bb07eb7689b2b3ec6851b0c62c851200473afe716af27331d0655d3a0239e'
+assert {p.relative_to(SRC).as_posix() for p in SRC.rglob('*') if p.is_file()}==set(manifest)
+for n,h in manifest.items():assert sha(read(SRC/n))==h
+assert read(SRC/'execution_authorization.json')==b'{"ready":true}\n'
+archive=read(BASE/'sources.tar.gz',prep['source_archive_sha256'])
+with tarfile.open(fileobj=io.BytesIO(archive),mode='r:gz') as t:
+ members=t.getmembers();assert len(members)==260 and {m.name for m in members}==set(manifest)
+ for m in members:
+  assert m.isfile() and not m.issym() and not m.islnk()
+  assert sha(t.extractfile(m).read())==manifest[m.name]
+python=Path(prep['interpreter']['path']);assert str(python.resolve())==prep['interpreter']['resolved']
+assert sha(python.read_bytes())==prep['interpreter']['sha256']
+assert manifest['collect.py']==prep['initial_script_sha256']
+
+vfio=['/dev/vfio/vfio']+['/dev/vfio/'+str(i) for i in range(8)]+['/dev/vfio/devices/vfio'+str(i) for i in range(8)]
+assert all(stat.S_ISCHR(Path(p).lstat().st_mode) for p in vfio)
+free=subprocess.run(['sudo','-n','fuser','-v',*vfio],capture_output=True,check=False)
+assert free.returncode==1 and not free.stdout and not free.stderr,'TPU not exclusively free; setup not launched'
+space=os.statvfs('/dev/shm');free_bytes=space.f_bavail*space.f_frsize
+assert free_bytes>=prep['logical_workspace_required_bytes']
+mem={}
+for line in Path('/proc/meminfo').read_text().splitlines():
+ if line.startswith(('MemAvailable:','MemTotal:')):
+  name,n,unit=line.split();assert unit=='kB';mem[name.rstrip(':')]=int(n)*1024
+os.sched_setaffinity(0,set(range(160,168)))
+assert sorted(os.sched_getaffinity(0))==list(range(160,168))
+env=dict(os.environ)
+unset=('CROSS_SKIP_TOPLEVEL_ROTKEYS','CROSS_PUBLIC_KEY_DIRECTORY','CROSS_LEVEL_PARAMS_MAX','CROSS_BARRETT_NTT_CONTEXT_CACHE_CAPACITY','XLA_FLAGS','JAX_COMPILATION_CACHE_DIR','TOY4_PREFLIGHT_AUDIT_PATH')
+for name in unset:env.pop(name,None)
+env.update(PYTHONDONTWRITEBYTECODE='1',PYTHONPATH='',OMP_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',MKL_NUM_THREADS='1',NUMEXPR_NUM_THREADS='1',JAX_PLATFORMS='tpu',CROSS_ROOT=str(SRC/'runtime'))
+failure_path=BASE/'setup-launch-failure-v1.json'
+cleanup_path=BASE/'setup-launch-failure-cleanup-v1.json'
+assert not failure_path.exists() and not cleanup_path.exists()
+parent=None
+parent_path=None
+owned_identity=None
+try:
+ parent_path=tempfile.mkdtemp(prefix='cross-toy4-workspace-parent-',dir='/dev/shm')
+ parent=Path(parent_path)
+ s=parent.lstat();assert stat.S_ISDIR(s.st_mode) and s.st_uid==os.getuid() and stat.S_IMODE(s.st_mode)==0o700
+ owned_identity=(s.st_dev,s.st_ino,s.st_uid,s.st_gid,stat.S_IMODE(s.st_mode))
+ command=[str(python),'-I','-B',str(SRC/'collect.py'),'--source-manifest',str(BASE/'source_manifest.json'),'--source-manifest-sha256',prep['source_manifest_sha256'],'--output',str(OUTPUT),'--execute','--stage','setup','--workspace-parent',str(parent)]
+ fields=Path('/proc/self/stat').read_text().rsplit(')',1)[1].split()
+ record=dict(schema='root-toy4-one-role-setup-launch-v1',observed_utc=datetime.now(timezone.utc).isoformat(),stage='setup',
+  pid=os.getpid(),ppid=os.getppid(),pgid=os.getpgrp(),start_ticks=int(fields[19]),cpu_affinity=list(range(160,168)),
+  command=command,cwd=str(SRC),environment={name:env.get(name) for name in (*unset,'PYTHONDONTWRITEBYTECODE','PYTHONPATH','OMP_NUM_THREADS','OPENBLAS_NUM_THREADS','MKL_NUM_THREADS','NUMEXPR_NUM_THREADS','JAX_PLATFORMS','CROSS_ROOT')},
+  source_manifest_sha256=prep['source_manifest_sha256'],source_archive_sha256=prep['source_archive_sha256'],preparation_sha256=sha(prep_raw),
+  activation_review=str(a.activation_review),activation_review_sha256=sha(review),P3_terminal_admission_sha256=sha(prior_raw),P3_original_terminal_chunk=prior['terminal_tool_chunk'],
+  owned_workspace_parent=str(parent),owned_workspace_parent_identity=dict(device=s.st_dev,inode=s.st_ino,uid=s.st_uid,gid=s.st_gid,mode=stat.S_IMODE(s.st_mode)),
+  workspace_retention='Collector owns fresh nested workspace; retain it and this parent across separately reviewed roles. No cleanup by guessed names or uncertain identity.',
+  resource_observation=dict(dev_shm_available_bytes=free_bytes,logical_workspace_required_bytes=prep['logical_workspace_required_bytes'],**mem),resource_peak_or_reservation_claim=False,
+  checked_free_devices=vfio,device_fuser_returncode=1,healthy_timeout=None,server_or_validator_automatically_launched=False,
+  original_scope='Queued fixed synthetic Toy4/BERT4 diagnostic setup only; no full-model accuracy or benchmark claim.',
+  launcher_path=str(Path(__file__)),launcher_sha256=sha(Path(__file__).read_bytes()),interpreter=prep['interpreter'],
+  actual_running_observation_pending=True,terminal_or_success_claim=False)
+ with RECEIPT.open('x') as f:f.write(json.dumps(record,indent=2,sort_keys=True)+'\n')
+ print(json.dumps(dict(launch_receipt=str(RECEIPT),sha256=sha(RECEIPT.read_bytes()),pid=os.getpid(),stage='setup',owned_workspace_parent=str(parent))),flush=True)
+ os.chdir(SRC)
+ os.execve(str(python),command,env)
+except BaseException as primary:
+ failure=dict(observed_utc=datetime.now(timezone.utc).isoformat(),stage='setup-launch-before-successful-exec',
+     original_error_type=type(primary).__name__,original_error=str(primary),
+     acquired_parent_path=parent_path,
+     original_parent_identity=owned_identity,actual_exec_succeeded=False,
+     launch_receipt_path=str(RECEIPT),publication_may_have_started=True,cleanup_status='pending')
+ # Retain the returned path even when initial lstat/identity acquisition failed.
+ # If publication itself fails, keep that error secondary to the launch failure.
+ try:
+  with failure_path.open('x') as f:f.write(json.dumps(failure,indent=2,sort_keys=True)+'\n')
+ except BaseException as publication_error:
+  primary.add_note('Launch failure ownership receipt could not be written: '+repr(publication_error))
+  primary.add_note('Returned parent path requiring retention: '+repr(failure['acquired_parent_path']))
+ cleanup=dict(parent=parent_path,removed=False,retained=True,reason='identity unavailable; no guessed cleanup')
+ if parent is not None and owned_identity is not None:
+  try:
+   current=parent.lstat()
+   identity=(current.st_dev,current.st_ino,current.st_uid,current.st_gid,stat.S_IMODE(current.st_mode))
+   if not stat.S_ISDIR(current.st_mode) or identity!=owned_identity:
+    raise RuntimeError('launch parent identity changed; left untouched')
+   if list(parent.iterdir()):raise RuntimeError('launch parent is nonempty; retained')
+   again=parent.lstat()
+   if (again.st_dev,again.st_ino)!=(owned_identity[0],owned_identity[1]):
+    raise RuntimeError('launch parent identity changed before removal; retained')
+   parent.rmdir()
+   cleanup.update(removed=True,retained=False,reason='original identity and empty directory checked after failed exec/launch')
+  except BaseException as cleanup_error:
+   cleanup.update(reason=repr(cleanup_error));primary.add_note('Launch parent cleanup retained: '+repr(cleanup_error))
+ elif parent_path is None:
+  cleanup.update(retained=False,reason='mkdtemp returned no parent path; no guessed cleanup')
+ try:
+  with cleanup_path.open('x') as f:f.write(json.dumps(cleanup,indent=2,sort_keys=True)+'\n')
+ except BaseException as publication_error:
+  primary.add_note('Launch cleanup receipt could not be written: '+repr(publication_error))
+ raise

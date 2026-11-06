@@ -1,0 +1,141 @@
+.................................................................F...... [ 10%]
+.........................F.............................................. [ 20%]
+........................................................................ [ 31%]
+........................................................................ [ 41%]
+........................................................................ [ 52%]
+........................................................................ [ 62%]
+........................................................................ [ 73%]
+........................................................................ [ 83%]
+......................................F................................. [ 94%]
+......................................                                   [100%]
+=================================== FAILURES ===================================
+____________ test_synthetic_public_binding_returns_immutable_bytes _____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x766f43394590>
+
+    def test_synthetic_public_binding_returns_immutable_bytes(monkeypatch):
+>       blobs,*rest=fixture(monkeypatch);binding=a.require_candidate(blobs)
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/qwen-expanded-candidate-checker-preflight-v1-20261104/execution_source/test_checker_admission.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/tmp/qwen-expanded-candidate-checker-preflight-v1-20261104/execution_source/checker_admission.py:244: in require_candidate
+    report, data = _selector(blobs, config['selector_proof'], candidate_raw, initial)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/qwen-expanded-candidate-checker-preflight-v1-20261104/execution_source/checker_admission.py:151: in _selector
+    authorization = authenticate_grant(data['grant'], sha(data['grant']),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+raw = b'{\n  "candidate_ordinal": 1,\n  "encrypted_execution": false,\n  "execute_authorized": true,\n  "gate_bounds_sha256"...99aadd2dd154763e744c6ee1c1044661",\n  "token_or_calibration_body_reads": false,\n  "validation_body_reads": false\n}\n'
+expected_sha256 = 'd9a5cd9186491f0b3cd1e1ee4f75066ae59a3b5598e28af16a9f308654a21966'
+source_manifest_sha256 = '178bb586edde20278b3c4ded65dddc7599aadd2dd154763e744c6ee1c1044661'
+output_directory = '/synthetic/selection'
+
+    def authenticate_grant(raw, expected_sha256, *, source_manifest_sha256, output_directory):
+        bounded(raw, 1 << 20, expected_sha256)
+        grant = parse(raw)
+        fixed = dict(schema='qwen-expanded-initial-selector-grant-v1', ready=True,
+            execute_authorized=True, candidate_ordinal=1, source_manifest_sha256=source_manifest_sha256,
+            observer_source_manifest_sha256=SOURCE_MANIFEST_SHA256, protected_manifest_sha256=BASELINE_SHA256,
+            protocol_sha256=PROTOCOL_SHA256, gate_bounds_sha256=GATE_BOUNDS_SHA256,
+            output_directory=output_directory, model_execution=False, token_or_calibration_body_reads=False,
+            validation_body_reads=False, encrypted_execution=False)
+        extra = {'preflight_report_sha256', 'independent_preflight_review_sha256', 'initial_evidence'}
+        if (type(grant) is not dict or set(grant) != set(fixed) | extra or
+                any(canonical(grant[k]) != canonical(v) for k, v in fixed.items())):
+            raise ValueError('Exact externally reviewed initial-selection grant required')
+        if not hash_string(source_manifest_sha256):
+            raise ValueError('Exact selector source manifest digest required')
+        absolute_path(output_directory)
+        for key in ('preflight_report_sha256', 'independent_preflight_review_sha256'):
+            if not hash_string(grant[key]):
+                raise ValueError('Reviewed complete preflight hashes required')
+        evidence = grant['initial_evidence']
+        if type(evidence) is not dict or set(evidence) != {'parent', 'worker', 'source_archive', 'root_review', 'reconstruction_script', 'root_reconstruction_outer_receipt'}:
+            raise ValueError('Exact public initial evidence descriptors required')
+        for name, row in evidence.items():
+            if type(row) is not dict or set(row) != {'path', 'sha256', 'bytes'}:
+                raise ValueError('Exact public proof file descriptor required')
+            absolute_path(row['path'])
+            bound = (2 if name in ('root_review', 'reconstruction_script', 'root_reconstruction_outer_receipt') else 32) << 20
+            if not hash_string(row['sha256']) or type(row['bytes']) is not int or not 0 < row['bytes'] <= bound:
+                raise ValueError('Bounded public proof file required')
+        if len({row['path'] for row in evidence.values()}) != 6:
+            raise ValueError('Distinct initial evidence paths required')
+        if evidence['reconstruction_script']['sha256'] != RECONSTRUCTION_SCRIPT_SHA256:
+>           raise ValueError('Independently reviewed reconstruction script required')
+E           ValueError: Independently reviewed reconstruction script required
+
+/tmp/qwen-expanded-candidate-checker-preflight-v1-20261104/execution_source/selection_grant.py:49: ValueError
+_____________ test_body_bytes_not_opened_by_pending_or_public_gate _____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x766f40dd95c0>
+
+    def test_body_bytes_not_opened_by_pending_or_public_gate(monkeypatch):
+        blobs,*_=fixture(monkeypatch)
+        monkeypatch.setattr('builtins.open',lambda *args,**kwargs:pytest.fail('public gate read file'))
+>       a.require_candidate(blobs)
+
+/tmp/qwen-expanded-candidate-checker-preflight-v1-20261104/execution_source/test_checker_admission.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/tmp/qwen-expanded-candidate-checker-preflight-v1-20261104/execution_source/checker_admission.py:244: in require_candidate
+    report, data = _selector(blobs, config['selector_proof'], candidate_raw, initial)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/qwen-expanded-candidate-checker-preflight-v1-20261104/execution_source/checker_admission.py:151: in _selector
+    authorization = authenticate_grant(data['grant'], sha(data['grant']),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+raw = b'{\n  "candidate_ordinal": 1,\n  "encrypted_execution": false,\n  "execute_authorized": true,\n  "gate_bounds_sha256"...99aadd2dd154763e744c6ee1c1044661",\n  "token_or_calibration_body_reads": false,\n  "validation_body_reads": false\n}\n'
+expected_sha256 = 'd9a5cd9186491f0b3cd1e1ee4f75066ae59a3b5598e28af16a9f308654a21966'
+source_manifest_sha256 = '178bb586edde20278b3c4ded65dddc7599aadd2dd154763e744c6ee1c1044661'
+output_directory = '/synthetic/selection'
+
+    def authenticate_grant(raw, expected_sha256, *, source_manifest_sha256, output_directory):
+        bounded(raw, 1 << 20, expected_sha256)
+        grant = parse(raw)
+        fixed = dict(schema='qwen-expanded-initial-selector-grant-v1', ready=True,
+            execute_authorized=True, candidate_ordinal=1, source_manifest_sha256=source_manifest_sha256,
+            observer_source_manifest_sha256=SOURCE_MANIFEST_SHA256, protected_manifest_sha256=BASELINE_SHA256,
+            protocol_sha256=PROTOCOL_SHA256, gate_bounds_sha256=GATE_BOUNDS_SHA256,
+            output_directory=output_directory, model_execution=False, token_or_calibration_body_reads=False,
+            validation_body_reads=False, encrypted_execution=False)
+        extra = {'preflight_report_sha256', 'independent_preflight_review_sha256', 'initial_evidence'}
+        if (type(grant) is not dict or set(grant) != set(fixed) | extra or
+                any(canonical(grant[k]) != canonical(v) for k, v in fixed.items())):
+            raise ValueError('Exact externally reviewed initial-selection grant required')
+        if not hash_string(source_manifest_sha256):
+            raise ValueError('Exact selector source manifest digest required')
+        absolute_path(output_directory)
+        for key in ('preflight_report_sha256', 'independent_preflight_review_sha256'):
+            if not hash_string(grant[key]):
+                raise ValueError('Reviewed complete preflight hashes required')
+        evidence = grant['initial_evidence']
+        if type(evidence) is not dict or set(evidence) != {'parent', 'worker', 'source_archive', 'root_review', 'reconstruction_script', 'root_reconstruction_outer_receipt'}:
+            raise ValueError('Exact public initial evidence descriptors required')
+        for name, row in evidence.items():
+            if type(row) is not dict or set(row) != {'path', 'sha256', 'bytes'}:
+                raise ValueError('Exact public proof file descriptor required')
+            absolute_path(row['path'])
+            bound = (2 if name in ('root_review', 'reconstruction_script', 'root_reconstruction_outer_receipt') else 32) << 20
+            if not hash_string(row['sha256']) or type(row['bytes']) is not int or not 0 < row['bytes'] <= bound:
+                raise ValueError('Bounded public proof file required')
+        if len({row['path'] for row in evidence.values()}) != 6:
+            raise ValueError('Distinct initial evidence paths required')
+        if evidence['reconstruction_script']['sha256'] != RECONSTRUCTION_SCRIPT_SHA256:
+>           raise ValueError('Independently reviewed reconstruction script required')
+E           ValueError: Independently reviewed reconstruction script required
+
+/tmp/qwen-expanded-candidate-checker-preflight-v1-20261104/execution_source/selection_grant.py:49: ValueError
+_______________ test_actual_paths_disabled_and_inputs_immutable ________________
+
+    def test_actual_paths_disabled_and_inputs_immutable():
+>       assert json.loads((HERE/'execution_authorization.json').read_bytes())=={'actual_coefficient_selection':False,'actual_observer_admission':False}
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError
+
+/tmp/qwen-expanded-candidate-checker-preflight-v1-20261104/execution_source/test_selector.py:157: AssertionError
+=========================== short test summary info ============================
+FAILED ../../tmp/qwen-expanded-candidate-checker-preflight-v1-20261104/execution_source/test_checker_admission.py::test_synthetic_public_binding_returns_immutable_bytes
+FAILED ../../tmp/qwen-expanded-candidate-checker-preflight-v1-20261104/execution_source/test_checker_admission.py::test_body_bytes_not_opened_by_pending_or_public_gate
+FAILED ../../tmp/qwen-expanded-candidate-checker-preflight-v1-20261104/execution_source/test_selector.py::test_actual_paths_disabled_and_inputs_immutable
+3 failed, 683 passed in 51.27s

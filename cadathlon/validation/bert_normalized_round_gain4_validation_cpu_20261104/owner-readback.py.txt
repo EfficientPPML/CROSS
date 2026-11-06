@@ -1,0 +1,66 @@
+from pathlib import Path
+import hashlib,json,math,tarfile,io,os,datetime
+source=Path('/tmp/bert-normalized-round-gain4-validator-ready-20261104');out=Path('/tmp/bert-normalized-round-gain4-validate-actual-v1-20261104');sha=lambda b:hashlib.sha256(b).hexdigest()
+manifest=Path('/tmp/gain4-validator-ready-sources-20261104.json').read_bytes();assert sha(manifest)=='e0bfcee1ab85f8750e576de24bdbdf13faf4f0b8abe66ecef55b3403a084cce0';expected=json.loads(manifest);assert len(expected)==187
+parent_raw=(out/'report.json').read_bytes();worker_raw=(out/'worker/worker_report.json').read_bytes();p=json.loads(parent_raw);w=json.loads(worker_raw)
+assert sha(parent_raw)=='80599a5bdfa1cf531da3c165fa20cd607beb78a05e83127bf7962ce65ded0be2'
+assert sha(worker_raw)==p['worker_report_sha256']=='f8b6ea7a300b8754f3d80e346ca8b6f8af06f4287339f657eefd4b2b2c29bee9'
+assert p['schema']=='gain4-validator-successor-terminal-v1'and w['schema']=='gain4-validator-successor-worker-v1'
+for report in [p,w]:
+ for name in ['passed','source_files_unchanged','terminal_scope_completed','termination_scope_completed']:assert report[name]is True,name
+ assert report['stage']=='validate'and report['source_hashes_start']==report['source_hashes_end']==expected
+ assert not report.get('error')
+ assert report['cpu_affinity']==[124,125,126,127]
+ assert report['producer_source_map_sha256']=='d8533cc0c770683691fb01fb078977a0e248812696ca7548edc537af2d93cbec'
+for name in ['source_archive_verified','all_direct_children_reaped','all_owned_groups_empty','process_cleanup_completed','worker_reaped','worker_group_empty_verified','workspace_retained']:assert p[name]is True,name
+assert p['execute']is True and p['cleanup_errors']==[]and type(p['worker_exit_code'])is int and p['worker_exit_code']==0
+for name in ['loader_entered','loader_cleanup_completed','phase_complete','all54_authenticated_before_private_read','numeric_validation_complete','external_stores_retained']:assert w[name]is True,name
+assert w['forbidden_attempts']==[]
+assert json.loads((out/'source_manifest.json').read_bytes())==expected
+for report,manifest_pin in [(p,sha(manifest)),(w,sha((out/'source_manifest.json').read_bytes()))]:
+ guard=report['fresh_source_guard'];assert guard['passed']is True and guard['fresh']is True and guard['source_count']==187 and guard['manifest_sha256']==manifest_pin
+for root in [source,out/'execution_source']:
+ assert all(sha((root/n).read_bytes())==h for n,h in expected.items())
+ actual={f.relative_to(root).as_posix()for f in root.rglob('*')if f.is_file()and '__pycache__'not in f.parts and '.pytest_cache'not in f.parts};assert actual==set(expected)
+archive=(out/'sources.tar.gz').read_bytes();assert sha(archive)==p['source_archive_sha256']=='9d7d04722112bfda694e680d2ad325f2a909448f0ef8619b19a504382c45b9ee'
+with tarfile.open(fileobj=io.BytesIO(archive),mode='r:gz')as z:
+ members=z.getmembers();assert len(members)==187 and all(m.isfile()for m in members)
+ assert {m.name:sha(z.extractfile(m).read())for m in members}==expected
+for field in ['loaded_local_modules_start','loaded_local_modules_end']:
+ for row in w[field].values():assert expected[row['path']]==row['sha256']
+server_raw=Path('/tmp/bert-normalized-round-gain4-ready-20261104/actual-server-v1/report.json').read_bytes();assert sha(server_raw)=='897fa13c99005dff41d10e192d87417a6d31a155995c3e65805922fc5326d68a';server=json.loads(server_raw)
+assert p['request_contract']==w['request_contract']==server['request_contract']
+assert p['readback']==w['readback']==server['readback']and p['readback']['tile_count']==54
+assert p['workspace_identity']==w['workspace_identity']==server['workspace_identity']==[66305,3370369]
+assert p['producer_terminal_pins']=={'fixture':'aca358a292ca8cc867241e09abec18889b20b31ccc4111b4fa66b2830ff271ad','server':sha(server_raw)}
+plan_raw=(source/'proof_plan.json').read_bytes();assert sha(plan_raw)==w['request_contract']['numerical_plan_sha256'];plan=json.loads(plan_raw)
+rows=w['numeric_checkpoints'];assert type(rows)is list and len(rows)==len(plan['checkpoints'])==54
+
+def metric(row):
+ assert type(row)is dict
+ for name in ['passed','shape_and_finite','error_arithmetic_finite']:assert row[name]is True,name
+ for name in ['decoded_minimum','decoded_maximum','max_abs_error']:assert type(row[name])is float and math.isfinite(row[name]),name
+ assert 0<=row['max_abs_error']<=1e-6 and row['decoded_minimum']<=row['decoded_maximum']
+for i,(row,wanted)in enumerate(zip(rows,plan['checkpoints'])):
+ for name,value in dict(index=i,case=wanted['case'],label=wanted['label'],level=wanted['level'],scale=wanted['scale'],slots=65536,absolute_gate=1e-6).items():assert type(row[name])is type(value)and row[name]==value,(i,name)
+ metric(row)
+expected_summary=dict(checkpoints=54,physical_slots=54*65536,maximum_absolute_error=max(r['max_abs_error']for r in rows),absolute_gate=1e-6,passed=True)
+assert p['numeric_summary']==w['numeric_summary']==expected_summary
+cases={r['name']:r for r in plan['cases']};assert set(w['derived_checks'])==set(cases)
+derived={}
+for name,case in cases.items():
+ names={f'{prefix}{i:02}'for prefix in ['invariant','true_residual_vs_original']for i in range(1,case['updates']+1)}|{'final_true_inverse','final_true_relative_residual','final_true_normalized_quotient'}
+ checks=w['derived_checks'][name];assert set(checks)==names
+ for row in checks.values():metric(row)
+ derived[name]=dict(count=len(checks),maximum_absolute_error=max(row['max_abs_error']for row in checks.values()),passed=True)
+child,=p['children'];assert child['name']=='worker'and child['pid']==w['pid']==3859522 and child['direct_returncode']==0
+assert all(child[n]is True for n in ['direct_child_reaped','group_empty_verified','cleanup_completed'])and child['cleanup_errors']==[]and child['signals_sent']==[]
+pids=[3859416,3859417,3859522];groups=[3859416,3859522]
+for pid in pids:assert not Path('/proc',str(pid)).exists(),pid
+for pgid in groups:
+ try:os.killpg(pgid,0)
+ except ProcessLookupError:pass
+ else:raise AssertionError(('group remains',pgid))
+grant=Path('/tmp/bert-gain4-validator-root-launch-20261104/launch.json').read_bytes();assert sha(grant)=='c2493b48d5e38462b652004f7b7e856b4f20af6c9b83840dacce43843caecaa0'
+receipt=dict(schema='gain4-validator-owner-terminal-v1',passed=True,utc=datetime.datetime.now(datetime.timezone.utc).isoformat(),owner_session=32501,owner_tool_chunk='78b876',owner_exit_code=0,owner_reaped=True,report_sha256=sha(parent_raw),worker_report_sha256=sha(worker_raw),source_archive_sha256=sha(archive),source_manifest_sha256=sha(manifest),source_count=187,all_current_execution_start_end_archive_equal=True,source_origins_start=len(w['loaded_local_modules_start']),source_origins_end=len(w['loaded_local_modules_end']),all54_authenticated_before_private_read=True,numeric_summary=expected_summary,derived_checks=derived,worst_checkpoint=max(rows,key=lambda r:r['max_abs_error']),parent_elapsed_s=p['elapsed_s'],worker_elapsed_s=w['elapsed_s'],cpu_affinity=p['cpu_affinity'],child_maxrss_kib=p['child_maxrss_kib'],memory_scope=p['memory_measurement_scope'],observed_absent_pids=pids,observed_absent_groups=groups,loader_cleanup_completed=True,outer_signal_restoration_completed=True,borrowed_stores_retained_reported=True,response_readback_equal_completed_server=True,launch_grant_sha256=sha(grant),review_script_sha256=sha(Path(__file__).read_bytes()),scope='Public terminal/source/typed metric readback after the authorized genuine validator. No additional key/ciphertext/private/model body reads or repeated decoding by this readback. Component-only, not refresh/full-model/ranked timing evidence.')
+root=Path('/tmp/bert-normalized-round-gain4-validator-terminal-20261104');root.mkdir(exist_ok=True);target=root/'owner-terminal.json';assert not target.exists();target.write_text(json.dumps(receipt,sort_keys=True,indent=2)+'\n');print(json.dumps(dict(receipt_path=str(target),receipt_sha256=sha(target.read_bytes()),**receipt),sort_keys=True))

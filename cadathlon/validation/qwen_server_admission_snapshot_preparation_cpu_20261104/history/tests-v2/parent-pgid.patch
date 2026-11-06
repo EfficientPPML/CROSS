@@ -1,0 +1,10 @@
+--- v1/test_snapshot_guard.py
++++ v2/test_snapshot_guard.py
+@@ -48,6 +48,7 @@
+     assert data['original_validator_identities_restored']is True and data['backend_imported']is False
+     assert data['backend_denials']==[]
+     assert data['graph_type_count']==13 and data['pid']==proc.pid
++    assert type(data['pgid'])is int and data['pgid']==proc.pid
+     if observed_pgid is not None:assert data['pgid']==observed_pgid
+     try:os.killpg(data['pgid'],0)
+     except ProcessLookupError:group_absent=True

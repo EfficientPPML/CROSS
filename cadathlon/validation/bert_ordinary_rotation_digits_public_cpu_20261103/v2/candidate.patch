@@ -1,0 +1,118 @@
+--- a/jaxite_word/herot.py
++++ b/jaxite_word/herot.py
+@@ -439,6 +439,115 @@
+ 
+     return jnp.concatenate(components, axis=1)
+ 
++  def _rotate_from_digits_array(self, ct_data, digits, eval_a=None, eval_b=None, coef_map=None):
++    """Complete ordinary rotation using same-input precomputed HYBRID digits.
++
++    Experimental raw seam: caller must bind digits from _decompose_array of
++    this exact immutable input and control state. Shape validation alone does
++    not authenticate that provenance. No shared owner/cache is introduced.
++    """
++    self._require_controls()
++    if eval_a is None or eval_b is None or coef_map is None:
++      raise ValueError('prepared ordinary rotation requires all explicit array operands')
++    if (self._controls_ready is not True or self.ff_context_cls is not BarrettContext
++        or any(modulus >= 1 << 31 for modulus in self.overall_moduli)):
++      raise ValueError('prepared ordinary rotation requires exact sub31 Barrett controls')
++    finite_field.check_rank5_array(
++        ct_data, '_HERotKernel._rotate_from_digits_array', batch=self.batch,
++        num_elements=2, degree_layout=(self.r, self.c), num_moduli=self.sizeQl)
++    expected = (self.numPartQl, self.batch, 1, self.r, self.c, self.sizeQlP)
++    if getattr(digits, 'shape', None) != expected or getattr(digits, 'dtype', None) != jnp.uint32:
++      raise ValueError('prepared rotation requires exact uint32 digit shape')
++    if getattr(ct_data, 'dtype', None) != jnp.uint32:
++      raise ValueError('prepared rotation requires uint32 source payload')
++    if any(key is not None and getattr(key, 'dtype', None) != jnp.uint32
++           for key in (eval_a, eval_b)):
++      raise ValueError('prepared rotation requires uint32 explicit key operands')
++    if coef_map is not None and getattr(coef_map, 'dtype', None) != jnp.int32:
++      raise ValueError('prepared rotation requires int32 coefficient map')
++    coef_map = self._resolve_automorphism_map(coef_map)
++    eval_a, eval_b = self._resolve_evaluation_keys(eval_a, eval_b)
++    ff_full = self.ct_full.ntt_ctx.ff_ctx
++
++    res0 = jnp.zeros(
++        (self.batch, 1, self.r, self.c, self.sizeQlP), dtype=jnp.uint64
++    )
++    res1 = jnp.zeros_like(res0)
++
++    # Keep the original per-part accumulation order while consuming the
++    # already materialized QP digits. This method performs no decomposition.
++    if self.numPartQl:
++      next_digit = digits[0]
++      for part in range(self.numPartQl - 1):
++        digit = next_digit
++        next_digit = digits[part + 1]
++        digit = digit.astype(jnp.uint64)
++        res0 = res0 + ff_full.modular_reduction(
++            digit * eval_b[part].astype(jnp.uint64)
++        ).astype(jnp.uint64)
++        res1 = res1 + ff_full.modular_reduction(
++            digit * eval_a[part].astype(jnp.uint64)
++        ).astype(jnp.uint64)
++
++      next_digit = next_digit.astype(jnp.uint64)
++      res0 = res0 + ff_full.modular_reduction(
++          next_digit * eval_b[self.numPartQl - 1].astype(jnp.uint64)
++      ).astype(jnp.uint64)
++      res1 = res1 + ff_full.modular_reduction(
++          next_digit * eval_a[self.numPartQl - 1].astype(jnp.uint64)
++      ).astype(jnp.uint64)
++
++    q_moduli = jnp.asarray(
++        self.overall_moduli[:self.sizeQl], dtype=jnp.uint32
++    ).reshape(1, 1, 1, 1, self.sizeQl)
++    p_inv = jnp.asarray(self.PInvModq, dtype=jnp.uint64).reshape(
++        1, 1, 1, 1, self.sizeQl
++    )
++    base0 = ct_data[:, 0:1, ..., :self.sizeQl]
++    components = []
++
++    # Process each component completely before starting the next one. This
++    # bounds live QP data and avoids a bandwidth-heavy QP concatenate/slice.
++    for component_index, accumulated in enumerate((res0, res1)):
++      reduced = ff_full.modular_reduction(accumulated).astype(jnp.uint32)
++      p_part = reduced[..., self.sizeQl:]
++      p_shape = p_part.shape
++      p_coeffs = self.ct_approx.ntt_ctx.intt(
++          p_part.reshape(-1, self.r, self.c, p_shape[-1])
++      ).reshape(p_shape)
++      q_from_p = self.bconv.basis_change_bat(
++          p_coeffs, control_index=self.numPartQl
++      ).astype(jnp.uint32)
++      q_shape = q_from_p.shape
++      q_from_p_ntt = self.ct_in.ntt_ctx.ntt(
++          q_from_p.reshape(-1, self.r, self.c, self.sizeQl)
++      ).reshape(q_shape)
++
++      q_part = reduced[..., :self.sizeQl]
++      diff = q_part - q_from_p_ntt
++      diff = jnp.where(
++          q_part < q_from_p_ntt, diff + q_moduli, diff
++      )
++      result = self.ct_in.ntt_ctx.ff_ctx.modular_reduction(
++          diff.astype(jnp.uint64) * p_inv
++      ).astype(jnp.uint32)
++
++      if component_index == 0:
++        result = result + base0
++        result = jnp.where(result >= q_moduli, result - q_moduli, result)
++
++      flat = result.reshape(
++          self.batch, self.r * self.c, self.sizeQl
++      )
++      permuted = jnp.take(flat, coef_map, axis=1)
++      components.append(
++          permuted.reshape(
++              self.batch, 1, self.r, self.c, self.sizeQl
++          )
++      )
++
++    return jnp.concatenate(components, axis=1)
++
+   # ---------------------------------------------------------------------------
+   # Runtime state helpers. These intentionally omit the ``_array`` suffix.
+   # ---------------------------------------------------------------------------

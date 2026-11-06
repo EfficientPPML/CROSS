@@ -1,0 +1,80 @@
+--- preparation-v1/executed_driver.py
++++ preparation-v2/executed_driver.py
+@@ -7,12 +7,12 @@
+ import hashlib, json, os, signal, stat, subprocess, sys, tarfile, time
+ import xml.etree.ElementTree as ET
+ 
+-CONFIG_SHA256 = '02d9dec6cfff9dd65b9c32f89fda52a08c47848e33bbab74237b80395b28e47d'
++CONFIG_SHA256 = '73f36f9634f726699a8c70ec826f2020b59713dc1fc9960b85859d27bb281ab0'
+ WORKER_SHA256 = '55b6e6f684480efb7b834f72d4678df778b3f63beb2f06d36b05ca663764b8be'
+ HERE = Path(__file__).resolve().parent
+ sha = lambda raw: hashlib.sha256(raw).hexdigest()
+ canonical = lambda value: (json.dumps(value, sort_keys=True, indent=2, allow_nan=False) + '\n').encode()
+-map_canonical = lambda value: (json.dumps(value, sort_keys=True, separators=(',', ':'), allow_nan=False) + '\n').encode()
++map_canonical = lambda value: (json.dumps(value, sort_keys=True, indent=2, allow_nan=False) + '\n').encode()
+ 
+ def inventory(root):
+     assert not any(p.is_symlink() for p in root.rglob('*'))
+@@ -60,8 +60,13 @@
+     for path in sorted(p for p in regular if p.name == 'child-terminal.json'):
+         terminal = json.loads(path.read_bytes())
+         result_path, log_path = path.parent / 'result.json', path.parent / 'child.log'
+-        assert result_path.is_file() and log_path.is_file()
++        parent_path = path.parent / 'parent-terminal.json'
++        assert all(p in regular for p in (result_path, log_path, parent_path))
+         result = json.loads(result_path.read_bytes())
++        parent = json.loads(parent_path.read_bytes())
++        assert type(parent) is dict and set(parent) == {'schema', 'pid', 'owned_session_pgid', 'observed_pgid', 'exit_code', 'reaped', 'group_absent', 'scenario', 'child_result_read', 'runtime_scope'}
++        assert parent['schema'] == 'qwen-snapshot-owned-child-terminal-v1'
++        assert parent['child_result_read'] is False and parent['runtime_scope'] == 'recording guard state only'
+         scenario = terminal['scenario']
+         assert scenario in expected and scenario not in records and result['scenario'] == scenario
+         pid, pgid = result['pid'], result['pgid']
+@@ -71,6 +76,13 @@
+         assert terminal['observed_pgid'] is None or (type(terminal['observed_pgid']) is int and terminal['observed_pgid'] == pid)
+         assert type(terminal['exit_code']) is int and terminal['exit_code'] == 0
+         assert terminal['reaped'] is True and terminal['group_absent'] is True
++        assert parent['scenario'] == scenario
++        assert type(parent['pid']) is int and parent['pid'] == pid
++        assert type(parent['owned_session_pgid']) is int and parent['owned_session_pgid'] == pid
++        assert parent['observed_pgid'] is None or (type(parent['observed_pgid']) is int and parent['observed_pgid'] == pid)
++        assert parent['observed_pgid'] == terminal['observed_pgid']
++        assert type(parent['exit_code']) is int and parent['exit_code'] == terminal['exit_code'] == 0
++        assert parent['reaped'] is True and parent['group_absent'] is True
+         assert result['assertions_completed'] is True and result['original_validator_identities_restored'] is True
+         assert result['recording_full_validation_seam'] is True and result['scientific_admission_tested'] is False
+         assert result['actual_proof_instances'] is False and result['backend_imported'] is False and result['backend_denials'] == []
+@@ -79,10 +91,14 @@
+             try: (os.killpg if group else os.kill)(pid, 0)
+             except ProcessLookupError: pass
+             else: raise ValueError('owned snapshot child or group remains live')
+-        records[scenario] = dict(terminal=terminal, result=result,
++        records[scenario] = dict(terminal=terminal, result=result, parent_terminal=parent,
++            parent_terminal_path=parent_path.relative_to(out).as_posix(), parent_terminal_sha256=sha(parent_path.read_bytes()),
+             terminal_path=path.relative_to(out).as_posix(), result_path=result_path.relative_to(out).as_posix(),
+             log_path=log_path.relative_to(out).as_posix(), log_sha256=sha(log_path.read_bytes()))
+     assert set(records) == set(expected) and len(records) == 18
++    assert type(config['expected_parent_records']) is int and config['expected_parent_records'] == 18
++    assert sum(p.name == 'parent-terminal.json' for p in regular) == config['expected_parent_records']
++    assert sum(p.name == 'child-terminal.json' for p in regular) == 18
+     assert sum(p.name == 'result.json' for p in regular) == sum(p.name == 'child.log' for p in regular) == 18
+     return metadata, [records[name] for name in expected]
+ 
+@@ -94,7 +110,7 @@
+     raw = (HERE / 'run_config.json').read_bytes()
+     assert sha(raw) == CONFIG_SHA256
+     config = json.loads(raw)
+-    assert config['schema'] == 'qwen-admission-snapshot-focused-proof-v1'
++    assert config['schema'] == 'qwen-admission-snapshot-focused-proof-v2'
+     assert config['synthetic_only'] is True and config['actual_execution_authorized'] is False
+     source = Path(config['source_root'])
+     out = Path(config['proof_root'])
+@@ -204,7 +220,7 @@
+         backend_context_construction=False, actual_key_generation=False, actual_client_role_execution=False,
+         driver_sha256=sha(Path(__file__).read_bytes()), worker_driver_sha256=WORKER_SHA256,
+         config_sha256=CONFIG_SHA256, scope=config['scope'],
+-        child_records=child_records, retained_owned_files=len(owned_metadata),
++        child_records=child_records, early_parent_records_validated=len(child_records), retained_owned_files=len(owned_metadata),
+         snapshot_guard_recording_only=True, full_scientific_admission_tested=False,
+         actual_proofs_present=False, temporary_root=str(temporary), pytest_basetemp=str(basetemp))
+     dump('report.json', report)

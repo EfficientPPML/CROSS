@@ -1,0 +1,104 @@
+{
+  "passed": true,
+  "test_exit_code": 0,
+  "source_hashes_before": {
+    "bounds.py": "c98042505284409bcfe6ec58ac4f88da5f7f6132483052c3709f0560e75a33aa",
+    "test_bounds.py": "02a63555cff0f1cfe98dcc347c23e7b8dfc44761c7cd4e55de5d5d11f49e4f5a",
+    "PLAN.md": "17c4039dd2c5a7a30c796b73c6576e94a306137b1c24e70be03abbdb6cf791ed",
+    "plan.py": "93351b8e8ef60c05eefb1c26099e84e76b3a8c7945df23ee5e8100ba98236dcf",
+    "config.json": "660db3b73d788119c04535e48cf9be5f55bc3100841a718637ae695b442f27dd",
+    "model_pins.json": "6ce7cff55898969d0b4f60140179ebf8ce34a3b26de886e21f2c0beaba3415f5",
+    "preflight.py": "06479c2d350e07e99a8a97ff0ba4285107233ce3504411e006f4f35f2955ff9b"
+  },
+  "source_hashes_after": {
+    "bounds.py": "c98042505284409bcfe6ec58ac4f88da5f7f6132483052c3709f0560e75a33aa",
+    "test_bounds.py": "02a63555cff0f1cfe98dcc347c23e7b8dfc44761c7cd4e55de5d5d11f49e4f5a",
+    "PLAN.md": "17c4039dd2c5a7a30c796b73c6576e94a306137b1c24e70be03abbdb6cf791ed",
+    "plan.py": "93351b8e8ef60c05eefb1c26099e84e76b3a8c7945df23ee5e8100ba98236dcf",
+    "config.json": "660db3b73d788119c04535e48cf9be5f55bc3100841a718637ae695b442f27dd",
+    "model_pins.json": "6ce7cff55898969d0b4f60140179ebf8ce34a3b26de886e21f2c0beaba3415f5",
+    "preflight.py": "06479c2d350e07e99a8a97ff0ba4285107233ce3504411e006f4f35f2955ff9b"
+  },
+  "source_files_unchanged": true,
+  "source_archive_sha256": "8e09586313b8b45a9392162d37d8be6e31cc0aebde72f44be477388f4a9f62e3",
+  "cpu_affinity": [
+    140,
+    141,
+    142,
+    143
+  ],
+  "elapsed_s": 0.22532445699471282,
+  "plan": {
+    "scope": "Design/reference arithmetic only; exact-real native graph envelopes, not approximate/HE/native-float32 certificates.",
+    "model_revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+    "config_sha256": "660db3b73d788119c04535e48cf9be5f55bc3100841a718637ae695b442f27dd",
+    "model_pin_sha256": "6ce7cff55898969d0b4f60140179ebf8ce34a3b26de886e21f2c0beaba3415f5",
+    "rms_sites": {
+      "input": 28,
+      "post_attention": 28,
+      "q_heads": 28,
+      "k_heads": 28,
+      "final": 1,
+      "total": 113
+    },
+    "epsilon_binary64_hex": "0x1.0c6f7a0b5ed8dp-20",
+    "q_head_variance_count": 448,
+    "k_head_variance_count": 224,
+    "extraction_not_performed": true,
+    "model_evaluated": false,
+    "coefficients_selected": false,
+    "validation_outputs_used": false,
+    "initializer": "Full embedding table coordinate maxima, optionally exact full-row maximum for the first site.",
+    "ideal_newton_cost_illustrations": [
+      {
+        "condition": "100",
+        "updates": 10,
+        "depth": 37,
+        "ideal_relative_error_upper": "2.98377043334355592657623321408040533557000928814812187776180494177487619422711916809216197545715073243943726544195157619E-11",
+        "coefficient_selected": false
+      },
+      {
+        "condition": "10000",
+        "updates": 15,
+        "depth": 57,
+        "ideal_relative_error_upper": "2.44636695697262313464168333827085709581040353886809709539754790083191151325869872628790812255830663409870895104893319702E-7",
+        "coefficient_selected": false
+      },
+      {
+        "condition": "1000000",
+        "updates": 21,
+        "depth": 81,
+        "ideal_relative_error_upper": "6.08844061364217620799334976892723763558075527183208878262095412925640138557324230943387324754908066071566745408701209704E-9",
+        "coefficient_selected": false
+      },
+      {
+        "condition": "1000000000000",
+        "updates": 38,
+        "depth": 149,
+        "ideal_relative_error_upper": "9.68300745996953412995821663069866567410497217000942829151916052941420689062846981412620425816869937147242929232453261125E-9",
+        "coefficient_selected": false
+      },
+      {
+        "condition": "1000000000000000000",
+        "updates": 55,
+        "depth": 217,
+        "ideal_relative_error_upper": "1.52216020461850638154803798610749859987898859795911192475721690278242096744563278641068402279304901562359421797041284941E-8",
+        "coefficient_selected": false
+      },
+      {
+        "condition": "1000000000000000000000000",
+        "updates": 72,
+        "depth": 285,
+        "ideal_relative_error_upper": "2.36584677074859335304182895924751106748791118555450263950304456289596607044816107840047336916045326492609198921070146377E-8",
+        "coefficient_selected": false
+      }
+    ],
+    "limitations": [
+      "No actual113-site outer widths have been computed by this design checkpoint.",
+      "Illustrative ideal Newton counts select no site coefficients and exclude rounded seed/arithmetic/CKKS errors.",
+      "Approximate attention needs a separate positivity or row-L1 certificate; exact native softmax convexity does not transfer automatically.",
+      "Approximate norm/SiLU uniform envelopes must be certified on the new outer domains before propagating that graph.",
+      "Future candidate selection must follow a new untouched input freeze and preserve original published regression obligations."
+    ]
+  }
+}

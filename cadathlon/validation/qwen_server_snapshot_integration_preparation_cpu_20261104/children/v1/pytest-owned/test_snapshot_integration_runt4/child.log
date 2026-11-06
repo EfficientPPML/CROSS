@@ -1,0 +1,22 @@
+Traceback (most recent call last):
+  File "/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/integration_child.py", line 103, in <module>
+    if __name__=='__main__':main()
+                            ~~~~^^
+  File "/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/integration_child.py", line 83, in main
+    else:run_direct(fixture,scenario)
+         ~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/integration_checks.py", line 9, in run_direct
+    f.capture_runtime();r=f.runtime
+    ~~~~~~~~~~~~~~~~~^^
+  File "/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/integration_fixture.py", line 185, in capture_runtime
+    self.runtime,self.runtime_retire=self.process._runtime(self.packet,self.core,self.audit,callbacks,self.full_boundary,self.capacity,self.files,self.snapshot_check,self.derived)
+                                     ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/runtime/qwen_server_process.py", line 324, in _runtime
+    control_callbacks=tuple(_function_binding(fn)for fn in(guard_check,source_check,capacity_check))
+  File "/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/runtime/qwen_server_process.py", line 324, in <genexpr>
+    control_callbacks=tuple(_function_binding(fn)for fn in(guard_check,source_check,capacity_check))
+                            ~~~~~~~~~~~~~~~~~^^^^
+  File "/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/runtime/qwen_server_process.py", line 54, in _function_binding
+    if type(fn)is not FunctionType:raise TypeError('original source-fixed Python callback required')
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: original source-fixed Python callback required

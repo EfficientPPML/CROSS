@@ -1,0 +1,211 @@
+"""Collect real client stage3 only after caller-pinned stage1/2/input proofs."""
+from pathlib import Path
+import argparse,hashlib,importlib.util,io,json,os,shutil,stat,sys,tarfile,time,uuid
+HERE=Path(__file__).resolve().parent
+sys.path[:0]=[str(HERE),str(HERE/'runtime/stage'),str(HERE/'runtime')]
+import check_transformer_suite as process
+import client_keys,key_gate
+from cleanup import cleanup_signals,termination_signals
+spec=importlib.util.spec_from_file_location('stage3_worker_runtime',HERE/'worker.py')
+stage3_worker=importlib.util.module_from_spec(spec);spec.loader.exec_module(stage3_worker)
+
+
+def sources():
+    paths={p.relative_to(HERE).as_posix():p for p in (HERE/'runtime').rglob('*')
+        if p.is_file() and p.suffix in ('.py','.json') and '__pycache__' not in p.parts}
+    paths.update({p.name:p for p in HERE.glob('*.py')})
+    paths['source_origin.json']=HERE/'source_origin.json'
+    return {n:p.read_bytes() for n,p in paths.items()}
+def hashes(raw):return {n:hashlib.sha256(b).hexdigest() for n,b in raw.items()}
+def write(path,value):process.write_json(path,value)
+def archive(path,raw):
+    with tarfile.open(path,'w:gz') as tar:
+        for name,data in raw.items():info=tarfile.TarInfo(name);info.size=len(data);tar.addfile(info,io.BytesIO(data))
+def check_archive(path,expected):
+    with tarfile.open(path) as tar:
+        rows=tar.getmembers()
+        return len(rows)==len(expected)==len({m.name for m in rows}) and all(m.isfile() for m in rows) and {m.name:hashlib.sha256(tar.extractfile(m).read()).hexdigest() for m in rows}==expected
+
+def outside(path,protected):
+    path=Path(path).absolute()
+    for base in protected:
+        base=Path(base).absolute()
+        resolved=path.resolve();resolved_base=base.resolve()
+        if path==base or base in path.parents or resolved==resolved_base or resolved_base in resolved.parents:
+            raise ValueError('stage3 output must be outside external key/model/input workspaces')
+    return path
+
+def fixture_workspace(evidence, expected_report_sha256):
+    """Authenticate only bounded PUBLIC metadata before creating any output.
+
+    This extracts a protected path, not permission to read private input. The
+    complete ordered key/model/input completion gates still run afterward.
+    """
+    raw=key_gate.read(Path(evidence)/'report.json')
+    if key_gate.digest(raw)!=key_gate.sha_field(expected_report_sha256):
+        raise ValueError('external input-fixture report identity differs before output creation')
+    report=key_gate.parse(raw)
+    if (type(report)is not dict or report.get('schema')!='bert-upstream-size0-input-fixture-v1'
+            or type(report.get('private_workspace'))is not str
+            or not Path(report['private_workspace']).is_absolute()):
+        raise ValueError('externally bound private fixture workspace required')
+    return Path(report['private_workspace'])
+
+def upload_binding(owner,paths,expected):
+    """Bind retained request metadata/inodes; worker authenticated all payloads."""
+    owner.check();upload=Path(paths['upload']);private=Path(paths['client_private'])/'requests.json'
+    info=upload.lstat()
+    if not stat.S_ISDIR(info.st_mode):raise ValueError('ordinary retained upload directory required')
+    from file_stage_io import read_manifest
+    from transport_contract import digest
+    batch=read_manifest(upload/'batch.json');private_raw=key_gate.read(private)
+    pi=private.lstat()
+    if not stat.S_ISREG(pi.st_mode) or stat.S_IMODE(pi.st_mode)!=0o600:raise ValueError('regular0600 private request required')
+    if digest(batch)!=expected['public_batch_sha256']:raise ValueError('retained upload manifest differs')
+    manifest=key_gate.parse(private_raw)
+    if (manifest.get('public_batch_sha256')!=expected['public_batch_sha256']
+            or manifest.get('input_file_sha256')!=expected['private_input_sha256']):raise ValueError('retained private request binding differs')
+    return dict(upload=str(upload),upload_identity=[info.st_dev,info.st_ino],public_batch_sha256=digest(batch),
+        private_request_identity=[pi.st_dev,pi.st_ino],private_request_sha256=key_gate.digest(private_raw))
+
+
+def run(output,*,key_evidence,key_report_sha256,key_workspace,model_evidence,model_report_sha256,model_workspace,
+        fixture_evidence,fixture_report_sha256,snapshot,workspace_parent,execute=False,
+        worker_python=Path('/tmp/cross-pretrained-validation-env/bin/python')):
+    key_workspace=Path(key_workspace).absolute();model_workspace=Path(model_workspace).absolute()
+    private_fixture=fixture_workspace(fixture_evidence,fixture_report_sha256)
+    protected=(key_workspace,model_workspace,private_fixture)
+    output=outside(output,protected);workspace_parent=outside(workspace_parent,protected)
+    output.mkdir(parents=True,exist_ok=False);start=time.monotonic();primary=None;cleanup_error=None
+    owner=None;paths=None;active=False;attempted=False;record=None;before={};execution=None
+    report=dict(passed=False,execute=execute,actual_encryption=False,actual_execution_attempted=False,
+        io_workspace_retained=False,all_processes_reaped=True,external_key_workspace_never_removed=True,
+        scope='Size0 client input encryption and strict upload readback only; no decryption/model forward/server compute/accuracy claim.',
+        wrapper_pid=os.getpid(),cpu_affinity=sorted(os.sched_getaffinity(0)))
+    gate_args=dict(key_evidence=key_evidence,key_report_sha256=key_report_sha256,key_workspace=key_workspace,
+        model_evidence=model_evidence,model_report_sha256=model_report_sha256,model_workspace=model_workspace,
+        fixture_evidence=fixture_evidence,fixture_report_sha256=fixture_report_sha256)
+    def attempt(label,fn):
+        nonlocal cleanup_error
+        try:return fn()
+        except BaseException as error:
+            report.setdefault('cleanup_errors',[]).append(dict(operation=label,type=type(error).__name__,message=str(error)))
+            if primary is not None:primary.add_note(label+': '+repr(error))
+            elif cleanup_error is None:cleanup_error=error
+            elif not isinstance(error,Exception) and isinstance(cleanup_error,Exception):error.add_note('earlier cleanup: '+repr(cleanup_error));cleanup_error=error
+            else:cleanup_error.add_note(label+': '+repr(error))
+    try:
+        write(output/'report.json',report)
+        if type(execute)is not bool or os.environ.get('JAX_PLATFORMS')!='cpu':raise ValueError('explicit execution bool and CPU environment required')
+        raw=sources();before=hashes(raw);archive(output/'sources.tar.gz',raw)
+        if not check_archive(output/'sources.tar.gz',before):raise ValueError('startup source archive differs')
+        execution=output/'execution_source';execution.mkdir()
+        for name,data in raw.items():path=execution/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(data)
+        if {n:hashlib.sha256((execution/n).read_bytes()).hexdigest() for n in before}!=before:raise ValueError('immutable execution copy differs')
+        write(output/'source_manifest.json',before)
+        profile=raw['runtime/stage/server_inputs/p60_profile_and_refresh.json'];plan=raw['runtime/stage/server_inputs/twelve_layer_plan.json']
+        authorized=stage3_worker.authenticate(**gate_args,profile_bytes=profile,plan_bytes=plan)
+        keys,model,inputs=authorized;report['prerequisite']=stage3_worker.prerequisite_summary(*authorized)
+        if Path(inputs['private_workspace'])!=private_fixture:raise ValueError('authenticated fixture workspace changed')
+        outside(output,(inputs['private_workspace'],));outside(workspace_parent,(inputs['private_workspace'],))
+        # Resource preflight follows all three completion gates, before key/input
+        #payload access. Eight full-Q two-component request payloads are retained.
+        p,_=client_keys.public_contract(profile,plan)
+        payload_bytes=8*2*p['degree']*len(p['q_towers'])*4;needed=payload_bytes+8*65536+(1<<30)
+        usage=shutil.disk_usage(workspace_parent)
+        if usage.free<needed:raise OSError('insufficient retained upload storage capacity')
+        report['storage']=dict(ciphertext_payload_bytes=payload_bytes,required_with_margin=needed,parent=str(workspace_parent),free_bytes=usage.free,total_bytes=usage.total,
+            exclusions='keys, private input fixture, model cache, host/device temporary memory')
+        import server_public_model
+        pins={'model.safetensors':server_public_model.CHECKPOINT_SHA256,'config.json':server_public_model.CONFIG_SHA256}
+        assets={n:server_public_model.file_sha(Path(snapshot)/n) for n in pins}
+        if assets!=pins:raise ValueError('pinned embedding checkpoint/config differs')
+        report['asset_hashes_start']=assets
+        owner=client_keys._OwnedDirectory(workspace_parent/('cross-bert-input-encryption-'+uuid.uuid4().hex))
+        paths=stage3_worker.make_paths(*authorized,key_workspace,owner.path);stage3_worker.fresh_paths(paths)
+        report.update(io_workspace=str(owner.path),io_workspace_identity=list(owner.identity),source_hashes_start=before,
+            source_archive_sha256=process.sha256(output/'sources.tar.gz'),software=process.software_versions(),worker_python=str(worker_python),
+            environment={n:os.environ.get(n) for n in ('JAX_PLATFORMS','OMP_NUM_THREADS','OPENBLAS_NUM_THREADS','MKL_NUM_THREADS')})
+        write(output/'report.json',report)
+        if execute:
+            directory=output/'worker';directory.mkdir();active=True;attempted=True;report['actual_execution_attempted']=True
+            write(output/'report.json',report)
+            args=gate_args|dict(io_workspace=owner.path,snapshot=snapshot,output=directory/'worker_report.json',source_manifest=output/'source_manifest.json')
+            command=[str(worker_python),str(execution/'worker.py')]
+            for name,value in args.items():command+=['--'+name.replace('_','-'),str(value)]
+            previous=process.child_environment_overrides;process.child_environment_overrides=lambda:{'JAX_PLATFORMS':'cpu','PYTHONUNBUFFERED':'1'}
+            try:record=process.run_case(command,directory,timeout=None,cleanup_grace_s=120.)
+            finally:process.child_environment_overrides=previous
+            active=False;report['worker_process']=record
+            if (type(record)is not dict or type(record.get('returncode'))is not int or record['returncode']!=0 or record.get('error')
+                    or any(record.get(n)is not True for n in ('process_reaped','public_key_store_removed','owned_directory_handle_closed'))):raise ValueError('stage3 worker failed or cleanup incomplete')
+            result=record.get('result');worker=key_gate.parse(key_gate.read(directory/'worker_report.json'))
+            required=('passed','actual_client_encode_started','actual_client_encode_completed','readback_complete','all_eight_ordered_payloads_validated','source_files_unchanged','keygen_decrypt_native_model_forbidden')
+            if (type(result)is not dict or result.get('passed')is not True or result.get('worker_report_sha256')!=process.sha256(directory/'worker_report.json')
+                    or type(worker)is not dict or any(worker.get(n)is not True for n in required) or worker.get('forbidden_attempts')
+                    or worker.get('source_hashes_start')!=before or worker.get('source_hashes_end')!=before or worker.get('prerequisite')!=report['prerequisite']
+                    or worker.get('asset_hashes_start')!=assets or worker.get('asset_hashes_end')!=assets):raise ValueError('strict stage3 worker/source/phase proof differs')
+            readback=worker['readback']
+            if (readback.get('sample_count')!=1 or readback.get('tile_count')!=8 or [x['tile'] for x in readback.get('tiles',[])]!=list(range(8))
+                    or readback.get('ciphertext_payload_bytes')!=payload_bytes or readback.get('private_input_sha256')!=inputs['input_sha256']
+                    or any(readback.get(n)is not True for n in ('private_binding_verified','private_request_permissions_verified'))
+                    or any(result.get(n)!=keys['context_id'] for n in ('context_id',)) or result.get('model_id')!=model['model_id']
+                    or result.get('public_batch_sha256')!=readback.get('public_batch_sha256')):raise ValueError('strict eight-tile size0 request binding differs')
+            binding=upload_binding(owner,paths,readback)
+            report.update(binding,actual_encryption=True,context_id=keys['context_id'],model_id=model['model_id'],readback=readback,worker_elapsed_s=worker['elapsed_s'])
+        after_assets={n:server_public_model.file_sha(Path(snapshot)/n) for n in pins}
+        if after_assets!=assets:raise ValueError('public embedding assets changed')
+        after_auth=stage3_worker.authenticate(**gate_args,profile_bytes=profile,plan_bytes=plan)
+        if stage3_worker.prerequisite_summary(*after_auth)!=report['prerequisite']:raise ValueError('completed prerequisite identities changed')
+        report.update(asset_hashes_end=after_assets,operation_complete=True)
+    except BaseException as error:primary=error;report['error']=dict(type=type(error).__name__,message=str(error))
+    finally:
+        with cleanup_signals():
+            if active:
+                try:
+                    record=key_gate.parse(key_gate.read(output/'worker/process.json'))
+                    if type(record)is not dict or any(record.get(n)is not True for n in ('process_reaped','public_key_store_removed','owned_directory_handle_closed')):raise ValueError('active stage3 cleanup unknown')
+                    report['worker_process']=record
+                except BaseException as error:
+                    report['worker_process']=dict(process_reaped=False,error='active stage3 cleanup unknown',evidence_error=repr(error))
+                    if primary is None:primary=error
+                    else:primary.add_note('active process evidence: '+repr(error))
+            report['all_processes_reaped']=not active if record is None else type(record)is dict and all(record.get(n)is True for n in ('process_reaped','public_key_store_removed','owned_directory_handle_closed'))
+            after=attempt('source readback',lambda:hashes(sources()))
+            copied=attempt('execution source readback',lambda:{n:hashlib.sha256((execution/n).read_bytes()).hexdigest() for n in before}) if before and execution is not None else None
+            verified=attempt('archive readback',lambda:check_archive(output/'sources.tar.gz',before)) if before else False
+            report.update(source_hashes_end=after,execution_source_hashes_end=copied,source_files_unchanged=bool(before) and before==after==copied,source_archive_verified=verified is True)
+            if owner is not None:
+                if attempted:
+                    # Never delete an actual attempt's I/O or any external
+                    #private request pair. The unchanged handler may itself
+                    #rollback incomplete files; accurately record what remains.
+                    checked=attempt('retained I/O workspace identity',lambda:(owner.check(),True)[1])
+                    report['io_workspace_retained']=checked is True
+                    report['retention_reason']='actual execution attempted; retain remaining artifacts for stage4 or review'
+                    if paths is not None:report['remaining_artifacts']=attempt('remaining artifact inventory',lambda:stage3_worker.remaining(paths))
+                    if report.get('actual_encryption'):
+                        def verify_retained():
+                            now=upload_binding(owner,paths,report['readback'])
+                            if now!={n:report[n] for n in now}:raise ValueError('retained upload/private request changed')
+                        attempt('retained upload/private binding',verify_retained)
+                else:attempt('remove unused owned I/O workspace',owner.remove)
+                attempt('close owned I/O workspace',owner.close)
+            report['cleanup_completed']=not report.get('cleanup_errors') and report['all_processes_reaped']
+            report['passed']=bool(report.get('operation_complete') and primary is None and cleanup_error is None and report['source_files_unchanged'] and verified and report['cleanup_completed'] and (not execute or report['io_workspace_retained']))
+            report['elapsed_s']=time.monotonic()-start
+            try:write(output/'report.json',report)
+            except BaseException as error:
+                prior=primary if primary is not None else cleanup_error
+                if prior is None:raise
+                prior.add_note('stage3 terminal publication: '+repr(error))
+            if primary is not None:raise primary
+            if cleanup_error is not None:raise cleanup_error
+    print(json.dumps({n:report[n] for n in ('passed','execute','actual_encryption','io_workspace_retained','elapsed_s')}));return report
+
+if __name__=='__main__':
+    p=argparse.ArgumentParser()
+    for name in ('output','key-evidence','key-workspace','model-evidence','model-workspace','fixture-evidence','snapshot'):p.add_argument('--'+name,type=Path,required=True)
+    for name in ('key-report-sha256','model-report-sha256','fixture-report-sha256'):p.add_argument('--'+name,required=True)
+    p.add_argument('--workspace-parent',type=Path,default=Path('/tmp'));p.add_argument('--worker-python',type=Path,default=Path('/tmp/cross-pretrained-validation-env/bin/python'));p.add_argument('--execute',action='store_true')
+    with termination_signals():report=run(**vars(p.parse_args()));raise SystemExit(0 if report['passed'] else 1)

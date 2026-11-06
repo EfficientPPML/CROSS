@@ -1,0 +1,61 @@
+FFFF                                                                     [100%]
+=================================== FAILURES ===================================
+__________ test_all_zero_callback_cannot_skip_original_input_barrier ___________
+
+env = namespace(barriers=[<lease_test_helpers.Array object at 0x7eb7fff34510>, <lease_test_helpers.Array object at 0x7eb7fff...y=0, group_module=<module 'grouped_rotation' from '/tmp/bert-ordinary-rotation-group-v2-20261103/grouped_rotation.py'>)
+
+    def test_all_zero_callback_cannot_skip_original_input_barrier(env):
+        owner,_,_,_,value=setup(env);original=value.polynomial
+        def callback(*args):value.polynomial=Array(original.data)
+        with pytest.raises(ValueError):owner.rotate_many(value,(0,),progress=callback)
+>       assert any(item is original for item in env.barriers)
+E       assert False
+E        +  where False = any(<generator object test_all_zero_callback_cannot_skip_original_input_barrier.<locals>.<genexpr> at 0x7eb7fff55490>)
+
+test_backing_successor.py:9: AssertionError
+____ test_pending_original_input_is_quarantined_after_wrapper_substitution _____
+
+env = namespace(barriers=[<lease_test_helpers.Array object at 0x7eb8017e2d50>, <lease_test_helpers.Array object at 0x7eb8017...y=0, group_module=<module 'grouped_rotation' from '/tmp/bert-ordinary-rotation-group-v2-20261103/grouped_rotation.py'>)
+
+    def test_pending_original_input_is_quarantined_after_wrapper_substitution(env):
+        owner,_,_,_,value=setup(env);original=value.polynomial
+        env.fail=lambda item:item is original
+        def callback(*args):value.polynomial=Array(original.data)
+        with pytest.raises(ValueError):owner.rotate_many(value,(0,),progress=callback)
+>       assert owner._failed is not None and env.quarantine
+E       assert (None is not None)
+E        +  where None = <grouped_rotation.GroupedCompiledRotation object at 0x7eb7fff882d0>._failed
+
+test_backing_successor.py:16: AssertionError
+___ test_original_result_gets_retirement_barrier_after_callback_substitution ___
+
+env = namespace(barriers=[<lease_test_helpers.Array object at 0x7eb7fff3f070>, <lease_test_helpers.Array object at 0x7eb7fff...y=0, group_module=<module 'grouped_rotation' from '/tmp/bert-ordinary-rotation-group-v2-20261103/grouped_rotation.py'>)
+
+    def test_original_result_gets_retirement_barrier_after_callback_substitution(env):
+        owner,_,_,_,value=setup(env);record=[]
+        def callback(n,index,result):
+            record.append(result.polynomial);env.barriers.clear();result.polynomial=Array(result.polynomial.data)
+        with pytest.raises(ValueError):owner.rotate_many(value,(1,2),progress=callback)
+>       assert any(item is record[0] for item in env.barriers)
+E       assert False
+E        +  where False = any(<generator object test_original_result_gets_retirement_barrier_after_callback_substitution.<locals>.<genexpr> at 0x7eb7fff3f680>)
+
+test_backing_successor.py:24: AssertionError
+_______ test_binding_fingerprint_truncation_fails_before_next_completion _______
+
+env = namespace(barriers=[<lease_test_helpers.Array object at 0x7eb7fff91e50>, <lease_test_helpers.Array object at 0x7eb7fff...y=0, group_module=<module 'grouped_rotation' from '/tmp/bert-ordinary-rotation-group-v2-20261103/grouped_rotation.py'>)
+
+    def test_binding_fingerprint_truncation_fails_before_next_completion(env):
+        owner,_,_,_,value=setup(env)
+        def callback(*args):owner._group.binding_states.clear()
+>       with pytest.raises(ValueError):owner.rotate_many(value,(1,2),progress=callback)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_backing_successor.py:29: Failed
+=========================== short test summary info ============================
+FAILED test_backing_successor.py::test_all_zero_callback_cannot_skip_original_input_barrier
+FAILED test_backing_successor.py::test_pending_original_input_is_quarantined_after_wrapper_substitution
+FAILED test_backing_successor.py::test_original_result_gets_retirement_barrier_after_callback_substitution
+FAILED test_backing_successor.py::test_binding_fingerprint_truncation_fails_before_next_completion
+4 failed in 0.10s

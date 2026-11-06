@@ -1,0 +1,29 @@
+from pathlib import Path
+import datetime,hashlib,io,json,os,subprocess,tarfile
+base=Path('/tmp/gain4-validator-bootstrap-review-20261104/negative-v1');base.mkdir(parents=True,exist_ok=False);run=base/'execution';run.mkdir()
+producer=Path('/tmp/bert-normalized-round-gain4-validator-preflight-v1-20261104');r=json.loads((producer/'report.json').read_bytes());original=r['source_hashes_start'];assert len(original)==181
+sha=lambda raw:hashlib.sha256(raw).hexdigest()
+assert sha((producer/'report.json').read_bytes())=='858c241d00a324ca7de08f0c448bd7f6e55911ef27353d58b3fa869923b8b93c'
+assert sha((producer/'sources.tar.gz').read_bytes())=='bd08f5b998b915acb36d5a51cf46dad668e7f42139374ba93dc8a18b726fe691'
+with tarfile.open(producer/'sources.tar.gz')as t:
+ ms=t.getmembers();assert len(ms)==len({m.name for m in ms})==181 and all(m.isfile()and not Path(m.name).is_absolute()and '..'not in Path(m.name).parts for m in ms)
+ for m in ms:
+  raw=t.extractfile(m).read();assert sha(raw)==original[m.name];p=run/m.name;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(raw)
+canary=base/'unverified_helper_executed.txt';module=run/'validator_common.py';old=module.read_bytes()
+module.write_bytes(('from pathlib import Path as CanaryPath\nCanaryPath('+repr(str(canary))+').write_text("unverified helper executed before source gate\\n")\n').encode()+old)
+manifest=base/'expected_consumer_sources.json';manifest.write_text(json.dumps(original,sort_keys=True)+'\n')
+before={n:sha((run/n).read_bytes())for n in original};assert {n for n in before if before[n]!=original[n]}=={'validator_common.py'}
+(base/'review-driver.py.txt').write_bytes(Path(__file__).read_bytes())
+with tarfile.open(base/'sources.tar.gz','w:gz')as tar:
+ for n in sorted(original):
+  raw=(run/n).read_bytes();m=tarfile.TarInfo('execution/'+n);m.size=len(raw);tar.addfile(m,io.BytesIO(raw))
+ for n in ('expected_consumer_sources.json','review-driver.py.txt'):
+  raw=(base/n).read_bytes();m=tarfile.TarInfo(n);m.size=len(raw);tar.addfile(m,io.BytesIO(raw))
+command=['/tmp/cross-pretrained-validation-env/bin/python','-B',str(run/'validator_worker.py'),'--execute','--config',str(base/'not_opened_config.json'),'--config-sha256','ab'*32,'--source-manifest',str(manifest),'--output',str(base/'worker_report.json')]
+env={'PATH':'/usr/local/bin:/usr/bin:/bin','HOME':'/home/jianming_gatech','LANG':'C.UTF-8','JAX_PLATFORMS':'cpu','PYTHONDONTWRITEBYTECODE':'1','OMP_NUM_THREADS':'1','OPENBLAS_NUM_THREADS':'1','MKL_NUM_THREADS':'1'}
+child=subprocess.Popen(command,cwd=run,env=env,start_new_session=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE);stdout,stderr=child.communicate();pid=child.pid
+(base/'stdout.log').write_bytes(stdout);(base/'stderr.log').write_bytes(stderr)
+after={n:sha((run/n).read_bytes())for n in original};assert before==after
+assert child.returncode==1 and canary.read_text()=='unverified helper executed before source gate\n'and b'validator execution remains disabled'in stderr and not (base/'worker_report.json').exists()and not Path('/proc',str(pid)).exists()
+receipt=dict(schema='gain4-validator-late-bootstrap-source-negative-v1',observed_at_utc=datetime.datetime.now(datetime.timezone.utc).isoformat(),expected_source_rejection_before_helper=False,reproducer_observed=True,original_preflight_source_count=181,execution_source_count=181,original_report_sha256=sha((producer/'report.json').read_bytes()),original_archive_sha256=sha((producer/'sources.tar.gz').read_bytes()),source_archive_sha256=sha((base/'sources.tar.gz').read_bytes()),source_hashes_before=before,source_hashes_after=after,changed_from_original=['validator_common.py'],child_pid=pid,exit_code=child.returncode,direct_child_reaped=True,child_absent=True,canary_created=True,worker_report_created=False,original_sources_changed=False,retained_private_or_CT_data_used=False,scope='Harmless synthetic canary in an isolated copied helper; demonstrates helper execution precedes externally supplied manifest validation even with validator disabled.')
+(base/'report.json').write_text(json.dumps(receipt,indent=2,sort_keys=True)+'\n');print(json.dumps({k:v for k,v in receipt.items()if k not in ('source_hashes_before','source_hashes_after')},sort_keys=True))

@@ -1,0 +1,156 @@
+"""CPU fake-process evidence tests; no TPU/backend or encrypted evaluation."""
+from pathlib import Path
+import hashlib, importlib.util, json, math, os, signal, subprocess, sys, tarfile, time
+import pytest
+HERE=Path(__file__).resolve().parent
+spec=importlib.util.spec_from_file_location('p3six',HERE/'check_p3_original_six.py')
+m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+
+
+def fake_result(case):
+    return dict(passed=True,simulated=True,case=case,mode='HE-synthetic-smoke',implementation='baseline.py',
+        cold_start_included=True,mapping_release_included=True,trained_accuracy_evaluated=False,
+        device='TPU_FAKE_ONLY',server_s=[.01],end_to_end_s=[.02],warmup_s=[],warmup_server_s=[],
+        median_s=.02,setup_s=.01,total_s=.04,max_abs_error=0.,nrmse=0.,top1_agreement=1.,
+        execution_rings=[dict(degree=8192,num_slots=4096,num_q=1,num_p=1,q_towers=[17],p_towers=[97],
+            log2_QP=math.log2(17*97),security_bits=128,security_model='classical')])
+
+
+@pytest.fixture
+def prepared(tmp_path,monkeypatch):
+    repo=tmp_path/'repo';src=repo/'cadathlon/non_agent_pset/p3_cnn/src'
+    for path in (repo/'jaxite_word/a.py',repo/'demos/b.py',repo/'cadathlon/common/support.py',src/'runner.py',src/'baseline.py'):
+        path.parent.mkdir(parents=True,exist_ok=True);path.write_text('# fake source\n')
+    for case in m.CASES:
+        for name in (case,case.replace('.in','.out')):
+            path=src.parent/'test'/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('{}\n')
+    helpers=m.load_helpers(repo)
+    monkeypatch.setattr(m,'__doc__','CPU fake-process collector tests only; no encrypted execution')
+    def command(repo,case,folder):return [sys.executable,'-c','import json;print(json.dumps('+repr(fake_result(case))+'))']
+    monkeypatch.setattr(m,'command',command)
+    return repo,tmp_path/'output',helpers
+
+
+def test_six_sequential_no_deadline_exact_snapshot_and_cleanup(prepared,monkeypatch):
+    repo,out,h=prepared;calls=[];original=h.run_case
+    def track(*a,**kw):calls.append(kw.copy());return original(*a,**kw)
+    monkeypatch.setattr(h,'run_case',track)
+    assert m.evaluate(repo,out,h)==0
+    report=json.loads((out/'report.json').read_text())
+    assert report['passed'] and report['complete'] and report['source_files_unchanged']
+    assert len(calls)==6 and all(c==dict(timeout=None,cleanup_grace_s=30.) for c in calls)
+    assert len({c['pid'] for c in report['cases'].values()})==6
+    assert all(c['process_reaped'] and c['public_key_store_removed'] and c['owned_directory_handle_closed'] for c in report['cases'].values())
+    with tarfile.open(out/'sources.tar.gz') as tar:
+        actual={v.name:hashlib.sha256(tar.extractfile(v).read()).hexdigest() for v in tar.getmembers()}
+    assert actual==report['source_hashes_start']==report['source_hashes_end']
+    assert len([n for n in actual if '/test/test' in n])==12
+
+
+def test_failed_case_preserved_and_remaining_cases_run(prepared,monkeypatch):
+    repo,out,h=prepared;original=m.command
+    def fail(repo,case,folder):
+        if case=='test2.in':return [sys.executable,'-c','import json;print(json.dumps({"passed":False}));raise SystemExit(3)']
+        return original(repo,case,folder)
+    monkeypatch.setattr(m,'command',fail)
+    assert m.evaluate(repo,out,h)==1
+    report=json.loads((out/'report.json').read_text())
+    assert report['complete'] and not report['passed'] and report['cases']['test2.in']['returncode']==3
+    assert report['cases']['test6.in']['passed']
+
+
+def test_source_mutation_stops_before_second_case(prepared,monkeypatch):
+    repo,out,h=prepared
+    code='from pathlib import Path;import json;Path('+repr(str(repo/'demos/b.py'))+').write_text("changed");print(json.dumps('+repr(fake_result('test1.in'))+'))'
+    monkeypatch.setattr(m,'command',lambda *args:[sys.executable,'-c',code])
+    assert m.evaluate(repo,out,h)==1
+    report=json.loads((out/'report.json').read_text())
+    assert set(report['cases'])=={'test1.in'} and not report['source_files_unchanged']
+
+
+def test_unknown_cleanup_metadata_stops_sweep(prepared,monkeypatch):
+    repo,out,h=prepared
+    monkeypatch.setattr(h,'run_case',lambda *a,**k:dict(passed=False,returncode=0,result=fake_result('test1.in')))
+    assert m.evaluate(repo,out,h)==1
+    report=json.loads((out/'report.json').read_text())
+    assert set(report['cases'])=={'test1.in'} and 'cleanup incomplete' in report['cases']['test1.in']['error']
+
+
+def test_metadata_failure_still_writes_fresh_failed_report(prepared,monkeypatch):
+    repo,out,h=prepared
+    def fail():raise RuntimeError('broken version metadata')
+    monkeypatch.setattr(h,'software_versions',fail)
+    with pytest.raises(RuntimeError,match='broken version'):m.evaluate(repo,out,h)
+    report=json.loads((out/'report.json').read_text())
+    assert not report['passed'] and 'broken version' in report['error'] and not report['cases']
+
+
+def test_publication_error_keeps_primary_cancellation(prepared,monkeypatch):
+    repo,out,h=prepared;original=h.write_json
+    def stop(*a,**k):raise KeyboardInterrupt('primary interruption')
+    def write(path,obj):
+        if path.name=='report.json' and 'elapsed_s' in obj:raise OSError('final publication failed')
+        return original(path,obj)
+    monkeypatch.setattr(h,'run_case',stop);monkeypatch.setattr(h,'write_json',write)
+    with pytest.raises(KeyboardInterrupt,match='primary interruption') as caught:m.evaluate(repo,out,h)
+    assert any('Final sweep evidence write failed' in n for n in caught.value.__notes__)
+
+
+def test_live_cpu_backend_rejected_before_runner_without_initializing_backend(prepared,monkeypatch):
+    from types import SimpleNamespace
+    repo,out,h=prepared;runner=repo/'cadathlon/non_agent_pset/p3_cnn/src/runner.py'
+    monkeypatch.setenv('JAX_PLATFORMS','tpu')
+    monkeypatch.setitem(sys.modules,'jax',SimpleNamespace(default_backend=lambda:'cpu',devices=lambda:[]))
+    with pytest.raises(ValueError,match='actual TPU'):m.child_runner(repo,runner,m.runner_arguments(repo,'test1.in'),h)
+
+
+@pytest.mark.parametrize('field,value',[('implementation','baseline_student.py'),('cold_start_included',False),('device','CPU_0'),('mapping_release_included',False),('warmup_s',[1.])])
+def test_rejects_wrong_profile_backend_or_schedule(prepared,field,value):
+    _,_,h=prepared;result=fake_result('test1.in');result[field]=value
+    with pytest.raises(ValueError):m.validate_result(result,'test1.in',h)
+
+
+def test_plan_is_backend_free_and_lists_all_six():
+    result=subprocess.run([sys.executable,str(HERE/'check_p3_original_six.py'),'--plan'],check=True,capture_output=True,text=True)
+    plan=json.loads(result.stdout)
+    assert plan['cases']==list(m.CASES) and plan['healthy_case_timeout_s'] is None and plan['cleanup_grace_s']==30
+    assert all('--baseline' in args and '--student-baseline' not in args for args in plan['arguments'])
+
+
+def test_outer_sigterm_waits_for_child_cleanup_and_preserves_failure(prepared,tmp_path):
+    repo,out,h=prepared;started=tmp_path/'started';cleaned=tmp_path/'cleaned'
+    child="import os,signal,time;from pathlib import Path\ndef stop(s,f):\n Path("+repr(str(cleaned))+").write_text('cleaned');raise SystemExit(0)\nsignal.signal(signal.SIGTERM,stop)\nPath("+repr(str(started))+").write_text(str(os.getpid()))\nwhile True:time.sleep(.05)\n"
+    outer="import importlib.util;from pathlib import Path\ns=importlib.util.spec_from_file_location('p3six',"+repr(str(HERE/'check_p3_original_six.py'))+");m=importlib.util.module_from_spec(s);s.loader.exec_module(m)\nm.__doc__='CPU fake process cancellation only'\nm.command=lambda *a:["+repr(sys.executable)+",'-c',"+repr(child)+"]\nh=m.load_helpers(Path("+repr(str(repo))+"))\nwith m.termination_signals(h):m.evaluate(Path("+repr(str(repo))+"),Path("+repr(str(out))+"),h)\n"
+    process=subprocess.Popen([sys.executable,'-c',outer],stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
+    try:
+        deadline=time.monotonic()+5
+        while not started.exists() and time.monotonic()<deadline:time.sleep(.02)
+        assert started.exists()
+        process.send_signal(signal.SIGTERM)
+        stdout,stderr=process.communicate(timeout=8)
+        assert process.returncode==143 and cleaned.read_text()=='cleaned'
+        report=json.loads((out/'report.json').read_text());record=report['cases']['test1.in']
+        assert not report['passed'] and record['process_reaped'] and record['public_key_store_removed']
+        assert not Path('/proc/'+started.read_text()).exists()
+    finally:
+        if process.poll() is None:process.kill();process.wait()
+        if started.exists():
+            try:os.kill(int(started.read_text()),signal.SIGKILL)
+            except ProcessLookupError:pass
+
+
+def test_initial_report_write_failure_recovers_failed_attempt_metadata(prepared,monkeypatch):
+    repo,out,h=prepared;original=h.write_json;writes=[]
+    def write(path,obj):
+        if path.name=='report.json':
+            writes.append(path)
+            if len(writes)==1:raise OSError('transient first publication failure')
+        return original(path,obj)
+    def no_process(*a,**kw):raise AssertionError('no child should start after metadata failure')
+    monkeypatch.setattr(h,'write_json',write);monkeypatch.setattr(h,'run_case',no_process)
+    with pytest.raises(OSError,match='transient first publication failure'):
+        m.evaluate(repo,out,h)
+    report=json.loads((out/'report.json').read_text())
+    assert len(writes)==2 and not report['passed'] and not report['complete']
+    assert not report['cases'] and 'transient first publication failure' in report['error']
+    assert report['source_hashes_end'] and report['source_files_unchanged'] is False

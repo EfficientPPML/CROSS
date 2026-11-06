@@ -1,0 +1,425 @@
+{
+  "test_lazy_bconv": [
+    {
+      "kind": "secure_eager_lazy_chain_parity",
+      "batch": 2,
+      "all_slots_checked": 8192,
+      "max_abs_error": 3.64419096079982e-08,
+      "fixed_max_abs_error_gate": 2e-06,
+      "payload_and_metadata_exact": true,
+      "lazy_bconv_builder_forbidden": true,
+      "dual_key_generation_guards": true,
+      "keyless_server": true,
+      "execution_rings": [
+        {
+          "degree": 8192,
+          "num_slots": 4096,
+          "num_q": 6,
+          "num_p": 2,
+          "dnum": 3,
+          "max_level": 2,
+          "q_towers": [
+            8273921,
+            4079617,
+            1097729,
+            1130497,
+            786433,
+            1032193
+          ],
+          "p_towers": [
+            1073692673,
+            1073643521
+          ],
+          "log2_Q": 124.67700393176125,
+          "log2_QP": 184.67680580287663,
+          "security_bits": 128,
+          "security_model": "classical"
+        }
+      ]
+    }
+  ],
+  "test_encrypted_tensor_only": [
+    {
+      "ring_degree": 8192,
+      "depth": 2,
+      "dnum": 3,
+      "q_towers": [
+        8273921,
+        4079617,
+        1097729,
+        1130497,
+        786433,
+        1032193
+      ],
+      "p_towers": [
+        1073692673,
+        1073643521
+      ],
+      "actual_log2_qp": 184.67680580287663
+    },
+    {
+      "ring_degree": 8192,
+      "depth": 2,
+      "dnum": 3,
+      "q_towers": [
+        8273921,
+        4079617,
+        1097729,
+        1130497,
+        786433,
+        1032193
+      ],
+      "p_towers": [
+        1073692673,
+        1073643521
+      ],
+      "actual_log2_qp": 184.67680580287663
+    },
+    {
+      "ring_degree": 8192,
+      "depth": 2,
+      "dnum": 3,
+      "q_towers": [
+        8273921,
+        4079617,
+        1097729,
+        1130497,
+        786433,
+        1032193
+      ],
+      "p_towers": [
+        1073692673,
+        1073643521
+      ],
+      "actual_log2_qp": 184.67680580287663
+    },
+    {
+      "ring_degree": 8192,
+      "depth": 2,
+      "dnum": 3,
+      "q_towers": [
+        8273921,
+        4079617,
+        1097729,
+        1130497,
+        786433,
+        1032193
+      ],
+      "p_towers": [
+        1073692673,
+        1073643521
+      ],
+      "actual_log2_qp": 184.67680580287663
+    }
+  ],
+  "test_scoped_mul_ntt": [
+    {
+      "kind": "six_field_table_parity",
+      "composite_degree": 1,
+      "skip_rescale": false,
+      "field_checks": 36,
+      "stats": {
+        "builds": 6,
+        "hits": 2
+      }
+    },
+    {
+      "kind": "six_field_table_parity",
+      "composite_degree": 2,
+      "skip_rescale": false,
+      "field_checks": 30,
+      "stats": {
+        "builds": 6,
+        "hits": 3
+      }
+    },
+    {
+      "kind": "six_field_table_parity",
+      "composite_degree": 1,
+      "skip_rescale": true,
+      "field_checks": 36,
+      "stats": {
+        "builds": 5,
+        "hits": 1
+      }
+    },
+    {
+      "kind": "six_field_table_parity",
+      "composite_degree": 2,
+      "skip_rescale": true,
+      "field_checks": 36,
+      "stats": {
+        "builds": 5,
+        "hits": 1
+      }
+    },
+    {
+      "kind": "secure_core_and_compiled_helpers",
+      "batch": 2,
+      "level": 2,
+      "six_field_checks": 42,
+      "payload_metadata_exact": true,
+      "max_abs_error": 5.2817783924297146e-08,
+      "tensor_helper_constructed_no_hemul": true,
+      "relinearization_executable_reused": true
+    },
+    {
+      "kind": "secure_core_and_compiled_helpers",
+      "batch": 2,
+      "level": 1,
+      "six_field_checks": 36,
+      "payload_metadata_exact": true,
+      "max_abs_error": 5.6667254146047785e-08,
+      "tensor_helper_constructed_no_hemul": true,
+      "relinearization_executable_reused": true
+    },
+    {
+      "kind": "actual_bootstrap_mul_dispatch",
+      "batch": 2,
+      "level": 2,
+      "input_nsds": [
+        1,
+        1
+      ],
+      "payload_metadata_exact": true,
+      "max_abs_error": 5.1569002033902134e-08
+    },
+    {
+      "kind": "actual_bootstrap_mul_dispatch",
+      "batch": 2,
+      "level": 1,
+      "input_nsds": [
+        2,
+        1
+      ],
+      "payload_metadata_exact": true,
+      "max_abs_error": 2.578742220107899e-08
+    },
+    {
+      "kind": "actual_bootstrap_mul_dispatch",
+      "batch": 2,
+      "level": 1,
+      "input_nsds": [
+        2,
+        2
+      ],
+      "payload_metadata_exact": true,
+      "max_abs_error": 1.2643583454513552e-08
+    },
+    {
+      "kind": "retirement",
+      "owners_and_controls_collected": true,
+      "executable_retained": true,
+      "stats": {
+        "builds": 61,
+        "hits": 48
+      }
+    }
+  ],
+  "test_scoped_rescale_ntt": [
+    {
+      "kind": "public_controls_and_raw_arithmetic",
+      "drop": 1,
+      "elements": 2,
+      "six_field_checks": 12,
+      "stats": {
+        "builds": 2
+      }
+    },
+    {
+      "kind": "public_controls_and_raw_arithmetic",
+      "drop": 2,
+      "elements": 2,
+      "six_field_checks": 24,
+      "stats": {
+        "builds": 4
+      }
+    },
+    {
+      "kind": "public_controls_and_raw_arithmetic",
+      "drop": 3,
+      "elements": 2,
+      "six_field_checks": 36,
+      "stats": {
+        "builds": 6
+      }
+    },
+    {
+      "kind": "public_controls_and_raw_arithmetic",
+      "drop": 1,
+      "elements": 3,
+      "six_field_checks": 12,
+      "stats": {
+        "builds": 2
+      }
+    },
+    {
+      "kind": "public_controls_and_raw_arithmetic",
+      "drop": 2,
+      "elements": 3,
+      "six_field_checks": 24,
+      "stats": {
+        "builds": 4
+      }
+    },
+    {
+      "kind": "public_controls_and_raw_arithmetic",
+      "drop": 3,
+      "elements": 3,
+      "six_field_checks": 36,
+      "stats": {
+        "builds": 6
+      }
+    },
+    {
+      "kind": "secure_rescale_paths",
+      "source": 2,
+      "target": 1,
+      "input_nsd": 2,
+      "six_field_checks": 24,
+      "max_abs_error": 8.115679714067528e-08,
+      "raw_payload_and_metadata_exact": true,
+      "executable_reused": true
+    },
+    {
+      "kind": "secure_rescale_paths",
+      "source": 1,
+      "target": 0,
+      "input_nsd": 2,
+      "six_field_checks": 24,
+      "max_abs_error": 7.894577630897584e-08,
+      "raw_payload_and_metadata_exact": true,
+      "executable_reused": true
+    },
+    {
+      "kind": "secure_rescale_paths",
+      "source": 2,
+      "target": 0,
+      "input_nsd": 3,
+      "six_field_checks": 48,
+      "max_abs_error": 4.023858691929762e-08,
+      "raw_payload_and_metadata_exact": true,
+      "executable_reused": true
+    },
+    {
+      "kind": "lifetime",
+      "retired_controls_collected": true,
+      "retired_owners_collected": true,
+      "executable_cache_retained": true
+    }
+  ],
+  "test_scoped_nested_rescale": [
+    {
+      "kind": "public_control_parity",
+      "composite_degree": 1,
+      "skip_rescale": false,
+      "backend": "BarrettContext",
+      "parent_fields": 36,
+      "nested_fields": 12,
+      "split_path_executed": false
+    },
+    {
+      "kind": "public_control_parity",
+      "composite_degree": 2,
+      "skip_rescale": false,
+      "backend": "BarrettContext",
+      "parent_fields": 30,
+      "nested_fields": 24,
+      "split_path_executed": false
+    },
+    {
+      "kind": "public_control_parity",
+      "composite_degree": 1,
+      "skip_rescale": true,
+      "backend": "BarrettContext",
+      "parent_fields": 36,
+      "nested_fields": 0,
+      "split_path_executed": false
+    },
+    {
+      "kind": "public_control_parity",
+      "composite_degree": 2,
+      "skip_rescale": true,
+      "backend": "BarrettContext",
+      "parent_fields": 36,
+      "nested_fields": 0,
+      "split_path_executed": false
+    },
+    {
+      "kind": "public_control_parity",
+      "composite_degree": 1,
+      "skip_rescale": false,
+      "backend": "MontgomeryContext",
+      "parent_fields": 36,
+      "nested_fields": 12,
+      "split_path_executed": false
+    },
+    {
+      "kind": "public_control_parity",
+      "composite_degree": 2,
+      "skip_rescale": false,
+      "backend": "MontgomeryContext",
+      "parent_fields": 30,
+      "nested_fields": 24,
+      "split_path_executed": false
+    },
+    {
+      "kind": "public_control_parity",
+      "composite_degree": 1,
+      "skip_rescale": true,
+      "backend": "MontgomeryContext",
+      "parent_fields": 36,
+      "nested_fields": 0,
+      "split_path_executed": false
+    },
+    {
+      "kind": "public_control_parity",
+      "composite_degree": 2,
+      "skip_rescale": true,
+      "backend": "MontgomeryContext",
+      "parent_fields": 36,
+      "nested_fields": 0,
+      "split_path_executed": false
+    },
+    {
+      "kind": "secure_public_facade",
+      "composite_degree": 1,
+      "input_level": 5,
+      "nested_fields": 12,
+      "max_abs_error": 3.665682151571259e-08,
+      "payload_metadata_exact": true,
+      "no_rescale_payload_metadata_exact": true,
+      "input_scale": 7.205759403792794e+16,
+      "compiled_effective_nsd_and_payload_exact": null,
+      "production_opt_in_supported": false
+    },
+    {
+      "kind": "secure_public_facade",
+      "composite_degree": 2,
+      "input_level": 2,
+      "nested_fields": 24,
+      "max_abs_error": 3.154628549356664e-08,
+      "payload_metadata_exact": true,
+      "no_rescale_payload_metadata_exact": true,
+      "input_scale": 1099511627776.0,
+      "compiled_effective_nsd_and_payload_exact": true,
+      "production_opt_in_supported": true
+    },
+    {
+      "kind": "secure_legacy_private_cd2",
+      "nested_fields": 24,
+      "derived_decode_scale": 2.2179616335834868e+24,
+      "max_abs_error": 7.712415844851606e-09,
+      "payload_metadata_exact": true,
+      "split_path_executed": false
+    },
+    {
+      "kind": "input_immutability",
+      "payload_identity_scale_nsd_presence_and_moduli_unchanged": true
+    },
+    {
+      "kind": "retirement",
+      "owners_and_nested_contexts_collected": true
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+--- unrun-preparation-v1/executed_driver.py
++++ unrun-preparation-v2/executed_driver.py
+@@ -3,9 +3,9 @@
+ import hashlib, importlib.util, json, os, signal, stat, subprocess, sys, tarfile, time
+ import xml.etree.ElementTree as ET
+ 
+-CONFIG_SHA256 = '06b39d4db524ff388beb06a718bab60d7b9e7022cdfd29393bdbc270d4079beb'
++CONFIG_SHA256 = 'b654ad46688f3379adda538cfdbcb6c66e0e45eed6c71095c32a0e7625afb365'
+ WORKER_SHA256 = 'e2f304bfceb6bcd2bfaaaa57c2e3c78f10ca419390c3b0ef57a8236ad7027543'
+-INSPECTOR_SHA256 = '8970d6b13c54e4e36470afd02933175beb76da84793bd09713fc2459137211dc'
++INSPECTOR_SHA256 = '094b706cc428b19941886536e231c282b255f5044d2d90a20985cd01c05e0423'
+ HERE = Path(__file__).resolve().parent
+ sha = lambda raw: hashlib.sha256(raw).hexdigest()
+ canonical = lambda value: (json.dumps(value,sort_keys=True,indent=2,allow_nan=False)+'\n').encode()

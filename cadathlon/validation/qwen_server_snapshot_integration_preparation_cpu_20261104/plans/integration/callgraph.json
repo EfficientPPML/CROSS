@@ -1,0 +1,30 @@
+{
+  "schema": "qwen-server-snapshot-integration-callgraph-plan-v1",
+  "current_hot_edges": [
+    "bound_map_array -> backend.check -> _runtime -> RuntimeAdmission.check -> control -> packet.check -> phase.check + authenticate_packet -> scientific admission",
+    "ServerBackend.check -> phase.check -> scientific admission",
+    "ActualServerDependencies.check -> phase.expected_ids -> phase.check -> scientific admission",
+    "publisher/report -> phase.input_digest -> phase.check -> scientific admission"
+  ],
+  "proposed_hot_edges": [
+    "runtime.control -> captured AdmissionSnapshot.check(original_packet) -> nonrecursive binding_check + retained graph/code identity",
+    "runtime.control -> original core/audit/state checks",
+    "ServerBackend.check -> original runtime guard + unchanged core/callback/engine identities",
+    "dependency/publisher -> runtime-checked original derived ID bytes/input-digest string",
+    "array reader -> unchanged original live FD/header/hash/residue/ownership checks"
+  ],
+  "forbidden_recursion_edges": [
+    "binding_check -> full_boundary_check",
+    "binding_check -> runtime.check",
+    "binding_check -> guard.check",
+    "binding_check -> packet.check/phase.check/expected_ids/input_digest"
+  ],
+  "full_boundaries_retained": ["admit", "capture", "entry", "post_import", "enable_public_keys", "enable_server_bodies", "post_stage", "terminal_cleanup"],
+  "proposed_runtime_overlays": ["qwen_server_process.py", "qwen_server_backend.py", "qwen_server_entry.py:ROOT_MODULES"],
+  "literal_addition": "qwen_admission_snapshot.py",
+  "unchanged": ["pure admission validators", "key reader/loader", "AccessScope", "security/P coverage", "core aliases", "file stages/publisher", "mathematical graph/default decoder", "unconditional complete-capacity denial"],
+  "planned_only": true,
+  "imports_tests_or_integration": false,
+  "actual_authority": false,
+  "measured_acceleration": false
+}

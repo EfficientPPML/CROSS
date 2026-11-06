@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/tmp/bert-ordinary-group-parity-20261103/group_preflight_child.py", line 41, in <module>
+    with termination_signals():code=main(**vars(p.parse_args()))
+                                    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/bert-ordinary-group-parity-20261103/group_preflight_child.py", line 11, in main
+    if os.environ.get('JAX_PLATFORMS')!='cpu':raise ValueError('explicit CPU process required')
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: explicit CPU process required

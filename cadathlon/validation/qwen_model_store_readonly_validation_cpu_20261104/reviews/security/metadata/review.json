@@ -1,0 +1,64 @@
+{
+  "acquisition_executed": false,
+  "borrowed_body_reads": false,
+  "borrowed_metadata_inspected": false,
+  "candidate_imports": false,
+  "checks": {
+    "canonical_ExpectedStoreIdentity_field_shape": true,
+    "exact_held_files": true,
+    "exact_names_84_113_1": true,
+    "exclusive_original_descriptor_write_readback_fsync": true,
+    "extent_matches_accepted_consumer": true,
+    "final_escaped_failure_maps70": true,
+    "fixed_hashes_copied_not_recomputed": true,
+    "lstat_only_known_borrowed_names": true,
+    "no_borrowed_directory_harvest": true,
+    "no_integrity_or_read_grant_claim": true,
+    "shared_cleanup_four_functions_AST_exact": true,
+    "symlink_and_duplicate_identity_rejection": true,
+    "three_roots_from_pinned_public_provenance": true,
+    "two_observation_calls": true
+  },
+  "conclusion": "Fixed metadata derivation/access and terminal scope align. One explicit output-ownership check remains recommended before eventual metadata execution; no current store observation was made.",
+  "files_index_sha256": "71d596b18ea1716154222ed55e80bbb3856c1595507740635101b09abe09891a",
+  "finding": {
+    "id": "explicit_output_ownership",
+    "observation": "Parent/leaf/file identity and modes are checked, but parent UID/sticky trust and fresh leaf/file UID are not explicitly enforced.",
+    "recommendation": "In a separate source successor add parent uid0-or-euid and sticky-or-nonshared trust checks, fresh directory/file euid checks, and preserve those checks through final publication.",
+    "runtime_failure_demonstrated": false,
+    "severity": "narrow source-contract gap"
+  },
+  "limits": [
+    "Repeated named metadata is not an atomic or body-integrity proof.",
+    "Read denial hook is supplemental trusted-source protection, not an OS sandbox.",
+    "Independent actual exit0/reap/group absence and output hashes remain prerequisites for root use."
+  ],
+  "public_inputs": {
+    "aggregate": {
+      "maximum_bytes": 1048576,
+      "path": "/tmp/qwen-model-stage-aggregate-plan-v2-20261104/unadmitted_aggregate_manifest.json",
+      "sha256": "18189e5f2f2de3a4939c6afca19d79822465d917caf06c4f6e36668bd37c1f55"
+    },
+    "catalog": {
+      "maximum_bytes": 1048576,
+      "path": "/tmp/qwen-model-stage-aggregate-plan-v2-20261104/unadmitted_catalog.json",
+      "sha256": "6faa4630169f055b853a62a64088952e2ead48dc2ace5b61b6aa438c0106a0c0"
+    },
+    "layout_reference": {
+      "maximum_bytes": 65536,
+      "path": "/home/jianming_gatech/CROSS/cadathlon/validation/qwen_full_model_trajectory_preflight_cpu_20261104/trajectory_requirement.json",
+      "sha256": "964cc8dcd8c3cdd441773422072a710a1c4af5d1375b56eb1cf677ffa6940c6b"
+    }
+  },
+  "schema": "qwen-metadata-acquisition-security-source-review-v1",
+  "shared_cleanup_sha256": "4543b26bf1168e29bc21375c2f80a9aa99648205a9fd9aea6d5a8059c6d18175",
+  "source_hashes": {
+    "README.md": "98ce76b694b1a0ff94ebc430726bd28d9521a18fda4d2f54b8ccbb4512e2ccbb",
+    "acquire_expectations.py": "81d7d829b539ab2d837a2c2465c8ef0ca9919e6f3ab02988b018bd8abba0c043",
+    "planned_names.json": "a5e8cdec2ba583ad525edeca70f194d8644b8d8b62aedd29535b74fc40466dcf",
+    "proposal.json": "319557b68cd9ee8c92e70dafd1a737c6922a3bcab9d5657d6a9a36e4f1b03bd9",
+    "source_pins.json": "42c2e7fe14029855f6bc0e7e5d3e94d2eb8319348d272ed512eeb2247674eb6e"
+  },
+  "source_only": true,
+  "tests_executed": false
+}

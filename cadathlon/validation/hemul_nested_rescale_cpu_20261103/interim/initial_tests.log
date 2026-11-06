@@ -1,0 +1,108 @@
+.........F                                                               [100%]
+=================================== FAILURES ===================================
+____________ test_secure_cd1_cd2_facades_legacy_cd2_and_retirement _____________
+
+ring = (<jaxite_word.ckks_ctx.CKKSContext object at 0x73ed7676c830>, {'degree': 8192, 'num_slots': 4096, 'scaling_factor': 10...1, 4079617, 1097729, 1130497, 786433, 1032193], 'P': [1073692673, 1073643521]}, 'P': [1073692673, 1073643521], ...}, 3)
+
+    def test_secure_cd1_cd2_facades_legacy_cd2_and_retirement(ring):
+     client,params,evaluation,dnum=ring
+     def execute():
+      tracked=[];all_fields=0
+      values=np.stack([np.linspace(-.3,.3,client.num_slots),.2*np.sin(np.arange(client.num_slots)/17)])
+      left=client.encrypt_slots_batch(values,scale=float(1<<40));right=client.encrypt_slots_batch(-.7*values,scale=float(1<<40))
+      for cd in (1,2):
+       def server():
+        value=CKKSContext(dict(params,composite_degree=cd,evaluation_key=[jax.numpy.asarray(evaluation[k],dtype='uint32').transpose(0,2,1) for k in ('a','b')]))
+        value.program_initialization([],dnum=dnum,r=64,c=128,batch=2,pregenerated_rotation_keys={})
+        assert value.secret_key is None and value._param_cache.secret_key is None
+        return value
+       ordinary,selected=server(),server();provider=enable_scoped_ntt_subsets(selected)
+       level=selected.max_level-1
+       expected_op=ordinary.he_mul[level];actual_op=selected.he_mul[level]
+       assert actual_op._hemul._use_split_rescale is False
+       if cd==1:
+        assert actual_op._hemul._he_rescale._polynomial_factory.__self__ is provider
+        assert nested(actual_op._no_relin_operator)==[]
+        count=controls_equal(actual_op._hemul._he_rescale,expected_op._hemul._he_rescale)
+       else:
+        assert nested(actual_op._hemul)==[]
+        assert actual_op._post_rescale._polynomial_factory.__self__ is provider
+        count=controls_equal(actual_op._post_rescale,expected_op._post_rescale)
+       expected=expected_op.mul(left,right);actual=actual_op.mul(left,right);same(actual,expected)
+       error=float(np.max(np.abs(client.decrypt_slots_batch(actual)-values*(-.7*values))));assert error<2e-6,error
+       # The compiled evaluator calls the same facade's raw multiply/rescale path.
+       arithmetic=EncryptedPolynomialEvaluator(selected,compiled_multiply=True,low_memory=True)
+       same(arithmetic.multiply(left,right),expected)
+       RECORDS.append(dict(kind='secure_public_facade',composite_degree=cd,input_level=level+1,nested_fields=count,max_abs_error=error,payload_metadata_exact=True,compiled_path_exact=True))
+       tracked.extend([weakref.ref(selected),weakref.ref(selected._param_cache)])
+       arithmetic._clear_working_caches();provider.close();ckks_ctx.evict_context_caches(ordinary);ckks_ctx.evict_context_caches(selected)
+       del arithmetic,provider,actual_op,expected_op,selected,ordinary,actual,expected
+      # Legacy private CD2 pre-rescales BOTH operands. Use genuine PTCT products
+      # so their real scale supports that path; decode with its derived scale.
+      ordinary,selected=server_for(ring,2),server_for(ring,2);provider=enable_scoped_ntt_subsets(selected)
+      pt=selected.encode_at_level(np.full(client.num_slots,.5),2,scale=float(1<<40))
+      a=selected.ptct_mul[2].mul(left,pt);b=selected.ptct_mul[2].mul(right,pt)
+      combined=a._clone_with_payload(jax.numpy.concatenate((a.polynomial,b.polynomial),axis=1),num_elements=4)
+      args=dict(batch=2,r=64,c=128,dnum=dnum,num_eval_mult=1,original_moduli=params['q_towers'],extend_moduli=params['p_towers'],composite_degree=2)
+      baseline=hemul._HEMulKernel(**args);candidate=hemul._HEMulKernel(**args,polynomial_factory=provider.polynomial_factory)
+      for kernel in (baseline,candidate):
+       kernel.control_gen(degree_layout=(64,128),keygen_sizeQ=len(params['q_towers']),skip_rescale=False)
+       kernel.setup_relinearization(*selected._param_cache.get_eval_key(1))
+      count=controls_equal(candidate._he_rescale,baseline._he_rescale)
+      expected=baseline.mul(combined);actual=candidate.mul(combined);same(actual,expected)
+      divisor=math.prod(params['q_towers'][-2:]);scale=(a._ckks_scale/divisor)*(b._ckks_scale/divisor)
+      error=float(np.max(np.abs(client.decrypt_slots_batch(actual,scale=scale)-.25*values*(-.7*values))));assert error<2e-6,error
+      RECORDS.append(dict(kind='secure_legacy_private_cd2',nested_fields=count,derived_decode_scale=scale,max_abs_error=error,payload_metadata_exact=True,split_path_executed=False))
+      tracked.extend([weakref.ref(selected),weakref.ref(selected._param_cache),*[weakref.ref(v.ntt_ctx) for v in candidate._he_rescale.ct_last_list+candidate._he_rescale.ct_work_list]])
+      provider.close();ckks_ctx.evict_context_caches(ordinary);ckks_ctx.evict_context_caches(selected)
+      return tracked
+>    refs=execute();jax.clear_caches();polynomial._POLYNOMIAL_REGISTRY.clear();he_params.ntt_mm._barrett_ntt_context_cache.clear();gc.collect()
+          ^^^^^^^^^
+
+cadathlon/tests/test_scoped_nested_rescale.py:114: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+cadathlon/tests/test_scoped_nested_rescale.py:74: in execute
+    ordinary,selected=server(),server();provider=enable_scoped_ntt_subsets(selected)
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+cadathlon/common/encrypted_ntt.py:248: in enable_scoped_ntt_subsets
+    EncryptedPolynomialEvaluator(context)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <encrypted_polynomial.EncryptedPolynomialEvaluator object at 0x73ed55b4f230>
+context = <jaxite_word.ckks_ctx.CKKSContext object at 0x73ed55bbd590>
+strategy = 'chebyshev', low_memory = False, progress = None, refresher = None
+compiled_multiply = False, compiled_linear = False
+preserve_dispatch_cache = False
+
+    def __init__(self, context, *, strategy="chebyshev", low_memory=False, progress=None, refresher=None,
+                 compiled_multiply=False, compiled_linear=False, preserve_dispatch_cache=False):
+        if strategy not in ("chebyshev", "power"):
+            raise ValueError("polynomial strategy must be chebyshev or power")
+        if type(preserve_dispatch_cache) is not bool:
+            raise TypeError('preserve_dispatch_cache must be an explicit boolean')
+        if preserve_dispatch_cache and not low_memory:
+            raise ValueError('dispatch cache preservation requires dedicated low_memory execution')
+        self.preserve_dispatch_cache = preserve_dispatch_cache
+        self.strategy = strategy
+        self.low_memory = bool(low_memory)
+        self.progress = progress
+        from jaxite_word import CKKSContext, he_params
+        if not isinstance(context, CKKSContext):
+            raise TypeError("expected CKKSContext")
+        cache = getattr(context, "_param_cache", None)
+        if cache is None:
+            raise ValueError("evaluator context must be initialized")
+        if (context.secret_key is not None or cache.secret_key is not None
+                or context.parameters.get("secret_key") is not None):
+            raise ValueError("evaluator must not hold a secret key")
+        target = he_params.SecurityTarget(128, he_params.CostModel.CLASSICAL)
+        if not he_params.qp_is_secure(context.q_towers, context.p_towers, context.degree, target):
+            raise ValueError("polynomial evaluator requires a 128-bit-secure Q/P ring")
+        if context.composite_degree != 2:
+>           raise ValueError("experimental evaluator currently requires composite_degree=2")
+E           ValueError: experimental evaluator currently requires composite_degree=2
+
+cadathlon/common/encrypted_polynomial.py:107: ValueError
+=========================== short test summary info ============================
+FAILED cadathlon/tests/test_scoped_nested_rescale.py::test_secure_cd1_cd2_facades_legacy_cd2_and_retirement
+1 failed, 9 passed in 4.33s

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.128" timestamp="2026-11-04T00:01:39.542311+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_gain4_failure_edges" name="test_entered_failure_forbids_new_owner_reuse" time="0.030"><failure message="Failed: DID NOT RAISE RuntimeError">def test_entered_failure_forbids_new_owner_reuse():
+        owner,ops,source=setup(progress=lambda *args:(_ for _ in ()).throw(KeyboardInterrupt('entered failure')))
+        with pytest.raises(KeyboardInterrupt):owner.evaluate_tile(source)
+&gt;       with pytest.raises(RuntimeError):g.BertNormalizationRoundGain4(ops,owner.layout,owner.contract)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE RuntimeError
+
+test_gain4_failure_edges.py:22: Failed</failure></testcase></testsuite></testsuites>

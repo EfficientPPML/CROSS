@@ -1,0 +1,16 @@
+F.                                                                       [100%]
+=================================== FAILURES ===================================
+_ test_multifile_reconstruction_without_source_archive_grant_binding_rejected __
+
+    def test_multifile_reconstruction_without_source_archive_grant_binding_rejected():
+        blobs,pins=pack(*skeleton())
+        assert set(pins)==set(f.PIN_FIELDS)
+        assert not any(k.startswith('reconstruction_')and k!='reconstruction_script_sha256'and k!='reconstruction_outer'for k in pins)
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+/tmp/qwen-freeze-issuer-security-review-20261104/negative-v1/source/test_missing_closure.py:10: Failed
+=========================== short test summary info ============================
+FAILED ../../tmp/qwen-freeze-issuer-security-review-20261104/negative-v1/source/test_missing_closure.py::test_multifile_reconstruction_without_source_archive_grant_binding_rejected
+1 failed, 1 passed in 0.03s

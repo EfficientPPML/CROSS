@@ -1,0 +1,476 @@
+.......................................s.............F.................. [ 63%]
+.........................ss..............                             [100%]
+=================================== FAILURES ===================================
+______________ test_both_facade_kernels_receive_owner_factory[2] _______________
+
+cd = 2
+
+    @pytest.mark.parametrize('cd',[1,2])
+    def test_both_facade_kernels_receive_owner_factory(cd):
+        # Arithmetic-only small ring: test constructor routing, not security.
+        from types import SimpleNamespace
+        import he_ops
+        owner=make_owner();provider=ScopedNTTSubsets(owner)
+        cache=SimpleNamespace(max_level=(len(owner.q_towers)-1)//cd,composite_degree=cd,
+            batch=1,r=16,c=16,dnum=2,q_towers=owner.q_towers,p_towers=owner.p_towers,
+            degree_layout=(16,16),perf_test=False,ff_context_cls=he_params.BarrettContext,
+            multiplication_polynomial_factory=provider.polynomial_factory,
+            num_q_at_level=lambda level:(level+1)*cd)
+        # Key controls only: zero evaluation arrays do not claim encryption.
+        cache.get_eval_key=lambda level:tuple(jax.numpy.zeros((2,256,(level+1)*cd+2),dtype='uint32') for _ in range(2))
+>       operation=he_ops._HEMulAtLevel(cache,0)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+cadathlon/tests/test_scoped_mul_ntt.py:89: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <he_ops._HEMulAtLevel object at 0x782ba60490d0>
+cache = namespace(max_level=1, composite_degree=2, batch=1, r=16, c=16, dnum=2, q_towers=[12289, 40961, 65537, 114689], p_towe...ba1a805e0>, get_eval_key=<function test_both_facade_kernels_receive_owner_factory.<locals>.<lambda> at 0x782ba1a80ea0>)
+level = 0
+
+    def __init__(self, cache: HEParameterCache, level: int):
+      _validate_level(cache, level)
+      if level == cache.max_level:
+        raise ValueError(
+            f'ctx.he_mul output level {level} requires input level {level + 1}, '
+            f'but max_level is {cache.max_level}.'
+        )
+      self.cache = cache
+      self.level = level
+      self._cd = cache.composite_degree
+    
+      # Input is at level+1 (before rescale)
+      input_level = level + 1
+      num_q_input = cache.num_q_at_level(input_level)
+      q_input = cache.q_towers[:num_q_input]
+    
+      use_skip_rescale = cache.composite_degree >= 2
+    
+      self._hemul = hemul._HEMulKernel(
+          batch=cache.batch,
+          r=cache.r,
+          c=cache.c,
+          dnum=cache.dnum,
+          num_eval_mult=1,
+          original_moduli=q_input,
+          extend_moduli=cache.p_towers,
+          composite_degree=cache.composite_degree,
+          finite_field_context=cache.ff_context_cls,
+          polynomial_factory=cache.multiplication_polynomial_factory,
+      )
+      self._hemul.control_gen(
+          degree_layout=cache.degree_layout,
+          perf_test=cache.perf_test,
+          keygen_sizeQ=len(cache.q_towers),
+          skip_rescale=use_skip_rescale,
+      )
+    
+      eval_key_level = input_level if use_skip_rescale else level
+      eval_a, eval_b = cache.get_eval_key(eval_key_level)
+      self._hemul.setup_relinearization(eval_a, eval_b)
+    
+      self._num_q_output = num_q_input - self._cd
+      self._use_skip_rescale = use_skip_rescale
+    
+      # For cd>=2: pre-create post-rescale operator
+      if use_skip_rescale and self._cd >= 2:
+        self._post_rescale = rescale._HERescaleKernel(
+            batch=cache.batch,
+            num_elements=2,
+            moduli=q_input,
+            r=cache.r,
+            c=cache.c,
+            degree_layout=cache.degree_layout,
+            finite_field_context=cache.ff_context_cls,
+>           polynomial_factory=cache.rescale_polynomial_factory,
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        )
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'rescale_polynomial_factory'
+
+jaxite_word/he_ops.py:133: AttributeError
+=========================== short test summary info ============================
+FAILED cadathlon/tests/test_scoped_mul_ntt.py::test_both_facade_kernels_receive_owner_factory[2]
+1 failed, 109 passed, 3 skipped, 3 subtests passed in 199.71s (0:03:19)
+{
+  "passed": false,
+  "elapsed_s": 200.14294201599841,
+  "sources": 174,
+  "records": {
+    "test_scoped_nested_rescale": [
+      {
+        "kind": "public_control_parity",
+        "composite_degree": 1,
+        "skip_rescale": false,
+        "backend": "BarrettContext",
+        "parent_fields": 36,
+        "nested_fields": 12,
+        "split_path_executed": false
+      },
+      {
+        "kind": "public_control_parity",
+        "composite_degree": 2,
+        "skip_rescale": false,
+        "backend": "BarrettContext",
+        "parent_fields": 30,
+        "nested_fields": 24,
+        "split_path_executed": false
+      },
+      {
+        "kind": "public_control_parity",
+        "composite_degree": 1,
+        "skip_rescale": true,
+        "backend": "BarrettContext",
+        "parent_fields": 36,
+        "nested_fields": 0,
+        "split_path_executed": false
+      },
+      {
+        "kind": "public_control_parity",
+        "composite_degree": 2,
+        "skip_rescale": true,
+        "backend": "BarrettContext",
+        "parent_fields": 36,
+        "nested_fields": 0,
+        "split_path_executed": false
+      },
+      {
+        "kind": "public_control_parity",
+        "composite_degree": 1,
+        "skip_rescale": false,
+        "backend": "MontgomeryContext",
+        "parent_fields": 36,
+        "nested_fields": 12,
+        "split_path_executed": false
+      },
+      {
+        "kind": "public_control_parity",
+        "composite_degree": 2,
+        "skip_rescale": false,
+        "backend": "MontgomeryContext",
+        "parent_fields": 30,
+        "nested_fields": 24,
+        "split_path_executed": false
+      },
+      {
+        "kind": "public_control_parity",
+        "composite_degree": 1,
+        "skip_rescale": true,
+        "backend": "MontgomeryContext",
+        "parent_fields": 36,
+        "nested_fields": 0,
+        "split_path_executed": false
+      },
+      {
+        "kind": "public_control_parity",
+        "composite_degree": 2,
+        "skip_rescale": true,
+        "backend": "MontgomeryContext",
+        "parent_fields": 36,
+        "nested_fields": 0,
+        "split_path_executed": false
+      },
+      {
+        "kind": "secure_public_facade",
+        "composite_degree": 1,
+        "input_level": 5,
+        "nested_fields": 12,
+        "max_abs_error": 4.116741016482739e-08,
+        "payload_metadata_exact": true,
+        "no_rescale_payload_metadata_exact": true,
+        "input_scale": 7.205759403792794e+16,
+        "compiled_effective_nsd_and_payload_exact": null,
+        "production_opt_in_supported": false
+      },
+      {
+        "kind": "secure_public_facade",
+        "composite_degree": 2,
+        "input_level": 2,
+        "nested_fields": 24,
+        "max_abs_error": 2.988925673630405e-08,
+        "payload_metadata_exact": true,
+        "no_rescale_payload_metadata_exact": true,
+        "input_scale": 1099511627776.0,
+        "compiled_effective_nsd_and_payload_exact": true,
+        "production_opt_in_supported": true
+      },
+      {
+        "kind": "secure_legacy_private_cd2",
+        "nested_fields": 24,
+        "derived_decode_scale": 2.2179616335834868e+24,
+        "max_abs_error": 6.8624387509347295e-09,
+        "payload_metadata_exact": true,
+        "split_path_executed": false
+      },
+      {
+        "kind": "input_immutability",
+        "payload_identity_scale_nsd_presence_and_moduli_unchanged": true
+      },
+      {
+        "kind": "retirement",
+        "owners_and_nested_contexts_collected": true
+      }
+    ],
+    "test_scoped_rescale_ntt": [
+      {
+        "kind": "public_controls_and_raw_arithmetic",
+        "drop": 1,
+        "elements": 2,
+        "six_field_checks": 12,
+        "stats": {
+          "builds": 2
+        }
+      },
+      {
+        "kind": "public_controls_and_raw_arithmetic",
+        "drop": 2,
+        "elements": 2,
+        "six_field_checks": 24,
+        "stats": {
+          "builds": 4
+        }
+      },
+      {
+        "kind": "public_controls_and_raw_arithmetic",
+        "drop": 3,
+        "elements": 2,
+        "six_field_checks": 36,
+        "stats": {
+          "builds": 6
+        }
+      },
+      {
+        "kind": "public_controls_and_raw_arithmetic",
+        "drop": 1,
+        "elements": 3,
+        "six_field_checks": 12,
+        "stats": {
+          "builds": 2
+        }
+      },
+      {
+        "kind": "public_controls_and_raw_arithmetic",
+        "drop": 2,
+        "elements": 3,
+        "six_field_checks": 24,
+        "stats": {
+          "builds": 4
+        }
+      },
+      {
+        "kind": "public_controls_and_raw_arithmetic",
+        "drop": 3,
+        "elements": 3,
+        "six_field_checks": 36,
+        "stats": {
+          "builds": 6
+        }
+      },
+      {
+        "kind": "secure_rescale_paths",
+        "source": 2,
+        "target": 1,
+        "input_nsd": 2,
+        "six_field_checks": 24,
+        "max_abs_error": 5.0783953051483643e-08,
+        "raw_payload_and_metadata_exact": true,
+        "executable_reused": true
+      },
+      {
+        "kind": "secure_rescale_paths",
+        "source": 1,
+        "target": 0,
+        "input_nsd": 2,
+        "six_field_checks": 24,
+        "max_abs_error": 5.082320854617184e-08,
+        "raw_payload_and_metadata_exact": true,
+        "executable_reused": true
+      },
+      {
+        "kind": "secure_rescale_paths",
+        "source": 2,
+        "target": 0,
+        "input_nsd": 3,
+        "six_field_checks": 48,
+        "max_abs_error": 3.1762017627112726e-08,
+        "raw_payload_and_metadata_exact": true,
+        "executable_reused": true
+      },
+      {
+        "kind": "lifetime",
+        "retired_controls_collected": true,
+        "retired_owners_collected": true,
+        "executable_cache_retained": true
+      }
+    ],
+    "test_encrypted_tensor_only": [
+      {
+        "ring_degree": 8192,
+        "depth": 2,
+        "dnum": 3,
+        "q_towers": [
+          8273921,
+          4079617,
+          1097729,
+          1130497,
+          786433,
+          1032193
+        ],
+        "p_towers": [
+          1073692673,
+          1073643521
+        ],
+        "actual_log2_qp": 184.67680580287663
+      },
+      {
+        "ring_degree": 8192,
+        "depth": 2,
+        "dnum": 3,
+        "q_towers": [
+          8273921,
+          4079617,
+          1097729,
+          1130497,
+          786433,
+          1032193
+        ],
+        "p_towers": [
+          1073692673,
+          1073643521
+        ],
+        "actual_log2_qp": 184.67680580287663
+      },
+      {
+        "batch": 1,
+        "level": 2,
+        "input_nsds": [
+          1,
+          1
+        ],
+        "raw_payload_exact": true,
+        "bootstrap_payload_exact": true,
+        "metadata_exact": true,
+        "max_abs_error": 7.29046866904115e-08
+      },
+      {
+        "batch": 1,
+        "level": 1,
+        "input_nsds": [
+          2,
+          1
+        ],
+        "raw_payload_exact": true,
+        "bootstrap_payload_exact": true,
+        "metadata_exact": true,
+        "max_abs_error": 3.6551691638686545e-08
+      },
+      {
+        "batch": 1,
+        "level": 1,
+        "input_nsds": [
+          2,
+          2
+        ],
+        "raw_payload_exact": true,
+        "bootstrap_payload_exact": true,
+        "metadata_exact": true,
+        "max_abs_error": 1.841591505333251e-08
+      },
+      {
+        "batch": 1,
+        "level": 1,
+        "input_nsds": [
+          1,
+          1
+        ],
+        "raw_payload_exact": true,
+        "bootstrap_payload_exact": true,
+        "metadata_exact": true,
+        "max_abs_error": 7.29046866904115e-08
+      },
+      {
+        "batch": 2,
+        "level": 2,
+        "input_nsds": [
+          1,
+          1
+        ],
+        "raw_payload_exact": true,
+        "bootstrap_payload_exact": true,
+        "metadata_exact": true,
+        "max_abs_error": 7.762964385205073e-08
+      },
+      {
+        "batch": 2,
+        "level": 1,
+        "input_nsds": [
+          2,
+          1
+        ],
+        "raw_payload_exact": true,
+        "bootstrap_payload_exact": true,
+        "metadata_exact": true,
+        "max_abs_error": 3.877319135203727e-08
+      },
+      {
+        "batch": 2,
+        "level": 1,
+        "input_nsds": [
+          2,
+          2
+        ],
+        "raw_payload_exact": true,
+        "bootstrap_payload_exact": true,
+        "metadata_exact": true,
+        "max_abs_error": 1.95933486171751e-08
+      },
+      {
+        "batch": 2,
+        "level": 1,
+        "input_nsds": [
+          1,
+          1
+        ],
+        "raw_payload_exact": true,
+        "bootstrap_payload_exact": true,
+        "metadata_exact": true,
+        "max_abs_error": 7.762964385205073e-08
+      },
+      {
+        "ring_degree": 8192,
+        "depth": 2,
+        "dnum": 3,
+        "q_towers": [
+          8273921,
+          4079617,
+          1097729,
+          1130497,
+          786433,
+          1032193
+        ],
+        "p_towers": [
+          1073692673,
+          1073643521
+        ],
+        "actual_log2_qp": 184.67680580287663
+      },
+      {
+        "ring_degree": 8192,
+        "depth": 2,
+        "dnum": 3,
+        "q_towers": [
+          8273921,
+          4079617,
+          1097729,
+          1130497,
+          786433,
+          1032193
+        ],
+        "p_towers": [
+          1073692673,
+          1073643521
+        ],
+        "actual_log2_qp": 184.67680580287663
+      }
+    ]
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "schema": "bert-qk-preprocessing-v1",
+  "scope": "Trusted client preprocessing only: unchanged fixed128-token public pair; complete embedding module, full768x768 Q/K; raw192 native scores before attention masking.",
+  "passed": true,
+  "query_tile": 0,
+  "key_tile": 7,
+  "offset": 15,
+  "embedding_shape": [
+    2,
+    16,
+    768
+  ],
+  "full_embedding_shape": [
+    1,
+    128,
+    768
+  ],
+  "embedding_sha256": "350ee44aeddf7fc1c0a96d02de864f2b94351474d8312aa5b6abf0f31ecb9cc5",
+  "expected_sha256": "04e0b27edc31e11bb0f067078b96e8c004f7ad097d90030762a17793a3309ac5",
+  "tokenization_sha256": "670a9619c7684fdd715b20941d2e57724be014e49cb88b7f36672cae90175657",
+  "model_manifest_sha256": "e747464c0a5f3f6a0930f4656407a911b7ee54554cfbdd7a2b74719d4872a6cf",
+  "asset_sha256": {
+    "config.json": "ec2b6cd6ce741dda6c972aea96f9d1a449cbb4b5349e688c5370a9b2f6872d30",
+    "model.safetensors": "e1f8085ef673c9eb8a1a93a84270742e8aa0ccbceadef01eef15e26c44b46034",
+    "tokenizer.json": "5b3360be30cdf39081153cf9d30bfb0503c011462fc9f77f097127c83ef0f4d9",
+    "tokenizer_config.json": "0f6d13e6f4da6f9e24f22ada6bc3be571123d858d7c0c05a8a7cd55a9c23c2e8",
+    "vocab.txt": "eeaa9875b23b04b4c54ef759d03db9d1ba1554838f8fb26c5d96fa551df93d02"
+  },
+  "model_revision": "f150c1d609d1e50dd5e2e5408661cfac8339277c",
+  "dense_oracle_error": 1.4210854715202004e-14,
+  "score_oracle_error": 6.661338147750939e-15,
+  "raw_score_count": 192,
+  "raw_score_nonzero_count_above_1e_12": 192,
+  "raw_score_minimum": -7.7559953787874765,
+  "raw_score_maximum": 5.527365792634931,
+  "raw_score_max_abs": 7.7559953787874765,
+  "selected_valid_key_rows": 0,
+  "masked_reference_nonzero_count": 0,
+  "elapsed_s": 2.5958654370042495,
+  "versions": {
+    "numpy": "2.5.4",
+    "torch": "2.15.0+cpu",
+    "transformers": "4.51.3",
+    "tokenizers": "0.21.4",
+    "safetensors": "0.8.0"
+  }
+}

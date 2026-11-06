@@ -1,0 +1,177 @@
+{
+  "b6_live_original_worker": {
+    "command_matches_original": true,
+    "key_directory_identity_matches": true,
+    "pgid": 897099,
+    "pid": 897099,
+    "start_ticks": 19985171,
+    "state": "S",
+    "system_ticks": 34412,
+    "user_ticks": 1846617
+  },
+  "completed_case_count": 11,
+  "fail_count": 4,
+  "limitations": [
+    "Returned refreshes and layer milestones are progress markers, not numerical pass evidence. No first encrypted divergence is located.",
+    "Sampled process-tree RSS can double-count shared pages and miss transients; allocator checkpoint metadata is not continuous peak proof.",
+    "The twelve public cases do not establish full pretrained BERT12/Qwen28 or ranked-dataset/seed completion.",
+    "Original sweep has not terminated or been fully admitted. TPU queue remains twelve then P3six then Toy4; no restart, cancellation or new Q5 run."
+  ],
+  "origins": {
+    "b6-process-snapshot.json": {
+      "bytes": 1094,
+      "path": "/tmp/cross-optimized-twelve-20261103/evidence/bert/test6/process.json",
+      "sha256": "9c42918ae527e15a4b054f252f861d0a1a1e2e275f098af9d20e1407336ede39"
+    },
+    "q6-process.json": {
+      "bytes": 2067,
+      "path": "/tmp/cross-optimized-twelve-20261103/evidence/qwen/test6/process.json",
+      "sha256": "87ff40c9a82e087b3599c3e5df871d162c2b6a3eb6c21d279e053085ea5cfa04"
+    },
+    "q6-resources.json": {
+      "bytes": 325,
+      "path": "/tmp/cross-optimized-twelve-20261103/evidence/qwen/test6/resources.json",
+      "sha256": "33efe0b7a8e296842fada9bd40af5648c57bb6875fb5b402403375f3ed2d3160"
+    },
+    "q6-security_device.json": {
+      "bytes": 16529,
+      "path": "/tmp/cross-optimized-twelve-20261103/evidence/qwen/test6/security_device.json",
+      "sha256": "0d94e285413218c38052a3f566208be3130afd78e320505dbbe88b04522674c8"
+    },
+    "q6-stderr.log": {
+      "bytes": 4679,
+      "path": "/tmp/cross-optimized-twelve-20261103/evidence/qwen/test6/stderr.log",
+      "sha256": "fd96ff9b30d1f20a746636984eb0d52fcebb9c3c7d203fd7d4dbed0ca1635a02"
+    },
+    "q6-stdout.json": {
+      "bytes": 272,
+      "path": "/tmp/cross-optimized-twelve-20261103/evidence/qwen/test6/stdout.json",
+      "sha256": "9c9ff6e663e195b072995a3b8aa3e103213954d9c9ded8a3209904ff8d475750"
+    },
+    "sweep-report-snapshot.json": {
+      "bytes": 59108,
+      "path": "/tmp/cross-optimized-twelve-20261103/evidence/report.json",
+      "sha256": "cd3a2e6834a49af1532c46be4f5f0e8f378ee5200a22b5b31609260eaa5e1b4e"
+    }
+  },
+  "pass_count": 7,
+  "pending_case": "bert/test6.in",
+  "phase": "bert/test6",
+  "q6": {
+    "cleanup_reported_and_current_pid_key_absence_verified": true,
+    "elapsed_s": 31490.243542222015,
+    "error": "CKKS decryption failed because the approximation error is too high; estimated stddev=6.314e+81, limit=3.125e-02. Check the ring parameters, scale, and circuit depth.",
+    "layer_milestone_count": 6,
+    "pid": 76681,
+    "refresh_return_count": 19,
+    "resources": {
+      "sample_interval_s": 1.0,
+      "sampled_peak_process_tree_rss_bytes": 141938708480,
+      "samples": 30137,
+      "scope": "Sampled sum of RSS for observed owned process-group/descendant tree; shared pages can be counted twice, transient peaks/escaped descendants can be missed. Not an OS sandbox or a continuous peak guarantee."
+    },
+    "returncode": 1,
+    "security_events": [
+      {
+        "boundary": "input",
+        "ciphertexts": [
+          {
+            "devices": [
+              {
+                "id": 0,
+                "platform": "tpu"
+              }
+            ],
+            "moduli_count": 100,
+            "scale": 6.89940115708969e+16,
+            "shape": [
+              1,
+              2,
+              256,
+              512,
+              100
+            ]
+          }
+        ],
+        "index": 0,
+        "rings": [
+          {
+            "degree": 131072,
+            "dnum": null,
+            "log2_QP": 3490.161581036245,
+            "num_p": 24,
+            "num_q": 100,
+            "num_slots": 65536,
+            "security_bits": 128,
+            "security_model": "classical"
+          },
+          {
+            "degree": 131072,
+            "dnum": 4,
+            "log2_QP": 3490.161581036245,
+            "num_p": 24,
+            "num_q": 100,
+            "num_slots": 65536,
+            "security_bits": 128,
+            "security_model": "classical"
+          }
+        ]
+      },
+      {
+        "boundary": "output",
+        "ciphertexts": [
+          {
+            "devices": [
+              {
+                "id": 0,
+                "platform": "tpu"
+              }
+            ],
+            "moduli_count": 12,
+            "scale": 6.89940115708969e+16,
+            "shape": [
+              1,
+              2,
+              256,
+              512,
+              12
+            ]
+          }
+        ],
+        "index": 1,
+        "rings": [
+          {
+            "degree": 131072,
+            "dnum": null,
+            "log2_QP": 3490.161581036245,
+            "num_p": 24,
+            "num_q": 100,
+            "num_slots": 65536,
+            "security_bits": 128,
+            "security_model": "classical"
+          },
+          {
+            "degree": 131072,
+            "dnum": 4,
+            "log2_QP": 3490.161581036245,
+            "num_p": 24,
+            "num_q": 100,
+            "num_slots": 65536,
+            "security_bits": 128,
+            "security_model": "classical"
+          }
+        ]
+      }
+    ]
+  },
+  "schema": "public-tpu12-q6-terminal-child-progress-v1",
+  "scope": "Completed public Q6 child only; whole original sweep session12657 remains live. No private Qwen calibrator outcomes read.",
+  "source_read_tools": [
+    "9a1b26",
+    "009714",
+    "9f97db",
+    "6e23ae"
+  ],
+  "sourcewatch_tool": "7ddbed",
+  "utc": "2026-11-05T03:10:43.752971+00:00"
+}

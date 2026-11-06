@@ -1,0 +1,189 @@
+"""Complete frozen layer0 BERT softmax with explicit probability refreshes.
+
+The public level schedule composes the original initial polynomial and five
+tracked normalization rounds. Refresh uses the genuine full-period adapter at
+fixed bound2. This bound is an engineering margin, not a CKKS error certificate;
+domain validity and repeated-refresh accuracy still need measured evidence.
+"""
+from collections.abc import Mapping
+
+from encrypted_bert_initial_softmax import BertInitialSoftmax, InitialSoftmaxContract
+from encrypted_bert_normalization_round import BertNormalizationRound, NormalizationRoundContract
+from encrypted_score_reduction import ScoreReduction, ScoreReductionLayout, SLOTS
+
+
+class BertSoftmaxTile:
+    """One borrowed arithmetic context, explicit refresher, uniform public K."""
+    def __init__(self, arithmetic, layout, manifest_bytes, refresher, *,
+                 continuation_levels=2, progress=None):
+        from encrypted_refresh import BoundedSecureRefresh
+        if not isinstance(layout, ScoreReductionLayout):
+            raise TypeError('full-slot score layout required')
+        if type(continuation_levels) is not int or continuation_levels < 2:
+            raise ValueError('at least two public continuation levels required')
+        if progress is not None and not callable(progress):
+            raise TypeError('progress must be callable or None')
+        if not isinstance(refresher, BoundedSecureRefresh):
+            raise TypeError('genuine bounded refresh adapter required')
+        self.arithmetic, self.layout, self.refresher = arithmetic, layout, refresher
+        self.continuation_levels, self.progress = continuation_levels, progress
+        self._active = False
+        self._source = self._source_state = None
+        self.last_run = None
+        initial_contract = InitialSoftmaxContract.from_manifest_bytes(manifest_bytes)
+        round_contract = NormalizationRoundContract(manifest_bytes, int(layout.counts[0]))
+        self.initial = BertInitialSoftmax(arithmetic, layout, initial_contract,
+                                         progress=self._component_progress)
+        self.round = BertNormalizationRound(arithmetic, layout, round_contract,
+                                           progress=self._component_progress)
+        self._bound = (arithmetic, layout, refresher, self.initial, self.round)
+        self._bound_continuation = ScoreReduction._typed(continuation_levels)
+        self._bound_progress = progress
+        self._bound_child_callbacks = (self.initial.reduction.progress, self.round.reduction.progress)
+        self._refresh_objects = (refresher.ctx, refresher.evaluator, refresher.engine,
+                                refresher.compiled_primitives, refresher.plan)
+        self._refresh_contract = self._refresh_state()
+        self._guard()
+
+    @staticmethod
+    def _public_state(value):
+        if isinstance(value, Mapping):
+            return (type(value), tuple(sorted((k, BertSoftmaxTile._public_state(v))
+                                             for k, v in value.items())))
+        return ScoreReduction._typed(value)
+
+    def _refresh_state(self):
+        r = self.refresher
+        return (self._public_state(r.plan),
+                tuple(ScoreReduction._typed(getattr(r, n)) for n in
+                      ('input_level', 'output_level', 'meta_precision', 'public_bound')),
+                ScoreReduction._typed(r.evaluator.scale))
+
+    def _guard(self):
+        current = (self.arithmetic, self.layout, self.refresher, self.initial, self.round)
+        if any(a is not b for a, b in zip(current, self._bound)):
+            raise ValueError('construction-bound softmax owner changed')
+        if (ScoreReduction._typed(self.continuation_levels) != self._bound_continuation
+                or self.progress is not self._bound_progress):
+            raise ValueError('public softmax continuation or callback changed')
+        self.initial._guard_bindings()
+        self.round._guard_bindings()
+        if any(a is not b for a, b in zip((self.initial.reduction.progress,
+                                          self.round.reduction.progress), self._bound_child_callbacks)):
+            raise ValueError('softmax component callback changed')
+        r = self.refresher
+        current_refresh = (r.ctx, r.evaluator, r.engine, r.compiled_primitives, r.plan)
+        if (any(a is not b for a, b in zip(current_refresh, self._refresh_objects))
+                or r.ctx is not self.arithmetic.ctx or r.evaluator.ctx is not r.ctx
+                or self._refresh_state() != self._refresh_contract):
+            raise ValueError('borrowed refresh owner or public contract changed')
+        if (type(r.input_level) is not int or r.input_level != 2
+                or type(r.output_level) is not int
+                or r.output_level < max(self.round.contract.updates+7, self.continuation_levels)
+                or type(r.meta_precision) is not int or r.meta_precision != 10
+                or type(r.plan.get('period')) is not int or r.plan['period'] != SLOTS
+                or r.compiled_primitives is None):
+            raise ValueError('full-period compiled meta10 refresh with sufficient levels required')
+        cache = r.ctx._param_cache
+        keys, maps = getattr(cache, 'raw_rotation_keys', None), getattr(cache, 'coef_maps', None)
+        if (getattr(cache, 'per_level_rotation_keys', False)
+                or not isinstance(keys, Mapping) or not isinstance(maps, Mapping)):
+            raise ValueError('supplied reusable softmax/refresh key inventories required')
+        for key in set(r.plan['rotations']) | set(ScoreReductionLayout.rotation_indices()):
+            entry = keys.get(key)
+            if (not isinstance(entry, Mapping) or entry.get('a') is None
+                    or entry.get('b') is None or maps.get(key) is None):
+                raise ValueError('missing supplied softmax/refresh rotation key')
+        if self._source is not None:
+            if self.initial.reduction._value_fingerprint(self._source) != self._source_state:
+                raise ValueError('softmax original score ciphertext changed')
+
+    def _component_progress(self, label, value, counts):
+        self._guard()
+        fingerprint = self.initial.reduction._value_fingerprint(value)
+        if self.progress is not None:
+            self.progress(label, value, dict(counts))
+        self._guard()
+        if self.initial.reduction._value_fingerprint(value) != fingerprint:
+            raise ValueError('softmax callback changed result metadata or payload')
+
+    def level_plan(self, input_level):
+        """Plan from public levels/K only; no claimed post-refresh scale value."""
+        self._guard()
+        if type(input_level) is not int or input_level < 24:
+            raise ValueError('initial softmax needs22 levels plus two continuation levels')
+        if input_level >= len(self.arithmetic.ctx._param_cache.q_towers)//2:
+            raise ValueError('input level exceeds actual Q chain')
+        level = input_level-22
+        rounds = []
+        for index in range(5):
+            before = level
+            refresh = level < self.round.contract.updates+7
+            if refresh:
+                level = self.refresher.output_level
+            entry = level
+            level -= self.round.contract.updates+5
+            rounds.append(dict(index=index, preceding_level=before, refreshed=refresh,
+                               input_level=entry, output_level=level))
+        final_refresh = level < self.continuation_levels
+        return dict(input_level=input_level, initial_output_level=input_level-22,
+                    key_count=self.round.contract.key_count,
+                    initial_updates=6, updates_per_round=self.round.contract.updates,
+                    normalized_rounds=rounds, final_refresh=final_refresh,
+                    output_level=self.refresher.output_level if final_refresh else level,
+                    refresh_count=sum(x['refreshed'] for x in rounds)+final_refresh,
+                    refresh_public_bound=2., continuation_levels=self.continuation_levels)
+
+    def _refresh(self, value, label):
+        self._guard()
+        self.initial.reduction._validate(value, 2)
+        fingerprint = self.initial.reduction._value_fingerprint(value)
+        result = self.refresher.refresh(value, public_bound=2.)
+        self._guard()
+        if self.initial.reduction._value_fingerprint(value) != fingerprint:
+            raise ValueError('refresh changed its borrowed input')
+        self.initial.reduction._validate(result, self.refresher.output_level)
+        if self.arithmetic._level(result) != self.refresher.output_level:
+            raise ValueError('refresh level differs from the static public schedule')
+        ScoreReduction._forget(result)
+        self._component_progress(label, result, {'explicit_refreshes': 1})
+        return result
+
+    def evaluate_tile(self, scores):
+        self._guard()
+        if self._active:
+            raise ValueError('softmax tile cannot be reentered')
+        self.initial.reduction._validate(scores, 24)
+        plan = self.level_plan(self.arithmetic._level(scores))
+        self._active = True
+        self._source = scores
+        self._source_state = self.initial.reduction._value_fingerprint(scores)
+        self.last_run = None
+        try:
+            value = self.initial.evaluate_tile(scores)
+            actual = [dict(stage='initial', level=self.arithmetic._level(value), scale=value._ckks_scale)]
+            for row in plan['normalized_rounds']:
+                if row['refreshed']:
+                    value = self._refresh(value, f"before normalized round{row['index']}")
+                    actual.append(dict(stage=f"refresh before round{row['index']}",
+                                       level=self.arithmetic._level(value), scale=value._ckks_scale))
+                self._guard()
+                value = self.round.evaluate_tile(value)
+                if self.arithmetic._level(value) != row['output_level']:
+                    raise ValueError('normalization level differs from public schedule')
+                actual.append(dict(stage=f"normalized round{row['index']}",
+                                   level=self.arithmetic._level(value), scale=value._ckks_scale))
+            if plan['final_refresh']:
+                value = self._refresh(value, 'final probability continuation refresh')
+                actual.append(dict(stage='final refresh', level=self.arithmetic._level(value),
+                                   scale=value._ckks_scale))
+            self._guard()
+            self.initial.reduction._validate(value, self.continuation_levels)
+            if self.arithmetic._level(value) != plan['output_level']:
+                raise ValueError('softmax output level differs from public schedule')
+            self.last_run = dict(plan=plan, actual_metadata=actual,
+                                range_verified=False, repeated_refresh_error_verified=False)
+            return value
+        finally:
+            self._source = self._source_state = None
+            self._active = False

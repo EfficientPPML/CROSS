@@ -1,0 +1,92 @@
+"""Verify public preparation evidence only; never import measured runtime."""
+import argparse
+import hashlib
+import json
+from pathlib import Path
+import tarfile
+import xml.etree.ElementTree as ET
+
+ROOT=Path(__file__).resolve().parent
+
+def sha(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+def load(path):
+    return json.loads(path.read_bytes())
+
+def require(condition,message):
+    if not condition:
+        raise ValueError(message)
+
+def proof(sub,count,passing,current):
+    p=ROOT/sub
+    source=load(p/'source_manifest.json')
+    require(len(source)==count,'Source count')
+    parent=load(p/'report.json');worker=load(p/'worker/report.json')
+    require(sha(p/'source_manifest.json')==parent['source_manifest_sha256']==worker['source_manifest_sha256'],'Manifest binding')
+    require(sha(p/'sources.tar.gz')==parent['source_archive']['sha256'],'Archive binding')
+    require(sha(p/'worker/report.json')==parent['worker_report_sha256']and parent['worker']==worker,'Worker binding')
+    with tarfile.open(p/'sources.tar.gz','r:gz')as t:
+        members=t.getmembers()
+        require(len(members)==count and all(x.isfile()for x in members),'Exact regular source inventory')
+        got={x.name:hashlib.sha256(t.extractfile(x).read()).hexdigest()for x in members}
+        require(got==source,'Source archive bytes')
+        authorization=json.loads(t.extractfile('execution_authorization.json').read())
+        require(authorization=={'execute':False},'Execution remains disabled')
+    for d in(parent,worker):
+        require(d['source_hashes_start']==source==d['source_hashes_end'],'Start/end source equality')
+        for key in('cleanup_completed','outer_termination_completed','signal_restoration_completed','terminal_after_body_cleanup_and_signal_restoration_attempts','requires_independent_outer_receipt'):
+            require(d[key]is True,key)
+        require(d['passed']is passing,'Expected outcome')
+        for key in('actual_reconstruction','model_forward','validation_read'):
+            require(d[key]is False,'No actual workload')
+    for key in('execution_source_hashes_start','execution_source_hashes_end'):
+        require(parent[key]==source,'Execution tree equality')
+    child=parent['child']
+    require(child['direct_returncode']==(0 if passing else 1),'Child returncode')
+    for key in('direct_child_reaped','group_empty_verified','cleanup_completed'):
+        require(child[key]is True,'Child retirement')
+    require(child['cleanup_errors']==[],'Child cleanup errors')
+    for key in('private_read_attempted','private_read_confirmed'):
+        require(worker[key]is False,'No actual private-body attempt')
+    require(worker['private_read_state']=='not_attempted','Read-state scope')
+    if passing:
+        require(parent['audit_denials']==worker['audit_denials']==[],'Zero audit denials')
+        require(parent['complete']is worker['complete']is True,'Complete preflight')
+        require(worker['tests']==139 and worker['failures']==worker['errors']==worker['skipped']==0,'139 passing checks')
+        x=ET.parse(p/'worker/tests.xml').getroot()
+        require(len(x.findall('.//testcase'))==139,'XML count')
+        require(not any(x.findall('.//'+tag)for tag in('failure','error','skipped')),'XML failures')
+        require(len([c for c in x.findall('.//testcase')if c.get('name','').startswith('test_backend_import')])==11,'Eleven denied backend roots')
+        terminal=load(p/'owner-terminal.json')
+        require(terminal['session_id']==99452 and terminal['authoritative_exit_code']==0 and terminal['authoritative_reaped']is True,'Authoritative owner reap')
+        for role,pid,pgid in(('wrapper',2940640,2940640),('collector',2940641,2940640),('worker',2940642,2940642)):
+            require(terminal[role]=={'pid':pid,'pgid':pgid,'absent':True},'Observed process identity')
+        require(terminal['observed_process_groups_absent']==[2940640,2940642],'Observed group absence')
+        require(terminal['report_sha256']==sha(p/'report.json')and terminal['worker_report_sha256']==sha(p/'worker/report.json'),'Owner report binding')
+    else:
+        require(parent['complete']is worker['complete']is False,'Preserved failed startup')
+        require(len(worker['audit_denials'])==4 and worker['error_type']=='FileNotFoundError','Preserved tempfile failure')
+        require(not(p/'worker/tests.xml').exists(),'Zero tests before startup failure')
+    if current:
+        lab=Path('/tmp/qwen-candidate-terminal-reconstruction'+('-v2'if passing else'')+'-20261104')
+        execution=Path('/tmp/qwen-candidate-terminal-reconstruction-preflight-'+('v2'if passing else'v1')+'-20261104/execution_source')
+        for base in(lab,execution):
+            require({k:sha(base/k)for k in source}==source,'Current original/execution source bytes')
+    return source
+
+def main():
+    parser=argparse.ArgumentParser();parser.add_argument('--current',action='store_true');args=parser.parse_args()
+    index=load(ROOT/'artifact_hashes.json')
+    actual={str(p.relative_to(ROOT))for p in ROOT.rglob('*')if p.is_file()and p.name!='artifact_hashes.json'and '__pycache__'not in p.parts}
+    require(actual==set(index),'Exact public artifact inventory')
+    for name,pin in index.items():require(sha(ROOT/name)==pin,'Artifact SHA '+name)
+    old=proof('preserved-failed40',40,False,args.current)
+    new=proof('preflight44',44,True,args.current)
+    require(new['producer139_sources.json']=='ccd5834b83b9dfec2d3ea988fb395a61ec4b05ce3f2f54621f29200cbbb8e06a','Frozen producer139')
+    require(load(ROOT/'templates/grant.disabled.template.json')['execute']is False,'Disabled template')
+    review=load(ROOT/'independent-reviews/current44/review.json')
+    require(sha(ROOT/'independent-reviews/current44/review.json')=='7021e884c6185ab19825e10cf912c694b69b61c8af0925ef53ca71a2c973c95f','Independent final review')
+    print(json.dumps({'passed':True,'public_artifacts':len(index),'preserved_failed_sources':len(old),'final_sources':len(new),'final_tests':139,'current_original_and_execution_readback':args.current,'actual_reconstruction':False,'private_body_reads':False},sort_keys=True))
+
+if __name__=='__main__':main()

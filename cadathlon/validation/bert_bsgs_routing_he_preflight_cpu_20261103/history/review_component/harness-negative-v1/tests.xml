@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="2" time="0.403" timestamp="2026-11-03T17:06:12.043734+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_independent_failures" name="test_finite_extreme_decode_retains_serializable_failure" time="0.208"><failure message="ValueError: Out of range float values are not JSON compliant: inf">tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-411/test_finite_extreme_decode_ret0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x731b08d0d810&gt;
+
+    def test_finite_extreme_decode_retains_serializable_failure(tmp_path,monkeypatch):
+        cfg,keys,events,stored=orchestration(monkeypatch,tmp_path);fixture={}
+        w.fixture(cfg,keys,b'profile',b'plan',fixture,lambda:None)
+        oracle=w.public_oracle();x,_=oracle.fixture_arrays();proof=c.numerical_plan()
+        def exercise(ctx,source,ones,*,checkpoint):
+            i=0
+            for case in proof['cases']:
+                forward=oracle.oracle(x,gain=case['gain'])
+                answers={'forward':forward,'roundtrip_inverse':oracle.oracle(forward['key placement'],inverse=True),'hostile_inverse':oracle.oracle(x,inverse=True)}
+                for row in case['checkpoints']:
+                    slots=answers[row['direction']][row['label']].copy()
+                    if i==0:slots[:]=np.finfo(np.float64).max
+                    checkpoint(i,Value(slots,events),{n:row[n] for n in ('direction','label','level','scale','counts')}|dict(case=case['name']));i+=1
+            return {}
+        fake=ModuleType('component_arithmetic');fake.exercise=exercise;monkeypatch.setitem(sys.modules,'component_arithmetic',fake)
+        server={};w.server(cfg,keys,b'profile',b'plan',server,lambda:None,{'fixture':fixture})
+        report={}
+        with np.errstate(over='ignore',invalid='ignore'):
+            with pytest.raises(ValueError):w.validate(cfg,keys,b'profile',b'plan',report,lambda:c.canonical(report),{'fixture':fixture,'server':server})
+        assert report['numeric_checkpoints'][0]['passed'] is False
+&gt;       c.canonical(report)
+
+test_independent_failures.py:33: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+component_contract.py:30: in canonical
+    return (json.dumps(value, sort_keys=True, separators=(',', ':'), allow_nan=False)+'\n').encode()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/json/__init__.py:242: in dumps
+    **kw).encode(obj)
+          ^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/json/encoder.py:202: in encode
+    chunks = self.iterencode(o, _one_shot=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;json.encoder.JSONEncoder object at 0x731b08d4a4e0&gt;
+o = {'all18_authenticated_before_private_read': True, 'loader_entered': True, 'numeric_checkpoints': [{'index': 0, 'case': 'canonical', 'direction': 'forward', 'label': 'head compaction', ...}]}
+_one_shot = True
+
+    def iterencode(self, o, _one_shot=False):
+        """Encode the given object and yield each string
+        representation as available.
+    
+        For example::
+    
+            for chunk in JSONEncoder().iterencode(bigobject):
+                mysocket.write(chunk)
+    
+        """
+        if self.check_circular:
+            markers = {}
+        else:
+            markers = None
+        if self.ensure_ascii:
+            _encoder = encode_basestring_ascii
+        else:
+            _encoder = encode_basestring
+    
+        def floatstr(o, allow_nan=self.allow_nan,
+                _repr=float.__repr__, _inf=INFINITY, _neginf=-INFINITY):
+            # Check for specials.  Note that this type of test is processor
+            # and/or platform-specific, so do tests which don't depend on the
+            # internals.
+    
+            if o != o:
+                text = 'NaN'
+            elif o == _inf:
+                text = 'Infinity'
+            elif o == _neginf:
+                text = '-Infinity'
+            else:
+                return _repr(o)
+    
+            if not allow_nan:
+                raise ValueError(
+                    "Out of range float values are not JSON compliant: " +
+                    repr(o))
+    
+            return text
+    
+    
+        if self.indent is None or isinstance(self.indent, str):
+            indent = self.indent
+        else:
+            indent = ' ' * self.indent
+        if _one_shot and c_make_encoder is not None:
+            _iterencode = c_make_encoder(
+                markers, self.default, _encoder, indent,
+                self.key_separator, self.item_separator, self.sort_keys,
+                self.skipkeys, self.allow_nan)
+        else:
+            _iterencode = _make_iterencode(
+                markers, self.default, _encoder, indent, floatstr,
+                self.key_separator, self.item_separator, self.sort_keys,
+                self.skipkeys, _one_shot)
+&gt;       return _iterencode(o, 0)
+               ^^^^^^^^^^^^^^^^^
+E       ValueError: Out of range float values are not JSON compliant: inf
+
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/json/encoder.py:263: ValueError</failure></testcase><testcase classname="test_independent_failures" name="test_exited_leader_cannot_leave_live_descendants_and_report_success" time="0.076"><failure message="AssertionError: leader-only completion falsely reports all_processes_reaped=True with live owned descendants&#10;assert not True">tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-411/test_exited_leader_cannot_leav0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x731b08d0da70&gt;
+
+    def test_exited_leader_cannot_leave_live_descendants_and_report_success(tmp_path,monkeypatch):
+        real_popen=subprocess.Popen;leaders=[]
+        libc=ctypes.CDLL(None,use_errno=True);previous=ctypes.c_int()
+        assert libc.prctl(37,ctypes.byref(previous),0,0,0)==0
+        assert libc.prctl(36,1,0,0,0)==0
+        setup(monkeypatch)
+        def spawn(command,**kwargs):
+            xml=next(x.split('=',1)[1] for x in command if x.startswith('--junitxml='))
+            pidfile=tmp_path/('descendant'+str(len(leaders)))
+            script="import subprocess,sys;from pathlib import Path;child=subprocess.Popen([sys.executable,'-c','import time;time.sleep(60)']);Path(sys.argv[1]).write_text(str(child.pid));Path(sys.argv[2]).write_text('&lt;testsuites&gt;&lt;testsuite&gt;&lt;testcase name=\"owned\"/&gt;&lt;/testsuite&gt;&lt;/testsuites&gt;')"
+            p=real_popen([sys.executable,'-c',script,str(pidfile),xml],**kwargs);leaders.append((p,pidfile));return p
+        monkeypatch.setattr(collector.subprocess,'Popen',spawn)
+        try:
+            out=tmp_path/'report';collector.collect(output=out,key_evidence=tmp_path/'public',key_workspace=tmp_path/'keys')
+            r=json.loads((out/'report.json').read_bytes())
+            for _,pidfile in leaders:os.kill(int(pidfile.read_text()),0)
+&gt;           assert not r['passed'],'leader-only completion falsely reports all_processes_reaped=True with live owned descendants'
+E           AssertionError: leader-only completion falsely reports all_processes_reaped=True with live owned descendants
+E           assert not True
+
+test_independent_failures.py:52: AssertionError</failure></testcase></testsuite></testsuites>

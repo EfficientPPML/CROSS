@@ -1,0 +1,346 @@
+FFFFFFFFF                                                                [100%]
+=================================== FAILURES ===================================
+__________ test_real_single_fire_scope_with_native_threads[0-cleanup] __________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-472/test_real_single_fire_scope_wi0')
+phase = 'cleanup', sample = 0
+
+    @pytest.mark.parametrize('phase',['cleanup','restoration','body-and-restoration'])
+    @pytest.mark.parametrize('sample',range(3))
+    def test_real_single_fire_scope_with_native_threads(tmp_path,phase,sample):
+        destination=tmp_path/'report.json'
+        env=os.environ.copy();env.update(OPENBLAS_NUM_THREADS='4',OMP_NUM_THREADS='4',MKL_NUM_THREADS='4')
+        result=subprocess.run([sys.executable,str(HERE/'native_signal_case.py'),phase,str(destination)],env=env,capture_output=True,text=True,timeout=30)
+>       report=json.loads(destination.read_bytes())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_native_signal_wrapper.py:12: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-472/test_real_single_fire_scope_wi0/report.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-472/test_real_single_fire_scope_wi0/report.json'
+
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+________ test_real_single_fire_scope_with_native_threads[0-restoration] ________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-472/test_real_single_fire_scope_wi1')
+phase = 'restoration', sample = 0
+
+    @pytest.mark.parametrize('phase',['cleanup','restoration','body-and-restoration'])
+    @pytest.mark.parametrize('sample',range(3))
+    def test_real_single_fire_scope_with_native_threads(tmp_path,phase,sample):
+        destination=tmp_path/'report.json'
+        env=os.environ.copy();env.update(OPENBLAS_NUM_THREADS='4',OMP_NUM_THREADS='4',MKL_NUM_THREADS='4')
+        result=subprocess.run([sys.executable,str(HERE/'native_signal_case.py'),phase,str(destination)],env=env,capture_output=True,text=True,timeout=30)
+>       report=json.loads(destination.read_bytes())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_native_signal_wrapper.py:12: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-472/test_real_single_fire_scope_wi1/report.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-472/test_real_single_fire_scope_wi1/report.json'
+
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+___ test_real_single_fire_scope_with_native_threads[0-body-and-restoration] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-472/test_real_single_fire_scope_wi2')
+phase = 'body-and-restoration', sample = 0
+
+    @pytest.mark.parametrize('phase',['cleanup','restoration','body-and-restoration'])
+    @pytest.mark.parametrize('sample',range(3))
+    def test_real_single_fire_scope_with_native_threads(tmp_path,phase,sample):
+        destination=tmp_path/'report.json'
+        env=os.environ.copy();env.update(OPENBLAS_NUM_THREADS='4',OMP_NUM_THREADS='4',MKL_NUM_THREADS='4')
+        result=subprocess.run([sys.executable,str(HERE/'native_signal_case.py'),phase,str(destination)],env=env,capture_output=True,text=True,timeout=30)
+>       report=json.loads(destination.read_bytes())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_native_signal_wrapper.py:12: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-472/test_real_single_fire_scope_wi2/report.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-472/test_real_single_fire_scope_wi2/report.json'
+
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+__________ test_real_single_fire_scope_with_native_threads[1-cleanup] __________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-472/test_real_single_fire_scope_wi3')
+phase = 'cleanup', sample = 1
+
+    @pytest.mark.parametrize('phase',['cleanup','restoration','body-and-restoration'])
+    @pytest.mark.parametrize('sample',range(3))
+    def test_real_single_fire_scope_with_native_threads(tmp_path,phase,sample):
+        destination=tmp_path/'report.json'
+        env=os.environ.copy();env.update(OPENBLAS_NUM_THREADS='4',OMP_NUM_THREADS='4',MKL_NUM_THREADS='4')
+        result=subprocess.run([sys.executable,str(HERE/'native_signal_case.py'),phase,str(destination)],env=env,capture_output=True,text=True,timeout=30)
+>       report=json.loads(destination.read_bytes())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_native_signal_wrapper.py:12: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-472/test_real_single_fire_scope_wi3/report.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-472/test_real_single_fire_scope_wi3/report.json'
+
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+________ test_real_single_fire_scope_with_native_threads[1-restoration] ________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-472/test_real_single_fire_scope_wi4')
+phase = 'restoration', sample = 1
+
+    @pytest.mark.parametrize('phase',['cleanup','restoration','body-and-restoration'])
+    @pytest.mark.parametrize('sample',range(3))
+    def test_real_single_fire_scope_with_native_threads(tmp_path,phase,sample):
+        destination=tmp_path/'report.json'
+        env=os.environ.copy();env.update(OPENBLAS_NUM_THREADS='4',OMP_NUM_THREADS='4',MKL_NUM_THREADS='4')
+        result=subprocess.run([sys.executable,str(HERE/'native_signal_case.py'),phase,str(destination)],env=env,capture_output=True,text=True,timeout=30)
+>       report=json.loads(destination.read_bytes())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_native_signal_wrapper.py:12: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-472/test_real_single_fire_scope_wi4/report.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-472/test_real_single_fire_scope_wi4/report.json'
+
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+___ test_real_single_fire_scope_with_native_threads[1-body-and-restoration] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-472/test_real_single_fire_scope_wi5')
+phase = 'body-and-restoration', sample = 1
+
+    @pytest.mark.parametrize('phase',['cleanup','restoration','body-and-restoration'])
+    @pytest.mark.parametrize('sample',range(3))
+    def test_real_single_fire_scope_with_native_threads(tmp_path,phase,sample):
+        destination=tmp_path/'report.json'
+        env=os.environ.copy();env.update(OPENBLAS_NUM_THREADS='4',OMP_NUM_THREADS='4',MKL_NUM_THREADS='4')
+        result=subprocess.run([sys.executable,str(HERE/'native_signal_case.py'),phase,str(destination)],env=env,capture_output=True,text=True,timeout=30)
+>       report=json.loads(destination.read_bytes())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_native_signal_wrapper.py:12: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-472/test_real_single_fire_scope_wi5/report.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-472/test_real_single_fire_scope_wi5/report.json'
+
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+__________ test_real_single_fire_scope_with_native_threads[2-cleanup] __________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-472/test_real_single_fire_scope_wi6')
+phase = 'cleanup', sample = 2
+
+    @pytest.mark.parametrize('phase',['cleanup','restoration','body-and-restoration'])
+    @pytest.mark.parametrize('sample',range(3))
+    def test_real_single_fire_scope_with_native_threads(tmp_path,phase,sample):
+        destination=tmp_path/'report.json'
+        env=os.environ.copy();env.update(OPENBLAS_NUM_THREADS='4',OMP_NUM_THREADS='4',MKL_NUM_THREADS='4')
+        result=subprocess.run([sys.executable,str(HERE/'native_signal_case.py'),phase,str(destination)],env=env,capture_output=True,text=True,timeout=30)
+>       report=json.loads(destination.read_bytes())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_native_signal_wrapper.py:12: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-472/test_real_single_fire_scope_wi6/report.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-472/test_real_single_fire_scope_wi6/report.json'
+
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+________ test_real_single_fire_scope_with_native_threads[2-restoration] ________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-472/test_real_single_fire_scope_wi7')
+phase = 'restoration', sample = 2
+
+    @pytest.mark.parametrize('phase',['cleanup','restoration','body-and-restoration'])
+    @pytest.mark.parametrize('sample',range(3))
+    def test_real_single_fire_scope_with_native_threads(tmp_path,phase,sample):
+        destination=tmp_path/'report.json'
+        env=os.environ.copy();env.update(OPENBLAS_NUM_THREADS='4',OMP_NUM_THREADS='4',MKL_NUM_THREADS='4')
+        result=subprocess.run([sys.executable,str(HERE/'native_signal_case.py'),phase,str(destination)],env=env,capture_output=True,text=True,timeout=30)
+>       report=json.loads(destination.read_bytes())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_native_signal_wrapper.py:12: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-472/test_real_single_fire_scope_wi7/report.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-472/test_real_single_fire_scope_wi7/report.json'
+
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+___ test_real_single_fire_scope_with_native_threads[2-body-and-restoration] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-472/test_real_single_fire_scope_wi8')
+phase = 'body-and-restoration', sample = 2
+
+    @pytest.mark.parametrize('phase',['cleanup','restoration','body-and-restoration'])
+    @pytest.mark.parametrize('sample',range(3))
+    def test_real_single_fire_scope_with_native_threads(tmp_path,phase,sample):
+        destination=tmp_path/'report.json'
+        env=os.environ.copy();env.update(OPENBLAS_NUM_THREADS='4',OMP_NUM_THREADS='4',MKL_NUM_THREADS='4')
+        result=subprocess.run([sys.executable,str(HERE/'native_signal_case.py'),phase,str(destination)],env=env,capture_output=True,text=True,timeout=30)
+>       report=json.loads(destination.read_bytes())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_native_signal_wrapper.py:12: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-472/test_real_single_fire_scope_wi8/report.json')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-472/test_real_single_fire_scope_wi8/report.json'
+
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+=========================== short test summary info ============================
+FAILED test_native_signal_wrapper.py::test_real_single_fire_scope_with_native_threads[0-cleanup]
+FAILED test_native_signal_wrapper.py::test_real_single_fire_scope_with_native_threads[0-restoration]
+FAILED test_native_signal_wrapper.py::test_real_single_fire_scope_with_native_threads[0-body-and-restoration]
+FAILED test_native_signal_wrapper.py::test_real_single_fire_scope_with_native_threads[1-cleanup]
+FAILED test_native_signal_wrapper.py::test_real_single_fire_scope_with_native_threads[1-restoration]
+FAILED test_native_signal_wrapper.py::test_real_single_fire_scope_with_native_threads[1-body-and-restoration]
+FAILED test_native_signal_wrapper.py::test_real_single_fire_scope_with_native_threads[2-cleanup]
+FAILED test_native_signal_wrapper.py::test_real_single_fire_scope_with_native_threads[2-restoration]
+FAILED test_native_signal_wrapper.py::test_real_single_fire_scope_with_native_threads[2-body-and-restoration]
+9 failed in 0.34s

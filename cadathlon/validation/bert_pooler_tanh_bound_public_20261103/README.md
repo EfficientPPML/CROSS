@@ -1,0 +1,15 @@
+This exact public certificate proves a conditional **B2 magnitude envelope** for the frozen BERT-v2 pooler rational tanh. It keeps manifest `4e2277beea7189aa1d77b168c500c8a175f6c630afa520fcc6b38cb5a179cff9`, the degree12 base polynomial, six doublings, and five original static reciprocal updates unchanged. No model, native input, fitting, ciphertext, key generation, refresh, or classifier was evaluated.
+
+The original pooler input must lie in[-34,34]. The exact power-of-two division gives x/64 in[-17/32,17/32]; the base polynomial's rounded public domain map is A=1, B=0. The actual binary64 Chebyshev-to-power coefficients have maximum nonzero degree11, while the declared degree remains12. Their exact coefficient absolute sum weighted by(17/32)^n bounds the base output by0.587480489825258.
+
+For every denominator d in the unchanged[1,2.1] contract, the certificate constructs the actual rounded first affine w=−seed*seed and b=2*seed. Endpoints and the exact quadratic residual vertex bound |r1|<1. Four subsequent original Newton updates give r5=r1^16, with0≤r5≤3.990172970377188e-15. Thus the final inverse is positive and at most1/d. For a shared denominator d=1+y², the doubled result obeys
+
+    |2*y*inverse(d)| ≤ 2*|y|/(1+y²) ≤ 1.
+
+The next denominator therefore lies in[1,2], inside the original reciprocal domain. This proves all six exact iterations by induction without expanding their enormous composed polynomial. Every refreshed ideal iterate is bounded by1, and fixed9/8 headroom remains below2. It proves magnitude, not tanh approximation error or a classifier/logit gate.
+
+B2 headroom alone does **not** guarantee reciprocal-domain preservation after a noisy refresh: even9/8 permits1+y²>2.1. A separately established additive refresh error≤1/32 around an ideal unit-bounded iterate would suffice, since |y|≤33/32 implies1+y²≤2113/1024<2.1. This is an exact conditional tolerance, not a measured CKKS guarantee. Shared-square correlation, floating arithmetic, encoding/rescaling error, refresh perturbation and whether actual pooler inputs satisfy[-34,34] remain separate obligations.
+
+21 source-bound tests passed in0.11s; the public collector exited0 in0.28s. Tests cover actual rounded first-affine Newton identities, single-round exact rational bounds, all six fixed counts, coefficient-byte agreement with the unchanged arithmetic analogue, and a separate8193-point floating diagnostic. The uniform proof is analytic/exact and does not rely on those sample points. An independent offline verifier checks all six induction steps and the rounded-affine residual certificate.
+
+All six sources matched before/end/current and archive readback. Archive SHA256:`91edf68e3013730a4bb4c601cb4fc11eed81e45a7442d960f28646907edd1e5e`. Run `python verify.py public-v1` for offline verification. This discharges the conditional ideal B2 magnitude obligation in the [public continuation plan](../bert_twelve_layer_continuation_plan_cpu_20261103/README.md); it is not an encrypted pooler, complete-model, refresh-accuracy, or scoring result.

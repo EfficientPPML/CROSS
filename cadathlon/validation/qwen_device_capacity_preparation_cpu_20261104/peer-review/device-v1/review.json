@@ -1,0 +1,76 @@
+{
+  "actual_policy_instances": false,
+  "body_reads": false,
+  "candidate_imports": false,
+  "closed_documents": [
+    "resource_policy",
+    "resource_review",
+    "dependency_policy",
+    "selection",
+    "allocator",
+    "access",
+    "workspace",
+    "evidence",
+    "review",
+    "lease"
+  ],
+  "collection_or_tests": false,
+  "current_five_preserved": true,
+  "device_or_capacity_probes": false,
+  "findings": [
+    {
+      "detail": "The registry retains the DevicePolicyAdmission object but not independently captured identities of its original phase, blobs and expected_pins. Frozen dataclass fields can be rebound through object.__setattr__, within the same callback-mutation boundary addressed by the other retained owners. _context then authenticates the current coherent fields, _caller derives source/hook bindings from them, and _hook supplies those current phase/blob values. Equal-content replacements can pass pure authentication; a coherent different policy could also rebase unless the external process hook rejects it.",
+      "id": "DEVICE-ORIGINAL-POLICY-FIELDS",
+      "locations": [
+        "issue_initialization record construction",
+        "_context policy.check",
+        "_hook current phase/blobs arguments"
+      ],
+      "minimal_repair": "Capture the original three fields before any fallible check/callback, retain them with the attempt, compare their identities before reauthentication and after callbacks, and invoke source-fixed hooks with those captured original values. Reject rather than rebase on replacement. Preserve current5 unchanged and use a declared source successor.",
+      "scope": "This does not establish actual authority bypass: the documented process hook must independently enforce original identities, current server hooks/policies are absent, and selected complete-capacity still denies. Nevertheless the component does not locally meet its stated original-input/one-permit invariant.",
+      "status": "concrete source-only local invariant gap; no execution or bypass demonstration"
+    }
+  ],
+  "grants_or_launch": false,
+  "handoff_sha256": "4dfea651ff04dea0d26c6a5f2fbefad061b36ea9cfd5f699029721503ccb6deb",
+  "limits": [
+    "Only declared source/hook callback boundary reviewed; no genuine backend type/memory_stats compatibility execution.",
+    "Mutable interpreter/private registry globals and arbitrary native tampering remain outside the documented trust boundary.",
+    "No actual policy instance, access path, capacity result, initialization or integration was inspected or supplied."
+  ],
+  "no_unresolved_blockers": false,
+  "ordered_stages": [
+    "post_init",
+    "post_keys",
+    "pre_evaluation",
+    "terminal"
+  ],
+  "review_completed": true,
+  "review_script_sha256": "fe0b9c60407787ba1ca85d9df91be8c500aa0df64221ad34a95bb0d2b82ae06f",
+  "schema": "qwen-device-component-source-peer-review-v1",
+  "source_archive_sha256": "cc93bedfbba903089e8c890ff0287bc1696b08ca5936fff19978171ce36716c9",
+  "source_checks_passed": true,
+  "source_conclusions": [
+    "Ten immutable canonical bounded documents are externally hashed and joined to exact phase/source/archive/dependency/resource hashes; resource selection and allocator links, workspace request/source joins,14 review subjects and exclusive lease links are explicit. No default numerical allowance, self-issued grant or hash-only policy fallback is supplied.",
+    "Source-fixed hook lookup requires five top-level Python functions with exact module/global/code origins, no defaults or closures, and retained process module/spec/function/code identities. Independent helper-source origins/hashes and the hook binding contract remain necessary; this is not arbitrary-Python/native containment.",
+    "Registry insertion precedes initial callbacks and retains the policy/returned owners on failure. Second issuance during capture/busy and nested public transitions poison the attempt; _hook checks busy after the callback, so a caught nested hook transition cannot restore a permitted/observed state through that hook path.",
+    "Initialization precedes ordered post_init/post_keys/pre_evaluation/terminal observations. Statistics require explicit bytes_in_use/bytes_limit, exact nonnegative integers, consistent limits and reviewed additional/workspace/reserve comparison; no missing-stat fallback or reservation is claimed.",
+    "The selected device/JAX class, memory_stats descriptor/method, selection callables, original default-device identity and one-device/process checks remain explicit. Actual native semantics, exclusivity, synchronization and complete workspace bounds are independent factual/process-hook prerequisites, not proven by this component.",
+    "Clean retirement removes only the guard registry after terminal observation. Hardware/default-device/array/lease retirement remains with original process/external owners; failed attempts remain retained and no retry is granted."
+  ],
+  "source_fixed_hooks": [
+    "device_capacity_check_bindings",
+    "device_capacity_check_host",
+    "device_capacity_check_lease",
+    "device_capacity_initialize",
+    "device_capacity_synchronize"
+  ],
+  "source_hashes": {
+    "API.md": "fd8ba70134a845bdc01c62cc4bf3dbfa1c14148aff505db98bf5ceb8e09a998c",
+    "provenance.json": "bc308064ce8db0a993012c1275296f286575088ad3d53d2b0199a7033a5e60c6",
+    "qwen_device_capacity.py": "c473606471be10667191a2a1e049c0ba0a3acdf64171795b3488069049576b2a",
+    "qwen_device_policy.py": "7b2d69456fca8a07052a37d33bcd2dfda1fb769e340755e97b98b4fce4c26c45",
+    "source_refs.json": "75dcc8edadf6340c93f5cd05e5cd19b44350b9afbad17cf5782754dffe27f3c5"
+  },
+  "source_map_sha256": "5fdb8fc1927c3118fcb2acd65b218039ab1f1bb9b097f963fa10e92dded4c7b3"
+}

@@ -1,0 +1,45 @@
+............................................F........................... [ 92%]
+......                                                                   [100%]
+=================================== FAILURES ===================================
+_____________ test_self_consistently_rehashed_wrong_model_rejected _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-169/test_self_consistently_rehashe0')
+
+    def test_self_consistently_rehashed_wrong_model_rejected(tmp_path):
+        # Every file/digest/shape agrees with this export, while its tensor bytes
+        # differ from the checkpoint whose asset identity the manifest declares.
+        manifest=dict(schema='pinned-bert-layer0-qk-v1',model_id='google-bert/bert-base-cased-finetuned-mrpc',
+            revision=REVISION,asset_sha256=ASSETS,tensors={})
+        for kind in KINDS:
+            for suffix,shape in (('weight',(768,768)),('bias',(768,))):
+                value=np.zeros(shape,dtype='<f4');name=f'{kind}_{suffix}.npy';path=tmp_path/name
+                np.save(path,value,allow_pickle=False)
+                manifest['tensors'][name]=dict(name=f'bert.encoder.layer.0.attention.self.{kind}.{suffix}',
+                    shape=list(shape),dtype='<f4',file_sha256=contracts.sha(path),tensor_sha256=hashlib.sha256(value.tobytes()).hexdigest())
+        (tmp_path/'model_manifest.json').write_bytes(t._canonical(manifest))
+        with pytest.raises(ValueError,match='public tensor identity'):
+>           contracts.load_model(tmp_path)
+
+prototype/test_qk_transport.py:151: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+directory = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-169/test_self_consistently_rehashe0')
+
+    def load_model(directory):
+     directory=Path(directory);manifest=_json(_read_regular(directory/'model_manifest.json',65536))
+     names={f'{kind}_{suffix}.npy' for kind in KINDS for suffix in ('weight','bias')}
+     if not isinstance(manifest,dict) or set(manifest)!={'schema','model_id','revision','asset_sha256','tensors'} or manifest['schema']!='pinned-bert-layer0-qk-v1' or manifest['model_id']!='google-bert/bert-base-cased-finetuned-mrpc' or manifest['revision']!=REVISION or manifest['asset_sha256']!=ASSETS or not isinstance(manifest['tensors'],dict) or set(manifest['tensors'])!=names:raise ValueError('public pinned model identity differs')
+     if directory.is_symlink() or {p.name for p in directory.iterdir()}!=names|{'model_manifest.json'}:raise ValueError('public model inventory differs')
+     arrays={}
+     for kind in KINDS:
+      pair=[]
+      for suffix,shape in (('weight',(768,768)),('bias',(768,))):
+       name=f'{kind}_{suffix}.npy';desc=manifest['tensors'][name];p=directory/name
+>      if not isinstance(desc,dict) or set(desc)!={'name','shape','dtype','file_sha256','tensor_sha256'} or desc['name']!=f'bert.encoder.layer.0.attention.self.{kind}.{suffix}' or desc['shape']!=list(shape) or any(type(n) is not int for n in desc['shape']) or desc['dtype']!='<f4' or desc['tensor_sha256']!=PINNED_TENSOR_SHA256[desc['name']] or p.is_symlink() or sha(p,math.prod(shape)*4+65536)!=desc['file_sha256']:raise ValueError('public tensor identity differs')
+                                                                                                                                                                                                                                                                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E      KeyError: 'bert.encoder.layer.0.attention.self.query.weight'
+
+prototype/contracts.py:62: KeyError
+=========================== short test summary info ============================
+FAILED prototype/test_qk_transport.py::test_self_consistently_rehashed_wrong_model_rejected
+1 failed, 77 passed in 4.01s

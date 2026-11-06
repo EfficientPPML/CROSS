@@ -1,0 +1,84 @@
+--- v2/TEST_SCOPE.md
++++ v3/TEST_SCOPE.md
+@@ -7,7 +7,10 @@
+ no candidate imports, pytest collection, child launch or test execution occurred.
+ 
+ The child constructs the exact13 frozen admission types with non-proof synthetic
+-markers, including all25 proof names. These are intentionally not valid JSON
++markers, including all25 proof names. PublicContract alone is allocated with
++object.__new__ and receives its blobs with object.__setattr__, explicitly bypassing
++its real source-validating constructor. This is unadmitted fixture construction,
++not an additional validator replacement. These are intentionally not valid JSON
+ proofs or successful scientific evidence. `ServerPacket.check` and the snapshot's
+ saved `_FULL_PACKET_CHECK` are temporarily the same recording function. It records
+ the original packet and invocation count only. Every child cleanup restores and
+@@ -28,7 +31,13 @@
+ Normal children have no deadline. Process/PGID observation is recorded truthfully;
+ the parent distinguishes its observed PGID from the child's self-report and
+ requires normal child exit, reap and subsequent group absence. Logs/results are
+-owned pytest temporary files. The parent never imports candidate modules.
++owned pytest temporary files. After direct wait and group observation, the parent
++publishes parent-terminal.json before asserting normal exit or reading result.json.
++That record separates the owned session group (start_new_session, equal to Popen
++PID) from an optional actual getpgid observation. It survives a completed nonzero
++child exit even when no result exists; it does not claim every exceptional cleanup
++path publishes a receipt. The existing positive child-terminal.json and all guard
++assertions are unchanged. The parent never imports candidate modules.
+ 
+ Parent and child prohibit NumPy, JAX/JAXlib, libtpu, jax_plugins, jaxite_word and
+ model backends before candidate imports; attempts are sticky failures. The child
+@@ -42,7 +51,16 @@
+ owned CPU affinity, exact external source/archive/config pins, disabled pytest
+ plugin autoload/cache, explicit rootdir/confcutdir/config and owned TMPDIR. It
+ must authenticate exact18 collection/XML nodes and all before/end/archive bytes,
+-and retain the18 child-terminal records. No harness or launch authority is
++and retain and validate both the18 parent-terminal records and the18 positive
++child-terminal records, joining their exact PID/group/exit/scenario fields. It must
++not silently ignore the new early receipts. Retain owned pytest current aliases
++without following them or copying duplicate child files. No harness or launch authority is
+ issued by these test sources. Expected numerical/backend module inventory is
+ empty. No full scientific admission, resource sufficiency, backend/TPU, model,
+ calibration, heldout, row0 or HE execution claim can result from this suite.
++
++The prior37-source run failed all18 cases in PublicContract.__post_init__, before
++the recording-validator seam or snapshot guard. Its collector then rejected the
++missing child-terminal records. That original run and source are preserved; it
++does not establish a snapshot runtime failure. This v3 has not been imported,
++collected or run, and no new launch authority is implied.
+--- v2/snapshot_child.py
++++ v3/snapshot_child.py
+@@ -60,7 +60,11 @@
+             module=sys.modules[name];wanted=runtime/(name+'.py')
+             assert Path(module.__file__)==wanted and Path(module.__spec__.origin)==wanted
+     source_binding()
+-    public=file_module.PublicContract((('synthetic-public-marker',b'synthetic non-proof metadata'),))
++    # Explicitly unadmitted synthetic fixture: PublicContract's constructor
++    # authenticates real public blobs. Bypass only that constructor, without
++    # replacing another validator or claiming these marker bytes are evidence.
++    public=object.__new__(file_module.PublicContract)
++    object.__setattr__(public,'blobs',(('synthetic-public-marker',b'synthetic non-proof metadata'),))
+     generation_model=model_module.ModelAdmission(public,b'synthetic generation manifest',b'synthetic generation report',b'synthetic generation outer',b'synthetic generation root',model_module.ExpectedModelPins(b'synthetic generation pins'))
+     server_model=model_module.ModelAdmission(public,b'synthetic server manifest',b'synthetic server report',b'synthetic server outer',b'synthetic server root',model_module.ExpectedModelPins(b'synthetic server pins'))
+     intent=key_module.ActualKeygenIntent(public,b'synthetic intent')
+--- v2/test_snapshot_guard.py
++++ v3/test_snapshot_guard.py
+@@ -41,6 +41,19 @@
+                 except BaseException as cleanup:
+                     if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+             raise
++    # Publish owned process closure before exit/result assertions. A startup
++    # failure can have no result.json; its PID/group/exit evidence still survives.
++    try:os.killpg(proc.pid,0)
++    except ProcessLookupError:owned_group_absent=True
++    else:owned_group_absent=False
++    with(tmp_path/'parent-terminal.json').open('x')as stream:
++        json.dump({'schema':'qwen-snapshot-owned-child-terminal-v1','pid':proc.pid,
++            'owned_session_pgid':proc.pid,'observed_pgid':observed_pgid,
++            'exit_code':code,'reaped':True,'group_absent':owned_group_absent,
++            'scenario':scenario,'child_result_read':False,
++            'runtime_scope':'recording guard state only'},stream,sort_keys=True)
++        stream.write('\n')
++    assert owned_group_absent
+     assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+     data=json.loads(result.read_text())
+     assert data['scenario']==scenario and data['assertions_completed']is True

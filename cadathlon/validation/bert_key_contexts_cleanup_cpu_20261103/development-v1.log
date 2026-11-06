@@ -1,0 +1,12 @@
+...........................................................E             [100%]
+==================================== ERRORS ====================================
+___ ERROR at teardown of test_failed_block_attempt_does_not_abandon_cleanup ____
+/tmp/bert-key-contexts-cleanup-20261103/candidate/test_key_contexts_signals.py:20: in signal_state
+    signal.pthread_sigmask(signal.SIG_UNBLOCK,SIGS)
+/tmp/bert-key-contexts-cleanup-20261103/candidate/test_key_contexts_signals.py:96: in blocking
+    def blocking(*a):called.append(True);raise OSError('cannot install signal block')
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   OSError: cannot install signal block
+=========================== short test summary info ============================
+ERROR ../../tmp/bert-key-contexts-cleanup-20261103/candidate/test_key_contexts_signals.py::test_failed_block_attempt_does_not_abandon_cleanup
+59 passed, 1 error in 1.70s

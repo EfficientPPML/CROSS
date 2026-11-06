@@ -1,0 +1,11 @@
+# BERT prepared-cache / BSGS public compatibility
+
+**All74 authentic public dense matrices were audited.** Their exact chained-key union is `{1,32,64,61760,64064,64768}`. The BSGS graph requires62 keys and unchanged refresh106; their118-key union is covered by the completed actual130-key store, with no missing keys. The12 unused old head-routing keys remain retained. No key arrays were read or changed.
+
+The source-bound public audit authenticated stage2 NPY/tensor hashes and original pinned-checkpoint offsets, with all74 public file hashes and the checkpoint digest checked before/after. It passed in2.437s, session25855 exit0/reaped,38 unchanged exact sources. No model forward, private inputs/references, ciphertexts, key payloads, JAX/Torch/Transformers or HE were used. Reports contain only shapes, hashes, diagonal support and public plans; no model arrays are archived.
+
+The separate final15 synthetic/public checks passed with39 proof sources (38audit plus external test driver). `measured/` is the successful audit; `tests/` is the separate test capsule. The first authentic audit is preserved under `history/actual-v1`: all74 checks completed but generated gate `.pyc` files changed an overly broad inventory, so it correctly reportedfalse/exited1. V2 uses explicit source names; no original runtime or gate bytes changed. Development syntax/extraction failures are also retained.
+
+`INTEGRATION.md` records the exact source/import seam and ownership/cleanup requirements. `integration_plan.json` contains the exact groups and NPY accounting. This is a public plan, not an implemented combined engine, prepared file-handler or encrypted full-model/ranked pass. The actual130-key store remains unchanged; a hypothetical118-key subset size is informational only. Existing prepared cache4GiB limits are logical entries, not process memory.
+
+The active217-source engine, frozen prepared251 candidate, BSGS v2 sources and live QK job were untouched. Root review is required before a combined source successor or any genuine run. Ordinary-group results were not used. Run `python verify.py` for offline checks, optionally `--current /tmp/bert-prepared-bsgs-compatibility-plan-20261103` for the current38-source check.

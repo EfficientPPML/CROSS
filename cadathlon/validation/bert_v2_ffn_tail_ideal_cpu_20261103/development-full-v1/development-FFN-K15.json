@@ -1,0 +1,117 @@
+{
+  "passed": true,
+  "scope": "Full-width actual-loop ideal FFN composition; no encrypted execution.",
+  "K": 15,
+  "tiles": 1,
+  "physical_slots_checked": 65536,
+  "actual_loop_vs_independent_polynomial_gate": 1e-08,
+  "max_abs_errors": {
+    "middle": 1.9539925233402755e-14,
+    "activated": 9.769962616701378e-15,
+    "dense": 3.552713678800501e-14,
+    "residual": 3.552713678800501e-14,
+    "output": 8.076872504148014e-15
+  },
+  "polynomial_vs_native_function_max_abs": 0.0002558604312156709,
+  "native_function_oracle": "Independent dense matmul/exact-erf GELU/exact LayerNorm; no new native-framework model run.",
+  "domain_observations": {
+    "gelu_input_min": -15.74750025138914,
+    "gelu_input_max": 7.932777672550925,
+    "mlp_variance_min": 1.3302137873858715,
+    "mlp_variance_max": 6.4712475495112,
+    "input_max_abs": 49.373714315343136,
+    "gelu_max_abs": 7.932739423527625
+  },
+  "gelu_padding_polynomial_at_zero": 1.4362408041090902e-05,
+  "original_positions": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14
+  ],
+  "identity_refresh_calls": 2,
+  "actual_primitive_counts": {
+    "rotate": 286,
+    "weighted_sum": 190,
+    "add": 164,
+    "multiply": 80
+  },
+  "public_plaintext_products": 7857,
+  "metadata": [
+    {
+      "actual_metadata": [
+        {
+          "stage": "input B128 refresh",
+          "level": 25,
+          "scale": 1.1467305003699406e+18
+        },
+        {
+          "stage": "intermediate dense",
+          "level": 24,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "GELU64",
+          "level": 10,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "GELU B16 refresh",
+          "level": 25,
+          "scale": 1.1467305003699404e+18
+        },
+        {
+          "stage": "output dense",
+          "level": 24,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "residual",
+          "level": 24,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "MLP normalization",
+          "level": 13,
+          "scale": 1.1467305003699405e+18
+        }
+      ],
+      "explicit_refresh_bounds": [
+        128.0,
+        16.0
+      ],
+      "original_positions": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14
+      ],
+      "range_verified": false,
+      "encrypted_error_verified": false
+    }
+  ],
+  "elapsed_s": 2.4775801460054936,
+  "encrypted_or_refresh_error_claim": false
+}

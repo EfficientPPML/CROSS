@@ -1,0 +1,110 @@
+"""Execute unchanged production method ASTs on payload stubs; metadata only, no HE."""
+from pathlib import Path
+import ast,copy,json,math,sys,types
+import numpy as np
+import pytest
+HERE=Path(__file__).resolve().parent;COMMON=HERE/'checkout/cadathlon/common'
+sys.path.insert(0,str(COMMON))
+import encrypted_scale_planning as plan
+AUDIT=json.loads((HERE/'actual_profile_audit.json').read_text())
+PROFILE=next(p for p in AUDIT['profiles'] if p['name']=='depth49_p60_d8')
+Q=PROFILE['q'];DELTA=PROFILE['canonical_scale']
+
+class Payload:
+    dtype=np.dtype('uint32')
+    def __init__(self,data=0.):self.data=np.asarray(data)
+    def devices(self):return {'fake-cpu'}
+    def astype(self,dtype):return self
+
+class Value:
+    modulus_dtype=np.uint32
+    def __init__(self,scale,level,*,data=0.):
+        self._ckks_scale=scale;self._ckks_nsd=1;self.level=level;self.moduli=Q[:2*(level+1)]
+        self.polynomial=Payload(data);self.ntt_ctx=None;self.num_moduli=len(self.moduli)
+        self.shape=(1,2,1,1,self.num_moduli)
+    def _clone_with_payload(self,payload,**changes):
+        result=copy.copy(self);result.polynomial=payload
+        for key,value in changes.items():setattr(result,key,value)
+        result.num_moduli=len(result.moduli);result.level=result.num_moduli//2-1;result.shape=(1,2,1,1,result.num_moduli)
+        return result
+
+def method(path,class_name,name):
+    root=ast.parse(path.read_text());cls=next(n for n in root.body if isinstance(n,ast.ClassDef) and n.name==class_name)
+    fn=next(n for n in cls.body if isinstance(n,ast.FunctionDef) and n.name==name)
+    namespace={'np':np,'math':math,'Polynomial':Value,'finite_field':types.SimpleNamespace(check_binary_ct_operands=lambda *a,**k:None)}
+    exec(compile(ast.Module(body=[fn],type_ignores=[]),str(path),'exec'),namespace)
+    return namespace[name]
+
+WEIGHTED=method(COMMON/'encrypted_polynomial.py','EncryptedPolynomialEvaluator','weighted_sum')
+PTCT=method(COMMON/'encrypted_primitives.py','CompiledPlaintextMultiply','multiply')
+RESCALE=method(COMMON/'encrypted_primitives.py','CompiledRescale','rescale')
+ADD=method(HERE/'checkout/jaxite_word/headd.py','_HEAddKernel','add')
+
+@pytest.fixture
+def executor(monkeypatch):
+    checks=[]
+    monkeypatch.setitem(sys.modules,'finite_field',types.SimpleNamespace(check_ct_operand=lambda *a,**k:checks.append(a)))
+    monkeypatch.setitem(sys.modules,'support',types.SimpleNamespace(require_secure_execution=lambda *a:None))
+    monkeypatch.setitem(sys.modules,'jax',types.SimpleNamespace(block_until_ready=lambda value:value))
+    cache=types.SimpleNamespace(batch=1,degree_layout=(1,1),ff_context_cls=object,
+        q_moduli_at_level=lambda level:Q[:2*(level+1)],num_q_at_level=lambda level:2*(level+1),
+        level_for_num_q=lambda count:count//2-1,get_sliced_ntt_q=lambda level:object())
+    ctx=types.SimpleNamespace(_param_cache=cache)
+    ptct=types.SimpleNamespace(ctx=ctx)
+    ptct.multiply_encoded=lambda value,plain,level:value._clone_with_payload(Payload(value.polynomial.data*plain.data))
+    ptct.multiply=types.MethodType(PTCT,ptct)
+    rescaler=types.SimpleNamespace(ctx=ctx)
+    def rescale(value,source,target):
+        signature=('rescale',source,target,tuple(value.shape),'fake-cpu')
+        rescaler.binding=(signature,lambda payload:Payload(payload.data))
+        return RESCALE(rescaler,value,source,target)
+    rescaler.rescale=rescale
+    class AddTable:
+        def __getitem__(self,level):
+            kernel=types.SimpleNamespace(ff_context_cls=object,num_moduli=2*(level+1),moduli=Q[:2*(level+1)],
+                _add_unchecked=lambda left,right:Payload(left.data+right.data))
+            return types.SimpleNamespace(add=types.MethodType(ADD,kernel))
+    ctx.he_add=AddTable()
+    evaluator=types.SimpleNamespace(scale=DELTA,ctx=ctx,_plaintext_multiply=ptct,_rescale=rescaler,
+        _public_slots=lambda value:np.asarray(value),_ensure_capacity=lambda values,levels:values,
+        _level=lambda value:value.level,_prepare=lambda level:None,_lower=lambda value,level:value,
+        _encode_public=lambda weight,level,scale:Value(scale,level,data=weight),_finish=lambda value:value)
+    return lambda scales,level,weights:WEIGHTED(evaluator,[Value(s,level,data=2.) for s in scales],weights),checks
+
+@pytest.mark.parametrize('level',(1,2,5,16,17,20,24,27,34,36,38,48,49))
+@pytest.mark.parametrize('factor',(1.,.73,1.17))
+def test_actual_compiled_metadata_matches_planner_operation_order(executor,level,factor):
+    evaluate,checks=executor;source=DELTA*factor;divisor=math.prod(Q[2*level:2*level+2])
+    result=evaluate([source],level,[.125]);expected=plan.weighted_sum_scale([source],DELTA,divisor)
+    assert result._ckks_scale==expected['output_scale']
+    assert result.level==level-1 and result._ckks_nsd==1
+    assert len(checks)==2 # Actual plaintext operand and rescale operand checks executed.
+    assert expected['terms'][0]['product_scale']==float(source)*float(expected['terms'][0]['plaintext_scale'])
+
+
+def test_real_public_profile_has_one_ulp_counterexample_to_forced_delta(executor):
+    evaluate,_=executor;result=evaluate([DELTA],38,[1.])
+    assert result._ckks_scale==math.nextafter(DELTA,0.) and result._ckks_scale!=DELTA
+    assert plan.weighted_sum_scale([DELTA],DELTA,plan.drop_divisor(Q,38))['output_scale']==result._ckks_scale
+
+
+def test_zero_first_weight_still_owns_scale_and_reordering_changes_it(executor):
+    evaluate,_=executor;level=38;divisor=plan.drop_divisor(Q,level)
+    candidates=[DELTA*x for x in (.73,.81,1.,1.17,1.31)]
+    pair=next((a,b) for a in candidates for b in candidates if
+        plan.affine_scale(a,DELTA,divisor)['output_scale']!=plan.affine_scale(b,DELTA,divisor)['output_scale'])
+    first=evaluate(pair,level,[0.,1.]);reversed_result=evaluate(pair[::-1],level,[1.,0.])
+    assert np.array_equal(first.polynomial.data,reversed_result.polynomial.data)
+    assert first._ckks_scale!=reversed_result._ckks_scale
+    assert first._ckks_scale==plan.weighted_sum_scale(pair,DELTA,divisor)['output_scale']
+    assert reversed_result._ckks_scale==plan.weighted_sum_scale(pair[::-1],DELTA,divisor)['output_scale']
+
+
+@pytest.mark.parametrize('level',(5,6,17,38,49))
+def test_affine_helper_and_dropped_pair_use_actual_ordered_prefix(executor,level):
+    evaluate,_=executor;source=DELTA*1.2097589777469568
+    divisor=plan.drop_divisor(Q,level)
+    assert divisor==Q[2*level]*Q[2*level+1]
+    result=evaluate([source],level,[1.])
+    assert result._ckks_scale==plan.affine_scale(source,DELTA,divisor)['output_scale']
+    assert plan.multiply_scale(source,DELTA,divisor)==(source*DELTA)/divisor

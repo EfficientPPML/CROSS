@@ -1,0 +1,34 @@
+{
+  "scope": "Isolated optional model-control wiring, import and lifecycle regression run.",
+  "passed": true,
+  "tests_passed": 216,
+  "skips": [
+    {
+      "name": "test_actual_secure_keyless_refresh_and_continuation",
+      "reason": "opt-in large secure bootstrap"
+    },
+    {
+      "name": "test_actual_deep_profile_bounded_refresh_and_continuation",
+      "reason": "opt-in deep-profile bounded bootstrap"
+    },
+    {
+      "name": "test_guards_fall_back[other_device]",
+      "reason": "requires two logical CPU devices; run with --xla_force_host_platform_device_count=2"
+    }
+  ],
+  "pytest_seconds": 66.799,
+  "source_count": 344,
+  "source_files_unchanged": true,
+  "archive_sha256": "e213225ca90c5b52294e1c85f4d9e762e8858d8955d017696b9340c23943614d",
+  "patch_sha256": "a911508d7355f27fdc8fa2c643d3ae686451b5b443db1a03c797fa39807f1409",
+  "patch_applies_after": [
+    "cadathlon/validation/combined_runtime_candidate_cpu_20261103/combined_runtime.patch",
+    "cadathlon/validation/hemul_scoped_ntt_cpu_20261103/hemul_scoped_ntt_followup.patch",
+    "cadathlon/validation/guarded_dispatch_policy_cpu_20261103/candidate.patch"
+  ],
+  "bootstrap_and_existing_adapters_unchanged": true,
+  "ring_profile_unchanged": true,
+  "full_model_evaluated": false,
+  "accelerator_evaluated": false,
+  "review": "Security agent read-only review found no blocker; no reviewer edits."
+}

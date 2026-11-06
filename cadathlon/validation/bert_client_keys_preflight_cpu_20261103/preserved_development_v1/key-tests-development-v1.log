@@ -1,0 +1,80 @@
+..FF..............................                                       [100%]
+=================================== FAILURES ===================================
+__________ test_actual_security_predicates_without_backend_or_keygen ___________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7371f113f950>
+
+    def test_actual_security_predicates_without_backend_or_keygen(monkeypatch):
+        import jax
+        import jax._src.xla_bridge as xb
+        def forbidden(*a,**kw):raise AssertionError('no backend/key generation authorized')
+        monkeypatch.setattr(xb,'backends',forbidden)
+>       from jaxite_word import he_params
+
+/tmp/bert-full-model-file-stages-20261103/test_client_keys.py:33: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+CROSS/jaxite_word/he_params.py:33: in <module>
+    import bconv
+CROSS/jaxite_word/bconv.py:12: in <module>
+    import util
+CROSS/jaxite_word/util.py:171: in <module>
+    BYTE_SHIFTS = jnp.arange(NUM_BYTES, dtype=jnp.uint32) * 8
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+miniconda3/envs/jaxite/lib/python3.13/site-packages/jax/_src/numpy/lax_numpy.py:5945: in arange
+    return _arange(start, stop=stop, step=step, dtype=dtype,
+miniconda3/envs/jaxite/lib/python3.13/site-packages/jax/_src/numpy/lax_numpy.py:6009: in _arange
+    return lax.broadcasted_iota(dtype, (size,), 0, out_sharding=out_sharding)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+miniconda3/envs/jaxite/lib/python3.13/site-packages/jax/_src/lax/lax.py:3751: in broadcasted_iota
+    return iota_p.bind(dtype=dtype, shape=shape,
+miniconda3/envs/jaxite/lib/python3.13/site-packages/jax/_src/core.py:732: in bind
+    return self.bind_with_trace(prev_trace, args, avals, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+miniconda3/envs/jaxite/lib/python3.13/site-packages/jax/_src/core.py:740: in bind_with_trace
+    return trace.process_primitive(self, args, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+miniconda3/envs/jaxite/lib/python3.13/site-packages/jax/_src/core.py:1321: in process_primitive
+    return primitive.impl(*args, **params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+miniconda3/envs/jaxite/lib/python3.13/site-packages/jax/_src/dispatch.py:89: in apply_primitive
+    outs = fun(*args)
+           ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+a = (), kw = {}
+
+>   def forbidden(*a,**kw):raise AssertionError('no backend/key generation authorized')
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: no backend/key generation authorized
+E   --------------------
+E   For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.
+
+/tmp/bert-full-model-file-stages-20261103/test_client_keys.py:31: AssertionError
+________ test_mocked_complete_call_order_files_permissions_and_context _________
+
+mocked = namespace(public=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-249/test_mocked_complete_call_orde0/public_keys'), p...ution': 'uniform_ternary'}, rotations=(1, 2, 3), fake=<test_client_keys.mocked.<locals>.Fake object at 0x7371f1f48c20>)
+
+    def test_mocked_complete_call_order_files_permissions_and_context(mocked):
+        m=mocked;r=generate(m)
+        assert m.events[:4]==['security','crypto','pke','relin']
+        assert [e for e in m.events if isinstance(e,tuple)]==[('rotation',i) for i in m.rotations]
+        assert m.events[-1]=='security'
+        assert stat.S_IMODE(m.private.stat().st_mode)==0o700
+        assert {p.name for p in m.private.iterdir()}=={'secret.npy','private_manifest.json'}
+        assert all(stat.S_IMODE(p.stat().st_mode)==0o600 for p in m.private.iterdir())
+        public=r['public_manifest'];body={k:v for k,v in public.items() if k!='context_id'}
+        assert public['context_id']==keys.digest(body)
+        assert r['private_manifest']['public_manifest_sha256']==hashlib.sha256(keys.canonical(public)).hexdigest()
+>       assert 'secret' not in json.dumps(public) and len(public['arrays'])==9
+E       assert ('secret' not in '{"schema": ...545d0552ed"}'
+E         
+E         'secret' is contained here:
+E         ?                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        ...
+E         
+E         ...Full output truncated, use '-vv' to show)
+
+/tmp/bert-full-model-file-stages-20261103/test_client_keys.py:79: AssertionError
+=========================== short test summary info ============================
+FAILED ../../tmp/bert-full-model-file-stages-20261103/test_client_keys.py::test_actual_security_predicates_without_backend_or_keygen
+FAILED ../../tmp/bert-full-model-file-stages-20261103/test_client_keys.py::test_mocked_complete_call_order_files_permissions_and_context
+2 failed, 32 passed in 1.01s

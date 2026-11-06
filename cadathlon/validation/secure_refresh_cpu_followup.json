@@ -1,0 +1,293 @@
+{
+  "scope": "Experimental CPU evidence. Insecure tiny-ring arithmetic fixtures are explicitly separate from secure primitive tests; no full transformer or secure large-range bootstrap completion claim.",
+  "compiled_bootstrap_arithmetic": {
+    "passed": true,
+    "scope": "Insecure N256 arithmetic parity only; not a deployment or security proof.",
+    "degree": 256,
+    "depth": 22,
+    "dnum": 8,
+    "period": 4,
+    "backend": "cpu",
+    "raw_ciphertext_bit_exact": true,
+    "scale_and_nsd_exact": true,
+    "eager_seconds": 255.98420634000104,
+    "optimized_seconds": [
+      94.20321339200018,
+      73.68795667499944
+    ],
+    "compile_counts": [
+      [
+        5,
+        13,
+        19,
+        7
+      ],
+      [
+        5,
+        13,
+        19,
+        7
+      ]
+    ]
+  },
+  "secure_primitive_tests": {
+    "degree": 4096,
+    "backend": "cpu",
+    "keyless_server": true,
+    "source_test": "../tests/test_encrypted_primitives.py",
+    "checks": [
+      "exact core-facade payload and metadata parity for rescale, raw/public plaintext multiply, and relinearization",
+      "batches1/2 and nsd1/2",
+      "reusable compiled code with public-control arrays collected after cleanup",
+      "reject malformed levels, operands, noise sigma and secret distribution"
+    ]
+  },
+  "secure_scaling_only": {
+    "passed": true,
+    "backend": "cpu",
+    "degree": 16384,
+    "records": [
+      {
+        "public_bound": 16.0,
+        "input_amplitude": 14.0,
+        "max_abs_error": 3.2989122544790916e-10,
+        "input_level": 2,
+        "level_at_isolated_bootstrap": 1,
+        "output_level": 0
+      },
+      {
+        "public_bound": 0.35,
+        "input_amplitude": 0.3,
+        "max_abs_error": 2.1378071535238519e-10,
+        "input_level": 2,
+        "level_at_isolated_bootstrap": 1,
+        "output_level": 0
+      }
+    ],
+    "scope": "Actual 128-bit-secure plaintext multiply/rescale and inverse scaling only; bootstrap isolated as identity. Does not establish large-range refreshed accuracy."
+  },
+  "secure_combined_normalization_only": {
+    "passed": true,
+    "scope": "Actual secure projection/bound restoration/scale normalization only; no bootstrap invoked.",
+    "degree": 16384,
+    "scale_bits": 50,
+    "public_bound": 16.0,
+    "input_level": 2,
+    "separate_output_level": 0,
+    "combined_output_level": 1,
+    "combined_nsd": 1,
+    "separate_max_abs_error": 4.3511860781109135e-11,
+    "combined_max_abs_error": 4.037659095956769e-11,
+    "square_max_abs_error": 1.1282281775493175e-09
+  },
+  "tiny_projection_diagnostic": {
+    "scope": "INSECURE N256 numerical/control-flow fixture only; not actual ring security or deep model validation.",
+    "result": {
+      "meta_precision": 10,
+      "max_abs_error": 1.8643608362012287e-05,
+      "max_relative_error": 3.6503007902081005e-06,
+      "square_max_abs_error": 0.0005220208517187075,
+      "output_level": 3,
+      "elapsed_seconds": 193.18962885700057,
+      "projected_max_abs_error": 1.3288157241220233e-08,
+      "projected_square_max_abs_error": 3.23684730574314e-07,
+      "projected_output_level": 2
+    },
+    "bootstrap_diagnostics": [
+      {
+        "kind": "bootstrap",
+        "samples": [
+          [
+            -0.8750000000000002,
+            -0.29166666666666663,
+            0.29166666666666663,
+            0.8749999999999989
+          ],
+          [
+            -0.8750001324964679,
+            -0.2916674262704432,
+            0.29166754508637366,
+            0.8750002863395512
+          ]
+        ],
+        "scales": [
+          7.205044781079553e+16,
+          5.200805819492423e+33
+        ],
+        "levels": [
+          1,
+          6
+        ],
+        "bootstrap_max_error": 1.6868734923347617e-06,
+        "period_means": [
+          [
+            -0.8750000000000003,
+            -0.2916666666666666,
+            0.29166666666666674,
+            0.8749999999999998
+          ],
+          [
+            -0.8750004168949157,
+            -0.29166724628231244,
+            0.2916674016138353,
+            0.8750002803210234
+          ]
+        ],
+        "max_alias_deviation": [
+          2.886579864025407e-15,
+          1.165752077314508e-06
+        ]
+      },
+      {
+        "kind": "bootstrap",
+        "samples": [
+          [
+            -0.00013567638246290525,
+            -0.00077783426713419,
+            0.0008995017816154726,
+            0.0002932117014473552
+          ],
+          [
+            -0.00042720117311328406,
+            -0.0005937914586399336,
+            0.000753320920724161,
+            0.00028623580951289256
+          ]
+        ],
+        "scales": [
+          7.205044781079552e+16,
+          5.200805819492423e+33
+        ],
+        "levels": [
+          1,
+          6
+        ],
+        "bootstrap_max_error": 0.001193190940584994,
+        "period_means": [
+          [
+            -0.00042690039337072203,
+            -0.000593526421486663,
+            0.0007525859006766896,
+            0.00028704872772753403
+          ],
+          [
+            -0.0004271560068830212,
+            -0.0005938760707877978,
+            0.0007534363438081481,
+            0.0002863088804785043
+          ]
+        ],
+        "max_alias_deviation": [
+          0.0011937301281471472,
+          1.285193580447203e-06
+        ]
+      }
+    ],
+    "interpretation": "The second sparse bootstrap averages the nonperiodic correction error across aliases; real periodic output projection removes the remaining alias component."
+  },
+  "tiny_integrated_followup": {
+    "scope": "INSECURE N256 numerical/control-flow fixture only; not actual ring security or deep model validation.",
+    "degree": 256,
+    "depth": 24,
+    "backend": "cpu",
+    "records": [
+      {
+        "meta_precision": null,
+        "max_abs_error": 1.7190541557354777e-05,
+        "max_relative_error": 3.6836874765760234e-06,
+        "square_max_abs_error": 0.00016044476780763262,
+        "output_level": 4,
+        "elapsed_seconds": 115.66132275000018
+      },
+      {
+        "meta_precision": 10,
+        "max_abs_error": 1.0811575634761539e-08,
+        "max_relative_error": 2.2294145577258664e-09,
+        "square_max_abs_error": 3.027241461950325e-07,
+        "output_level": 4,
+        "elapsed_seconds": 176.7887036379998
+      }
+    ]
+  },
+  "source_provenance": {
+    "prototype_scope": "The compiler and normalization development probes used isolated /tmp modules before repository integration. Their timings are CPU component observations, not final-source TPU measurements.",
+    "integrated_scope": "The integrated tiny test used repository refresh/linear helpers and checkpoint cleanup. The later constructor change enabling the already-tested compiled ciphertext multiplier for square continuation was not loaded by this tiny run.",
+    "secure_large_probe": "Completed isolated N65536/depth24 single-pass CPU snapshot; all captured source hashes unchanged; failed numerical gate. The raw artifact preserves the original snapshot hashes."
+  },
+  "not_established": [
+    "Deep BERT/Qwen error accumulation through repeated refresh.",
+    "TPU speedup, memory peaks or a five-minute transformer schedule."
+  ],
+  "secure_large_single_pass_cpu": {
+    "passed": false,
+    "exit_code": 1,
+    "process_reaped": true,
+    "backend": "cpu",
+    "scope": "Genuine secure older single-pass range-preconditioned refresh without meta correction or periodic output projection; not the current combined implementation.",
+    "profile": {
+      "degree": 65536,
+      "depth": 24,
+      "period": 4,
+      "dnum": 8,
+      "scale_bits": 56
+    },
+    "amplitude": 14.0,
+    "public_bound": 16.0,
+    "meta_precision": null,
+    "actual_output_level": 3,
+    "absolute_error_gate": 0.001,
+    "refresh_max_abs_error": 0.009178703322014314,
+    "refresh_max_relative_error": 0.0018853032814185285,
+    "square_max_abs_error": 0.2569199096107013,
+    "square_max_relative_error": 0.0037718567010674893,
+    "component_seconds": 6175.4922014740005,
+    "timing_scope": "component timing through client validation; excludes final cleanup and process startup",
+    "source_hashes_unchanged": true,
+    "raw_result": "secure_refresh_cpu_large_single_raw.json",
+    "raw_log": "secure_refresh_cpu_large_single.log",
+    "interpretation": "Public range scaling alone did not meet the unchanged absolute-error gate. The square was evaluated above base level, so this is not terminal message-capacity wrap.",
+    "source_archive": "secure_refresh_cpu_large_single_sources.tar.gz",
+    "source_archive_sha256": "603d18a04f2a439c0fa9240a0ddbd7d76f1d07da8bd43bc03202957019c5bbaf"
+  },
+  "bulk_array_encoder_candidate": {
+    "passed": true,
+    "exit_code": 0,
+    "process_reaped": true,
+    "backend": "cpu",
+    "cases": 41,
+    "scope": "Exact private encoder residue and array-transfer parity; no encrypted bootstrap or TPU runtime claim",
+    "large_profile": {
+      "degree": 131072,
+      "num_q": 100,
+      "num_p": 24,
+      "slots": 128
+    },
+    "conversion_only_seconds": {
+      "nested_list_to_jax": 4.1184312170007615,
+      "ndarray_to_jax": 0.009850269998423755
+    },
+    "measurement_scope": "One CPU conversion of identical precomputed residues; excludes plaintext encoding and any encrypted bootstrap or TPU execution.",
+    "source_hashes_unchanged": true,
+    "raw_result": "secure_refresh_bulk_array_cpu.json",
+    "raw_log": "secure_refresh_bulk_array_cpu.log",
+    "source_archive": "secure_refresh_bulk_array_cpu_sources.tar.gz",
+    "source_archive_sha256": "810552653735784355a688ecca36f7e03b94418897e0ce705b326b0b5981a33f",
+    "separate_experiments": "Uniform-scalar algebra and tensor-stage fusion are not part of this candidate.",
+    "post_run_integration": {
+      "files": [
+        "jaxite_word/ckks_ctx.py",
+        "jaxite_word/bootstrapping.py",
+        "jaxite_word/codec_preparation_test.py"
+      ],
+      "focused_test_result": "108 passed in1.06s",
+      "source_hashes": {
+        "jaxite_word/ckks_ctx.py": "1c457c3be4ce53215636141c65b5042ff7cb570d8627cd42053ad595c9ba43fa",
+        "jaxite_word/bootstrapping.py": "e44f748f5ef51ec68be0f224f4d8ff1068fe6c449f09c04532900a3ac4fcfc49",
+        "jaxite_word/codec_preparation_test.py": "18d0692ffe2d09d33973d14c64dba61147cbc5ea0f5269640bdee2d559a6c1d3"
+      },
+      "whitespace_check": "passed",
+      "runtime_scope": "Core array-return interface and bootstrap callers only; no scalar/tensor algebra change."
+    }
+  },
+  "separate_secure_tpu_evidence": "secure_refresh_tpu_deep_validation.json"
+}

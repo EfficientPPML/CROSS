@@ -1,0 +1,46 @@
+--- held40/model_entry.py
++++ successor/model_entry.py
+@@ -126,6 +126,15 @@
+         if name.split('.')[0]in FORBIDDEN or(initial and name.split('.')[0]=='numpy'):
+             raise ValueError('preloaded/unselected backend or NumPy')
+         if initial and name in local and name!='__main__': raise ValueError('preloaded local helper')
++        if name=='__main__':
++            # The selected CLI is a direct absolute script, not runpy/-m. Its
++            # missing spec is an exact initial/postcondition, not permission
++            # to ignore an unexpected outside-root spec origin.
++            value=getattr(module,'__file__',None)
++            if (not isinstance(value,(str,os.PathLike)) or Path(value)!=ROOT/'model_entry.py'
++                    or Path(value).resolve()!=ROOT/'model_entry.py'
++                    or getattr(module,'__spec__',None)is not None):
++                raise ValueError('exact direct-CLI main file/spec origin required')
+         values=(getattr(module,'__file__',None),getattr(getattr(module,'__spec__',None),'origin',None))
+         found=[]
+         for value in values:
+@@ -133,13 +142,15 @@
+             if not isinstance(value,(str,os.PathLike)):
+                 if name in local or name=='__main__': raise ValueError('invalid critical module origin')
+                 continue
+-            p=Path(value).resolve()
++            raw_path=Path(value);p=raw_path.resolve()
++            if not initial and name in local and raw_path!=ROOT/(name+'.py'):
++                raise ValueError('canonical helper origin alias differs')
+             if p==ROOT or ROOT in p.parents:
+                 expected_name='model_entry.py'if name=='__main__'else name+'.py'
+                 if expected_name not in expected or p!=ROOT/expected_name:
+                     raise ValueError('unknown local module alias or origin')
+             found.append(p)
+-        if not initial and name in local and name!='model_entry':
++        if not initial and name in local:
+             if len(found)!=2 or any(p!=ROOT/(name+'.py') for p in found): raise ValueError('selected module origins differ')
+ 
+ 
+--- held40/model_validation_process.py
++++ successor/model_validation_process.py
+@@ -354,6 +354,7 @@
+             try: publication.write('report.json'if success else'failure.json',canonical(report))
+             finally: terminal.attempt('final original publication close',publication.close)
+         terminal.shielded(cleanup_signals,publish)
++        terminal.attempt('post-publication sticky audit veto',audit.check)
+         terminal.attempt('original open-attribution restoration',audit.close)
+         terminal.raise_if_failed()
+         if not success: raise RuntimeError('readonly model validation incomplete')

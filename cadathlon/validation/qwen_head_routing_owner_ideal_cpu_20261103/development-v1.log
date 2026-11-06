@@ -1,0 +1,65 @@
+.....sss........FF....................                                   [100%]
+=================================== FAILURES ===================================
+_____________ test_rope_original_positions_halfsplit[positions3-8] _____________
+
+heads = 8, positions = (0, 2, 4, 6, 8, 10, ...)
+
+    @pytest.mark.parametrize('heads',[8,16])
+    @pytest.mark.parametrize('positions',[(0,),(0,3,7,21),tuple(range(16)),tuple(range(0,64,2))])
+    def test_rope_original_positions_halfsplit(heads,positions):
+        o=owner(positions)
+        for t in range(o.layout.tile_count):
+            n=o.layout.tile_rows(t);x=tile(n,heads*128,seed=t+heads,scale=math.nextafter(DELTA,math.inf))
+            out=o.rope(x,tile=t,heads=heads)
+            expected=expected_rope(x.polynomial.reshape(16,4096),o.layout.tile_positions(t),heads)
+>           np.testing.assert_allclose(out.polynomial,expected.ravel(),rtol=0,atol=3e-15)
+E           AssertionError: 
+E           Not equal to tolerance rtol=0, atol=3e-15
+E           
+E           Mismatched elements: 2 / 65536 (0.00305%)
+E           Mismatch at indices:
+E            [53573]: -0.4205916042549944 (ACTUAL), -0.420591604254998 (DESIRED)
+E            [57413]: -0.4562119576348621 (ACTUAL), -0.4562119576348582 (DESIRED)
+E           Max absolute difference among violations: 3.88578059e-15
+E           Max relative difference among violations: 8.51748956e-15
+E            ACTUAL: array([-1.738266, -1.336643, -1.361107, ...,  0.      ,  0.      ,
+E                   0.      ], shape=(65536,))
+E            DESIRED: array([-1.738266, -1.336643, -1.361107, ...,  0.      ,  0.      ,
+E                   0.      ], shape=(65536,))
+
+test_head_routing.py:84: AssertionError
+____________ test_rope_original_positions_halfsplit[positions3-16] _____________
+
+heads = 16, positions = (0, 2, 4, 6, 8, 10, ...)
+
+    @pytest.mark.parametrize('heads',[8,16])
+    @pytest.mark.parametrize('positions',[(0,),(0,3,7,21),tuple(range(16)),tuple(range(0,64,2))])
+    def test_rope_original_positions_halfsplit(heads,positions):
+        o=owner(positions)
+        for t in range(o.layout.tile_count):
+            n=o.layout.tile_rows(t);x=tile(n,heads*128,seed=t+heads,scale=math.nextafter(DELTA,math.inf))
+            out=o.rope(x,tile=t,heads=heads)
+            expected=expected_rope(x.polynomial.reshape(16,4096),o.layout.tile_positions(t),heads)
+>           np.testing.assert_allclose(out.polynomial,expected.ravel(),rtol=0,atol=3e-15)
+E           AssertionError: 
+E           Not equal to tolerance rtol=0, atol=3e-15
+E           
+E           Mismatched elements: 9 / 65536 (0.0137%)
+E           First 5 mismatches are at indices:
+E            [41989]: 1.1180107043805048 (ACTUAL), 1.1180107043805094 (DESIRED)
+E            [42757]: 2.488924116843623 (ACTUAL), 2.4889241168436196 (DESIRED)
+E            [42821]: 2.2137992259637316 (ACTUAL), 2.213799225963736 (DESIRED)
+E            [53445]: -9.179554410021495e-05 (ACTUAL), -9.17955441044338e-05 (DESIRED)
+E            [57861]: -1.5145589172602085 (ACTUAL), -1.5145589172602132 (DESIRED)
+E           Max absolute difference among violations: 4.6629367e-15
+E           Max relative difference among violations: 4.59591752e-11
+E            ACTUAL: array([-0.594724,  0.630783,  1.039354, ...,  0.      ,  0.      ,
+E                   0.      ], shape=(65536,))
+E            DESIRED: array([-0.594724,  0.630783,  1.039354, ...,  0.      ,  0.      ,
+E                   0.      ], shape=(65536,))
+
+test_head_routing.py:84: AssertionError
+=========================== short test summary info ============================
+FAILED test_head_routing.py::test_rope_original_positions_halfsplit[positions3-8]
+FAILED test_head_routing.py::test_rope_original_positions_halfsplit[positions3-16]
+2 failed, 33 passed, 3 skipped in 2.36s

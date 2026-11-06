@@ -1,0 +1,68 @@
+..FF                                                                     [100%]
+=================================== FAILURES ===================================
+_______ test_zero_exit_is_raised_after_termination_scope[True-worker.py] _______
+
+name = 'worker.py', restore_failure = True
+
+    @pytest.mark.parametrize('name',['worker.py','collect.py'])
+    @pytest.mark.parametrize('restore_failure',[False,True])
+    def test_zero_exit_is_raised_after_termination_scope(name,restore_failure):
+        path=Path(__file__).parent/name
+        node=ast.parse(path.read_text()).body[-1]
+        assert isinstance(node,ast.If)
+        failure=OSError('termination restoration failed')
+        @contextmanager
+        def scope():
+            primary=None
+            try:yield
+            except BaseException as error:primary=error
+            if primary is not None:raise primary
+            if restore_failure:raise failure
+        class Parser:
+            def add_argument(self,*args,**kwargs):pass
+            def parse_args(self):return SimpleNamespace()
+        namespace=dict(__name__='__main__',Path=Path,argparse=SimpleNamespace(ArgumentParser=Parser),
+            termination_signals=scope,run=lambda **kwargs:0 if name=='worker.py' else {'passed':True})
+        caught=None
+        try:exec(compile(ast.Module(body=[node],type_ignores=[]),str(path),'exec'),namespace)
+        except BaseException as error:caught=error
+>       if restore_failure:assert caught is failure
+                           ^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert SystemExit(0) is OSError('termination restoration failed')
+
+test_terminal_main.py:34: AssertionError
+______ test_zero_exit_is_raised_after_termination_scope[True-collect.py] _______
+
+name = 'collect.py', restore_failure = True
+
+    @pytest.mark.parametrize('name',['worker.py','collect.py'])
+    @pytest.mark.parametrize('restore_failure',[False,True])
+    def test_zero_exit_is_raised_after_termination_scope(name,restore_failure):
+        path=Path(__file__).parent/name
+        node=ast.parse(path.read_text()).body[-1]
+        assert isinstance(node,ast.If)
+        failure=OSError('termination restoration failed')
+        @contextmanager
+        def scope():
+            primary=None
+            try:yield
+            except BaseException as error:primary=error
+            if primary is not None:raise primary
+            if restore_failure:raise failure
+        class Parser:
+            def add_argument(self,*args,**kwargs):pass
+            def parse_args(self):return SimpleNamespace()
+        namespace=dict(__name__='__main__',Path=Path,argparse=SimpleNamespace(ArgumentParser=Parser),
+            termination_signals=scope,run=lambda **kwargs:0 if name=='worker.py' else {'passed':True})
+        caught=None
+        try:exec(compile(ast.Module(body=[node],type_ignores=[]),str(path),'exec'),namespace)
+        except BaseException as error:caught=error
+>       if restore_failure:assert caught is failure
+                           ^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert SystemExit(0) is OSError('termination restoration failed')
+
+test_terminal_main.py:34: AssertionError
+=========================== short test summary info ============================
+FAILED test_terminal_main.py::test_zero_exit_is_raised_after_termination_scope[True-worker.py]
+FAILED test_terminal_main.py::test_zero_exit_is_raised_after_termination_scope[True-collect.py]
+2 failed, 2 passed in 0.03s

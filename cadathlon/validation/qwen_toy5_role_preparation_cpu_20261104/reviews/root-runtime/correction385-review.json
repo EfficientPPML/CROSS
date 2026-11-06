@@ -1,0 +1,43 @@
+{
+  "actual_ready": false,
+  "candidate_imports": false,
+  "current_archive_exact": true,
+  "exact_declared_delta": {
+    "added": [
+      "owner_correction_history.json",
+      "provenance/owner_correction_ciphertext.patch",
+      "provenance/owner_correction_setup.patch"
+    ],
+    "changed": [
+      "RESOURCE_STATUS.json",
+      "SOURCE_DESIGN.md",
+      "q5_actual_process.py",
+      "q5_ciphertext_owner.py"
+    ]
+  },
+  "execution_authorized": false,
+  "finding": {
+    "author_acknowledged": true,
+    "detail": "The setup owner captures original NTT/ff objects, but does not validate original value-to-NTT/NTT-to-ff and table/control edges before rescanning at close. Replacing an ff/table field inside an original context can be accepted into the cleanup inventory and its foreign array wait called. The original ctx attachment guard alone does not catch it.",
+    "id": "setup-original-graph-binding",
+    "path": "q5_actual_process.py",
+    "required_change": "Freeze original returned/attached NTT and ff/table/control graph at first observation. Validate before later traversal; on change reject and still attempt only retained original array barriers. Preserve385 and use separately pinned successor."
+  },
+  "parent250_core34_common12_unchanged": true,
+  "parent382_current_exact": true,
+  "passed_within_scope": false,
+  "process_outside_setup_owner_ast_unchanged": true,
+  "schema": "qwen-toy5-owner-correction385-root-source-review-v1",
+  "scope": "Static source/archive/AST checks only. No genuine backend, device, capacity, numerical or actual authority evidence.",
+  "source_archive_sha256": "794dd6e32f5d42051fb44b9df4feff79bec233c5b393ea2695083a807a9c38e7",
+  "source_count": 385,
+  "source_manifest_sha256": "ddefc197d5323a064203d15a08c81c9a4c757dede8c77396e6586eed495346b0",
+  "tests": false,
+  "utc": "2026-11-04T22:20:50.697739+00:00",
+  "verified_corrections": [
+    "InputOwner weak tombstone check now precedes removed registry lookup; duplicate CT branch removed.",
+    "CiphertextOwner captures original returned payload and moduli_array before validation/security and includes them in attempted cleanup barriers.",
+    "Setup owner captures returned or attached NTT/ff objects and original array wait callbacks, including attachment before encrypt raises; original context-attached NTT identity is checked.",
+    "Resource note explicitly accounts for unchanged eager extra Barrett construction and unobservable constructor locals."
+  ]
+}

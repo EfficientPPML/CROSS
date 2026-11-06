@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="3" time="0.082" timestamp="2026-11-03T16:37:28.957007+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_transport_lifecycle" name="test_read_primary_cancellation_survives_descriptor_close_error" time="0.002"><failure message="OSError: later descriptor close failure">args = (13, 'rb'), kwargs = {'closefd': False}
+
+    @contextmanager
+    def read_failure(*args,**kwargs):
+&gt;       raise KeyboardInterrupt('primary read interruption')
+E       KeyboardInterrupt: primary read interruption
+
+/tmp/bert-bsgs-routing-he-proof-20261103/review_component/test_transport_lifecycle.py:35: KeyboardInterrupt
+
+During handling of the above exception, another exception occurred:
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-387/test_read_primary_cancellation0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7edbab80ac40&gt;
+
+    def test_read_primary_cancellation_survives_descriptor_close_error(tmp_path,monkeypatch):
+        path=tmp_path/'value';path.write_bytes(b'value');real_close=os.close
+        @contextmanager
+        def read_failure(*args,**kwargs):
+            raise KeyboardInterrupt('primary read interruption')
+            yield
+        def close_failure(fd):
+            real_close(fd);raise OSError('later descriptor close failure')
+        with monkeypatch.context() as m:
+            m.setattr(os,'fdopen',read_failure);m.setattr(os,'close',close_failure)
+            with pytest.raises(KeyboardInterrupt,match='primary read'):
+&gt;               transport._read_regular(path,64)
+
+/tmp/bert-bsgs-routing-he-proof-20261103/review_component/test_transport_lifecycle.py:42: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/tmp/bert-bsgs-routing-he-proof-20261103/review_component/component_transport.py:62: in _read_regular
+    finally: os.close(descriptor)
+             ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fd = 13
+
+    def close_failure(fd):
+&gt;       real_close(fd);raise OSError('later descriptor close failure')
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: later descriptor close failure
+
+/tmp/bert-bsgs-routing-he-proof-20261103/review_component/test_transport_lifecycle.py:38: OSError</failure></testcase><testcase classname="test_transport_lifecycle" name="test_writer_fdopen_handoff_failure_does_not_leak_fd" time="0.006"><failure message="AssertionError: temporary descriptor remained open after failed handoff&#10;assert not True">tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-387/test_writer_fdopen_handoff_fai0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7edbab81f410&gt;
+tiny = &lt;test_transport_lifecycle.tiny.&lt;locals&gt;.Polynomial object at 0x7edbab947a10&gt;
+
+    def test_writer_fdopen_handoff_failure_does_not_leak_fd(tmp_path,monkeypatch,tiny):
+        original_open=os.open;original_fdopen=os.fdopen;owned=[]
+        def opened(path,*args,**kwargs):
+            fd=original_open(path,*args,**kwargs)
+            if path=='.transport.tmp':owned.append(fd)
+            return fd
+        def fail_handoff(fd,*args,**kwargs):
+            if args and args[0]=='wb':raise RuntimeError('fdopen before ownership transfer')
+            return original_fdopen(fd,*args,**kwargs)
+        with monkeypatch.context() as m:
+            m.setattr(os,'open',opened);m.setattr(os,'fdopen',fail_handoff)
+            with pytest.raises(RuntimeError,match='fdopen before'):
+                transport.save_ciphertext(tiny,tmp_path/'tile',contract={},role='request',tile_index=0)
+        assert len(owned)==1
+        try:
+            try:os.fstat(owned[0]);leaked=True
+            except OSError:leaked=False
+&gt;           assert not leaked,'temporary descriptor remained open after failed handoff'
+E           AssertionError: temporary descriptor remained open after failed handoff
+E           assert not True
+
+/tmp/bert-bsgs-routing-he-proof-20261103/review_component/test_transport_lifecycle.py:62: AssertionError</failure></testcase><testcase classname="test_transport_lifecycle" name="test_replacement_path_is_not_recursively_removed" time="0.001"><failure message="AssertionError: foreign replacement was recursively deleted&#10;assert False&#10; +  where False = exists()&#10; +    where exists = (PosixPath('/tmp/pytest-of-jianming_gatech/pytest-387/test_replacement_path_is_not_r0/tile') / 'foreign').exists">tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-387/test_replacement_path_is_not_r0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7edbaded9040&gt;
+tiny = &lt;test_transport_lifecycle.tiny.&lt;locals&gt;.Polynomial object at 0x7edbab710590&gt;
+
+    def test_replacement_path_is_not_recursively_removed(tmp_path,monkeypatch,tiny):
+        target=tmp_path/'tile';moved=tmp_path/'original';real_remove=transport.shutil.rmtree
+        def writer_failure(*args):raise RuntimeError('primary writer failure')
+        def replace_after_identity_check(path,*args,**kwargs):
+            path.rename(moved);path.mkdir();(path/'foreign').write_text('unowned replacement')
+            return real_remove(path,*args,**kwargs)
+        monkeypatch.setitem(sys.modules,'bundle_io',SimpleNamespace(save_bundle=writer_failure))
+        with monkeypatch.context() as m:
+            m.setattr(transport.shutil,'rmtree',replace_after_identity_check)
+            with pytest.raises(RuntimeError,match='primary writer'):
+                transport.save_ciphertext(tiny,target,contract={},role='request',tile_index=0)
+&gt;       assert (target/'foreign').exists(),'foreign replacement was recursively deleted'
+E       AssertionError: foreign replacement was recursively deleted
+E       assert False
+E        +  where False = exists()
+E        +    where exists = (PosixPath('/tmp/pytest-of-jianming_gatech/pytest-387/test_replacement_path_is_not_r0/tile') / 'foreign').exists
+
+/tmp/bert-bsgs-routing-he-proof-20261103/review_component/test_transport_lifecycle.py:78: AssertionError</failure></testcase></testsuite></testsuites>

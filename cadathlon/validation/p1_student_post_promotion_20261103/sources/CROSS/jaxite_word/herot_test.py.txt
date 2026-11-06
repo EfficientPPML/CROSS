@@ -1,0 +1,785 @@
+import functools
+import os
+from unittest import mock
+
+import jax
+import jax.numpy as jnp
+import util
+import herot
+import he_ops
+from typing import List
+import math
+from absl.testing import absltest
+from absl.testing import parameterized
+from polynomial import Polynomial
+
+import numpy as np
+
+try:
+  import pytest
+except ModuleNotFoundError:
+  pytestmark = []
+else:
+  pytestmark = [pytest.mark.correctness, pytest.mark.integration]
+
+
+jax.config.update("jax_enable_x64", True)
+
+def precompute_auto_map(n: int, k: int) -> List[int]:
+    """Python translation of nbtheory2.cpp PrecomputeAutoMap (lines 264-276).
+
+    Args:
+        n: ring dimension (assumed power of two).
+        k: automorphism index.
+
+    Returns:
+        A list `precomp` of length `n` where precomp[jrev] = idxrev as computed
+        by the C++ routine.
+    """
+    m = n << 1  # cyclOrder
+    logm = int(round(math.log2(m)))
+    logn = int(round(math.log2(n)))
+
+    precomp: List[int] = [0] * n
+    for j in range(n):
+        j_tmp = (j << 1) + 1
+        t = j_tmp * k
+        # ((t % m) >> 1) but written to mirror the C++ bit ops exactly
+        idx = (t - ((t >> logm) << logm)) >> 1
+
+        j_rev = util.bit_reverse(j, logn)
+        idx_rev = util.bit_reverse(idx, logn)
+        precomp[j_rev] = idx_rev
+
+    return precomp
+
+
+def find_automorphism_index_2n_complex(i: int, m: int) -> int:
+    """Python translation of nbtheory2.cpp FindAutomorphismIndex2nComplex (243-263).
+
+    Mirrors the C++ logic including early exits, power-of-two validation, and
+    modulus via bitmask for m being a power of two.
+    """
+    if i == 0:
+        return 1
+    if i == (m - 1):
+        return int(i)
+
+    if not util.is_power_of_two(m):
+        raise ValueError("m should be a power of two.")
+
+    # Conjugation automorphism generator
+    g0 = pow(5, -1, m) if i < 0 else 5
+    g = g0
+    i_unsigned = abs(i)
+    mask = m - 1
+    for _ in range(1, i_unsigned):
+        # Equivalent to (g * g0) % m since m is a power of two
+        g = (g * g0) & mask
+    return int(g)
+
+
+class HERotTest(parameterized.TestCase):
+  def setUp(self):
+    super().setUp()
+    self.key = jax.random.key(0)
+    self.rotate_in_ciphertext_str = """
+Element 0: 0: EVAL: [180625882 255757538 84913182 85761137 138047281 15652860 150921306 89208834 196695580 52048768 236648345 1252401 239725012 245842091 54788857 215291310] modulus: 268437409
+1: EVAL: [130689880 6162309 142011228 167455467 9074472 36856822 52596933 7853410 38429900 228487221 250544097 64851320 198030104 237769482 245148684 133248556] modulus: 268436801
+2: EVAL: [266290596 135620846 243037636 33605998 60949809 56071667 114138527 188759689 243854263 8270360 50367320 80178295 5950943 231121751 215838152 227928030] modulus: 268435361
+3: EVAL: [8253931 201125424 116893308 113469634 6922585 239305337 93185509 43784548 251572188 70608716 192800881 3454910 80407941 132506025 116024105 166812198] modulus: 268435649
+4: EVAL: [134396 88255 443983 262120 523697 150573 296558 359669 409433 224394 146162 158940 227987 403144 121892 275184] modulus: 524353
+Element 1: 0: EVAL: [241934143 74220813 171311043 251246638 44550863 208469992 257246734 181395759 204334167 134512532 166638742 157712398 8124846 129917349 173868119 259562076] modulus: 268437409
+1: EVAL: [145446316 104587044 227744427 233435110 219782288 174242786 161162726 202149800 217046358 582776 132098951 254808143 76294665 215876138 229354674 228488990] modulus: 268436801
+2: EVAL: [243297650 146330724 136136265 121888465 247398893 23384661 211433183 45497662 160878416 160480032 149155353 61374659 64033067 119243264 206724626 114523042] modulus: 268435361
+3: EVAL: [170480588 75554142 82495432 262075599 198632171 245985229 17234610 195502400 182384762 251541586 19127344 9856795 72716245 137833420 19317325 81683945] modulus: 268435649
+4: EVAL: [445764 506076 258912 427497 390948 28691 373784 128868 250816 431872 290063 357924 233555 352520 447038 459716] modulus: 524353
+"""
+
+    self.evalkey_a_vector_str = """
+Element 0: 0: EVAL: [202209945 211804446 94581833 28713827 87531073 195216318 237832195 170190252 264388485 241663854 202364830 67564525 223046588 28739482 12982157 18900176] modulus: 268437409
+1: EVAL: [13241356 158343088 29867896 176971265 1000905 11892376 211574968 223169718 159396548 114747160 110147101 150503383 201009134 11807807 94330647 70558538] modulus: 268436801
+2: EVAL: [193566759 225444641 156776276 242295279 64107804 80405183 209992321 91405577 24542917 5611955 228978682 119994458 66137251 49599477 64048072 9045490] modulus: 268435361
+3: EVAL: [111265993 50713567 51721222 56479597 256546983 224108394 91277783 251515421 223091206 224647254 46485408 96823477 199710082 135386995 117180076 220450265] modulus: 268435649
+4: EVAL: [363329 2019 150566 497851 475792 248066 15490 185398 408793 429772 205854 163412 453723 248537 8767 102023] modulus: 524353
+5: EVAL: [263200136 647408019 356047034 493815756 769781379 457308066 669750591 458577133 794964559 629160229 564686021 652169492 380639020 924541659 389732314 691481249] modulus: 1073741441
+6: EVAL: [591164934 558394185 719136799 312157506 63431892 278197786 792604604 274847232 772082539 607728943 973081847 483204933 1010644877 602034240 183063833 904233674] modulus: 1073740609
+Element 1: 0: EVAL: [18828539 233406859 197293577 99178167 93825900 17033956 96795747 250960712 180439608 222269021 256659753 223228743 159363688 235641345 242780137 3038475] modulus: 268437409
+1: EVAL: [98852796 183146248 129512116 185872217 5756386 21984904 1103082 254013284 161061369 49300542 222878606 54008108 240412792 153009142 28658706 82247182] modulus: 268436801
+2: EVAL: [221559614 125264555 46473575 253315151 122818492 26352876 9160000 42772022 161219588 40506755 141727641 47642317 150496125 197921731 206548994 248098774] modulus: 268435361
+3: EVAL: [84368146 95410131 64259861 25566287 13587494 109844187 27846911 85477957 232730497 63930701 264150883 75154852 44714579 159759304 241004147 47722947] modulus: 268435649
+4: EVAL: [109462 384233 517828 267016 345043 285050 136509 206624 318654 257500 114998 295594 369440 261268 206294 403146] modulus: 524353
+5: EVAL: [988673308 420642234 643898924 35046984 895109202 790967607 674385589 586855253 332305380 549399047 290300546 1026244857 232658053 939126316 26063979 908119412] modulus: 1073741441
+6: EVAL: [182401512 803289516 670433849 640408382 280571348 282923599 620995235 287387526 508681131 21803370 980934312 231874213 359565777 1035216170 614880072 308362890] modulus: 1073740609
+Element 2: 0: EVAL: [220666329 73227281 185963463 103087159 99516555 238279775 99867082 198930947 156751969 166593049 156406141 260544734 247118336 134461152 183027669 239154468] modulus: 268437409
+1: EVAL: [228359049 141754399 82783910 95941929 29859043 75610703 194173237 98418217 153322676 216303859 257107658 213534703 7772281 147380016 185576801 18847913] modulus: 268436801
+2: EVAL: [237221513 90473393 19803966 18468201 15445867 171705747 108826716 245458624 145537356 223281478 94359188 67195437 3717035 87172280 262222571 24409372] modulus: 268435361
+3: EVAL: [253539384 198618587 107118964 126646994 145890677 227218769 88582723 250728830 63272970 138489028 36570492 177489378 189633952 144589362 88701206 36141205] modulus: 268435649
+4: EVAL: [246752 179485 172907 285554 315568 336476 60327 207856 1184 11887 39027 229896 12605 104639 431803 198578] modulus: 524353
+5: EVAL: [609593977 45456753 422543043 269617072 684481359 397816584 198679594 695770327 346624725 932091455 464293041 346552642 797650812 953455244 356191022 871429983] modulus: 1073741441
+6: EVAL: [1022611876 406216557 634174446 435147561 504228930 189965700 376856664 778313092 992266499 773785099 686155930 825901223 828993916 148404797 496755861 146210298] modulus: 1073740609
+"""
+
+    self.evalkey_b_vector_str = """
+Element 0: 0: EVAL: [200165358 34243823 31502259 180748591 85372059 16548233 131840628 181794653 231202449 266762315 68823126 122853238 118141469 2420433 220286837 226068375] modulus: 268437409
+1: EVAL: [172171311 89535199 124020819 204464144 130473141 127868485 177705082 261388378 246647996 6120903 43473183 171865427 88520246 213802258 204943492 27699262] modulus: 268436801
+2: EVAL: [223635254 219139763 13896972 123413703 122010807 213078587 178666273 92246978 224035902 66269036 190693786 201082085 13623338 124846718 132955412 218975416] modulus: 268435361
+3: EVAL: [184051736 43566265 249955679 193298154 176364838 35868188 152600775 3823106 261666583 59399425 105484085 193535058 234687253 258022320 48811501 164358295] modulus: 268435649
+4: EVAL: [401110 360079 386990 293489 209401 123324 232778 15179 55292 97138 277470 82055 113819 343232 397632 82779] modulus: 524353
+5: EVAL: [267029896 721960809 918084524 607793661 671557687 41754622 789786401 1043346942 935440862 95909395 1037322532 622760684 728460878 683420660 53086411 599310260] modulus: 1073741441
+6: EVAL: [456863457 718293589 575384961 6776252 628053815 262025424 892230070 1034416429 118288408 652105245 62493395 427586412 158425949 798023753 754105150 327806256] modulus: 1073740609
+Element 1: 0: EVAL: [65234150 3138677 31016939 14535275 128577527 83502341 47556352 231937592 167051185 86218973 267439878 20740571 43045045 207200071 17194548 173642839] modulus: 268437409
+1: EVAL: [185254176 21535974 249314334 169258631 226514696 201267932 77393966 189348218 42994367 2117911 214969369 216831247 112835150 267143572 140786599 121216578] modulus: 268436801
+2: EVAL: [234868851 263481251 39829515 20938017 40786998 33353530 55561567 131263163 153314272 164234543 225450153 245414114 151885303 213824644 253972032 125520206] modulus: 268435361
+3: EVAL: [134734080 219279481 206278855 112358783 97631736 73310992 47676247 81041716 266865421 104292848 107010329 250530186 157683150 88850449 228453969 263909501] modulus: 268435649
+4: EVAL: [1509 305179 289559 437672 286550 120740 122732 442419 371118 464807 31988 470322 316344 393970 406921 318873] modulus: 524353
+5: EVAL: [36710719 300132016 911159930 652416779 282401199 186956092 894122877 64723966 470157791 608626844 128074755 190712300 79297220 555013457 555470735 221220370] modulus: 1073741441
+6: EVAL: [818206168 434032264 933780588 27197173 259872266 641021595 829543016 804279465 622605753 210750089 200515230 857778211 536794136 255418586 647579304 1025051938] modulus: 1073740609
+Element 2: 0: EVAL: [248478822 35632295 202259541 50083682 67866787 126119227 20835110 215805087 119164593 49788060 108115798 254678335 138019961 31662739 216472978 185132596] modulus: 268437409
+1: EVAL: [58402645 140235627 89569470 53086476 17056615 33888389 135841221 518603 17869561 235199341 257327021 140773713 48548196 238459268 134771710 253962053] modulus: 268436801
+2: EVAL: [167629322 11404742 173591732 87096540 1995947 14859629 102356358 139414199 129998122 135461113 113706202 182320451 143688634 97375882 183403806 62508946] modulus: 268435361
+3: EVAL: [31373897 173375930 12886232 219046913 253178164 212282144 222753909 168645348 75957259 126078784 267013947 103458404 62792872 145546066 181340169 264751556] modulus: 268435649
+4: EVAL: [469086 12656 161865 222584 345016 231446 471941 312213 425127 253849 501150 54073 233972 164236 80837 305253] modulus: 524353
+5: EVAL: [230768434 96911801 855576746 818769915 79788104 379824191 929091812 104665781 140800991 1040392210 586579628 179327915 426409138 825665868 127601259 337795527] modulus: 1073741441
+6: EVAL: [360655107 47462749 793816342 100572185 553388464 1014413439 559613230 575456774 561173720 32918692 779119328 138220239 448346413 1065875696 204862956 340028745] modulus: 1073740609
+"""
+    self.evalkey_b_vector_ref, self.evalkey_b_vector_moduli = util.parse_ciphertext_string(self.evalkey_b_vector_str)
+    self.evalkey_a_vector_ref, self.evalkey_a_vector_moduli = util.parse_ciphertext_string(self.evalkey_a_vector_str)
+
+    self.ks_precompute_ref_str = """
+Element 0: 0: EVAL: [241934143 74220813 171311043 251246638 44550863 208469992 257246734 181395759 204334167 134512532 166638742 157712398 8124846 129917349 173868119 259562076] modulus: 268437409
+1: EVAL: [145446316 104587044 227744427 233435110 219782288 174242786 161162726 202149800 217046358 582776 132098951 254808143 76294665 215876138 229354674 228488990] modulus: 268436801
+2: EVAL: [72034118 148706727 239960624 132129667 172200300 170324314 218932454 232107570 43539304 216786629 172229077 105143082 238486928 118069500 224884985 176439263] modulus: 268435361
+3: EVAL: [258121070 235693884 45836185 251322610 40405689 222980212 229950090 232714938 61925176 59792935 178658742 92691657 124567454 68247048 33210687 31622997] modulus: 268435649
+4: EVAL: [225279 83941 76662 311703 316983 72232 442619 319517 253055 12848 35160 30790 41181 442539 235314 76386] modulus: 524353
+5: EVAL: [737863403 993198345 1003702148 988310375 220888660 364087479 933203868 313737630 89127991 699093979 139908477 126145276 837732694 632941393 103477765 573247879] modulus: 1073741441
+6: EVAL: [898992216 773981136 219465251 574538112 775952030 404403257 430390908 504575748 583464427 807156342 143737260 510203366 243130142 216259015 672269169 655449739] modulus: 1073740609
+Element 1: 0: EVAL: [247025458 216481942 228777828 235980326 267408393 23632502 205955100 173251990 130299501 124287317 26373673 109473278 8216999 125945013 40274891 98700531] modulus: 268437409
+1: EVAL: [174762976 34697388 24662864 80040267 225807095 129029451 221833925 160989101 247186153 222103622 182511862 159328541 211942208 15067860 80622710 207035058] modulus: 268436801
+2: EVAL: [243297650 146330724 136136265 121888465 247398893 23384661 211433183 45497662 160878416 160480032 149155353 61374659 64033067 119243264 206724626 114523042] modulus: 268435361
+3: EVAL: [170480588 75554142 82495432 262075599 198632171 245985229 17234610 195502400 182384762 251541586 19127344 9856795 72716245 137833420 19317325 81683945] modulus: 268435649
+4: EVAL: [439059 107889 390923 254994 341533 394310 372356 348990 123141 100931 382119 208083 351337 178435 230692 308191] modulus: 524353
+5: EVAL: [453222804 443373366 64869741 314139470 702732445 353063241 1023581449 70543487 1047383897 1007512330 1042746826 842524216 913177674 739290748 22825101 574934334] modulus: 1073741441
+6: EVAL: [103547670 143037984 848936029 1001622801 415234379 181231194 982740872 603905242 545234573 145895270 1048600883 730037633 529547664 584002916 780403750 1036555706] modulus: 1073740609
+Element 2: 0: EVAL: [145236762 92515984 175982756 73193021 108614960 93205142 266281793 68033119 182956964 55941174 232146117 153250887 74553678 131936164 236725540 64406667] modulus: 268437409
+1: EVAL: [223388953 261220732 265117257 138492747 236328294 31337192 133470486 60832409 108898639 42452468 63521212 4614339 187101709 34195714 11039958 84526954] modulus: 268436801
+2: EVAL: [151753259 191389049 45560705 40074153 215483180 168458444 218119974 85138262 210349852 11466031 245284132 205330197 104680613 49787183 118718973 93370337] modulus: 268435361
+3: EVAL: [15881114 129267200 265816466 201531092 31584912 240582418 188457287 63191669 85244006 102347194 126925052 19773328 69255036 198566600 140826485 7281140] modulus: 268435649
+4: EVAL: [445764 506076 258912 427497 390948 28691 373784 128868 250816 431872 290063 357924 233555 352520 447038 459716] modulus: 524353
+5: EVAL: [1040887803 37667730 989742627 146675728 150059067 868533734 883244504 517903161 612724433 776993791 101565476 1034731148 654424481 43999960 246305661 491953680] modulus: 1073741441
+6: EVAL: [861334069 930730598 1026818396 311563304 417119358 818812971 631253324 610999425 46128888 1012850845 256135052 647913079 674914819 17975193 413112658 993484958] modulus: 1073740609
+"""
+    self.ks_precompute_ref = util.parse_ciphertext_string(self.ks_precompute_ref_str)[0]
+
+    self.ks_core_ext_result_str = """
+Element 0: 0: EVAL: [193813504 31631193 137208600 246750412 86659686 161335333 8010220 171953357 196348662 81454225 93897283 232874920 206154606 266590268 83893444 23433089] modulus: 268437409
+1: EVAL: [81976092 252321245 99164988 152648911 205640674 175625856 203769555 88831374 79515711 133695054 251526933 256076529 254107433 151287093 1148032 84712730] modulus: 268436801
+2: EVAL: [41125509 113818241 63927057 35523556 134713063 77925908 33800006 64225631 141009825 69417574 66726323 238309477 63309644 252784037 70296920 168141956] modulus: 268435361
+3: EVAL: [180501453 191292022 159577515 192514263 93415431 169960783 90551313 48085273 14118152 49536131 102368002 86072491 104149490 51573868 201387571 50779056] modulus: 268435649
+4: EVAL: [351756 320876 505430 250408 70650 75610 392208 213623 359907 288791 26390 16018 312679 183591 130916 298579] modulus: 524353
+5: EVAL: [824403467 312444910 1021739306 51303574 242620142 733898741 601396281 977674712 71642139 256939854 260372362 996004609 570038317 221379495 1021435921 86837999] modulus: 1073741441
+6: EVAL: [702188646 169473197 449851019 1052883089 971533706 369417180 728834794 354407060 120924368 35608630 347230372 527704735 454771352 285812706 287771513 709355968] modulus: 1073740609
+Element 1: 0: EVAL: [30639518 210964893 251075365 6109406 261712320 166046073 88198292 110694634 223920112 202617413 44211768 27338190 184628648 171963884 119259119 34283779] modulus: 268437409
+1: EVAL: [261973017 53463345 175145644 69110314 246194717 157816417 172801300 14477021 205827547 12758092 111620124 226641181 152416807 153419522 95290007 111546858] modulus: 268436801
+2: EVAL: [184659296 158174547 167444010 188770157 188948058 113941699 244360254 69784623 187540958 138309989 126956494 190069506 267825639 68001222 118340184 81965370] modulus: 268435361
+3: EVAL: [46671682 85987279 265327919 214067201 216785154 79162540 30342392 30569183 134852770 157817705 99657571 54704403 186730419 252497094 120068626 175031577] modulus: 268435649
+4: EVAL: [270958 230546 323976 50224 228822 460614 457881 180500 253168 171862 255915 347461 339107 413361 472516 346676] modulus: 524353
+5: EVAL: [207590871 139050723 757587349 905393025 71237357 538377078 100010171 200652218 872191604 764530270 55766629 955967612 189836589 154286410 540904024 637217407] modulus: 1073741441
+6: EVAL: [1047842006 168961057 522858908 645412717 889128256 778597223 630286777 57855230 833568162 390390168 648912319 290539308 50571172 991115871 499974848 16770320] modulus: 1073740609
+"""
+    self.ks_core_ext_result_ref = util.parse_ciphertext_string(self.ks_core_ext_result_str)[0]
+
+    self.approx_mod_down_result_str = """
+Element 0: 0: EVAL: [259144406 45006058 146656240 193723735 154035162 60690953 117208139 135756387 223915647 12583760 191152484 24291424 44430450 29082602 118748017 63963998] modulus: 268437409
+1: EVAL: [24260495 99877578 59654702 221317225 65072708 233404168 62582815 104789809 92677314 231155376 224334475 126950639 21659509 40214701 35892215 226160167] modulus: 268436801
+2: EVAL: [187484639 27067197 173992401 142624755 182811180 183039946 6347062 40685048 173573820 178429113 92539835 58739183 143145438 74065853 241266367 121212226] modulus: 268435361
+3: EVAL: [129783905 15938793 163809083 159461009 151202687 65910177 238520342 108986082 153952325 209992401 23852519 69939124 118095920 22909972 235057521 234968625] modulus: 268435649
+4: EVAL: [122637 113752 50963 446727 451429 321000 336135 357625 369564 314840 516419 449202 298456 24552 126599 338881] modulus: 524353
+Element 1: 0: EVAL: [231613703 122401794 160080880 203662737 57836071 153702706 229297322 80758737 222239229 257629351 40843821 49025970 214376558 115586886 115035836 68552168] modulus: 268437409
+1: EVAL: [80938253 67642720 367717 113366631 19771051 136227343 157410760 23508938 249006613 71471951 100519768 195571411 224831954 115163399 152434154 213935537] modulus: 268436801
+2: EVAL: [231316444 156814364 186013877 64121164 160767854 103756947 147405331 72919568 139620017 15046194 73952828 254579880 77662607 106675061 243355612 153884663] modulus: 268435361
+3: EVAL: [143635940 199239811 159739643 46241159 226804295 127117898 117050725 64344047 178002755 48950581 30167743 102463401 260364697 80505227 171724911 161720331] modulus: 268435649
+4: EVAL: [112334 129113 6345 319957 162999 195253 239283 15540 423487 193018 232549 490876 82527 458359 357356 293981] modulus: 524353
+"""
+
+    self.approx_mod_down_result_ref = util.parse_ciphertext_string(self.approx_mod_down_result_str)[0]
+
+    self.ks_results_ref_str = """
+Element 0: 0: EVAL: [171332879 32326187 231569422 11047463 23645034 76343813 268129445 224965221 152173818 64632528 159363420 25543825 15718053 6487284 173536874 10817899] modulus: 268437409
+1: EVAL: [154950375 106039887 201665930 120335891 74147180 1824189 115179748 112643219 131107214 191205796 206441771 191801959 219689613 9547382 12604098 90971922] modulus: 268436801
+2: EVAL: [185339874 162688043 148594676 176230753 243760989 239111613 120485589 229444737 148992722 186699473 142907155 138917478 149096381 36752243 188669158 80704895] modulus: 268435361
+3: EVAL: [138037836 217064217 12266742 4494994 158125272 36779865 63270202 152770630 137088864 12165468 216653400 73394034 198503861 155415997 82645977 133345174] modulus: 268435649
+4: EVAL: [257033 202007 494946 184494 450773 471573 108340 192941 254644 14881 138228 83789 2090 427696 248491 89712] modulus: 524353
+Element 1: 0: EVAL: [231613703 122401794 160080880 203662737 57836071 153702706 229297322 80758737 222239229 257629351 40843821 49025970 214376558 115586886 115035836 68552168] modulus: 268437409
+1: EVAL: [80938253 67642720 367717 113366631 19771051 136227343 157410760 23508938 249006613 71471951 100519768 195571411 224831954 115163399 152434154 213935537] modulus: 268436801
+2: EVAL: [231316444 156814364 186013877 64121164 160767854 103756947 147405331 72919568 139620017 15046194 73952828 254579880 77662607 106675061 243355612 153884663] modulus: 268435361
+3: EVAL: [143635940 199239811 159739643 46241159 226804295 127117898 117050725 64344047 178002755 48950581 30167743 102463401 260364697 80505227 171724911 161720331] modulus: 268435649
+4: EVAL: [112334 129113 6345 319957 162999 195253 239283 15540 423487 193018 232549 490876 82527 458359 357356 293981] modulus: 524353
+"""
+    self.ks_results_ref = util.parse_ciphertext_string(self.ks_results_ref_str)[0]
+
+    self.final_result_str = """
+Element 0: 0: EVAL: [23645034 76343813 268129445 224965221 11047463 231569422 171332879 32326187 173536874 10817899 6487284 15718053 152173818 64632528 159363420 25543825] modulus: 268437409
+1: EVAL: [74147180 1824189 115179748 112643219 120335891 201665930 154950375 106039887 12604098 90971922 9547382 219689613 131107214 191205796 206441771 191801959] modulus: 268436801
+2: EVAL: [243760989 239111613 120485589 229444737 176230753 148594676 185339874 162688043 188669158 80704895 36752243 149096381 148992722 186699473 142907155 138917478] modulus: 268435361
+3: EVAL: [158125272 36779865 63270202 152770630 4494994 12266742 138037836 217064217 82645977 133345174 155415997 198503861 137088864 12165468 216653400 73394034] modulus: 268435649
+4: EVAL: [450773 471573 108340 192941 184494 494946 257033 202007 248491 89712 427696 2090 254644 14881 138228 83789] modulus: 524353
+Element 1: 0: EVAL: [57836071 153702706 229297322 80758737 203662737 160080880 231613703 122401794 115035836 68552168 115586886 214376558 222239229 257629351 40843821 49025970] modulus: 268437409
+1: EVAL: [19771051 136227343 157410760 23508938 113366631 367717 80938253 67642720 152434154 213935537 115163399 224831954 249006613 71471951 100519768 195571411] modulus: 268436801
+2: EVAL: [160767854 103756947 147405331 72919568 64121164 186013877 231316444 156814364 243355612 153884663 106675061 77662607 139620017 15046194 73952828 254579880] modulus: 268435361
+3: EVAL: [226804295 127117898 117050725 64344047 46241159 159739643 143635940 199239811 171724911 161720331 80505227 260364697 178002755 48950581 30167743 102463401] modulus: 268435649
+4: EVAL: [162999 195253 239283 15540 319957 6345 112334 129113 357356 293981 458359 82527 423487 193018 232549 490876] modulus: 524353
+"""
+    self.final_result_ref = util.parse_ciphertext_string(self.final_result_str)[0]
+    self.rotate_in_ciphertext, self.rotate_in_ciphertext_moduli = util.parse_ciphertext_string(
+        self.rotate_in_ciphertext_str
+    )
+
+  def test_control_gen_defaults_to_canonical_tiled_layout(self):
+    extend_moduli = self.evalkey_b_vector_moduli[
+        len(self.rotate_in_ciphertext_moduli):
+    ]
+    op = herot._HERotKernel(
+        4, 4, 3, self.rotate_in_ciphertext_moduli, extend_moduli
+    )
+
+    op.control_gen(perf_test=True)
+
+    self.assertEqual(op.degree_layout, (4, 4))
+    self.assertEqual(op.ct_in.shape[2:4], (4, 4))
+
+  def test_setup_rotation_requires_offline_controls(self):
+    extend_moduli = self.evalkey_b_vector_moduli[
+        len(self.rotate_in_ciphertext_moduli):
+    ]
+    op = herot._HERotKernel(
+        4, 4, 3, self.rotate_in_ciphertext_moduli, extend_moduli
+    )
+
+    with self.assertRaisesRegex(RuntimeError, 'control_gen'):
+      op.setup_rotation(
+          jnp.zeros((0,), dtype=jnp.uint64),
+          jnp.zeros((0,), dtype=jnp.uint64),
+          jnp.zeros((0,), dtype=jnp.int32),
+      )
+
+  def test_method_names_follow_operator_template(self):
+    self.assertTrue(hasattr(herot._HERotKernel, 'rotate'))
+    self.assertTrue(hasattr(herot._HERotKernel, 'setup_rotation'))
+    self.assertFalse(hasattr(herot._HERotKernel, 'setup_rotate'))
+    raw_steps = (
+        'rotate',
+        'decompose',
+        'key_switch',
+        'key_switch_core',
+        'key_switch_extend',
+        'automorphism',
+        'add_first_component',
+        'hoisted_rotate',
+        'mod_down',
+        'mul_plain',
+    )
+    for step in raw_steps:
+      with self.subTest(step=step):
+        self.assertTrue(hasattr(herot._HERotKernel, f'_{step}_array'))
+        self.assertFalse(hasattr(herot._HERotKernel, f'{step}_array'))
+    facade_steps = (
+        'rotate',
+        'decompose',
+        'key_switch_extend',
+        'automorphism',
+        'hoisted_rotate',
+        'mod_down',
+        'mul_plain',
+    )
+    for step in facade_steps:
+      with self.subTest(facade_step=step):
+        self.assertTrue(hasattr(he_ops._HERotAtLevel, f'_{step}_array'))
+        self.assertFalse(hasattr(he_ops._HERotAtLevel, f'{step}_array'))
+    for dead_forwarder in (
+        '_key_switch_array',
+        '_key_switch_core_array',
+        '_add_first_component_array',
+    ):
+      self.assertFalse(hasattr(he_ops._HERotAtLevel, dead_forwarder))
+    self.assertFalse(hasattr(herot._HERotKernel, '_mod_down_component'))
+    implementation_helpers = (
+        '_rotation_state',
+        '_prepare_decomposition_inputs',
+        '_decompose_part',
+        '_resolve_evaluation_keys',
+        '_accumulate_key_switch_parts',
+    )
+    for helper in implementation_helpers:
+      with self.subTest(helper=helper):
+        self.assertTrue(hasattr(herot._HERotKernel, helper))
+        self.assertFalse(hasattr(herot._HERotKernel, f'{helper}_array'))
+
+
+  # @absltest.skip("Skipping HERot test for now")
+  def test_herot_rotation_28bit(self):
+    batch, r, c, dnum = 1, 4, 4, 3
+    degree = r * c
+    # degree_layout = (r*c, )
+    degree_layout = (r, c)
+    coef_map = precompute_auto_map(degree, find_automorphism_index_2n_complex(1, 2 * degree))
+    np.testing.assert_array_equal(coef_map, [4,5,6,7,3,2,0,1,14,15,13,12,8,9,10,11])
+
+    rotate_in_ciphertext = jnp.array(self.rotate_in_ciphertext, dtype=jnp.uint32).reshape(batch, -1, *degree_layout, len(self.rotate_in_ciphertext_moduli))
+    self.final_result_ref = jnp.array(
+        self.final_result_ref, dtype=jnp.uint32
+    ).reshape(
+        batch, -1, *degree_layout, len(self.rotate_in_ciphertext_moduli)
+    )
+    rotate_in_ciphertext_moduli = self.rotate_in_ciphertext_moduli
+    evalkey_b_vector = jnp.array(self.evalkey_b_vector_ref, dtype=jnp.uint64).reshape(dnum, *degree_layout, len(self.evalkey_b_vector_moduli))
+    extend_moduli = self.evalkey_b_vector_moduli[len(rotate_in_ciphertext_moduli):]
+    evalkey_a_vector = jnp.array(self.evalkey_a_vector_ref, dtype=jnp.uint64).reshape(dnum, *degree_layout, len(self.evalkey_a_vector_moduli))
+    ct_in_shapes = {'batch': batch, 'num_elements': 2, 'degree': degree, 'precision': 32, 'num_moduli': len(rotate_in_ciphertext_moduli), 'degree_layout': degree_layout}
+    ct_in = Polynomial(ct_in_shapes, parameters={'moduli': rotate_in_ciphertext_moduli})
+    ct_in.polynomial = rotate_in_ciphertext
+
+    # Instantiate the private rotation kernel.
+    herot_obj = herot._HERotKernel(
+        r, c, dnum, rotate_in_ciphertext_moduli, extend_moduli
+    )
+
+    # Run control_gen
+    herot_obj.control_gen(batch=batch, degree_layout=degree_layout)
+    herot_obj.setup_rotation(evalkey_a_vector, evalkey_b_vector, coef_map)
+
+    # JIT may be the first operation after setup. It must not leave tracers in
+    # cached key-switch state that break a later eager operation.
+    final_result_jit_first = jax.jit(herot_obj.rotate)(ct_in)
+    np.testing.assert_array_equal(
+        final_result_jit_first.polynomial, self.final_result_ref
+    )
+    raw_default = herot_obj._rotate_array(rotate_in_ciphertext)
+    raw_explicit = jax.jit(herot_obj._rotate_array)(
+        rotate_in_ciphertext,
+        herot_obj.evalkey_a_vector,
+        herot_obj.evalkey_b_vector,
+        coef_map,
+    )
+    np.testing.assert_array_equal(raw_default, self.final_result_ref)
+    np.testing.assert_array_equal(raw_explicit, raw_default)
+
+    # The split QP-domain API must reproduce OpenFHE's recorded HYBRID
+    # intermediates before it is used to hoist bootstrapping rotations.
+    digits = herot_obj._decompose_array(rotate_in_ciphertext)
+    expected_digits = jnp.array(
+        self.ks_precompute_ref, dtype=jnp.uint32
+    ).reshape(dnum, batch, 1, *degree_layout, len(self.evalkey_b_vector_moduli))
+    np.testing.assert_array_equal(digits, expected_digits)
+
+    switched_qp = herot_obj._key_switch_core_array(digits)
+    with self.assertRaisesRegex(ValueError, 'eval_a and eval_b together'):
+      herot_obj._key_switch_core_array(digits, eval_a=evalkey_a_vector)
+    with self.assertRaisesRegex(ValueError, 'must have shape'):
+      herot_obj._key_switch_core_array(
+          digits,
+          eval_a=evalkey_a_vector,
+          eval_b=evalkey_b_vector[:-1],
+      )
+    expected_switched_qp = jnp.array(
+        self.ks_core_ext_result_ref, dtype=jnp.uint32
+    ).reshape(batch, 2, *degree_layout, len(self.evalkey_b_vector_moduli))
+    np.testing.assert_array_equal(switched_qp, expected_switched_qp)
+    np.testing.assert_array_equal(
+        herot_obj._key_switch_array(rotate_in_ciphertext), switched_qp
+    )
+
+    down = herot_obj._mod_down_array(switched_qp)
+    expected_down = jnp.array(
+        self.approx_mod_down_result_ref, dtype=jnp.uint32
+    ).reshape(batch, 2, *degree_layout, len(rotate_in_ciphertext_moduli))
+    np.testing.assert_array_equal(down, expected_down)
+
+    embedded = herot_obj._key_switch_extend_array(
+        rotate_in_ciphertext, include_first=True
+    )
+    combined = herot_obj._add_first_component_array(switched_qp, embedded)
+    with self.assertRaisesRegex(ValueError, 'ciphertext dtype uint32'):
+      herot_obj._add_first_component_array(
+          switched_qp.astype(jnp.uint64), embedded
+      )
+    combined_down = herot_obj._mod_down_array(combined)
+    expected_combined_down = jnp.array(
+        self.ks_results_ref, dtype=jnp.uint32
+    ).reshape(batch, 2, *degree_layout, len(rotate_in_ciphertext_moduli))
+    np.testing.assert_array_equal(combined_down, expected_combined_down)
+    three_components = jnp.concatenate(
+        [switched_qp, combined[:, 0:1]], axis=1
+    )
+    np.testing.assert_array_equal(
+        herot_obj._mod_down_array(three_components),
+        jnp.concatenate([expected_down, expected_combined_down[:, 0:1]], axis=1),
+    )
+
+    final_result_test = herot_obj.rotate(ct_in)
+    np.testing.assert_array_equal(final_result_test.polynomial, self.final_result_ref)
+
+    hoisted_qp = herot_obj._hoisted_rotate_array(
+        rotate_in_ciphertext, digits, include_first=True
+    )
+    np.testing.assert_array_equal(
+        hoisted_qp, herot_obj._automorphism_array(combined, coef_map)
+    )
+
+    # Regenerating shared controls invalidates the previously bound default
+    # key/map rather than leaving runtime state from the old layout reachable.
+    herot_obj.control_gen(batch=batch, degree_layout=degree_layout)
+    with self.assertRaisesRegex(RuntimeError, 'setup_rotation'):
+      herot_obj._rotate_array(rotate_in_ciphertext)
+    with self.assertRaisesRegex(RuntimeError, 'setup_rotation'):
+      herot_obj._rotation_state()
+
+  def test_herot_rotation_28bit_montgomery(self):
+    """The Montgomery rotation kernel matches the Barrett-verified golden.
+
+    The ciphertext crosses the boundary in Montgomery computation format;
+    eval keys are passed in standard form (setup_rotation Montgomery-encodes
+    them); all internal modular reductions are Montgomery/CRNS based.
+    """
+    import finite_field as ff_context
+
+    batch, r, c, dnum = 1, 4, 4, 3
+    degree = r * c
+    degree_layout = (r, c)
+    coef_map = precompute_auto_map(
+        degree, find_automorphism_index_2n_complex(1, 2 * degree))
+
+    rotate_in_ciphertext = jnp.array(
+        self.rotate_in_ciphertext, dtype=jnp.uint64
+    ).reshape(batch, -1, *degree_layout, len(self.rotate_in_ciphertext_moduli))
+    final_result_ref = jnp.array(self.final_result_ref, dtype=jnp.uint32).reshape(
+        batch, -1, *degree_layout, len(self.rotate_in_ciphertext_moduli))
+    rotate_in_ciphertext_moduli = self.rotate_in_ciphertext_moduli
+    evalkey_b_vector = jnp.array(
+        self.evalkey_b_vector_ref, dtype=jnp.uint64
+    ).reshape(dnum, *degree_layout, len(self.evalkey_b_vector_moduli))
+    extend_moduli = self.evalkey_b_vector_moduli[len(rotate_in_ciphertext_moduli):]
+    evalkey_a_vector = jnp.array(
+        self.evalkey_a_vector_ref, dtype=jnp.uint64
+    ).reshape(dnum, *degree_layout, len(self.evalkey_a_vector_moduli))
+
+    mont_in = ff_context.MontgomeryContext(rotate_in_ciphertext_moduli)
+    ct_in_shapes = {
+        'batch': batch, 'num_elements': 2, 'degree': degree, 'precision': 32,
+        'num_moduli': len(rotate_in_ciphertext_moduli),
+        'degree_layout': degree_layout,
+    }
+    ct_in = Polynomial(ct_in_shapes, parameters={
+        'moduli': rotate_in_ciphertext_moduli,
+        'finite_field_context': ff_context.MontgomeryContext,
+    })
+    ct_in.polynomial = mont_in.to_computation_format(rotate_in_ciphertext)
+
+    herot_obj = herot._HERotKernel(
+        r, c, dnum, rotate_in_ciphertext_moduli, extend_moduli,
+        finite_field_context=ff_context.MontgomeryContext)
+    herot_obj.control_gen(batch=batch, degree_layout=degree_layout)
+    herot_obj.setup_rotation(evalkey_a_vector, evalkey_b_vector, coef_map)
+    digits = herot_obj._decompose_array(ct_in.polynomial)
+    np.testing.assert_array_equal(
+        herot_obj._key_switch_array(ct_in.polynomial),
+        herot_obj._key_switch_core_array(digits),
+    )
+    final_result_test = herot_obj.rotate(ct_in)
+    out = mont_in.to_original_format(
+        jnp.asarray(final_result_test.polynomial, jnp.uint64))
+    np.testing.assert_array_equal(out, final_result_ref)
+
+
+class HERotDegree2048Test(absltest.TestCase):
+  """End-to-end HE rotation correctness test at production ring dimension.
+
+  Verifies the Barrett `int(m)` fix (finite_field.py) and the per-product
+  modular reduction in rotation key_switch (herot.py) work at degree=2048.
+  Without these fixes, herot produces garbage output at this scale.
+
+  Uses the same parameters as HEMulDegree2048Test for consistency.
+  """
+
+  def setUp(self):
+    super().setUp()
+    self.degree = 2048
+    self.num_slots = 1024
+    self.r, self.c = 32, 64
+    self.dnum = 3
+    self.q_towers = [
+        1073971201, 1073872897, 1073668097,
+        1073815553, 1073692673, 1073750017,
+    ]
+    self.p_towers = [2147389441, 2147377153, 2147352577, 2147295233]
+    self.scaling_factor = self.q_towers[0] * self.q_towers[1]
+    self.sigma = 3.190000057220458984375
+
+  def test_rotate_by_1_degree_2048(self):
+    """HE rotation by 1 slot at degree=2048 matches plaintext rotation."""
+    import ckks_ctx
+    import key_gen as kg
+    import he_params
+
+    rot_idx = 1
+
+    # Build CKKSContext (handles key gen, encoding, rotation keys)
+    key_pair = kg.gen_pke_pair(self.q_towers, self.p_towers, self.degree)
+    params = {
+        "degree": self.degree,
+        "num_slots": self.num_slots,
+        "scaling_factor": self.scaling_factor,
+        "output_scale": self.scaling_factor,
+        "q_towers": self.q_towers,
+        "p_towers": self.p_towers,
+        "p": 60,
+        "CKKS_M_FACTOR": 1,
+        "max_bits_in_word": 61,
+        "noise_scale_degree": 1,
+        "composite_degree": 1,
+        "public_key": key_pair["public_key"],
+        "secret_key": key_pair["secret_key"],
+    }
+    ctx = ckks_ctx.CKKSContext(params)
+    ctx.program_initialization(
+        total_rotation_indices=[rot_idx],
+        dnum=self.dnum, r=self.r, c=self.c, batch=1,
+    )
+
+    # Encode + encrypt an 8-slot test vector
+    input_vals = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+    slots = [complex(v, 0) for v in input_vals] + [complex(0)] * (self.num_slots - len(input_vals))
+    pt = ctx.encode(slots)
+    ct = ctx.encrypt(pt)
+
+    # Reshape to 5D for the level-indexed rotation wrapper
+    M = len(self.q_towers)
+    ct_5d = Polynomial(
+        {"batch": 1, "num_elements": 2, "degree": self.degree,
+         "num_moduli": M, "precision": 32,
+         "degree_layout": (self.r, self.c)},
+        {"moduli": self.q_towers},
+    )
+    ct_5d.polynomial = ct.polynomial.reshape(1, 2, self.r, self.c, M).astype(jnp.uint32)
+
+    # Rotate
+    level = ctx.max_level
+    rotated = ctx.he_rot[level, rot_idx].rotate(ct_5d)
+
+    # Decrypt
+    decrypted = ctx.decrypt(rotated)
+    decoded = ctx.decode(decrypted, is_ntt=False)
+    got = [v.real for v in decoded[:len(input_vals) + 1]]
+
+    # Expected: slots rotated left by 1
+    expected = input_vals[1:] + [0.0]
+    np.testing.assert_array_almost_equal(got[:len(expected)], expected, decimal=3,
+        err_msg=f"HE rotation by {rot_idx} at degree=2048 mismatch. "
+                f"Got {got}, expected {expected}")
+
+    # Split/hoisted form used by bootstrapping: retain the rotation in QP,
+    # then apply one grouped ApproxModDown.  Check both OpenFHE addFirst modes.
+    op = ctx.he_rot[level, rot_idx]
+    eval_a, eval_b, coef_map = op._rotation_state()
+    with self.assertRaisesRegex(ValueError, 'eval_a and eval_b together'):
+      op._rotate_array(ct_5d.polynomial, eval_a=eval_a)
+    np.testing.assert_array_equal(
+        op._rotate_array(ct_5d.polynomial, eval_a, eval_b),
+        rotated.polynomial,
+    )
+    digits = op._decompose_array(ct_5d.polynomial)
+    hoisted_qp = op._hoisted_rotate_array(
+        ct_5d.polynomial, digits, eval_a, eval_b, coef_map,
+        include_first=True,
+    )
+    split_payload = op._mod_down_array(hoisted_qp)
+    split_ct = ct_5d._clone_with_payload(split_payload)
+    split_got = ctx.decode(ctx.decrypt(split_ct), is_ntt=False)
+    np.testing.assert_array_almost_equal(
+        [v.real for v in split_got[:len(expected)]], expected, decimal=3
+    )
+
+    hoisted_qp_no_first = op._hoisted_rotate_array(
+        ct_5d.polynomial, digits, eval_a, eval_b, coef_map,
+        include_first=False,
+    )
+    no_first_payload = op._mod_down_array(hoisted_qp_no_first)
+    rotated_c0 = op._automorphism_array(ct_5d.polynomial[:, 0:1])
+    np.testing.assert_array_equal(
+        rotated_c0,
+        op._automorphism_array(ct_5d.polynomial[:, 0:1], coef_map),
+    )
+    moduli = jnp.asarray(self.q_towers, dtype=jnp.uint64).reshape(
+        1, 1, 1, 1, -1
+    )
+    restored_c0 = (
+        no_first_payload[:, 0:1].astype(jnp.uint64)
+        + rotated_c0.astype(jnp.uint64)
+    ) % moduli
+    no_first_payload = no_first_payload.at[:, 0:1].set(
+        restored_c0.astype(jnp.uint32)
+    )
+    no_first_ct = ct_5d._clone_with_payload(no_first_payload)
+    no_first_got = ctx.decode(ctx.decrypt(no_first_ct), is_ntt=False)
+    np.testing.assert_array_almost_equal(
+        [v.real for v in no_first_got[:len(expected)]], expected, decimal=3
+    )
+
+
+class HERotRotationKeyPolicyTest(absltest.TestCase):
+  """Integration tests for the two rotation-key provisioning policies."""
+
+  def setUp(self):
+    super().setUp()
+    self.q_towers = [
+        1073971201,
+        1073872897,
+        1073668097,
+    ]
+    self.p_towers = [
+        2147389441,
+        2147377153,
+    ]
+
+  def test_lower_level_rotation_reuses_sliced_max_level_key(self):
+    """Default mode slices one reusable key without regenerating it."""
+    import ckks_ctx
+    import he_params
+    import key_gen as kg
+
+    degree = 16
+    q_towers = self.q_towers[:3]
+    p_towers = self.p_towers[:2]
+    key_pair = kg.gen_pke_pair(q_towers, p_towers, degree)
+    params = {
+        "degree": degree,
+        "num_slots": degree // 2,
+        "scaling_factor": q_towers[0],
+        "output_scale": q_towers[0],
+        "q_towers": q_towers,
+        "p_towers": p_towers,
+        "p": 30,
+        "CKKS_M_FACTOR": 1,
+        "max_bits_in_word": 61,
+        "noise_scale_degree": 1,
+        "composite_degree": 1,
+        "public_key": key_pair["public_key"],
+        "secret_key": key_pair["secret_key"],
+    }
+    ctx = ckks_ctx.CKKSContext(params)
+    ctx.program_initialization(
+        total_rotation_indices=[1], dnum=2, r=4, c=4, batch=1
+    )
+
+    cache = ctx._param_cache
+    lower_level = ctx.max_level - 1
+    with mock.patch.object(
+        he_params.kg, "gen_rotation_key", wraps=he_params.kg.gen_rotation_key
+    ) as generate:
+      max_a, max_b, _ = cache.get_rot_key(1, ctx.max_level)
+      self.assertEqual(generate.call_count, 0)
+      lower_a, lower_b, _ = cache.get_rot_key(1, lower_level)
+      self.assertEqual(generate.call_count, 0)
+      self.assertEqual(max_a.shape[0], 2)
+      self.assertEqual(max_b.shape[0], 2)
+      self.assertEqual(lower_a.shape[0], 2)
+      self.assertEqual(lower_b.shape[0], 2)
+      self.assertEqual(
+          lower_a.shape[-1], cache.num_q_at_level(lower_level) + len(p_towers)
+      )
+      for lower, maximum in ((lower_a, max_a), (lower_b, max_b)):
+        expected_lower = jnp.concatenate(
+            [
+                maximum[..., : cache.num_q_at_level(lower_level)],
+                maximum[..., -len(p_towers) :],
+            ],
+            axis=-1,
+        )
+        np.testing.assert_array_equal(lower, expected_lower)
+
+    lower_op = ctx.he_rot[lower_level, 1]
+    self.assertEqual(lower_op.num_partitions, 1)
+    self.assertEqual(lower_op._rotation_state()[0].shape[0], 1)
+
+    restored = ckks_ctx.CKKSContext(params)
+    with mock.patch.object(
+        he_params.kg, "gen_rotation_key", wraps=he_params.kg.gen_rotation_key
+    ) as generate:
+      restored.program_initialization(
+          total_rotation_indices=[1],
+          dnum=2,
+          r=4,
+          c=4,
+          batch=1,
+          pregenerated_rotation_keys=dict(ctx._raw_rotation_keys),
+      )
+      restored._param_cache.get_rot_key(1, lower_level)
+      self.assertEqual(generate.call_count, 0)
+
+  def test_lower_level_rotation_generates_operator_owned_key_on_demand(self):
+    """Low-memory mode binds one level key without populating global caches."""
+    import ckks_ctx
+    import he_params
+    import key_gen as kg
+
+    degree = 16
+    q_towers = self.q_towers[:3]
+    p_towers = self.p_towers[:2]
+    key_pair = kg.gen_pke_pair(q_towers, p_towers, degree)
+    params = {
+        "degree": degree,
+        "num_slots": degree // 2,
+        "scaling_factor": q_towers[0],
+        "output_scale": q_towers[0],
+        "q_towers": q_towers,
+        "p_towers": p_towers,
+        "p": 30,
+        "CKKS_M_FACTOR": 1,
+        "max_bits_in_word": 61,
+        "noise_scale_degree": 2,
+        "composite_degree": 1,
+        "public_key": key_pair["public_key"],
+        "secret_key": key_pair["secret_key"],
+    }
+    values = [complex(i / 8, 0) for i in range(8)]
+
+    with mock.patch.dict(os.environ, {"CROSS_SKIP_TOPLEVEL_ROTKEYS": "1"}):
+      ctx = ckks_ctx.CKKSContext(params)
+      with mock.patch.object(
+          he_params.kg, "gen_rotation_key", wraps=he_params.kg.gen_rotation_key
+      ) as generate:
+        ctx.program_initialization(
+            total_rotation_indices=[1], dnum=2, r=4, c=4, batch=1
+        )
+        self.assertEqual(generate.call_count, 0)
+        self.assertEmpty(ctx._raw_rotation_keys)
+
+        level = ctx.max_level - 1
+        ciphertext = ctx.encrypt(ctx.encode(values)).drop_last_modulus()
+        rotation = ctx.he_rot[level, 1]
+
+        self.assertEqual(generate.call_count, 1)
+        self.assertEqual(generate.call_args.kwargs["noise_scale"], 2)
+        eval_a, eval_b, _ = rotation._rotation_state()
+        self.assertEqual(eval_a.shape[0], rotation.num_partitions)
+        self.assertEqual(eval_b.shape, eval_a.shape)
+        self.assertEqual(
+            eval_a.shape[-1],
+            ctx._param_cache.num_q_at_level(level) + len(p_towers),
+        )
+        self.assertEmpty(ctx._param_cache.raw_rotation_keys)
+        self.assertEmpty(ctx._param_cache._formatted_rotation_keys)
+
+        rotated = rotation.rotate(ciphertext)
+        decoded = ctx.decode(ctx.decrypt(rotated), is_ntt=False)
+
+        self.assertEqual(generate.call_count, 1)
+        self.assertEmpty(ctx._param_cache.raw_rotation_keys)
+        self.assertEmpty(ctx._param_cache._formatted_rotation_keys)
+        np.testing.assert_array_almost_equal(
+            decoded, values[1:] + values[:1], decimal=3
+        )
+
+
+if __name__ == "__main__":
+  absltest.main()

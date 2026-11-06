@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="2" time="0.092" timestamp="2026-11-03T16:44:10.578444+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_close_priority" name="test_cleanup_only_cancel_supersedes_file_close_error[KeyboardInterrupt]" time="0.008"><failure message="OSError: first file cleanup failed&#10;borrowed fixture close: KeyboardInterrupt">tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-394/test_cleanup_only_cancel_super0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x770a86739480&gt;
+cancel = &lt;class 'KeyboardInterrupt'&gt;
+
+    @pytest.mark.parametrize('cancel',[KeyboardInterrupt,SystemExit])
+    def test_cleanup_only_cancel_supersedes_file_close_error(tmp_path,monkeypatch,cancel):
+        tmp_path.chmod(0o700);p=tmp_path/'value';p.write_bytes(b'[]');p.chmod(0o600)
+        real_close=os.close;attempts=[]
+        def close(fd):
+            real_close(fd);attempts.append(fd)
+            if len(attempts)==1:raise OSError('first file cleanup failed')
+            raise cancel('later directory cleanup cancelled')
+        with monkeypatch.context() as m:
+            m.setattr(os,'close',close)
+            with pytest.raises(cancel,match='later directory'):
+&gt;               ranked_readback._private_read(p,1024)
+
+/tmp/bert-ranked-private-cleanup-review-20261103/negative-v2/test_close_priority.py:17: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/tmp/bert-ranked-private-cleanup-review-20261103/negative-v2/ranked_readback.py:137: in _private_read
+    parent=owner._open_dir(path.parent);raw=owner._read(path,parent)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/bert-ranked-private-cleanup-review-20261103/negative-v2/ranked_input_gate.py:109: in _read
+    try:os.close(fd)
+        ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fd = 14
+
+    def close(fd):
+        real_close(fd);attempts.append(fd)
+&gt;       if len(attempts)==1:raise OSError('first file cleanup failed')
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: first file cleanup failed
+E       borrowed fixture close: KeyboardInterrupt
+
+/tmp/bert-ranked-private-cleanup-review-20261103/negative-v2/test_close_priority.py:12: OSError</failure></testcase><testcase classname="test_close_priority" name="test_cleanup_only_cancel_supersedes_file_close_error[SystemExit]" time="0.001"><failure message="OSError: first file cleanup failed&#10;borrowed fixture close: SystemExit">tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-394/test_cleanup_only_cancel_super1')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x770a843e5eb0&gt;
+cancel = &lt;class 'SystemExit'&gt;
+
+    @pytest.mark.parametrize('cancel',[KeyboardInterrupt,SystemExit])
+    def test_cleanup_only_cancel_supersedes_file_close_error(tmp_path,monkeypatch,cancel):
+        tmp_path.chmod(0o700);p=tmp_path/'value';p.write_bytes(b'[]');p.chmod(0o600)
+        real_close=os.close;attempts=[]
+        def close(fd):
+            real_close(fd);attempts.append(fd)
+            if len(attempts)==1:raise OSError('first file cleanup failed')
+            raise cancel('later directory cleanup cancelled')
+        with monkeypatch.context() as m:
+            m.setattr(os,'close',close)
+            with pytest.raises(cancel,match='later directory'):
+&gt;               ranked_readback._private_read(p,1024)
+
+/tmp/bert-ranked-private-cleanup-review-20261103/negative-v2/test_close_priority.py:17: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/tmp/bert-ranked-private-cleanup-review-20261103/negative-v2/ranked_readback.py:137: in _private_read
+    parent=owner._open_dir(path.parent);raw=owner._read(path,parent)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/bert-ranked-private-cleanup-review-20261103/negative-v2/ranked_input_gate.py:109: in _read
+    try:os.close(fd)
+        ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fd = 14
+
+    def close(fd):
+        real_close(fd);attempts.append(fd)
+&gt;       if len(attempts)==1:raise OSError('first file cleanup failed')
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: first file cleanup failed
+E       borrowed fixture close: SystemExit
+
+/tmp/bert-ranked-private-cleanup-review-20261103/negative-v2/test_close_priority.py:12: OSError</failure></testcase></testsuite></testsuites>

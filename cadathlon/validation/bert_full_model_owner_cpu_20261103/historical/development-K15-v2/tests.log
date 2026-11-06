@@ -1,0 +1,30 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________ test_joined_all12_actual_ciphertext_connections_all_slots[15] _________
+test_full_model_owner.py:240: in test_joined_all12_actual_ciphertext_connections_all_slots
+    result=owner.evaluate(sources,capture_checkpoints=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+encrypted_bert_full_model.py:208: in evaluate
+    self._install_child(head);result=head.evaluate_tile(current[0],capture_checkpoints=capture_checkpoints)
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+test_full_model_owner.py:236: in head
+    return head_impl(child,value,**kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_bert_pooler_head.py:99: in evaluate_tile
+    output=self._linear(activated,'classifier');remember('classifier',output);self._guard()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_bert_pooler_head.py:79: in _linear
+    result=self.linear.linear_tile(value,self.model[name+'.weight'],self.model[name+'.bias'],valid_rows=1)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_chained_streaming_linear.py:168: in linear_tile
+    result=_chained_linear(graph,value,weight,bias,input_mask=mask)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_chained_streaming_linear.py:96: in _chained_linear
+    count_bytes=output_payload_bytes(graph,value)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_packed_transformer.py:48: in output_payload_bytes
+    raise ValueError('invalid public ciphertext payload shape')
+E   ValueError: invalid public ciphertext payload shape
+=========================== short test summary info ============================
+FAILED test_full_model_owner.py::test_joined_all12_actual_ciphertext_connections_all_slots[15]
+1 failed, 42 deselected in 329.05s (0:05:29)

@@ -1,0 +1,56 @@
+{
+  "current_before_after_archive_equal": true,
+  "diagnosis_root": "/tmp/bert-toy5-overflow-diagnosis-v2-20261104",
+  "errors": 0,
+  "failures": 0,
+  "frozen_runtime_copies_match_199_source_snapshot": true,
+  "limits": [
+    "CRT reconstruction and FFT are explicit synthetic seams. These tests establish conversion and guard classification, not real decryption, FFT precision, encrypted accuracy or application success.",
+    "A large conjugate-symmetric constant can satisfy the unchanged noise gate; no new arbitrary magnitude rejection is added. Future actual output must still pass the original application gates.",
+    "The actual BERT5 throw-site remains an inference: public case evidence has no traceback/payload proving this exact conversion failed.",
+    "All original199/runtime bytes remain unchanged. No TPU rerun or live patch is authorized or performed."
+  ],
+  "original_stddev_threshold": 0.03125,
+  "preserved_history": {
+    "predecessor_failed": 1,
+    "predecessor_passed": 17,
+    "predecessor_tests": 18,
+    "reason": "Real coefficient index0 is conjugate symmetric; v2 moves rejection probe toindex1 and adds symmetric positivecontrol."
+  },
+  "reviewed_conversion_expressions": [
+    {
+      "expression": "float(r) * scale_inv",
+      "line": 1734
+    },
+    {
+      "expression": "float(im) * scale_inv",
+      "line": 1738
+    }
+  ],
+  "schema": "bert-toy5-conversion-public-source-review-v1",
+  "scope": "Independent source/AST and existing public19-test evidence readback only. No test rerun, diagnosis-module/backend import, model/CT/key/private body read, actual decode, or TPU execution.",
+  "skipped": 0,
+  "source_archive_sha256": "897fac4778eb1febbe7efa063f391009a5decddd9301b2a6456154512a9ffea5",
+  "source_count": 9,
+  "source_findings": [
+    "No concrete blocker found in the isolated range-safe conversion candidate.",
+    "For integers whose float conversion succeeds, the helper returns the literal old raw*scale_inv result; existing rounding behavior is preserved.",
+    "Only OverflowError from float(value) activates the fallback. It derives the exact binary64 scale ratio and uses integer true division after scaling, avoiding the oversized intermediate float conversion.",
+    "For the pinned positive finite output scale, a truly unrepresentable scaled result still raises OverflowError. The helper is not presented here as a newly validated general invalid-scale API.",
+    "The AST transformer applies to only two r/im multiplication expressions inside _fast_decode. Conjugation, original1/32 stddev gate, averaging and FFT call remain unchanged.",
+    "Synthetic tests bind actual public Q40 product1096bits/outputscale, reproduce old conversion failure for2**1024 before FFT, compare fallback against exactFraction for both signs, and retain giant-asymmetric-noise rejection.",
+    "The corrected realindex1 rejection and separate realindex0 symmetry control address the preserved test-only wrong assumption; they do not weaken the original gate."
+  ],
+  "source_hashes": {
+    "failure-preserved/security_device.json": "f2b0c6f8a5ed3c07d394f8b19a22eb3f6a433feb4f3549dd53299b23e288e318",
+    "sources/ckks_ctx.py": "bc978cb7412b55416f7ed634a689ae616a263b0f47fd9eef996ba244f2505db6",
+    "sources/diagnose.py": "f0572fb71770a0578ebafba291ea9b667e872c8d2717ddd0b432dc78addccea2",
+    "sources/encrypted_reference.py": "f487dd1c04203594d9ca696109d4506e4bba66b76294b17393615a178e34d759",
+    "sources/runner.py": "3561ae1920119b352a0a804bab58659ab6d4bed34a7ab2ef46ea537279eaa9f4",
+    "sources/source_origin.json": "0dbe2d0ad12b1bbf11f46e87ca46815d1c73ed6ee94992bf48658808654aa144",
+    "sources/test_conversion.py": "14b1ade459449a9f3143a257f0594f3ada6ef75ea74a58b712eae53cbb4d73aa",
+    "sources/transformer_runner.py": "9d4c6c8c53544d05046651b55224ce5b254d34a3bea445f65484e26e0f49ac55",
+    "sources/validation_sweep.py": "357a9f35b22bf8b78a84f10ef5dd0365ae51f12fbbb24ee934397896d36fe16a"
+  },
+  "tests": 19
+}

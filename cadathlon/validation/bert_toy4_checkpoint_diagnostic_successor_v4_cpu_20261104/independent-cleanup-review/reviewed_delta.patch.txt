@@ -1,0 +1,307 @@
+--- v3/cleanup_origin.py
++++ v4/cleanup_origin.py
+@@ -5,15 +5,23 @@
+ cancellation outranks ordinary failures even after an intermediate helper exits.
+ """
+ ATTRIBUTE='_cross_toy4_cleanup_origin'
++BODY_ATTRIBUTE='_cross_toy4_body_origin'
+ 
+-def is_cleanup(error):return error is not None and getattr(error,ATTRIBUTE,False)is True
++def is_cleanup(error):return error is not None and getattr(error,BODY_ATTRIBUTE,False)is not True and getattr(error,ATTRIBUTE,False)is True
++
++def protect_body(error):
++    # Capture provenance before cleanup actions may re-raise the identical
++    #exception object (for example a sticky readiness failure).
++    if error is not None and not is_cleanup(error):setattr(error,BODY_ATTRIBUTE,True)
++    return error
+ 
+ def mark(error):
+-    setattr(error,ATTRIBUTE,True)
++    if getattr(error,BODY_ATTRIBUTE,False)is not True:setattr(error,ATTRIBUTE,True)
+     return error
+ 
+ def select(primary,errors):
+     """Select one exception; errors are labeled cleanup operations, in order."""
++    protect_body(primary)
+     rows=[]
+     for label,error in errors:
+         if error is None or error is primary:continue
+--- v3/cleanup.py
++++ v4/cleanup.py
+@@ -8,13 +8,14 @@
+ import signal
+ import sys
+ import threading
+-from cleanup_origin import mark,select
++from cleanup_origin import mark,select,protect_body
+ 
+ SIGNALS = (signal.SIGINT, signal.SIGTERM, signal.SIGHUP)
+ _MISSING = object()
+ 
+ 
+ def _attempt(errors, label, function):
++    protect_body(sys.exception())
+     try:
+         return function()
+     except BaseException as error:
+@@ -63,7 +64,7 @@
+ @contextmanager
+ def cleanup_signals():
+     """Defer cancellation through cleanup/publication, then report all failures."""
+-    incoming = sys.exception()
++    incoming = protect_body(sys.exception())
+     caught = None
+     errors = []
+     originals = []
+@@ -85,7 +86,7 @@
+         try:
+             yield
+         except BaseException as error:
+-            caught = error
++            caught = protect_body(error)
+     finally:
+         _restore(originals, previous_mask, errors)
+     if deferred:
+@@ -107,7 +108,7 @@
+ @contextmanager
+ def termination_signals():
+     """Install cancellation before work; repeat signals cannot reenter it."""
+-    incoming = sys.exception()
++    incoming = protect_body(sys.exception())
+     primary = None
+     errors = []
+     originals = []
+@@ -136,7 +137,7 @@
+         _finish(None, errors)
+         yield
+     except BaseException as error:
+-        primary = error
++        primary = protect_body(error)
+     finally:
+         _restore(originals, previous_mask, errors)
+     if deferred and primary is not None:
+--- v3/component_protocol.py
++++ v4/component_protocol.py
+@@ -3,12 +3,12 @@
+ import hashlib,io,json,os,stat,sys,tarfile
+ from component_contract import ROOT,canonical,numerical_plan,validate_contract,digest
+ from component_transport import _CloseState,_stream
+-from cleanup_origin import mark,select
++from cleanup_origin import mark,select,protect_body
+ 
+ STAGES=('setup','server','validate')
+ class Finalizer:
+     """Attempt every owned cleanup/publication; preserve real body primary."""
+-    def __init__(self,primary):self.primary=primary;self.errors=[]
++    def __init__(self,primary):self.primary=protect_body(primary);self.errors=[]
+     def attempt(self,label,action):
+         try:return action()
+         except BaseException as error:self.errors.append((label,mark(error)));return None
+--- v3/component_transport.py
++++ v4/component_transport.py
+@@ -21,7 +21,7 @@
+ import zipfile
+ 
+ import numpy as np
+-from cleanup_origin import mark,is_cleanup,select
++from cleanup_origin import mark,is_cleanup,select,protect_body
+ 
+ FORMAT = 'cross-toy4-checkpoint-tile-v1'
+ FILES = {'bundle.json', 'ct_0.npz', 'transport.json'}
+@@ -61,8 +61,8 @@
+     def __init__(self): self.errors = []
+ 
+     def cleanup(self, label, action):
+-        primary = sys.exception()
+-        close_only = is_cleanup(primary) or any(primary is error for error in self.errors)
++        primary = protect_body(sys.exception())
++        close_only = is_cleanup(primary)
+         try: action()
+         except BaseException as error:
+             mark(error);self.errors.append(error)
+--- v3/stage/client_keys.py
++++ v4/stage/client_keys.py
+@@ -8,7 +8,7 @@
+ from contextlib import contextmanager
+ import hashlib,json,math,os,re,shutil,stat,sys
+ import numpy as np
+-from cleanup_origin import mark,is_cleanup
++from cleanup_origin import mark,is_cleanup,protect_body
+ PROFILE_SHA256='f86b3b56bed72aeabec50b81dababeb62ba1627cf6764efcec189c930f708f18'
+ PLAN_SHA256='bb0d15f96fc2b01dd611a526f9aa9274965fdefe9b350e2663593a57283268c7'
+ BINDINGS=dict(original_source_archive_sha256='bc0ad1b2a3796fe4ecb5944d68f3ca65561ad5740357470a1e634cc243ec387b',
+@@ -143,7 +143,7 @@
+     """
+     def __init__(self):self.errors=[]
+     def cleanup(self,label,action,owner=None):
+-        primary=sys.exception();cleanup_only=is_cleanup(primary)or any(primary is error for error in self.errors)
++        primary=protect_body(sys.exception());cleanup_only=is_cleanup(primary)
+         try:action()
+         except BaseException as error:
+             mark(error);self.errors.append(error)
+@@ -316,7 +316,7 @@
+             if stat.S_IMODE(os.stat(name,dir_fd=private.fd,follow_symlinks=False).st_mode)!=0o600:raise ValueError('private file permission differs')
+         public.check();private.check();result=dict(public_manifest=manifest,private_manifest=private_manifest,preflight=preflight_report)
+     except BaseException as error:
+-        primary=error
++        primary=protect_body(error)
+         def remove(index):
+             owners=(public,private)
+             if index==len(owners):return
+--- v3/stage/key_contexts.py
++++ v4/stage/key_contexts.py
+@@ -7,7 +7,7 @@
+ No context or key array is valid after exit. Loaders never generate keys.
+ """
+ from contextlib import contextmanager
+-from cleanup_origin import mark,select
++from cleanup_origin import mark,select,protect_body
+ from pathlib import Path
+ from types import SimpleNamespace
+ import gc,hashlib,importlib,math,os,signal,stat,sys,threading
+@@ -214,7 +214,7 @@
+         if not server:
+             checked,raw_checked=_read_private(private_owner,public,raw_public)
+             if raw_checked!=raw_private:raise ValueError('private manifest changed during stage')
+-    except BaseException as error:primary=error;raise
++    except BaseException as error:primary=protect_body(error);raise
+     finally:
+         shield=[];deferred=[]
+         cancellation_signals=(signal.SIGINT,signal.SIGTERM,signal.SIGHUP)
+--- v3/component_arithmetic.py
++++ v4/component_arithmetic.py
+@@ -6,7 +6,7 @@
+ and must propagate through the outer key loader, which retains public backings.
+ """
+ from contextlib import contextmanager
+-from cleanup_origin import mark,select
++from cleanup_origin import mark,select,protect_body
+ from collections.abc import Mapping
+ import hashlib,math,weakref
+ import numpy as np
+@@ -265,7 +265,7 @@
+         return dict(checkpoints=ledger.trace,counts=ledger.counts,refresh_scales=ledger.refresh_scales,complete=True,
+                     no_decode_or_oracle=True,output_metadata=metadata(result,profile))
+     except BaseException as error:
+-        primary=error
++        primary=protect_body(error)
+         if entered:_FAILURE_QUARANTINE.append((ctx,initial_state,graph,refresher,provider,ledger,
+             tuple(v for ref in tuple(ledger.live.values())if(v:=ref())is not None)))
+         raise
+--- v3/component_processes.py
++++ v4/component_processes.py
+@@ -10,7 +10,7 @@
+ import signal
+ import subprocess
+ import time
+-from cleanup_origin import select
++from cleanup_origin import select,protect_body
+ from cleanup import cleanup_signals
+ 
+ 
+@@ -71,6 +71,7 @@
+ 
+     def close(self, primary=None):
+         """Failure/cancellation cleanup; never a deadline for healthy execution."""
++        protect_body(primary)
+         if self._closing:raise RuntimeError('child cleanup cannot reenter')
+         if self.record['direct_child_reaped'] and self.record['group_empty_verified']:return
+         self._closing=True;errors=[]
+--- v3/finish.py
++++ v4/finish.py
+@@ -1,6 +1,6 @@
+ """Publish outer-scope completion or a coherent public failure receipt."""
+ import json
+-from cleanup_origin import select
++from cleanup_origin import select,protect_body
+ from cleanup import termination_signals,cleanup_signals
+ 
+ def finish(path,call,write,read,*,termination=termination_signals,shield=cleanup_signals):
+@@ -12,7 +12,7 @@
+         write(path,report)
+         return report
+     except BaseException as primary:
+-        chosen=primary
++        chosen=protect_body(primary)
+         if type(report)is not dict:
+             try:
+                 report=json.loads(read(path))
+--- v3/source_guard.py
++++ v4/source_guard.py
+@@ -27,7 +27,7 @@
+     finally:
+         try:os.close(fd)
+         except BaseException as error:
+-            error._cross_toy4_cleanup_origin=True
++            if error is not primary and getattr(error,'_cross_toy4_body_origin',False)is not True:error._cross_toy4_cleanup_origin=True
+             _UNCERTAIN.append((fd,error))
+             if primary is None:raise
+             primary.add_note('source descriptor close: '+repr(error))
+--- v3/collect.py
++++ v4/collect.py
+@@ -31,7 +31,7 @@
+         finally:
+             try:os.close(fd)
+             except BaseException as error:
+-                error._cross_toy4_cleanup_origin=True
++                if error is not primary and getattr(error,'_cross_toy4_body_origin',False)is not True:error._cross_toy4_cleanup_origin=True
+                 if primary is None:raise
+                 primary.add_note('bootstrap descriptor close: '+repr(error))
+     manifest0=_initial_read(args0.source_manifest,1<<20)
+@@ -54,7 +54,8 @@
+ from terminal import terminal_scope
+ from finish import finish
+ from publication import OwnedOutput,separate
+-EXPECTED_TESTS=338
++from cleanup_origin import protect_body
++EXPECTED_TESTS=371
+ 
+ def snapshot(out,publication):
+     publication.check();raw=p.sources();pins=p.hashes(raw);p.check_sources(pins)
+@@ -98,7 +99,7 @@
+         if fresh.get('passed')is not True or fresh.get('fresh')is not True or type(fresh.get('source_count'))is not int or fresh['source_count']!=len(pins)or fresh.get('manifest_sha256')!=p.sha(canonical(pins)):raise ValueError('fresh authenticated worker admission required')
+         report['complete']=True
+         report['passed']=bool(code==0 and report['worker_verified']and all(worker.get(k)is True for k in('passed','complete','source_verified','cleanup_completed','terminal_scope_completed','termination_scope_completed')))
+-    except BaseException as error:primary=error;report['error']=dict(type=type(error).__name__,message=str(error))
++    except BaseException as error:primary=protect_body(error);report['error']=dict(type=type(error).__name__,message=str(error))
+     finally:
+         with terminal_scope(report,path,publication.write,cleanup_signals,lambda:(primary,None)):
+             cleanup=p.Finalizer(primary)
+@@ -159,7 +160,7 @@
+             report['passed']=True
+             report['next_phase_not_automatically_launched']=True
+         report['complete']=True
+-    except BaseException as error:primary=error;report['error']=dict(type=type(error).__name__,message=str(error))
++    except BaseException as error:primary=protect_body(error);report['error']=dict(type=type(error).__name__,message=str(error))
+     finally:
+         with terminal_scope(report,path,publication.write,cleanup_signals,lambda:(primary,None)):
+             cleanup=p.Finalizer(primary);cleanup.attempt('output ownership',publication.check)
+--- v3/component_worker.py
++++ v4/component_worker.py
+@@ -26,7 +26,7 @@
+         finally:
+             try:os.close(fd)
+             except BaseException as error:
+-                error._cross_toy4_cleanup_origin=True
++                if error is not primary and getattr(error,'_cross_toy4_body_origin',False)is not True:error._cross_toy4_cleanup_origin=True
+                 if primary is None:raise
+                 primary.add_note('bootstrap descriptor close: '+repr(error))
+     manifest0=_initial_read(args0.source_manifest,1<<20)
+@@ -49,7 +49,7 @@
+ from terminal import terminal_scope
+ from finish import finish
+ from publication import OwnedOutput,separate
+-from cleanup_origin import select
++from cleanup_origin import select,protect_body
+ _DECODE_FAILURE_QUARANTINE=[]
+ 
+ def fixed_files():return(HERE/'profile.json').read_bytes(),(HERE/'public_plan/plan.json').read_bytes()
+@@ -239,7 +239,7 @@
+             elif config['stage']=='server':server(config,report,publish,prior)
+             else:validate(config,report,publish,prior,expected_sources=expected)
+         report['complete']=True;report['passed']=report.get('numeric_passed',True)
+-    except BaseException as error:primary=error;report['error']=dict(type=type(error).__name__,message=str(error))
++    except BaseException as error:primary=protect_body(error);report['error']=dict(type=type(error).__name__,message=str(error))
+     finally:
+         with terminal_scope(report,path,publication.write,cleanup_signals,lambda:(primary,None)):
+             try:

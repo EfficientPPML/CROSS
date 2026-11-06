@@ -1,0 +1,54 @@
+{
+  "case": "test_client_explicit_ntt_acquires_before_original_initializers",
+  "details": {},
+  "error_type": null,
+  "events": [
+    {
+      "event": "ntt_guard"
+    },
+    {
+      "event": "ff_init",
+      "owner": 125659736346976
+    },
+    {
+      "event": "ntt_guard"
+    },
+    {
+      "event": "ntt_init",
+      "ff": 125659736346976,
+      "owner": 125659736347312
+    },
+    {
+      "count": 1,
+      "event": "barrier",
+      "name": "ff_table"
+    },
+    {
+      "count": 1,
+      "event": "barrier",
+      "name": "ntt_table"
+    },
+    {
+      "event": "ntt_guard"
+    },
+    {
+      "event": "ntt_guard"
+    },
+    {
+      "event": "ntt_guard"
+    },
+    {
+      "count": 2,
+      "event": "barrier",
+      "name": "ff_table"
+    },
+    {
+      "count": 2,
+      "event": "barrier",
+      "name": "ntt_table"
+    }
+  ],
+  "passed": true,
+  "runtime_map_sha256": "d82d68101c1f3ddc7f18b6ae4492aa7618d779012babaf9ed85355dfab927fea",
+  "variant": ""
+}

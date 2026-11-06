@@ -1,0 +1,33 @@
+--- admitted38/executed_driver.py
++++ readonly54/executed_driver.py
+@@ -1,4 +1,4 @@
+-"""Finalized public/synthetic model-stage proof driver; never auto-discovers tests.
++"""Finalized public/synthetic readonly-model focused proof driver; never auto-discovers tests.
+ 
+ Exact config and worker bytes are pinned. Source/test/driver review and an
+ explicit launch authorization remain external; preparation has not executed.
+@@ -7,8 +7,8 @@
+ import hashlib, json, os, signal, subprocess, sys, tarfile, time
+ import xml.etree.ElementTree as ET
+ 
+-CONFIG_SHA256 = 'da8269a2002ebeb55cb8084b27e26c592d95aee53e1f2c78cd168242c64a4137'
+-WORKER_SHA256 = 'f26cf16ec3ad1fca60ea93c7fb6e07059f597123e86662e23dc0a7f437cda91b'
++CONFIG_SHA256 = 'cf4d9dbaa5cc68a598fb0a21eab43a07c4f5cabf11293ce5d7fba6e078073546'
++WORKER_SHA256 = '415c2bd0b3ea13afc67819eea7e3d7637fe5f716681722f1469c3cb8b9fa76fb'
+ HERE = Path(__file__).resolve().parent
+ sha = lambda raw: hashlib.sha256(raw).hexdigest()
+ canonical = lambda value: (json.dumps(value, sort_keys=True, indent=2, allow_nan=False) + '\n').encode()
+@@ -21,11 +21,11 @@
+ def main():
+     # Reject the unfinalized template before any source, evidence or child work.
+     if not isinstance(CONFIG_SHA256, str) or not isinstance(WORKER_SHA256, str):
+-        raise ValueError('model-stage proof pins remain unset; launch disabled')
++        raise ValueError('readonly focused proof pins remain unset; launch disabled')
+     raw = (HERE / 'run_config.json').read_bytes()
+     assert sha(raw) == CONFIG_SHA256
+     config = json.loads(raw)
+-    assert config['schema'] == 'qwen-model-stage-focused-proof-v1'
++    assert config['schema'] == 'qwen-readonly-focused-proof-v1'
+     assert config['synthetic_only'] is True and config['actual_execution_authorized'] is False
+     source = Path(config['source_root'])
+     out = Path(config['proof_root'])

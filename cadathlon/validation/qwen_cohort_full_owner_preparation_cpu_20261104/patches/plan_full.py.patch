@@ -1,0 +1,42 @@
+--- parent199/plan_full.py
++++ current208/plan_full.py
+@@ -6,6 +6,8 @@
+ from full_contract import FullQwenContract,KEY_PLAN
+ from encrypted_qwen_rmsnorm import QwenRMSContract,rms_scale_plan
+ from encrypted_qwen_attention_join import QwenAttentionJoinContract
++from encrypted_qwen_causal_softmax import QwenCausalSoftmaxContract
++from encrypted_qwen_causal_softmax_batched import cohort_plan
+ from encrypted_qwen_decoder_tail import QwenDecoderTailContract
+ from encrypted_scale_planning import weighted_sum_scale,drop_divisor
+ 
+@@ -41,14 +43,25 @@
+         silu=tiles*sum(r['silu_refreshes_per_tile'] for r in layers)
+         attention_outer=tiles*sum(len(r['attention_outer_events']) for r in layers)
+         tail_outer=56*tiles
+-        # Each literal nontrivial query uses three initial events and two per
+-        # original squaring round. K1 remains the direct V0 branch.
+-        softmax=(sequence-1)*sum(3+2*r['causal_squarings'] for r in layers)
++        literal_softmax=(sequence-1)*sum(3+2*r['causal_squarings'] for r in layers)
++        schedules=[];softmax=0
++        for layer in range(28):
++            rule=QwenCausalSoftmaxContract(c.manifest_bytes,c.certificate_bytes,layer)
++            groups=cohort_plan(rule,c.positions);cost=0;tiles_plan=[]
++            for tile in groups:
++                tile_plan=[]
++                for group in tile:
++                    count=3+2*rule.squarings;cost+=count
++                    tile_plan.append(dict(index=group.index,newton_iterations=group.iterations,refresh_bound=group.refresh_bound,
++                        refreshes=count,queries=[dict(k=x.k,row=x.row,position=x.position,alpha=x.alpha,domain=list(x.domain),
++                        first_weight=x.first_weight,first_bias=x.first_bias) for x in group.queries]))
++                tiles_plan.append(tile_plan)
++            schedules.append(dict(layer=layer,squarings=rule.squarings,tiles=tiles_plan,refreshes=cost));softmax+=cost
+         continuation=27*tiles+1
+-        workloads.append(dict(sequence=sequence,tiles=tiles,original_positions=list(c.positions),last_position=c.last_position,
++        workloads.append(dict(softmax_strategy="tile-cohorts-v1",softmax_cohorts=schedules,literal_reference_softmax_refreshes=literal_softmax,sequence=sequence,tiles=tiles,original_positions=list(c.positions),last_position=c.last_position,
+             last_tile=c.last_tile,last_local_row=c.last_local_row,last_row_rotation=c.last_local_row*4096,
+             refresh_counts=dict(rms_inverse=inverse,silu=silu,attention_outer=attention_outer,tail_outer=tail_outer,interlayer=27*tiles,final_input=1,softmax=softmax,
+-                total=inverse+silu+attention_outer+tail_outer+continuation+softmax),
++                total=inverse+silu+attention_outer+tail_outer+continuation+softmax,literal_reference_total=inverse+silu+attention_outer+tail_outer+continuation+literal_softmax),
+             entry_events=[dict(stage=e.stage,layer=e.layer,input_level=e.input_level,bound=e.bound,output_level=e.output_level) for e in c.entry_events],
+             final_stages=[dict(name='select_last_hidden',input_level=4,output_level=3),dict(name='row_to_zero',input_level=3,output_level=3),
+                 dict(name='final_raw_refresh',input_level=3,output_level=25,bound=c.entry_events[-1].bound),dict(name='final_rms',input_level=25,output_level=c.final_norm_level),dict(name='all38_vocabulary_maps',input_level=c.final_norm_level,output_level=c.vocabulary_blocks[0].output_level)],

@@ -1,0 +1,50 @@
+from pathlib import Path
+import datetime,hashlib,json,math,tarfile,sys,xml.etree.ElementTree as ET
+import numpy as np
+repo=Path('/home/jianming_gatech/CROSS');lab=Path('/tmp/bert-fixed-q-registration-diagnosis-v2-20261104');out=Path('/tmp/bert-fixed-q-public-controls-v2-20261104')
+sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest();read=lambda p:json.loads(p.read_bytes());r=read(out/'report.json');h=r['source_hashes_before'];t=read(out/'terminal.json')
+assert sha(out/'report.json')=='4f39e9169aaa3e9436668bddf0ff072f7535f959ceda0b8bee125ec62ef62a0b'and sha(out/'sources.tar.gz')=='c8c8ef5405ed421a53e349f92362b274d0b986ec39069fba2d06f5efadc9b661'
+assert len(h)==49 and h==r['source_hashes_after']==t['tests']['source_before']==t['tests']['source_after']and all(sha(lab/n)==v for n,v in h.items())
+with tarfile.open(out/'sources.tar.gz')as tar:
+ ms=tar.getmembers();assert len(ms)==len({m.name for m in ms})==49 and all(m.isfile()and not Path(m.name).is_absolute()and '..'not in Path(m.name).parts for m in ms)
+ assert {m.name:hashlib.sha256(tar.extractfile(m).read()).hexdigest()for m in ms}==h
+assert r['passed']and r['source_archive_verified']and r['source_files_unchanged']and r['CPU_backend_initialized']and r['guards_restored']and r['devices']==['cpu:0']
+assert r['guard_count']==r['installed_guard_denials']==37 and r['forbidden_during_controls']==0
+cases=list(ET.parse(out/'tests.xml').iter('testcase'));assert len(cases)==16 and not any(x.findall(k)for x in cases for k in ('failure','error','skipped'))
+assert t['session_id']==21330 and t['exit_code']==0 and t['session_reaped']and t['pid_absent']and not Path('/proc',str(r['pid'])).exists()
+previous=read(lab/'parent_report.json')['profiles'];total=0;table_count=0;logical_bytes=0
+assert len(previous)==len(r['profiles'])==3
+for index,(pr,old)in enumerate(zip(r['profiles'],previous,strict=True)):
+ fields=old['registration']['fields'];q,p=fields['q_towers'],fields['p_towers'];d=fields['dnum'];alpha=(100+d-1)//d
+ assert (pr['dnum'],pr['aux_bits'],pr['P_count'],pr['logical_estimated_P_count'],pr['physical_bit_count_lower_bound'])==[(8,30,14,15,13),(6,30,18,19,17),(6,31,17,18,17)][index]
+ assert pr['registered_accepted']is False and pr['actual_QP_secure']is pr['generated_P_exact']is True and math.prod(q+p).bit_length()<=3523
+ assert len(pr['levels'])==50
+ for level,row in enumerate(pr['levels']):
+  n=2*(level+1);parts=[list(range(i,min(i+alpha,n)))for i in range(0,n,alpha)];overall=q[:n]+p
+  assert row['level']==level and row['num_q']==n and row['max_q']==100 and row['fixed_alpha']==alpha and row['partitions']==parts and row['active_digits']==len(parts)
+  assert row['actual_control_sets']==len(parts)+1 and row['descriptor_count']==len(parts)+4 and row['controls_ready']is True and row['rotation_ready']is False and row['P_coverage']is True
+  assert math.prod(p)>=max(math.prod(q[i]for i in part)for part in parts)
+  tables=[];numeric_entries=0
+  def add(array,count=True):
+   nonlocal_dummy=None
+   tables.append(dict(shape=list(array.shape),dtype=str(array.dtype),sha256=hashlib.sha256(array.tobytes()).hexdigest(),nbytes=array.nbytes,counted=array.size if count else 0))
+  add(np.asarray([pow(math.prod(p),-1,v)for v in q[:n]],dtype=np.uint32))
+  non=[[i for i in range(len(overall))if i not in part]for part in parts]
+  bases=[([q[i]for i in part],[overall[i]for i in target])for part,target in zip(parts,non)]+[(p,q[:n])]
+  for source,target in bases:
+   product=math.prod(source);qh=[product//x for x in source]
+   add(np.asarray([pow(x,-1,mod)for x,mod in zip(qh,source)],dtype=np.uint64))
+   add(np.asarray([[x%mod for mod in target]for x in qh],dtype=np.uint64))
+   add(np.asarray([[[(x*(1<<(8*byte))%mod)>>(8*lane)&255 for lane in range(4)]for mod in target]for x in qh for byte in range(4)],dtype=np.uint8))
+  restore=[]
+  for part,other in zip(parts,non):
+   permutation=part+other;restore.append([permutation.index(i)for i in range(len(overall))])
+  for group in (restore,restore,parts):
+   for indices in group:add(np.asarray(indices,dtype=np.uint16),False)
+  assert [{k:v for k,v in x.items()if k not in ('nbytes','counted')}for x in tables]==row['completed_public_tables'],(index,level)
+  assert sum(x['counted']for x in tables)==row['exact_public_constant_entries']
+  assert sum(x['nbytes']for x in tables)==row['explicit_control_array_bytes']
+  total+=row['exact_public_constant_entries'];table_count+=len(tables);logical_bytes+=row['explicit_control_array_bytes']
+assert total==11092910 and not any(n.split('.')[0]in ('jax','jaxlib','jaxite_word','torch','transformers')for n in sys.modules)
+receipt=dict(schema='root-fixed-Q-public-controls-review-v1',checked_at_utc=datetime.datetime.now(datetime.timezone.utc).isoformat(),passed=True,sources=49,current_start_end_archive_equal=True,tests=16,installed_denials=37,public_prefixes=150,independently_recomputed_numeric_entries=total,independently_recomputed_table_hashes=table_count,aggregate_logical_table_bytes=logical_bytes,registered_profile_acceptances=0,report_sha256=sha(out/'report.json'),archive_sha256=sha(out/'sources.tar.gz'),outer_session=21330,outer_exit_code=0,outer_reaped_attested_by_owner=True,process_absent=True,review_imported_runtime_or_backend=False,scope='Public controls/metadata descriptors and exact integer/NumPy table readback only; no compiled HE, context/key/rotation execution, profile change, precision or physical memory bound.')
+root=lab/'root-review';root.mkdir(exist_ok=True);dst=root/'terminal.json';assert not dst.exists();dst.write_text(json.dumps(receipt,indent=2,sort_keys=True)+'\n');print(json.dumps(receipt,sort_keys=True))

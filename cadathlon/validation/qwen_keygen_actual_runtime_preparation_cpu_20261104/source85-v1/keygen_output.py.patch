@@ -1,0 +1,163 @@
+--- readonly42/model_output.py
++++ keygen85/keygen_output.py
+@@ -1,6 +1,6 @@
+ """Bounded public reads and fresh held-parent evidence publication.
+ 
+-Adapted from reviewed checker141 Output; all cleanup uses shared4543. No
++Adapted from readonly42 Output with REQUIRED external parent binding; shared4543. No
+ borrowed-store write, buffered stream, replacement, deletion, or close retry.
+ """
+ import hashlib
+@@ -9,6 +9,8 @@
+ from pathlib import Path
+ from cleanup_origin import protect_body, select
+ from qwen_finalizer import Finalizer
++from qwen_file_contract import canonical
++from qwen_public_parse import parse
+ 
+ _QUARANTINE=[]
+ 
+@@ -68,60 +70,93 @@
+         finish(primary,close,'public read descriptor close')
+ 
+ 
++def expected_parent(raw,parent):
++    if type(raw)is not bytes or not 0<len(raw)<=8192: raise ValueError('bounded immutable external parent bytes required')
++    value=parse(raw)
++    if type(value)is not dict or set(value)!={'path','device','inode','mode'} or canonical(value)!=raw:
++        raise ValueError('exact canonical external parent fields required')
++    if canonical_path(value['path'])!=parent: raise ValueError('external parent path differs')
++    for name,minimum,maximum in (('device',0,None),('inode',1,None),('mode',0,4095)):
++        x=value[name]
++        if type(x)is not int or x<minimum or (maximum is not None and x>maximum): raise ValueError('exact external parent integer required')
++    return (value['path'],value['device'],value['inode'],value['mode'])
++
++
+ class Output:
+-    """Fresh output leaf; an existing trusted parent may have protected siblings."""
+-    def __init__(self,path):
+-        self.path=canonical_path(str(path));self.parent=self.path.parent
+-        self.parent_fd=None;self.fd=None;self.failure=None
+-        self.parent_identity=None;self.owner=None;self.parent_policy=None
+-        primary=None
++    """Fresh evidence leaf under the independently granted original parent."""
++    def _prepare(self,path,parent_bytes):
++        self.path=canonical_path(path);self.parent=self.path.parent
++        self.expected_parent=parent_bytes;self.parent_expectation=expected_parent(parent_bytes,self.parent)
++        self.effective_uid=os.geteuid();self.parent_uid=None
++        self.parent_fd=None;self.fd=None;self.failure=None;self.owner=None
++        self.parent_identity=self.parent_expectation[1:3]
++        self._fixed=(self.path,self.parent,self.expected_parent,self.parent_expectation,self.effective_uid)
++        self._owned_fds=[]
++
++    def __init__(self,path,*,expected_parent):
++        self._prepare(path,expected_parent)
+         try:
+             self.parent_fd=os.open(self.parent,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW|os.O_CLOEXEC)
+-            p=os.fstat(self.parent_fd)
+-            self.parent_identity=identity(p);self.parent_policy=(p.st_uid,stat.S_IMODE(p.st_mode))
+-            self._parent_check()
++            self._owned_fds.append(self.parent_fd)
++            self.parent_uid=self._parent_check()
++            self._parent_uid_fixed=self.parent_uid
+             os.mkdir(self.path.name,0o700,dir_fd=self.parent_fd)
+             self.fd=os.open(self.path.name,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW|os.O_CLOEXEC,dir_fd=self.parent_fd)
++            self._owned_fds.append(self.fd)
+             self.owner=identity(os.fstat(self.fd));self.check()
+         except BaseException as error:
+             primary=protect_body(error);self.close(primary=primary);raise
+ 
+     def _parent_check(self):
++        current=(self.path,self.parent,self.expected_parent,self.parent_expectation,self.effective_uid)
++        if any(a is not b for a,b in zip(current,self._fixed)) or os.geteuid()!=self.effective_uid:
++            raise ValueError('original external output parent binding changed')
++        if self.parent_uid is not None and self.parent_uid!=self._parent_uid_fixed:
++            raise ValueError('captured output parent UID changed')
++        if not self._owned_fds or self.parent_fd!=self._owned_fds[0]: raise ValueError('original output parent descriptor changed')
+         if self.parent.resolve()!=self.parent: raise ValueError('output parent alias differs')
+         held=os.fstat(self.parent_fd);visible=self.parent.lstat()
+         for info in (held,visible):
+             mode=stat.S_IMODE(info.st_mode)
+-            if not stat.S_ISDIR(info.st_mode) or identity(info)!=self.parent_identity or (info.st_uid,mode)!=self.parent_policy:
+-                raise ValueError('original output parent identity differs')
+-            if info.st_uid not in (0,os.getuid()) or (mode&0o022 and not mode&stat.S_ISVTX):
+-                raise ValueError('output parent is not owned or sticky trusted storage')
++            if not stat.S_ISDIR(info.st_mode) or (str(self.parent),info.st_dev,info.st_ino,mode)!=self.parent_expectation:
++                raise ValueError('granted original output parent identity differs')
++            if info.st_uid not in (0,self.effective_uid) or (mode&0o022 and not mode&stat.S_ISVTX):
++                raise ValueError('output parent is not trusted owned or sticky storage')
++            if self.parent_uid is not None and info.st_uid!=self.parent_uid: raise ValueError('original output parent UID differs')
++        if held.st_uid!=visible.st_uid: raise ValueError('held/named output parent UID differs')
++        return held.st_uid
+ 
+     def check(self):
+         if self.failure is not None: raise self.failure
+-        if self.fd is None or self.parent_fd is None: raise ValueError('output is closed')
++        if self.fd is None or self.parent_fd is None or len(self._owned_fds)!=2 or self.fd!=self._owned_fds[1]:
++            raise ValueError('output is closed or descriptor changed')
+         self._parent_check()
+         if self.path.resolve()!=self.path: raise ValueError('output leaf alias differs')
+         held=os.fstat(self.fd);visible=os.stat(self.path.name,dir_fd=self.parent_fd,follow_symlinks=False)
+         for info in (held,visible):
+-            if not stat.S_ISDIR(info.st_mode) or identity(info)!=self.owner or info.st_uid!=os.getuid() or stat.S_IMODE(info.st_mode)!=0o700:
++            if not stat.S_ISDIR(info.st_mode) or identity(info)!=self.owner or info.st_uid!=self.effective_uid or stat.S_IMODE(info.st_mode)!=0o700:
+                 raise ValueError('original fresh output identity differs')
+ 
+     def binding(self):
+         self.check()
+-        return (str(self.path),self.parent_identity,self.parent_policy,self.owner)
++        return (str(self.path),self.expected_parent,self.effective_uid,self.parent_uid,self.owner)
+ 
+     @classmethod
+     def reopen(cls,binding):
+-        value=cls.__new__(cls)
+-        path,parent_identity,parent_policy,owner=binding
+-        value.path=canonical_path(path);value.parent=value.path.parent
+-        value.parent_identity=tuple(parent_identity);value.parent_policy=tuple(parent_policy);value.owner=tuple(owner)
+-        value.parent_fd=None;value.fd=None;value.failure=None
++        if type(binding)is not tuple or len(binding)!=5: raise ValueError('exact immutable output binding required')
++        path,parent_bytes,uid,parent_uid,owner=binding
++        if type(uid)is not int or uid<0 or type(parent_uid)is not int or parent_uid<0:
++            raise ValueError('exact captured output UID required')
++        if type(owner)is not tuple or len(owner)!=2 or any(type(x)is not int or x<0 for x in owner) or owner[1]<=0:
++            raise ValueError('exact captured output inode required')
++        value=cls.__new__(cls);value._prepare(path,parent_bytes)
++        if value.effective_uid!=uid: raise ValueError('original effective UID differs on reopen')
++        value.parent_uid=parent_uid;value._parent_uid_fixed=parent_uid;value.owner=owner
+         try:
+             value.parent_fd=os.open(value.parent,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW|os.O_CLOEXEC)
+-            value._parent_check()
++            value._owned_fds.append(value.parent_fd);value._parent_check()
+             value.fd=os.open(value.path.name,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW|os.O_CLOEXEC,dir_fd=value.parent_fd)
+-            value.check();return value
++            value._owned_fds.append(value.fd);value.check();return value
+         except BaseException as error:
+             primary=protect_body(error);value.close(primary=primary);raise
+ 
+@@ -132,7 +167,7 @@
+         fd=os.open(name,os.O_RDWR|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW|os.O_CLOEXEC,0o600,dir_fd=self.fd)
+         try:
+             before=os.fstat(fd)
+-            if not stat.S_ISREG(before.st_mode) or stat.S_IMODE(before.st_mode)!=0o600 or before.st_uid!=os.getuid() or before.st_size!=0:
++            if not stat.S_ISREG(before.st_mode) or stat.S_IMODE(before.st_mode)!=0o600 or before.st_uid!=self.effective_uid or before.st_size!=0:
+                 raise ValueError('fresh owned evidence file required')
+             position=0
+             while position<len(raw):
+@@ -168,12 +203,13 @@
+         if self.failure is not None:
+             error=self.failure
+             final.attempt('prior uncertain evidence close',lambda:(_ for _ in ()).throw(error))
+-        for name in ('fd','parent_fd'):
+-            fd=getattr(self,name);setattr(self,name,None)
+-            if fd is None: continue
++        # Original acquisition slots are detached before any uncertain close.
++        original=tuple(reversed(self._owned_fds));self._owned_fds.clear()
++        self.fd=None;self.parent_fd=None
++        for fd in original:
+             def close(original=fd):
+                 try: os.close(original)
+                 except BaseException as error:
+                     self.failure=error;_QUARANTINE.append((self,original,error));raise
+-            final.attempt('evidence '+name+' close',close)
++            final.attempt('evidence original descriptor close',close)
+         final.raise_if_failed()

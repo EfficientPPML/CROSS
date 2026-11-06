@@ -1,0 +1,47 @@
+{
+  "actual_execution_authorized": false,
+  "affinity": [
+    108,
+    109,
+    110,
+    111
+  ],
+  "argv": [
+    "taskset",
+    "-c",
+    "108-111",
+    "env",
+    "-i",
+    "PATH=/usr/bin:/bin",
+    "HOME=/home/jianming_gatech",
+    "LANG=C.UTF-8",
+    "TZ=UTC",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1",
+    "OPENBLAS_NUM_THREADS=4",
+    "OMP_NUM_THREADS=4",
+    "MKL_NUM_THREADS=4",
+    "/tmp/cross-pretrained-validation-env/bin/python",
+    "-I",
+    "-B",
+    "/tmp/qwen-model-stage-boundary-proof-20261104/preparation-v1/executed_driver.py"
+  ],
+  "passed": true,
+  "peer_review_sha256": "fbbf1cc22b51bb56b16877eb53361807d0fe45e5311e73e625bbd4572b8fa054",
+  "pins": {
+    "executed_driver.py": "27003446b2b49976d4dd6f067fdfae63a42d229538ec4f189d5d42a148f732fc",
+    "launch-proposal.json": "627e31456b21a4157a447e3d5b7f6ce03dbda2f97225cf23730f1fab9cf9bb26",
+    "run_config.json": "da8269a2002ebeb55cb8084b27e26c592d95aee53e1f2c78cd168242c64a4137",
+    "sources-before.json": "30ab709ada68471e65767357808398990cbb36329bb29650d91fc0b1a75a3f1a",
+    "sources.tar.gz": "b456d1148ee8d2abe7e12444e5f9e3cdf2a806df7809771cf8b90c2d62780286",
+    "worker_driver.py": "f26cf16ec3ad1fca60ea93c7fb6e07059f597123e86662e23dc0a7f437cda91b"
+  },
+  "schema": "qwen-model-stage-root-focused-launch-review-v1",
+  "scope": "One exact48-case synthetic/owned-small-file/recording execution; collection checked before fixtures. No inherited suites, retained body reads, backend/context/model or actual role.",
+  "script_sha256": "a19bbd71508086507797d28534004602b2d21a0f9781e79097fcd068c0732ca2",
+  "source_count": 38,
+  "source_review_sha256": "89d6b35c30b990966e6cb3d2edab6956946855a157606728a935c6850581984c",
+  "synthetic_launch_authorized": true,
+  "tests": 48,
+  "unchanged_admitted_harness_semantics": true
+}

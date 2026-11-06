@@ -1,0 +1,1095 @@
+{
+  "actual_execution_authorized": false,
+  "actual_metadata_authoritative": false,
+  "count": 47,
+  "formula": "1 input + 6 phase ends + 2*19 refresh boundaries + 1 final RMS + 1 output",
+  "new_exports": 46,
+  "records": [
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "admitted_original_input_reference",
+      "clear_trace_index": 0,
+      "index": 0,
+      "kind": "input",
+      "label": "original_embeddings",
+      "planned_level": 49,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        100
+      ],
+      "proposed_export_ordinal": null,
+      "public_bound": null,
+      "raw_payload_bytes": 104857600,
+      "stack": []
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 31,
+      "index": 1,
+      "kind": "phase",
+      "label": "packed Qwen layer 0: attention ready",
+      "planned_level": 8,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        18
+      ],
+      "proposed_export_ordinal": 0,
+      "public_bound": null,
+      "raw_payload_bytes": 18874368,
+      "stack": []
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 35,
+      "index": 2,
+      "kind": "refresh_before",
+      "label": "0",
+      "planned_level": 6,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        14
+      ],
+      "proposed_export_ordinal": 1,
+      "public_bound": 0.5,
+      "raw_payload_bytes": 14680064,
+      "stack": [
+        "normalize:1",
+        "polynomial:5:inverse_sqrt"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 36,
+      "index": 3,
+      "kind": "refresh_after",
+      "label": "0",
+      "planned_level": 25,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        52
+      ],
+      "proposed_export_ordinal": 2,
+      "public_bound": 0.5,
+      "raw_payload_bytes": 54525952,
+      "stack": [
+        "normalize:1",
+        "polynomial:5:inverse_sqrt"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 48,
+      "index": 4,
+      "kind": "refresh_before",
+      "label": "1",
+      "planned_level": 2,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        6
+      ],
+      "proposed_export_ordinal": 3,
+      "public_bound": 4.0,
+      "raw_payload_bytes": 6291456,
+      "stack": [
+        "linear:6"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 49,
+      "index": 5,
+      "kind": "refresh_after",
+      "label": "1",
+      "planned_level": 25,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        52
+      ],
+      "proposed_export_ordinal": 4,
+      "public_bound": 4.0,
+      "raw_payload_bytes": 54525952,
+      "stack": [
+        "linear:6"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 52,
+      "index": 6,
+      "kind": "phase",
+      "label": "packed Qwen layer 0: MLP ready",
+      "planned_level": 8,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        18
+      ],
+      "proposed_export_ordinal": 5,
+      "public_bound": null,
+      "raw_payload_bytes": 18874368,
+      "stack": []
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 56,
+      "index": 7,
+      "kind": "refresh_before",
+      "label": "2",
+      "planned_level": 6,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        14
+      ],
+      "proposed_export_ordinal": 6,
+      "public_bound": 0.5,
+      "raw_payload_bytes": 14680064,
+      "stack": [
+        "normalize:2",
+        "polynomial:7:inverse_sqrt"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 57,
+      "index": 8,
+      "kind": "refresh_after",
+      "label": "2",
+      "planned_level": 25,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        52
+      ],
+      "proposed_export_ordinal": 7,
+      "public_bound": 0.5,
+      "raw_payload_bytes": 54525952,
+      "stack": [
+        "normalize:2",
+        "polynomial:7:inverse_sqrt"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 70,
+      "index": 9,
+      "kind": "refresh_before",
+      "label": "3",
+      "planned_level": 3,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        8
+      ],
+      "proposed_export_ordinal": 8,
+      "public_bound": 0.5,
+      "raw_payload_bytes": 8388608,
+      "stack": [
+        "normalize_heads:2",
+        "polynomial:8:inverse_sqrt"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 71,
+      "index": 10,
+      "kind": "refresh_after",
+      "label": "3",
+      "planned_level": 25,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        52
+      ],
+      "proposed_export_ordinal": 9,
+      "public_bound": 0.5,
+      "raw_payload_bytes": 54525952,
+      "stack": [
+        "normalize_heads:2",
+        "polynomial:8:inverse_sqrt"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 80,
+      "index": 11,
+      "kind": "refresh_before",
+      "label": "4",
+      "planned_level": 3,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        8
+      ],
+      "proposed_export_ordinal": 10,
+      "public_bound": 0.5,
+      "raw_payload_bytes": 8388608,
+      "stack": [
+        "normalize_heads:3",
+        "polynomial:9:inverse_sqrt"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 81,
+      "index": 12,
+      "kind": "refresh_after",
+      "label": "4",
+      "planned_level": 25,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        52
+      ],
+      "proposed_export_ordinal": 11,
+      "public_bound": 0.5,
+      "raw_payload_bytes": 54525952,
+      "stack": [
+        "normalize_heads:3",
+        "polynomial:9:inverse_sqrt"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 89,
+      "index": 13,
+      "kind": "refresh_before",
+      "label": "5",
+      "planned_level": 2,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        6
+      ],
+      "proposed_export_ordinal": 12,
+      "public_bound": 4.0,
+      "raw_payload_bytes": 6291456,
+      "stack": [
+        "attention:1"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 90,
+      "index": 14,
+      "kind": "refresh_after",
+      "label": "5",
+      "planned_level": 25,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        52
+      ],
+      "proposed_export_ordinal": 13,
+      "public_bound": 4.0,
+      "raw_payload_bytes": 54525952,
+      "stack": [
+        "attention:1"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 93,
+      "index": 15,
+      "kind": "refresh_before",
+      "label": "6",
+      "planned_level": 2,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        6
+      ],
+      "proposed_export_ordinal": 14,
+      "public_bound": 4.0,
+      "raw_payload_bytes": 6291456,
+      "stack": [
+        "attention:1"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 94,
+      "index": 16,
+      "kind": "refresh_after",
+      "label": "6",
+      "planned_level": 25,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        52
+      ],
+      "proposed_export_ordinal": 15,
+      "public_bound": 4.0,
+      "raw_payload_bytes": 54525952,
+      "stack": [
+        "attention:1"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 103,
+      "index": 17,
+      "kind": "refresh_before",
+      "label": "7",
+      "planned_level": 2,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        6
+      ],
+      "proposed_export_ordinal": 16,
+      "public_bound": 2.0,
+      "raw_payload_bytes": 6291456,
+      "stack": [
+        "linear:10"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 104,
+      "index": 18,
+      "kind": "refresh_after",
+      "label": "7",
+      "planned_level": 25,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        52
+      ],
+      "proposed_export_ordinal": 17,
+      "public_bound": 2.0,
+      "raw_payload_bytes": 54525952,
+      "stack": [
+        "linear:10"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 107,
+      "index": 19,
+      "kind": "phase",
+      "label": "packed Qwen layer 1: attention ready",
+      "planned_level": 8,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        18
+      ],
+      "proposed_export_ordinal": 18,
+      "public_bound": null,
+      "raw_payload_bytes": 18874368,
+      "stack": []
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 111,
+      "index": 20,
+      "kind": "refresh_before",
+      "label": "8",
+      "planned_level": 6,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        14
+      ],
+      "proposed_export_ordinal": 19,
+      "public_bound": 0.5,
+      "raw_payload_bytes": 14680064,
+      "stack": [
+        "normalize:3",
+        "polynomial:12:inverse_sqrt"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 112,
+      "index": 21,
+      "kind": "refresh_after",
+      "label": "8",
+      "planned_level": 25,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        52
+      ],
+      "proposed_export_ordinal": 20,
+      "public_bound": 0.5,
+      "raw_payload_bytes": 54525952,
+      "stack": [
+        "normalize:3",
+        "polynomial:12:inverse_sqrt"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 124,
+      "index": 22,
+      "kind": "refresh_before",
+      "label": "9",
+      "planned_level": 2,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        6
+      ],
+      "proposed_export_ordinal": 21,
+      "public_bound": 4.0,
+      "raw_payload_bytes": 6291456,
+      "stack": [
+        "linear:13"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 125,
+      "index": 23,
+      "kind": "refresh_after",
+      "label": "9",
+      "planned_level": 25,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        52
+      ],
+      "proposed_export_ordinal": 22,
+      "public_bound": 4.0,
+      "raw_payload_bytes": 54525952,
+      "stack": [
+        "linear:13"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 128,
+      "index": 24,
+      "kind": "phase",
+      "label": "packed Qwen layer 1: MLP ready",
+      "planned_level": 8,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        18
+      ],
+      "proposed_export_ordinal": 23,
+      "public_bound": null,
+      "raw_payload_bytes": 18874368,
+      "stack": []
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 132,
+      "index": 25,
+      "kind": "refresh_before",
+      "label": "10",
+      "planned_level": 6,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        14
+      ],
+      "proposed_export_ordinal": 24,
+      "public_bound": 0.5,
+      "raw_payload_bytes": 14680064,
+      "stack": [
+        "normalize:4",
+        "polynomial:14:inverse_sqrt"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 133,
+      "index": 26,
+      "kind": "refresh_after",
+      "label": "10",
+      "planned_level": 25,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        52
+      ],
+      "proposed_export_ordinal": 25,
+      "public_bound": 0.5,
+      "raw_payload_bytes": 54525952,
+      "stack": [
+        "normalize:4",
+        "polynomial:14:inverse_sqrt"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 146,
+      "index": 27,
+      "kind": "refresh_before",
+      "label": "11",
+      "planned_level": 3,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        8
+      ],
+      "proposed_export_ordinal": 26,
+      "public_bound": 0.5,
+      "raw_payload_bytes": 8388608,
+      "stack": [
+        "normalize_heads:4",
+        "polynomial:15:inverse_sqrt"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 147,
+      "index": 28,
+      "kind": "refresh_after",
+      "label": "11",
+      "planned_level": 25,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        52
+      ],
+      "proposed_export_ordinal": 27,
+      "public_bound": 0.5,
+      "raw_payload_bytes": 54525952,
+      "stack": [
+        "normalize_heads:4",
+        "polynomial:15:inverse_sqrt"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 156,
+      "index": 29,
+      "kind": "refresh_before",
+      "label": "12",
+      "planned_level": 3,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        8
+      ],
+      "proposed_export_ordinal": 28,
+      "public_bound": 0.5,
+      "raw_payload_bytes": 8388608,
+      "stack": [
+        "normalize_heads:5",
+        "polynomial:16:inverse_sqrt"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 157,
+      "index": 30,
+      "kind": "refresh_after",
+      "label": "12",
+      "planned_level": 25,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        52
+      ],
+      "proposed_export_ordinal": 29,
+      "public_bound": 0.5,
+      "raw_payload_bytes": 54525952,
+      "stack": [
+        "normalize_heads:5",
+        "polynomial:16:inverse_sqrt"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 165,
+      "index": 31,
+      "kind": "refresh_before",
+      "label": "13",
+      "planned_level": 2,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        6
+      ],
+      "proposed_export_ordinal": 30,
+      "public_bound": 4.0,
+      "raw_payload_bytes": 6291456,
+      "stack": [
+        "attention:2"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 166,
+      "index": 32,
+      "kind": "refresh_after",
+      "label": "13",
+      "planned_level": 25,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        52
+      ],
+      "proposed_export_ordinal": 31,
+      "public_bound": 4.0,
+      "raw_payload_bytes": 54525952,
+      "stack": [
+        "attention:2"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 169,
+      "index": 33,
+      "kind": "refresh_before",
+      "label": "14",
+      "planned_level": 2,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        6
+      ],
+      "proposed_export_ordinal": 32,
+      "public_bound": 4.0,
+      "raw_payload_bytes": 6291456,
+      "stack": [
+        "attention:2"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 170,
+      "index": 34,
+      "kind": "refresh_after",
+      "label": "14",
+      "planned_level": 25,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        52
+      ],
+      "proposed_export_ordinal": 33,
+      "public_bound": 4.0,
+      "raw_payload_bytes": 54525952,
+      "stack": [
+        "attention:2"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 179,
+      "index": 35,
+      "kind": "refresh_before",
+      "label": "15",
+      "planned_level": 2,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        6
+      ],
+      "proposed_export_ordinal": 34,
+      "public_bound": 2.0,
+      "raw_payload_bytes": 6291456,
+      "stack": [
+        "linear:17"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 180,
+      "index": 36,
+      "kind": "refresh_after",
+      "label": "15",
+      "planned_level": 25,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        52
+      ],
+      "proposed_export_ordinal": 35,
+      "public_bound": 2.0,
+      "raw_payload_bytes": 54525952,
+      "stack": [
+        "linear:17"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 183,
+      "index": 37,
+      "kind": "phase",
+      "label": "packed Qwen layer 2: attention ready",
+      "planned_level": 8,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        18
+      ],
+      "proposed_export_ordinal": 36,
+      "public_bound": null,
+      "raw_payload_bytes": 18874368,
+      "stack": []
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 187,
+      "index": 38,
+      "kind": "refresh_before",
+      "label": "16",
+      "planned_level": 6,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        14
+      ],
+      "proposed_export_ordinal": 37,
+      "public_bound": 0.5,
+      "raw_payload_bytes": 14680064,
+      "stack": [
+        "normalize:5",
+        "polynomial:19:inverse_sqrt"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 188,
+      "index": 39,
+      "kind": "refresh_after",
+      "label": "16",
+      "planned_level": 25,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        52
+      ],
+      "proposed_export_ordinal": 38,
+      "public_bound": 0.5,
+      "raw_payload_bytes": 54525952,
+      "stack": [
+        "normalize:5",
+        "polynomial:19:inverse_sqrt"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 200,
+      "index": 40,
+      "kind": "refresh_before",
+      "label": "17",
+      "planned_level": 2,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        6
+      ],
+      "proposed_export_ordinal": 39,
+      "public_bound": 4.0,
+      "raw_payload_bytes": 6291456,
+      "stack": [
+        "linear:20"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 201,
+      "index": 41,
+      "kind": "refresh_after",
+      "label": "17",
+      "planned_level": 25,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        52
+      ],
+      "proposed_export_ordinal": 40,
+      "public_bound": 4.0,
+      "raw_payload_bytes": 54525952,
+      "stack": [
+        "linear:20"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 204,
+      "index": 42,
+      "kind": "phase",
+      "label": "packed Qwen layer 2: MLP ready",
+      "planned_level": 8,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        18
+      ],
+      "proposed_export_ordinal": 41,
+      "public_bound": null,
+      "raw_payload_bytes": 18874368,
+      "stack": []
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 208,
+      "index": 43,
+      "kind": "refresh_before",
+      "label": "18",
+      "planned_level": 6,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        14
+      ],
+      "proposed_export_ordinal": 42,
+      "public_bound": 0.5,
+      "raw_payload_bytes": 14680064,
+      "stack": [
+        "normalize:6",
+        "polynomial:21:inverse_sqrt"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 209,
+      "index": 44,
+      "kind": "refresh_after",
+      "label": "18",
+      "planned_level": 25,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        52
+      ],
+      "proposed_export_ordinal": 43,
+      "public_bound": 0.5,
+      "raw_payload_bytes": 54525952,
+      "stack": [
+        "normalize:6",
+        "polynomial:21:inverse_sqrt"
+      ]
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 212,
+      "index": 45,
+      "kind": "normalize_after",
+      "label": "6",
+      "planned_level": 6,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        14
+      ],
+      "proposed_export_ordinal": 44,
+      "public_bound": null,
+      "raw_payload_bytes": 14680064,
+      "stack": []
+    },
+    {
+      "actual_scale_source": "retained original ciphertext, then independent metadata replay; never clear nominal replacement",
+      "artifact_kind": "new_opaque_export",
+      "clear_trace_index": 215,
+      "index": 46,
+      "kind": "output",
+      "label": "logits",
+      "planned_level": 5,
+      "planned_nsd": 1,
+      "planned_shape": [
+        1,
+        2,
+        256,
+        512,
+        12
+      ],
+      "proposed_export_ordinal": 45,
+      "public_bound": null,
+      "raw_payload_bytes": 12582912,
+      "stack": []
+    }
+  ],
+  "schema": "qwen-toy5-checkpoint-selection-plan-v1",
+  "source_report_sha256": "1207f2cd2328ddfc5a7e06f622579d956968382ffd581d59f769ef8909168cdd",
+  "status": "design only; no writer/role selected"
+}

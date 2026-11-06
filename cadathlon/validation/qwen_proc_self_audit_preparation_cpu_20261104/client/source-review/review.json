@@ -1,0 +1,125 @@
+{
+  "actual_execution_ready": false,
+  "backend_or_context_calls": false,
+  "borrowed_body_or_private_reads": false,
+  "candidate_imports": false,
+  "capacity_or_proc_observations": false,
+  "current_archive_map_equal": true,
+  "declared_overlays": {
+    "client_role_source_pins.py": {
+      "parent": {
+        "path": "/tmp/qwen-client-role-authority-20261104/client_role_source_pins.py",
+        "sha256": "2fdd3fa16ea1e461cb9eac85c344a654d005723327d9d6ee26f3061bfd2d3d18"
+      },
+      "selected_sha256": "640ad5a5acf71527aa408899d3d86767236b4649c3f67d883d9706c0956b4f37"
+    },
+    "client_stage.py": {
+      "parent": {
+        "path": "/tmp/qwen-client-stage-glue-v2-20261104/client_stage.py",
+        "sha256": "e822bb2d77c8310875458c4a7821e9e9d48df977508757dbd6736de7909945dd"
+      },
+      "selected_sha256": "bbe8ecc9d68db97c6460e76fbb0cf2fd4926e20667267f8cd423b74b02160cb3"
+    },
+    "qwen_file_lifecycle.py": {
+      "parent": {
+        "path": "/tmp/qwen-client-stage-glue-v2-20261104/qwen_file_lifecycle.py",
+        "sha256": "39366fc06adbb69d55928c8f5131faa4bdf46500852768c6a44444c072fb6782"
+      },
+      "selected_sha256": "1ff592c510f0943d0fe5308aec84e00cdd888586563db54d534de74742ada91d"
+    },
+    "qwen_key_loader.py": {
+      "parent": {
+        "path": "/tmp/qwen-client-stage-glue-v2-20261104/qwen_key_loader.py",
+        "sha256": "cef368d4016a930fdee7b8e05f19826cde9b67de1e52f6e4fa78d00ec3b19d80"
+      },
+      "selected_sha256": "92735bd7f78ed8ccc567160e9147373b62b8bd5cdbf68ea5e60dfa124a393ab5"
+    },
+    "qwen_publisher.py": {
+      "parent": {
+        "path": "/tmp/qwen-client-stage-glue-v2-20261104/qwen_publisher.py",
+        "sha256": "dc6fc6733d9740ae9d19998ed4303214466dd8ae752dfefefb474b5b1aa4f8d3"
+      },
+      "selected_sha256": "22b6bda76d53dbc79ac0fd19422ba4b228e0017dd93168ac8e15bdfe1746fa58"
+    }
+  },
+  "findings": [
+    {
+      "evidence_kind": "Exact source/AST ordering, no runtime reproduction",
+      "id": "client-kernel-self-alias",
+      "listdir_distinction": "check_capacity later uses os.listdir(/proc/self/fd) for FD count. This audit does not intercept os.listdir; that call is not the reported open-alias blocker. No listdir/capacity call was executed by this reviewer.",
+      "mechanism": "AccessScope.kernel contains literal /proc/self/status,cgroup,mountinfo. access rejects p.resolve()!=p before its kernel allowlist. On the specified Linux process /proc/self resolves to this PID; check_capacity after audit.install reaches status and triggers sticky open alias denial.",
+      "ordering": "First /proc/meminfo read may pass; /proc/self/status is next, before backend import or output creation. Earlier independent admission failures remain possible.",
+      "repair_boundary": "Use a separately reviewed exact current-process kernel path identity policy; retain fail-closed aliases for ordinary public/key/input/output paths. Preserve held464.",
+      "severity": "blocks future actual execution",
+      "source_files": [
+        "qwen_client_dependencies.py",
+        "qwen_client_resource.py",
+        "qwen_client_process.py"
+      ]
+    }
+  ],
+  "fixed_core_sources": 34,
+  "fixed_prerequisites": 93,
+  "read_source_pins": {
+    "ACTUAL_CLIENT_SOURCE.md": "880243758c6d7c951f9b7b13a213dc3d9ea6ca3318cb5bea68c3aab781732ff5",
+    "actual_client_selection.json": "9d16bdc07efa9b9c2ba142b7aeb1bc65f5620e2b6081132cb5a628781e88467e",
+    "actual_client_selection_base.json": "0a074b9d67d5a56d38ffea4cd9a3b941c94171312f39be342d73ccdf08839958",
+    "client_loader_factoring.patch.txt": "01cd5d293a983f9177c7b86bb963dd86e53369322c21d6e99b58a8b76778b36e",
+    "client_output_shared85.patch.txt": "a1b0f06f5e754433f25c4cc553fc526a941103e7abc6b0c0726089286fa0617b",
+    "client_role_source_pins.py": "640ad5a5acf71527aa408899d3d86767236b4649c3f67d883d9706c0956b4f37",
+    "client_stage.py": "bbe8ecc9d68db97c6460e76fbb0cf2fd4926e20667267f8cd423b74b02160cb3",
+    "client_stage_factoring.patch.txt": "6102cda1ab01da173831c29537a5175d7605f813cc43f3435c01da6d5989115a",
+    "model_output.py": "9a02dc51d133c3741ce6c40ee82b44bd4f4cef8af50fa5311618a9b2f35b5ceb",
+    "publisher_actual_parent.patch.txt": "febc12ed21bf22e1ce068d9efca6e2696d46990724d56d05b61e6606b39c952f",
+    "qwen_backend_composition.py": "4922518125324ccef64bf8747e10d804e7887bbae3c211d89856eccda87a13c1",
+    "qwen_backend_identity.py": "284817f7aa3ba2c2ccc2ad4d9d30d2bfab3bc4ba9566d2af9cd18215d1bfa35d",
+    "qwen_client_authority_packet.py": "fcd96eafe994b30b696ef26e428a6ccc8615e04384257ca46fedbdac4695dcca",
+    "qwen_client_backend.py": "07ad60f464ef0feb8df73a7f61d7ba47db7c1fcb28b11082e5f50a6dace7a900",
+    "qwen_client_dependencies.json": "fdfbc2781ca16595b2b90c490e24263dc7ddc930336d0a7afcdf3386d4807ef7",
+    "qwen_client_dependencies.py": "aacd47725484dfe74346d3f3052498a6f01aaf9174368529922973e9f9547399",
+    "qwen_client_entry.py": "011e76b4d93f4b93ebb48d9cc80ad2a5032d20706652a176db9c83c64d36d7a2",
+    "qwen_client_entry_status.json": "b4c3dc1fb68ec245a70396e4d15734a67fb6664944901ff6d76ce1e8aed17c36",
+    "qwen_client_input_files.py": "b903ea64bf07d801c48064617ce02036ebdbf8bc9c7aa5439cf029673910bb23",
+    "qwen_client_orchestration.py": "8086ab097055e51a42bb96a2161133b4080e00e8247c00d2fadb68b0efdb2fb1",
+    "qwen_client_process.py": "fa1044c57ae761df5caa0647e71bfb81b8bf22ac0536e955e22ab728ea95e639",
+    "qwen_client_resource.py": "40b97b5980c4ca2c9864e64203a9340a8ee1f0142ceadb4682fa186caf743ba0",
+    "qwen_client_role_policy.json": "325ff002a45888832b43fec0552a8c58b4b93bca9762be82ddaa4c67b9db59ae",
+    "qwen_file_lifecycle.py": "1ff592c510f0943d0fe5308aec84e00cdd888586563db54d534de74742ada91d",
+    "qwen_key_loader.py": "92735bd7f78ed8ccc567160e9147373b62b8bd5cdbf68ea5e60dfa124a393ab5",
+    "qwen_key_readers.py": "5b83d0a279a89f937dbf524223257780d8cea0d0ec65274632e5c60d44f319dc",
+    "qwen_publisher.py": "22b6bda76d53dbc79ac0fd19422ba4b228e0017dd93168ac8e15bdfe1746fa58",
+    "runtime/jaxite_word/__init__.py": "fc78b0845c2314a523cb20e490ded0c8ef09c9c05fa50d92eb218ef247533096",
+    "runtime/jaxite_word/ckks_ctx.py": "bc978cb7412b55416f7ed634a689ae616a263b0f47fd9eef996ba244f2505db6"
+  },
+  "remaining_obligations": [
+    "Repair audit/kernel path mismatch in separate successor",
+    "Focused current-source orchestration tests and installed import/origin proof",
+    "Externally reviewed client resource policy",
+    "Ready source successor and independent conditional/phase grants",
+    "Real key/body/backend behavior remains unexecuted",
+    "Independent normal-zero/reap/group/root admission for any eventual actual result"
+  ],
+  "required_role_module_names": 14,
+  "review_conclusion": "One concrete source-derived audit/resource integration blocker; no additional concrete issue found in the bounded reviewed paths.",
+  "review_script_sha256": "d1cc5bb9cfbb8e6174478a9c9af5aa2583406db1726837972bac3b19b1444217",
+  "reviewed_paths": {
+    "aliases": "Fixed34 bytes, paired flat/package identity and retained core/class bindings; loader retains original p56/defaultbc978 and patches both keygen aliases before context.",
+    "embedding": "Granted file state precedes hash/header/body; original parent+file FDs retained; immutable float64 snapshot and original positions feed unchanged layout; no model/token reader.",
+    "entry": "External canonical compact map/full tree and fresh main/file/spec checks precede local helpers; false source status denies before packet/backend access; source cap64MiB is separate from unchanged body limits.",
+    "outputs": "Original external parent, UID/modes/exclusive outputs/fsync/readback; captured callback checks and shared cleanup policy; no deletion or uncertain-close retry in selected new output path.",
+    "public_authority": "Externally pinned complete packet reauthenticates model/key conditional/phase and distinct server-source envelope; no outcome-derived pins or inherited actual PASS.",
+    "response": "Complete38 original held/named effective-UID root and six-field payload checks precede private manifest/key admission; original consumer arrays retire inside nested key scope; actual-scale/full65536/approximationTrue decoder and immutable snapshots unchanged.",
+    "terminal": "Postpublication source/sticky audit and original output/audit retirement are attempted; escaped BaseException maps70, reports alone do not establish successful independent normal-zero/reap/root admission."
+  },
+  "reviewer": "cnn_performance",
+  "schema": "qwen-actual-client464-source-peer-review-v1",
+  "selected_base": 431,
+  "source_archive_sha256": "41f61e4ae593336f63565ebf3f7da24948db14ff361a4706ee3d78b02b426938",
+  "source_count": 464,
+  "source_edits": false,
+  "source_manifest_sha256": "41d563410ec152d2ae390396284fc776da940276141552a867ae775a797f93d2",
+  "source_only": true,
+  "source_root": "/tmp/qwen-actual-client-role-runtime-20261104",
+  "tests_or_collection": false,
+  "unchanged_base": 426
+}

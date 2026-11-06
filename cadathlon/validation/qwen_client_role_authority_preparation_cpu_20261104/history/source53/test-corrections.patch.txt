@@ -1,0 +1,98 @@
+--- held52/selected_client_tests.json
++++ successor53/selected_client_tests.json
+@@ -91,7 +91,7 @@
+     "test_client_server.py::test_repinned_all38_response_metadata_rejects_shape_order_identity_errors[boolean_row]",
+     "test_client_server.py::test_repinned_all38_response_metadata_rejects_shape_order_identity_errors[wrong_context]",
+     "test_client_server.py::test_repinned_all38_response_metadata_rejects_shape_order_identity_errors[wrong_input_digest]",
+-    "test_client_server.py::test_repinned_all38_response_metadata_rejects_shape_order_identity_errors[nonfinite_scale]",
++    "test_client_server.py::test_repinned_all38_response_metadata_rejects_shape_order_identity_errors[string_scale]",
+     "test_client_server.py::test_repinned_inner_file_proof_cannot_be_reinterpreted_as_actual_server_source[inner_source_as_server]",
+     "test_client_server.py::test_repinned_inner_file_proof_cannot_be_reinterpreted_as_actual_server_source[inner_count]",
+     "test_client_server.py::test_repinned_inner_file_proof_cannot_be_reinterpreted_as_actual_server_source[inner_exit]",
+@@ -400,7 +400,7 @@
+     },
+     {
+       "classname": "test_client_server",
+-      "name": "test_repinned_all38_response_metadata_rejects_shape_order_identity_errors[nonfinite_scale]"
++      "name": "test_repinned_all38_response_metadata_rejects_shape_order_identity_errors[string_scale]"
+     },
+     {
+       "classname": "test_client_server",
+--- held52/synthetic_client_chain.py
++++ successor53/synthetic_client_chain.py
+@@ -93,6 +93,7 @@
+     links=dict(server_source_manifest_sha256=source_hash,server_source_archive_sha256=fake_hash('SYNTHETIC server archive'),server_grant_sha256=fake_hash('SYNTHETIC server grant'),server_role_review_sha256=fake_hash('SYNTHETIC server role review'),scientific_authorization_sha256=fake_hash('SYNTHETIC independent scientific authorization'),request_contract_sha256=sha(request_raw),input_digest=input_digest,response_manifest_sha256=sha(response_raw),inner_report_sha256=sha(inner_raw),inner_outer_sha256=sha(inner_outer_raw),context_id=c['public']['context_id'],model_id=c['public']['model_id'],model_evidence=model_evidence,key_evidence=keys)
+     process=dict(pid=707,pgid=706)
+     envelope=dict(schema='qwen-actual-server-envelope-v1',mode='full28_keyless_server',passed=True,complete=True,error_type=None,**links,source_hashes_before=clone(source),source_hashes_after=clone(source),process=process,checks={n:True for n in CHECKS},audit_denials=[],scope=dict(full28_encrypted_evaluation=True,private_key_read=False,client_codec_called=False,key_generation=False,coefficient_revision=False,scientific_acceptance_claimed=False))
++    envelope=clone(envelope)  # Mutation hooks own their nested document state.
+     if change_envelope:change_envelope(envelope)
+     envelope_raw=canonical(envelope)
+     outer_links={n:links[n]for n in ('server_source_manifest_sha256','server_source_archive_sha256','server_grant_sha256','request_contract_sha256','response_manifest_sha256')}
+@@ -100,6 +101,7 @@
+     if change_outer:change_outer(outer)
+     outer_raw=canonical(outer)
+     root=dict(schema='qwen-actual-server-root-admission-v1',passed=True,envelope_sha256=sha(envelope_raw),outer_sha256=sha(outer_raw),**links,source_archive_members_verified=True,all_required_links_verified=True,current_response_store_verified=True,scientific_authorization_verified=True,client_execution_authorized=False)
++    root=clone(root)  # Keep links/expected model pins independent of root negatives.
+     if change_root:change_root(root)
+     root_raw=canonical(root)
+     pins=dict(schema='qwen-actual-server-expected-pins-v1',**{n:links[n]for n in links if n not in ('context_id','model_id')},server_source_map=source,envelope_sha256=sha(envelope_raw),outer_sha256=sha(outer_raw),root_review_sha256=sha(root_raw))
+--- held52/test_client_phase.py
++++ successor53/test_client_phase.py
+@@ -33,14 +33,14 @@
+     def change(row):
+         if case=='same_outputs':row['outputs']['result']=row['outputs']['evidence']
+         elif case=='nested_output':row['outputs']['result']['path']='/synthetic-unopened-phase/evidence/result';row['outputs']['result']['parent']['path']='/synthetic-unopened-phase/evidence'
+-        elif case=='ancestor_input':row['outputs']['result']['path']='/synthetic-unopened-input';row['outputs']['result']['parent']['path']='/'
++        elif case=='ancestor_input':row['input']['path']='/synthetic-unopened-input/nested/original.npy';row['outputs']['result']['path']='/synthetic-unopened-input/nested';row['outputs']['result']['parent']['path']='/synthetic-unopened-input'
+         elif case=='key_private':row['outputs']['result']['path']=row['key_stores']['private']['path']+'/result';row['outputs']['result']['parent']['path']=row['key_stores']['private']['path']
+         elif case=='model_root':row['outputs']['result']['path']='/synthetic-unopened-model/qkv/result';row['outputs']['result']['parent']['path']='/synthetic-unopened-model/qkv'
+         elif case=='source_root':row['outputs']['result']['path']=c.conditional['request_producer'].grant['source_root']+'/result';row['outputs']['result']['parent']['path']=c.conditional['request_producer'].grant['source_root']
+         elif case=='input_in_keys':row['input']['path']=row['key_stores']['public']['path']+'/original.npy'
+         elif case=='wrong_parent':row['outputs']['result']['parent']['path']='/other'
+         elif case=='boolean_inode':row['outputs']['result']['parent']['inode']=True
+-    with pytest.raises((ValueError,TypeError)):phase_bundle(c,'request_producer',change_grant=change).admit()
++    with pytest.raises((ValueError,TypeError),match='fresh output overlaps' if case=='ancestor_input' else None):phase_bundle(c,'request_producer',change_grant=change).admit()
+ 
+ def test_request_phase_rejects_attached_server_admission_and_response_requires_one(client_chain):
+     c=client_chain();p=phase_bundle(c,'response_consumer')
+--- held52/test_client_server.py
++++ successor53/test_client_server.py
+@@ -18,7 +18,7 @@
+     assert rows[-1]['binding']['logical']==dict(index=37,start=151552,stop=151936,physical_row=0,level=2)
+     assert phase.execution_authorized is admitted.execution_authorized is False
+ 
+-@pytest.mark.parametrize('case',['missing_last','duplicate_index','wrong_level','wrong_last_stop','boolean_row','wrong_context','wrong_input_digest','nonfinite_scale'])
++@pytest.mark.parametrize('case',['missing_last','duplicate_index','wrong_level','wrong_last_stop','boolean_row','wrong_context','wrong_input_digest','string_scale'])
+ def test_repinned_all38_response_metadata_rejects_shape_order_identity_errors(client_chain,case):
+     c=client_chain();ready=c.key.ready();request=c.request(ready)
+     def change(row):
+@@ -29,18 +29,20 @@
+         elif case=='boolean_row':row['artifacts'][0]['binding']['logical']['physical_row']=False
+         elif case=='wrong_context':row['artifacts'][0]['binding']['context_id']=fake_hash('other context')
+         elif case=='wrong_input_digest':row['input_digest']=fake_hash('other input')
+-        elif case=='nonfinite_scale':row['artifacts'][0]['binding']['scale']='nan'
++        elif case=='string_scale':row['artifacts'][0]['binding']['scale']='nan'
+     with pytest.raises((ValueError,TypeError)):server_bundle(c,ready,request,change_response=change).admit()
+ 
+ @pytest.mark.parametrize('case',['inner_source_as_server','inner_count','inner_exit','inner_boolean_pid','inner_unreaped'])
+ def test_repinned_inner_file_proof_cannot_be_reinterpreted_as_actual_server_source(client_chain,case):
+     c=client_chain();ready=c.key.ready();request=c.request(ready);changes={}
+-    if case=='inner_source_as_server':changes['change_inner']=lambda r:r.__setitem__('producer_source_manifest_sha256',fake_hash('actual server map'))
++    if case=='inner_source_as_server':
++        actual_server_map=server_bundle(c,ready,request).envelope['server_source_manifest_sha256']
++        changes['change_inner']=lambda r:r.__setitem__('producer_source_manifest_sha256',actual_server_map)
+     elif case=='inner_count':changes['change_inner']=lambda r:r.__setitem__('output_count',37)
+     elif case=='inner_exit':changes['change_inner_outer']=lambda r:r.__setitem__('exit_code',1)
+     elif case=='inner_boolean_pid':changes['change_inner_outer']=lambda r:r.__setitem__('server_pid',True)
+     elif case=='inner_unreaped':changes['change_inner_outer']=lambda r:r.__setitem__('reaped',False)
+-    with pytest.raises((ValueError,TypeError)):server_bundle(c,ready,request,**changes).admit()
++    with pytest.raises((ValueError,TypeError),match='request-provenance' if case=='inner_source_as_server' else None):server_bundle(c,ready,request,**changes).admit()
+ 
+ @pytest.mark.parametrize('case',['incomplete','audit_denial','changed_source','cleanup_false','private_read','scientific_claim','extra','bool_count'])
+ def test_repinned_server_envelope_cannot_hide_source_cleanup_or_scope_failures(client_chain,case):
+@@ -77,4 +79,4 @@
+         elif case=='scientific_authorization':row['scientific_authorization_verified']=False
+         elif case=='enables_client':row['client_execution_authorized']=True
+         elif case=='other_model_proof':row['model_evidence']['report_sha256']=fake_hash('other report')
+-    with pytest.raises((ValueError,TypeError)):server_bundle(c,ready,request,change_root=change).admit()
++    with pytest.raises((ValueError,TypeError),match='independent actual server root links' if case=='other_model_proof' else None):server_bundle(c,ready,request,change_root=change).admit()

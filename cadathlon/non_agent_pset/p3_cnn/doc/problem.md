@@ -1,13 +1,25 @@
-# Problem 3: Faster encrypted LeNet and AlexNetTiny
+# Problem 3: Faster encrypted CNNs
 
-**CADathlon · `non_agent_pset` · BONUS problem · 20 points · proposed duration: 8 hours**
+**CADathlon · `non_agent_pset` · BONUS problem · 20 points · 8-hour event · 1.5-hour topic slot**
+
+The default 1.5-hour topic uses the explicitly reduced **compact-v1**
+competition in **section 2.4**. Follow that section's models, commands and
+scoring rules. It has two different, small CNNs,
+a complete 300-second evaluation budget and a separately measured 20-point
+rubric. The LeNet/AlexNetTiny definitions and six fixtures below remain the
+**legacy full-model challenge**; no compact result substitutes for them.
+Sections 2.1, 2.3, 3 and 4 document the separate legacy schedule. Section 2.2
+defines the shared implementation interface and identifies its legacy-only
+requirements. Organizers announce the chosen schedule and calibration before
+the event.
 
 ## 1. Introduction
 
 An encrypted classifier protects an image while a remote server evaluates a
-neural network. CROSS already implements LeNet and AlexNetTiny using CKKS.
-Your task is to improve **the latency and throughput of both encrypted
-networks** while preserving their outputs, weights and cryptographic security.
+neural network. Your task is to improve **the latency and throughput of both
+encrypted networks in the selected schedule** while preserving their outputs,
+weights and cryptographic security. The compact schedule uses the two small
+models in section 2.4; the legacy schedule uses LeNet and AlexNetTiny.
 
 This track is for teams working without generative AI or coding agents.
 The supplied source, tutorials, conventional editors, profilers, debuggers,
@@ -15,15 +27,15 @@ documentation and deterministic autocomplete are permitted. Organizers provide
 the same offline documentation to all teams. No AI-use requirement applies
 to the resulting model; “non-AI” describes the team's development tools.
 
-This is a compiler and accelerator optimization problem. The trained models
-are fixed. BAT turns suitable high-precision arithmetic into low-precision
+This is a compiler and accelerator optimization problem. The selected models
+and their weights are fixed. BAT turns suitable high-precision arithmetic into low-precision
 matrix operations, while MAT reduces runtime data rearrangement. Use profiles
 to identify when arithmetic, rotations, packing, compilation or memory traffic
 limits the current CROSS path.
 
 ## 2. Problem statement
 
-### 2.1 Two required networks
+### 2.1 Legacy networks
 
 | Network | Exact encrypted architecture | Data and client preprocessing |
 |---|---|---|
@@ -48,7 +60,8 @@ Implement **`build_mapping(model, input_shape, *, batch, devices)`** in
 **`src/cnn_opt.py`**. Return a prepared CROSS `Mapping` (or a compatible object
 with `encrypt_input`, `execute`, `decrypt_output`, `release`). The supplied
 model is an ordinary evaluation-mode `torch.nn.Module` with fixed weights.
-The baseline follows:
+The legacy baseline follows the example below. For compact-v1, begin with
+`baseline_student.build_mapping`, which selects the compact profile:
 
 ```python
 program = nn.vectorize(model, input_shape)
@@ -73,22 +86,23 @@ You may add helpers. Do not change the benchmark, scoring, fixtures or checks.
 You may not change weights, activations, input resolution, numerical
 preprocessing, network topology, test data, batch sizes or assigned devices.
 No pruning, retraining, approximate model replacement or plaintext fallback.
-Keep the organizer baseline's validated RingConfig, Q/P chains, scale policy,
+For the legacy track, keep the organizer baseline's validated RingConfig, Q/P chains, scale policy,
 key-switch decomposition and 128-bit security target. The currently derived
 plans for both networks have depth 7, degree 32768, 16384 slots, 8 logical Q
 moduli and dnum 4. The release manifest and actual plan are authoritative;
 print and compare them before timing. Small insecure test rings receive no
 performance credit. Secure encryption noise must remain freshly sampled.
 
-Complete these tasks:
+Complete these tasks for the legacy track; compact tasks and scoring are in
+section 2.4:
 
-1. **P2.1 — establish the baseline:** verify model/parameter provenance, run
+1. **P3.1 — establish the baseline:** verify model/parameter provenance, run
    the exact cleartext and HE paths, and profile each model at batch 1.
-2. **P2.2 — improve LeNet:** optimize at least one measured bottleneck and
+2. **P3.2 — improve LeNet:** optimize at least one measured bottleneck and
    explain which operations or memory transfers it reduces.
-3. **P2.3 — improve AlexNetTiny:** measure whether the same change helps;
+3. **P3.3 — improve AlexNetTiny:** measure whether the same change helps;
    add a model-independent improvement if necessary.
-4. **P2.4 — compare and explain:** run all six workload configurations,
+4. **P3.4 — compare and explain:** run all six workload configurations,
    preserve numerical and label accuracy, and report speedup with evidence.
 
 Suggested starting points: lazy constants; avoiding repeated setup in serving;
@@ -98,7 +112,7 @@ memory lifetimes. CROSS chooses BSGS plans inside Mapping; obsolete per-demo
 Use `mapping.estimate_live_memory()` for a logical estimate, and a profiler
 for actual peak HBM. Clearly distinguish the two measurements.
 
-### 2.3 Inputs, outputs and six ranked workloads
+### 2.3 Legacy inputs, outputs and six ranked workloads
 
 The public `test1.in`–`test6.in` are JSON descriptions with model, batch size,
 synthetic data seed and weight seed. `testN.out` contains real cleartext logits
@@ -137,7 +151,68 @@ mismatch or dropped images fails the case. Organizers validate that the
 unmodified baseline passes before release. Tolerances are contest choices,
 not guarantees from CKKS.
 
-## 3. How to compile and run
+### 2.4 Compact competition for a short topic slot
+
+`compact-v1` is a published model-size reduction. It still requires real
+homomorphic convolution, quadratic activation and classification with the
+same numerical and 128-bit actual-ring gates. Its fixed seeded models are
+arithmetic/performance workloads; no trained accuracy or state-of-the-art
+claim is made for them.
+
+| Case | Fixed model | Input | Encrypted architecture |
+|---|---|---|---|
+| `student1.in` | `CompactGrayCNN` | batch 1, 1×28×28 | Conv 1→2, kernel 5, stride 4, padding 2; square; flatten 98; Linear 98→10 |
+| `student2.in` | `CompactRGBCNN` | batch 1, 3×16×16 | Conv 3→4, kernel 3, stride 4, padding 1; square; flatten 64; Linear 64→10 |
+
+Use `compact_models.py` and the supplied `student*.in/.out` fixtures exactly.
+Implement the same `cnn_opt.py::build_mapping` interface. The provided
+`baseline_student.py` derives a secure N=8192, 42-bit-scale, four-digit plan
+for these depth-three models. It does not change the original six models or
+fixtures. Candidate implementations may optimize packing and parameters but
+must preserve the selected models and pass the live-ring security checks.
+
+From `src/`, run:
+
+```bash
+make compact-reference-test  # plaintext fixture integrity only
+make competition-baseline   # complete real encrypted reference evaluation
+make competition-evaluate   # complete evaluation of cnn_opt.py
+make competition-score
+```
+
+Each evaluation uses one TPU device, includes model/key setup, one validated
+warmup and three measured encrypted requests per model, and releases all
+owned state. The parent process enforces a **300-second whole-evaluation
+budget**, including process startup and cleanup. Reports contain actual rings,
+raw timing samples, fixture/model/source hashes, software versions and hardware
+identity. A CPU fallback, failed case, timeout or cleanup error fails the run.
+The complete reference evaluation measured **145.00 seconds (2m25s)** on the
+validation host, with both models passing and maximum logit errors of
+1.39e-08 and 1.22e-08. The measured server medians were 0.02108s and 0.01957s. These are
+compact-model results, not timings for the original full models; recalibrate
+on the contest host. Preserve raw reports and source/fixture hashes.
+
+The compact rubric is **20 points total**. Each model earns five correctness
+points, plus `5*clamp(log2(T_reference/T_candidate),0,1)` speed points, using the
+median of its three **server execution** samples. The complete run must pass
+both models and finish within the budget. An unchanged measured baseline earns
+10/20; a correct 2× speedup on both models earns 20/20; regressions receive no
+speed points. This is the default compact-v1 rubric. The legacy all-or-nothing
+SOTA gate applies only to the separately announced legacy challenge.
+
+`score_compact.py` requires a successful baseline report from the same models,
+fixtures, device kind and software environment. No invented latency constant
+or full-model historical baseline is accepted. The judge must rerun candidate
+code and use protected reports; contestant-supplied JSON alone is not a score.
+Model changes or fixture lookup are invalid optimizations. Preserve the source
+patch and audit evaluator privacy, just as for the legacy challenge.
+
+## 3. How to compile and run the legacy full-model challenge
+
+This section's six-case commands, setup limits, warmup counts and timing
+boundary apply to the legacy schedule. For `compact-v1`, use section 2.4's
+competition commands, 300-second total budget, one warmup and three measured
+requests per model, and server-execution scoring boundary.
 
 The organizer image contains Python, NumPy, PyTorch, JAX, the TPU runtime,
 and the pinned CROSS checkout. `CROSS_ROOT` selects another checkout if
@@ -187,7 +262,7 @@ Record physical peak device memory and process RSS, plus logical memory
 estimates if used. A throughput increase obtained by changing the batch or
 hardware does not count as an optimization.
 
-## 4. How to score
+## 4. How to score the legacy full-model challenge
 
 This is the **bonus problem** of `non_agent_pset`. It is worth **20 points on
 top of** the 100 available in Problem 1, which is the essential problem. Attempt

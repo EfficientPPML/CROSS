@@ -1,0 +1,599 @@
+--- /dev/null
++++ b/cadathlon/common/encrypted_integer_affine.py
+@@ -0,0 +1,185 @@
++"""Experimental public integer affine and fixed CKKS scale planning.
++
++Requires an unbounded, keyless initialized compiled evaluator; no codec or refresh is
++performed. No encrypted-domain or convergence bound is inferred. The hardened
++API has a secure two-update regression. The separate measured thirteen-update
++K128/s4/C32 experiment used its earlier isolated source version.
++"""
++import copy
++from decimal import Decimal, localcontext
++import math
++import numpy as np
++
++__all__ = ("integer_affine", "affine_at_scale", "backward_scale_plan")
++
++
++def _positive_scale(value, name):
++    if (isinstance(value, (bool, np.bool_)) or not isinstance(value, (int, float, np.integer, np.floating))
++            or not math.isfinite(value) or value <= 0):
++        raise ValueError(name + " must be a finite positive real scale")
++    result = float(value)
++    if not math.isfinite(result) or result <= 0:
++        raise ValueError(name + " is not representable as binary64")
++    return result
++
++
++def _public_reals(value, *, name):
++    raw = np.asarray(value)
++    if raw.dtype.kind not in "fiu":
++        raise ValueError(name + " must be real, excluding bool/complex/object values")
++    if isinstance(value, (list, tuple)) and any(isinstance(v, (bool, np.bool_, complex, np.complexfloating)) for v in np.asarray(value, dtype=object).flat):
++        raise ValueError(name + " must exclude bool/complex values")
++    with np.errstate(over="ignore", invalid="ignore"):
++        result = raw.astype(np.float64)
++    if not np.isfinite(result).all():
++        raise ValueError(name + " must be finite and representable as float64")
++    return result
++
++
++def _encode_checked(arithmetic, slots, level, scale):
++    scale = _positive_scale(scale, "public encoding scale")
++    nonzero = np.abs(slots[slots != 0])
++    if nonzero.size:
++        if float(nonzero.min()) * scale < .5:
++            raise ValueError("nonzero public coefficient would round away at this encoding scale")
++        if not math.isfinite(float(nonzero.max()) * scale):
++            raise ValueError("scaled public coefficient is not representable")
++    plaintext = arithmetic._encode_public(slots, level, scale)
++    # This is public data, never a ciphertext inspection. The slot guard alone
++    # cannot exclude a whole nonuniform FFT image quantizing to zero.
++    if nonzero.size and not np.any(np.asarray(plaintext.polynomial)):
++        raise ValueError("nonzero public coefficients encoded to the zero plaintext")
++    return plaintext
++
++
++
++def _require_unbounded_keyless_owner(arithmetic):
++    # Bound-aware owners need sound bound propagation; dropping their contracts
++    # would break their next operation. This API deliberately excludes them.
++    if callable(getattr(arithmetic, "declare_bound", None)):
++        raise ValueError("integer helpers do not support bound-aware arithmetic")
++    context = arithmetic.ctx
++    cache = getattr(context, "_param_cache", None)
++    parameters = getattr(context, "parameters", None)
++    missing = object()
++    if (cache is None or not isinstance(parameters, dict)
++            or getattr(context, "secret_key", missing) is not None
++            or getattr(cache, "secret_key", missing) is not None
++            or parameters.get("secret_key") is not None):
++        raise ValueError("integer helpers require an initialized keyless server")
++    return context
++
++
++def integer_affine(arithmetic, value, multiplier, *, bias=0.):
++    """Apply an integer addition chain and a normally encoded real bias.
++
++    Level/scale/NSD stay unchanged. Integer residue arithmetic is exact; the
++    plaintext bias still has ordinary CKKS encoding error. Existing semantic
++    public contracts are removed from the returned wrapper, never the input.
++    """
++    if type(multiplier) is not int or abs(multiplier).bit_length() > 64:
++        raise ValueError('multiplier must be a public signed integer of at most 64 bits')
++    if isinstance(bias, bool) or not isinstance(bias, (int, float)) or not math.isfinite(bias):
++        raise ValueError('bias must be a finite public real scalar')
++    context = _require_unbounded_keyless_owner(arithmetic)
++    if type(getattr(value, "_ckks_nsd", None)) is not int or value._ckks_nsd != 1:
++        raise ValueError("explicit noise-scale degree1 required")
++    _positive_scale(getattr(value, "_ckks_scale", None), "ciphertext scale")
++    level = arithmetic._level(value)
++    arithmetic._prepare(level)
++    # Even the identity and zero paths use the strict current-context facade
++    # to validate layout, residue representation, batch and ordered moduli.
++    zero = context.he_sub[level].sub(value, value)
++    magnitude = abs(multiplier)
++    result = zero if not magnitude else copy.copy(value)
++    for bit in bin(magnitude)[3:]:
++        result = context.he_add[level].add(result, result)
++        if bit == '1':
++            result = context.he_add[level].add(result, value)
++    if multiplier < 0:
++        result = context.he_sub[level].sub(zero, result)
++    if bias:
++        plaintext = _encode_checked(arithmetic, arithmetic._public_slots(bias), level, result._ckks_scale)
++        result = context.he_add[level].add_plain(result, plaintext)
++    for name in tuple(vars(result)):
++        if name.startswith('_public_'):
++            delattr(result, name)
++    return arithmetic._finish(result)
++
++
++def backward_scale_plan(q_moduli, *, input_scale, first_output_level, updates, final_scale):
++    """Solve public two-level Newton scale recurrence, then simulate floats.
++
++    The initial affine consumes one level before first_output_level. This
++    returns a target for a REAL affine encoding/rescale, never a scale edit.
++    All later metadata entries are the exact binary64 arithmetic recurrence.
++    """
++    q = tuple(q_moduli)
++    if (not q or len(q) % 2 or any(type(x) is not int or x <= 1 for x in q)
++            or type(first_output_level) is not int
++            or type(updates) is not int or updates < 1
++            or first_output_level < 2*(updates-1)
++            or first_output_level+1 >= len(q)//2):
++        raise ValueError('invalid public composite-degree-two level schedule')
++    input_scale = _positive_scale(input_scale, "input scale")
++    final_scale = _positive_scale(final_scale, "final scale")
++    def divisor(level):
++        return q[2*level]*q[2*level+1]
++    levels = tuple(first_output_level-2*index for index in range(updates))
++    with localcontext() as context:
++        context.prec = 100
++        sigma = Decimal.from_float(float(final_scale))
++        delta = Decimal.from_float(float(input_scale))
++        for level in reversed(levels[:-1]):
++            sigma = (sigma*Decimal(divisor(level))*Decimal(divisor(level-1))/delta).sqrt()
++        initial_decimal = str(sigma)
++        initial = float(sigma)
++    # The initial PTCT and rescale operate in binary64 metadata as well.
++    first_divisor = divisor(first_output_level+1)
++    encode_scale = initial*first_divisor/float(input_scale)
++    _positive_scale(initial, "planned initial scale")
++    _positive_scale(encode_scale, "planned plaintext scale")
++    actual = float(input_scale)*encode_scale/first_divisor
++    rows = [dict(update=1,level=levels[0],scale=actual)]
++    for index, level in enumerate(levels[:-1],2):
++        product = float(input_scale)*actual/divisor(level)
++        actual = actual*product/divisor(level-1)
++        rows.append(dict(update=index,level=level-2,product_scale=product,scale=actual))
++    if not all(math.isfinite(value) and value > 0 for row in rows for name, value in row.items() if name in ("scale", "product_scale")):
++        raise ValueError('public scale recurrence is not representable')
++    return dict(initial_scale_decimal=initial_decimal,initial_target_scale=initial,
++                initial_plaintext_scale=encode_scale,rows=rows,
++                requested_final_scale=float(final_scale),
++                final_relative_difference=actual/float(final_scale)-1)
++
++
++def affine_at_scale(arithmetic, value, weight, bias, *, output_scale):
++    """One actual PTCT affine/rescale, requiring compiled CD2/NSD1 helpers."""
++    context = _require_unbounded_keyless_owner(arithmetic)
++    if type(getattr(value, "_ckks_nsd", None)) is not int or value._ckks_nsd != 1:
++        raise ValueError("explicit noise-scale degree1 required")
++    _positive_scale(getattr(value, "_ckks_scale", None), "ciphertext scale")
++    level = arithmetic._level(value)
++    output_scale = _positive_scale(output_scale, "planned output scale")
++    if level < 1:
++        raise ValueError("one level required for initial affine")
++    if getattr(context, "composite_degree", None) != 2:
++        raise ValueError("initial affine requires composite degree2")
++    if (getattr(arithmetic, "_plaintext_multiply", None) is None or getattr(arithmetic, "_rescale", None) is None):
++        raise ValueError("initial affine requires compiled plaintext/rescale helpers")
++    weight = arithmetic._public_slots(_public_reals(weight, name="affine weight"))
++    bias = arithmetic._public_slots(_public_reals(bias, name="affine bias"))
++    arithmetic._prepare(level)
++    divisor = math.prod(arithmetic.ctx._param_cache.q_moduli_at_level(level)[-2:])
++    encode_scale = output_scale*divisor/value._ckks_scale
++    plaintext = _encode_checked(arithmetic, weight, level, encode_scale)
++    product = arithmetic._plaintext_multiply.multiply(value, plaintext, level)
++    constant = _encode_checked(arithmetic, bias, level, product._ckks_scale)
++    product = arithmetic.ctx.he_add[level].add_plain(product, constant)
++    result = arithmetic._rescale.rescale(product, level, level-1)
++    # One actual PTCT followed by one actual composite rescale.
++    result._ckks_nsd = 1
++    for name in tuple(vars(result)):
++        if name.startswith('_public_'):
++            delattr(result, name)
++    return arithmetic._finish(result)
+--- /dev/null
++++ b/cadathlon/common/encrypted_scaled_newton.py
+@@ -0,0 +1,88 @@
++"""Experimental static scaled-Newton composition; no codec or refresh.
++
++Bound-aware evaluators are rejected; their bound propagation is outside this API.
++The caller supplies the exact positive integer C, initial estimate, count and
++scale plan. This module does not derive or round C from a key count K. The
++caller must establish its own public denominator domain/seed certificate;
++measured K128/s4/C32 evidence does not certify arbitrary K or full softmax.
++"""
++import math
++import numpy as np
++from encrypted_integer_affine import affine_at_scale,integer_affine,_positive_scale,_public_reals,_require_unbounded_keyless_owner
++
++__all__ = ("integer_newton_updates",)
++
++
++def integer_newton_updates(arithmetic, denominator, *, normalization_factor,
++                           initial_estimate, updates, first_output_scale):
++    """Yield a fixed CD2/NSD1 leveled circuit; exhaust for complete coverage.
++
++    The compiled arithmetic/context and denominator metadata must remain fixed
++    while this generator is suspended. No refresher is permitted. Public scale
++    recurrences are checked against real primitive outputs, never assigned to
++    them. No encrypted-domain membership or convergence guarantee is inferred.
++    """
++    if type(normalization_factor) is not int or not 1 <= normalization_factor < 2**64:
++        raise ValueError('positive public integer normalization factor required')
++    if type(updates) is not int or updates < 1:
++        raise ValueError('positive public update count required')
++    first_output_scale=_positive_scale(first_output_scale,'planned first output scale')
++    initial=_public_reals(initial_estimate,name='public initial estimate')
++    if initial.ndim not in (0,1) or (initial.ndim==1 and initial.shape!=(arithmetic.ctx.num_slots,)):
++        raise ValueError('public estimate must be a scalar or one full slot vector')
++    if not (initial>0).all():raise ValueError('public estimates must be positive')
++    with np.errstate(over='ignore',invalid='ignore',under='ignore'):
++        weight=(-normalization_factor*initial)*initial
++        bias=2.*initial
++    if not np.isfinite(weight).all() or not np.isfinite(bias).all():
++        raise ValueError('initial public affine coefficients overflow')
++    if np.any(weight==0):raise ValueError('nonzero initial coefficient underflowed to zero')
++    weight,bias=(float(weight),float(bias)) if initial.ndim==0 else (weight.copy(),bias.copy())
++    context=_require_unbounded_keyless_owner(arithmetic);cache=context._param_cache
++    if type(context.composite_degree) is not int or context.composite_degree!=2:
++        raise ValueError('static Newton schedule requires composite degree2')
++    if getattr(arithmetic,'refresher',None) is not None:
++        raise ValueError('static Newton schedule forbids mid-circuit refresh')
++    level=arithmetic._level(denominator)
++    if type(getattr(denominator,'_ckks_nsd',None)) is not int or denominator._ckks_nsd!=1:
++        raise ValueError('static Newton schedule requires explicit NSD1')
++    source_scale=_positive_scale(denominator._ckks_scale,'denominator scale')
++    if level<2*updates-1:raise ValueError('insufficient fixed levels for all Newton updates')
++    q=tuple(cache.q_moduli_at_level(level))
++    if len(q)!=2*(level+1):raise ValueError('noncanonical CD2 modulus schedule')
++    def divisor(L):return math.prod(q[2*L:2*L+2])
++    encode_scale=_positive_scale(first_output_scale*divisor(level)/source_scale,'initial plaintext scale')
++    actual_scale=_positive_scale(source_scale*encode_scale/divisor(level),'first output scale')
++    rows=[(level-1,actual_scale,None)]
++    for _ in range(1,updates):
++        L=rows[-1][0]
++        product_scale=_positive_scale(source_scale*actual_scale/divisor(L),'planned product scale')
++        actual_scale=_positive_scale(actual_scale*product_scale/divisor(L-1),'planned update scale')
++        rows.append((L-2,actual_scale,product_scale))
++    def static():
++        _require_unbounded_keyless_owner(arithmetic)
++        if (arithmetic.ctx is not context or context._param_cache is not cache
++                or context.composite_degree!=2 or getattr(arithmetic,'refresher',None) is not None
++                or tuple(cache.q_moduli_at_level(level))!=q
++                or arithmetic._level(denominator)!=level
++                or denominator._ckks_scale!=source_scale
++                or type(getattr(denominator,'_ckks_nsd',None)) is not int or denominator._ckks_nsd!=1):
++            raise ValueError('static context, denominator or refresh assumptions changed')
++    def check(value,L,scale):
++        static()
++        if (arithmetic._level(value)!=L or value._ckks_scale!=scale
++                or type(getattr(value,'_ckks_nsd',None)) is not int or value._ckks_nsd!=1):
++            raise ValueError('actual primitive metadata differs from static scale/level schedule')
++    static()
++    z=affine_at_scale(arithmetic,denominator,weight,bias,output_scale=first_output_scale)
++    check(z,*rows[0][:2]);yield 1,z
++    for update in range(2,updates+1):
++        static();expected_level,expected_scale,product_scale=rows[update-1]
++        check(z,*rows[update-2][:2])
++        product=arithmetic.multiply(denominator,z)
++        check(product,expected_level+1,product_scale)
++        correction=integer_affine(arithmetic,product,-normalization_factor,bias=2.)
++        check(correction,expected_level+1,product_scale)
++        z=arithmetic.multiply(z,correction)
++        check(z,expected_level,expected_scale)
++        yield update,z
+--- a/cadathlon/common/package.py
++++ b/cadathlon/common/package.py
+@@ -13,6 +13,7 @@
+     "encrypted_primitives.py", "encrypted_ntt.py", "encrypted_packed_qwen.py", "encrypted_packed_transformer.py",
+     "encrypted_bounded_arithmetic.py", "encrypted_bounded_transformer.py",
+     "encrypted_streaming_linear.py",
++    "encrypted_integer_affine.py", "encrypted_scaled_newton.py",
+ )
+ PUBLIC_RELEASE_EVIDENCE = (
+     "validation/p1_student_suite.json", "validation/p3_compact_baseline.json",
+--- /dev/null
++++ b/cadathlon/tests/test_encrypted_integer_affine.py
+@@ -0,0 +1,224 @@
++"""Public/static API regression; actual encrypted two-update proof is separate."""
++from pathlib import Path
++import sys
++sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'common'))
++from types import SimpleNamespace
++import numpy as np
++import pytest
++import encrypted_scaled_newton as module
++from encrypted_integer_affine import backward_scale_plan
++
++
++class Value:
++    def __init__(self,data,level=26,scale=23562.,nsd=1):
++        self.data=np.asarray(data);self.level=level;self._ckks_scale=scale;self._ckks_nsd=nsd
++
++
++class Arithmetic:
++    def __init__(self,slots):
++        self.q=list(range(101,155));self.calls=[];self.refresher=None
++        self.ctx=SimpleNamespace(num_slots=slots,composite_degree=2,secret_key=None,parameters={},
++            _param_cache=SimpleNamespace(secret_key=None,q_moduli_at_level=lambda level:tuple(self.q[:2*(level+1)])))
++    def _level(self,value):return value.level
++    def multiply(self,left,right):
++        self.calls.append('multiply');level=min(left.level,right.level)
++        divisor=self.q[2*level]*self.q[2*level+1]
++        return Value(left.data*right.data,level-1,left._ckks_scale*right._ckks_scale/divisor)
++
++
++@pytest.fixture
++def arithmetic(monkeypatch):
++    a=Arithmetic(8)
++    def affine(arithmetic,value,weight,bias,*,output_scale):
++        assert arithmetic is a;arithmetic.calls.append(('first_affine',output_scale))
++        divisor=a.q[2*value.level]*a.q[2*value.level+1]
++        scale=value._ckks_scale*(output_scale*divisor/value._ckks_scale)/divisor
++        return Value(value.data*weight+bias,value.level-1,scale)
++    def integer(arithmetic,value,multiplier,*,bias):
++        assert arithmetic is a;arithmetic.calls.append(('integer',multiplier,bias))
++        return Value(multiplier*value.data+bias,value.level,value._ckks_scale)
++    monkeypatch.setattr(module,'affine_at_scale',affine);monkeypatch.setattr(module,'integer_affine',integer)
++    return a
++
++
++def test_all_thirteen_updates_and_declared_checkpoints(arithmetic):
++    x=np.array([.00390625,.04,.2,.4,1.,1.5,1.9,2.])
++    initial=np.array([.2,.3,.2,.1,.03,.02,.02,.01]);original=initial.copy();input_copy=x.copy()
++    first_scale=backward_scale_plan(arithmetic.q,input_scale=23562.,first_output_level=25,updates=13,final_scale=23562.)['initial_target_scale']
++    outputs=dict(module.integer_newton_updates(arithmetic,Value(x),normalization_factor=32,initial_estimate=initial,updates=13,first_output_scale=first_scale))
++    expected=x*((-32*initial)*initial)+2.*initial
++    for update in range(1,14):
++        if update>1:expected=expected*(2.-32*(x*expected))
++        assert np.array_equal(outputs[update].data,expected)
++    assert list(outputs)==list(range(1,14))
++    assert arithmetic.calls==[('first_affine',first_scale)]+['multiply',('integer',-32,2.),'multiply']*12
++    assert np.array_equal(initial,original) and np.array_equal(x,input_copy)
++    assert outputs[9] is not outputs[13] and outputs[12] is not outputs[13]
++
++
++@pytest.mark.parametrize('field,value',[
++    ('normalization_factor',True),('normalization_factor',32.),('normalization_factor',0),
++    ('updates',0),('updates',True),('first_output_scale',float('inf')),
++    ('first_output_scale',True),('initial_estimate',0.),('initial_estimate',float('nan')),
++    ('initial_estimate',[1.,2.]),('initial_estimate',np.ones((2,4))),('initial_estimate',1e308)])
++def test_invalid_contract_before_server_operations(arithmetic,field,value):
++    kwargs=dict(normalization_factor=32,initial_estimate=.1,updates=13,first_output_scale=123.)
++    kwargs[field]=value
++    with pytest.raises(ValueError):list(module.integer_newton_updates(arithmetic,Value(np.ones(8)),**kwargs))
++    assert arithmetic.calls==[]
++
++
++def test_thirteen_update_real_affine_scale_recurrence():
++    q=tuple(range(101,155));delta=float(q[-2]*q[-1])
++    plan=backward_scale_plan(q,input_scale=delta,first_output_level=25,updates=13,final_scale=delta)
++    scale=delta*plan['initial_plaintext_scale']/(q[52]*q[53])
++    assert plan['rows'][0]['scale']==scale
++    for row in plan['rows'][1:]:
++        L=row['level']+2
++        product=delta*scale/(q[2*L]*q[2*L+1])
++        scale=scale*product/(q[2*(L-1)]*q[2*(L-1)+1])
++        assert row['product_scale']==product and row['scale']==scale
++    assert [r['level'] for r in plan['rows']]==list(range(25,0,-2))
++    assert abs(plan['final_relative_difference'])<2e-12
++
++from types import SimpleNamespace
++import numpy as np
++import pytest
++import encrypted_integer_affine as affine
++import encrypted_scaled_newton as newton
++
++
++def options(**kw):
++    return dict(normalization_factor=32,initial_estimate=.1,updates=3,first_output_scale=123.)|kw
++
++
++@pytest.mark.parametrize('value',[True,np.bool_(True),[True]+[.1]*7,1+.0j,np.ones(8,dtype=complex),np.array([.1]*8,dtype=object),1e-300])
++def test_estimate_rejected_before_any_operation(arithmetic,value):
++    with pytest.raises(ValueError):list(newton.integer_newton_updates(arithmetic,Value(np.ones(8)),**options(initial_estimate=value)))
++    assert arithmetic.calls==[]
++
++
++@pytest.mark.parametrize('change',['refresh','level','scale','nsd','q','context','yielded_scale','yielded_level'])
++def test_static_schedule_rejects_generator_resume_drift(arithmetic,change):
++    denominator=Value(np.ones(8));g=newton.integer_newton_updates(arithmetic,denominator,**options())
++    _,first=next(g);calls=list(arithmetic.calls)
++    if change=='refresh':arithmetic.refresher=object()
++    elif change=='level':denominator.level-=1
++    elif change=='scale':denominator._ckks_scale*=2
++    elif change=='nsd':denominator._ckks_nsd=True
++    elif change=='q':arithmetic.q[-1]+=2
++    elif change=='context':arithmetic.ctx=SimpleNamespace(**vars(arithmetic.ctx))
++    elif change=='yielded_scale':first._ckks_scale*=2
++    elif change=='yielded_level':first.level-=1
++    with pytest.raises(ValueError):next(g)
++    assert arithmetic.calls==calls
++
++
++@pytest.mark.parametrize('change',['short','refresh','cd1','nsd2','nsdbool','overflow'])
++def test_fixed_plan_rejected_before_operations(arithmetic,change):
++    value=Value(np.ones(8));kw=options()
++    if change=='short':value.level=4
++    elif change=='refresh':arithmetic.refresher=object()
++    elif change=='cd1':arithmetic.ctx.composite_degree=1
++    elif change=='nsd2':value._ckks_nsd=2
++    elif change=='nsdbool':value._ckks_nsd=True
++    elif change=='overflow':kw['first_output_scale']=1e308
++    with pytest.raises(ValueError):list(newton.integer_newton_updates(arithmetic,value,**kw))
++    assert arithmetic.calls==[]
++
++
++def test_actual_affine_scale_mismatch_not_relabelled(arithmetic,monkeypatch):
++    original=newton.affine_at_scale
++    def wrong(*a,**kw):
++        value=original(*a,**kw);value._ckks_scale*=2;return value
++    monkeypatch.setattr(newton,'affine_at_scale',wrong)
++    with pytest.raises(ValueError,match='actual primitive metadata'):
++        next(newton.integer_newton_updates(arithmetic,Value(np.ones(8)),**options()))
++
++
++@pytest.mark.parametrize('value',[True,1+0j,np.bool_(False),float('inf')])
++def test_planner_scale_type_rejected(value):
++    with pytest.raises(ValueError):affine.backward_scale_plan(range(101,109),input_scale=value,first_output_level=2,updates=2,final_scale=123.)
++
++
++def test_subresolution_and_zero_public_encoding_fail_closed():
++    calls=[]
++    def encode(slots,level,scale):calls.append((slots,level,scale));return SimpleNamespace(polynomial=np.zeros(4,dtype=np.uint32))
++    a=SimpleNamespace(_encode_public=encode)
++    with pytest.raises(ValueError,match='round away'):affine._encode_checked(a,np.array([0.,1e-100]),1,100.)
++    assert not calls
++    with pytest.raises(ValueError,match='zero plaintext'):affine._encode_checked(a,np.array([0.,1.]),1,100.)
++    assert len(calls)==1
++    # An intentionally zero coefficient is allowed.
++    assert np.all(affine._encode_checked(a,np.zeros(2),1,100.).polynomial==0)
++
++
++@pytest.mark.parametrize('value',[True,np.array([1+0j]),[.1,True]])
++def test_public_affine_coefficients_reject_coercive_types(value):
++    with pytest.raises(ValueError):affine._public_reals(value,name='coefficient')
++
++
++def test_full_static_scale_underflow_rejected_before_operations(arithmetic):
++    with pytest.raises(ValueError,match='planned update scale'):
++        list(newton.integer_newton_updates(arithmetic,Value(np.ones(8),scale=123.),**options(updates=13)))
++    assert arithmetic.calls==[]
++
++import math
++import pytest
++from encrypted_integer_affine import backward_scale_plan
++
++Q=(101,103,107,109,113,127,131,137)
++
++
++def test_real_initial_affine_and_two_product_metadata():
++    delta=float(Q[-2]*Q[-1])
++    p=backward_scale_plan(Q,input_scale=delta,first_output_level=2,updates=2,final_scale=delta)
++    first=delta*p['initial_plaintext_scale']/(Q[6]*Q[7])
++    product=delta*first/(Q[4]*Q[5])
++    final=first*product/(Q[2]*Q[3])
++    assert p['rows']==[dict(update=1,level=2,scale=first),dict(update=2,level=0,product_scale=product,scale=final)]
++    assert abs(p['final_relative_difference'])<1e-14
++
++
++@pytest.mark.parametrize('field,value',[
++    ('updates',0),('updates',True),('first_output_level',1),
++    ('first_output_level',3),('input_scale',0.),('input_scale',float('nan')),
++    ('final_scale',float('inf')),('final_scale',True)])
++def test_invalid_schedule_rejected(field,value):
++    args=dict(input_scale=100.,first_output_level=2,updates=2,final_scale=100.)
++    args[field]=value
++    with pytest.raises(ValueError):backward_scale_plan(Q,**args)
++
++
++def test_reject_invalid_composite_moduli():
++    with pytest.raises(ValueError):
++        backward_scale_plan(Q[:-1],input_scale=100.,first_output_level=2,updates=2,final_scale=100.)
++
++
++@pytest.mark.parametrize('location',['context','cache','parameters'])
++def test_key_injection_while_suspended_rejected_before_multiply(arithmetic,location):
++    denominator=Value(np.ones(8));g=newton.integer_newton_updates(arithmetic,denominator,**options())
++    next(g);calls=list(arithmetic.calls)
++    if location=='context':arithmetic.ctx.secret_key='injected sentinel'
++    elif location=='cache':arithmetic.ctx._param_cache.secret_key='injected sentinel'
++    else:arithmetic.ctx.parameters['secret_key']='injected sentinel'
++    with pytest.raises(ValueError,match='keyless'):next(g)
++    assert arithmetic.calls==calls
++
++
++@pytest.mark.parametrize('operation',['integer','affine','newton'])
++def test_bound_aware_owner_rejected_before_arithmetic(arithmetic,operation):
++    arithmetic.declare_bound=lambda *a,**kw:None
++    value=Value(np.ones(8))
++    with pytest.raises(ValueError,match='bound-aware'):
++        if operation=='integer':affine.integer_affine(arithmetic,value,32)
++        elif operation=='affine':affine.affine_at_scale(arithmetic,value,1.,0.,output_scale=123.)
++        else:next(newton.integer_newton_updates(arithmetic,value,**options()))
++    assert arithmetic.calls==[]
++
++
++def test_bound_owner_added_during_yield_rejected_before_multiply(arithmetic):
++    g=newton.integer_newton_updates(arithmetic,Value(np.ones(8)),**options())
++    next(g);calls=list(arithmetic.calls);arithmetic.declare_bound=lambda *a,**kw:None
++    with pytest.raises(ValueError,match='bound-aware'):next(g)
++    assert arithmetic.calls==calls
+--- a/cadathlon/tests/test_package.py
++++ b/cadathlon/tests/test_package.py
+@@ -31,7 +31,7 @@
+                  "encrypted_polynomial.py", "encrypted_transformer.py", "encrypted_reference.py", "encrypted_refresh.py",
+                  "encrypted_rotation.py", "encrypted_compilation.py", "encrypted_primitives.py", "encrypted_ntt.py",
+                  "encrypted_packed_qwen.py", "encrypted_packed_transformer.py",
+-                 "encrypted_bounded_arithmetic.py", "encrypted_bounded_transformer.py", "encrypted_streaming_linear.py"):
++                 "encrypted_bounded_arithmetic.py", "encrypted_bounded_transformer.py", "encrypted_streaming_linear.py", "encrypted_integer_affine.py", "encrypted_scaled_newton.py"):
+         (common / name).write_text("")
+     script = Path(__file__).parents[1] / "common" / "package.py"
+     subprocess.run([sys.executable, str(script), "submit", str(problem)], check=True)
+@@ -50,6 +50,8 @@
+     assert "common/encrypted_bounded_arithmetic.py" in names
+     assert "common/encrypted_bounded_transformer.py" in names
+     assert "common/encrypted_streaming_linear.py" in names
++    assert "common/encrypted_integer_affine.py" in names
++    assert "common/encrypted_scaled_newton.py" in names
+     assert "common/encrypted_transformer.py" in names
+     assert "common/encrypted_polynomial.py" in names
+     assert "non_agent_pset/p1_benchmark/src/runner.py" in names
+@@ -130,6 +132,8 @@
+         assert "common/encrypted_bounded_arithmetic.py" in names
+         assert "common/encrypted_bounded_transformer.py" in names
+         assert "common/encrypted_streaming_linear.py" in names
++        assert "common/encrypted_integer_affine.py" in names
++        assert "common/encrypted_scaled_newton.py" in names
+         assert "validation/p1_student_suite.json" in names
+         assert "validation/p3_compact_baseline.json" in names
+         assert str((public_calibration/'report.json').relative_to(root)) in names
+@@ -142,6 +146,11 @@
+     # Neither plaintext fixture checks nor interface preflight needs a backend.
+     env = dict(os.environ, PYTHONPATH="", CROSS_ROOT=str(source.parent),
+                JAX_PLATFORMS="packaging_test_no_backend")
++    # New helpers must import and execute public scale planning from the
++    # extracted closure without a source checkout or valid JAX backend.
++    public_probe = "import sys; sys.path.insert(0, 'common'); import encrypted_scaled_newton as n; from encrypted_integer_affine import backward_scale_plan; p=backward_scale_plan(range(101,109),input_scale=11556.,first_output_level=2,updates=2,final_scale=11556.); assert len(p['rows'])==2; assert 'jax' not in sys.modules; assert n.__file__.startswith(str(__import__('pathlib').Path.cwd()))"
++    probe=subprocess.run([sys.executable,'-c',public_probe],cwd=extracted,env=env,text=True,capture_output=True)
++    assert probe.returncode==0,probe.stdout+probe.stderr
+     for problem in problems:
+         src = extracted / problem / "src"
+         result = subprocess.run([sys.executable, "runner.py", "--reference", "--case", "../test/test1.in"],
+--- a/cadathlon/tests/test_bert_staging.py
++++ b/cadathlon/tests/test_bert_staging.py
+@@ -51,7 +51,7 @@
+     names = set(manifest['common_sha256'])
+     assert {'support.py','transformer_runner.py','encrypted_reference.py','encrypted_compilation.py',
+             'encrypted_primitives.py','encrypted_bounded_transformer.py','encrypted_ntt.py',
+-            'encrypted_streaming_linear.py'} <= names
++            'encrypted_streaming_linear.py','encrypted_integer_affine.py','encrypted_scaled_newton.py'} <= names
+     for name, expected in manifest['common_sha256'].items():
+         assert hashlib.sha256((common/name).read_bytes()).hexdigest() == expected
+         assert (common/name).read_bytes() == (ROOT/'cadathlon/common'/name).read_bytes()
+@@ -80,7 +80,7 @@
+         'client_encode_encrypt_input','server_encrypted_compute','client_decrypt_decode'}
+ 
+ 
+-@pytest.mark.parametrize('helper_name', ['encrypted_primitives.py','encrypted_streaming_linear.py'])
++@pytest.mark.parametrize('helper_name', ['encrypted_primitives.py','encrypted_streaming_linear.py','encrypted_integer_affine.py','encrypted_scaled_newton.py'])
+ @pytest.mark.parametrize('damage', ['changed','missing','no-manifest'])
+ def test_staged_provenance_failure_never_falls_back_to_checkout(staging, damage, helper_name):
+     stage, upstream, destination = staging
+@@ -106,9 +106,11 @@
+     (destination/'submissions/bert_he.py').write_text('''import json
+ import encrypted_reference
+ import encrypted_streaming_linear
++import encrypted_integer_affine
++import encrypted_scaled_newton
+ 
+ def server_preprocess_model(paths):
+-    print(json.dumps({'import_only': True, 'helper': encrypted_reference.__file__, 'streaming_helper': encrypted_streaming_linear.__file__, 'paths': sorted(paths)}))
++    print(json.dumps({'import_only': True, 'helper': encrypted_reference.__file__, 'streaming_helper': encrypted_streaming_linear.__file__, 'integer_helper': encrypted_integer_affine.__file__, 'newton_helper': encrypted_scaled_newton.__file__, 'paths': sorted(paths)}))
+ ''')
+     env = dict(os.environ, PYTHONPATH='', CROSS_ROOT=str(ROOT), JAX_PLATFORMS='bert_staging_test_no_backend')
+     result = subprocess.run([sys.executable,'submissions/server_preprocess_model.py','0'],
+@@ -118,6 +120,8 @@
+     assert report['import_only'] is True
+     assert Path(report['helper']) == destination/'submissions/_cross_common/encrypted_reference.py'
+     assert Path(report['streaming_helper']) == destination/'submissions/_cross_common/encrypted_streaming_linear.py'
++    assert Path(report['integer_helper']) == destination/'submissions/_cross_common/encrypted_integer_affine.py'
++    assert Path(report['newton_helper']) == destination/'submissions/_cross_common/encrypted_scaled_newton.py'
+     assert {'client_private','test_input','preprocessed_input','decrypted_results'}.isdisjoint(report['paths'])
+ 
+ 

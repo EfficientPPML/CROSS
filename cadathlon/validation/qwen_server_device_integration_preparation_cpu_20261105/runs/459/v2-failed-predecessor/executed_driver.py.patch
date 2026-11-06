@@ -1,0 +1,42 @@
+--- failed-preparation-v2/executed_driver.py
++++ unrun-preparation-v3/executed_driver.py
+@@ -1,11 +1,11 @@
+-"""Unrun enclosing full28 458/59 proof collector; external launch grant required."""
++"""Unrun enclosing full28 459/59 proof collector; external launch grant required."""
+ from pathlib import Path
+ import hashlib, importlib.util, json, os, signal, stat, subprocess, sys, tarfile, time
+ import xml.etree.ElementTree as ET
+ 
+-CONFIG_SHA256 = 'b654ad46688f3379adda538cfdbcb6c66e0e45eed6c71095c32a0e7625afb365'
++CONFIG_SHA256 = 'a73571443c2c19c840fcdfdf4ae5f690e9ebdc8cfb7738bf468542eb52653e87'
+ WORKER_SHA256 = 'e2f304bfceb6bcd2bfaaaa57c2e3c78f10ca419390c3b0ef57a8236ad7027543'
+-INSPECTOR_SHA256 = '094b706cc428b19941886536e231c282b255f5044d2d90a20985cd01c05e0423'
++INSPECTOR_SHA256 = '26288c3a11dbe7e2578920b070bad4cf281e85a877934af39bd97bec7597b0cf'
+ HERE = Path(__file__).resolve().parent
+ sha = lambda raw: hashlib.sha256(raw).hexdigest()
+ canonical = lambda value: (json.dumps(value,sort_keys=True,indent=2,allow_nan=False)+'\n').encode()
+@@ -36,13 +36,13 @@
+     assert sha(canonical(nodes))==config['selected_nodes_sha256']
+     assert sha(canonical(xml_cases))==config['selected_xml_cases_sha256']
+     manifest=(out/'sources-before.json').read_bytes(); assert sha(manifest)==config['source_manifest_sha256']
+-    expected=json.loads(manifest); assert manifest==map_canonical(expected) and len(expected)==458
++    expected=json.loads(manifest); assert manifest==map_canonical(expected) and len(expected)==459
+     assert inventory(source)==inventory(execution)==expected
+     assert sha((out/'sources.tar.gz').read_bytes())==config['source_archive_sha256']
+     def archived():
+         with tarfile.open(out/'sources.tar.gz')as archive:
+             members=archive.getmembers()
+-            assert len(members)==len({m.name for m in members})==458
++            assert len(members)==len({m.name for m in members})==459
+             assert all(m.isfile()and not Path(m.name).is_absolute()and '..'not in Path(m.name).parts for m in members)
+             return {m.name:sha(archive.extractfile(m).read())for m in members}
+     assert archived()==expected
+@@ -136,7 +136,7 @@
+         and audit['runtime_module_origins']=={}and terminal['normal_main_return']is True
+         and artifacts['passed']is True)
+     report=dict(passed=bool(passed),tests=counts,selected_nodes=nodes,selected_xml_cases=observed_xml,
+-        source_count=458,runtime_count=403,source_manifest_sha256=config['source_manifest_sha256'],
++        source_count=459,runtime_count=403,source_manifest_sha256=config['source_manifest_sha256'],
+         source_archive_sha256=config['source_archive_sha256'],sources_unchanged=current==after==archive_after==expected,
+         child_returncode=code,child_reaped=waited,child_pid_absent=pid_absent,child_group_absent=group_absent,
+         worker_identity_verified=worker_identity,elapsed_s=time.monotonic()-started,

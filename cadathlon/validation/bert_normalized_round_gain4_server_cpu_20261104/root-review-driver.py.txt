@@ -1,0 +1,70 @@
+from pathlib import Path
+import datetime, hashlib, json, os, sys, tarfile
+ROOT=Path('/tmp/bert-normalized-round-gain4-ready-20261104')
+BASE=ROOT/'actual-server-v1'
+OWNER=Path('/tmp/bert-normalized-round-gain4-server-terminal-20261104/owner-terminal.json')
+EXPECTED=Path('/tmp/bert-normalized-round-gain4-validator-v2-20261104/producer_sources.json')
+REPORT='897fa13c99005dff41d10e192d87417a6d31a155995c3e65805922fc5326d68a'
+WORKER='e3eb179778ac962b624842010391865c77de56a513ca1b5de3fdc97fdf9d22d1'
+TAR='4ab405b63a86998082acbacfd0d642b2a6371e286688939ba3c88131985f41ea'
+sha=lambda b:hashlib.sha256(b).hexdigest()
+assert sha(EXPECTED.read_bytes())=='d8533cc0c770683691fb01fb078977a0e248812696ca7548edc537af2d93cbec'
+expected=json.loads(EXPECTED.read_bytes());assert len(expected)==163
+for root in (ROOT,BASE/'execution_source'):
+ for name,pin in expected.items():
+  assert not Path(name).is_absolute() and '..' not in Path(name).parts
+  f=root/name;assert not f.is_symlink() and sha(f.read_bytes())==pin,name
+assert json.loads((BASE/'source_manifest.json').read_bytes())==expected
+assert sha((BASE/'report.json').read_bytes())==REPORT
+assert sha((BASE/'worker/worker_report.json').read_bytes())==WORKER
+assert sha((BASE/'sources.tar.gz').read_bytes())==TAR
+with tarfile.open(BASE/'sources.tar.gz','r:gz')as tar:
+ members=tar.getmembers();assert len(members)==163 and all(m.isfile()for m in members)
+ assert len({m.name for m in members})==163
+ assert {m.name:sha(tar.extractfile(m).read())for m in members}==expected
+r=json.loads((BASE/'report.json').read_bytes());w=json.loads((BASE/'worker/worker_report.json').read_bytes())
+assert r['source_hashes_start']==r['source_hashes_end']==w['source_hashes_start']==w['source_hashes_end']==expected
+assert r['worker_report_sha256']==WORKER and r['source_archive_sha256']==TAR
+assert type(r['worker_exit_code'])is int and r['worker_exit_code']==0
+for key in ('passed','execute','worker_reaped','worker_group_empty_verified','all_direct_children_reaped','all_owned_groups_empty','process_cleanup_completed','source_files_unchanged','source_archive_verified','terminal_scope_completed','termination_scope_completed','workspace_retained'):assert r[key]is True,key
+assert r['cleanup_errors']==[] and not r.get('error')
+for key in ('passed','phase_complete','source_files_unchanged','loader_entered','loader_cleanup_completed','terminal_scope_completed','termination_scope_completed','all_inputs_authenticated_before_server'):assert w[key]is True,key
+assert w['forbidden_attempts']==[] and not w.get('error')
+assert w['completed_ciphertexts']==54 and type(w['completed_ciphertexts'])is int
+assert r['cpu_affinity']==w['cpu_affinity']==[124,125,126,127]
+assert r['request_contract']==w['request_contract'] and r['readback']==w['readback']
+assert r['workspace_identity']==w['workspace_identity']==[66305,3370369]
+assert r['readback']['input_digest']=='a16a14ddc7d2e96e26d939ad75655da405944775c58a2f1398db557e531b1844'
+a=w['arithmetic'];assert a['checkpoints_completed']==54 and a['refreshes']==0
+assert a['codecs_called']is False and a['keygen']is False
+for key in ('context_borrowed','synchronous_outputs','input_metadata_unchanged'):assert a[key]is True
+assert len(a['cases'])==2
+for c,(name,k,updates)in zip(a['cases'],(('K128_rows16',128,13),('K15_rows9',15,10))):
+ assert (c['name'],c['key_count'],c['updates'])==(name,k,updates)
+ assert c['level_reduction_calls']==c['diagnostic_ciphertext_products']==c['diagnostic_rescales']==1
+ assert c['production_counts']==dict(ciphertext_additions=14,ciphertext_products=2*updates,plaintext_products=3,rotations=14)
+for key in ('loaded_local_modules_start','loaded_local_modules_end'):
+ for item in w[key].values():assert item['path']in expected and expected[item['path']]==item['sha256']
+assert len(r['children'])==1
+c=r['children'][0];assert c['pid']==c['process_group']==w['pid']==2594585 and c['direct_returncode']==0
+assert c['cleanup_errors']==[] and c['signals_sent']==[]
+for key in ('cleanup_completed','direct_child_reaped','group_empty_verified'):assert c[key]is True
+assert sha(OWNER.read_bytes())=='21bf021debeb2dc23321b16fc978e5e7d7b3f0ebd1ef9bfd3a6cff5f54156ca1'
+o=json.loads(OWNER.read_bytes());assert (o['session_id'],o['tool_chunk'],o['exit_code'],o['reaped'])==(27546,'ab88e7',0,True)
+assert o['persisted_parent_report_sha256']==REPORT
+for pid in (2594548,2594553,2594585):assert not Path('/proc',str(pid)).exists()
+try:os.killpg(2594585,0)
+except ProcessLookupError:pass
+else:raise AssertionError('owned worker group remains')
+# Byte-checked pure public terminal gates; never invoke a worker or runtime.
+snapshot=BASE/'execution_source';sys.path.insert(0,str(snapshot))
+import component_protocol as protocol
+assert 'jax'not in sys.modules and 'jaxite_word'not in sys.modules
+fixture=protocol.terminal_gate(ROOT/'actual-fixture-v1','aca358a292ca8cc867241e09abec18889b20b31ccc4111b4fa66b2830ff271ad',stage='fixture',expected_sources=expected,workspace=Path(r['workspace']),workspace_identity=r['workspace_identity'],request=r['request_contract'])
+server=protocol.terminal_gate(BASE,REPORT,stage='server',expected_sources=expected,workspace=Path(r['workspace']),workspace_identity=r['workspace_identity'],request=r['request_contract'])
+assert server==r and fixture['readback']['input_digest']==r['readback']['input_digest']
+assert 'jax'not in sys.modules and 'jaxite_word'not in sys.modules
+out=Path(__file__).with_name('review.json');assert not out.exists()
+receipt=dict(schema='root-gain4-server-terminal-review-v1',utc=datetime.datetime.now(datetime.timezone.utc).isoformat(),passed=True,scope='Genuine server completion and public source/terminal binding only; no ciphertext/key/private/model body read or numerical decoding. Validator needs a distinct reviewed ready successor and launch binding.',server_report_sha256=REPORT,worker_report_sha256=WORKER,source_archive_sha256=TAR,producer_source_map_sha256=sha(EXPECTED.read_bytes()),source_count=163,all_current_execution_archive_start_end_sources_exact=True,fixture_server_terminal_gates_passed=True,fixture_report_sha256='aca358a292ca8cc867241e09abec18889b20b31ccc4111b4fa66b2830ff271ad',owner_terminal_sha256=sha(OWNER.read_bytes()),owner_session=27546,owner_tool_chunk='ab88e7',owner_exit_code=0,owner_reaped=True,observed_absent_pids=[2594548,2594553,2594585],owned_worker_group_absent=True,checkpoints_completed=54,cases=2,production_ciphertext_products=46,diagnostic_ciphertext_products=2,plaintext_products=6,rescales=54,rotations=28,level_reductions=2,refreshes=0,codecs_called=False,key_generation=False,loader_cleanup_completed=True,elapsed_s=r['elapsed_s'],child_maxrss_kib=r['child_maxrss_kib'],memory_scope=r['memory_measurement_scope'],input_digest=r['readback']['input_digest'],workspace=r['workspace'],workspace_identity=r['workspace_identity'],workspace_retained=True,numerical_validation_performed=False,actual_validator_launch_authorized=False)
+out.write_text(json.dumps(receipt,indent=2,sort_keys=True)+'\n')
+print(json.dumps(dict(receipt=str(out),sha256=sha(out.read_bytes()),passed=True,sources=163,checkpoints=54,numerical_validation=False)))

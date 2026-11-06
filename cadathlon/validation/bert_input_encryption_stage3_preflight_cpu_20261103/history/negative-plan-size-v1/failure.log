@@ -1,0 +1,18 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____ test_actual_inherited_public_plan_member_fits_the_completed_model_gate ____
+test_model_gate.py:111: in test_actual_inherited_public_plan_member_fits_the_completed_model_gate
+    assert check(case)['model_id']=='b'*64
+           ^^^^^^^^^^^
+test_model_gate.py:44: in check
+    def check(c):return model_gate.authenticate(c.evidence,c.publish(),c.workspace,keys=c.keys)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+model_gate.py:73: in authenticate
+    report,worker,result=completed(evidence,expected_report_sha256)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+model_gate.py:39: in completed
+    raise ValueError('bounded complete source archive required')
+E   ValueError: bounded complete source archive required
+=========================== short test summary info ============================
+FAILED test_model_gate.py::test_actual_inherited_public_plan_member_fits_the_completed_model_gate
+1 failed, 26 deselected in 0.22s

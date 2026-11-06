@@ -1,0 +1,35 @@
+.................................................................F.      [100%]
+=================================== FAILURES ===================================
+_ test_signal_arriving_during_restoration_preserves_primary_and_final_mask[False] _
+
+fake = (namespace(secret_key=None, _param_cache=namespace(secret_key=None), parameters={}), [('provider',), ('arithmetic', {'...public_bound': 2.0, 'meta_precision': 10, ...}), ('arithmetic', {}), ...], namespace(fail=None, cleanup_failure=False))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7af13d61a510>
+body_primary = False
+
+    @pytest.mark.parametrize('body_primary',[False,True])
+    def test_signal_arriving_during_restoration_preserves_primary_and_final_mask(fake,monkeypatch,body_primary):
+        ctx,calls,state=fake
+        old={s:signal.getsignal(s) for s in SIGS};real_set=signal.signal
+        beforemask=signal.pthread_sigmask(signal.SIG_BLOCK,[]);primary=ValueError('original primary')
+        def earlier_handler(signum,frame):raise KeyboardInterrupt('old handler after cleanup')
+        for s in SIGS:real_set(s,earlier_handler)
+        injected=[]
+        def restore_then_signal(signum,handler):
+            result=real_set(signum,handler)
+            if signum==signal.SIGHUP and handler is earlier_handler and not injected:
+                injected.append(True);os.kill(os.getpid(),signal.SIGHUP)
+            return result
+        monkeypatch.setattr(signal,'signal',restore_then_signal)
+        try:
+            with pytest.raises(ValueError if body_primary else KeyboardInterrupt) as caught:
+                with engine.server_engine(ctx,manifest_bytes=b'fixed'):
+                    if body_primary:raise primary
+            if body_primary:assert caught.value is primary and any('old handler after cleanup' in n for n in primary.__notes__)
+>           assert all(signal.getsignal(s) is earlier_handler for s in SIGS)
+E           assert False
+E            +  where False = all(<generator object test_signal_arriving_during_restoration_preserves_primary_and_final_mask.<locals>.<genexpr> at 0x7af13d53a6c0>)
+
+test_signal_installation.py:59: AssertionError
+=========================== short test summary info ============================
+FAILED test_signal_installation.py::test_signal_arriving_during_restoration_preserves_primary_and_final_mask[False]
+1 failed, 66 passed in 0.16s

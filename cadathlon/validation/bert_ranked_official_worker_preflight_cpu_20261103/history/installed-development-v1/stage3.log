@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "/tmp/bert-ranked-official-stage-workers-20261103/installed_probe.py", line 59, in <module>
+    print(json.dumps(run(a.stage),sort_keys=True))
+                     ~~~^^^^^^^^^
+  File "/tmp/bert-ranked-official-stage-workers-20261103/installed_probe.py", line 53, in run
+    p=Path(file).resolve();local[name]={'path':str(p.relative_to(worker.HERE)),'sha256':hashlib.sha256(p.read_bytes()).hexdigest()}
+                                                                                                       ~~~~~~~~~~~~^^
+  File "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_abc.py", line 625, in read_bytes
+    with self.open(mode='rb') as f:
+         ~~~~~~~~~^^^^^^^^^^^
+  File "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/bert-ranked-official-stage-workers-20261103/_ops.py'

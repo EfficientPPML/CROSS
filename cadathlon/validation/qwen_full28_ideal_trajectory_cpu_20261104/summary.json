@@ -1,0 +1,65 @@
+{
+  "passed": false,
+  "fixtures": [
+    {
+      "fixture": "S1",
+      "passed": false,
+      "complete": false,
+      "elapsed_s": 12.272344022989273,
+      "failure": {
+        "type": "DomainFailure",
+        "message": "independent declared domain failure: final.inverse_sqrt",
+        "notes": [],
+        "label": "final.inverse_sqrt",
+        "record": {
+          "domain": [
+            29.88948209636508,
+            2923.83603515625
+          ],
+          "count": 1,
+          "minimum": 3391.698360993511,
+          "maximum": 3391.698360993511,
+          "below": 0,
+          "above": 1,
+          "nonfinite": 0
+        }
+      },
+      "coverage": null,
+      "logits": null
+    },
+    {
+      "fixture": "S8",
+      "passed": true,
+      "complete": true,
+      "elapsed_s": 1996.2348968709994,
+      "failure": null,
+      "coverage": {
+        "passed": true,
+        "operators": 421,
+        "blocks": 28,
+        "logit_blocks": 38,
+        "logits": 151936,
+        "physical_metric_slots": 31916032,
+        "domains": 1918
+      },
+      "logits": {
+        "passed": true,
+        "gate": 1e-08,
+        "finite": true,
+        "shape_valid": true,
+        "physical_slots_checked": 2490368,
+        "max_abs_error": 2.9243274468626623e-13,
+        "all_logits": 151936,
+        "predicted_token": 6774,
+        "reference_token": 6774
+      },
+      "measured_operator_count": 421,
+      "measured_block_count": 28,
+      "measured_logit_blocks": 38,
+      "domain_count": 1918,
+      "worst_operator_error": 7.821654435247183e-11,
+      "worst_block_error": 8.094502845779061e-11
+    }
+  ],
+  "scope": "Conditional NumPy/identity-refresh actual owner loops, independent dense and frozen clear references. No CKKS/native benchmark/file-stage proof."
+}

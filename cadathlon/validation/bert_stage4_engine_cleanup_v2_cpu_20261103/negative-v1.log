@@ -1,0 +1,85 @@
+FF...FF.F                                                                [100%]
+=================================== FAILURES ===================================
+____ test_later_cleanup_interrupt_takes_precedence_and_finishes[interrupt0] ____
+before/test_cleanup_regressions.py:14: in test_later_cleanup_interrupt_takes_precedence_and_finishes
+    with engine.server_engine(ctx,manifest_bytes=b'fixed') as graph:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/contextlib.py:148: in __exit__
+    next(self.gen)
+before/full_model_engine.py:86: in server_engine
+    if active is None and failure is not None:raise failure
+                                              ^^^^^^^^^^^^^
+before/full_model_engine.py:63: in attempt
+    try: operation()
+         ^^^^^^^^^^^
+before/full_model_engine.py:80: in <lambda>
+    attempt('refresh helper cleanup',lambda helper=helper:helper.clear(executables=True))
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+before/test_cleanup_regressions.py:16: in fail_first
+    def fail_first(**kw):calls.append(('first_failed',));raise ordinary
+                                                         ^^^^^^^^^^^^^^
+E   OSError: first ordinary cleanup error
+E   refresh helper cleanup: KeyboardInterrupt('later interrupt')
+____ test_later_cleanup_interrupt_takes_precedence_and_finishes[interrupt1] ____
+before/test_cleanup_regressions.py:14: in test_later_cleanup_interrupt_takes_precedence_and_finishes
+    with engine.server_engine(ctx,manifest_bytes=b'fixed') as graph:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/contextlib.py:148: in __exit__
+    next(self.gen)
+before/full_model_engine.py:86: in server_engine
+    if active is None and failure is not None:raise failure
+                                              ^^^^^^^^^^^^^
+before/full_model_engine.py:63: in attempt
+    try: operation()
+         ^^^^^^^^^^^
+before/full_model_engine.py:80: in <lambda>
+    attempt('refresh helper cleanup',lambda helper=helper:helper.clear(executables=True))
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+before/test_cleanup_regressions.py:16: in fail_first
+    def fail_first(**kw):calls.append(('first_failed',));raise ordinary
+                                                         ^^^^^^^^^^^^^^
+E   OSError: first ordinary cleanup error
+E   refresh helper cleanup: SystemExit(143)
+__ test_repeated_real_signals_are_deferred_until_all_cleanup_finishes[False] ___
+before/test_cleanup_regressions.py:60: in test_repeated_real_signals_are_deferred_until_all_cleanup_finishes
+    assert completed==[True], 'cleanup operation itself was interrupted'
+E   AssertionError: cleanup operation itself was interrupted
+E   assert [] == [True]
+E     
+E     Right contains one more item: True
+E     Use -v to get more diff
+___ test_repeated_real_signals_are_deferred_until_all_cleanup_finishes[True] ___
+before/test_cleanup_regressions.py:60: in test_repeated_real_signals_are_deferred_until_all_cleanup_finishes
+    assert completed==[True], 'cleanup operation itself was interrupted'
+E   AssertionError: cleanup operation itself was interrupted
+E   assert [] == [True]
+E     
+E     Right contains one more item: True
+E     Use -v to get more diff
+_____ test_deferred_signal_takes_precedence_over_ordinary_cleanup_failure ______
+before/test_cleanup_regressions.py:83: in test_deferred_signal_takes_precedence_over_ordinary_cleanup_failure
+    with engine.server_engine(ctx,manifest_bytes=b'fixed') as graph:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/contextlib.py:148: in __exit__
+    next(self.gen)
+before/full_model_engine.py:86: in server_engine
+    if active is None and failure is not None:raise failure
+                                              ^^^^^^^^^^^^^
+before/full_model_engine.py:63: in attempt
+    try: operation()
+         ^^^^^^^^^^^
+before/full_model_engine.py:80: in <lambda>
+    attempt('refresh helper cleanup',lambda helper=helper:helper.clear(executables=True))
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+before/test_cleanup_regressions.py:85: in fail
+    def fail(**kw):raise OSError('earlier ordinary')
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   OSError: earlier ordinary
+E   refresh helper cleanup: KeyboardInterrupt('unshielded')
+=========================== short test summary info ============================
+FAILED before/test_cleanup_regressions.py::test_later_cleanup_interrupt_takes_precedence_and_finishes[interrupt0]
+FAILED before/test_cleanup_regressions.py::test_later_cleanup_interrupt_takes_precedence_and_finishes[interrupt1]
+FAILED before/test_cleanup_regressions.py::test_repeated_real_signals_are_deferred_until_all_cleanup_finishes[False]
+FAILED before/test_cleanup_regressions.py::test_repeated_real_signals_are_deferred_until_all_cleanup_finishes[True]
+FAILED before/test_cleanup_regressions.py::test_deferred_signal_takes_precedence_over_ordinary_cleanup_failure
+5 failed, 4 passed in 0.06s

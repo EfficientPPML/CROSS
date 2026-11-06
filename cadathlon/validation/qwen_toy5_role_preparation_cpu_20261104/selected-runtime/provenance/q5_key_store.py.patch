@@ -1,0 +1,29 @@
+--- /tmp/qwen-key-generation-held-parent-20261104/qwen_key_store.py
++++ q5_key_store.py
+@@ -10,14 +10,14 @@
+ from cleanup_origin import protect_body,mark
+ from key_descriptor_io import _CloseState,_stream,_sha_fd
+ from qwen_finalizer import Finalizer
+-from qwen_key_contract import ArraySpec,canonical,parse
+-from qwen_key_readers import _header
++from q5_key_contract import ArraySpec,canonical,parse
++from q5_key_readers import _header
+ 
+ _QUARANTINE=[]
+ CHUNK=1<<20
+ 
+ def create_actual_key_store(*args,**kwargs):
+-    raise PermissionError('Qwen key generation actual admission is unavailable')
++    raise PermissionError('Q5 actual key-store entry is unselected')
+ 
+ def _state(info):return(info.st_dev,info.st_ino,info.st_size,info.st_mtime_ns,info.st_ctime_ns)
+ def _identity(info):return(info.st_dev,info.st_ino)
+@@ -107,7 +107,7 @@
+             spec=self.spec;close_state=_CloseState();os.lseek(self.fd,0,os.SEEK_SET)
+             with _stream(self.fd,'rb',close_state)as stream:offset=_header(stream,self.state[2],spec.shape)
+             # Read one bounded limb chunk at a time, from the original fd.
+-            # No full key mapping, duplicate fd or full335-array RAM copy.
++            # No full key mapping, duplicate fd or full203-array RAM copy.
+             degree=spec.shape[-1];limbs=len(spec.moduli)
+             for row in range(math.prod(spec.shape[:-2])):
+                 for limb,modulus in enumerate(spec.moduli):

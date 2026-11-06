@@ -1,0 +1,215 @@
+{
+  "all_restored": true,
+  "cpu_affinity": [
+    120,
+    121,
+    122,
+    123
+  ],
+  "denied_calls": 12,
+  "denied_entrypoints": [
+    "BertForSequenceClassification.from_pretrained",
+    "BertForSequenceClassification.forward",
+    "BertModel.forward",
+    "BertEmbeddings.forward",
+    "AutoTokenizer.from_pretrained",
+    "client_inputs.ClientEmbeddings",
+    "ranked_native.load_weights",
+    "safetensors.safe_open",
+    "safetensors.torch.load_file",
+    "BertForSequenceClassification.from_pretrained",
+    "BertForSequenceClassification.from_pretrained",
+    "BertForSequenceClassification.from_pretrained"
+  ],
+  "direct_entrypoints": 9,
+  "elapsed_s": 2.5997094250051305,
+  "forbidden_reads": [],
+  "installed_attention_classes": [
+    "BertSelfAttention",
+    "BertSdpaSelfAttention"
+  ],
+  "loaded_local_modules": {
+    "__main__": {
+      "file": "installed_probe.py",
+      "sha256": "2c1f3144acb462fee3473a3825e5e127bc25f80378e91181d769904696f4aa72"
+    },
+    "__mp_main__": {
+      "file": "installed_probe.py",
+      "sha256": "2c1f3144acb462fee3473a3825e5e127bc25f80378e91181d769904696f4aa72"
+    },
+    "check_reference": {
+      "file": "check_reference.py",
+      "sha256": "5ee871f8a86e292f4dca19548f86b05c553f658e759a68a23f4e43bdb3dfd5f7"
+    },
+    "cleanup": {
+      "file": "cleanup.py",
+      "sha256": "1798455cdd88d4bbac5e1769e6b3226676ccb9901e7be6faf383e7ad063c1ef6"
+    },
+    "client_inputs": {
+      "file": "client_inputs.py",
+      "sha256": "ea026bcadb56281762535daa0168ecaa3abf18df29f20fa81f4e7adb183b1e72"
+    },
+    "collect_full_model_reference": {
+      "file": "collect_full_model_reference.py",
+      "sha256": "165cebf24320da7e5f684843c54f662632d22d8b0629897bca500952717268f2"
+    },
+    "full_model_reference": {
+      "file": "full_model_reference.py",
+      "sha256": "a32b51c0e0e1f436891fa087eeb2c8756c1115777a2a57d4f3605262cefc0d51"
+    },
+    "input_gate": {
+      "file": "input_gate.py",
+      "sha256": "34ba68d9f3a769ba2d0dd063c4e5ee7d4c9ff8d62ffbc00a2159ccfb0f6170e8"
+    },
+    "key_gate": {
+      "file": "key_gate.py",
+      "sha256": "b23b1b3bf7e8adfb8bd7097c2e7ecba157426938f48be22e225f6bc036de654b"
+    },
+    "owned_directory": {
+      "file": "owned_directory.py",
+      "sha256": "3b7d216b851456e71b372607fbbb771465b6340ec5fc0fd759290d202ebd886b"
+    },
+    "prepare_native_full": {
+      "file": "prepare_native_full.py",
+      "sha256": "1522b35dd4006cbcf29ea5b96ea4d3e586c6728e7728b55a02ace412f9ba34d9"
+    },
+    "ranked_collect": {
+      "file": "ranked_collect.py",
+      "sha256": "3390cd668ba6992d7a3ddbb72349467e9a75d6f83d695fb4a721aaa704a24e66"
+    },
+    "ranked_input_gate": {
+      "file": "ranked_input_gate.py",
+      "sha256": "33fdd8ea3e143e60fc2468df1e9e114f4451743174552e42c67092f9683bfde6"
+    },
+    "ranked_native": {
+      "file": "ranked_native.py",
+      "sha256": "af58bc243efdc7e10e58c772312804e9af00787194b4727de28e198d6317c4e7"
+    },
+    "ranked_records": {
+      "file": "ranked_records.py",
+      "sha256": "8e88cbafedca498a1a4a6c827a2ed8faf17854e1e1706dd954a0b44a8a319381"
+    },
+    "server_public_model": {
+      "file": "server_public_model.py",
+      "sha256": "c9af11d48255fd87352f3f56f69e6bfce61f7acac95f86de332f7457f9835244"
+    },
+    "terminal": {
+      "file": "terminal.py",
+      "sha256": "dc985d38746751099511b816bbac925b15ad31a8db6caffaebeb8e9b53a9464e"
+    }
+  },
+  "native_loader_policies": [
+    {
+      "attention": null,
+      "dtype": "None",
+      "local_files_only": true,
+      "output_loading_info": true,
+      "use_safetensors": true
+    },
+    {
+      "attention": "eager",
+      "dtype": "torch.float64",
+      "local_files_only": true,
+      "output_loading_info": true,
+      "use_safetensors": true
+    },
+    {
+      "attention": null,
+      "dtype": "None",
+      "local_files_only": true,
+      "output_loading_info": true,
+      "use_safetensors": true
+    }
+  ],
+  "no_jax_or_he_modules_loaded": true,
+  "passed": true,
+  "pid": 1877702,
+  "scope": "Installed imports and denied native entrypoints only; no models, assets, private inputs, JAX or HE.",
+  "source_archive_sha256": "2b7b0000df6d8baa636ce3e9952183161f65fada9b4a58291d6bf5c355fbcebd",
+  "source_archive_verified": true,
+  "source_files_unchanged": true,
+  "source_hashes_after": {
+    "candidate_manifest.json": "4e2277beea7189aa1d77b168c500c8a175f6c630afa520fcc6b38cb5a179cff9",
+    "check_reference.py": "5ee871f8a86e292f4dca19548f86b05c553f658e759a68a23f4e43bdb3dfd5f7",
+    "cleanup.py": "1798455cdd88d4bbac5e1769e6b3226676ccb9901e7be6faf383e7ad063c1ef6",
+    "client_inputs.py": "ea026bcadb56281762535daa0168ecaa3abf18df29f20fa81f4e7adb183b1e72",
+    "collect_full_model_reference.py": "165cebf24320da7e5f684843c54f662632d22d8b0629897bca500952717268f2",
+    "full_model_reference.py": "a32b51c0e0e1f436891fa087eeb2c8756c1115777a2a57d4f3605262cefc0d51",
+    "input_gate.py": "34ba68d9f3a769ba2d0dd063c4e5ee7d4c9ff8d62ffbc00a2159ccfb0f6170e8",
+    "installed/numpy/polynomial/chebyshev.py": "7689f5b2d3f2413a150889711e988287bc2db7a66cca655acb2d12c56349667d",
+    "installed/numpy/polynomial/polynomial.py": "752e5feebd565edbe05d57c803bd8044673671810507bcca922c82778a7e607d",
+    "installed/numpy/polynomial/polyutils.py": "68064957a6f465962e2b520a0cf1e188981299757f7948a48d7714a132c7c3b6",
+    "installed/safetensors/torch.py": "f3f476d1f8c04fe65fa3797426556a0b7afa43f8c4db9db6b799c7cf84748f3d",
+    "installed/torch/nn/functional.py": "5a3bacfc98d3a3b75696e7ee6814da3d3ca9e0a02b60fba5bbd15743141fa634",
+    "installed/torch/nn/modules/linear.py": "1961ad1a1f650e104b3c7f78d19af2d21bf977e7af6c3fdf2420aad563c9e202",
+    "installed/torch/nn/modules/module.py": "6e1d498b3b1997725aae48fcda347149d2fa093f4f5854490268bb4af75b1b81",
+    "installed/torch/nn/modules/normalization.py": "96284b63a2088c7d378716d5114eb5b6a1c072d479116170fcfd284c57e84b4f",
+    "installed/transformers/activations.py": "5e45852b518ed3fdfbff4d8a44dc934b74f6606670fd90f2fb6c486172f9792c",
+    "installed/transformers/configuration_utils.py": "596fa229c03b05339412ed56fcac70d9cbd5df518d2de2e4f2ba7c2ffbb0ad48",
+    "installed/transformers/modeling_utils.py": "bf3f2b4314492a5148d69bde5ef23dbe0c63a9224970b5e83a22af0d10269a0c",
+    "installed/transformers/models/bert/configuration_bert.py": "628085ba86c3e5dfb16817ac1a68724eb4bfd8fa390c8769101197116419d67c",
+    "installed/transformers/models/bert/modeling_bert.py": "ef3407eae97090a4c0bfb635b3aafd4435248148e553e4ae307aa2b4aa1efcbc",
+    "installed/transformers/pytorch_utils.py": "ffc4dd7ac41ac4ecfd877870b6d68a97f4bbd43ec623ccf8d1a1134d5e32907e",
+    "installed_probe.py": "2c1f3144acb462fee3473a3825e5e127bc25f80378e91181d769904696f4aa72",
+    "key_gate.py": "b23b1b3bf7e8adfb8bd7097c2e7ecba157426938f48be22e225f6bc036de654b",
+    "origins.json": "9472649459da723b7be25ac47f82ab712dc54d793adbcddab90fd9dd08439483",
+    "owned_directory.py": "3b7d216b851456e71b372607fbbb771465b6340ec5fc0fd759290d202ebd886b",
+    "prepare_native_full.py": "1522b35dd4006cbcf29ea5b96ea4d3e586c6728e7728b55a02ace412f9ba34d9",
+    "problem.md": "650ff90e473fc6386aad7cfe28aedbb820476daad9ce2b5eb426cabe17a0abae",
+    "producer_source_manifest.json": "0d76118524872541a4dd6a311b5493313860ee2c5058d2296bca6d71843783fd",
+    "ranked_collect.py": "3390cd668ba6992d7a3ddbb72349467e9a75d6f83d695fb4a721aaa704a24e66",
+    "ranked_input_gate.py": "33fdd8ea3e143e60fc2468df1e9e114f4451743174552e42c67092f9683bfde6",
+    "ranked_native.py": "af58bc243efdc7e10e58c772312804e9af00787194b4727de28e198d6317c4e7",
+    "ranked_records.py": "8e88cbafedca498a1a4a6c827a2ed8faf17854e1e1706dd954a0b44a8a319381",
+    "server_public_model.py": "c9af11d48255fd87352f3f56f69e6bfce61f7acac95f86de332f7457f9835244",
+    "server_tensor_pins.json": "719d09712c2b26e80bfc36897a81dcd423cfa9ef64cb6423899ff80a0f72f575",
+    "terminal.py": "dc985d38746751099511b816bbac925b15ad31a8db6caffaebeb8e9b53a9464e",
+    "test_fixture_lifecycle.py": "356de7dfe009adfb2dc88fe23e31b943b6328e9f4763a2ef67942e8ebe8dd98e",
+    "test_native_policy.py": "f8d53ac514fb4e946cd2ff8a1f991886bd75315cb5dba7997f47dfa3f1f2b33c",
+    "test_ranked_reference.py": "ab8bdb656e76ca71814779bec7558e0ae673321ff91f1f81c0c863efc3e09fe3",
+    "upstream_model.py": "784685ccd7f09e5267c604ede7cbe21eb5e1d7a4df8eef6bfb77a6bce74b2fb4",
+    "upstream_test.py": "13ed5c720cada62aaf73d88b5b7afb9de4e6fcd22ed96b0f43324ec8d0e33a24"
+  },
+  "source_hashes_before": {
+    "candidate_manifest.json": "4e2277beea7189aa1d77b168c500c8a175f6c630afa520fcc6b38cb5a179cff9",
+    "check_reference.py": "5ee871f8a86e292f4dca19548f86b05c553f658e759a68a23f4e43bdb3dfd5f7",
+    "cleanup.py": "1798455cdd88d4bbac5e1769e6b3226676ccb9901e7be6faf383e7ad063c1ef6",
+    "client_inputs.py": "ea026bcadb56281762535daa0168ecaa3abf18df29f20fa81f4e7adb183b1e72",
+    "collect_full_model_reference.py": "165cebf24320da7e5f684843c54f662632d22d8b0629897bca500952717268f2",
+    "full_model_reference.py": "a32b51c0e0e1f436891fa087eeb2c8756c1115777a2a57d4f3605262cefc0d51",
+    "input_gate.py": "34ba68d9f3a769ba2d0dd063c4e5ee7d4c9ff8d62ffbc00a2159ccfb0f6170e8",
+    "installed/numpy/polynomial/chebyshev.py": "7689f5b2d3f2413a150889711e988287bc2db7a66cca655acb2d12c56349667d",
+    "installed/numpy/polynomial/polynomial.py": "752e5feebd565edbe05d57c803bd8044673671810507bcca922c82778a7e607d",
+    "installed/numpy/polynomial/polyutils.py": "68064957a6f465962e2b520a0cf1e188981299757f7948a48d7714a132c7c3b6",
+    "installed/safetensors/torch.py": "f3f476d1f8c04fe65fa3797426556a0b7afa43f8c4db9db6b799c7cf84748f3d",
+    "installed/torch/nn/functional.py": "5a3bacfc98d3a3b75696e7ee6814da3d3ca9e0a02b60fba5bbd15743141fa634",
+    "installed/torch/nn/modules/linear.py": "1961ad1a1f650e104b3c7f78d19af2d21bf977e7af6c3fdf2420aad563c9e202",
+    "installed/torch/nn/modules/module.py": "6e1d498b3b1997725aae48fcda347149d2fa093f4f5854490268bb4af75b1b81",
+    "installed/torch/nn/modules/normalization.py": "96284b63a2088c7d378716d5114eb5b6a1c072d479116170fcfd284c57e84b4f",
+    "installed/transformers/activations.py": "5e45852b518ed3fdfbff4d8a44dc934b74f6606670fd90f2fb6c486172f9792c",
+    "installed/transformers/configuration_utils.py": "596fa229c03b05339412ed56fcac70d9cbd5df518d2de2e4f2ba7c2ffbb0ad48",
+    "installed/transformers/modeling_utils.py": "bf3f2b4314492a5148d69bde5ef23dbe0c63a9224970b5e83a22af0d10269a0c",
+    "installed/transformers/models/bert/configuration_bert.py": "628085ba86c3e5dfb16817ac1a68724eb4bfd8fa390c8769101197116419d67c",
+    "installed/transformers/models/bert/modeling_bert.py": "ef3407eae97090a4c0bfb635b3aafd4435248148e553e4ae307aa2b4aa1efcbc",
+    "installed/transformers/pytorch_utils.py": "ffc4dd7ac41ac4ecfd877870b6d68a97f4bbd43ec623ccf8d1a1134d5e32907e",
+    "installed_probe.py": "2c1f3144acb462fee3473a3825e5e127bc25f80378e91181d769904696f4aa72",
+    "key_gate.py": "b23b1b3bf7e8adfb8bd7097c2e7ecba157426938f48be22e225f6bc036de654b",
+    "origins.json": "9472649459da723b7be25ac47f82ab712dc54d793adbcddab90fd9dd08439483",
+    "owned_directory.py": "3b7d216b851456e71b372607fbbb771465b6340ec5fc0fd759290d202ebd886b",
+    "prepare_native_full.py": "1522b35dd4006cbcf29ea5b96ea4d3e586c6728e7728b55a02ace412f9ba34d9",
+    "problem.md": "650ff90e473fc6386aad7cfe28aedbb820476daad9ce2b5eb426cabe17a0abae",
+    "producer_source_manifest.json": "0d76118524872541a4dd6a311b5493313860ee2c5058d2296bca6d71843783fd",
+    "ranked_collect.py": "3390cd668ba6992d7a3ddbb72349467e9a75d6f83d695fb4a721aaa704a24e66",
+    "ranked_input_gate.py": "33fdd8ea3e143e60fc2468df1e9e114f4451743174552e42c67092f9683bfde6",
+    "ranked_native.py": "af58bc243efdc7e10e58c772312804e9af00787194b4727de28e198d6317c4e7",
+    "ranked_records.py": "8e88cbafedca498a1a4a6c827a2ed8faf17854e1e1706dd954a0b44a8a319381",
+    "server_public_model.py": "c9af11d48255fd87352f3f56f69e6bfce61f7acac95f86de332f7457f9835244",
+    "server_tensor_pins.json": "719d09712c2b26e80bfc36897a81dcd423cfa9ef64cb6423899ff80a0f72f575",
+    "terminal.py": "dc985d38746751099511b816bbac925b15ad31a8db6caffaebeb8e9b53a9464e",
+    "test_fixture_lifecycle.py": "356de7dfe009adfb2dc88fe23e31b943b6328e9f4763a2ef67942e8ebe8dd98e",
+    "test_native_policy.py": "f8d53ac514fb4e946cd2ff8a1f991886bd75315cb5dba7997f47dfa3f1f2b33c",
+    "test_ranked_reference.py": "ab8bdb656e76ca71814779bec7558e0ae673321ff91f1f81c0c863efc3e09fe3",
+    "upstream_model.py": "784685ccd7f09e5267c604ede7cbe21eb5e1d7a4df8eef6bfb77a6bce74b2fb4",
+    "upstream_test.py": "13ed5c720cada62aaf73d88b5b7afb9de4e6fcd22ed96b0f43324ec8d0e33a24"
+  }
+}

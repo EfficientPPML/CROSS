@@ -1,0 +1,33 @@
+--- failed-preparation-v1/run_config.json
++++ unrun-preparation-v2/run_config.json
+@@ -23,11 +23,13 @@
+     "transformers"
+   ],
+   "numpy_pins_sha256": "a696bcc87f4c3be479c56ade4046e8b50e49f5c2100d0e7ca5f1c1929b35972d",
+-  "proof_root": "/tmp/qwen-toy5-checkpoint-focused-proof-20261104/preparation-v1",
+-  "pytest_basetemp": "/tmp/qwen-toy5-checkpoint-focused-proof-20261104/preparation-v1/pytest-owned",
++  "proof_root": "/tmp/qwen-toy5-checkpoint-focused-proof-20261104/preparation-v2",
++  "pytest_basetemp": "/tmp/qwen-toy5-checkpoint-focused-proof-20261104/preparation-v2/pytest-owned",
+   "pytest_basetemp_max_bytes": 16777216,
+   "pytest_basetemp_max_files": 128,
+   "pytest_basetemp_policy": "Fresh leaf under this proof only; no selected test requests tmp_path. Inspect at most128 regular files/16MiB after execution; refuse links. This is a retention bound, not OS confinement.",
++  "pytest_config_path": "/dev/null",
++  "pytest_config_policy": "Explicit -c /dev/null; no pytest configuration discovery.",
+   "runtime_module_origins": {
+     "numpy": "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/numpy/__init__.py"
+   },
+@@ -292,10 +294,11 @@
+   ],
+   "selected_xml_cases_sha256": "840474f7cf210ab2f14019fc70b57350d8d96dad3e49f194eb6c62ade09e3083",
+   "selection_sha256": "f65764352893e7fb6a07ce04e0e6511d3c7f60fe717fbf3c9f3469761571c379",
+-  "source_archive_sha256": "6d890c097757327e1f4de6a624a1496dd40e466703210e617975bbf64e26e21a",
++  "source_archive_sha256": "442ab2df032b451c9e067a49e046d26c661fa967b70aa026e117d20b874f9463",
++  "source_correction_sha256": "5d29926975fa4013ebae7e71ce7956b5493a1eeed1b02b8a3cbdc72ac44b0e3f",
+   "source_count": 261,
+   "source_manifest_encoding": "canonical sorted compact JSON plus newline",
+-  "source_manifest_sha256": "91a4bc8c1715f8900edb49e97cc9c2be696b30a5037b5efd4a136ac088664339",
+-  "source_root": "/tmp/qwen-toy5-checkpoint-tests-20261104",
++  "source_manifest_sha256": "1136d1a47ed36c2ae2723bb8f3c05eca2f64a18b7ae9de3533c6ea1073b64d7a",
++  "source_root": "/tmp/qwen-toy5-checkpoint-tests-v2-20261104",
+   "synthetic_only": true
+ }

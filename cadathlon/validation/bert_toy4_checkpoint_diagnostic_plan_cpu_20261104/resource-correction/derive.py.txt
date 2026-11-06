@@ -1,0 +1,20 @@
+"""Public correction for stored secret dimensions; no crypto/backend import."""
+from pathlib import Path
+import hashlib,json,ast
+P=Path(__file__).resolve().parent
+sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+def derive():
+ plan=json.loads((P/'public_plan/plan.json').read_bytes());q=plan['profile']['q_towers'];N=plan['profile']['degree']
+ key=P/'runtime/jaxite_word/key_gen.py';tree=ast.parse(key.read_text());f=next(n for n in tree.body if isinstance(n,ast.FunctionDef)and n.name=='gen_pke_pair')
+ slicing=[ast.unparse(n)for n in ast.walk(f)if isinstance(n,ast.Assign)and any(isinstance(x,ast.Name)and x.id=='s'for x in n.targets)]
+ assert 's = s[:len(q_towers)]'in slicing
+ assert sha(key)=='742e6af9e1ce9025416fa2ef68ae037bca7e772d48fbbd6ca387cc79820119c8'
+ return dict(schema='toy4-private-storage-correction-v1',original_plan_sha256=sha(P/'public_plan/plan.json'),source_key_gen_sha256=sha(key),
+  original_secret_i64_bytes=plan['storage']['secret_i64_bytes'],original_field_is_not_a_serialized_secret_bound=True,
+  serialized_secret_shape=[len(q),N],serialized_secret_dtype='uint32',serialized_secret_payload_bytes=len(q)*N*4,
+  private_required_bytes=len(q)*N*4+4096+(1<<20),public_and_checkpoint_payload_totals_unchanged=True,
+  scope='Production gen_pke_pair returns standard NTT RNS secret rows for all Q. Raw Python integer keygen buffers and process memory remain excluded. No original222 source/report modified; no keys generated.')
+if __name__=='__main__':
+ import argparse
+ p=argparse.ArgumentParser();p.add_argument('--output',type=Path,required=True);a=p.parse_args()
+ with a.output.open('x')as f:json.dump(derive(),f,indent=2);f.write('\n')

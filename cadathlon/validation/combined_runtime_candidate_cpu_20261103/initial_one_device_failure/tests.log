@@ -1,0 +1,15 @@
+.......................................................F................ [ 21%]
+........................................................................ [ 43%]
+.........................................ssss........................... [ 64%]
+......ss.............................................................................................................                                [100%]
+=================================== FAILURES ===================================
+_____________________ test_guards_fall_back[other_device] ______________________
+../test_scoped_ntt.py:79: in test_guards_fall_back
+    assert len(jax.devices())>=2
+E   assert 1 >= 2
+E    +  where 1 = len([CpuDevice(id=0)])
+E    +    where [CpuDevice(id=0)] = <function devices at 0x749241800720>()
+E    +      where <function devices at 0x749241800720> = jax.devices
+=========================== short test summary info ============================
+FAILED ::test_guards_fall_back[other_device] - assert 1 >= 2
+1 failed, 326 passed, 6 skipped, 68 subtests passed in 166.62s (0:02:46)

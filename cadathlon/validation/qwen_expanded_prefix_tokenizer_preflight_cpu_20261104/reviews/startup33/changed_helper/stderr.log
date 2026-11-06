@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/tmp/qwen-token-entry-review-v2-20261104/changed_helper/source/entry.py", line 168, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/tmp/qwen-token-entry-review-v2-20261104/changed_helper/source/entry.py", line 161, in main
+    raw, expected, blobs, origins = authenticate(args.manifest, args.manifest_sha256)
+                                    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/qwen-token-entry-review-v2-20261104/changed_helper/source/entry.py", line 109, in authenticate
+    raise ValueError('source closure SHA256 differs')
+ValueError: source closure SHA256 differs

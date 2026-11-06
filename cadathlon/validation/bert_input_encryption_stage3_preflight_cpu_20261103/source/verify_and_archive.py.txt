@@ -1,0 +1,37 @@
+from pathlib import Path
+import hashlib,json,shutil,tarfile
+LAB=Path('/tmp/bert-input-encryption-stage3-component-20261103')
+OUT=Path('/home/jianming_gatech/CROSS/cadathlon/validation/bert_input_encryption_stage3_preflight_cpu_20261103')
+MEASURED=LAB/'source-bound-preflight-v1'
+sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+r=json.loads((MEASURED/'report.json').read_text());expected=r['source_hashes_start']
+assert r['passed']is True and r['mock_tests']==115 and r['real_entrypoint_denials']==21
+assert expected==r['source_hashes_end']==r['snapshot_hashes_end']==r['archive_member_hashes'] and len(expected)==76
+with tarfile.open(MEASURED/'sources.tar.gz') as t:
+    assert len(t.getmembers())==len(expected)
+    assert {m.name:hashlib.sha256(t.extractfile(m).read()).hexdigest() for m in t.getmembers()}==expected
+for n,h in expected.items():
+    p=Path('/tmp/check_stage3_preflight_20261103.py') if n=='preflight_driver.py' else LAB/n
+    assert sha(p)==h
+    assert sha(MEASURED/'snapshot'/n)==h
+assert sha(MEASURED/'sources.tar.gz')==r['source_archive_sha256']
+OUT.mkdir(exist_ok=False);(OUT/'measured').mkdir();(OUT/'source').mkdir();(OUT/'history').mkdir()
+for n in ('report.json','sources.tar.gz','tests.log','tests.xml','real_import_guard.json','real_import_guard.log'):shutil.copy2(MEASURED/n,OUT/'measured'/n)
+for n in ('worker.py','collect.py','test_worker.py','test_collector.py','test_import_guards.py','preflight_driver.py'):
+    shutil.copy2(MEASURED/'snapshot'/n,OUT/'source'/(n+'.txt'))
+for d in ('development-v1','development-v2'):shutil.copytree(LAB/d,OUT/'history'/d)
+shutil.copytree('/tmp/review-stage3-boundaries',OUT/'history'/'independent-boundary-negative',ignore=shutil.ignore_patterns('__pycache__','.pytest_cache'))
+shutil.copy2(__file__,OUT/'source'/'verify_and_archive.py.txt')
+summary=dict(passed=True,scope='Preparation only: mocked phase/provenance/lifecycle tests and real installed entrypoint denial. No actual stage3 encryption or accuracy claim.',
+    mock_tests=115,real_entrypoint_denials=21,measured_project_and_driver_sources=76,inherited_runtime_sources_unchanged=59,
+    source_archive_sha256=r['source_archive_sha256'],elapsed_s=r['elapsed_s'],actual_stage3_started=False,
+    actual_prerequisites_required=['caller-pinned completed key-generation proof','caller-pinned completed public-model preprocessing proof','caller-pinned complete upstream size0 private fixture'],
+    retention='Actual attempts retain owned I/O and remaining private request pair; external key workspace is never removed. The unchanged handler retains its own internal rollback policy.',
+    containment='Public fixture report hash/path extraction occurs before output creation; full key→model→input completion gates still precede payload/assets.',
+    history='Earlier fake-fixture setup failure and independently reproduced cleanup-cancellation defect are preserved separately. They are not actual crypto failures.',
+    exclusions='No secret/public key arrays, ciphertext payloads, private inputs, model tensors, model predictions or labels are archived.')
+(OUT/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
+(OUT/'README.md').write_text('''# Stage-three input encryption preparation\n\nThe isolated worker and collector passed **115 mocked checks** and a separate **21-entrypoint denial/restoration probe** in the intended installed Python environment. All **76 captured project/probe files** matched before, execution snapshot, after and archive readback. The original **58 first-handler runtime files plus support.py** remain byte-identical. Installed framework versions and sampled imported module hashes are recorded separately.\n\nThis is preparation evidence. No CKKS context, key generation, model construction, embedding execution, encryption, decryption or server computation occurred in this checkpoint. The actual handler can run only after caller-pinned successful key, model and complete size0 fixture reports. Its scope will be one original size0 sample and all eight ordered ciphertext uploads, with private input binding; it will not establish encrypted accuracy or full-model readiness.\n\nThe collector authenticates the bounded public fixture report and protected path before creating output. Full key→model→input gates precede payload and model asset reads. Every actual attempt retains its owned I/O and whatever upload/private request artifacts remain; no external keys or receipts are deleted. The unchanged handler can roll back its own incomplete transaction. The collector preserves that policy and records the remaining artifacts. Process cleanup, unknown-child states, initial/final publication failures, source drift, containment through symlink aliases and cleanup cancellation are covered. The entrypoint guards are Python regression boundaries, not an operating-system sandbox.\n\n`measured/` contains the exact source archive, results and raw logs. `source/` contains readable copies and the archive verifier; the verifier and this README are archive-time additions. `history/` retains the initial fake fixture's explicit-None setup omission and the independent guard-restoration cancellation reproduction, followed by the corrected test result. These were preparation defects, not cryptographic execution failures.\n\nNo private input bytes, key arrays, ciphertexts or checkpoint tensors are included. Actual stage-three execution remains unstarted and requires a separate report.\n''')
+files={p.relative_to(OUT).as_posix():sha(p) for p in OUT.rglob('*') if p.is_file()}
+(OUT/'archive_inventory.json').write_text(json.dumps(files,indent=2)+'\n')
+print(json.dumps({'archive':str(OUT),'files':len(files)+1,'source_sha256':r['source_archive_sha256']}))

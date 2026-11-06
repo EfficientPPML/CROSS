@@ -1,0 +1,23 @@
+{
+  "utc": "2026-11-04T04:15:32.149983+00:00",
+  "scope": "Narrow independent source-only review of sticky-body cleanup provenance; no tests, backend, role execution or payload reads",
+  "source_root": "/tmp/bert-toy4-checkpoint-component-v4-20261104",
+  "source_hashes": {
+    "cleanup_origin.py": "4543b26bf1168e29bc21375c2f80a9aa99648205a9fd9aea6d5a8059c6d18175",
+    "component_protocol.py": "e21ae9fc9c8a1fd75b80c960c41d1f6406aaeb06c01e58c62e49a4f4e57b3955",
+    "cleanup.py": "af2de68646d1071778479aedbf2854e91c48c3178edab95246ca0a84e7a82d7f",
+    "finish.py": "a5bc25f697fdb2fc13b58d04578540c3924edd9749d55144f776ca6fb210e2a6"
+  },
+  "finding": null,
+  "checks": [
+    "Finalizer protects original incoming body identity before cleanup actions may rethrow the same object.",
+    "Cleanup-origin selection never reclassifies a protected real body; true cleanup-only cancellation can supersede an ordinary cleanup failure.",
+    "Signal scopes capture incoming/body provenance before restoration and retain explicit main-thread-mask limitation.",
+    "Outer finish preserves protected primary while attempting failed-receipt publication; independent outer return/terminal gates remain necessary."
+  ],
+  "limits": [
+    "This is not a rerun or independent validation of all260 sources/371 tests.",
+    "Only listed files were read in detail; marker locations in loader/arithmetic/source-reader were located but are outside this narrow full-read claim.",
+    "Original sticky-primary negatives and frozen source-bound proof remain unchanged."
+  ]
+}

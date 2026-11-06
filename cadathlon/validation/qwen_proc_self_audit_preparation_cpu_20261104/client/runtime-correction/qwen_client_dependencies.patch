@@ -1,0 +1,63 @@
+--- held464-v1/qwen_client_dependencies.py
++++ kernel-successor464-v2/qwen_client_dependencies.py
+@@ -17,10 +17,18 @@
+ from model_output import canonical_path,overlap,finish
+ from qwen_client_resource import authenticate_policy
+ _QUARANTINE=[]
++_PROC_SELF_KERNEL=frozenset(('/proc/self/status','/proc/self/cgroup','/proc/self/mountinfo'))
+ 
+ FORBIDDEN=frozenset(('torch','transformers','tensorflow','flax','torch_xla','safetensors','tokenizers','libtpu'))
+ 
+ DEPENDENCY_FIELDS={'schema','interpreter','resolved_interpreter','python_major_minor','cores','environment','installed_sources','library_roots','backend_module_origins'}
++
++
++def _literal_proc_self(value,dir_fd=None):
++    # Preserve os.open's original argument before Path normalization. Direct
++    # builtin audit events can attest only their already-normalized argument.
++    # The wrapper rejects bytes/PathLike, relative and dirfd aliases here.
++    return type(value)is str and value in _PROC_SELF_KERNEL and dir_fd is None
+ 
+ 
+ def object_bytes(raw,fields,schema,limit=2<<20):
+@@ -236,8 +244,14 @@
+         if not path.is_absolute():path=(Path(os.getcwd())if dir_fd is None else Path(os.readlink('/proc/self/fd/'+str(dir_fd))))/path
+         return path
+ 
+-    def access(self,p,flags):
+-        if type(flags)is not int or not p.is_absolute()or '..'in p.parts:self.deny('open spelling or flags')
++    def access(self,p,flags,*,literal_kernel=False):
++        if type(flags)is not int or type(literal_kernel)is not bool or not p.is_absolute()or '..'in p.parts:self.deny('open spelling or flags')
++        if str(p)in _PROC_SELF_KERNEL:
++            allowed=os.O_CLOEXEC|os.O_NOFOLLOW|os.O_NONBLOCK
++            if not literal_kernel or p not in self.kernel or flags&~allowed:self.deny('nonliteral or writable proc-self read')
++            if any(p==r or r in p.parents for r in self.protected):self.deny('protected body')
++            if p.resolve()!=Path('/proc')/str(os.getpid())/p.name:self.deny('foreign proc-self resolution')
++            return
+         # Protected trees cannot be turned into an allowed body by a suffix or
+         # broad installed-library root; exact owned/input/key sets are separate.
+         if any(p==r or r in p.parents for r in self.protected):self.deny('protected body')
+@@ -262,8 +276,9 @@
+     def install(self):
+         if os.open is not self.original_open:raise ValueError('open wrapper changed before audit')
+         def wrapped(path,flags,mode=0o777,*,dir_fd=None):
+-            selected=self.resolve(path,dir_fd);self.access(selected,flags)
+-            previous=getattr(self.local,'open',None);self.local.open=(path,selected,flags)
++            selected=self.resolve(path,dir_fd);literal=_literal_proc_self(path,dir_fd)
++            self.access(selected,flags,literal_kernel=literal)
++            previous=getattr(self.local,'open',None);self.local.open=(path,selected,flags,literal)
+             try:return self.original_open(path,flags,mode,dir_fd=dir_fd)
+             finally:self.local.open=previous
+         self.wrapper=wrapped
+@@ -271,8 +286,10 @@
+             if not self.active:return
+             if event=='open':
+                 pending=getattr(self.local,'open',None)
+-                p=pending[1]if pending is not None and args[0]==pending[0]else self.resolve(args[0])
+-                self.access(p,args[2])
++                matched=pending is not None and args[0]==pending[0]
++                p=pending[1]if matched else self.resolve(args[0])
++                literal=pending[3]if matched else _literal_proc_self(args[0])
++                self.access(p,args[2],literal_kernel=literal)
+             elif event=='import'and args and str(args[0]).split('.')[0]in FORBIDDEN:self.deny('forbidden import')
+             elif event.startswith('socket.')or event in('subprocess.Popen','os.fork','os.forkpty','os.posix_spawn','os.posix_spawnp','os.system','os.exec'):
+                 self.deny('network/process')

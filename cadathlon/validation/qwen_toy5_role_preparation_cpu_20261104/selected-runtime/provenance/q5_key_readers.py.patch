@@ -1,0 +1,20 @@
+--- /tmp/qwen-key-context-adapter-v2-20261104/qwen_key_readers.py
++++ q5_key_readers.py
+@@ -8,7 +8,7 @@
+ import numpy as np
+ from cleanup_origin import protect_body,select,mark
+ from key_descriptor_io import _CloseState,_stream,_sha_fd,_IO_FAILURE_QUARANTINE
+-from qwen_key_contract import ArraySpec,PublicKeyBinding,PrivateKeyBinding,PUBLIC_LIMIT,PRIVATE_LIMIT
++from q5_key_contract import ArraySpec,PublicKeyBinding,PrivateKeyBinding,PUBLIC_LIMIT,PRIVATE_LIMIT
+ 
+ _QUARANTINE=[]
+ HEADER_LIMIT=512
+@@ -146,7 +146,7 @@
+     if raw!=binding.raw:raise ValueError('externally authenticated public manifest changed')
+     specs={s.name:(s.shape,s.moduli)for s in binding.profile.arrays}
+     if set(os.listdir(owner.fd))!=set(specs)|{'public_manifest.json'}:
+-        raise ValueError('exact335 public key files required')
++        raise ValueError('exact203 public key files required')
+     owner.check();return expected,specs,raw
+ 
+ 

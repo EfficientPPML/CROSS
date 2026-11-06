@@ -1,0 +1,122 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+___ test_all_slots_distinct_rows_masks_padding_and_frozen_polynomial[all-16] ___
+
+valid = 16, pattern = 'all'
+
+    @pytest.mark.parametrize('valid',(1,7,16))
+    @pytest.mark.parametrize('pattern',('all','first15','last','boundaries','perrow'))
+    def test_all_slots_distinct_rows_masks_padding_and_frozen_polynomial(valid,pattern):
+        k=np.arange(128);mask={'all':np.ones(128,bool),'first15':k<15,'last':k==127,
+            'boundaries':np.isin(k,[0,15,16,63,64,111,112,127]),
+            'perrow':np.array([k%(row+2)==row%(row+2) for row in range(16)])}[pattern]
+        layout=ScoreReductionLayout(mask,valid_rows=valid);ops=Arithmetic();owner=initial.BertInitialSoftmax(ops,layout,CONTRACT)
+        rng=np.random.default_rng(12+valid);scores=rng.uniform(-7,7,SLOTS)
+        for row in range(16):scores[row*4096:(row+1)*4096]+=row*4-25
+        scores[layout.input_mask==0]=rng.choice([-10000.,10000.],int(np.sum(layout.input_mask==0)))
+>       original=Value(scores);saved=copy.deepcopy(vars(original));out,stages=owner.evaluate_tile(original,capture_checkpoints=True)
+                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_initial_ideal.py:90: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <encrypted_bert_initial_softmax.BertInitialSoftmax object at 0x72535f5f1be0>
+capture_checkpoints = True
+
+    def evaluate_tile(self,value,*,capture_checkpoints=False):
+        if type(capture_checkpoints)is not bool:raise ValueError('checkpoint option must be an explicit bool')
+        self.reduction._validate(value,24)
+        arithmetic=self.arithmetic;context=arithmetic.ctx;cache=context._param_cache
+        input_level=arithmetic._level(value);input_scale=value._ckks_scale
+        q=tuple(cache.q_moduli_at_level(input_level))
+        plan=initial_softmax_plan(q,input_level=input_level,canonical_scale=arithmetic.scale)
+        contract=self.contract;layout=self.layout
+        snapshots={};original=value
+        fingerprint=self.reduction._value_fingerprint(value)
+        def guard():
+            self.reduction._guard_context()
+            if (self.arithmetic is not arithmetic or arithmetic.ctx is not context or context._param_cache is not cache
+                    or self.layout is not layout or self.contract is not contract
+                    or tuple(cache.q_moduli_at_level(input_level))!=q
+                    or self.reduction._value_fingerprint(original)!=fingerprint):
+                raise ValueError('initial-softmax static input/context/contract changed')
+        # The local callback wrapper validates the captured input immediately,
+        # before the reduction may execute its next rotate/add primitive.
+        callback=self.reduction.progress
+        def observed_progress(*args):
+            callback(*args);guard()
+        reduction=ScoreReduction(arithmetic,layout,
+            progress=observed_progress if callback is not None else None)
+        def note(name,result):
+            guard();self._forget(result)
+            if arithmetic._level(result)!=plan['levels'][name] or type(result._ckks_nsd)is not int or result._ckks_nsd!=1:
+                raise RuntimeError('initial-softmax primitive depth/NSD differs')
+            if capture_checkpoints:snapshots[name]=result
+            reduction._note('initial softmax '+name,result);guard();self._forget(result)
+            return result
+        mean=note('score_mean',reduction.mean(value))
+        # Frozen center/32 then exp domain map*2 is exactly the power-of-two
+        # coefficient1/16. Public masking is applied before polynomial powers.
+        t=note('normalized_t',arithmetic.weighted_sum([value,mean],
+            [layout.input_mask/16.,-layout.input_mask/16.]))
+        del mean,value
+        terms={1:t}
+        def power(n):
+            if n not in terms:terms[n]=self._forget(arithmetic.multiply(power(n//2),power((n+1)//2)))
+            return terms[n]
+        coefficients=contract.power_coefficients
+        base=note('base_exp',arithmetic.weighted_sum([power(i) for i in range(1,9)],
+            [coefficients[i]*layout.input_mask for i in range(1,9)],bias=coefficients[0]*layout.input_mask))
+        terms.clear();del t
+        denominator=note('mean_exp',reduction.mean_with_dummy(base,
+            domain=contract.initial_domain,inactive_dummy=1.))
+        inverse=None
+        for update,inverse in integer_newton_updates(arithmetic,denominator,normalization_factor=1,
+                initial_estimate=contract.initial_seed,updates=contract.initial_updates,
+                first_output_scale=plan['static_inverse_scale_plan']['initial_target_scale']):
+            guard();reduction._note(f'initial softmax inverse update{update}',inverse);guard()
+        inverse=note('inverse',inverse);del denominator
+        product=note('base_times_inverse',arithmetic.multiply(base,inverse));del base,inverse
+        if product._ckks_scale!=plan['actual_product_scale']:
+            raise RuntimeError('initial-softmax product scale differs from actual recurrence')
+        output=note('probabilities',arithmetic.weighted_sum([product],[layout.mean_weight]));del product
+>       if output._ckks_scale!=arithmetic.scale:raise RuntimeError('initial-softmax output scale differs')
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       RuntimeError: initial-softmax output scale differs
+
+checkout/cadathlon/common/encrypted_bert_initial_softmax.py:160: RuntimeError
+__________ test_all_public_K_partial_rows_and_hostile_padding[16-128] __________
+
+keys = 128, valid_rows = 16
+
+    @pytest.mark.parametrize('keys',range(1,129))
+    @pytest.mark.parametrize('valid_rows',(1,7,16))
+    def test_all_public_K_partial_rows_and_hostile_padding(keys,valid_rows):
+        positions=np.arange(128);mask=np.array([((positions+7*row)%128)<keys for row in range(16)])
+        layout=ScoreReductionLayout(mask,valid_rows=valid_rows);contract=round_module.NormalizationRoundContract(MANIFEST,keys)
+        ops=Arithmetic();graph=round_module.BertNormalizationRound(ops,layout,contract)
+        values=values_for(layout,keys);source=Value(values,25);before=copy.deepcopy(vars(source))
+>       output,stages,steps=graph.evaluate_tile(source,capture_checkpoints=True)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_round_ideal.py:93: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+checkout/cadathlon/common/encrypted_bert_normalization_round.py:138: in evaluate_tile
+    denominator=note('denominator',reduction._reduce_broadcast(numerator,dummy=1.,label='normalization denominator'))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+name = 'denominator', result = <test_round_ideal.Value object at 0x72535db4be30>
+
+    def note(name,result):
+        guard();reduction._forget(result)
+        if (arithmetic._level(result)!=plan['levels'][name] or result._ckks_scale!=plan['scales'][name]
+>               or type(result._ckks_nsd)is not int or result._ckks_nsd!=1):raise RuntimeError('round metadata differs from the actual public schedule')
+                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               RuntimeError: round metadata differs from the actual public schedule
+
+checkout/cadathlon/common/encrypted_bert_normalization_round.py:131: RuntimeError
+=========================== short test summary info ============================
+FAILED test_initial_ideal.py::test_all_slots_distinct_rows_masks_padding_and_frozen_polynomial[all-16]
+FAILED test_round_ideal.py::test_all_public_K_partial_rows_and_hostile_padding[16-128]
+2 failed in 0.20s

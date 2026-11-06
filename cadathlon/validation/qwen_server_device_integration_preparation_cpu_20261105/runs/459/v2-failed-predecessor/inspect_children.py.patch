@@ -1,0 +1,25 @@
+--- failed-preparation-v2/inspect_children.py
++++ unrun-preparation-v3/inspect_children.py
+@@ -39,11 +39,17 @@
+         if stat.S_ISLNK(info.st_mode):
+             assert child.name.startswith('test_device_integration_')and child.name.endswith('current')and info.st_uid==os.geteuid()
+             target=os.readlink(child)
+-            # The only selected target is one lexical sibling basename. Never
+-            # resolve an alias or follow a target symlink during validation.
+-            assert type(target)is str and 0<len(target)<=255 and target not in('.', '..')
+-            assert '/'not in target and '\\'not in target and Path(target).name==target
+-            named=child.parent/target;assert named.parent==base and named!=child
++            # Pytest can use an absolute lexical sibling or a single basename.
++            # Never resolve the alias or follow a target symlink during validation.
++            assert type(target)is str and 0<len(target)<=4096 and '\\'not in target
++            lexical=Path(target)
++            assert str(lexical)==target and '..'not in lexical.parts and '.'not in lexical.parts
++            if lexical.is_absolute():
++                named=lexical
++            else:
++                assert target not in('.', '..')and '/'not in target and lexical.name==target
++                named=child.parent/target
++            assert 0<len(named.name)<=255 and named.parent==base and named!=child
+             target_info=named.lstat()
+             assert stat.S_ISDIR(target_info.st_mode)and target_info.st_uid==os.geteuid()
+             prefix=child.name[:-len('current')]

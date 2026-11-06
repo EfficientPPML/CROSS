@@ -1,0 +1,249 @@
+"""Strict isolated single-ciphertext transport; no secret/client data loader.
+
+The parent key loader authenticates ``public`` against its full public key
+manifest. This module binds ciphertext artifacts to that already-validated
+identity, an opaque request nonce, and (for responses) the input manifest hash.
+It reuses P1's writer only inside a newly created owned directory. Reads rebuild
+from checked bytes directly, never the permissive bundle_io.load_bundle path.
+"""
+from __future__ import annotations
+
+import hashlib
+import io
+import json
+import math
+import os
+from pathlib import Path
+import re
+import shutil
+import stat
+import zipfile
+
+import numpy as np
+
+FORMAT = 'cross-bert-qkv-row-component-v1'
+FILES = {'bundle.json', 'ct_0.npz', 'transport.json'}
+NPZ_FIELDS = {'payload', 'moduli', 'degree_layout', 'precision', 'scale', 'nsd'}
+SHA256 = re.compile(r'[0-9a-f]{64}\Z')
+REQUEST_ID = re.compile(r'[A-Za-z0-9_-]{1,128}\Z')
+MAX_JSON_BYTES = 16384
+
+
+def _canonical(value):
+    return (json.dumps(value, sort_keys=True, separators=(',', ':'), allow_nan=False)+'\n').encode('utf-8')
+
+
+def manifest_digest(manifest):
+    return hashlib.sha256(_canonical(manifest)).hexdigest()
+
+
+def _object(pairs):
+    value = {}
+    for key, item in pairs:
+        if key in value:
+            raise ValueError('duplicate JSON field: '+key)
+        value[key] = item
+    return value
+
+
+def _json(raw):
+    def invalid(value):
+        raise ValueError('nonfinite JSON value: '+value)
+    return json.loads(raw, object_pairs_hook=_object, parse_constant=invalid)
+
+
+def _contract(public, request_id, role, input_digest):
+    if not isinstance(public, dict) or not isinstance(public.get('context_id'), str) or not SHA256.fullmatch(public['context_id']):
+        raise ValueError('validated public context identity required')
+    if not isinstance(request_id, str) or not REQUEST_ID.fullmatch(request_id):
+        raise ValueError('opaque request identity required')
+    if role not in ('request', 'query', 'key', 'value'):
+        raise ValueError('unknown ciphertext transport role')
+    if (role == 'request' and input_digest is not None) or (role != 'request' and
+            (not isinstance(input_digest, str) or not SHA256.fullmatch(input_digest))):
+        raise ValueError('response requires the exact request manifest digest')
+    parameters = public.get('parameters')
+    if not isinstance(parameters, dict):
+        raise ValueError('public parameters required')
+    degree, batch, level = (parameters.get(name) for name in ('degree', 'batch', 'max_level'))
+    if (type(degree) is not int or degree < 2 or degree & (degree-1)
+            or type(batch) is not int or batch < 1 or type(level) is not int or level != 1
+            or type(parameters.get('composite_degree')) is not int or parameters['composite_degree'] != 2
+            or type(parameters.get('precision')) is not int or parameters['precision'] != 32
+            or type(parameters.get('num_slots')) is not int or parameters['num_slots'] != degree//2):
+        raise ValueError('unsupported public ring/layout contract')
+    layout = parameters.get('degree_layout')
+    q = parameters.get('q_towers')
+    if (not isinstance(layout, list) or len(layout) != 2
+            or any(type(x) is not int or x < 1 for x in layout) or math.prod(layout) != degree
+            or not isinstance(q, list) or len(q) != 4
+            or any(type(x) is not int or not 2 < x < 2**31 or x % 2 == 0 for x in q)
+            or len(set(q)) != len(q)):
+        raise ValueError('invalid public modulus/layout contract')
+    scale = parameters.get('scaling_factor')
+    if type(scale) not in (float, int) or not math.isfinite(scale) or scale <= 0:
+        raise ValueError('finite positive public scale required')
+    moduli = q if role == 'request' else q[:2]
+    shape = (batch, 2, *layout, len(moduli))
+    return dict(context_id=public['context_id'], request_id=request_id, role=role,
+                input_digest=input_digest, level=1 if role == 'request' else 0,
+                shape=shape, moduli=moduli, layout=layout, scale=float(scale))
+
+
+def _read_regular(path, maximum):
+    # Reject symlink replacement at the actual open, not only at an earlier
+    # path inspection. The directory belongs to the caller's request owner.
+    descriptor = os.open(path, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | os.O_NONBLOCK)
+    try:
+        info = os.fstat(descriptor)
+        if not stat.S_ISREG(info.st_mode) or info.st_size > maximum:
+            raise ValueError('unexpected ciphertext artifact type or size: '+str(path))
+        with os.fdopen(descriptor, 'rb', closefd=False) as stream:
+            raw = stream.read(maximum+1)
+        if len(raw) > maximum:
+            raise ValueError('ciphertext artifact exceeds public size bound')
+        return raw
+    finally:
+        os.close(descriptor)
+
+
+def _payload(raw, contract):
+    maximum = math.prod(contract['shape'])*4 + 65536
+    if len(raw) > maximum:
+        raise ValueError('ciphertext container exceeds public size bound')
+    with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+        entries = archive.infolist()
+        if (len(entries) != len(NPZ_FIELDS)
+                or {entry.filename for entry in entries} != {name+'.npy' for name in NPZ_FIELDS}
+                or any(entry.compress_type != zipfile.ZIP_STORED for entry in entries)
+                or sum(entry.file_size for entry in entries) > maximum):
+            raise ValueError('unexpected ciphertext container inventory or compression')
+    with np.load(io.BytesIO(raw), allow_pickle=False) as data:
+        arrays = {name: np.asarray(data[name]) for name in NPZ_FIELDS}
+    payload = arrays['payload']
+    if payload.dtype != np.dtype('uint32') or payload.shape != contract['shape']:
+        raise ValueError('ciphertext payload dtype or shape differs from public contract')
+    for name, expected in (('moduli', contract['moduli']), ('degree_layout', contract['layout'])):
+        value = arrays[name]
+        if value.dtype != np.dtype('int64') or value.ndim != 1 or value.tolist() != expected:
+            raise ValueError('ciphertext '+name+' differs from public contract')
+    for name, expected in (('precision', 32), ('nsd', 1)):
+        value = arrays[name]
+        if value.dtype != np.dtype('int64') or value.shape != () or int(value) != expected:
+            raise ValueError('ciphertext '+name+' differs from public contract')
+    scale = arrays['scale']
+    if (scale.dtype != np.dtype('float64') or scale.shape != () or not math.isfinite(float(scale))
+            or float(scale) <= 0 or not math.isclose(float(scale), contract['scale'], rel_tol=1e-12, abs_tol=0.)):
+        raise ValueError('ciphertext scale differs from public contract')
+    # Check before conversion/Polynomial construction; a cast must never hide
+    # negative, oversized or non-integral serialized coefficients.
+    for limb, modulus in enumerate(contract['moduli']):
+        if np.any(payload[..., limb] >= modulus):
+            raise ValueError('ciphertext residue is outside its declared modulus')
+    return payload, float(scale)
+
+
+def validate_ciphertext(directory, *, public, request_id, role, input_digest=None):
+    """Validate transport and payload without importing or initializing JAX."""
+    contract = _contract(public, request_id, role, input_digest)
+    directory = Path(directory)
+    if directory.is_symlink() or not directory.is_dir() or {p.name for p in directory.iterdir()} != FILES:
+        raise ValueError('ciphertext directory must have the exact regular-file inventory')
+    manifest_raw = _read_regular(directory/'transport.json', MAX_JSON_BYTES)
+    manifest = _json(manifest_raw)
+    expected = dict(format=FORMAT, context_id=contract['context_id'], request_id=request_id,
+                    role=role, input_digest=input_digest, level=contract['level'])
+    if (not isinstance(manifest, dict) or set(manifest) != set(expected)|{'files'}
+            or type(manifest.get('level')) is not int
+            or any(manifest[name] != value for name, value in expected.items())):
+        raise ValueError('ciphertext context/request/role/level binding mismatch')
+    digests = manifest['files']
+    if (not isinstance(digests, dict) or set(digests) != {'bundle.json','ct_0.npz'}
+            or any(not isinstance(value, str) or not SHA256.fullmatch(value) for value in digests.values())):
+        raise ValueError('invalid ciphertext artifact digest inventory')
+    if manifest_raw != _canonical(manifest):
+        raise ValueError('transport manifest must use the canonical serialized form')
+    bundle_raw = _read_regular(directory/'bundle.json', MAX_JSON_BYTES)
+    payload_raw = _read_regular(directory/'ct_0.npz', math.prod(contract['shape'])*4+65536)
+    for name, raw in [('bundle.json', bundle_raw), ('ct_0.npz', payload_raw)]:
+        if hashlib.sha256(raw).hexdigest() != digests[name]:
+            raise ValueError('ciphertext artifact digest mismatch: '+name)
+    bundle = _json(bundle_raw)
+    if (not isinstance(bundle, dict) or set(bundle) != {'shape','count'} or type(bundle['count']) is not int or bundle['count'] != 1
+            or not isinstance(bundle['shape'], dict) or set(bundle['shape']) != {'__ct__'}
+            or type(bundle['shape']['__ct__']) is not int or bundle['shape']['__ct__'] != 0):
+        raise ValueError('only a single ciphertext without plaintext bookkeeping is transportable')
+    payload, scale = _payload(payload_raw, contract)
+    return payload, scale, contract, manifest
+
+
+def save_ciphertext(ct, directory, *, public, request_id, role, input_digest=None):
+    from jaxite_word import Polynomial
+    import bundle_io
+    contract = _contract(public, request_id, role, input_digest)
+    if not isinstance(ct, Polynomial):
+        raise TypeError('one CROSS Polynomial ciphertext is required')
+    ct.validate()
+    if (tuple(ct.shape) != contract['shape'] or list(ct.get_moduli()) != contract['moduli']
+            or list(ct.degree_layout) != contract['layout'] or ct.precision != 32
+            or type(getattr(ct,'_ckks_nsd',None)) is not int or ct._ckks_nsd != 1):
+        raise ValueError('ciphertext differs from its public role contract')
+    scale = getattr(ct,'_ckks_scale',None)
+    if type(scale) not in (float,int) or not math.isfinite(scale) or scale <= 0 or not math.isclose(scale,contract['scale'],rel_tol=1e-12,abs_tol=0.):
+        raise ValueError('ciphertext scale differs from its public contract')
+    directory = Path(directory)
+    directory.mkdir(mode=0o700, parents=False, exist_ok=False)
+    ownership = directory.stat()
+    try:
+        bundle_io.save_bundle(ct, directory)
+        bundle_raw = _read_regular(directory/'bundle.json',MAX_JSON_BYTES)
+        payload_raw = _read_regular(directory/'ct_0.npz',math.prod(contract['shape'])*4+65536)
+        _payload(payload_raw, contract)
+        manifest = dict(format=FORMAT,context_id=contract['context_id'],request_id=request_id,role=role,
+            input_digest=input_digest,level=contract['level'],files={
+                'bundle.json':hashlib.sha256(bundle_raw).hexdigest(),
+                'ct_0.npz':hashlib.sha256(payload_raw).hexdigest()})
+        for name in ('bundle.json','ct_0.npz'):
+            with (directory/name).open('rb') as stream:
+                os.fsync(stream.fileno())
+        # Publication point: readers reject the directory until this final
+        # commit record exists. No existing request directory is overwritten.
+        temporary = directory/'.transport.tmp'
+        with temporary.open('xb') as stream:
+            stream.write(_canonical(manifest))
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, directory/'transport.json')
+        descriptor = os.open(directory, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
+        validate_ciphertext(directory, public=public, request_id=request_id, role=role,input_digest=input_digest)
+        return manifest
+    except BaseException as primary:
+        # Only remove the inode this call created; never a replacement path.
+        try:
+            current = directory.lstat()
+            if (current.st_dev,current.st_ino)==(ownership.st_dev,ownership.st_ino) and stat.S_ISDIR(current.st_mode):
+                shutil.rmtree(directory)
+        except FileNotFoundError:
+            pass
+        except BaseException as cleanup:
+            primary.add_note('Owned transport cleanup also failed: '+str(cleanup))
+        raise
+
+
+def load_ciphertext(directory, *, public, request_id, role, input_digest=None):
+    payload,scale,contract,manifest = validate_ciphertext(directory,public=public,request_id=request_id,role=role,input_digest=input_digest)
+    import jax.numpy as jnp
+    from jaxite_word import Polynomial
+    # Reconstruct only the same in-memory bytes that passed all checks above.
+    ct = Polynomial.from_array(jnp.asarray(payload,dtype=jnp.uint32),
+        dict(batch=contract['shape'][0],num_elements=2,degree=math.prod(contract['layout']),
+             num_moduli=len(contract['moduli']),precision=32,degree_layout=tuple(contract['layout'])),
+        dict(moduli=contract['moduli']))
+    ct._ckks_scale=scale
+    ct._ckks_nsd=1
+    ct.validate()
+    return ct,manifest

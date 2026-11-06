@@ -1,0 +1,351 @@
+{
+  "review_base_commit": "98ca6833397069e4228c265d75fef64884218a28",
+  "environment": {
+    "python": "3.13.18",
+    "jax": "0.12.0.1",
+    "jaxlib": "0.12.0.1",
+    "libtpu": "0.0.50.1",
+    "numpy": "2.5.4",
+    "torch": "2.15.0+cpu"
+  },
+  "original_baseline_test5": {
+    "case": "test5.in",
+    "mode": "HE-synthetic-smoke",
+    "device": "TPU_0(process=0,(0,0,0,0))",
+    "setup_s": 657.580195048,
+    "end_to_end_s": [
+      2.115523635000045
+    ],
+    "server_s": [
+      0.8902419390001342
+    ],
+    "warmup_s": [],
+    "warmup_server_s": [],
+    "cold_start_included": true,
+    "median_s": 2.115523635000045,
+    "batch": 2,
+    "trained_accuracy_evaluated": false,
+    "max_abs_error": 2.5062851100043915e-13,
+    "nrmse": 1.1660295377730352e-11,
+    "top1_agreement": 1.0,
+    "total_s": 661.5043850319998
+  },
+  "original_baseline_test5_setup_profile_s": {
+    "pke_keys": 3.381,
+    "context_initialization": 103.736,
+    "prepare_bindings": 287.796
+  },
+  "codec_preparation_benchmark": {
+    "degree": 32768,
+    "q_towers": 16,
+    "trials": 5,
+    "bit_exact": true,
+    "before_median_s": 0.1745829420001428,
+    "after_median_s": 0.05923966999989716
+  },
+  "limits": [
+    "Original test5 precedes codec optimizations; original test6 includes them. Different batches/seeds mean these are not a controlled full-run speedup comparison.",
+    "Public synthetic cases are not trained-model accuracy. Compact-v1 uses explicitly reduced CNNs and a measured-reference rubric, separate from the legacy full-model/SOTA rubric.",
+    "Original cases1\u20134 passed together in the later frozen-source TPU sweep recorded in validation/p3_legacy_20261102/report.json. Original cases5/6 were directly verified earlier in this review and retain separate provenance; this is not a single final-source six-case timing sweep.",
+    "The reduced-precision full-model student test6 preceded the final host-array encoding optimization. It is not the compact-v1 competition schedule."
+  ],
+  "regression_tests": {
+    "command": "JAX_PLATFORMS=cpu OPENBLAS_NUM_THREADS=1 python -m pytest jaxite_word/codec_preparation_test.py jaxite_word/composite_prime_gen_test.py jaxite_word/ckks_ctx_test.py jaxite_word/bsgs_test.py jaxite_word/mapping_compile_test.py jaxite_word/packing_test.py cadathlon/tests/test_runner_timing.py -q",
+    "passed": 297,
+    "skipped": 2,
+    "subtests_passed": 62,
+    "seconds": 48.48,
+    "following_device_residency_change": {
+      "mapping_compile_passed": 52,
+      "subtests_passed": 17,
+      "seconds": 1.02
+    },
+    "final_combined": {
+      "passed": 300,
+      "skipped": 2,
+      "subtests_passed": 62,
+      "seconds": 41.83
+    },
+    "host_encoder_montgomery_check": {
+      "passed": 1,
+      "subtests_passed": 2
+    }
+  },
+  "student_baseline_test6_before_host_encoding_change": {
+    "case": "test6.in",
+    "mode": "HE-synthetic-smoke",
+    "device": "TPU_0(process=0,(0,0,0,0))",
+    "passed": true,
+    "implementation": "baseline_student.py",
+    "execution_rings": [
+      {
+        "degree": 16384,
+        "num_slots": 8192,
+        "num_q": 16,
+        "num_p": 2,
+        "dnum": 8,
+        "max_level": 7,
+        "q_towers": [
+          8257537,
+          1146881,
+          1179649,
+          1376257,
+          5308417,
+          5767169,
+          4882433,
+          1769473,
+          4816897,
+          2424833,
+          2654209,
+          2752513,
+          4423681,
+          4620289,
+          3604481,
+          3735553
+        ],
+        "p_towers": [
+          2147352577,
+          2146959361
+        ],
+        "log2_Q": 345.4140615457298,
+        "log2_QP": 407.4136212257974,
+        "security_bits": 128,
+        "security_model": "classical"
+      }
+    ],
+    "setup_s": 260.0938177779999,
+    "end_to_end_s": [
+      1.3469644490000974
+    ],
+    "server_s": [
+      0.5100192820000302
+    ],
+    "warmup_s": [],
+    "warmup_server_s": [],
+    "cold_start_included": true,
+    "median_s": 1.3469644490000974,
+    "batch": 4,
+    "trained_accuracy_evaluated": false,
+    "max_abs_error": 1.9474864164023553e-08,
+    "nrmse": 7.561788208553399e-07,
+    "top1_agreement": 1.0,
+    "total_s": 263.5397716550001
+  },
+  "student_baseline_test6_setup_profile_s": {
+    "pke_keys": 1.218,
+    "context_initialization": 43.357,
+    "prepare_bindings": 83.183,
+    "compile_dynamic_constants": 131.816
+  },
+  "original_baseline_test6": {
+    "case": "test6.in",
+    "mode": "HE-synthetic-smoke",
+    "device": "TPU_0(process=0,(0,0,0,0))",
+    "passed": true,
+    "implementation": "baseline.py",
+    "execution_rings": [
+      {
+        "degree": 32768,
+        "num_slots": 16384,
+        "num_q": 16,
+        "num_p": 4,
+        "dnum": 4,
+        "max_level": 7,
+        "q_towers": [
+          2147352577,
+          1065484289,
+          1065811969,
+          1068236801,
+          1079443457,
+          1080360961,
+          1068433409,
+          1068564481,
+          1077477377,
+          1069219841,
+          1070727169,
+          1071513601,
+          1073872897,
+          1074266113,
+          1072496641,
+          1073479681
+        ],
+        "p_towers": [
+          2146959361,
+          2146041857,
+          2145976321,
+          2144796673
+        ],
+        "log2_Q": 480.96377040094364,
+        "log2_QP": 604.9596299590162,
+        "security_bits": 128,
+        "security_model": "classical"
+      }
+    ],
+    "setup_s": 496.72041641999976,
+    "end_to_end_s": [
+      2.864006461999452
+    ],
+    "server_s": [
+      1.3014958480007408
+    ],
+    "warmup_s": [],
+    "warmup_server_s": [],
+    "cold_start_included": true,
+    "median_s": 2.864006461999452,
+    "batch": 4,
+    "trained_accuracy_evaluated": false,
+    "max_abs_error": 2.810668364716662e-13,
+    "nrmse": 9.313348716478477e-12,
+    "top1_agreement": 1.0,
+    "total_s": 501.42665918099965
+  },
+  "original_baseline_test6_setup_profile_s": {
+    "pke_keys": 3.351,
+    "context_initialization": 102.105,
+    "prepare_bindings": 121.526
+  },
+  "failed_full_model_parallel_evaluation": {
+    "passed": false,
+    "budget_s": 300.0,
+    "profile": "student",
+    "schedule": [
+      "test1.in",
+      "test4.in"
+    ],
+    "trained_accuracy_evaluated": false,
+    "error": "evaluation exceeded wall-time budget",
+    "elapsed_s": 307.8947256239999,
+    "within_budget": false,
+    "external_elapsed_s": 307.95,
+    "peak_host_rss_kib": 36375984,
+    "worker_killed_and_reaped": true,
+    "note": "Historical failed experiment; final compact-v1 evaluation uses serial setup and smaller published models."
+  },
+  "compact_v1_full_evaluation": {
+    "evidence": "cadathlon/validation/p3_compact_baseline.json",
+    "command": "python cadathlon/non_agent_pset/p3_cnn/src/evaluate.py --baseline --budget-s 300 --output /tmp/p3-compact-baseline",
+    "passed": true,
+    "worker_returncode": 0,
+    "elapsed_s": 152.96140972800004,
+    "external_elapsed_s": 153.01,
+    "budget_s": 300.0,
+    "includes": [
+      "process startup",
+      "both model setups",
+      "one warmup and three measured requests per model",
+      "numerical and actual-ring security checks",
+      "resource release and process exit"
+    ],
+    "peak_host_rss_kib": 11268652,
+    "device_memory": [
+      {
+        "num_allocs": 463,
+        "bytes_in_use": 27714560,
+        "peak_bytes_in_use": 1526606336,
+        "largest_alloc_size": 167772160,
+        "bytes_limit": 33546039296,
+        "bytes_reserved": 0,
+        "peak_bytes_reserved": 71712768,
+        "bytes_reservable_limit": 32108044288,
+        "largest_free_block_bytes": 32108044288
+      }
+    ],
+    "cases": {
+      "student1.in": {
+        "model": "compact_gray_cnn",
+        "setup_s": 68.98950495499957,
+        "median_server_s": 0.02113160000044445,
+        "max_abs_error": 1.190862009047347e-08,
+        "top1_agreement": 1.0
+      },
+      "student2.in": {
+        "model": "compact_rgb_cnn",
+        "setup_s": 64.02933491800013,
+        "median_server_s": 0.01973502000055305,
+        "max_abs_error": 5.781215070901902e-09,
+        "top1_agreement": 1.0
+      }
+    },
+    "baseline_self_score": {
+      "points": 10.0,
+      "maximum": 20.0
+    },
+    "trained_accuracy_evaluated": false,
+    "source_sha256": {
+      "cadathlon/non_agent_pset/p3_cnn/src/baseline_student.py": "05c3d0210d05cbcdcb46825dde0c6188abbe674ada98c6cff039a18a4f1b2e6a",
+      "cadathlon/non_agent_pset/p3_cnn/src/runner.py": "4528da76477fdc1c924ab0b42ece099c9563b51560393b374d466f5b380595a9",
+      "cadathlon/non_agent_pset/p3_cnn/src/evaluate.py": "ab853b614c0cc282cfe7fd4aedba131b8dc2defbb93c2bed05416f6f108890b1",
+      "cadathlon/non_agent_pset/p3_cnn/src/compact_models.py": "bb7f6461cd8040a32955ac8b356839fcbd711159e8ce86d735424d502bf2cabf",
+      "cadathlon/non_agent_pset/p3_cnn/src/reference.py": "4515f9c6556db844aab24803071cfd246378e7a8eaef805530b93aa012726fa1",
+      "jaxite_word/mapping.py": "c8d035d4b7d743b18324830eeb09b6cd2a562bc4862e6af2ee10702922f6816f",
+      "jaxite_word/packing.py": "7496f37b7116b883c14f8e3d5cae6bd1ed7375d0a8d2425f78c8f84e347c0206",
+      "jaxite_word/ckks_ctx.py": "d3ed2db0ca47e395a257a9e3da2850c2ad127d0d022d2ee3a575a236b32d5149",
+      "jaxite_word/bsgs.py": "52a1027be9bf704fd3ffd453251d2b3136ab31a3242c12d341ca1374b1b82aed",
+      "jaxite_word/composite_prime_gen.py": "e3e689237d2b8449333774e84fa271a15a5c54ad603a32f7fcbe60ecb26f0317",
+      "cadathlon/non_agent_pset/p3_cnn/test/student1.in": "362469c1b15077203df27e24e975580c43bea615c16f7b8b0242a18f38c5bdc7",
+      "cadathlon/non_agent_pset/p3_cnn/test/student1.out": "66aa9ecf834026fc498104aa1712b25b7948f4df6ca18bae12bd7c2334a4d1a8",
+      "cadathlon/non_agent_pset/p3_cnn/test/student2.in": "ace28917dbbcb5f15ea89db25017132ad0a01eacd03b77801ba57ccba7781ac1",
+      "cadathlon/non_agent_pset/p3_cnn/test/student2.out": "79a794604c8904bdcb984d5e0b3b5d2b4f08463de758af398a3d46cf0790b19b"
+    }
+  },
+  "compact_cpu_validation": {
+    "passed": 14,
+    "seconds": 1.63,
+    "command": "JAX_PLATFORMS=cpu OPENBLAS_NUM_THREADS=1 python -m pytest cadathlon/tests/test_compact_cnn.py cadathlon/tests/test_cnn_evaluation.py cadathlon/tests/test_runner_timing.py -q",
+    "all_eight_plaintext_fixtures": {
+      "passed": true,
+      "max_abs_error": 0.0,
+      "top1_agreement": 1.0
+    }
+  },
+  "original_baseline_cases1_to4_20261102": {
+    "report": "validation/p3_legacy_20261102/report.json",
+    "raw_artifact_manifest": "validation/p3_legacy_20261102/artifact_manifest.json",
+    "passed": true,
+    "parent_elapsed_s": 2225.230089791001,
+    "fresh_process_per_case": true,
+    "baseline": "original default model and CKKS profile; dynamic_constants remains disabled",
+    "warmups": 0,
+    "repeats": 1,
+    "all_source_snapshots_unchanged": true,
+    "cases": {
+      "test1.in": {
+        "passed": true,
+        "returncode": 0,
+        "parent_elapsed_s": 548.3116112209991,
+        "peak_child_rss_kib": 131042996,
+        "runner_total_s": 540.1400766119987,
+        "max_abs_error": 1.4862069908083697e-13,
+        "top1_agreement": 1.0
+      },
+      "test2.in": {
+        "passed": true,
+        "returncode": 0,
+        "parent_elapsed_s": 603.6852687629998,
+        "peak_child_rss_kib": 134220380,
+        "runner_total_s": 595.3497787520009,
+        "max_abs_error": 3.767090805961715e-13,
+        "top1_agreement": 1.0
+      },
+      "test3.in": {
+        "passed": true,
+        "returncode": 0,
+        "parent_elapsed_s": 619.3399245239998,
+        "peak_child_rss_kib": 134106848,
+        "runner_total_s": 611.1565872390001,
+        "max_abs_error": 8.843290683069327e-13,
+        "top1_agreement": 1.0
+      },
+      "test4.in": {
+        "passed": true,
+        "returncode": 0,
+        "parent_elapsed_s": 453.82324665300075,
+        "peak_child_rss_kib": 110034384,
+        "runner_total_s": 444.7868552489999,
+        "max_abs_error": 4.0290513980689724e-13,
+        "top1_agreement": 1.0
+      }
+    },
+    "provenance_note": "Earlier original test5/test6 data above are unchanged historical results, not reruns against this source snapshot."
+  }
+}

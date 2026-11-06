@@ -1,0 +1,74 @@
+{
+  "actual_execution_enabled": false,
+  "affinity": [
+    108,
+    109,
+    110,
+    111
+  ],
+  "backend_forbidden_roots": [
+    "jax",
+    "jaxlib",
+    "jaxite_word",
+    "torch",
+    "transformers",
+    "tensorflow",
+    "safetensors",
+    "libtpu"
+  ],
+  "expected_nodes": 30,
+  "files": [
+    "test_key_store.py",
+    "test_key_producer.py"
+  ],
+  "inherited_suites_selected": false,
+  "interpreter": "/tmp/cross-pretrained-validation-env/bin/python",
+  "nodes": [
+    "test_key_store.py::test_exact_numpy_wire_bytes_and_original_bounded_readback[rank2-private]",
+    "test_key_store.py::test_exact_numpy_wire_bytes_and_original_bounded_readback[rank3-public]",
+    "test_key_store.py::test_write_all_positive_partial_progress_has_bounded_calls",
+    "test_key_store.py::test_invalid_progress_does_not_retry[zero]",
+    "test_key_store.py::test_invalid_progress_does_not_retry[negative]",
+    "test_key_store.py::test_invalid_progress_does_not_retry[boolean]",
+    "test_key_store.py::test_invalid_progress_does_not_retry[too-large]",
+    "test_key_store.py::test_cumulative_cap_rejects_before_new_write_and_empty_is_noop",
+    "test_key_store.py::test_raised_write_preserves_identity_without_uncertain_replay[oserror]",
+    "test_key_store.py::test_raised_write_preserves_identity_without_uncertain_replay[keyboardinterrupt]",
+    "test_key_store.py::test_retained_sink_cannot_write_after_owned_numeric_fd_reuse",
+    "test_key_store.py::test_sink_has_no_automatic_close_or_buffer_authority",
+    "test_key_store.py::test_save_body_wins_cleanup_cancellation_and_all_original_fds_retire[body-valueerror]",
+    "test_key_store.py::test_save_body_wins_cleanup_cancellation_and_all_original_fds_retire[body-keyboardinterrupt]",
+    "test_key_store.py::test_uncertain_raw_close_is_not_retried_after_successful_npy_write",
+    "test_key_producer.py::test_complete166_literal_order335_descriptors_original_secret_and_separate_identity",
+    "test_key_producer.py::test_prerequisite_rejection_precedes_store_and_rng[source]",
+    "test_key_producer.py::test_prerequisite_rejection_precedes_store_and_rng[security]",
+    "test_key_producer.py::test_prerequisite_rejection_precedes_store_and_rng[capacity]",
+    "test_key_producer.py::test_wrong_authenticated_intent_rejects_before_any_dependency[keygen]",
+    "test_key_producer.py::test_wrong_authenticated_intent_rejects_before_any_dependency[candidate]",
+    "test_key_producer.py::test_later_factory_failure_retires_earlier_original_store",
+    "test_key_producer.py::test_partial_rotation_failure_has_no_manifest_and_keeps_original_secret",
+    "test_key_producer.py::test_cleanup_only_cancellation_outranks_ordinary_close[keyboardinterrupt]",
+    "test_key_producer.py::test_cleanup_only_cancellation_outranks_ordinary_close[systemexit]",
+    "test_key_producer.py::test_genuine_rng_body_primary_survives_cleanup_cancellation",
+    "test_key_producer.py::test_store_accessor_mutation_rejects_and_closes_captured_original",
+    "test_key_producer.py::test_parsed_intent_mutation_rejects_before_root_factory",
+    "test_key_producer.py::test_actual_entries_deny_without_argument_access[producer]",
+    "test_key_producer.py::test_actual_entries_deny_without_argument_access[store]"
+  ],
+  "numpy_source_root": "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/numpy",
+  "per_file": {
+    "test_key_producer.py": 15,
+    "test_key_store.py": 15
+  },
+  "pytest_args": [
+    "-p",
+    "no:cacheprovider",
+    "--import-mode=importlib"
+  ],
+  "python_flags": [
+    "-I",
+    "-B"
+  ],
+  "schema": "qwen-key-producer-focused-selection-v1",
+  "scope": "Static AST-declared nodes; pytest has not collected or executed"
+}

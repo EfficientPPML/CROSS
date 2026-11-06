@@ -1,0 +1,67 @@
+{
+  "normalized_newton": {
+    "s": 4.0,
+    "C": "public_valid_count/4",
+    "target": "z=4/(K*x)",
+    "first_mean_exp_reciprocal": "unchanged",
+    "round_iterations": "minimum public contraction count certified per K/stage before model load",
+    "declared_z_upper": 8.0,
+    "declared_xz_upper": "4/K",
+    "public_product_upper": 1.0,
+    "correction_interval": [
+      1.0,
+      2.0
+    ],
+    "final_unscaled_product_upper": "4/K",
+    "binary64_range_diagnostic_slack": "64*machine_epsilon*max(1,abs(interval endpoints)); no CKKS interpretation"
+  },
+  "centered_score_domain": [
+    -16.0,
+    16.0
+  ],
+  "domain_scope": "Fixed conditional domain selected from the preceding public full-row audit, not a guaranteed bound on unseen inputs.",
+  "historical_domain_preserved_for_diagnostics": [
+    -9.0,
+    12.0
+  ],
+  "exp_domain": [
+    -0.5,
+    0.5
+  ],
+  "exp_degree": 8,
+  "power_coefficients_in_t_2x": [
+    0.9999999999999996,
+    0.49999999980981014,
+    0.12499999999051792,
+    0.020833335868773423,
+    0.0026041667932295343,
+    0.0002604075432705909,
+    2.170093323790781e-05,
+    1.562250712181943e-06,
+    9.748833634062901e-08
+  ],
+  "exp_grid_max_abs_error": 2.224065376310591e-11,
+  "exp_grid_gate": 1e-10,
+  "normalized_squarings": 5,
+  "initial_reciprocal": {
+    "domain": [
+      0.5,
+      2.0
+    ],
+    "iterations": 6
+  },
+  "round_reciprocal": {
+    "domain_formula": "a=0.5/K outward down; b=min(2,2*Rj/(K-1+Rj)) outward up",
+    "iterations": "per public_schedule.json",
+    "unchanged_baseline_iterations": 13,
+    "max_keys": 128,
+    "worst_case_exact_arithmetic_relative_residual_bound": 1.2663650252183214e-14
+  },
+  "selection": "Only declared function domains and analytic Newton convergence decide constants/iterations. No labels/logits or per-value stopping/clipping.",
+  "fixed_gates": {
+    "probability_max_abs": 1e-08,
+    "context_and_block_max_abs": 1e-06,
+    "probability_sum_abs": 1e-10,
+    "domain_violations": 0
+  }
+}

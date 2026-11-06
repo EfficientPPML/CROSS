@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="4" skipped="0" tests="4" time="0.107" timestamp="2026-11-03T16:52:28.766091+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="review_component.close-priority-negative-v1.test_close_priority" name="test_cleanup_only_cancellation_supersedes_prior_close[read-KeyboardInterrupt]" time="0.002"><failure message="OSError: first cleanup failure&#10;Incomplete transport tile retained for parent-owned quarantine; no files removed&#10;Directory handle close also failed: later cleanup cancellation">tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-402/test_cleanup_only_cancellation0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x71624de14180&gt;
+tiny = &lt;test_close_priority.tiny.&lt;locals&gt;.Polynomial object at 0x71624de3c6e0&gt;
+cancel = &lt;class 'KeyboardInterrupt'&gt;, site = 'read'
+
+    @pytest.mark.parametrize('cancel',[KeyboardInterrupt,SystemExit])
+    @pytest.mark.parametrize('site',['read','write'])
+    def test_cleanup_only_cancellation_supersedes_prior_close(tmp_path,monkeypatch,tiny,cancel,site):
+        target=tmp_path/'tile';real_close=os.close;real_fdopen=os.fdopen;opened_write=[];active=[]
+        def fdopen(fd,*a,**kw):
+            if a and a[0]=='wb':opened_write.append(fd)
+            return real_fdopen(fd,*a,**kw)
+        def close(fd):
+            real_close(fd)
+            if site=='write' and not opened_write:return
+            active.append(fd)
+            if len(active)==1:raise OSError('first cleanup failure')
+            raise cancel('later cleanup cancellation')
+        with monkeypatch.context() as m:
+            m.setattr(os,'fdopen',fdopen);m.setattr(os,'close',close)
+            with pytest.raises(cancel,match='later cleanup'):
+&gt;               transport.save_ciphertext(tiny,target,contract={},role='request',tile_index=0)
+
+review_component/close-priority-negative-v1/test_close_priority.py:47: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+review_component/close-priority-negative-v1/component_transport.py:228: in save_ciphertext
+    bundle_raw=_read_regular('bundle.json',MAX_JSON_BYTES,directory_fd=fd)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+review_component/close-priority-negative-v1/component_transport.py:61: in _read_regular
+    finally: _close(descriptor)
+             ^^^^^^^^^^^^^^^^^^
+review_component/close-priority-negative-v1/component_transport.py:83: in _close
+    try: os.close(fd)
+         ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fd = 14
+
+    def close(fd):
+        real_close(fd)
+        if site=='write' and not opened_write:return
+        active.append(fd)
+&gt;       if len(active)==1:raise OSError('first cleanup failure')
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: first cleanup failure
+E       Incomplete transport tile retained for parent-owned quarantine; no files removed
+E       Directory handle close also failed: later cleanup cancellation
+
+review_component/close-priority-negative-v1/test_close_priority.py:42: OSError</failure></testcase><testcase classname="review_component.close-priority-negative-v1.test_close_priority" name="test_cleanup_only_cancellation_supersedes_prior_close[read-SystemExit]" time="0.001"><failure message="OSError: first cleanup failure&#10;Incomplete transport tile retained for parent-owned quarantine; no files removed&#10;Directory handle close also failed: later cleanup cancellation">tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-402/test_cleanup_only_cancellation1')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x71624e086210&gt;
+tiny = &lt;test_close_priority.tiny.&lt;locals&gt;.Polynomial object at 0x71624bb7fcb0&gt;
+cancel = &lt;class 'SystemExit'&gt;, site = 'read'
+
+    @pytest.mark.parametrize('cancel',[KeyboardInterrupt,SystemExit])
+    @pytest.mark.parametrize('site',['read','write'])
+    def test_cleanup_only_cancellation_supersedes_prior_close(tmp_path,monkeypatch,tiny,cancel,site):
+        target=tmp_path/'tile';real_close=os.close;real_fdopen=os.fdopen;opened_write=[];active=[]
+        def fdopen(fd,*a,**kw):
+            if a and a[0]=='wb':opened_write.append(fd)
+            return real_fdopen(fd,*a,**kw)
+        def close(fd):
+            real_close(fd)
+            if site=='write' and not opened_write:return
+            active.append(fd)
+            if len(active)==1:raise OSError('first cleanup failure')
+            raise cancel('later cleanup cancellation')
+        with monkeypatch.context() as m:
+            m.setattr(os,'fdopen',fdopen);m.setattr(os,'close',close)
+            with pytest.raises(cancel,match='later cleanup'):
+&gt;               transport.save_ciphertext(tiny,target,contract={},role='request',tile_index=0)
+
+review_component/close-priority-negative-v1/test_close_priority.py:47: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+review_component/close-priority-negative-v1/component_transport.py:228: in save_ciphertext
+    bundle_raw=_read_regular('bundle.json',MAX_JSON_BYTES,directory_fd=fd)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+review_component/close-priority-negative-v1/component_transport.py:61: in _read_regular
+    finally: _close(descriptor)
+             ^^^^^^^^^^^^^^^^^^
+review_component/close-priority-negative-v1/component_transport.py:83: in _close
+    try: os.close(fd)
+         ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fd = 14
+
+    def close(fd):
+        real_close(fd)
+        if site=='write' and not opened_write:return
+        active.append(fd)
+&gt;       if len(active)==1:raise OSError('first cleanup failure')
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: first cleanup failure
+E       Incomplete transport tile retained for parent-owned quarantine; no files removed
+E       Directory handle close also failed: later cleanup cancellation
+
+review_component/close-priority-negative-v1/test_close_priority.py:42: OSError</failure></testcase><testcase classname="review_component.close-priority-negative-v1.test_close_priority" name="test_cleanup_only_cancellation_supersedes_prior_close[write-KeyboardInterrupt]" time="0.007"><failure message="OSError: first cleanup failure&#10;Incomplete transport tile retained for parent-owned quarantine; no files removed&#10;Directory handle close also failed: later cleanup cancellation">tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-402/test_cleanup_only_cancellation2')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x71624b95c7c0&gt;
+tiny = &lt;test_close_priority.tiny.&lt;locals&gt;.Polynomial object at 0x71624b934440&gt;
+cancel = &lt;class 'KeyboardInterrupt'&gt;, site = 'write'
+
+    @pytest.mark.parametrize('cancel',[KeyboardInterrupt,SystemExit])
+    @pytest.mark.parametrize('site',['read','write'])
+    def test_cleanup_only_cancellation_supersedes_prior_close(tmp_path,monkeypatch,tiny,cancel,site):
+        target=tmp_path/'tile';real_close=os.close;real_fdopen=os.fdopen;opened_write=[];active=[]
+        def fdopen(fd,*a,**kw):
+            if a and a[0]=='wb':opened_write.append(fd)
+            return real_fdopen(fd,*a,**kw)
+        def close(fd):
+            real_close(fd)
+            if site=='write' and not opened_write:return
+            active.append(fd)
+            if len(active)==1:raise OSError('first cleanup failure')
+            raise cancel('later cleanup cancellation')
+        with monkeypatch.context() as m:
+            m.setattr(os,'fdopen',fdopen);m.setattr(os,'close',close)
+            with pytest.raises(cancel,match='later cleanup'):
+&gt;               transport.save_ciphertext(tiny,target,contract={},role='request',tile_index=0)
+
+review_component/close-priority-negative-v1/test_close_priority.py:47: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+review_component/close-priority-negative-v1/component_transport.py:242: in save_ciphertext
+    finally:_close(temporary)
+            ^^^^^^^^^^^^^^^^^
+review_component/close-priority-negative-v1/component_transport.py:83: in _close
+    try: os.close(fd)
+         ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fd = 14
+
+    def close(fd):
+        real_close(fd)
+        if site=='write' and not opened_write:return
+        active.append(fd)
+&gt;       if len(active)==1:raise OSError('first cleanup failure')
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: first cleanup failure
+E       Incomplete transport tile retained for parent-owned quarantine; no files removed
+E       Directory handle close also failed: later cleanup cancellation
+
+review_component/close-priority-negative-v1/test_close_priority.py:42: OSError</failure></testcase><testcase classname="review_component.close-priority-negative-v1.test_close_priority" name="test_cleanup_only_cancellation_supersedes_prior_close[write-SystemExit]" time="0.006"><failure message="OSError: first cleanup failure&#10;Incomplete transport tile retained for parent-owned quarantine; no files removed&#10;Directory handle close also failed: later cleanup cancellation">tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-402/test_cleanup_only_cancellation3')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x71624bac5d50&gt;
+tiny = &lt;test_close_priority.tiny.&lt;locals&gt;.Polynomial object at 0x71624b9346e0&gt;
+cancel = &lt;class 'SystemExit'&gt;, site = 'write'
+
+    @pytest.mark.parametrize('cancel',[KeyboardInterrupt,SystemExit])
+    @pytest.mark.parametrize('site',['read','write'])
+    def test_cleanup_only_cancellation_supersedes_prior_close(tmp_path,monkeypatch,tiny,cancel,site):
+        target=tmp_path/'tile';real_close=os.close;real_fdopen=os.fdopen;opened_write=[];active=[]
+        def fdopen(fd,*a,**kw):
+            if a and a[0]=='wb':opened_write.append(fd)
+            return real_fdopen(fd,*a,**kw)
+        def close(fd):
+            real_close(fd)
+            if site=='write' and not opened_write:return
+            active.append(fd)
+            if len(active)==1:raise OSError('first cleanup failure')
+            raise cancel('later cleanup cancellation')
+        with monkeypatch.context() as m:
+            m.setattr(os,'fdopen',fdopen);m.setattr(os,'close',close)
+            with pytest.raises(cancel,match='later cleanup'):
+&gt;               transport.save_ciphertext(tiny,target,contract={},role='request',tile_index=0)
+
+review_component/close-priority-negative-v1/test_close_priority.py:47: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+review_component/close-priority-negative-v1/component_transport.py:242: in save_ciphertext
+    finally:_close(temporary)
+            ^^^^^^^^^^^^^^^^^
+review_component/close-priority-negative-v1/component_transport.py:83: in _close
+    try: os.close(fd)
+         ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fd = 14
+
+    def close(fd):
+        real_close(fd)
+        if site=='write' and not opened_write:return
+        active.append(fd)
+&gt;       if len(active)==1:raise OSError('first cleanup failure')
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: first cleanup failure
+E       Incomplete transport tile retained for parent-owned quarantine; no files removed
+E       Directory handle close also failed: later cleanup cancellation
+
+review_component/close-priority-negative-v1/test_close_priority.py:42: OSError</failure></testcase></testsuite></testsuites>

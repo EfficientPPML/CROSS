@@ -1,0 +1,75 @@
+--- admitted-pure39/executed_driver.py
++++ pure-client53/executed_driver.py
+@@ -1,4 +1,4 @@
+-"""Finalized public/synthetic key-authority proof driver; never auto-discovers tests.
++"""Finalized public/synthetic client-authority proof driver; never auto-discovers tests.
+ 
+ Exact config and worker bytes are pinned. Source/test/driver review and an
+ explicit launch authorization remain external; preparation has not executed.
+@@ -7,8 +7,8 @@
+ import hashlib, json, os, signal, subprocess, sys, tarfile, time
+ import xml.etree.ElementTree as ET
+ 
+-CONFIG_SHA256 = 'ea619c255bac1009a4622a5c4c0905e4c5cb1c09cfe72c5aec1a0f5f85e1a25b'
+-WORKER_SHA256 = 'b2ec88e0d56252c3dd290d3e563d50875ab0afac3da81768f82172cc3b6b31f1'
++CONFIG_SHA256 = 'b54359259300c0e47daff411f93215eab25851160eedcc3a3591bebe4af85919'
++WORKER_SHA256 = '3dfb645c744143d1e1b7699791680dffd549ec179b16d708348e0e67c4b4ec97'
+ HERE = Path(__file__).resolve().parent
+ sha = lambda raw: hashlib.sha256(raw).hexdigest()
+ canonical = lambda value: (json.dumps(value, sort_keys=True, indent=2, allow_nan=False) + '\n').encode()
+@@ -21,11 +21,11 @@
+ def main():
+     # Reject the unfinalized template before any source, evidence or child work.
+     if not isinstance(CONFIG_SHA256, str) or not isinstance(WORKER_SHA256, str):
+-        raise ValueError('key-authority proof pins remain unset; launch disabled')
++        raise ValueError('client-authority proof pins remain unset; launch disabled')
+     raw = (HERE / 'run_config.json').read_bytes()
+     assert sha(raw) == CONFIG_SHA256
+     config = json.loads(raw)
+-    assert config['schema'] == 'qwen-keygen-authority-focused-proof-v1'
++    assert config['schema'] == 'qwen-client-authority-focused-proof-v1'
+     assert config['synthetic_only'] is True and config['actual_execution_authorized'] is False
+     source = Path(config['source_root'])
+     out = Path(config['proof_root'])
+@@ -37,12 +37,12 @@
+     assert type(xml_cases) is list and len(xml_cases) == len(nodes)
+     assert sha(canonical(nodes)) == config['selected_nodes_sha256']
+     assert sha(canonical(xml_cases)) == config['selected_xml_cases_sha256']
+-    assert os.sched_getaffinity(0) == {112, 113, 114, 115}
++    assert os.sched_getaffinity(0) == {108, 109, 110, 111}
+     def dump(name, value): (out / name).write_bytes(canonical(value))
+     manifest = (out / 'sources-before.json').read_bytes()
+     assert sha(manifest) == config['source_manifest_sha256']
+     expected = json.loads(manifest)
+-    assert manifest == (json.dumps(expected, sort_keys=True, separators=(',', ':'), allow_nan=False)+'\n').encode()
++    assert manifest == canonical(expected)
+     assert len(expected) == config['source_count']
+     assert inventory(source) == inventory(execution) == expected
+     assert sha((out / 'sources.tar.gz').read_bytes()) == config['source_archive_sha256']
+@@ -60,7 +60,7 @@
+     env = dict(PATH='/usr/bin:/bin', HOME='/home/jianming_gatech', LANG='C.UTF-8', TZ='UTC',
+                PYTHONDONTWRITEBYTECODE='1', PYTEST_DISABLE_PLUGIN_AUTOLOAD='1',
+                OPENBLAS_NUM_THREADS='4', OMP_NUM_THREADS='4', MKL_NUM_THREADS='4')
+-    command = ['taskset', '-c', '112-115', '/tmp/cross-pretrained-validation-env/bin/python',
++    command = ['taskset', '-c', '108-111', '/tmp/cross-pretrained-validation-env/bin/python',
+                '-I', '-B', str(out / 'worker_driver.py'), str(out / 'run_config.json'), CONFIG_SHA256]
+     start = time.monotonic()
+     with (out / 'tests.log').open('xb') as log:
+@@ -111,7 +111,7 @@
+               and type(audit['pytest_exit_code']) is int and audit['pytest_exit_code'] == 0
+               and type(audit['pid']) is int and audit['pid'] == child.pid
+               and type(audit['pgid']) is int and audit['pgid'] == child_pgid
+-              and audit['affinity'] == [112, 113, 114, 115]
++              and audit['affinity'] == [108, 109, 110, 111]
+               and audit['runtime_sources_before'] == audit['runtime_sources_after'] == config['runtime_source_expectations']
+               and audit['runtime_module_origins'] == {n: dict(file=p, spec=p) for n,p in config['runtime_module_origins'].items()})
+     report = dict(passed=passed, tests=counts, selected_nodes=nodes, selected_xml_cases=observed_xml,
+@@ -121,7 +121,7 @@
+         child_returncode=code, child_reaped=True, child_group_absent=group_absent,
+         elapsed_s=time.monotonic()-start, synthetic_only=True,
+         actual_execution_authorized=False, numpy_imported=audit['numpy_imported'], model_execution=False, encrypted_execution=False,
+-        backend_context_construction=False, actual_key_generation=False,
++        backend_context_construction=False, actual_key_generation=False, actual_client_role_execution=False,
+         driver_sha256=sha(Path(__file__).read_bytes()), worker_driver_sha256=WORKER_SHA256,
+         config_sha256=CONFIG_SHA256, scope=config['scope'])
+     dump('report.json', report)

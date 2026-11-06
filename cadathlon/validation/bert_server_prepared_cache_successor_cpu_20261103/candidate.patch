@@ -1,0 +1,225 @@
+--- a/runtime/stage/full_model_engine.py
++++ b/runtime/stage/full_model_engine.py
+@@ -27,8 +27,30 @@
+     owner_type: object
+     secure: object
+     manifest_bytes: bytes
++    prepared_owners: object = None
++
++    def __post_init__(self):
++        self._prepared_bound = None if self.prepared_owners is None else (
++            self.ctx,self.arithmetic,self.linear,self.linear.arithmetic,self.refresher,
++            self.prepared_owners,self.owner_type,self.secure,self.manifest_bytes,
++            tuple(self.refresher.compiled_primitives),self.refresher.evaluator)
++
++    def _check_prepared(self):
++        bound=self._prepared_bound
++        if bound is None:
++            if self.prepared_owners is not None:raise ValueError('prepared mode cannot be enabled after construction')
++            return
++        c,a,l,la,r,p,o,s,m,helpers,evaluator=bound
++        if (self.ctx is not c or self.arithmetic is not a or self.linear is not l or l.arithmetic is not la
++                or self.refresher is not r or self.prepared_owners is not p or self.owner_type is not o
++                or self.secure is not s or self.manifest_bytes is not m or r.evaluator is not evaluator
++                or len(r.compiled_primitives)!=len(helpers)
++                or any(x is not y for x,y in zip(r.compiled_primitives,helpers))):
++            raise ValueError('constructed prepared engine owner or ordinary refresh helper changed')
++        p.check()
+ 
+     def evaluate(self, tiles, weights, *, original_positions, context_id, request_id):
++        self._check_prepared()
+         # Both inputs and the synchronized final output expose the actual
+         #context/payload rings to the normal security gate.
+         for tile in tiles:
+@@ -39,12 +61,13 @@
+         result = owner.evaluate(tiles, capture_checkpoints=False)
+         result.output.polynomial.block_until_ready()
+         self.secure(self.ctx, result.output)
++        self._check_prepared()
+         return result
+ 
+ 
+ @contextmanager
+-def server_engine(ctx, *, manifest_bytes):
+-    provider = arithmetic = linear = refresher = None
++def server_engine(ctx, *, manifest_bytes, prepared_handle=None):
++    provider = arithmetic = linear = refresher = prepared = None
+     try:
+         enable, Arithmetic, Linear, Layout, Refresh, Owner, secure = _dependencies()
+         # The concrete arithmetic/refresh constructors check the initialized
+@@ -52,12 +75,18 @@
+         if (ctx.secret_key is not None or ctx._param_cache.secret_key is not None
+                 or ctx.parameters.get('secret_key') is not None):
+             raise ValueError('server graph requires a keyless context')
++        if prepared_handle is not None:
++            from engine_prepared_owners import PreparedEngineOwners
++            prepared = PreparedEngineOwners(prepared_handle, ctx)
+         provider = enable(ctx)
+-        arithmetic = Arithmetic(ctx,low_memory=True,preserve_dispatch_cache=True)
+-        linear = Linear(ctx,Layout(65536),low_memory=True,preserve_dispatch_cache=True)
++        arithmetic = (Arithmetic(ctx,low_memory=True,preserve_dispatch_cache=True) if prepared is None else
++            prepared.create('graph',ctx,low_memory=True,preserve_dispatch_cache=True))
++        options = {} if prepared is None else {'arithmetic_factory':prepared.linear_factory}
++        linear = Linear(ctx,Layout(65536),low_memory=True,preserve_dispatch_cache=True,**options)
+         refresher = Refresh(ctx,period=65536,level_budget=(4,4),public_bound=2.,
+             meta_precision=10,compiled=True,low_memory=True,preserve_dispatch_cache=True)
+-        yield ServerEngine(ctx,arithmetic,linear,refresher,Owner,secure,manifest_bytes)
++        if prepared is not None:prepared.check()
++        yield ServerEngine(ctx,arithmetic,linear,refresher,Owner,secure,manifest_bytes,prepared)
+     finally:
+         active = sys.exception(); failure = None
+         def attempt(label, operation):
+@@ -117,6 +146,7 @@
+             if value is not None:clear_arithmetic(value,'linear arithmetic')
+         if arithmetic is not None:
+             clear_arithmetic(arithmetic,'arithmetic')
++        if prepared is not None:attempt('original prepared owners cleanup',prepared.close)
+         if provider is not None:attempt('NTT provider cleanup',lambda:provider.close())
+         if shield:
+             previous_mask = attempt('engine cleanup restoration mask query',
+--- a/joined/checkout/cadathlon/common/encrypted_streaming_linear.py
++++ b/joined/checkout/cadathlon/common/encrypted_streaming_linear.py
+@@ -149,7 +149,7 @@
+     even if incoming ciphertext padding is hostile. Output feature padding and
+     inactive rows are zero in the ideal circuit, up to ordinary CKKS error.
+     """
+-    def __init__(self, context, layout, *, low_memory=True, preserve_dispatch_cache=False):
++    def __init__(self, context, layout, *, low_memory=True, preserve_dispatch_cache=False, arithmetic_factory=None):
+         if not isinstance(layout, RowTileLayout):
+             raise TypeError('expected RowTileLayout')
+         if type(low_memory) is not bool or type(preserve_dispatch_cache) is not bool:
+@@ -165,8 +165,14 @@
+         self.ctx, self.layout = context, layout
+         # Constructor validates initialization, CD2, actual secure Q/P and all
+         # three possible secret-key locations before creating arithmetic.
+-        self.arithmetic = CompiledArithmetic(context, low_memory=low_memory,
++        if arithmetic_factory is not None and not callable(arithmetic_factory):
++            raise TypeError('explicit callable arithmetic constructor required')
++        factory = CompiledArithmetic if arithmetic_factory is None else arithmetic_factory
++        self.arithmetic = factory(context, low_memory=low_memory,
+             preserve_dispatch_cache=preserve_dispatch_cache)
++        if (not isinstance(self.arithmetic, CompiledArithmetic) or self.arithmetic.ctx is not context
++                or callable(getattr(self.arithmetic, 'declare_bound', None))):
++            raise ValueError('same-context static compiled arithmetic required')
+ 
+     @staticmethod
+     def required_rotation_indices(weight, layout):
+--- /dev/null
++++ b/runtime/stage/engine_prepared_owners.py
+@@ -0,0 +1,116 @@
++"""Two explicit engine-owned caches under an authenticated loader lifetime.
++
++No global cache, key reader or arithmetic. Loader registration owns backing
++retirement; this controller retires original compiled owners before NTT cleanup.
++"""
++from typing import NamedTuple
++
++MAX_ENTRIES=2
++MAX_BYTES=2<<30
++ROLES=('graph','linear')
++
++def _types():
++    from loader_prepared_rotation import PreparedLoaderSession
++    from encrypted_packed_qwen import CompiledArithmetic
++    from prepared_rotation import PreparedCompiledRotation
++    return PreparedLoaderSession,CompiledArithmetic,PreparedCompiledRotation
++
++def identity(method):return getattr(method,'__self__',None),getattr(method,'__func__',method)
++
++class Owner(NamedTuple):
++    role: str
++    arithmetic: object
++    rotation: object
++    clear: object
++    rotation_clear: object
++    rotation_close: object
++
++class PreparedEngineOwners:
++    def __init__(self,handle,ctx):
++        Loader,_,_= _types();factory=getattr(handle,'prepared_arithmetic',None);session=getattr(factory,'__self__',None)
++        if type(session)is not Loader or getattr(factory,'__func__',None)is not Loader.create:
++            raise ValueError('actual authenticated loader factory required')
++        if handle.ctx is not ctx or session._context is not ctx or session._active is not True or session._failure is not None:
++            raise ValueError('same live authenticated keyless context required')
++        session.lease._check()
++        self.handle=handle;self.ctx=ctx;self.session=session;self.factory=factory
++        self._bound=(handle,ctx,session,identity(factory),session.lease)
++        self._maps=tuple((k,v) for k,v in ctx._param_cache.coef_maps.items())
++        self.owners=[];self._owner_list=self.owners;self._registered=();self.closed=False;self.failed=None
++        self.check()
++
++    def check(self):
++        if self.closed or self.failed is not None:raise RuntimeError('prepared engine owner is closed or failed')
++        h,c,s,f,lease=self._bound
++        if (self.handle is not h or self.ctx is not c or self.session is not s or identity(self.factory)!=f
++                or h.ctx is not c or identity(h.prepared_arithmetic)!=f or s.lease is not lease or s._context is not c
++                or s._active is not True or s._failure is not None):raise ValueError('prepared engine loader binding changed')
++        lease._check()
++        if len(c._param_cache.coef_maps)!=len(self._maps) or any(c._param_cache.coef_maps.get(k)is not v for k,v in self._maps):
++            raise ValueError('authenticated coefficient map inventory changed during engine construction/use')
++        self._check_inventory()
++        for item in self._registered:self._check_owner(item)
++        return True
++
++    def _check_inventory(self):
++        if (self.owners is not self._owner_list or type(self.owners)is not list or len(self.owners)!=len(self._registered)
++                or any(a is not b for a,b in zip(self.owners,self._registered))):
++            raise ValueError('original prepared owner inventory changed')
++        return True
++
++    def _check_owner(self,item):
++        a=item.arithmetic;r=item.rotation
++        if (a.ctx is not self.ctx or a.rotation is not r or identity(a._clear_working_caches)!=identity(item.clear)
++                or identity(r.clear)!=identity(item.rotation_clear) or identity(r.close)!=identity(item.rotation_close)
++                or r._lease is not self._bound[4] or r.ctx is not self.ctx or r._max_entries!=MAX_ENTRIES or type(r._max_entries)is not int
++                or r._max_bytes!=MAX_BYTES or type(r._max_bytes)is not int):raise ValueError('original prepared owner/budget/cleanup changed')
++        return True
++
++    def create(self,role,ctx,*,low_memory,preserve_dispatch_cache):
++        self.check()
++        if type(role)is not str or len(self._registered)>=2 or role!=ROLES[len(self._registered)]:
++            raise ValueError('exact graph then linear owner construction required')
++        if ctx is not self.ctx or low_memory is not True or preserve_dispatch_cache is not True:
++            raise ValueError('unchanged low-memory/dispatch policy required')
++        _,Arithmetic,Rotation=_types()
++        try:
++            value=self.factory(max_entries=MAX_ENTRIES,max_bytes=MAX_BYTES,low_memory=True,preserve_dispatch_cache=True)
++            if type(value)is not Arithmetic or type(value.rotation)is not Rotation:raise ValueError('verified concrete prepared arithmetic required')
++            item=Owner(role,value,value.rotation,value._clear_working_caches,value.rotation.clear,value.rotation.close)
++            self._registered=(*self._registered,item);self.owners.append(item);self._check_owner(item)
++            return value
++        except BaseException as error:self.failed=error;raise
++
++    def linear_factory(self,ctx,**options):return self.create('linear',ctx,**options)
++
++    def close(self):
++        if self.closed:return True
++        failure=self.failed
++        def attempt(call):
++            nonlocal failure
++            try:return call()
++            except BaseException as error:
++                if failure is None:failure=error
++                elif not isinstance(error,Exception) and isinstance(failure,Exception):
++                    error.add_note('earlier prepared-engine cleanup: '+type(failure).__name__);failure=error
++                elif error is not failure:failure.add_note('additional prepared-engine cleanup: '+type(error).__name__)
++        # Keep original readiness failure identity ahead of later inventory
++        #errors, even when a caller has also removed the public owner entries.
++        for item in reversed(self._registered):
++            def old_failure(item=item):
++                error=getattr(item.rotation,'_failed',None)
++                if error is not None:raise error
++            attempt(old_failure)
++        attempt(self._check_inventory)
++        for item in reversed(self._registered):
++            # A replaced public attribute must not hide original uncertain work.
++            okay=attempt(lambda item=item:self._check_owner(item)) is True
++            attempt(lambda item=item:item.rotation_clear(executables=True))
++            if okay:
++                attempt(item.clear);attempt(item.rotation_close)
++        if failure is not None:
++            self.failed=failure
++            # Keep all references; loader sees failure and quarantines backing.
++            raise failure
++        self.closed=True
++        return True

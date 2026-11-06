@@ -1,0 +1,285 @@
+{
+  "actual_execution_authorized": false,
+  "cpu_affinity": [
+    112,
+    113,
+    114,
+    115
+  ],
+  "forbidden_roots": [
+    "flax",
+    "jax",
+    "jaxite_word",
+    "jaxlib",
+    "libtpu",
+    "numpy",
+    "safetensors",
+    "tensorflow",
+    "tokenizers",
+    "torch",
+    "torch_xla",
+    "transformers"
+  ],
+  "proof_root": "/tmp/qwen-keygen-authority-boundary-proof-20261104/preparation-v1",
+  "runtime_module_origins": {},
+  "runtime_source_expectations": {},
+  "schema": "qwen-keygen-authority-focused-proof-v1",
+  "scope": "Exactly48 pure public-byte tests:17 launch/model/source,25 generated-readiness,6 retained-state/actual-entry. All28 parent files unchanged. Synthetic ModelAdmission, grants, process/identity claims and335 key descriptor dictionaries only. No genuine model/key/ciphertext/token/private body input, ndarray allocation, RNG, backend or NumPy import, actual role, capacity check or execution authority. Import guards are process assertions, not an OS filesystem sandbox.",
+  "selected_files": [
+    "test_keygen_launch.py",
+    "test_keygen_readiness.py",
+    "test_keygen_retention.py"
+  ],
+  "selected_nodes": [
+    "test_keygen_launch.py::test_complete_chain_returns_distinct_external_role_ids",
+    "test_keygen_launch.py::test_public_readiness_gate_performs_no_io_or_rng",
+    "test_keygen_launch.py::test_required_actual_source_is_not_replaceable[missing_store]",
+    "test_keygen_launch.py::test_required_actual_source_is_not_replaceable[changed_core]",
+    "test_keygen_launch.py::test_source_map_digest_requires_canonical_encoding",
+    "test_keygen_launch.py::test_model_is_reauthenticated_for_this_generation_source[repinned_model_scope]",
+    "test_keygen_launch.py::test_model_is_reauthenticated_for_this_generation_source[different_consumer_map]",
+    "test_keygen_launch.py::test_repinned_launch_document_mismatch_is_rejected[role_source]",
+    "test_keygen_launch.py::test_repinned_launch_document_mismatch_is_rejected[model_proof]",
+    "test_keygen_launch.py::test_repinned_launch_document_mismatch_is_rejected[resource_policy]",
+    "test_keygen_launch.py::test_repinned_launch_document_mismatch_is_rejected[parent_path]",
+    "test_keygen_launch.py::test_repinned_launch_document_mismatch_is_rejected[overlapping_leaves]",
+    "test_keygen_launch.py::test_repinned_launch_document_mismatch_is_rejected[missing_role_grant]",
+    "test_keygen_launch.py::test_repinned_launch_document_mismatch_is_rejected[execute_integer_alias]",
+    "test_keygen_launch.py::test_closed_typed_launch_arguments[unknown_intent_field]",
+    "test_keygen_launch.py::test_closed_typed_launch_arguments[duplicate_grant_key]",
+    "test_keygen_launch.py::test_closed_typed_launch_arguments[boolean_parent_inode]",
+    "test_keygen_readiness.py::test_generated_identity_must_match_independent_postterminal_pin[context_id]",
+    "test_keygen_readiness.py::test_generated_identity_must_match_independent_postterminal_pin[public_manifest_sha256]",
+    "test_keygen_readiness.py::test_generated_identity_must_match_independent_postterminal_pin[private_manifest_sha256]",
+    "test_keygen_readiness.py::test_generated_identity_must_match_independent_postterminal_pin[stores_sha256]",
+    "test_keygen_readiness.py::test_repinned_report_or_manifest_semantics_fail_closed[incomplete_public_count]",
+    "test_keygen_readiness.py::test_repinned_report_or_manifest_semantics_fail_closed[missing_secret_count]",
+    "test_keygen_readiness.py::test_repinned_report_or_manifest_semantics_fail_closed[missing_array]",
+    "test_keygen_readiness.py::test_repinned_report_or_manifest_semantics_fail_closed[boolean_array_shape]",
+    "test_keygen_readiness.py::test_repinned_report_or_manifest_semantics_fail_closed[cleanup_incomplete]",
+    "test_keygen_readiness.py::test_repinned_report_or_manifest_semantics_fail_closed[wrong_p_coverage]",
+    "test_keygen_readiness.py::test_repinned_report_or_manifest_semantics_fail_closed[non_cpu_backend]",
+    "test_keygen_readiness.py::test_repinned_report_or_manifest_semantics_fail_closed[changed_source_end]",
+    "test_keygen_readiness.py::test_repinned_report_or_manifest_semantics_fail_closed[wrong_role_link]",
+    "test_keygen_readiness.py::test_repinned_report_or_manifest_semantics_fail_closed[wrong_store_mode]",
+    "test_keygen_readiness.py::test_repinned_report_or_manifest_semantics_fail_closed[changed_store_parent]",
+    "test_keygen_readiness.py::test_repinned_report_or_manifest_semantics_fail_closed[model_scope_claim]",
+    "test_keygen_readiness.py::test_repinned_outer_requires_normal_zero_and_independent_retirement[exit70]",
+    "test_keygen_readiness.py::test_repinned_outer_requires_normal_zero_and_independent_retirement[not_normal_return]",
+    "test_keygen_readiness.py::test_repinned_outer_requires_normal_zero_and_independent_retirement[unreaped]",
+    "test_keygen_readiness.py::test_repinned_outer_requires_normal_zero_and_independent_retirement[live_group]",
+    "test_keygen_readiness.py::test_repinned_outer_requires_normal_zero_and_independent_retirement[boolean_pid]",
+    "test_keygen_readiness.py::test_repinned_root_review_cannot_weaken_readiness_scope[archive_unreviewed]",
+    "test_keygen_readiness.py::test_repinned_root_review_cannot_weaken_readiness_scope[stores_unreviewed]",
+    "test_keygen_readiness.py::test_repinned_root_review_cannot_weaken_readiness_scope[model_proof_changed]",
+    "test_keygen_readiness.py::test_repinned_root_review_cannot_weaken_readiness_scope[downstream_enabled]",
+    "test_keygen_retention.py::test_retained_object_tampering_cannot_bypass_reauthentication[launch_grant]",
+    "test_keygen_retention.py::test_retained_object_tampering_cannot_bypass_reauthentication[model_report]",
+    "test_keygen_retention.py::test_retained_object_tampering_cannot_bypass_reauthentication[ready_outer]",
+    "test_keygen_retention.py::test_retained_object_tampering_cannot_bypass_reauthentication[expected_ready_pin]",
+    "test_keygen_retention.py::test_retained_object_tampering_cannot_bypass_reauthentication[public_contract]",
+    "test_keygen_retention.py::test_actual_entry_denies_before_argument_access"
+  ],
+  "selected_nodes_sha256": "25f5b6056b5cd694d5899021c83fe668adb021cc13c5b072281c38df53860360",
+  "selected_xml_cases": [
+    {
+      "classname": "test_keygen_launch",
+      "name": "test_complete_chain_returns_distinct_external_role_ids"
+    },
+    {
+      "classname": "test_keygen_launch",
+      "name": "test_public_readiness_gate_performs_no_io_or_rng"
+    },
+    {
+      "classname": "test_keygen_launch",
+      "name": "test_required_actual_source_is_not_replaceable[missing_store]"
+    },
+    {
+      "classname": "test_keygen_launch",
+      "name": "test_required_actual_source_is_not_replaceable[changed_core]"
+    },
+    {
+      "classname": "test_keygen_launch",
+      "name": "test_source_map_digest_requires_canonical_encoding"
+    },
+    {
+      "classname": "test_keygen_launch",
+      "name": "test_model_is_reauthenticated_for_this_generation_source[repinned_model_scope]"
+    },
+    {
+      "classname": "test_keygen_launch",
+      "name": "test_model_is_reauthenticated_for_this_generation_source[different_consumer_map]"
+    },
+    {
+      "classname": "test_keygen_launch",
+      "name": "test_repinned_launch_document_mismatch_is_rejected[role_source]"
+    },
+    {
+      "classname": "test_keygen_launch",
+      "name": "test_repinned_launch_document_mismatch_is_rejected[model_proof]"
+    },
+    {
+      "classname": "test_keygen_launch",
+      "name": "test_repinned_launch_document_mismatch_is_rejected[resource_policy]"
+    },
+    {
+      "classname": "test_keygen_launch",
+      "name": "test_repinned_launch_document_mismatch_is_rejected[parent_path]"
+    },
+    {
+      "classname": "test_keygen_launch",
+      "name": "test_repinned_launch_document_mismatch_is_rejected[overlapping_leaves]"
+    },
+    {
+      "classname": "test_keygen_launch",
+      "name": "test_repinned_launch_document_mismatch_is_rejected[missing_role_grant]"
+    },
+    {
+      "classname": "test_keygen_launch",
+      "name": "test_repinned_launch_document_mismatch_is_rejected[execute_integer_alias]"
+    },
+    {
+      "classname": "test_keygen_launch",
+      "name": "test_closed_typed_launch_arguments[unknown_intent_field]"
+    },
+    {
+      "classname": "test_keygen_launch",
+      "name": "test_closed_typed_launch_arguments[duplicate_grant_key]"
+    },
+    {
+      "classname": "test_keygen_launch",
+      "name": "test_closed_typed_launch_arguments[boolean_parent_inode]"
+    },
+    {
+      "classname": "test_keygen_readiness",
+      "name": "test_generated_identity_must_match_independent_postterminal_pin[context_id]"
+    },
+    {
+      "classname": "test_keygen_readiness",
+      "name": "test_generated_identity_must_match_independent_postterminal_pin[public_manifest_sha256]"
+    },
+    {
+      "classname": "test_keygen_readiness",
+      "name": "test_generated_identity_must_match_independent_postterminal_pin[private_manifest_sha256]"
+    },
+    {
+      "classname": "test_keygen_readiness",
+      "name": "test_generated_identity_must_match_independent_postterminal_pin[stores_sha256]"
+    },
+    {
+      "classname": "test_keygen_readiness",
+      "name": "test_repinned_report_or_manifest_semantics_fail_closed[incomplete_public_count]"
+    },
+    {
+      "classname": "test_keygen_readiness",
+      "name": "test_repinned_report_or_manifest_semantics_fail_closed[missing_secret_count]"
+    },
+    {
+      "classname": "test_keygen_readiness",
+      "name": "test_repinned_report_or_manifest_semantics_fail_closed[missing_array]"
+    },
+    {
+      "classname": "test_keygen_readiness",
+      "name": "test_repinned_report_or_manifest_semantics_fail_closed[boolean_array_shape]"
+    },
+    {
+      "classname": "test_keygen_readiness",
+      "name": "test_repinned_report_or_manifest_semantics_fail_closed[cleanup_incomplete]"
+    },
+    {
+      "classname": "test_keygen_readiness",
+      "name": "test_repinned_report_or_manifest_semantics_fail_closed[wrong_p_coverage]"
+    },
+    {
+      "classname": "test_keygen_readiness",
+      "name": "test_repinned_report_or_manifest_semantics_fail_closed[non_cpu_backend]"
+    },
+    {
+      "classname": "test_keygen_readiness",
+      "name": "test_repinned_report_or_manifest_semantics_fail_closed[changed_source_end]"
+    },
+    {
+      "classname": "test_keygen_readiness",
+      "name": "test_repinned_report_or_manifest_semantics_fail_closed[wrong_role_link]"
+    },
+    {
+      "classname": "test_keygen_readiness",
+      "name": "test_repinned_report_or_manifest_semantics_fail_closed[wrong_store_mode]"
+    },
+    {
+      "classname": "test_keygen_readiness",
+      "name": "test_repinned_report_or_manifest_semantics_fail_closed[changed_store_parent]"
+    },
+    {
+      "classname": "test_keygen_readiness",
+      "name": "test_repinned_report_or_manifest_semantics_fail_closed[model_scope_claim]"
+    },
+    {
+      "classname": "test_keygen_readiness",
+      "name": "test_repinned_outer_requires_normal_zero_and_independent_retirement[exit70]"
+    },
+    {
+      "classname": "test_keygen_readiness",
+      "name": "test_repinned_outer_requires_normal_zero_and_independent_retirement[not_normal_return]"
+    },
+    {
+      "classname": "test_keygen_readiness",
+      "name": "test_repinned_outer_requires_normal_zero_and_independent_retirement[unreaped]"
+    },
+    {
+      "classname": "test_keygen_readiness",
+      "name": "test_repinned_outer_requires_normal_zero_and_independent_retirement[live_group]"
+    },
+    {
+      "classname": "test_keygen_readiness",
+      "name": "test_repinned_outer_requires_normal_zero_and_independent_retirement[boolean_pid]"
+    },
+    {
+      "classname": "test_keygen_readiness",
+      "name": "test_repinned_root_review_cannot_weaken_readiness_scope[archive_unreviewed]"
+    },
+    {
+      "classname": "test_keygen_readiness",
+      "name": "test_repinned_root_review_cannot_weaken_readiness_scope[stores_unreviewed]"
+    },
+    {
+      "classname": "test_keygen_readiness",
+      "name": "test_repinned_root_review_cannot_weaken_readiness_scope[model_proof_changed]"
+    },
+    {
+      "classname": "test_keygen_readiness",
+      "name": "test_repinned_root_review_cannot_weaken_readiness_scope[downstream_enabled]"
+    },
+    {
+      "classname": "test_keygen_retention",
+      "name": "test_retained_object_tampering_cannot_bypass_reauthentication[launch_grant]"
+    },
+    {
+      "classname": "test_keygen_retention",
+      "name": "test_retained_object_tampering_cannot_bypass_reauthentication[model_report]"
+    },
+    {
+      "classname": "test_keygen_retention",
+      "name": "test_retained_object_tampering_cannot_bypass_reauthentication[ready_outer]"
+    },
+    {
+      "classname": "test_keygen_retention",
+      "name": "test_retained_object_tampering_cannot_bypass_reauthentication[expected_ready_pin]"
+    },
+    {
+      "classname": "test_keygen_retention",
+      "name": "test_retained_object_tampering_cannot_bypass_reauthentication[public_contract]"
+    },
+    {
+      "classname": "test_keygen_retention",
+      "name": "test_actual_entry_denies_before_argument_access"
+    }
+  ],
+  "selected_xml_cases_sha256": "3dbb31d860235aedcadb048485cb40b0bfd0cf5ff5f64d5d24e9e2b871617f80",
+  "source_archive_sha256": "532c9f51972f851f535f373115022876fa2553af12f21ed84617de83e0f877b2",
+  "source_count": 39,
+  "source_manifest_encoding": "canonical sorted compact JSON plus newline",
+  "source_manifest_sha256": "3b2ddbcde655dc3485a36b160ed97f166ef6aad69512dd824bc409545a13db48",
+  "source_root": "/tmp/qwen-keygen-authority-tests-20261104",
+  "synthetic_only": true
+}

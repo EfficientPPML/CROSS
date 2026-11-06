@@ -1,0 +1,38 @@
+{
+  "case": "test_partial_store_acquisition_keeps_original_owner_for_cleanup",
+  "details": {},
+  "error_type": null,
+  "events": [
+    {
+      "event": "source"
+    },
+    {
+      "event": "generation_security"
+    },
+    {
+      "event": "capacity"
+    },
+    {
+      "event": "store_acquire",
+      "private": false
+    },
+    {
+      "event": "store_acquire",
+      "private": true
+    },
+    {
+      "event": "store_close",
+      "private": true
+    },
+    {
+      "event": "store_close",
+      "private": false
+    },
+    {
+      "event": "source"
+    }
+  ],
+  "passed": true,
+  "runtime_map_sha256": "d82d68101c1f3ddc7f18b6ae4492aa7618d779012babaf9ed85355dfab927fea",
+  "variant": ""
+}

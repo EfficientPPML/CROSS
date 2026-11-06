@@ -1,0 +1,43 @@
+--- admitted38/worker_driver.py
++++ readonly54/worker_driver.py
+@@ -12,21 +12,27 @@
+ runtime_before = {n: hashlib.sha256(Path(n).read_bytes()).hexdigest() for n in runtime_expected}
+ assert runtime_before == runtime_expected
+ assert os.sched_getaffinity(0) == {108, 109, 110, 111}
++runtime_map_raw = (source / 'runtime_sources.json').read_bytes()
++assert hashlib.sha256(runtime_map_raw).hexdigest() == config['runtime_manifest_sha256']
++runtime_map = json.loads(runtime_map_raw)
++assert len(runtime_map) == 42
++assert {p.relative_to(source / 'runtime').as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
++        for p in (source / 'runtime').rglob('*') if p.is_file()} == runtime_map
+ assert sys.flags.isolated and sys.dont_write_bytecode
+ assert os.environ.get('PYTEST_DISABLE_PLUGIN_AUTOLOAD') == '1'
+ forbidden = {'jax', 'jaxlib', 'jaxite_word', 'torch', 'transformers',
+-             'tensorflow', 'safetensors', 'libtpu'}
++             'tensorflow', 'flax', 'torch_xla', 'safetensors', 'tokenizers', 'libtpu'}
+ denied, collected = [], []
+ assert not any(n.split('.')[0] in forbidden for n in sys.modules)
+ def audit(event, args):
+     if event == 'import' and args and str(args[0]).split('.')[0] in forbidden:
+         denied.append(str(args[0]))
+-        raise PermissionError('backend import disabled in recording model-stage proof')
++        raise PermissionError('backend import disabled in readonly focused synthetic proof')
+ class DenyBackend(importlib.abc.MetaPathFinder):
+     def find_spec(self, fullname, path=None, target=None):
+         if fullname.split('.')[0] in forbidden:
+             denied.append(fullname)
+-            raise PermissionError('backend discovery disabled in recording model-stage proof')
++            raise PermissionError('backend discovery disabled in readonly focused synthetic proof')
+ sys.addaudithook(audit)
+ sys.meta_path.insert(0, DenyBackend())
+ sys.path.insert(0, str(source))
+@@ -38,7 +44,8 @@
+             raise pytest.UsageError('focused node selection differs before test execution')
+ selected = config['selected_files']
+ assert type(selected) is list and selected and len(selected) == len(set(selected))
+-assert all(type(n) is str and n.startswith('test_') and n.endswith('.py') and '/' not in n for n in selected)
++assert all(type(n) is str and len(Path(n).parts) == 2 and Path(n).parts[0] == 'tests'
++           and Path(n).name.startswith('test_') and n.endswith('.py') for n in selected)
+ status = pytest.main(['-q', '-p', 'no:cacheprovider', '--rootdir=' + str(source),
+                      '--confcutdir=' + str(source), '--import-mode=importlib',
+                      *[str(source / n) for n in selected],

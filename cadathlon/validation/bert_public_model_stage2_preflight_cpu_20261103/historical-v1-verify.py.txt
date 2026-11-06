@@ -1,0 +1,27 @@
+"""Offline verification of public stage2 preflight evidence only."""
+from pathlib import Path
+import hashlib,json,tarfile,xml.etree.ElementTree as ET
+ROOT=Path(__file__).resolve().parent
+
+def main():
+    pins=json.loads((ROOT/'artifact_sha256.json').read_text())
+    assert all(hashlib.sha256((ROOT/n).read_bytes()).hexdigest()==h for n,h in pins.items())
+    directory=ROOT/'preflight-v1';r=json.loads((directory/'report.json').read_text())
+    assert r['passed'] and r['source_files_unchanged'] and r['source_archive_verified']
+    assert r['actual_preprocessing'] is False and r['actual_key_generation'] is False and r['model_forward'] is False
+    assert r['source_hashes_before']==r['source_hashes_after'] and len(r['source_hashes_before'])==62
+    with tarfile.open(directory/'sources.tar.gz') as archive:
+        members=archive.getmembers();assert len(members)==62==len({m.name for m in members}) and all(m.isfile() for m in members)
+        raw={m.name:archive.extractfile(m).read() for m in members}
+    assert {n:hashlib.sha256(b).hexdigest() for n,b in raw.items()}==r['source_hashes_before']
+    assert hashlib.sha256((directory/'sources.tar.gz').read_bytes()).hexdigest()==r['source_archive_sha256']=='042e3de4e25b8e301b25c3f46b60c34a43290f086fa51369d3c3ac2eff7ba1ab'
+    assert r['tests']==dict(tests=68,failures=0,errors=0,skipped=0)
+    assert sum(int(x.attrib['tests']) for x in ET.parse(directory/'tests.xml').getroot())==68
+    storage=r['public_storage'];assert (storage['tensor_count'],storage['matrix_count'],storage['raw_model_bytes'],storage['required_with_margin'])==(196,74,342586376,1416428552)
+    origin=json.loads(raw['source_origin.json'])
+    for n,h in origin['files'].items():
+        if 'checkout/'+n in raw:assert hashlib.sha256(raw['checkout/'+n]).hexdigest()==h
+    assert not list(ROOT.rglob('*.npy')) and not list(ROOT.rglob('*.npz'))
+    print(json.dumps(dict(passed=True,sources=62,tests=68,actual_preprocessing=False,scope='mocked lifecycle/public import and storage preflight only')))
+
+if __name__=='__main__':main()

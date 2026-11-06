@@ -1,0 +1,21 @@
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import runpy,sys,types; m=types.ModuleType('review_unknown_alias'); m.__file__='/tmp/qwen-token-entry-alias-review-20261104/negative-v1/external_symlink_file/external_source_alias/input_plan.py'; sys.modules['review_unknown_alias']=m; sys.argv=sys.argv[1:]; runpy.run_path(sys.argv[0],run_name='__main__')
+                                                                                                                                                                                                                                                                      ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 294, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/tmp/qwen-token-entry-alias-review-20261104/negative-v1/external_symlink_file/source/entry.py", line 167, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/tmp/qwen-token-entry-alias-review-20261104/negative-v1/external_symlink_file/source/entry.py", line 163, in main
+    return freeze_process.dispatch(args, raw, expected, blobs, origins)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/qwen-token-entry-alias-review-20261104/negative-v1/external_symlink_file/source/freeze_process.py", line 414, in dispatch
+    return worker(args, expected, blobs, origins, root)
+  File "/tmp/qwen-token-entry-alias-review-20261104/negative-v1/external_symlink_file/source/freeze_process.py", line 230, in worker
+    grant_check(args, blobs)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/tmp/qwen-token-entry-alias-review-20261104/negative-v1/external_symlink_file/source/freeze_process.py", line 133, in grant_check
+    raise PermissionError('separate reviewed tokenizer-only launch grant required')
+PermissionError: separate reviewed tokenizer-only launch grant required

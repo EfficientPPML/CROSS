@@ -1,0 +1,185 @@
+--- a/full_model_engine.py
++++ b/full_model_engine.py
+@@ -2,6 +2,8 @@
+ from contextlib import contextmanager
+ from dataclasses import dataclass
+ import sys
++import signal
++import threading
+ 
+ 
+ def _dependencies():
+@@ -60,27 +62,53 @@
+         active = sys.exception(); failure = None
+         def attempt(label, operation):
+             nonlocal failure
+-            try: operation()
++            try: return operation()
+             except BaseException as error:
+                 if active is not None: active.add_note(label+': '+repr(error))
+                 elif failure is None: failure=error
++                elif not isinstance(error, Exception) and isinstance(failure, Exception):
++                    error.add_note('earlier engine cleanup: '+repr(failure)); failure=error
+                 else: failure.add_note(label+': '+repr(error))
++        # The outer key loader must remain alive until every compiled owner is
++        #retired. Defer repeated cancellation through these inner cleanups too.
++        shield = []; deferred = []
++        if threading.current_thread() is threading.main_thread():
++            def remember_signal(signum, frame): deferred.append(signum)
++            for signum in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP):
++                def install(sig=signum):
++                    original=signal.getsignal(sig)
++                    signal.signal(sig, remember_signal)
++                    shield.append((sig, original))
++                attempt('engine cleanup signal shield', install)
+         # Release executable owners while their context and NTT provider still
+         #exist. The outer key loader owns final context eviction and JAX caches.
+         def clear_arithmetic(value, label):
+-            attempt(label+' working cleanup',value._clear_working_caches)
++            attempt(label+' working cleanup',lambda:value._clear_working_caches())
+             for name in ('rotation','_plaintext_multiply','_rescale'):
+-                helper=getattr(value,name,None)
++                helper=attempt(label+' helper lookup',lambda name=name:getattr(value,name,None))
+                 if helper is not None:attempt(label+' helper cleanup',lambda helper=helper:helper.clear(executables=True))
+-            compiler=getattr(value,'_multiplication_compiler',None)
+-            if compiler is not None:attempt(label+' multiplication cleanup',compiler.clear_executables)
++            compiler=attempt(label+' multiplication lookup',lambda:getattr(value,'_multiplication_compiler',None))
++            if compiler is not None:attempt(label+' multiplication cleanup',lambda:compiler.clear_executables())
+         if refresher is not None:
+-            if refresher.compiled_primitives is not None:
+-                for helper in refresher.compiled_primitives:
++            def refresh_helpers():
++                helpers=refresher.compiled_primitives
++                return None if helpers is None else tuple(helpers)
++            helpers=attempt('refresh helper inventory',refresh_helpers)
++            if helpers is not None:
++                for helper in helpers:
+                     attempt('refresh helper cleanup',lambda helper=helper:helper.clear(executables=True))
+-            clear_arithmetic(refresher.evaluator,'refresh evaluator')
+-        if linear is not None:clear_arithmetic(linear.arithmetic,'linear arithmetic')
++            value=attempt('refresh evaluator lookup',lambda:refresher.evaluator)
++            if value is not None:clear_arithmetic(value,'refresh evaluator')
++        if linear is not None:
++            value=attempt('linear arithmetic lookup',lambda:linear.arithmetic)
++            if value is not None:clear_arithmetic(value,'linear arithmetic')
+         if arithmetic is not None:
+             clear_arithmetic(arithmetic,'arithmetic')
+-        if provider is not None:attempt('NTT provider cleanup',provider.close)
++        if provider is not None:attempt('NTT provider cleanup',lambda:provider.close())
++        for signum, original in reversed(shield):
++            attempt('engine cleanup signal restoration', lambda s=signum,o=original:signal.signal(s,o))
++        if deferred:
++            def cancellation():
++                raise KeyboardInterrupt('signals deferred until engine cleanup completed: '+repr(deferred))
++            attempt('deferred engine cleanup cancellation', cancellation)
+         if active is None and failure is not None:raise failure
+--- /dev/null
++++ b/test_full_model_engine_cleanup.py
+@@ -0,0 +1,107 @@
++"""Engine cleanup only; fabricated public owners, no crypto/model imports."""
++import os
++import signal
++import pytest
++import full_model_engine as engine
++from test_full_model_engine import fake
++
++
++@pytest.mark.parametrize('interrupt',[KeyboardInterrupt('later interrupt'),SystemExit(143)])
++def test_later_cleanup_interrupt_takes_precedence_and_finishes(fake,interrupt):
++    ctx,calls,state=fake
++    ordinary=OSError('first ordinary cleanup error')
++    with pytest.raises(type(interrupt)) as caught:
++        with engine.server_engine(ctx,manifest_bytes=b'fixed') as graph:
++            first,second=graph.refresher.compiled_primitives[:2]
++            def fail_first(**kw):calls.append(('first_failed',));raise ordinary
++            def fail_second(**kw):calls.append(('second_failed',));raise interrupt
++            first.clear=fail_first;second.clear=fail_second
++    assert caught.value is interrupt
++    assert any('first ordinary' in note for note in interrupt.__notes__)
++    assert calls[-1]==('close_provider',)
++    assert len([c for c in calls if c[0]=='clear'])==15
++
++
++@pytest.mark.parametrize('primary',[RuntimeError('body failure'),KeyboardInterrupt('body cancellation'),SystemExit(130)])
++def test_existing_primary_preserved_through_cleanup_interrupts(fake,primary):
++    ctx,calls,state=fake
++    with pytest.raises(type(primary)) as caught:
++        with engine.server_engine(ctx,manifest_bytes=b'fixed') as graph:
++            first,second=graph.refresher.compiled_primitives[:2]
++            def ordinary(**kw):raise OSError('cleanup ordinary')
++            def interrupt(**kw):raise KeyboardInterrupt('cleanup interrupt')
++            first.clear=ordinary;second.clear=interrupt
++            raise primary
++    assert caught.value is primary
++    assert len(primary.__notes__)==2 and 'cleanup ordinary' in primary.__notes__[0] and 'cleanup interrupt' in primary.__notes__[1]
++    assert calls[-1]==('close_provider',)
++
++
++@pytest.mark.parametrize('body_failure',[False,True])
++def test_repeated_real_signals_are_deferred_until_all_cleanup_finishes(fake,body_failure):
++    ctx,calls,state=fake
++    signs=(signal.SIGTERM,signal.SIGHUP,signal.SIGINT)
++    old={s:signal.getsignal(s) for s in signs}
++    delivered=[];completed=[];primary=RuntimeError('original body failure')
++    def original_handler(signum,frame):
++        delivered.append(signum)
++        raise KeyboardInterrupt('unshielded signal')
++    for s in signs:signal.signal(s,original_handler)
++    try:
++        with pytest.raises(RuntimeError if body_failure else KeyboardInterrupt) as caught:
++            with engine.server_engine(ctx,manifest_bytes=b'fixed') as graph:
++                helper=graph.refresher.compiled_primitives[0];real=helper.clear
++                def send_during_cleanup(**kw):
++                    for s in signs*2:os.kill(os.getpid(),s)
++                    completed.append(True);real(**kw)
++                helper.clear=send_during_cleanup
++                if body_failure:raise primary
++        if body_failure:assert caught.value is primary
++        assert completed==[True], 'cleanup operation itself was interrupted'
++        assert delivered==[], 'old signal handler ran during cleanup'
++        assert len([c for c in calls if c[0]=='clear'])==17
++        assert calls[-1]==('close_provider',)
++        assert all(signal.getsignal(s) is original_handler for s in signs)
++    finally:
++        for s,h in old.items():signal.signal(s,h)
++
++
++def test_signal_handlers_restored_after_success(fake):
++    ctx,calls,state=fake
++    signals=(signal.SIGINT,signal.SIGTERM,signal.SIGHUP)
++    old={s:signal.getsignal(s) for s in signals}
++    with engine.server_engine(ctx,manifest_bytes=b'fixed'):pass
++    assert {s:signal.getsignal(s) for s in signals}==old
++
++
++def test_deferred_signal_takes_precedence_over_ordinary_cleanup_failure(fake):
++    ctx,calls,state=fake;old=signal.getsignal(signal.SIGTERM)
++    def interrupted(signum,frame):raise KeyboardInterrupt('unshielded')
++    signal.signal(signal.SIGTERM,interrupted)
++    try:
++        with pytest.raises(KeyboardInterrupt) as caught:
++            with engine.server_engine(ctx,manifest_bytes=b'fixed') as graph:
++                first,second=graph.refresher.compiled_primitives[:2]
++                def fail(**kw):raise OSError('earlier ordinary')
++                def cancel(**kw):os.kill(os.getpid(),signal.SIGTERM)
++                first.clear=fail;second.clear=cancel
++        assert any('earlier ordinary' in note for note in caught.value.__notes__)
++        assert calls[-1]==('close_provider',)
++        assert signal.getsignal(signal.SIGTERM) is interrupted
++    finally:signal.signal(signal.SIGTERM,old)
++
++
++@pytest.mark.parametrize('attribute',['_clear_working_caches','rotation','_multiplication_compiler'])
++def test_cleanup_attribute_failure_cannot_skip_later_owners(fake,attribute):
++    ctx,calls,state=fake
++    class Broken:
++        def __init__(self,base):self.base=base
++        def __getattr__(self,name):
++            if name==attribute:raise RuntimeError('lookup failure '+name)
++            return getattr(self.base,name)
++    with pytest.raises(RuntimeError,match='lookup failure'):
++        with engine.server_engine(ctx,manifest_bytes=b'fixed') as graph:
++            graph.refresher.evaluator=Broken(graph.refresher.evaluator)
++    assert calls[-1]==('close_provider',)
++    # Both independent arithmetic owners still retire all of their executables.
++    assert len([c for c in calls if c[0]=='clear'])>=16

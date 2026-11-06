@@ -1,0 +1,43 @@
+.F.F...............................................                      [100%]
+=================================== FAILURES ===================================
+______________________ test_required_source_missing_fails ______________________
+
+harness = (PosixPath('/tmp/pytest-of-jianming_gatech/pytest-360/test_required_source_missing_f0/lab'), {}, [], [])
+
+    def test_required_source_missing_fails(harness):
+>       root,_,_,_=harness;(root/'check_public.py').unlink()
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_collector.py:49: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-360/test_required_source_missing_f0/lab/check_public.py')
+missing_ok = False
+
+    def unlink(self, missing_ok=False):
+        """
+        Remove this file or link.
+        If the path is a directory, use rmdir() instead.
+        """
+        try:
+>           os.unlink(self)
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-360/test_required_source_missing_f0/lab/check_public.py'
+
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py:746: FileNotFoundError
+______________ test_late_source_drift_has_false_report_and_stdout ______________
+
+harness = (PosixPath('/tmp/pytest-of-jianming_gatech/pytest-360/test_late_source_drift_has_fal0/lab'), {'drift': True, 'output':...or.harness.<locals>.Child object at 0x733278214440>, <test_collector.harness.<locals>.Child object at 0x7332783d5590>])
+capsys = <_pytest.capture.CaptureFixture object at 0x7332783d5950>
+
+    def test_late_source_drift_has_false_report_and_stdout(harness,capsys):
+        harness[1]['drift']=True;result=execute(harness)
+>       assert result['passed'] is False and result['source_files_unchanged'] is False
+E       assert (True is False)
+
+test_collector.py:61: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"passed": true, "source_count": 45, "comparisons": 372, "source_archive_sha256": "957dab9bb1a30c3572c2586390f9f762867687928598d89775b113c95ccc6246"}
+=========================== short test summary info ============================
+FAILED test_collector.py::test_required_source_missing_fails - FileNotFoundEr...
+FAILED test_collector.py::test_late_source_drift_has_false_report_and_stdout
+2 failed, 49 passed in 0.22s

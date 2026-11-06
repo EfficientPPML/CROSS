@@ -1,0 +1,101 @@
+{
+  "passed": true,
+  "command": [
+    "/usr/bin/time",
+    "-v",
+    "-o",
+    "/tmp/p3-original-six-preparation-20261105/run-v1/test6/time.txt",
+    "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+    "/tmp/p3-original-six-preparation-20261105/collector/check_p3_original_six.py",
+    "--repo",
+    "/tmp/p3-original-six-preparation-20261105/checkout",
+    "--child-runner",
+    "/tmp/p3-original-six-preparation-20261105/checkout/cadathlon/non_agent_pset/p3_cnn/src/runner.py",
+    "--",
+    "--case",
+    "/tmp/p3-original-six-preparation-20261105/checkout/cadathlon/non_agent_pset/p3_cnn/test/test6.in",
+    "--baseline",
+    "--warmups",
+    "0",
+    "--repeats",
+    "1"
+  ],
+  "timeout_s": null,
+  "cleanup_grace_s": 30.0,
+  "owned_public_key_directory": "/dev/shm/cross-p3-original-six-key-parent-f383y30c/cross-transformer-case-li1ihns3",
+  "owned_public_key_directory_identity": {
+    "device": 24,
+    "inode": 4070
+  },
+  "pid": 1620198,
+  "returncode": 0,
+  "result": {
+    "case": "test6.in",
+    "mode": "HE-synthetic-smoke",
+    "device": "TPU_0(process=0,(0,0,0,0))",
+    "passed": true,
+    "implementation": "baseline.py",
+    "execution_rings": [
+      {
+        "degree": 32768,
+        "num_slots": 16384,
+        "num_q": 16,
+        "num_p": 4,
+        "dnum": 4,
+        "max_level": 7,
+        "q_towers": [
+          2147352577,
+          1065484289,
+          1065811969,
+          1068236801,
+          1079443457,
+          1080360961,
+          1068433409,
+          1068564481,
+          1077477377,
+          1069219841,
+          1070727169,
+          1071513601,
+          1073872897,
+          1074266113,
+          1072496641,
+          1073479681
+        ],
+        "p_towers": [
+          2146959361,
+          2146041857,
+          2145976321,
+          2144796673
+        ],
+        "log2_Q": 480.96377040094364,
+        "log2_QP": 604.9596299590162,
+        "security_bits": 128,
+        "security_model": "classical"
+      }
+    ],
+    "setup_s": 527.8725638909964,
+    "end_to_end_s": [
+      2.822177863010438
+    ],
+    "server_s": [
+      1.286702912999317
+    ],
+    "warmup_s": [],
+    "warmup_server_s": [],
+    "mapping_release_included": true,
+    "cold_start_included": true,
+    "median_s": 2.822177863010438,
+    "batch": 4,
+    "trained_accuracy_evaluated": false,
+    "max_abs_error": 4.3929963833289065e-13,
+    "nrmse": 1.8574620865320212e-11,
+    "top1_agreement": 1.0,
+    "total_s": 532.4608967710228
+  },
+  "process_reaped": true,
+  "public_key_store_removed": true,
+  "owned_directory_handle_closed": true,
+  "process_elapsed_s": 548.9245270109968,
+  "source_files_unchanged": true,
+  "peak_child_rss_kib": 109224280
+}

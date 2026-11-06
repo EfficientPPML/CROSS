@@ -1,0 +1,14 @@
+.............................................F                           [100%]
+=================================== FAILURES ===================================
+___________ test_no_backend_modules_or_transformed_metadata_methods ____________
+
+    def test_no_backend_modules_or_transformed_metadata_methods():
+        assert not any(n=='jax' or n.startswith('jaxite_word') for n in sys.modules)
+>       assert len(EXTRACTED)==19
+E       AssertionError: assert 21 == 19
+E        +  where 21 = len({'polynomial.py:Polynomial._validate_payload': {'source_sha256': '043e1dcdf9aca02f2df9435ac610c1561859b7d29a7dee1b7254...bdf71f706acc20ab0f6fe7c8def5e', 'ast_sha256': '5a1fe6943db288a28c13dae1302c8932e1545e8d1b0a98920a2177d11177d72e'}, ...})
+
+/tmp/bert-bsgs-score-routing-owner-20261103/metadata_tests/test_production_metadata.py:101: AssertionError
+=========================== short test summary info ============================
+FAILED ../../tmp/bert-bsgs-score-routing-owner-20261103/metadata_tests/test_production_metadata.py::test_no_backend_modules_or_transformed_metadata_methods
+1 failed, 45 passed in 0.35s

@@ -1,0 +1,131 @@
+"""Predeclared all-site factor4 Qwen normalization feasibility, no model/HE."""
+from pathlib import Path
+from fractions import Fraction as F
+from decimal import Decimal,localcontext,ROUND_CEILING,ROUND_FLOOR
+from collections import Counter
+import copy,hashlib,io,json,math,os,sys,tarfile,time
+import numpy as np
+import numeric
+from old_selection import depths
+ROOT=Path(__file__).resolve().parent
+sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+canonical=lambda obj:hashlib.sha256(json.dumps(obj,sort_keys=True,separators=(',',':'),allow_nan=False).encode()).hexdigest()
+
+
+def outward(value,up):
+    y=float(value)
+    if (up and F(y)<value) or (not up and F(y)>value):y=math.nextafter(y,math.inf if up else -math.inf)
+    if not math.isfinite(y) or y<=0:raise ValueError('positive finite expanded endpoints required')
+    return y
+
+
+def domain(original,epsilon,factor=4):
+    if type(factor)is not int or factor!=4:raise ValueError('frozen uniform factor4 required')
+    a,b=map(F,original);epsilon=F(epsilon)
+    if not 0<epsilon or not 0<a<b:raise ValueError('positive original interval and epsilon required')
+    low=max(epsilon,a/factor);high=b*factor
+    if low>=high:raise ValueError('expanded physical interval empty')
+    return [outward(low,False),outward(high,True)]
+
+
+def check_certificate(rule):
+    a,b=map(F,rule['domain']);w=F(rule['rounded_first_weight']);bias=F(rule['rounded_first_bias'])
+    assert min(w*a+bias,w*b+bias)>0
+    points=[a,b]+[x for x in (-bias/w,-bias/(3*w)) if a<=x<=b]
+    first=max(abs(1-x*(w*x+bias)**2) for x in points)
+    given=rule['first_exact_residual_abs_bound'];assert first==F(int(given['numerator']),int(given['denominator'])) and first<1
+    with localcontext() as c:
+        c.prec=160;c.rounding=ROUND_CEILING
+        R=Decimal(first.numerator)/Decimal(first.denominator)
+        for _ in range(rule['iterations']-1):R=R*R*(3+R)/4
+    with localcontext() as c:
+        c.prec=160;c.rounding=ROUND_FLOOR
+        lower=(1-R).sqrt().next_minus();denom=1+lower
+    with localcontext() as c:
+        c.prec=160;c.rounding=ROUND_CEILING;relative=R/denom
+    assert R<=Decimal(rule['final_residual_bound']) and relative<=Decimal(rule['final_relative_error_bound'])<=Decimal('1e-6')
+    assert rule['depth']==4*rule['iterations']-3
+    return dict(first_residual_gap=outward(1-first,False),independent_relative_upper=str(relative),verified=True)
+
+
+def count_quantities(n):
+    # First affine1; each remaining actual static update has3 CT products and1 affine.
+    return dict(inverse_depth=4*n-3,inverse_ciphertext_products=3*(n-1),inverse_weighted_affines=n,
+                complete_rms_depth=4*n+1,complete_rms_ciphertext_products=3*(n-1)+2,
+                complete_rms_weighted_affines=n+2)
+
+
+def plan():
+    protocol=json.loads((ROOT/'protocol.json').read_text())
+    for n,h in protocol['source_input_sha256'].items():
+        if sha(ROOT/n)!=h:raise ValueError('pinned public/calibration input differs')
+    manifest=json.loads((ROOT/'inputs/candidate2_manifest.json').read_text())
+    assert sha(ROOT/'inputs/candidate2_manifest.json')=='0af45a8fc6d13b9d429ee1af2311b2cb6ac0aa4cde02eca56478472762482489'
+    calibration=json.loads((ROOT/'inputs/calibration_selection_inputs.json').read_text());config=json.loads((ROOT/'inputs/qwen_config.json').read_text())
+    multipliers=json.loads((ROOT/'inputs/norm_multipliers.json').read_text());outer=json.loads((ROOT/'inputs/public_outer_feasibility_v3.json').read_text())
+    epsilon=config['rms_norm_eps'];assert epsilon==1e-6
+    names=sorted(k for k in manifest['nonlinear'] if k.endswith('.inverse_sqrt'));assert len(names)==113
+    result={};updated=copy.deepcopy(manifest)
+    for name in names:
+        old=manifest['nonlinear'][name];observed=calibration[name]
+        assert old['domain']==[.8*observed['minimum'],1.2*observed['maximum']]
+        expanded=domain(old['domain'],epsilon)
+        rule=numeric.rsqrt_contract(expanded,1e-6);certificate=check_certificate(rule)
+        grid=np.unique(np.concatenate((np.linspace(*expanded,2049),np.geomspace(*expanded,2049))))
+        actual=numeric.rsqrt(grid,rule);truth=1/np.sqrt(grid)
+        error=float(np.max(np.abs(actual/truth-1))) if np.isfinite(actual).all() else None
+        updated['nonlinear'][name]={'kind':'inverse_sqrt','method':'newton',**rule}
+        result[name]=dict(original_domain=old['domain'],expanded_domain=expanded,epsilon_floor_active=expanded[0]==epsilon,
+            original_method=old['method'],original_depth=old['depth'],original_condition=old['domain'][1]/old['domain'][0],expanded_condition=expanded[1]/expanded[0],
+            calibration_range=[observed['minimum'],observed['maximum']],calibration_contained=expanded[0]<=observed['minimum']<=observed['maximum']<=expanded[1],
+            rule=rule,certificate=certificate,counts=count_quantities(rule['iterations']),
+            binary64_diagnostic=dict(grid_points=len(grid),max_relative_error=error,passed=error is not None and error<=1e-6,
+                initial_first_affine_lower=expanded[0]*rule['rounded_first_weight']+rule['rounded_first_bias']),
+            inverse_abs_bound_conditional=outward((1+F(Decimal(rule['final_relative_error_bound'])))/F.from_float(math.sqrt(expanded[0])),True))
+    # No reuse claim for SiLU's old norm multiplier without this public recheck.
+    silu={}
+    for layer in range(28):
+        name=f'{layer}.post.inverse_sqrt';delta=F(Decimal(result[name]['rule']['final_relative_error_bound']));B=F(multipliers[str(layer)]['native_gate_upper'])
+        guarded=F(9,8)*(1+delta)*B;radius=-(-guarded.numerator//guarded.denominator);domain_old=manifest['nonlinear'][f'{layer}.silu']['domain']
+        silu[str(layer)]=dict(conditional_public_radius=radius,existing_domain=domain_old,covered=domain_old[0]<=-radius and domain_old[1]>=radius,
+                            premise='Same represented input/variance, widened declared domain, exact-real uniform norm certificate; no floating/CKKS error allowance.')
+    assert {k:v for k,v in updated['nonlinear'].items() if not k.endswith('.inverse_sqrt')}=={k:v for k,v in manifest['nonlinear'].items() if not k.endswith('.inverse_sqrt')}
+    old_n=[r['iterations'] for r in manifest['nonlinear'].values() if r['method']=='newton'];new_n=[x['rule']['iterations'] for x in result.values()]
+    summary=dict(sites=113,original_methods=dict(Counter(x['original_method'] for x in result.values())),original_newton_updates=[min(old_n),max(old_n)],
+        proposed_newton_updates=[min(new_n),max(new_n)],proposed_update_histogram=dict(Counter(new_n)),
+        proposed_inverse_depth_range=[min(4*n-3 for n in new_n),max(4*n-3 for n in new_n)],proposed_complete_rms_depth_range=[min(4*n+1 for n in new_n),max(4*n+1 for n in new_n)],
+        epsilon_floor_sites=sum(x['epsilon_floor_active'] for x in result.values()),calibration_range_coverage=sum(x['calibration_contained'] for x in result.values()),
+        binary64_grid_failures=[k for k,x in result.items() if not x['binary64_diagnostic']['passed']],
+        largest_binary64_grid_relative_error=max(x['binary64_diagnostic']['max_relative_error'] for x in result.values() if x['binary64_diagnostic']['max_relative_error'] is not None),
+        unchanged_silu_domains_covered=all(x['covered'] for x in silu.values()),public_outer_comparison=outer['summary'],
+        original_abstract_depth={S:x['final_depth'] for S,x in manifest['depth_by_sequence'].items()},
+        fallback_abstract_depth={str(S):depths(updated,S)['final_depth'] for S in (8,16,19,32)},
+        caveat='Abstract depths match the existing clear arithmetic count only, without packing/ring/refresh/correlation cost; factor4 coverage remains an empirical engineering policy.')
+    return dict(scope=__doc__,policy_sha256=sha(ROOT/'protocol.json'),passed=all(x['certificate']['verified'] for x in result.values()),
+        model_evaluated=False,HE_executed=False,replacement_candidate_selected=False,heldout_or_fresh56_read=False,
+        exact_real_uniform_certificates=True,uniform_floating_or_CKKS_error_certified=False,sites=result,silu_radius_recheck=silu,summary=summary,
+        fixed_target_relative_error=1e-6,original_candidate2_domain_failures_preserved=True,
+        next_requirements=['Review a uniform polynomial selection rule to reduce cost if needed; each actual rounded map/power coefficient needs uniform certificate.',
+          'Freeze any replacement manifest before original calibration trajectory checks; do not read fresh56 until it is frozen and calibration is accepted.',
+          'Require all113 live approximate-trajectory domain checks, all original published numerical gates and exact prefix matching; historical nine stops remain failed evidence.',
+          'Recheck shifted norm error implications for downstream SiLU/softmax domains; factor4 is not arbitrary-input induction.',
+          'Any encrypted realization needs common-ring scale/noise/refresh certificates for retained variance/inverse correlation, not just the exact-real static recurrence.'])
+
+
+def main(output):
+    output=Path(output);output.mkdir(exist_ok=False);start=time.monotonic()
+    paths=[ROOT/n for n in ('assess.py','test_assess.py','protocol.json','protocol-before-grid-count-clarification.json','numeric.py','old_selection.py')]+sorted((ROOT/'inputs').glob('*'))
+    before={str(p.relative_to(ROOT)):sha(p) for p in paths}
+    with tarfile.open(output/'sources.tar.gz','w:gz') as archive:
+        for p in paths:b=p.read_bytes();i=tarfile.TarInfo(str(p.relative_to(ROOT)));i.size=len(b);archive.addfile(i,io.BytesIO(b))
+    report=plan();after={str(p.relative_to(ROOT)):sha(p) for p in paths}
+    with tarfile.open(output/'sources.tar.gz') as archive:
+        members=archive.getmembers();verified=len(members)==len(before)==len({m.name for m in members}) and {m.name:hashlib.sha256(archive.extractfile(m).read()).hexdigest() for m in members}==before
+    report.update(source_hashes_before=before,source_hashes_after=after,source_files_unchanged=before==after,source_archive_verified=verified,source_archive_sha256=sha(output/'sources.tar.gz'),elapsed_s=time.monotonic()-start,
+        cpu_affinity=sorted(os.sched_getaffinity(0)),numpy_version=np.__version__)
+    report['passed']=report['passed'] and before==after and verified
+    (output/'report.json').write_text(json.dumps(report,indent=2,allow_nan=False)+'\n');print(json.dumps(report['summary'],indent=2));return 0 if report['passed'] else 1
+
+if __name__=='__main__':
+    import argparse
+    p=argparse.ArgumentParser();p.add_argument('--output',required=True);raise SystemExit(main(p.parse_args().output))

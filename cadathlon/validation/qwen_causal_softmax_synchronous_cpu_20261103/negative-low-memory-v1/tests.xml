@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="4" skipped="0" tests="4" time="0.197" timestamp="2026-11-03T16:30:19.680941+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_low_memory_repro" name="test_reject_asynchronous_before_work[arithmetic]" time="0.023"><failure message="Failed: DID NOT RAISE ValueError">target = 'arithmetic'
+
+    @pytest.mark.parametrize("target",["arithmetic","refresh_evaluator","refresh_engine","PV"])
+    def test_reject_asynchronous_before_work(target):
+        a=Arithmetic();r=IdentityRefresh(a)
+        a.low_memory=True;r.evaluator.low_memory=True;r.engine._low_mem=True
+        if target in ("arithmetic","PV"):a.low_memory=False
+        elif target=="refresh_evaluator":r.evaluator.low_memory=False
+        else:r.engine._low_mem=False
+&gt;       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_low_memory_repro.py:13: Failed</failure></testcase><testcase classname="test_low_memory_repro" name="test_reject_asynchronous_before_work[refresh_evaluator]" time="0.022"><failure message="Failed: DID NOT RAISE ValueError">target = 'refresh_evaluator'
+
+    @pytest.mark.parametrize("target",["arithmetic","refresh_evaluator","refresh_engine","PV"])
+    def test_reject_asynchronous_before_work(target):
+        a=Arithmetic();r=IdentityRefresh(a)
+        a.low_memory=True;r.evaluator.low_memory=True;r.engine._low_mem=True
+        if target in ("arithmetic","PV"):a.low_memory=False
+        elif target=="refresh_evaluator":r.evaluator.low_memory=False
+        else:r.engine._low_mem=False
+&gt;       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_low_memory_repro.py:13: Failed</failure></testcase><testcase classname="test_low_memory_repro" name="test_reject_asynchronous_before_work[refresh_engine]" time="0.023"><failure message="Failed: DID NOT RAISE ValueError">target = 'refresh_engine'
+
+    @pytest.mark.parametrize("target",["arithmetic","refresh_evaluator","refresh_engine","PV"])
+    def test_reject_asynchronous_before_work(target):
+        a=Arithmetic();r=IdentityRefresh(a)
+        a.low_memory=True;r.evaluator.low_memory=True;r.engine._low_mem=True
+        if target in ("arithmetic","PV"):a.low_memory=False
+        elif target=="refresh_evaluator":r.evaluator.low_memory=False
+        else:r.engine._low_mem=False
+&gt;       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_low_memory_repro.py:13: Failed</failure></testcase><testcase classname="test_low_memory_repro" name="test_reject_asynchronous_before_work[PV]" time="0.001"><failure message="Failed: DID NOT RAISE ValueError">target = 'PV'
+
+    @pytest.mark.parametrize("target",["arithmetic","refresh_evaluator","refresh_engine","PV"])
+    def test_reject_asynchronous_before_work(target):
+        a=Arithmetic();r=IdentityRefresh(a)
+        a.low_memory=True;r.evaluator.low_memory=True;r.engine._low_mem=True
+        if target in ("arithmetic","PV"):a.low_memory=False
+        elif target=="refresh_evaluator":r.evaluator.low_memory=False
+        else:r.engine._low_mem=False
+&gt;       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_low_memory_repro.py:13: Failed</failure></testcase></testsuite></testsuites>

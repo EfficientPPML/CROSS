@@ -1,0 +1,68 @@
+{
+  "scope": "CPU integration of lazy BConv controls after the five reviewed candidates; secure arithmetic evidence is retained separately from full-model or TPU claims.",
+  "he_tpu_validation": false,
+  "command": [
+    "taskset",
+    "-c",
+    "136-139",
+    "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+    "/tmp/lazy-bconv-v2-20261103/checkout/cadathlon/validation/lazy_bconv_pytest_child.py",
+    "/tmp/lazy-bconv-v2-20261103/evidence/secure-records.json",
+    "cadathlon/tests",
+    "jaxite_word/ckks_ctx_test.py",
+    "jaxite_word/codec_preparation_test.py",
+    "jaxite_word/uniform_encoding_test.py",
+    "jaxite_word/mapping_compile_test.py",
+    "jaxite_word/bsgs_test.py",
+    "jaxite_word/packing_test.py",
+    "jaxite_word/composite_prime_gen_test.py",
+    "jaxite_word/bootstrapping_test.py",
+    "jaxite_word/key_gen_test.py",
+    "jaxite_word/herot_test.py",
+    "jaxite_word/hemul_test.py",
+    "-q",
+    "--junitxml=/tmp/lazy-bconv-v2-20261103/evidence/junit.xml"
+  ],
+  "environment": {
+    "JAX_PLATFORMS": "cpu",
+    "OMP_NUM_THREADS": "4",
+    "OPENBLAS_NUM_THREADS": "4",
+    "CROSS_ROOT": "/tmp/lazy-bconv-v2-20261103/checkout",
+    "CROSS_TEST_SECURE_REFRESH": "0",
+    "CROSS_TEST_BOUNDED_REFRESH": "0",
+    "CROSS_TEST_SECURE_POLYNOMIAL": "0",
+    "BOOTSTRAP_TEST_N4096": "0",
+    "BOOTSTRAP_TEST_N8192": "0"
+  },
+  "source_file_count": 323,
+  "source_archive": "sources.tar.gz",
+  "review_base_commit": "98ca6833397069e4228c265d75fef64884218a28",
+  "versions": {
+    "jax": "0.12.0.1",
+    "jaxlib": "0.12.0.1",
+    "numpy": "2.5.4",
+    "torch": "2.15.0+cpu",
+    "libtpu": "0.0.50.1",
+    "pytest": "9.2.0"
+  },
+  "python": "3.13.18 | packaged by Anaconda, Inc. | (main, Oct 27 2026, 00:57:03) [GCC 14.3.0]",
+  "started_utc": "2026-11-03T03:05:23.291198+00:00",
+  "returncode": 0,
+  "parent_elapsed_s": 373.1460937890006,
+  "completed_utc": "2026-11-03T03:11:36.437312+00:00",
+  "source_unchanged": true,
+  "changed_sources": [],
+  "pytest_suites": [
+    {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "12",
+      "tests": "1251",
+      "time": "370.219",
+      "timestamp": "2026-11-03T03:05:23.413082+00:00",
+      "hostname": "t1v-n-a4e6c486-w-0"
+    }
+  ],
+  "passed": true
+}

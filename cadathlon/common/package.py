@@ -6,6 +6,28 @@ import shutil
 import tarfile
 
 
+COMMON_RUNTIME_FILES = (
+    "support.py", "Makefile.problem", "package.py", "transformer_runner.py",
+    "encrypted_polynomial.py", "encrypted_transformer.py", "encrypted_reference.py",
+    "encrypted_refresh.py", "encrypted_rotation.py", "encrypted_compilation.py",
+    "encrypted_primitives.py", "encrypted_ntt.py", "encrypted_packed_qwen.py", "encrypted_packed_transformer.py",
+    "encrypted_bounded_arithmetic.py", "encrypted_bounded_transformer.py",
+    "encrypted_streaming_linear.py", "encrypted_chained_streaming_linear.py",
+    "encrypted_integer_affine.py", "encrypted_scaled_newton.py",
+)
+PUBLIC_RELEASE_EVIDENCE = (
+    "validation/p1_student_suite.json", "validation/p3_compact_baseline.json",
+)
+
+
+def required_files(root, names):
+    files = [root / name for name in names]
+    missing = [str(path) for path in files if not path.is_file() or path.is_symlink()]
+    if missing:
+        raise FileNotFoundError("Missing declared archive dependency: " + ", ".join(missing))
+    return files
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("action", choices=("clean", "submit", "release"))
@@ -35,8 +57,7 @@ def main():
         candidates += [directory / "src" / "Makefile"]
         candidates += [directory / "src" / "suite" / "suite_config.json"]
         candidates += list(directory.glob("results*.json"))
-        candidates += [root / "common" / "support.py", root / "common" / "Makefile.problem",
-                       root / "common" / "package.py"]
+        candidates += required_files(root / "common", COMMON_RUNTIME_FILES)
         output = directory / "submission.tar.gz"
     else:
         root = directory
@@ -52,8 +73,10 @@ def main():
                 rel = path.relative_to(folder).as_posix()
                 if not any(fnmatch.fnmatchcase(rel, pattern) for pattern in patterns):
                     candidates.append(path)
-        candidates += [root / "common" / name for name in
-                       ("support.py", "Makefile.problem", "package.py")]
+        candidates += required_files(root / "common", COMMON_RUNTIME_FILES)
+        # Only the public aggregate reports cited by student documentation.
+        # Per-image organizer verification evidence remains excluded above.
+        candidates += required_files(root, PUBLIC_RELEASE_EVIDENCE)
     files = sorted({p for p in candidates if p.is_file() and not p.is_symlink()
                     and "__pycache__" not in p.parts and p.suffix not in (".gz", ".golden", ".pyc")})
     with tarfile.open(output, "w:gz") as archive:

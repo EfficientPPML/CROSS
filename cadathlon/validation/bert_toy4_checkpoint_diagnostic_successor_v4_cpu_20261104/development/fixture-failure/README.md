@@ -1,0 +1,1 @@
+First focused development: 65 passed, 2 test-fixture failures. The client-context fake intentionally has no parameter cache, unlike the server fake; new sticky-transfer client tests accessed that absent fake field before raising the intended body error. No production failure was measured. The successor creates an explicit synthetic cache for this cleanup-only probe.

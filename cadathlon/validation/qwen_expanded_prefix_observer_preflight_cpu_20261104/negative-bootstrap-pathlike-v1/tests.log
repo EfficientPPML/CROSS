@@ -1,0 +1,100 @@
+FFFF                                                                     [100%]
+=================================== FAILURES ===================================
+_______ test_pathlike_preloaded_alias_rejected_before_helper[False-file] _______
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-627/test_pathlike_preloaded_alias_0')
+origin = 'file', symlink = False
+
+    @pytest.mark.parametrize('origin',['file','spec'])
+    @pytest.mark.parametrize('symlink',[False,True])
+    def test_pathlike_preloaded_alias_rejected_before_helper(tmp_path,origin,symlink):
+        root,marker,manifest,args=prepared(tmp_path)
+        target=root/'input_gate.py'
+        if symlink:
+            link=tmp_path/'alias_link';link.symlink_to(target);target=link
+        setup=('module.__file__=value' if origin=='file' else
+               'module.__spec__=types.SimpleNamespace(origin=value)')
+        wrapper=('import pathlib,types,sys,runpy\nmodule=types.ModuleType("unknown_alias")\n'
+            'value=pathlib.Path('+repr(str(target))+')\n'+setup+'\nsys.modules["unknown_alias"]=module\n'
+            'sys.argv='+repr(args)+'\nrunpy.run_path('+repr(args[0])+',run_name="__main__")\n')
+        code,_,error=launch(args,wrapper)
+>       assert code!=0 and not marker.exists(),error.decode()
+E       AssertionError: 
+E       assert (0 != 0)
+
+/tmp/qwen-observer-bootstrap-pathlike-review-20261104/negative-v1/test_entry.py:57: AssertionError
+_______ test_pathlike_preloaded_alias_rejected_before_helper[False-spec] _______
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-627/test_pathlike_preloaded_alias_1')
+origin = 'spec', symlink = False
+
+    @pytest.mark.parametrize('origin',['file','spec'])
+    @pytest.mark.parametrize('symlink',[False,True])
+    def test_pathlike_preloaded_alias_rejected_before_helper(tmp_path,origin,symlink):
+        root,marker,manifest,args=prepared(tmp_path)
+        target=root/'input_gate.py'
+        if symlink:
+            link=tmp_path/'alias_link';link.symlink_to(target);target=link
+        setup=('module.__file__=value' if origin=='file' else
+               'module.__spec__=types.SimpleNamespace(origin=value)')
+        wrapper=('import pathlib,types,sys,runpy\nmodule=types.ModuleType("unknown_alias")\n'
+            'value=pathlib.Path('+repr(str(target))+')\n'+setup+'\nsys.modules["unknown_alias"]=module\n'
+            'sys.argv='+repr(args)+'\nrunpy.run_path('+repr(args[0])+',run_name="__main__")\n')
+        code,_,error=launch(args,wrapper)
+>       assert code!=0 and not marker.exists(),error.decode()
+E       AssertionError: 
+E       assert (0 != 0)
+
+/tmp/qwen-observer-bootstrap-pathlike-review-20261104/negative-v1/test_entry.py:57: AssertionError
+_______ test_pathlike_preloaded_alias_rejected_before_helper[True-file] ________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-627/test_pathlike_preloaded_alias_2')
+origin = 'file', symlink = True
+
+    @pytest.mark.parametrize('origin',['file','spec'])
+    @pytest.mark.parametrize('symlink',[False,True])
+    def test_pathlike_preloaded_alias_rejected_before_helper(tmp_path,origin,symlink):
+        root,marker,manifest,args=prepared(tmp_path)
+        target=root/'input_gate.py'
+        if symlink:
+            link=tmp_path/'alias_link';link.symlink_to(target);target=link
+        setup=('module.__file__=value' if origin=='file' else
+               'module.__spec__=types.SimpleNamespace(origin=value)')
+        wrapper=('import pathlib,types,sys,runpy\nmodule=types.ModuleType("unknown_alias")\n'
+            'value=pathlib.Path('+repr(str(target))+')\n'+setup+'\nsys.modules["unknown_alias"]=module\n'
+            'sys.argv='+repr(args)+'\nrunpy.run_path('+repr(args[0])+',run_name="__main__")\n')
+        code,_,error=launch(args,wrapper)
+>       assert code!=0 and not marker.exists(),error.decode()
+E       AssertionError: 
+E       assert (0 != 0)
+
+/tmp/qwen-observer-bootstrap-pathlike-review-20261104/negative-v1/test_entry.py:57: AssertionError
+_______ test_pathlike_preloaded_alias_rejected_before_helper[True-spec] ________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-627/test_pathlike_preloaded_alias_3')
+origin = 'spec', symlink = True
+
+    @pytest.mark.parametrize('origin',['file','spec'])
+    @pytest.mark.parametrize('symlink',[False,True])
+    def test_pathlike_preloaded_alias_rejected_before_helper(tmp_path,origin,symlink):
+        root,marker,manifest,args=prepared(tmp_path)
+        target=root/'input_gate.py'
+        if symlink:
+            link=tmp_path/'alias_link';link.symlink_to(target);target=link
+        setup=('module.__file__=value' if origin=='file' else
+               'module.__spec__=types.SimpleNamespace(origin=value)')
+        wrapper=('import pathlib,types,sys,runpy\nmodule=types.ModuleType("unknown_alias")\n'
+            'value=pathlib.Path('+repr(str(target))+')\n'+setup+'\nsys.modules["unknown_alias"]=module\n'
+            'sys.argv='+repr(args)+'\nrunpy.run_path('+repr(args[0])+',run_name="__main__")\n')
+        code,_,error=launch(args,wrapper)
+>       assert code!=0 and not marker.exists(),error.decode()
+E       AssertionError: 
+E       assert (0 != 0)
+
+/tmp/qwen-observer-bootstrap-pathlike-review-20261104/negative-v1/test_entry.py:57: AssertionError
+=========================== short test summary info ============================
+FAILED ../../tmp/qwen-observer-bootstrap-pathlike-review-20261104/negative-v1/test_entry.py::test_pathlike_preloaded_alias_rejected_before_helper[False-file]
+FAILED ../../tmp/qwen-observer-bootstrap-pathlike-review-20261104/negative-v1/test_entry.py::test_pathlike_preloaded_alias_rejected_before_helper[False-spec]
+FAILED ../../tmp/qwen-observer-bootstrap-pathlike-review-20261104/negative-v1/test_entry.py::test_pathlike_preloaded_alias_rejected_before_helper[True-file]
+FAILED ../../tmp/qwen-observer-bootstrap-pathlike-review-20261104/negative-v1/test_entry.py::test_pathlike_preloaded_alias_rejected_before_helper[True-spec]
+4 failed, 8 deselected in 0.25s

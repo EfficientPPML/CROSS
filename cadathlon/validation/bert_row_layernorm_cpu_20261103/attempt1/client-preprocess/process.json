@@ -1,0 +1,179 @@
+{
+  "passed": true,
+  "command": [
+    "/tmp/cross-pretrained-validation-env/bin/python",
+    "/tmp/bert-row-layernorm-candidate-20261103/prototype/assets.py",
+    "--snapshot",
+    "/home/jianming_gatech/cross_validation_assets/bert/f150c1d609d1e50dd5e2e5408661cfac8339277c",
+    "--private",
+    "/tmp/cross-bert-row-norm-component-wbc6eqb5/client_only",
+    "--model",
+    "/tmp/cross-bert-row-norm-component-wbc6eqb5/model"
+  ],
+  "timeout_s": null,
+  "cleanup_grace_s": 30.0,
+  "owned_public_key_directory": "/tmp/cross-transformer-case-ouo0oqwi",
+  "owned_public_key_directory_identity": {
+    "device": 66305,
+    "inode": 2366136
+  },
+  "pid": 990421,
+  "returncode": 0,
+  "result": {
+    "schema": "bert-row-norm-preprocessing-v1",
+    "scope": "Actual native attention and MLP pre-LayerNorm rows0/1 of the fixed128-token pair; trusted isolated component fixtures beyond the embedding-only P2 client boundary. No encrypted/full-model accuracy or performance claim.",
+    "passed": true,
+    "rows": [
+      0,
+      1
+    ],
+    "shape": [
+      16384
+    ],
+    "full_native_shape": [
+      1,
+      128,
+      768
+    ],
+    "public_pair": [
+      "The committee approved the proposal.",
+      "The committee approved the proposal."
+    ],
+    "public_pair_sha256": "508f37a62fd99f5c9bf9824b58be50f3f4a923fb04cefa4af670f2b215793cee",
+    "tokenization_sha256": "03e5df9ab51acca03e137e974d7d591bbad970fe1142983b2b76af918d6f1ab5",
+    "asset_sha256": {
+      "config.json": "ec2b6cd6ce741dda6c972aea96f9d1a449cbb4b5349e688c5370a9b2f6872d30",
+      "model.safetensors": "e1f8085ef673c9eb8a1a93a84270742e8aa0ccbceadef01eef15e26c44b46034",
+      "tokenizer.json": "5b3360be30cdf39081153cf9d30bfb0503c011462fc9f77f097127c83ef0f4d9",
+      "tokenizer_config.json": "0f6d13e6f4da6f9e24f22ada6bc3be571123d858d7c0c05a8a7cd55a9c23c2e8",
+      "vocab.txt": "eeaa9875b23b04b4c54ef759d03db9d1ba1554838f8fb26c5d96fa551df93d02"
+    },
+    "model_revision": "f150c1d609d1e50dd5e2e5408661cfac8339277c",
+    "model_manifest_sha256": "e8ac7f28b474dd69c89303a029ee9fe779368174d635f5696899fec486d99a3e",
+    "rules": {
+      "attention": {
+        "domain": [
+          0.3175095347982688,
+          1.1853786301897118
+        ],
+        "degree": 12,
+        "coefficients": [
+          1.2429420296416187,
+          -0.4004137295322647,
+          0.095900127641538,
+          -0.02546403178033641,
+          0.007093123515549787,
+          -0.0020313635162497253,
+          0.000592372486320156,
+          -0.00017495872082950493,
+          5.2165431470865905e-05,
+          -1.566660408873233e-05,
+          4.729300160682236e-06,
+          -1.424046420789749e-06,
+          3.967468295485889e-07
+        ],
+        "epsilon": 1e-12
+      },
+      "mlp": {
+        "domain": [
+          1.0641702295685478,
+          7.77505592596739
+        ],
+        "degree": 16,
+        "coefficients": [
+          0.5551213550007985,
+          -0.2628767104028714,
+          0.09158229074479785,
+          -0.03527778669268927,
+          0.01424015980086766,
+          -0.005906415747222333,
+          0.002493724872956331,
+          -0.0010661468313961134,
+          0.00046008063004242814,
+          -0.0001999768423111877,
+          8.742062473043757e-05,
+          -3.8393880799241136e-05,
+          1.6924275627730217e-05,
+          -7.477237523286432e-06,
+          3.2958320504294735e-06,
+          -1.418485562297294e-06,
+          5.269087600090789e-07
+        ],
+        "epsilon": 1e-12
+      }
+    },
+    "source_module_tensor_sha256": {
+      "bert.embeddings.word_embeddings.weight": "b08bac26e8a48d18129ec7d70f7be4776a98f87e03bc00c01db27b3905b7ea41",
+      "bert.embeddings.position_embeddings.weight": "ff2253ccc63feaa0ee1870f74f69dfb3a61fa94e2d677ae4c24bcb68562cd34f",
+      "bert.embeddings.token_type_embeddings.weight": "194e41f31daf29ea7e24f492dc49612f7fb15876b6f5438157d8a8efffb61c8c",
+      "bert.embeddings.LayerNorm.weight": "096a64defcc83f314a68cb1c87a247170d3f06b2fecbbe500f60dba56a19a879",
+      "bert.embeddings.LayerNorm.bias": "ec11028ce02dec2f009cc8e5bb47af80e4a2e235f01a01de88bd42c8195dcd20",
+      "bert.encoder.layer.0.attention.self.query.weight": "1a8914c482024a643b1503123f2c1bac81ce565d0ab7c98f06d8951d8b277f47",
+      "bert.encoder.layer.0.attention.self.query.bias": "85b53d121a7751dbd243a12ce73c6be48132471667f817fde6020e1baaaed9c4",
+      "bert.encoder.layer.0.attention.self.key.weight": "854e6ccfbdd78eb9108127baaf3374ec8a69120994aae532b1985cab67103981",
+      "bert.encoder.layer.0.attention.self.key.bias": "aee8e9d6fb2d9f305221ee344c00e6a026bac065717dfd5191d86bcf8b0cdc4f",
+      "bert.encoder.layer.0.attention.self.value.weight": "d21b08742d7d298ef2139215a704546011010b5ed40fd315ae430af9b50eb174",
+      "bert.encoder.layer.0.attention.self.value.bias": "dab39da7473f97300c2380a0cff1028e91062f1da40efa95fc3c419cfa19cff9",
+      "bert.encoder.layer.0.attention.output.dense.weight": "e00c6a53896c0ed3d2a4fe73edd1313952d23e80bfc88e40402b2b9fd2df3e70",
+      "bert.encoder.layer.0.attention.output.dense.bias": "b80a500392b9bff59848d76a2d89d77a43cb132747beb292261f7b07bad800f3",
+      "bert.encoder.layer.0.attention.output.LayerNorm.weight": "75757855791f359399f2b35e7fb16db0bc93d08a3476cf7fdd8c523027029d03",
+      "bert.encoder.layer.0.attention.output.LayerNorm.bias": "2c76aba351fd94b34a299abf2cf8e2d12d2b903bf63f00e66bea6ed20773cc0d",
+      "bert.encoder.layer.0.intermediate.dense.weight": "9a0c8aa79b2bac48fc35f37b6695d253080f7eedd556b70b65411aab9c319fd3",
+      "bert.encoder.layer.0.intermediate.dense.bias": "b279856af79c545cdb2f914e02e9a953204152319f160e484ebfcc8d6b825774",
+      "bert.encoder.layer.0.output.dense.weight": "754a718ad071ca9ec27790aee1b82dc9db41cc3ef90c6c73a90ada8668f6fa0d",
+      "bert.encoder.layer.0.output.dense.bias": "744629ad72bdc326f22cd92c6429610c06ed41dd3a2fedd307d3f01f861638b9",
+      "bert.encoder.layer.0.output.LayerNorm.weight": "e10771889f781626f1a16ea0ad106b3f88ee65df412cd0021b37bdf3c93c007e",
+      "bert.encoder.layer.0.output.LayerNorm.bias": "5ca80117e32d77fbf91306d6bce9dc1a4b93548c158312825d493346857d6a2d"
+    },
+    "input_sha256": {
+      "attention_input.npy": "0ddb34b51073d9d44295464b2fd12771fa7a42c837cdeea174397e5ab70283af",
+      "mlp_input.npy": "80ee63136c7bdbd72f447a198c036dc2e9cd46a171d21841ce241542fbb0dedb"
+    },
+    "private_reference_sha256": {
+      "attention_mean_expected.npy": "e8f99a6ad7e7be3ed86a3c43e7cabb8ac1cc2f35285e24c38841732fb4a42cc3",
+      "attention_variance_expected.npy": "d4db7b68978a5f7492fb541ece2ae7e07cf837f782f788a85326433326bc3649",
+      "attention_inverse_expected.npy": "e19d1f9778d05995b725c35b9be729b780e9219c487171676bbf98539320b485",
+      "attention_output_expected.npy": "1cb5ac8a2dd3ccbcf0b668cef1f56ecf3d0fd555dc5c3476047c6b9eaa5ced8c",
+      "mlp_mean_expected.npy": "eef883e05e75059b485d0adf59dc8c2cb71c183b9e83c868a9550284d0f0c4e7",
+      "mlp_variance_expected.npy": "19eea89ac87d1542ecc4c6587edaaefa9e85de92fc41d805580324f45e56da38",
+      "mlp_inverse_expected.npy": "b9339a8897020bb442c46468686d626847aff6e32120c7aef9faa3590900d6ba",
+      "mlp_output_expected.npy": "7f6e3a2cededf0ac7989672540bdc4b286c907de84978d2d0c58bb979725bb62"
+    },
+    "records": {
+      "attention": {
+        "variance_range": [
+          0.4886805279882317,
+          0.974947667427482
+        ],
+        "domain_violations": 0,
+        "padding_seed": 20262305,
+        "exact_numpy_vs_native_max_abs": 7.105427357601002e-15,
+        "polynomial_vs_native_max_abs": 2.6503966310542637e-06,
+        "polynomial_vs_native_nrmse": 6.267378873626986e-08
+      },
+      "mlp": {
+        "variance_range": [
+          3.7528750168187384,
+          6.4713259252052975
+        ],
+        "domain_violations": 0,
+        "padding_seed": 20262705,
+        "exact_numpy_vs_native_max_abs": 8.881784197001252e-16,
+        "polynomial_vs_native_max_abs": 3.83900168010598e-06,
+        "polynomial_vs_native_nrmse": 2.007751165532104e-07
+      }
+    },
+    "versions": {
+      "numpy": "2.5.4",
+      "torch": "2.15.0+cpu",
+      "transformers": "4.51.3",
+      "tokenizers": "0.21.4",
+      "safetensors": "0.8.0"
+    },
+    "elapsed_s": 2.95660436199978
+  },
+  "process_reaped": true,
+  "public_key_store_removed": true,
+  "owned_directory_handle_closed": true,
+  "process_elapsed_s": 3.7253775719946134
+}

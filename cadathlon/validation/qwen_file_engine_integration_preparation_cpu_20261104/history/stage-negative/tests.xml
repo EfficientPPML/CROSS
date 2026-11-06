@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="12" time="55.741" timestamp="2026-11-04T11:52:34.168650+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_stage_boundaries" name="test_joined335_loader_engine38_writer_closes_consumers_before_key_retirement" time="8.822" /><testcase classname="test_stage_boundaries" name="test_late_publisher_close_error_after_manifest_then_consumer_cancellation[KeyboardInterrupt]" time="8.814" /><testcase classname="test_stage_boundaries" name="test_late_publisher_close_error_after_manifest_then_consumer_cancellation[SystemExit]" time="8.747" /><testcase classname="test_stage_boundaries" name="test_genuine_publication_body_preserves_identity_through_cleanup_and_loader" time="1.196" /><testcase classname="test_stage_boundaries" name="test_engine_uses_same_selected_exception_for_quarantine_and_propagation[KeyboardInterrupt]" time="0.616" /><testcase classname="test_stage_boundaries" name="test_engine_uses_same_selected_exception_for_quarantine_and_propagation[SystemExit]" time="0.615" /><testcase classname="test_stage_boundaries" name="test_full_identity_failure_precedes_key_directory_and_factories" time="0.306" /><testcase classname="test_stage_boundaries" name="test_actual_role_factories_still_deny_without_touching_arguments" time="0.000" /><testcase classname="test_stage_boundaries" name="test_all_selected_finalizers_and_cleanup_modules_are_explicitly_one_identity" time="0.005" /><testcase classname="test_stage_boundaries" name="test_close_accessor_replacement_is_rejected_and_original_cleanup_runs" time="8.801"><failure message="Failed: DID NOT RAISE ValueError">public = PublicContract(blobs=(('inputs/actual_key_plan.json', b'{\n  "actual_matrix_keys": [\n    1,\n    64,\n    128,\n    6...3783d73884fae4c9ed105995b5c051ecf0e742200ca5ca0fb46"\n    }\n  },\n  "schema": "qwen-qkv-public-parameters-v1"\n}\n')))
+profile = PublicProfile(profile_bytes=b'{\n  "scope": "Public actual-prime/resource audit for depth49 p60; no CKKS context/keyge...time key store or full HE readiness.",\n  "vocabulary_blocks": 38,\n  "vocabulary_rotation_calls_last_row": 6226\n}\n')
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-703/test_close_accessor_replacemen0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7a973428a550&gt;
+
+    def test_close_accessor_replacement_is_rejected_and_original_cleanup_runs(public,profile,tmp_path,monkeypatch):
+        from dataclasses import replace
+        env,s,c,fac,_=environment(public,profile,tmp_path,monkeypatch)
+        old=fac.publisher
+        def output(handle,digest):
+            out=old(handle,digest);write=out.write_ciphertext
+            def replaced(*args):
+                row=write(*args);s.case.params.close=lambda primary=None:None;return row
+            out.write_ciphertext=replaced;return out
+        fac=replace(fac,publisher=output)
+&gt;       with pytest.raises(ValueError):stage.server_for_recording(env.admission,env.public,c,key_dependencies=env.dependencies,factories=fac)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_stage_boundaries.py:163: Failed</failure></testcase><testcase classname="test_stage_boundaries" name="test_handle_mutation_after_finish_is_rejected_before_key_retirement" time="8.772"><failure message="Failed: DID NOT RAISE ValueError">public = PublicContract(blobs=(('inputs/actual_key_plan.json', b'{\n  "actual_matrix_keys": [\n    1,\n    64,\n    128,\n    6...3783d73884fae4c9ed105995b5c051ecf0e742200ca5ca0fb46"\n    }\n  },\n  "schema": "qwen-qkv-public-parameters-v1"\n}\n')))
+profile = PublicProfile(profile_bytes=b'{\n  "scope": "Public actual-prime/resource audit for depth49 p60; no CKKS context/keyge...time key store or full HE readiness.",\n  "vocabulary_blocks": 38,\n  "vocabulary_rotation_calls_last_row": 6226\n}\n')
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-703/test_handle_mutation_after_fin0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7a9734336d50&gt;
+
+    def test_handle_mutation_after_finish_is_rejected_before_key_retirement(public,profile,tmp_path,monkeypatch):
+        from dataclasses import replace
+        env,s,c,fac,_=environment(public,profile,tmp_path,monkeypatch);old=fac.publisher
+        def output(handle,digest):
+            out=old(handle,digest);finish=out.finish
+            def replaced():raw=finish();handle.public=object();return raw
+            out.finish=replaced;return out
+        fac=replace(fac,publisher=output)
+&gt;       with pytest.raises(ValueError):stage.server_for_recording(env.admission,env.public,c,key_dependencies=env.dependencies,factories=fac)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_stage_boundaries.py:174: Failed</failure></testcase><testcase classname="test_stage_boundaries" name="test_factory_mutation_during_cleanup_is_rejected_before_loader_return" time="8.792"><failure message="Failed: DID NOT RAISE ValueError">public = PublicContract(blobs=(('inputs/actual_key_plan.json', b'{\n  "actual_matrix_keys": [\n    1,\n    64,\n    128,\n    6...3783d73884fae4c9ed105995b5c051ecf0e742200ca5ca0fb46"\n    }\n  },\n  "schema": "qwen-qkv-public-parameters-v1"\n}\n')))
+profile = PublicProfile(profile_bytes=b'{\n  "scope": "Public actual-prime/resource audit for depth49 p60; no CKKS context/keyge...time key store or full HE readiness.",\n  "vocabulary_blocks": 38,\n  "vocabulary_rotation_calls_last_row": 6226\n}\n')
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-703/test_factory_mutation_during_c0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7a97342fde50&gt;
+
+    def test_factory_mutation_during_cleanup_is_rejected_before_loader_return(public,profile,tmp_path,monkeypatch):
+        from dataclasses import replace
+        env,s,c,fac,_=environment(public,profile,tmp_path,monkeypatch);old=fac.parameter_files;holder={}
+        def parameters(handle):
+            owner=old(handle);close=owner.close
+            def changed(primary=None):
+                close(primary=primary);object.__setattr__(holder['fac'],'engine_dependencies',lambda ctx:None)
+            owner.close=changed;return owner
+        fac=replace(fac,parameter_files=parameters);holder['fac']=fac
+&gt;       with pytest.raises(ValueError):stage.server_for_recording(env.admission,env.public,c,key_dependencies=env.dependencies,factories=fac)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_stage_boundaries.py:186: Failed</failure></testcase></testsuite></testsuites>

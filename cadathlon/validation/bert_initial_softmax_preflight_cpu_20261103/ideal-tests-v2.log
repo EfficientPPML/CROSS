@@ -1,0 +1,18 @@
+
+==================================== ERRORS ====================================
+______________________ ERROR collecting test_reduction.py ______________________
+ImportError while importing test module '/tmp/bert-initial-softmax-candidate-20261103/test_reduction.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+test_reduction.py:10: in <module>
+    from fixtures import public_fixtures,make_client_values,make_client_scores,client_oracles,mean_variation
+fixtures.py:5: in <module>
+    from public_schedule import PublicSchedule
+E   ModuleNotFoundError: No module named 'public_schedule'
+=========================== short test summary info ============================
+ERROR test_reduction.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 0.19s

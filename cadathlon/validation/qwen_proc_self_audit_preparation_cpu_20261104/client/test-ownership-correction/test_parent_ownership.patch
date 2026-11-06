@@ -1,0 +1,35 @@
+--- held472-unrun/test_kernel_allowlist.py
++++ ownership-successor472/test_kernel_allowlist.py
+@@ -65,14 +65,27 @@
+             except ProcessLookupError:pass
+             code=child.wait()
+         finally:
+-            if child.poll()is None:
+-                try:os.killpg(child.pid,signal.SIGKILL)
+-                except ProcessLookupError:pass
+-            child.wait()
++            primary=sys.exception()
++            try:
++                try:
++                    if child.poll()is None:
++                        try:os.killpg(child.pid,signal.SIGKILL)
++                        except ProcessLookupError:pass
++                except BaseException as cleanup:
++                    if primary is None:raise
++                    if cleanup is not primary:primary.add_note('owned child group cleanup: '+repr(cleanup))
++            finally:
++                # Attempt direct wait even if poll/killpg failed. Retain an
++                # active body or group-cleanup error if this wait also fails.
++                wait_primary=primary if primary is not None else sys.exception()
++                try:child.wait()
++                except BaseException as cleanup:
++                    if wait_primary is None:raise
++                    if cleanup is not wait_primary:wait_primary.add_note('owned child direct wait: '+repr(cleanup))
+     assert code==0,(tmp_path/'stderr.log').read_text()
+     report=json.loads(receipt.read_bytes())
+     assert report['passed']is True and report['pid']==child.pid
+-    assert type(report['pgid'])is int and report['pgid']>0
++    assert type(report['pgid'])is int and report['pgid']==child.pid
+     if observed_group is not None:assert report['pgid']==observed_group
+     assert absent(report['pgid'])
+     assert report['case']==case and report['baseline']is baseline

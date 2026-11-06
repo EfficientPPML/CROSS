@@ -1,0 +1,14 @@
+# Ordinary-group parity preparation — no encrypted execution
+
+The final v2 preflight passed **214 mocked/API/lifecycle checks**, **28 real installed entrypoint denials/restorations**, and authentication of the completed public stage1/stage2/stage3 prerequisite reports. All **258** source files matched before, after, current readback and the source archive. Session **42797** was observed exit 0 and reaped; the collector and all three child PIDs were subsequently absent. The final report has `actual_execution_attempted: false`. No retained key, ciphertext, private-reference or model array was read, and no context or genuine rotation was constructed.
+
+The candidate remains disabled by `group_dependencies.json` (`ready: false`). Root review, an explicitly frozen readiness successor and a separate grant are required before actual execution. The retained source archive contains the complete candidate; `review_sources/` provides convenient exact copies of the new orchestration and tests. The only changed inherited runtime files are the reviewed raw rotation seam and the copied key loader's explicit grouped mode. The reviewed group owner itself is unchanged. Neither the independent prepared-parity run nor the actual stage4 source was edited.
+
+The proposed future comparison uses stage3 tile0 at L49 and a genuine Q-prefix reduction to L25, with fixed 11- and 15-nonzero groups plus zero/duplicate cases. It requires 66 ordered full-array comparisons, eight zero aliases, 58 nonzero comparison pairs, 116 original/grouped nonzero completions and six shared decompositions. Each group is bounded by 16 requests, 2 GiB logical results and 512 MiB logical digits; excluded memory is listed in `DESIGN.md`. This is not a measured memory-fit, accuracy or performance claim.
+
+The exact failed preflight v1 is retained: the inherited process helper default selected TPU, but the new child's CPU guard rejected that environment before imports. The final driver explicitly supplies and restores a CPU-only child override. Separately, the earlier development public-profile check omitted CPU selection and backend initialization was rejected because the TPU was busy; its source capsule and failure log are retained. That development failure ran no context, key or ciphertext operation. The public profile function now rejects missing CPU selection before backend-dependent imports. Earlier loader test-setup failures and their logs are retained as development evidence, not final successes.
+
+Final source archive SHA256: `251a8bc6d8f555d0cb54539158475440d9d4f750649545daa4aa9e933817b5fa`.
+Final report SHA256: `67aaba20f6810663159858e74ec51414bbf5420bc566e207099f133a4ee9c350`.
+
+Run `python verify_archive.py` for a portable read-only verification. It does not import the runtime or read external payloads. The original lab is `/tmp/bert-ordinary-group-parity-20261103`; its measured source files remain frozen.

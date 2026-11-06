@@ -1,0 +1,46 @@
+FF................F                                                      [100%]
+=================================== FAILURES ===================================
+___________________ test_ordered_subsets_exact_and_lifecycle ___________________
+
+    def test_ordered_subsets_exact_and_lifecycle():
+        owner=make_owner();provider=ScopedNTTSubsets(owner,max_entries=2);device=jax.devices()[0]
+        choices=[owner.q_towers[:-1],owner.q_towers[1:]+owner.p_towers,
+                 [owner.p_towers[1],owner.q_towers[2],owner.q_towers[0],owner.p_towers[0]]]
+        retained=[]
+        for moduli in choices:
+            p=params(owner,moduli);actual=provider.get(moduli,p,device=device)
+>           assert actual is not None
+E           assert None is not None
+
+/tmp/ntt-subset-candidate/test_scoped_ntt.py:32: AssertionError
+______________ test_owner_not_retained_and_replacement_falls_back ______________
+
+    def test_owner_not_retained_and_replacement_falls_back():
+        owner=make_owner();provider=ScopedNTTSubsets(owner);device=jax.devices()[0]
+        moduli=owner.q_towers[:2]
+        actual=provider.get(moduli,params(owner,moduli),device=device)
+        owner_ref=weakref.ref(owner);master_ref=weakref.ref(owner.ntt_q_max)
+        del owner
+        jax.clear_caches();ntt._barrett_ntt_context_cache.clear();gc.collect()
+        assert owner_ref() is None and master_ref() is None
+        assert provider.get(moduli,{'r':16,'c':16,'finite_field_context':he_params.BarrettContext(moduli)},device=device) is None
+>       assert actual.ntt_tf_step2.shape[-1]==2
+               ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'NoneType' object has no attribute 'ntt_tf_step2'
+
+/tmp/ntt-subset-candidate/test_scoped_ntt.py:58: AttributeError
+___________________ test_mutated_cached_field_is_not_reused ____________________
+
+    def test_mutated_cached_field_is_not_reused():
+        owner=make_owner();provider=ScopedNTTSubsets(owner);device=jax.devices()[0];moduli=owner.q_towers[:2]
+        actual=provider.get(moduli,params(owner,moduli),device=device)
+>       actual.ff_ctx.m=jax.numpy.zeros_like(actual.ff_ctx.m)
+                                             ^^^^^^^^^^^^^
+E       AttributeError: 'NoneType' object has no attribute 'ff_ctx'
+
+/tmp/ntt-subset-candidate/test_scoped_ntt.py:87: AttributeError
+=========================== short test summary info ============================
+FAILED ../../tmp/ntt-subset-candidate/test_scoped_ntt.py::test_ordered_subsets_exact_and_lifecycle
+FAILED ../../tmp/ntt-subset-candidate/test_scoped_ntt.py::test_owner_not_retained_and_replacement_falls_back
+FAILED ../../tmp/ntt-subset-candidate/test_scoped_ntt.py::test_mutated_cached_field_is_not_reused
+3 failed, 16 passed in 1.08s

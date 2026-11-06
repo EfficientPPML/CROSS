@@ -1,0 +1,12 @@
+--- parent199/test_full_plan.py
++++ current208/test_full_plan.py
+@@ -39,7 +39,8 @@
+     assert all(x['physical_row']==0 and x['input_level']==3 and x['output_level']==2 for x in b)
+     assert report['resources']['rotation_keys']==166 and 262143 in report['resources']['rotation_indices']
+     assert report['resources']['all38_final_ciphertext_bytes']==228*1024**2
+-    assert report['workloads'][-1]['refresh_counts']['total']==12931
++    assert report['workloads'][-1]['refresh_counts']['total']==5035
++    assert report['workloads'][-1]['refresh_counts']['literal_reference_total']==12931
+     assert report['reference']['executed'] is False
+ 
+ def test_actual_final_scale_examples(report):

@@ -1,0 +1,36 @@
+FFFF                                                                     [100%]
+=================================== FAILURES ===================================
+___ test_startup_never_publishes_in_borrowed_private_root[bootstrap-fixture] ___
+/tmp/bert-separate-client-output-review-20261104/negative-v1/test_output_ownership.py:26: in test_startup_never_publishes_in_borrowed_private_root
+    assert not output.exists(),'standalone startup failure published inside borrowed private tree'
+E   AssertionError: standalone startup failure published inside borrowed private tree
+E   assert not True
+E    +  where True = exists()
+E    +    where exists = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-531/test_startup_never_publishes_i0/private-fixture/new-report.json').exists
+__ test_startup_never_publishes_in_borrowed_private_root[bootstrap-reference] __
+/tmp/bert-separate-client-output-review-20261104/negative-v1/test_output_ownership.py:26: in test_startup_never_publishes_in_borrowed_private_root
+    assert not output.exists(),'standalone startup failure published inside borrowed private tree'
+E   AssertionError: standalone startup failure published inside borrowed private tree
+E   assert not True
+E    +  where True = exists()
+E    +    where exists = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-531/test_startup_never_publishes_i1/private-reference/new-report.json').exists
+___ test_startup_never_publishes_in_borrowed_private_root[services-fixture] ____
+/tmp/bert-separate-client-output-review-20261104/negative-v1/test_output_ownership.py:26: in test_startup_never_publishes_in_borrowed_private_root
+    assert not output.exists(),'standalone startup failure published inside borrowed private tree'
+E   AssertionError: standalone startup failure published inside borrowed private tree
+E   assert not True
+E    +  where True = exists()
+E    +    where exists = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-531/test_startup_never_publishes_i2/private-fixture/new-report.json').exists
+__ test_startup_never_publishes_in_borrowed_private_root[services-reference] ___
+/tmp/bert-separate-client-output-review-20261104/negative-v1/test_output_ownership.py:26: in test_startup_never_publishes_in_borrowed_private_root
+    assert not output.exists(),'standalone startup failure published inside borrowed private tree'
+E   AssertionError: standalone startup failure published inside borrowed private tree
+E   assert not True
+E    +  where True = exists()
+E    +    where exists = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-531/test_startup_never_publishes_i3/private-reference/new-report.json').exists
+=========================== short test summary info ============================
+FAILED ../../tmp/bert-separate-client-output-review-20261104/negative-v1/test_output_ownership.py::test_startup_never_publishes_in_borrowed_private_root[bootstrap-fixture]
+FAILED ../../tmp/bert-separate-client-output-review-20261104/negative-v1/test_output_ownership.py::test_startup_never_publishes_in_borrowed_private_root[bootstrap-reference]
+FAILED ../../tmp/bert-separate-client-output-review-20261104/negative-v1/test_output_ownership.py::test_startup_never_publishes_in_borrowed_private_root[services-fixture]
+FAILED ../../tmp/bert-separate-client-output-review-20261104/negative-v1/test_output_ownership.py::test_startup_never_publishes_in_borrowed_private_root[services-reference]
+4 failed in 0.07s

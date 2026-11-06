@@ -1,0 +1,231 @@
+"""One actual secure CPU factored score map and inverse; no bootstrap/full-block claim."""
+from pathlib import Path
+from collections import Counter
+from datetime import datetime,timezone
+import argparse,gc,hashlib,importlib.metadata,io,json,math,os,resource,shutil,signal,sys,tarfile,tempfile,time
+if os.environ.get('JAX_PLATFORMS')!='cpu':raise RuntimeError('explicit CPU backend required')
+HERE=Path(__file__).resolve().parent;ROOT=HERE/'checkout'
+sys.path[:0]=[str(ROOT),str(ROOT/'cadathlon/common'),str(HERE)]
+import jax,numpy as np
+from jaxite_word import CKKSContext,ckks_ctx,he_params,key_gen,util
+from jaxite_word.composite_prime_gen import composite_prime_gen
+from encrypted_ntt import enable_scoped_ntt_subsets
+from encrypted_packed_qwen import CompiledArithmetic
+from encrypted_refresh import ClientRotationKeyStore
+from support import require_secure_execution
+from score_layout import ScoreMap,SLOTS,POSITIONS,ROW_INDEX
+jax.config.update('jax_enable_x64',True)
+
+
+def sources():
+    paths={Path(__file__),HERE/'score_layout.py',*(HERE/'input_patches').glob('*.patch')}
+    for folder in ('jaxite_word','cadathlon/common'):paths.update((ROOT/folder).glob('*.py'))
+    return {str(p.relative_to(HERE)):p.read_bytes() for p in sorted(paths)}
+
+
+def write(path,value):
+    temporary=path.with_suffix('.tmp')
+    temporary.write_text(json.dumps(value,indent=2,allow_nan=False)+'\n');temporary.replace(path)
+
+
+def parameters():
+    degree,depth,dnum=131072,18,4
+    q=composite_prime_gen(2,2*(depth+1),61,56,2*degree,31)
+    p=util.generate_p_towers(q,dnum,degree,aux_bits=30)
+    assert len(q)==38
+    assert he_params.qp_is_secure(q,p,degree,he_params.SecurityTarget(128,'classical'))
+    he_params.assert_p_coverage(q,p,dnum)
+    mapping=ScoreMap(7,15);zeros=np.zeros(SLOTS)
+    mapping.apply(zeros);mapping.inverse(zeros)
+    rotations=sorted(mapping.rotations)
+    assert len(rotations)==18
+    shape=(4,len(q)+len(p),degree)
+    required=len(rotations)*(2*math.prod(shape)*4+8192)
+    return dict(degree=degree,depth=depth,dnum=dnum,q_towers=q,p_towers=p,slots=SLOTS,
+        degree_layout=[256,512],actual_log2_qp=sum(map(math.log2,q+p)),security_bits=128,
+        scale=float(q[-2])*q[-1],rotation_indices=rotations,key_pair_shape=list(shape),
+        required_public_key_bytes=required,key_storage_parent='/tmp',
+        current_key_storage_free_bytes=shutil.disk_usage('/tmp').free,
+        key_tile=7,offset=15,expected_counts=dict(mapping.counts))
+
+
+class EncryptedMap:
+    """Exactly split public masks, rotate the masked branch, then add."""
+    def __init__(self,arithmetic,progress):
+        self.arithmetic=arithmetic;self.mapping=ScoreMap(7,15);self.counts=Counter();self.progress=progress
+    def mask(self,value,mask):
+        result=self.arithmetic.weighted_sum([value],[mask.astype(np.float64)])
+        self.counts['public_multiplications']+=1
+        self.counts['actual_composite_rescales']+=1
+        assert self.arithmetic._level(result)==self.arithmetic._level(value)-1
+        assert result._ckks_nsd==1 and math.isclose(result._ckks_scale,self.arithmetic.scale,rel_tol=1e-12)
+        return result
+    def rotate(self,value,shift):
+        shift=int(shift)%SLOTS
+        if not shift:return value
+        result=self.arithmetic.rotate(value,shift);self.counts['rotations']+=1
+        return result
+    def route(self,value,selector,shift,label):
+        left=self.mask(value,~selector);right=self.mask(value,selector)
+        right=self.rotate(right,shift)
+        result=self.arithmetic.add(left,right)
+        self.counts['additions']+=1;self.counts['public_multiplication_levels']+=1
+        self.progress(label,result,self.counts)
+        return result
+    def apply(self,value):
+        result=self.mask(value,self.mapping.source_mask);self.counts['public_multiplication_levels']+=1
+        self.progress('forward source mask',result,self.counts)
+        for bit in range(4):
+            result=self.route(result,(POSITIONS&(1<<(6+bit)))!=0,63*(1<<bit),f'forward head bit {bit}')
+        for bit in range(4):
+            result=self.route(result,(((ROW_INDEX+15)%16)&(1<<bit))!=0,-16*(1<<bit),f'forward key bit {bit}')
+        result=self.rotate(result,-256*7);self.progress('forward tile shift',result,self.counts)
+        return result
+    def inverse(self,value):
+        result=self.mask(value,self.mapping.target_mask);self.counts['public_multiplication_levels']+=1
+        result=self.rotate(result,256*7);self.progress('inverse target mask and tile shift',result,self.counts)
+        for bit in reversed(range(4)):
+            result=self.route(result,(((ROW_INDEX+15)%16)&(1<<bit))!=0,16*(1<<bit),f'inverse key bit {bit}')
+        for bit in reversed(range(4)):
+            result=self.route(result,(POSITIONS&(1<<bit))!=0,-63*(1<<bit),f'inverse head bit {bit}')
+        return result
+
+
+def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--output',type=Path,required=True);parser.add_argument('--preflight',action='store_true')
+    args=parser.parse_args();args.output.mkdir(parents=True,exist_ok=False)
+    raw=sources();before={n:hashlib.sha256(v).hexdigest() for n,v in raw.items()}
+    with tarfile.open(args.output/'sources.tar.gz','w:gz') as archive:
+        for name,data in raw.items():
+            info=tarfile.TarInfo(name);info.size=len(data);archive.addfile(info,io.BytesIO(data))
+    started=time.monotonic();report=dict(scope=__doc__,passed=False,cpu_only=True,
+        source_hashes_before=before,started_utc=datetime.now(timezone.utc).isoformat(),
+        fixed_absolute_error_gate=1e-6,checks={},phases=[],cpu_affinity=sorted(os.sched_getaffinity(0)),
+        versions={n:importlib.metadata.version(n) for n in ('jax','jaxlib','numpy')},
+        environment={n:os.environ.get(n) for n in ('JAX_PLATFORMS','OMP_NUM_THREADS','OPENBLAS_NUM_THREADS','MKL_NUM_THREADS')},
+        opt_ins=dict(ntt_subsets=True,preserve_dispatch_cache=True,compiled_linear=True,compiled_rotation=True),
+        limitations=['One public input and one tile/offset map only.','No bootstrap, complete attention, full block or encrypted model claim.','Client and keyless server are separate objects in one isolated process, not an OS sandbox.'])
+    write(args.output/'report.json',report)
+    client=server=ops=provider=key_store=key_parent=encrypted=forward=backward=router=None
+    keys=evaluation=None;patched=[];old_handlers={}
+    def interrupted(signum,frame):
+        for number in old_handlers:signal.signal(number,signal.SIG_IGN)
+        raise KeyboardInterrupt(f'interrupted by signal {signum}')
+    for number in (signal.SIGTERM,signal.SIGINT,signal.SIGHUP):
+        old_handlers[number]=signal.signal(number,interrupted)
+    def phase(label,value=None,counts=None):
+        if value is not None:value.polynomial.block_until_ready()
+        row=dict(label=label,elapsed_s=time.monotonic()-started,peak_host_rss_kib=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+        if value is not None:row.update(level=ops._level(value),scale=value._ckks_scale,nsd=getattr(value,'_ckks_nsd',None))
+        if counts is not None:row['counts']=dict(counts)
+        report['phases'].append(row);write(args.output/'report.json',report);print(json.dumps(row),flush=True)
+    try:
+        ring=parameters();report['ring']=ring
+        if ring['current_key_storage_free_bytes']<ring['required_public_key_bytes']+256*1024**2:
+            raise ValueError('insufficient free disk for the complete owned public key store plus256MiB')
+        assert jax.default_backend()=='cpu' and all(d.platform=='cpu' for d in jax.devices())
+        phase('parameter and key-storage preflight passed')
+        if args.preflight:
+            report['preflight_only']=True;report['passed']=True
+        else:
+            q,p,N,dnum=ring['q_towers'],ring['p_towers'],ring['degree'],ring['dnum']
+            scale=ring['scale'];rotations=ring['rotation_indices']
+            key_parent=tempfile.TemporaryDirectory(prefix='cross-score-map-keys-',dir=ring['key_storage_parent'])
+            report['owned_public_key_parent']=key_parent.name
+            phase('client key generation started')
+            keys=key_gen.gen_pke_pair(q,[],N)
+            evaluation=key_gen.gen_evaluation_key(keys['secret_key'],q=q,P=p,dnum=dnum)
+            phase('client public and relinearization keys ready; generating18rotation keys')
+            key_store=ClientRotationKeyStore.generate(keys['secret_key'],q,p,degree=N,dnum=dnum,rotations=rotations,directory=key_parent.name)
+            report['public_key_storage_bytes']=sum(path.stat().st_size for path in Path(key_parent.name).rglob('*.npy'))
+            params=dict(degree=N,num_slots=SLOTS,scaling_factor=scale,output_scale=scale,
+                q_towers=q,p_towers=p,composite_degree=2,degree_layout=(256,512),p=56,
+                CKKS_M_FACTOR=1,max_bits_in_word=61,noise_scale_degree=1)
+            client=CKKSContext(dict(params,**keys))
+            server=CKKSContext(dict(params,evaluation_key=[jax.numpy.asarray(evaluation[name],dtype='uint32').transpose(0,2,1) for name in ('a','b')]))
+            def forbidden(*a,**kw):raise AssertionError('server secret-key generation/encryption/decryption forbidden')
+            for module in {key_gen,sys.modules.get('key_gen')}-{None}:
+                for name in ('gen_pke_pair','gen_evaluation_key','gen_rotation_key','key_switch_gen'):
+                    patched.append((module,name,getattr(module,name)));setattr(module,name,forbidden)
+            server.program_initialization(rotations,dnum=dnum,r=256,c=512,batch=1,pregenerated_rotation_keys=key_store.keys)
+            assert server.secret_key is None and server._param_cache.secret_key is None and server.parameters.get('secret_key') is None
+            for name in ('encrypt','decrypt','encrypt_slots','decrypt_slots','encrypt_slots_batch','decrypt_slots_batch'):setattr(server,name,forbidden)
+            client._polynomial_ntt_ctx=server._param_cache.ntt_q_max
+            provider=enable_scoped_ntt_subsets(server)
+            ops=CompiledArithmetic(server,low_memory=True,preserve_dispatch_cache=True)
+            report['key_generation_guards']=sorted({module.__name__ for module,_,_ in patched})
+            assert set(report['key_generation_guards'])=={'jaxite_word.key_gen','key_gen'}
+            report['keyless_server']=True;keys=evaluation=None
+            phase('keyless server initialized; optional scoped tables and guarded dispatch enabled')
+            mapping=ScoreMap(7,15);rng=np.random.default_rng(20261103)
+            values=rng.uniform(4.,8.,SLOTS)*np.where(np.arange(SLOTS)%2,-1.,1.)
+            values[mapping.source]=np.arange(192)/256.-.375
+            report['input_contract']=dict(public_seed=20261103,source_anchor_count=192,
+                hostile_inactive_padding=True,min_value=float(values.min()),max_value=float(values.max()),
+                fullslot_input_sha256=hashlib.sha256(values.astype('<f8').tobytes()).hexdigest())
+            encrypted=client.encrypt_slots(values);encrypted._ckks_nsd=1
+            require_secure_execution(server,encrypted)
+            phase('client input encrypted at level18',encrypted)
+            router=EncryptedMap(ops,phase)
+            forward=router.apply(encrypted)
+            expected=mapping.oracle(values);decoded=np.asarray(client.decrypt_slots(forward))
+            error=float(np.max(np.abs(decoded-expected)))
+            metadata=ops._level(forward)==9 and forward._ckks_nsd==1 and math.isclose(forward._ckks_scale,scale,rel_tol=1e-12)
+            report['checks']['forward']=dict(passed=bool(error<=1e-6 and metadata),max_abs_error=error,
+                inactive_max_abs=float(np.max(np.abs(decoded[~mapping.target_mask]))),metadata_ok=metadata,
+                level=ops._level(forward),slots_checked=SLOTS,execution_rings=require_secure_execution(server,forward))
+            phase('client forward oracle checked',forward,router.counts)
+            if not report['checks']['forward']['passed']:raise AssertionError('forward fixed error/metadata gate failed')
+            encrypted=None;decoded=expected=None;gc.collect()
+            backward=router.inverse(forward)
+            expected=values*mapping.source_mask;decoded=np.asarray(client.decrypt_slots(backward))
+            error=float(np.max(np.abs(decoded-expected)))
+            metadata=ops._level(backward)==0 and backward._ckks_nsd==1 and math.isclose(backward._ckks_scale,scale,rel_tol=1e-12)
+            report['checks']['roundtrip']=dict(passed=bool(error<=1e-6 and metadata),max_abs_error=error,
+                inactive_max_abs=float(np.max(np.abs(decoded[~mapping.source_mask]))),metadata_ok=metadata,
+                level=ops._level(backward),slots_checked=SLOTS,execution_rings=require_secure_execution(server,backward))
+            report['counts']=dict(router.counts)
+            for name,count in ring['expected_counts'].items():assert router.counts[name]==count,(name,router.counts)
+            assert router.counts['actual_composite_rescales']==34
+            report['provider_stats']=dict(provider.stats)
+            report['compile_counts']=dict(rotation=ops.rotation.compile_count,plaintext_multiply=ops._plaintext_multiply.compiler.compile_count,rescale=ops._rescale.compiler.compile_count)
+            phase('client roundtrip source-mask oracle checked',backward,router.counts)
+            report['passed']=all(row['passed'] for row in report['checks'].values()) and set(report['checks'])=={'forward','roundtrip'}
+    except BaseException as error:
+        report['passed']=False;report['error']=f'{type(error).__name__}: {error}'
+        raise
+    finally:
+        primary=sys.exception()
+        cleanup=[]
+        def attempt(label,fn):
+            try:return fn()
+            except BaseException as error:cleanup.append(f'{label}: {type(error).__name__}: {error}')
+        if provider is not None:attempt('provider.close',provider.close)
+        if ops is not None:
+            attempt('rotation.clear',lambda:ops.rotation.clear(executables=True))
+            for helper in (ops._plaintext_multiply,ops._rescale):attempt('compiled primitive clear',lambda:helper.clear(executables=True))
+            attempt('multiplication compiler clear',ops._multiplication_compiler.clear_executables)
+        for context in (server,client):
+            if context is not None:attempt('evict context caches',lambda:ckks_ctx.evict_context_caches(context))
+        context=None;keys=evaluation=encrypted=forward=backward=router=ops=server=client=None
+        attempt('jax.clear_caches',jax.clear_caches);attempt('gc.collect',gc.collect)
+        if key_store is not None:attempt('key_store.close',key_store.close)
+        if key_parent is not None:attempt('key_parent.cleanup',key_parent.cleanup)
+        for module,name,original in patched:attempt('restore key generation guard',lambda:setattr(module,name,original))
+        for number,handler in old_handlers.items():attempt('restore signal handler',lambda:signal.signal(number,handler))
+        data=attempt('source verification',sources)
+        after={n:hashlib.sha256(b).hexdigest() for n,b in data.items()} if data is not None else {}
+        report.update(source_hashes_after=after,source_files_unchanged=before==after,cleanup_errors=cleanup,
+            public_key_store_removed=key_parent is None or not Path(key_parent.name).exists(),
+            elapsed_s=time.monotonic()-started,peak_host_rss_kib=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
+            finished_utc=datetime.now(timezone.utc).isoformat())
+        report['passed']=bool(report['passed'] and before==after and not cleanup and report['public_key_store_removed'])
+        try:
+            write(args.output/'report.json',report)
+        except BaseException as publication_error:
+            if primary is None:raise
+            primary.add_note(f'Final report publication also failed: {type(publication_error).__name__}: {publication_error}')
+    return 0 if report['passed'] else 1
+
+if __name__=='__main__':raise SystemExit(main())

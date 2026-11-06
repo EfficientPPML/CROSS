@@ -1,0 +1,2480 @@
+{
+  "scope": "Training-only native domain collection. Labels are never read or used.",
+  "passed": true,
+  "completed_examples": 3668,
+  "training_labels_loaded": false,
+  "dataset": {
+    "dataset": "nyu-mll/glue",
+    "configuration": "mrpc",
+    "split": "train",
+    "revision": "bcdcba79d07bc864c1c254ccfcedcce55bcc9a8c",
+    "url": "https://huggingface.co/datasets/nyu-mll/glue/resolve/bcdcba79d07bc864c1c254ccfcedcce55bcc9a8c/mrpc/train-00000-of-00001.parquet",
+    "file": "train.parquet",
+    "bytes": 649281,
+    "sha256": "61fd41301e0e244b0420c4350a170c8e7cf64740335fc875a4af2d79af0df0af",
+    "api_entry": {
+      "type": "file",
+      "oid": "d9536e81cb28e8f3a431cbb43d2a0ef0e31de7ca",
+      "size": 649281,
+      "lfs": {
+        "oid": "61fd41301e0e244b0420c4350a170c8e7cf64740335fc875a4af2d79af0df0af",
+        "size": 649281,
+        "pointerSize": 131
+      },
+      "xetHash": "f3bd68beff2db7dc08d20b5869955e6775b9d5b8fcbefe7c229267d80266e71b",
+      "path": "mrpc/train-00000-of-00001.parquet",
+      "lastCommit": {
+        "id": "a3f3ab759b9d7018046ce361f115ef38276d2e1e",
+        "title": "Convert dataset to Parquet (#16)",
+        "date": "2024-01-04T11:54:16.000Z"
+      },
+      "securityFileStatus": {
+        "status": "safe",
+        "protectAiScan": {
+          "status": "unscanned"
+        },
+        "avScan": {
+          "status": "safe",
+          "message": "No security issues detected",
+          "reportLink": "https://fdtn.ai/ai-supply-chain/hugging-face?utm_source=huggingface"
+        },
+        "pickleImportScan": {
+          "status": "unscanned",
+          "pickleImports": [],
+          "version": "0.0.0"
+        },
+        "virusTotalScan": {
+          "status": "unscanned",
+          "message": "File not scanned in VirusTotal",
+          "reportLink": "https://www.virustotal.com/gui/file/61fd41301e0e244b0420c4350a170c8e7cf64740335fc875a4af2d79af0df0af?utm_source=huggingface"
+        }
+      }
+    }
+  },
+  "selection_protocol": {
+    "scope": "Prospective training-only native domain calibration and public analytic-function selection; not certified arbitrary-input bounds.",
+    "training_split": "nyu-mll/glue mrpc train all3668; labels not loaded",
+    "input_contract": "same pinned model/tokenizer; sequence128; padding=max_length; truncation=True; native float32 eager batch1",
+    "domain_rules": {
+      "inverse_sqrt": "[.8 * observed_positive_min, 1.2 * observed_max]",
+      "gelu_centered_scores_tanh": "[floor(min - .1*(max-min)), ceil(max + .1*(max-min))]"
+    },
+    "degree_candidates": [
+      8,
+      12,
+      16,
+      24,
+      32,
+      48,
+      64,
+      96,
+      128,
+      192,
+      256
+    ],
+    "public_analytic_grid_points": 16385,
+    "gelu_max_abs_target": 0.001,
+    "inverse_sqrt_max_relative_target": 1e-05,
+    "inverse_sqrt_newton_ideal_relative_target": 1e-06,
+    "tanh_max_abs_target": 0.0001,
+    "inverse_sqrt_method": "existing power degree<=32 and normalized monomial coefficient L1<=1e8, otherwise fixed Newton schedule from domain endpoints",
+    "gelu_method": "balanced Chebyshev on declared training-derived domain; no monomial conversion execution",
+    "softmax_method": "fixed degree8 exp[-.5,.5], squarings=ceil(log2(max(abs(domain))/.5)); normalize each square with public K-dependent reciprocal Newton count targeting1e-12 analytic relative error",
+    "pooler_method": "existing degree candidates8/12/16 tanh[-1,1] with fixed power-of-two domain reduction and rational doubling; public reciprocal domain[1,2.1]",
+    "validation_policy": "No validation labels or approximate validation outputs used to select domains/degrees/iterations. Freeze candidate bytes first; report every later gate/domain failure without automatic retuning.",
+    "limitations": [
+      "Empirical training ranges with fixed slack are not arbitrary-input guarantees.",
+      "Native ranges do not prove approximate or encrypted trajectory coverage.",
+      "Native audit at float32; planned approximate reference may use float64 and must compare unchanged original harness gates."
+    ]
+  },
+  "source_hashes_before": {
+    "/tmp/bert-mrpc-train-calibration-20261103/calibrate.py": "27ba1c3dc671bdf31286bd174474608288c814dab1ac464b8f58952cf2144530",
+    "/tmp/bert-mrpc-train-calibration-20261103/audit.py": "e3bb08cbf1ec0b0c77d9086ed8cbc8da896ffe3f8e98c26e85ce88267c522bfe",
+    "/tmp/bert-mrpc-train-calibration-20261103/test_audit.py": "d6958824f23aa5f95396d6a2739372e62376250caa6fbf4b1ac18428c915e0a9",
+    "/tmp/bert-mrpc-train-calibration-20261103/test_calibrate.py": "1e06d26b72cc40484be8551b18866965e5654bc37abb9496fe094d588b1b330b",
+    "/tmp/bert-mrpc-train-calibration-20261103/dataset_manifest.json": "0600cd315621ae30b7efa08857f9814b44e8d20e11667b43a7d3529e73c7d8ce",
+    "/tmp/bert-mrpc-train-calibration-20261103/selection_protocol.json": "823babec11289820dd09d904b2f93bd19bd789ae85af8f85120af1b0bdcb478b",
+    "/home/jianming_gatech/CROSS/cadathlon/validation/compose_pretrained_bert_arithmetic.json": "20dc8138fcf4cd0d0e24fa7ad97f590019de518749b191e482b51e2909cd703c",
+    "/home/jianming_gatech/CROSS/cadathlon/validation/plan_pretrained_bert_operators.json": "5375b528c861178c1f113a547c7048c49e466b9ac32ca1ad68292adbe219298c",
+    "/home/jianming_gatech/CROSS/cadathlon/validation/compose_pretrained_bert_arithmetic.py": "ae261ea18d3417d5b42d2e97bb71c7ce53c22f1d4c62e7130588f8611b530ce8",
+    "/home/jianming_gatech/CROSS/cadathlon/validation/check_pretrained_bert_domains.py": "d3463f03bdfcb1a0539bf8b6333a22b9fc776231815ed120bf31a29b73f08c40",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/src/stages.py": "957a65289589caa24b139dfef9ae0cc8b91c986890d0a9dfad12c9103bbd62e8",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/src/benchmark.py": "acb6c5679106e00dd1c482dd750ca4620423f13c9b37e7c7bbce1781b8e76aec",
+    "/home/jianming_gatech/BERT_validation/harness/generate_input.py": "634804f0235ca611de32e535d4e55139eda109d7620c20129586b68efc73cfe1",
+    "/home/jianming_gatech/BERT_validation/harness/generate_dataset.py": "4dc6d35336f8d609b9676752fd0a041a40b19c1dcde822b989e44e5e20a30d6d",
+    "/home/jianming_gatech/BERT_validation/harness/params.py": "e1e12436a385e1ca6f59f3c7b4ec0f4a4d3dc38c6ab9669125a66b4df6b9cd3b",
+    "/home/jianming_gatech/BERT_validation/harness/run_submission.py": "997fcf575999c6c0a35fa0561dd1a90d3f5565303bd1b6800c078511139f4590",
+    "/home/jianming_gatech/BERT_validation/harness/utils.py": "e73b7ba164e18da00b57a53f8245a1df29cbfc3fc5424a7e734c0a4c7e2dabae",
+    "/home/jianming_gatech/BERT_validation/harness/mrpc/mrpc.py": "60115e739e420b006c0baf433be0c61ee88fb26fa5c1e3edc038e2ff2d3e4321",
+    "/home/jianming_gatech/BERT_validation/harness/mrpc/model.py": "784685ccd7f09e5267c604ede7cbe21eb5e1d7a4df8eef6bfb77a6bce74b2fb4",
+    "/home/jianming_gatech/BERT_validation/harness/mrpc/test.py": "13ed5c720cada62aaf73d88b5b7afb9de4e6fcd22ed96b0f43324ec8d0e33a24",
+    "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/models/bert/modeling_bert.py": "ef3407eae97090a4c0bfb635b3aafd4435248148e553e4ae307aa2b4aa1efcbc",
+    "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/models/bert/tokenization_bert.py": "2175151678441fe952744a55d309bdade829dcae496bf1ffda90e93e9f8d088f",
+    "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/models/bert/tokenization_bert_fast.py": "b3197237baa874ac770682b1926ae12a7c9236d95cd3815033539c1e9ed2e2c0",
+    "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/tokenization_utils_base.py": "32acd70cda55191fc1e1e659af62b9afce2411ddf21c5b8e2ffaa8ac0463da66",
+    "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/activations.py": "5e45852b518ed3fdfbff4d8a44dc934b74f6606670fd90f2fb6c486172f9792c",
+    "/home/jianming_gatech/cross_validation_assets/bert/f150c1d609d1e50dd5e2e5408661cfac8339277c/config.json": "ec2b6cd6ce741dda6c972aea96f9d1a449cbb4b5349e688c5370a9b2f6872d30",
+    "/home/jianming_gatech/cross_validation_assets/bert/f150c1d609d1e50dd5e2e5408661cfac8339277c/tokenizer.json": "5b3360be30cdf39081153cf9d30bfb0503c011462fc9f77f097127c83ef0f4d9",
+    "/home/jianming_gatech/cross_validation_assets/bert/f150c1d609d1e50dd5e2e5408661cfac8339277c/tokenizer_config.json": "0f6d13e6f4da6f9e24f22ada6bc3be571123d858d7c0c05a8a7cd55a9c23c2e8",
+    "/home/jianming_gatech/cross_validation_assets/bert/f150c1d609d1e50dd5e2e5408661cfac8339277c/vocab.txt": "eeaa9875b23b04b4c54ef759d03db9d1ba1554838f8fb26c5d96fa551df93d02"
+  },
+  "source_archive_sha256": "98fe697d5531256b5107559bce48119a52c53302933a2ff7925227782a18028e",
+  "source_archive_verified": true,
+  "model_assets": {
+    "config.json": "ec2b6cd6ce741dda6c972aea96f9d1a449cbb4b5349e688c5370a9b2f6872d30",
+    "model.safetensors": "e1f8085ef673c9eb8a1a93a84270742e8aa0ccbceadef01eef15e26c44b46034",
+    "tokenizer.json": "5b3360be30cdf39081153cf9d30bfb0503c011462fc9f77f097127c83ef0f4d9",
+    "tokenizer_config.json": "0f6d13e6f4da6f9e24f22ada6bc3be571123d858d7c0c05a8a7cd55a9c23c2e8",
+    "vocab.txt": "eeaa9875b23b04b4c54ef759d03db9d1ba1554838f8fb26c5d96fa551df93d02"
+  },
+  "cpu_affinity": [
+    172,
+    173,
+    174,
+    175,
+    176,
+    177,
+    178,
+    179
+  ],
+  "native_dtype": "float32",
+  "threads": 8,
+  "versions": {
+    "torch": "2.15.0+cpu",
+    "numpy": "2.5.4",
+    "transformers": "4.51.3",
+    "tokenizers": "0.21.4",
+    "safetensors": "0.8.0",
+    "pyarrow": "23.0.1"
+  },
+  "aggregate_native_ranges": {
+    "0.softmax.centered_scores.valid_queries": {
+      "domain": [
+        -9,
+        12
+      ],
+      "count": 139769940,
+      "minimum": -12.595036280730607,
+      "maximum": 13.302453414084656,
+      "below": 1585,
+      "above": 182,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 867
+    },
+    "0.softmax.base_exp.valid_queries": {
+      "domain": [
+        -0.5,
+        0.5
+      ],
+      "count": 139769940,
+      "minimum": -0.39359488377283147,
+      "maximum": 0.4157016691901455,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "0.softmax.centered_scores.padded_queries": {
+      "domain": [
+        -9,
+        12
+      ],
+      "count": 168304044,
+      "minimum": -13.40567674706108,
+      "maximum": 14.862215507420755,
+      "below": 146003,
+      "above": 160534,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 3668
+    },
+    "0.softmax.base_exp.padded_queries": {
+      "domain": [
+        -0.5,
+        0.5
+      ],
+      "count": 168304044,
+      "minimum": -0.41892739834565873,
+      "maximum": 0.4644442346068986,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "0.attention.inverse_sqrt.valid_queries": {
+      "domain": [
+        0.3175095347982688,
+        1.1853786301897118
+      ],
+      "count": 200569,
+      "minimum": 0.3336564466207946,
+      "maximum": 1.1879192453015086,
+      "below": 0,
+      "above": 1,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 1
+    },
+    "0.attention.inverse_sqrt.padded_queries": {
+      "domain": [
+        0.3175095347982688,
+        1.1853786301897118
+      ],
+      "count": 268935,
+      "minimum": 0.3576187754540589,
+      "maximum": 0.54102589697601,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "0.gelu.valid_queries": {
+      "domain": [
+        -19,
+        11
+      ],
+      "count": 616147968,
+      "minimum": -17.325164794921875,
+      "maximum": 10.564723014831543,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "0.gelu.padded_queries": {
+      "domain": [
+        -19,
+        11
+      ],
+      "count": 826168320,
+      "minimum": -13.788467407226562,
+      "maximum": 9.11135482788086,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "0.mlp.inverse_sqrt.valid_queries": {
+      "domain": [
+        1.0641702295685478,
+        7.77505592596739
+      ],
+      "count": 200569,
+      "minimum": 1.0129969407776949,
+      "maximum": 6.673227833105288,
+      "below": 20,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 18
+    },
+    "0.mlp.inverse_sqrt.padded_queries": {
+      "domain": [
+        1.0641702295685478,
+        7.77505592596739
+      ],
+      "count": 268935,
+      "minimum": 2.076710551773054,
+      "maximum": 4.397203159933431,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "1.softmax.centered_scores.valid_queries": {
+      "domain": [
+        -19,
+        18
+      ],
+      "count": 139769940,
+      "minimum": -30.04645610207485,
+      "maximum": 29.922650184482336,
+      "below": 28376,
+      "above": 157450,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 3649
+    },
+    "1.softmax.base_exp.valid_queries": {
+      "domain": [
+        -0.5,
+        0.5
+      ],
+      "count": 139769940,
+      "minimum": -0.4694758765949195,
+      "maximum": 0.4675414091325365,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "1.softmax.centered_scores.padded_queries": {
+      "domain": [
+        -19,
+        18
+      ],
+      "count": 168304044,
+      "minimum": -29.05712696598537,
+      "maximum": 25.04751237390334,
+      "below": 72865,
+      "above": 25617,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 3628
+    },
+    "1.softmax.base_exp.padded_queries": {
+      "domain": [
+        -0.5,
+        0.5
+      ],
+      "count": 168304044,
+      "minimum": -0.4540176088435214,
+      "maximum": 0.3913673808422397,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "1.attention.inverse_sqrt.valid_queries": {
+      "domain": [
+        0.23704575650795504,
+        1.2070054363296931
+      ],
+      "count": 200569,
+      "minimum": 0.27800705815321153,
+      "maximum": 1.215059518145629,
+      "below": 0,
+      "above": 5,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 5
+    },
+    "1.attention.inverse_sqrt.padded_queries": {
+      "domain": [
+        0.23704575650795504,
+        1.2070054363296931
+      ],
+      "count": 268935,
+      "minimum": 0.6271634599492699,
+      "maximum": 1.0837426588618293,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "1.gelu.valid_queries": {
+      "domain": [
+        -16,
+        29
+      ],
+      "count": 616147968,
+      "minimum": -14.405872344970703,
+      "maximum": 31.40923500061035,
+      "below": 0,
+      "above": 448,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 295
+    },
+    "1.gelu.padded_queries": {
+      "domain": [
+        -16,
+        29
+      ],
+      "count": 826168320,
+      "minimum": -13.080448150634766,
+      "maximum": 8.202856063842773,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "1.mlp.inverse_sqrt.valid_queries": {
+      "domain": [
+        0.946842253815884,
+        31.02299313698311
+      ],
+      "count": 200569,
+      "minimum": 1.001349149082486,
+      "maximum": 33.144105028091275,
+      "below": 0,
+      "above": 153,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 135
+    },
+    "1.mlp.inverse_sqrt.padded_queries": {
+      "domain": [
+        0.946842253815884,
+        31.02299313698311
+      ],
+      "count": 268935,
+      "minimum": 2.3275522821530146,
+      "maximum": 10.934932096479642,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "2.softmax.centered_scores.valid_queries": {
+      "domain": [
+        -28,
+        27
+      ],
+      "count": 139769940,
+      "minimum": -41.960914777735105,
+      "maximum": 44.33932971974543,
+      "below": 7775,
+      "above": 119595,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 3614
+    },
+    "2.softmax.base_exp.valid_queries": {
+      "domain": [
+        -0.5,
+        0.5
+      ],
+      "count": 139769940,
+      "minimum": -0.655639293402111,
+      "maximum": 0.6928020268710223,
+      "below": 1086,
+      "above": 28242,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 3070
+    },
+    "2.softmax.centered_scores.padded_queries": {
+      "domain": [
+        -28,
+        27
+      ],
+      "count": 168304044,
+      "minimum": -41.60325018316507,
+      "maximum": 30.23350033329593,
+      "below": 92,
+      "above": 9,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 66
+    },
+    "2.softmax.base_exp.padded_queries": {
+      "domain": [
+        -0.5,
+        0.5
+      ],
+      "count": 168304044,
+      "minimum": -0.6500507841119543,
+      "maximum": 0.4723984427077489,
+      "below": 8,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 4
+    },
+    "2.attention.inverse_sqrt.valid_queries": {
+      "domain": [
+        0.2408904184695401,
+        1.239186868089599
+      ],
+      "count": 200569,
+      "minimum": 0.3031480792438289,
+      "maximum": 1.2659601836000893,
+      "below": 0,
+      "above": 2,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 2
+    },
+    "2.attention.inverse_sqrt.padded_queries": {
+      "domain": [
+        0.2408904184695401,
+        1.239186868089599
+      ],
+      "count": 268935,
+      "minimum": 0.32769813883681537,
+      "maximum": 0.5893785624736586,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "2.gelu.valid_queries": {
+      "domain": [
+        -16,
+        26
+      ],
+      "count": 616147968,
+      "minimum": -14.908075332641602,
+      "maximum": 22.000957489013672,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "2.gelu.padded_queries": {
+      "domain": [
+        -16,
+        26
+      ],
+      "count": 826168320,
+      "minimum": -14.452296257019043,
+      "maximum": 6.7873125076293945,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "2.mlp.inverse_sqrt.valid_queries": {
+      "domain": [
+        1.0374898566454187,
+        37.475938356140304
+      ],
+      "count": 200569,
+      "minimum": 1.0140660555979626,
+      "maximum": 30.8922894275608,
+      "below": 4,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 3
+    },
+    "2.mlp.inverse_sqrt.padded_queries": {
+      "domain": [
+        1.0374898566454187,
+        37.475938356140304
+      ],
+      "count": 268935,
+      "minimum": 2.184279611388511,
+      "maximum": 6.797916826048562,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "3.softmax.centered_scores.valid_queries": {
+      "domain": [
+        -19,
+        19
+      ],
+      "count": 139769940,
+      "minimum": -29.351453376993064,
+      "maximum": 31.374855038752923,
+      "below": 2866,
+      "above": 57407,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 3505
+    },
+    "3.softmax.base_exp.valid_queries": {
+      "domain": [
+        -0.5,
+        0.5
+      ],
+      "count": 139769940,
+      "minimum": -0.4586164590155166,
+      "maximum": 0.4902321099805144,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "3.softmax.centered_scores.padded_queries": {
+      "domain": [
+        -19,
+        19
+      ],
+      "count": 168304044,
+      "minimum": -24.14925086301291,
+      "maximum": 19.32938439759516,
+      "below": 29,
+      "above": 1,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 18
+    },
+    "3.softmax.base_exp.padded_queries": {
+      "domain": [
+        -0.5,
+        0.5
+      ],
+      "count": 168304044,
+      "minimum": -0.3773320447345767,
+      "maximum": 0.30202163121242437,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "3.attention.inverse_sqrt.valid_queries": {
+      "domain": [
+        0.21577013245863302,
+        1.048163458438662
+      ],
+      "count": 200569,
+      "minimum": 0.26863089924816885,
+      "maximum": 1.3267125630458372,
+      "below": 0,
+      "above": 690,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 386
+    },
+    "3.attention.inverse_sqrt.padded_queries": {
+      "domain": [
+        0.21577013245863302,
+        1.048163458438662
+      ],
+      "count": 268935,
+      "minimum": 0.35986239160199446,
+      "maximum": 0.6160244039127054,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "3.gelu.valid_queries": {
+      "domain": [
+        -29,
+        15
+      ],
+      "count": 616147968,
+      "minimum": -24.82974624633789,
+      "maximum": 11.164072036743164,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "3.gelu.padded_queries": {
+      "domain": [
+        -29,
+        15
+      ],
+      "count": 826168320,
+      "minimum": -13.99685287475586,
+      "maximum": 4.837236404418945,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "3.mlp.inverse_sqrt.valid_queries": {
+      "domain": [
+        0.9663793422829697,
+        25.182337581642173
+      ],
+      "count": 200569,
+      "minimum": 0.9814980576274632,
+      "maximum": 20.744584098165376,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "3.mlp.inverse_sqrt.padded_queries": {
+      "domain": [
+        0.9663793422829697,
+        25.182337581642173
+      ],
+      "count": 268935,
+      "minimum": 1.8656819524392219,
+      "maximum": 3.9539010640555126,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "4.softmax.centered_scores.valid_queries": {
+      "domain": [
+        -10,
+        11
+      ],
+      "count": 139769940,
+      "minimum": -16.29896490981407,
+      "maximum": 22.372745377222696,
+      "below": 26366,
+      "above": 54606,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 3550
+    },
+    "4.softmax.base_exp.valid_queries": {
+      "domain": [
+        -0.5,
+        0.5
+      ],
+      "count": 139769940,
+      "minimum": -0.5093426534316897,
+      "maximum": 0.6991482930382092,
+      "below": 1,
+      "above": 157,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 115
+    },
+    "4.softmax.centered_scores.padded_queries": {
+      "domain": [
+        -10,
+        11
+      ],
+      "count": 168304044,
+      "minimum": -14.771013945104585,
+      "maximum": 13.113773296462066,
+      "below": 5640,
+      "above": 374,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 1082
+    },
+    "4.softmax.base_exp.padded_queries": {
+      "domain": [
+        -0.5,
+        0.5
+      ],
+      "count": 168304044,
+      "minimum": -0.4615941857845183,
+      "maximum": 0.40980541551443955,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "4.attention.inverse_sqrt.valid_queries": {
+      "domain": [
+        0.2321878603422849,
+        1.122139363939497
+      ],
+      "count": 200569,
+      "minimum": 0.28909118846369036,
+      "maximum": 1.3395444885586905,
+      "below": 0,
+      "above": 665,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 465
+    },
+    "4.attention.inverse_sqrt.padded_queries": {
+      "domain": [
+        0.2321878603422849,
+        1.122139363939497
+      ],
+      "count": 268935,
+      "minimum": 0.46928112970539554,
+      "maximum": 0.8909236288270547,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "4.gelu.valid_queries": {
+      "domain": [
+        -31,
+        20
+      ],
+      "count": 616147968,
+      "minimum": -26.190410614013672,
+      "maximum": 15.469917297363281,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "4.gelu.padded_queries": {
+      "domain": [
+        -31,
+        20
+      ],
+      "count": 826168320,
+      "minimum": -10.65638542175293,
+      "maximum": 6.354842662811279,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "4.mlp.inverse_sqrt.valid_queries": {
+      "domain": [
+        1.0351589246783657,
+        28.677804850304458
+      ],
+      "count": 200569,
+      "minimum": 0.99148810405459,
+      "maximum": 24.15710379911045,
+      "below": 19,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 15
+    },
+    "4.mlp.inverse_sqrt.padded_queries": {
+      "domain": [
+        1.0351589246783657,
+        28.677804850304458
+      ],
+      "count": 268935,
+      "minimum": 1.7226971828342694,
+      "maximum": 3.5889302328045614,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "5.softmax.centered_scores.valid_queries": {
+      "domain": [
+        -20,
+        18
+      ],
+      "count": 139769940,
+      "minimum": -32.250136790649286,
+      "maximum": 41.00740502828575,
+      "below": 3591,
+      "above": 66213,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 3574
+    },
+    "5.softmax.base_exp.valid_queries": {
+      "domain": [
+        -0.5,
+        0.5
+      ],
+      "count": 139769940,
+      "minimum": -0.5039083873538951,
+      "maximum": 0.6407407035669649,
+      "below": 1,
+      "above": 6,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 6
+    },
+    "5.softmax.centered_scores.padded_queries": {
+      "domain": [
+        -20,
+        18
+      ],
+      "count": 168304044,
+      "minimum": -26.01746090304662,
+      "maximum": 23.438052362011327,
+      "below": 1059,
+      "above": 1115,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 860
+    },
+    "5.softmax.base_exp.padded_queries": {
+      "domain": [
+        -0.5,
+        0.5
+      ],
+      "count": 168304044,
+      "minimum": -0.4065228266101034,
+      "maximum": 0.366219568156427,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "5.attention.inverse_sqrt.valid_queries": {
+      "domain": [
+        0.19703831751078957,
+        1.3904797750997746
+      ],
+      "count": 200569,
+      "minimum": 0.2448015031516056,
+      "maximum": 1.6470524067621701,
+      "below": 0,
+      "above": 160,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 110
+    },
+    "5.attention.inverse_sqrt.padded_queries": {
+      "domain": [
+        0.19703831751078957,
+        1.3904797750997746
+      ],
+      "count": 268935,
+      "minimum": 0.5522574064001473,
+      "maximum": 1.1890758996010602,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "5.gelu.valid_queries": {
+      "domain": [
+        -33,
+        12
+      ],
+      "count": 616147968,
+      "minimum": -28.99448013305664,
+      "maximum": 10.766304016113281,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "5.gelu.padded_queries": {
+      "domain": [
+        -33,
+        12
+      ],
+      "count": 826168320,
+      "minimum": -9.947168350219727,
+      "maximum": 7.950980186462402,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "5.mlp.inverse_sqrt.valid_queries": {
+      "domain": [
+        1.0059956393732474,
+        30.303766555402053
+      ],
+      "count": 200569,
+      "minimum": 0.9789861065910354,
+      "maximum": 25.72258394135878,
+      "below": 7,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 6
+    },
+    "5.mlp.inverse_sqrt.padded_queries": {
+      "domain": [
+        1.0059956393732474,
+        30.303766555402053
+      ],
+      "count": 268935,
+      "minimum": 1.3690591281672029,
+      "maximum": 2.578122043027857,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "6.softmax.centered_scores.valid_queries": {
+      "domain": [
+        -19,
+        22
+      ],
+      "count": 139769940,
+      "minimum": -31.888827217618626,
+      "maximum": 35.0142463460026,
+      "below": 7892,
+      "above": 17058,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 2972
+    },
+    "6.softmax.base_exp.valid_queries": {
+      "domain": [
+        -0.5,
+        0.5
+      ],
+      "count": 139769940,
+      "minimum": -0.49826292527529104,
+      "maximum": 0.5470975991562906,
+      "below": 0,
+      "above": 1,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 1
+    },
+    "6.softmax.centered_scores.padded_queries": {
+      "domain": [
+        -19,
+        22
+      ],
+      "count": 168304044,
+      "minimum": -31.287889227759642,
+      "maximum": 27.66247749545035,
+      "below": 7889,
+      "above": 659,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 1340
+    },
+    "6.softmax.base_exp.padded_queries": {
+      "domain": [
+        -0.5,
+        0.5
+      ],
+      "count": 168304044,
+      "minimum": -0.4888732691837444,
+      "maximum": 0.4322262108664117,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "6.attention.inverse_sqrt.valid_queries": {
+      "domain": [
+        0.16330028229305768,
+        1.5841269213893792
+      ],
+      "count": 200569,
+      "minimum": 0.2029842805903349,
+      "maximum": 1.735065175379843,
+      "below": 0,
+      "above": 66,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 56
+    },
+    "6.attention.inverse_sqrt.padded_queries": {
+      "domain": [
+        0.16330028229305768,
+        1.5841269213893792
+      ],
+      "count": 268935,
+      "minimum": 0.6720132911875429,
+      "maximum": 1.4574015246938943,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "6.gelu.valid_queries": {
+      "domain": [
+        -23,
+        13
+      ],
+      "count": 616147968,
+      "minimum": -19.308977127075195,
+      "maximum": 9.919753074645996,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "6.gelu.padded_queries": {
+      "domain": [
+        -23,
+        13
+      ],
+      "count": 826168320,
+      "minimum": -10.119864463806152,
+      "maximum": 8.427738189697266,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "6.mlp.inverse_sqrt.valid_queries": {
+      "domain": [
+        0.9842912066182974,
+        29.544259589468258
+      ],
+      "count": 200569,
+      "minimum": 1.0303104575753002,
+      "maximum": 24.714619973749542,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "6.mlp.inverse_sqrt.padded_queries": {
+      "domain": [
+        0.9842912066182974,
+        29.544259589468258
+      ],
+      "count": 268935,
+      "minimum": 1.0985816250668814,
+      "maximum": 2.7131393546697002,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "7.softmax.centered_scores.valid_queries": {
+      "domain": [
+        -9,
+        12
+      ],
+      "count": 139769940,
+      "minimum": -18.051279127889988,
+      "maximum": 19.056178555598088,
+      "below": 32297,
+      "above": 99725,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 3372
+    },
+    "7.softmax.base_exp.valid_queries": {
+      "domain": [
+        -0.5,
+        0.5
+      ],
+      "count": 139769940,
+      "minimum": -0.5641024727465621,
+      "maximum": 0.5955055798624402,
+      "below": 8,
+      "above": 25,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 24
+    },
+    "7.softmax.centered_scores.padded_queries": {
+      "domain": [
+        -9,
+        12
+      ],
+      "count": 168304044,
+      "minimum": -15.75849718807472,
+      "maximum": 18.525638199566554,
+      "below": 32360,
+      "above": 1593,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 2553
+    },
+    "7.softmax.base_exp.padded_queries": {
+      "domain": [
+        -0.5,
+        0.5
+      ],
+      "count": 168304044,
+      "minimum": -0.492453037127335,
+      "maximum": 0.5789261937364548,
+      "below": 0,
+      "above": 4,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 2
+    },
+    "7.attention.inverse_sqrt.valid_queries": {
+      "domain": [
+        0.1614954413623032,
+        1.2789712474313717
+      ],
+      "count": 200569,
+      "minimum": 0.20095509761453093,
+      "maximum": 1.5033199707838871,
+      "below": 0,
+      "above": 135,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 124
+    },
+    "7.attention.inverse_sqrt.padded_queries": {
+      "domain": [
+        0.1614954413623032,
+        1.2789712474313717
+      ],
+      "count": 268935,
+      "minimum": 0.6787807903547071,
+      "maximum": 1.4150978515701471,
+      "below": 0,
+      "above": 17,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 10
+    },
+    "7.gelu.valid_queries": {
+      "domain": [
+        -20,
+        39
+      ],
+      "count": 616147968,
+      "minimum": -21.832290649414062,
+      "maximum": 33.955440521240234,
+      "below": 14,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 13
+    },
+    "7.gelu.padded_queries": {
+      "domain": [
+        -20,
+        39
+      ],
+      "count": 826168320,
+      "minimum": -18.88593292236328,
+      "maximum": 7.858701705932617,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "7.mlp.inverse_sqrt.valid_queries": {
+      "domain": [
+        0.9599207591841173,
+        54.66482271182408
+      ],
+      "count": 200569,
+      "minimum": 0.9641240995189295,
+      "maximum": 46.01133637800436,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "7.mlp.inverse_sqrt.padded_queries": {
+      "domain": [
+        0.9599207591841173,
+        54.66482271182408
+      ],
+      "count": 268935,
+      "minimum": 0.983899232025093,
+      "maximum": 1.8874275807936975,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "8.softmax.centered_scores.valid_queries": {
+      "domain": [
+        -8,
+        9
+      ],
+      "count": 139769940,
+      "minimum": -18.82221603136638,
+      "maximum": 22.20759079035591,
+      "below": 112590,
+      "above": 198118,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 3579
+    },
+    "8.softmax.base_exp.valid_queries": {
+      "domain": [
+        -0.5,
+        0.5
+      ],
+      "count": 139769940,
+      "minimum": -0.5881942509801994,
+      "maximum": 0.6939872121986221,
+      "below": 45,
+      "above": 798,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 405
+    },
+    "8.softmax.centered_scores.padded_queries": {
+      "domain": [
+        -8,
+        9
+      ],
+      "count": 168304044,
+      "minimum": -20.609110384880164,
+      "maximum": 19.18498151797753,
+      "below": 50423,
+      "above": 72174,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 3188
+    },
+    "8.softmax.base_exp.padded_queries": {
+      "domain": [
+        -0.5,
+        0.5
+      ],
+      "count": 168304044,
+      "minimum": -0.6440346995275051,
+      "maximum": 0.5995306724367978,
+      "below": 39,
+      "above": 104,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 46
+    },
+    "8.attention.inverse_sqrt.valid_queries": {
+      "domain": [
+        0.14040232210799455,
+        1.4273237334489128
+      ],
+      "count": 200569,
+      "minimum": 0.17453576935953766,
+      "maximum": 1.7134861349570005,
+      "below": 0,
+      "above": 167,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 117
+    },
+    "8.attention.inverse_sqrt.padded_queries": {
+      "domain": [
+        0.14040232210799455,
+        1.4273237334489128
+      ],
+      "count": 268935,
+      "minimum": 0.7215570264337023,
+      "maximum": 1.4080065376878725,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "8.gelu.valid_queries": {
+      "domain": [
+        -25,
+        42
+      ],
+      "count": 616147968,
+      "minimum": -30.66205406188965,
+      "maximum": 36.57763671875,
+      "below": 1307,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 742
+    },
+    "8.gelu.padded_queries": {
+      "domain": [
+        -25,
+        42
+      ],
+      "count": 826168320,
+      "minimum": -28.931699752807617,
+      "maximum": 8.242368698120117,
+      "below": 53,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 27
+    },
+    "8.mlp.inverse_sqrt.valid_queries": {
+      "domain": [
+        0.864697748651513,
+        218.39017788539405
+      ],
+      "count": 200569,
+      "minimum": 0.9258792771518437,
+      "maximum": 184.49774037269202,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "8.mlp.inverse_sqrt.padded_queries": {
+      "domain": [
+        0.864697748651513,
+        218.39017788539405
+      ],
+      "count": 268935,
+      "minimum": 1.0174980728707226,
+      "maximum": 1.8250297370537476,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "9.softmax.centered_scores.valid_queries": {
+      "domain": [
+        -10,
+        11
+      ],
+      "count": 139769940,
+      "minimum": -16.398917234768824,
+      "maximum": 20.93238946536313,
+      "below": 18282,
+      "above": 208231,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 3592
+    },
+    "9.softmax.base_exp.valid_queries": {
+      "domain": [
+        -0.5,
+        0.5
+      ],
+      "count": 139769940,
+      "minimum": -0.5124661635865257,
+      "maximum": 0.6541371707925978,
+      "below": 2,
+      "above": 1096,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 536
+    },
+    "9.softmax.centered_scores.padded_queries": {
+      "domain": [
+        -10,
+        11
+      ],
+      "count": 168304044,
+      "minimum": -13.277503726448407,
+      "maximum": 16.87339700864894,
+      "below": 1759,
+      "above": 60957,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 2512
+    },
+    "9.softmax.base_exp.padded_queries": {
+      "domain": [
+        -0.5,
+        0.5
+      ],
+      "count": 168304044,
+      "minimum": -0.4149219914515127,
+      "maximum": 0.5272936565202794,
+      "below": 0,
+      "above": 4,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 2
+    },
+    "9.attention.inverse_sqrt.valid_queries": {
+      "domain": [
+        0.20296117046468742,
+        1.7204447231827555
+      ],
+      "count": 200569,
+      "minimum": 0.25212383556158463,
+      "maximum": 1.9250802548151065,
+      "below": 0,
+      "above": 13,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 13
+    },
+    "9.attention.inverse_sqrt.padded_queries": {
+      "domain": [
+        0.20296117046468742,
+        1.7204447231827555
+      ],
+      "count": 268935,
+      "minimum": 0.8256015637902764,
+      "maximum": 1.6706033701070477,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "9.gelu.valid_queries": {
+      "domain": [
+        -29,
+        39
+      ],
+      "count": 616147968,
+      "minimum": -35.318851470947266,
+      "maximum": 33.900978088378906,
+      "below": 1439,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 773
+    },
+    "9.gelu.padded_queries": {
+      "domain": [
+        -29,
+        39
+      ],
+      "count": 826168320,
+      "minimum": -26.07148551940918,
+      "maximum": 7.720811367034912,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "9.mlp.inverse_sqrt.valid_queries": {
+      "domain": [
+        0.7852900663501012,
+        267.3959021510363
+      ],
+      "count": 200569,
+      "minimum": 0.8833076907436299,
+      "maximum": 222.05605307275806,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "9.mlp.inverse_sqrt.padded_queries": {
+      "domain": [
+        0.7852900663501012,
+        267.3959021510363
+      ],
+      "count": 268935,
+      "minimum": 0.9483973192512621,
+      "maximum": 1.3669043854289349,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "10.softmax.centered_scores.valid_queries": {
+      "domain": [
+        -10,
+        13
+      ],
+      "count": 139769940,
+      "minimum": -17.91171084465338,
+      "maximum": 19.288245365700938,
+      "below": 26953,
+      "above": 159867,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 3394
+    },
+    "10.softmax.base_exp.valid_queries": {
+      "domain": [
+        -0.5,
+        0.5
+      ],
+      "count": 139769940,
+      "minimum": -0.5597409638954182,
+      "maximum": 0.6027576676781543,
+      "below": 35,
+      "above": 3949,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 693
+    },
+    "10.softmax.centered_scores.padded_queries": {
+      "domain": [
+        -10,
+        13
+      ],
+      "count": 168304044,
+      "minimum": -14.435216142237186,
+      "maximum": 17.741979364621436,
+      "below": 4004,
+      "above": 15310,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 1680
+    },
+    "10.softmax.base_exp.padded_queries": {
+      "domain": [
+        -0.5,
+        0.5
+      ],
+      "count": 168304044,
+      "minimum": -0.45110050444491206,
+      "maximum": 0.5544368551444199,
+      "below": 0,
+      "above": 85,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 27
+    },
+    "10.attention.inverse_sqrt.valid_queries": {
+      "domain": [
+        0.16701867557301636,
+        1.3933951927555366
+      ],
+      "count": 200569,
+      "minimum": 0.20662614083398262,
+      "maximum": 1.6675035827805609,
+      "below": 0,
+      "above": 163,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 161
+    },
+    "10.attention.inverse_sqrt.padded_queries": {
+      "domain": [
+        0.16701867557301636,
+        1.3933951927555366
+      ],
+      "count": 268935,
+      "minimum": 0.868962089521609,
+      "maximum": 1.700786629345403,
+      "below": 0,
+      "above": 2061,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 662
+    },
+    "10.gelu.valid_queries": {
+      "domain": [
+        -14,
+        37
+      ],
+      "count": 616147968,
+      "minimum": -15.132320404052734,
+      "maximum": 32.817047119140625,
+      "below": 30,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 21
+    },
+    "10.gelu.padded_queries": {
+      "domain": [
+        -14,
+        37
+      ],
+      "count": 826168320,
+      "minimum": -12.115667343139648,
+      "maximum": 8.861955642700195,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "10.mlp.inverse_sqrt.valid_queries": {
+      "domain": [
+        0.7414986782884628,
+        319.5292435647607
+      ],
+      "count": 200569,
+      "minimum": 0.8574558581828424,
+      "maximum": 274.05863342843713,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "10.mlp.inverse_sqrt.padded_queries": {
+      "domain": [
+        0.7414986782884628,
+        319.5292435647607
+      ],
+      "count": 268935,
+      "minimum": 0.8302909265994963,
+      "maximum": 1.421409800211672,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "11.softmax.centered_scores.valid_queries": {
+      "domain": [
+        -8,
+        11
+      ],
+      "count": 139769940,
+      "minimum": -18.014010813218707,
+      "maximum": 17.34239525794983,
+      "below": 74538,
+      "above": 109801,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 3394
+    },
+    "11.softmax.base_exp.valid_queries": {
+      "domain": [
+        -0.5,
+        0.5
+      ],
+      "count": 139769940,
+      "minimum": -0.5629378379130846,
+      "maximum": 0.5419498518109321,
+      "below": 9,
+      "above": 29,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 9
+    },
+    "11.softmax.centered_scores.padded_queries": {
+      "domain": [
+        -8,
+        11
+      ],
+      "count": 168304044,
+      "minimum": -15.488859577389324,
+      "maximum": 16.55847948316544,
+      "below": 47421,
+      "above": 71871,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 2965
+    },
+    "11.softmax.base_exp.padded_queries": {
+      "domain": [
+        -0.5,
+        0.5
+      ],
+      "count": 168304044,
+      "minimum": -0.48402686179341636,
+      "maximum": 0.51745248384892,
+      "below": 0,
+      "above": 8,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 3
+    },
+    "11.attention.inverse_sqrt.valid_queries": {
+      "domain": [
+        0.30118013406787913,
+        3.1414759692369336
+      ],
+      "count": 200569,
+      "minimum": 0.2939745749376272,
+      "maximum": 5.789712139602011,
+      "below": 1,
+      "above": 1926,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 1926
+    },
+    "11.attention.inverse_sqrt.padded_queries": {
+      "domain": [
+        0.30118013406787913,
+        3.1414759692369336
+      ],
+      "count": 268935,
+      "minimum": 0.9125370061402669,
+      "maximum": 2.8352553416124278,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "11.gelu.valid_queries": {
+      "domain": [
+        -11,
+        8
+      ],
+      "count": 616147968,
+      "minimum": -11.121866226196289,
+      "maximum": 9.72450065612793,
+      "below": 6,
+      "above": 21,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 22
+    },
+    "11.gelu.padded_queries": {
+      "domain": [
+        -11,
+        8
+      ],
+      "count": 826168320,
+      "minimum": -8.561042785644531,
+      "maximum": 5.72929573059082,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "11.mlp.inverse_sqrt.valid_queries": {
+      "domain": [
+        1.0746727878966804,
+        5.182371637378334
+      ],
+      "count": 200569,
+      "minimum": 0.909449620244057,
+      "maximum": 8.632270033927103,
+      "below": 1574,
+      "above": 123,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 899
+    },
+    "11.mlp.inverse_sqrt.padded_queries": {
+      "domain": [
+        1.0746727878966804,
+        5.182371637378334
+      ],
+      "count": 268935,
+      "minimum": 1.0973588670945251,
+      "maximum": 2.335555736301895,
+      "below": 0,
+      "above": 0,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 0
+    },
+    "pooler.tanh": {
+      "domain": [
+        -24,
+        24
+      ],
+      "count": 2817024,
+      "minimum": -27.859146118164062,
+      "maximum": 27.934602737426758,
+      "below": 3728,
+      "above": 1392,
+      "nonfinite": 0,
+      "examples": 3668,
+      "examples_with_violations": 1215
+    }
+  },
+  "proposed_domains": {
+    "0.softmax.centered_scores": {
+      "observed_range": [
+        -12.595036280730607,
+        13.302453414084656
+      ],
+      "domain": [
+        -16,
+        16
+      ],
+      "observations": 139769940,
+      "examples": 3668
+    },
+    "0.attention.inverse_sqrt": {
+      "observed_range": [
+        0.3336564466207946,
+        1.1879192453015086
+      ],
+      "domain": [
+        0.2669251572966357,
+        1.4255030943618103
+      ],
+      "observations": 200569,
+      "examples": 3668
+    },
+    "0.gelu": {
+      "observed_range": [
+        -17.325164794921875,
+        10.564723014831543
+      ],
+      "domain": [
+        -21,
+        14
+      ],
+      "observations": 616147968,
+      "examples": 3668
+    },
+    "0.mlp.inverse_sqrt": {
+      "observed_range": [
+        1.0129969407776949,
+        6.673227833105288
+      ],
+      "domain": [
+        0.810397552622156,
+        8.007873399726344
+      ],
+      "observations": 200569,
+      "examples": 3668
+    },
+    "1.softmax.centered_scores": {
+      "observed_range": [
+        -30.04645610207485,
+        29.922650184482336
+      ],
+      "domain": [
+        -37,
+        36
+      ],
+      "observations": 139769940,
+      "examples": 3668
+    },
+    "1.attention.inverse_sqrt": {
+      "observed_range": [
+        0.27800705815321153,
+        1.215059518145629
+      ],
+      "domain": [
+        0.22240564652256922,
+        1.4580714217747548
+      ],
+      "observations": 200569,
+      "examples": 3668
+    },
+    "1.gelu": {
+      "observed_range": [
+        -14.405872344970703,
+        31.40923500061035
+      ],
+      "domain": [
+        -19,
+        36
+      ],
+      "observations": 616147968,
+      "examples": 3668
+    },
+    "1.mlp.inverse_sqrt": {
+      "observed_range": [
+        1.001349149082486,
+        33.144105028091275
+      ],
+      "domain": [
+        0.8010793192659889,
+        39.77292603370953
+      ],
+      "observations": 200569,
+      "examples": 3668
+    },
+    "2.softmax.centered_scores": {
+      "observed_range": [
+        -41.960914777735105,
+        44.33932971974543
+      ],
+      "domain": [
+        -51,
+        53
+      ],
+      "observations": 139769940,
+      "examples": 3668
+    },
+    "2.attention.inverse_sqrt": {
+      "observed_range": [
+        0.3031480792438289,
+        1.2659601836000893
+      ],
+      "domain": [
+        0.24251846339506314,
+        1.519152220320107
+      ],
+      "observations": 200569,
+      "examples": 3668
+    },
+    "2.gelu": {
+      "observed_range": [
+        -14.908075332641602,
+        22.000957489013672
+      ],
+      "domain": [
+        -19,
+        26
+      ],
+      "observations": 616147968,
+      "examples": 3668
+    },
+    "2.mlp.inverse_sqrt": {
+      "observed_range": [
+        1.0140660555979626,
+        30.8922894275608
+      ],
+      "domain": [
+        0.8112528444783701,
+        37.07074731307296
+      ],
+      "observations": 200569,
+      "examples": 3668
+    },
+    "3.softmax.centered_scores": {
+      "observed_range": [
+        -29.351453376993064,
+        31.374855038752923
+      ],
+      "domain": [
+        -36,
+        38
+      ],
+      "observations": 139769940,
+      "examples": 3668
+    },
+    "3.attention.inverse_sqrt": {
+      "observed_range": [
+        0.26863089924816885,
+        1.3267125630458372
+      ],
+      "domain": [
+        0.2149047193985351,
+        1.5920550756550045
+      ],
+      "observations": 200569,
+      "examples": 3668
+    },
+    "3.gelu": {
+      "observed_range": [
+        -24.82974624633789,
+        11.164072036743164
+      ],
+      "domain": [
+        -29,
+        15
+      ],
+      "observations": 616147968,
+      "examples": 3668
+    },
+    "3.mlp.inverse_sqrt": {
+      "observed_range": [
+        0.9814980576274632,
+        20.744584098165376
+      ],
+      "domain": [
+        0.7851984461019706,
+        24.893500917798452
+      ],
+      "observations": 200569,
+      "examples": 3668
+    },
+    "4.softmax.centered_scores": {
+      "observed_range": [
+        -16.29896490981407,
+        22.372745377222696
+      ],
+      "domain": [
+        -21,
+        27
+      ],
+      "observations": 139769940,
+      "examples": 3668
+    },
+    "4.attention.inverse_sqrt": {
+      "observed_range": [
+        0.28909118846369036,
+        1.3395444885586905
+      ],
+      "domain": [
+        0.2312729507709523,
+        1.6074533862704286
+      ],
+      "observations": 200569,
+      "examples": 3668
+    },
+    "4.gelu": {
+      "observed_range": [
+        -26.190410614013672,
+        15.469917297363281
+      ],
+      "domain": [
+        -31,
+        20
+      ],
+      "observations": 616147968,
+      "examples": 3668
+    },
+    "4.mlp.inverse_sqrt": {
+      "observed_range": [
+        0.99148810405459,
+        24.15710379911045
+      ],
+      "domain": [
+        0.793190483243672,
+        28.988524558932536
+      ],
+      "observations": 200569,
+      "examples": 3668
+    },
+    "5.softmax.centered_scores": {
+      "observed_range": [
+        -32.250136790649286,
+        41.00740502828575
+      ],
+      "domain": [
+        -40,
+        49
+      ],
+      "observations": 139769940,
+      "examples": 3668
+    },
+    "5.attention.inverse_sqrt": {
+      "observed_range": [
+        0.2448015031516056,
+        1.6470524067621701
+      ],
+      "domain": [
+        0.19584120252128448,
+        1.976462888114604
+      ],
+      "observations": 200569,
+      "examples": 3668
+    },
+    "5.gelu": {
+      "observed_range": [
+        -28.99448013305664,
+        10.766304016113281
+      ],
+      "domain": [
+        -33,
+        15
+      ],
+      "observations": 616147968,
+      "examples": 3668
+    },
+    "5.mlp.inverse_sqrt": {
+      "observed_range": [
+        0.9789861065910354,
+        25.72258394135878
+      ],
+      "domain": [
+        0.7831888852728284,
+        30.867100729630536
+      ],
+      "observations": 200569,
+      "examples": 3668
+    },
+    "6.softmax.centered_scores": {
+      "observed_range": [
+        -31.888827217618626,
+        35.0142463460026
+      ],
+      "domain": [
+        -39,
+        42
+      ],
+      "observations": 139769940,
+      "examples": 3668
+    },
+    "6.attention.inverse_sqrt": {
+      "observed_range": [
+        0.2029842805903349,
+        1.735065175379843
+      ],
+      "domain": [
+        0.16238742447226795,
+        2.0820782104558115
+      ],
+      "observations": 200569,
+      "examples": 3668
+    },
+    "6.gelu": {
+      "observed_range": [
+        -19.308977127075195,
+        9.919753074645996
+      ],
+      "domain": [
+        -23,
+        13
+      ],
+      "observations": 616147968,
+      "examples": 3668
+    },
+    "6.mlp.inverse_sqrt": {
+      "observed_range": [
+        1.0303104575753002,
+        24.714619973749542
+      ],
+      "domain": [
+        0.8242483660602402,
+        29.65754396849945
+      ],
+      "observations": 200569,
+      "examples": 3668
+    },
+    "7.softmax.centered_scores": {
+      "observed_range": [
+        -18.051279127889988,
+        19.056178555598088
+      ],
+      "domain": [
+        -22,
+        23
+      ],
+      "observations": 139769940,
+      "examples": 3668
+    },
+    "7.attention.inverse_sqrt": {
+      "observed_range": [
+        0.20095509761453093,
+        1.5033199707838871
+      ],
+      "domain": [
+        0.16076407809162474,
+        1.8039839649406644
+      ],
+      "observations": 200569,
+      "examples": 3668
+    },
+    "7.gelu": {
+      "observed_range": [
+        -21.832290649414062,
+        33.955440521240234
+      ],
+      "domain": [
+        -28,
+        40
+      ],
+      "observations": 616147968,
+      "examples": 3668
+    },
+    "7.mlp.inverse_sqrt": {
+      "observed_range": [
+        0.9641240995189295,
+        46.01133637800436
+      ],
+      "domain": [
+        0.7712992796151437,
+        55.213603653605226
+      ],
+      "observations": 200569,
+      "examples": 3668
+    },
+    "8.softmax.centered_scores": {
+      "observed_range": [
+        -18.82221603136638,
+        22.20759079035591
+      ],
+      "domain": [
+        -23,
+        27
+      ],
+      "observations": 139769940,
+      "examples": 3668
+    },
+    "8.attention.inverse_sqrt": {
+      "observed_range": [
+        0.17453576935953766,
+        1.7134861349570005
+      ],
+      "domain": [
+        0.13962861548763014,
+        2.0561833619484005
+      ],
+      "observations": 200569,
+      "examples": 3668
+    },
+    "8.gelu": {
+      "observed_range": [
+        -30.66205406188965,
+        36.57763671875
+      ],
+      "domain": [
+        -38,
+        44
+      ],
+      "observations": 616147968,
+      "examples": 3668
+    },
+    "8.mlp.inverse_sqrt": {
+      "observed_range": [
+        0.9258792771518437,
+        184.49774037269202
+      ],
+      "domain": [
+        0.740703421721475,
+        221.3972884472304
+      ],
+      "observations": 200569,
+      "examples": 3668
+    },
+    "9.softmax.centered_scores": {
+      "observed_range": [
+        -16.398917234768824,
+        20.93238946536313
+      ],
+      "domain": [
+        -21,
+        25
+      ],
+      "observations": 139769940,
+      "examples": 3668
+    },
+    "9.attention.inverse_sqrt": {
+      "observed_range": [
+        0.25212383556158463,
+        1.9250802548151065
+      ],
+      "domain": [
+        0.20169906844926772,
+        2.310096305778128
+      ],
+      "observations": 200569,
+      "examples": 3668
+    },
+    "9.gelu": {
+      "observed_range": [
+        -35.318851470947266,
+        33.900978088378906
+      ],
+      "domain": [
+        -43,
+        41
+      ],
+      "observations": 616147968,
+      "examples": 3668
+    },
+    "9.mlp.inverse_sqrt": {
+      "observed_range": [
+        0.8833076907436299,
+        222.05605307275806
+      ],
+      "domain": [
+        0.7066461525949039,
+        266.46726368730964
+      ],
+      "observations": 200569,
+      "examples": 3668
+    },
+    "10.softmax.centered_scores": {
+      "observed_range": [
+        -17.91171084465338,
+        19.288245365700938
+      ],
+      "domain": [
+        -22,
+        24
+      ],
+      "observations": 139769940,
+      "examples": 3668
+    },
+    "10.attention.inverse_sqrt": {
+      "observed_range": [
+        0.20662614083398262,
+        1.6675035827805609
+      ],
+      "domain": [
+        0.1653009126671861,
+        2.001004299336673
+      ],
+      "observations": 200569,
+      "examples": 3668
+    },
+    "10.gelu": {
+      "observed_range": [
+        -15.132320404052734,
+        32.817047119140625
+      ],
+      "domain": [
+        -20,
+        38
+      ],
+      "observations": 616147968,
+      "examples": 3668
+    },
+    "10.mlp.inverse_sqrt": {
+      "observed_range": [
+        0.8574558581828424,
+        274.05863342843713
+      ],
+      "domain": [
+        0.685964686546274,
+        328.87036011412454
+      ],
+      "observations": 200569,
+      "examples": 3668
+    },
+    "11.softmax.centered_scores": {
+      "observed_range": [
+        -18.014010813218707,
+        17.34239525794983
+      ],
+      "domain": [
+        -22,
+        21
+      ],
+      "observations": 139769940,
+      "examples": 3668
+    },
+    "11.attention.inverse_sqrt": {
+      "observed_range": [
+        0.2939745749376272,
+        5.789712139602011
+      ],
+      "domain": [
+        0.23517965995010176,
+        6.947654567522412
+      ],
+      "observations": 200569,
+      "examples": 3668
+    },
+    "11.gelu": {
+      "observed_range": [
+        -11.121866226196289,
+        9.72450065612793
+      ],
+      "domain": [
+        -14,
+        12
+      ],
+      "observations": 616147968,
+      "examples": 3668
+    },
+    "11.mlp.inverse_sqrt": {
+      "observed_range": [
+        0.909449620244057,
+        8.632270033927103
+      ],
+      "domain": [
+        0.7275596961952456,
+        10.358724040712524
+      ],
+      "observations": 200569,
+      "examples": 3668
+    },
+    "pooler.tanh": {
+      "observed_range": [
+        -27.859146118164062,
+        27.934602737426758
+      ],
+      "domain": [
+        -34,
+        34
+      ],
+      "observations": 2817024,
+      "examples": 3668
+    }
+  },
+  "tokenization_sha256": "3fa38fcc882a2cf35762b8317342b53b6a7e9b19a5d58b1a8f0eb8adb8c60c80",
+  "valid_token_range": [
+    19,
+    111
+  ],
+  "no_jax_imported": true,
+  "candidate_coefficients_selected": false,
+  "approximate_forward_evaluated": false,
+  "encrypted_execution": false,
+  "limitation": "Prospective domains derive only from training native ranges and the fixed historical rule; neither validation coverage nor propagated approximation/CKKS error is established.",
+  "source_hashes_after": {
+    "/tmp/bert-mrpc-train-calibration-20261103/calibrate.py": "27ba1c3dc671bdf31286bd174474608288c814dab1ac464b8f58952cf2144530",
+    "/tmp/bert-mrpc-train-calibration-20261103/audit.py": "e3bb08cbf1ec0b0c77d9086ed8cbc8da896ffe3f8e98c26e85ce88267c522bfe",
+    "/tmp/bert-mrpc-train-calibration-20261103/test_audit.py": "d6958824f23aa5f95396d6a2739372e62376250caa6fbf4b1ac18428c915e0a9",
+    "/tmp/bert-mrpc-train-calibration-20261103/test_calibrate.py": "1e06d26b72cc40484be8551b18866965e5654bc37abb9496fe094d588b1b330b",
+    "/tmp/bert-mrpc-train-calibration-20261103/dataset_manifest.json": "0600cd315621ae30b7efa08857f9814b44e8d20e11667b43a7d3529e73c7d8ce",
+    "/tmp/bert-mrpc-train-calibration-20261103/selection_protocol.json": "823babec11289820dd09d904b2f93bd19bd789ae85af8f85120af1b0bdcb478b",
+    "/home/jianming_gatech/CROSS/cadathlon/validation/compose_pretrained_bert_arithmetic.json": "20dc8138fcf4cd0d0e24fa7ad97f590019de518749b191e482b51e2909cd703c",
+    "/home/jianming_gatech/CROSS/cadathlon/validation/plan_pretrained_bert_operators.json": "5375b528c861178c1f113a547c7048c49e466b9ac32ca1ad68292adbe219298c",
+    "/home/jianming_gatech/CROSS/cadathlon/validation/compose_pretrained_bert_arithmetic.py": "ae261ea18d3417d5b42d2e97bb71c7ce53c22f1d4c62e7130588f8611b530ce8",
+    "/home/jianming_gatech/CROSS/cadathlon/validation/check_pretrained_bert_domains.py": "d3463f03bdfcb1a0539bf8b6333a22b9fc776231815ed120bf31a29b73f08c40",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/src/stages.py": "957a65289589caa24b139dfef9ae0cc8b91c986890d0a9dfad12c9103bbd62e8",
+    "/home/jianming_gatech/CROSS/cadathlon/agent_pset/p2_bert/src/benchmark.py": "acb6c5679106e00dd1c482dd750ca4620423f13c9b37e7c7bbce1781b8e76aec",
+    "/home/jianming_gatech/BERT_validation/harness/generate_input.py": "634804f0235ca611de32e535d4e55139eda109d7620c20129586b68efc73cfe1",
+    "/home/jianming_gatech/BERT_validation/harness/generate_dataset.py": "4dc6d35336f8d609b9676752fd0a041a40b19c1dcde822b989e44e5e20a30d6d",
+    "/home/jianming_gatech/BERT_validation/harness/params.py": "e1e12436a385e1ca6f59f3c7b4ec0f4a4d3dc38c6ab9669125a66b4df6b9cd3b",
+    "/home/jianming_gatech/BERT_validation/harness/run_submission.py": "997fcf575999c6c0a35fa0561dd1a90d3f5565303bd1b6800c078511139f4590",
+    "/home/jianming_gatech/BERT_validation/harness/utils.py": "e73b7ba164e18da00b57a53f8245a1df29cbfc3fc5424a7e734c0a4c7e2dabae",
+    "/home/jianming_gatech/BERT_validation/harness/mrpc/mrpc.py": "60115e739e420b006c0baf433be0c61ee88fb26fa5c1e3edc038e2ff2d3e4321",
+    "/home/jianming_gatech/BERT_validation/harness/mrpc/model.py": "784685ccd7f09e5267c604ede7cbe21eb5e1d7a4df8eef6bfb77a6bce74b2fb4",
+    "/home/jianming_gatech/BERT_validation/harness/mrpc/test.py": "13ed5c720cada62aaf73d88b5b7afb9de4e6fcd22ed96b0f43324ec8d0e33a24",
+    "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/models/bert/modeling_bert.py": "ef3407eae97090a4c0bfb635b3aafd4435248148e553e4ae307aa2b4aa1efcbc",
+    "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/models/bert/tokenization_bert.py": "2175151678441fe952744a55d309bdade829dcae496bf1ffda90e93e9f8d088f",
+    "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/models/bert/tokenization_bert_fast.py": "b3197237baa874ac770682b1926ae12a7c9236d95cd3815033539c1e9ed2e2c0",
+    "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/tokenization_utils_base.py": "32acd70cda55191fc1e1e659af62b9afce2411ddf21c5b8e2ffaa8ac0463da66",
+    "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/activations.py": "5e45852b518ed3fdfbff4d8a44dc934b74f6606670fd90f2fb6c486172f9792c",
+    "/home/jianming_gatech/cross_validation_assets/bert/f150c1d609d1e50dd5e2e5408661cfac8339277c/config.json": "ec2b6cd6ce741dda6c972aea96f9d1a449cbb4b5349e688c5370a9b2f6872d30",
+    "/home/jianming_gatech/cross_validation_assets/bert/f150c1d609d1e50dd5e2e5408661cfac8339277c/tokenizer.json": "5b3360be30cdf39081153cf9d30bfb0503c011462fc9f77f097127c83ef0f4d9",
+    "/home/jianming_gatech/cross_validation_assets/bert/f150c1d609d1e50dd5e2e5408661cfac8339277c/tokenizer_config.json": "0f6d13e6f4da6f9e24f22ada6bc3be571123d858d7c0c05a8a7cd55a9c23c2e8",
+    "/home/jianming_gatech/cross_validation_assets/bert/f150c1d609d1e50dd5e2e5408661cfac8339277c/vocab.txt": "eeaa9875b23b04b4c54ef759d03db9d1ba1554838f8fb26c5d96fa551df93d02"
+  },
+  "source_files_unchanged": true,
+  "elapsed_s": 353.35262680100277
+}

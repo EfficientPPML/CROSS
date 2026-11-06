@@ -1,0 +1,9 @@
+# Secure full-slot score reduction components
+
+The isolated CPU process completed and was reaped with exit 0. All four outputs passed the unchanged absolute 1e-6 gate over all 65,536 physical slots: signed score means and squared probability denominators for K=128/full16 rows and K=15/partial7 rows with noncontiguous key masks. Maximum error was 2.164e-9; means finished at level2 and denominators at level1 with canonical scale and NSD1. Hostile inactive padding and varied row/head means are included.
+
+The actual N131072/Q10/P3/dnum4 ring satisfies the 128-bit security and P-coverage checks. Server arithmetic used a separate keyless context, both key-generation import guards and seven blocked client codecs. Client decoding began only after all four outputs completed. Input payloads and metadata remained unchanged. The owned public-key directory was removed, and both owned processes are absent.
+
+Internal elapsed time was 4267.6425 seconds. Exact before/after/current/archive equality holds for all104 measured source files. See `report.json`, `run.log` and independently reconstructed `verification.json`; `sources.tar.gz` contains the exact executed sources. Only public aggregate evidence, source bytes and logs are included; no secret keys, ciphertexts, private input arrays or weights are archived.
+
+This is four component outputs, not composed softmax, full attention, refresh, a model, or a TPU result. The helper does not verify a declared plaintext domain from a ciphertext. Its progress callback in this proof only records public phase metadata. Rechecking the owner after arbitrary callback continuation remains API hardening to do before promotion; the measured source remains unchanged. Earlier preparation is separately preserved in `../bert_score_reduction_prelaunch_cpu_20261103/`.

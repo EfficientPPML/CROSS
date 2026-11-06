@@ -1,0 +1,8 @@
+--- baseline_original.py
++++ baseline_dynamic_constants.py
+@@ -5,4 +5,4 @@
+     from jaxite_word import Mapping, nn, packing
+     program = nn.vectorize(model, input_shape)
+     packed = packing.pack(program, packing.PackingPolicy(lazy_constants=True))
+-    return Mapping(packed, global_batch=batch, devices=devices)
++    return Mapping(packed, global_batch=batch, devices=devices, dynamic_constants=True)

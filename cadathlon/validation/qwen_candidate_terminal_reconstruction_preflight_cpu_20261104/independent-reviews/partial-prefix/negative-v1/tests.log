@@ -1,0 +1,34 @@
+FF.                                                                      [100%]
+=================================== FAILURES ===================================
+__________ test_first_norm_input_stop_rejects_future_output[operator] __________
+
+kind = 'operator'
+
+    @pytest.mark.parametrize('kind',['operator','block'])
+    def test_first_norm_input_stop_rejects_future_output(kind):
+        operators={'0.input.inverse_sqrt':metric('operator',1024)}if kind=='operator'else{}
+        blocks=[metric('block',1024)]if kind=='block'else[]
+        row,e,prefix,pin,plan=record(operators,blocks)
+>       with pytest.raises(ValueError):r.candidate_journal(row,e,prefix,pin,plan,{})
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+/tmp/qwen-terminal-prefix-security-review-20261104/negative-v1/source/test_partial.py:19: Failed
+___________ test_first_norm_input_stop_rejects_future_output[block] ____________
+
+kind = 'block'
+
+    @pytest.mark.parametrize('kind',['operator','block'])
+    def test_first_norm_input_stop_rejects_future_output(kind):
+        operators={'0.input.inverse_sqrt':metric('operator',1024)}if kind=='operator'else{}
+        blocks=[metric('block',1024)]if kind=='block'else[]
+        row,e,prefix,pin,plan=record(operators,blocks)
+>       with pytest.raises(ValueError):r.candidate_journal(row,e,prefix,pin,plan,{})
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+/tmp/qwen-terminal-prefix-security-review-20261104/negative-v1/source/test_partial.py:19: Failed
+=========================== short test summary info ============================
+FAILED ../../tmp/qwen-terminal-prefix-security-review-20261104/negative-v1/source/test_partial.py::test_first_norm_input_stop_rejects_future_output[operator]
+FAILED ../../tmp/qwen-terminal-prefix-security-review-20261104/negative-v1/source/test_partial.py::test_first_norm_input_stop_rejects_future_output[block]
+2 failed, 1 passed in 0.03s

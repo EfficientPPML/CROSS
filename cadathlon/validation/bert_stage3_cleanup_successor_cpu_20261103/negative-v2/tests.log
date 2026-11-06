@@ -1,0 +1,42 @@
+FFFFF                                                                    [100%]
+=================================== FAILURES ===================================
+__ test_cleanup_install_failure_still_runs_body_and_restores_mutated_handler ___
+/tmp/bert-stage3-cleanup-successor-20261103/test_cleanup.py:93: in test_cleanup_install_failure_still_runs_body_and_restores_mutated_handler
+    assert entered == ['published']
+E   AssertionError: assert [] == ['published']
+E     
+E     Right contains one more item: 'published'
+E     Use -v to get more diff
+_______ test_body_primary_survives_restore_cancellation[cleanup_signals] _______
+/tmp/bert-stage3-cleanup-successor-20261103/test_cleanup.py:108: in test_body_primary_survives_restore_cancellation
+    assert caught is body
+E   AssertionError: assert KeyboardInterrupt('cleanup cancel') is ValueError('body primary')
+_____ test_body_primary_survives_restore_cancellation[termination_signals] _____
+/tmp/bert-stage3-cleanup-successor-20261103/test_cleanup.py:108: in test_body_primary_survives_restore_cancellation
+    assert caught is body
+E   AssertionError: assert KeyboardInterrupt('cleanup cancel') is ValueError('body primary')
+_____ test_restore_failure_attempts_all_handlers_and_mask[cleanup_signals] _____
+/tmp/bert-stage3-cleanup-successor-20261103/test_cleanup.py:122: in test_restore_failure_attempts_all_handlers_and_mask
+    assert {s for phase, s in signals.events if phase == 'restore'} == set(module.SIGNALS)
+E   assert {<Signals.SIGINT: 2>} == {<Signals.SIG....SIGTERM: 15>}
+E     
+E     Extra items in the right set:
+E     <Signals.SIGHUP: 1>
+E     <Signals.SIGTERM: 15>
+E     Use -v to get more diff
+___ test_restore_failure_attempts_all_handlers_and_mask[termination_signals] ___
+/tmp/bert-stage3-cleanup-successor-20261103/test_cleanup.py:122: in test_restore_failure_attempts_all_handlers_and_mask
+    assert {s for phase, s in signals.events if phase == 'restore'} == set(module.SIGNALS)
+E   assert {<Signals.SIGINT: 2>} == {<Signals.SIG....SIGTERM: 15>}
+E     
+E     Extra items in the right set:
+E     <Signals.SIGHUP: 1>
+E     <Signals.SIGTERM: 15>
+E     Use -v to get more diff
+=========================== short test summary info ============================
+FAILED ../../tmp/bert-stage3-cleanup-successor-20261103/test_cleanup.py::test_cleanup_install_failure_still_runs_body_and_restores_mutated_handler
+FAILED ../../tmp/bert-stage3-cleanup-successor-20261103/test_cleanup.py::test_body_primary_survives_restore_cancellation[cleanup_signals]
+FAILED ../../tmp/bert-stage3-cleanup-successor-20261103/test_cleanup.py::test_body_primary_survives_restore_cancellation[termination_signals]
+FAILED ../../tmp/bert-stage3-cleanup-successor-20261103/test_cleanup.py::test_restore_failure_attempts_all_handlers_and_mask[cleanup_signals]
+FAILED ../../tmp/bert-stage3-cleanup-successor-20261103/test_cleanup.py::test_restore_failure_attempts_all_handlers_and_mask[termination_signals]
+5 failed, 20 deselected in 0.04s

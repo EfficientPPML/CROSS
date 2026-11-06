@@ -1,0 +1,123 @@
+.........F                                                               [100%]
+=================================== FAILURES ===================================
+____________ test_secure_cd1_cd2_facades_legacy_cd2_and_retirement _____________
+
+ring = (<jaxite_word.ckks_ctx.CKKSContext object at 0x7c1293cf0830>, {'degree': 8192, 'num_slots': 4096, 'scaling_factor': 10...1, 4079617, 1097729, 1130497, 786433, 1032193], 'P': [1073692673, 1073643521]}, 'P': [1073692673, 1073643521], ...}, 3)
+
+    def test_secure_cd1_cd2_facades_legacy_cd2_and_retirement(ring):
+     client,params,evaluation,dnum=ring
+     def execute():
+      tracked=[];all_fields=0
+      values=np.stack([np.linspace(-.3,.3,client.num_slots),.2*np.sin(np.arange(client.num_slots)/17)])
+      left=client.encrypt_slots_batch(values,scale=float(1<<40));right=client.encrypt_slots_batch(-.7*values,scale=float(1<<40))
+      high_left=client.encrypt_slots_batch(values,scale=float(1<<48));high_right=client.encrypt_slots_batch(-.7*values,scale=float(1<<48))
+      for cd in (1,2):
+       def server():
+        value=CKKSContext(dict(params,composite_degree=cd,evaluation_key=[jax.numpy.asarray(evaluation[k],dtype='uint32').transpose(0,2,1) for k in ('a','b')]))
+        value.program_initialization([],dnum=dnum,r=64,c=128,batch=2,pregenerated_rotation_keys={})
+        assert value.secret_key is None and value._param_cache.secret_key is None
+        return value
+       ordinary,selected=server(),server()
+       assert he_params.qp_is_secure(selected.q_towers,selected.p_towers,selected.degree,he_params.SecurityTarget(128,'classical'))
+       if cd==1:
+        with pytest.raises(ValueError,match='composite_degree=2'):enable_scoped_ntt_subsets(selected)
+        # The production adapter remains CD2-only. This independently secure
+        # core-hook test directly owns the public factory without weakening it.
+        provider=ScopedNTTSubsets(selected._param_cache)
+        for name in ('rotation_polynomial_factory','multiplication_polynomial_factory','rescale_polynomial_factory'):
+         assert getattr(selected._param_cache,name) is None
+         setattr(selected._param_cache,name,provider.polynomial_factory)
+       else:provider=enable_scoped_ntt_subsets(selected)
+       a_in,b_in=(high_left,high_right) if cd==1 else (left,right)
+       level=selected.max_level-1
+       expected_op=ordinary.he_mul[level];actual_op=selected.he_mul[level]
+       assert actual_op._hemul._use_split_rescale is False
+       if cd==1:
+        assert actual_op._hemul._he_rescale._polynomial_factory.__self__ is provider
+        assert nested(actual_op._no_relin_operator)==[]
+        count=controls_equal(actual_op._hemul._he_rescale,expected_op._hemul._he_rescale)
+       else:
+        assert nested(actual_op._hemul)==[]
+        assert actual_op._post_rescale._polynomial_factory.__self__ is provider
+        count=controls_equal(actual_op._post_rescale,expected_op._post_rescale)
+       expected=expected_op.mul(a_in,b_in);actual=actual_op.mul(a_in,b_in);same(actual,expected)
+       error=float(np.max(np.abs(client.decrypt_slots_batch(actual)-values*(-.7*values))));assert error<2e-6,error
+       # The compiled evaluator calls the same facade's raw multiply/rescale path.
+       arithmetic=None
+       if cd==2:
+        arithmetic=EncryptedPolynomialEvaluator(selected,compiled_multiply=True,low_memory=True)
+        same(arithmetic.multiply(a_in,b_in),expected)
+       RECORDS.append(dict(kind='secure_public_facade',composite_degree=cd,input_level=level+1,nested_fields=count,max_abs_error=error,payload_metadata_exact=True,compiled_path_exact=True if cd==2 else None,production_opt_in_supported=cd==2))
+       tracked.extend([weakref.ref(selected),weakref.ref(selected._param_cache)])
+       if arithmetic is not None:arithmetic._clear_working_caches()
+       provider.close();ckks_ctx.evict_context_caches(ordinary);ckks_ctx.evict_context_caches(selected)
+       del arithmetic,provider,actual_op,expected_op,selected,ordinary,actual,expected
+      # Legacy private CD2 pre-rescales BOTH operands. Use genuine PTCT products
+      # so their real scale supports that path; decode with its derived scale.
+      ordinary,selected=server_for(ring,2),server_for(ring,2);provider=enable_scoped_ntt_subsets(selected)
+      pt=selected.encode_at_level(np.full(client.num_slots,.5),2,scale=float(1<<40))
+      a=selected.ptct_mul[2].mul(left,pt);b=selected.ptct_mul[2].mul(right,pt)
+      combined=a._clone_with_payload(jax.numpy.concatenate((a.polynomial,b.polynomial),axis=1),num_elements=4)
+      args=dict(batch=2,r=64,c=128,dnum=dnum,num_eval_mult=1,original_moduli=params['q_towers'],extend_moduli=params['p_towers'],composite_degree=2)
+      baseline=hemul._HEMulKernel(**args);candidate=hemul._HEMulKernel(**args,polynomial_factory=provider.polynomial_factory)
+      for kernel in (baseline,candidate):
+       kernel.control_gen(degree_layout=(64,128),keygen_sizeQ=len(params['q_towers']),skip_rescale=False)
+       kernel.setup_relinearization(*selected._param_cache.get_eval_key(1))
+      count=controls_equal(candidate._he_rescale,baseline._he_rescale)
+      expected=baseline.mul(combined);actual=candidate.mul(combined);same(actual,expected)
+      divisor=math.prod(params['q_towers'][-2:]);scale=(a._ckks_scale/divisor)*(b._ckks_scale/divisor)
+      error=float(np.max(np.abs(client.decrypt_slots_batch(actual,scale=scale)-.25*values*(-.7*values))));assert error<2e-6,error
+      RECORDS.append(dict(kind='secure_legacy_private_cd2',nested_fields=count,derived_decode_scale=scale,max_abs_error=error,payload_metadata_exact=True,split_path_executed=False))
+      tracked.extend([weakref.ref(selected),weakref.ref(selected._param_cache),*[weakref.ref(v.ntt_ctx) for v in candidate._he_rescale.ct_last_list+candidate._he_rescale.ct_work_list]])
+      provider.close();ckks_ctx.evict_context_caches(ordinary);ckks_ctx.evict_context_caches(selected)
+      return tracked
+>    refs=execute();jax.clear_caches();polynomial._POLYNOMIAL_REGISTRY.clear();he_params.ntt_mm._barrett_ntt_context_cache.clear();gc.collect()
+          ^^^^^^^^^
+
+cadathlon/tests/test_scoped_nested_rescale.py:129: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def execute():
+     tracked=[];all_fields=0
+     values=np.stack([np.linspace(-.3,.3,client.num_slots),.2*np.sin(np.arange(client.num_slots)/17)])
+     left=client.encrypt_slots_batch(values,scale=float(1<<40));right=client.encrypt_slots_batch(-.7*values,scale=float(1<<40))
+     high_left=client.encrypt_slots_batch(values,scale=float(1<<48));high_right=client.encrypt_slots_batch(-.7*values,scale=float(1<<48))
+     for cd in (1,2):
+      def server():
+       value=CKKSContext(dict(params,composite_degree=cd,evaluation_key=[jax.numpy.asarray(evaluation[k],dtype='uint32').transpose(0,2,1) for k in ('a','b')]))
+       value.program_initialization([],dnum=dnum,r=64,c=128,batch=2,pregenerated_rotation_keys={})
+       assert value.secret_key is None and value._param_cache.secret_key is None
+       return value
+      ordinary,selected=server(),server()
+      assert he_params.qp_is_secure(selected.q_towers,selected.p_towers,selected.degree,he_params.SecurityTarget(128,'classical'))
+      if cd==1:
+       with pytest.raises(ValueError,match='composite_degree=2'):enable_scoped_ntt_subsets(selected)
+       # The production adapter remains CD2-only. This independently secure
+       # core-hook test directly owns the public factory without weakening it.
+       provider=ScopedNTTSubsets(selected._param_cache)
+       for name in ('rotation_polynomial_factory','multiplication_polynomial_factory','rescale_polynomial_factory'):
+        assert getattr(selected._param_cache,name) is None
+        setattr(selected._param_cache,name,provider.polynomial_factory)
+      else:provider=enable_scoped_ntt_subsets(selected)
+      a_in,b_in=(high_left,high_right) if cd==1 else (left,right)
+      level=selected.max_level-1
+      expected_op=ordinary.he_mul[level];actual_op=selected.he_mul[level]
+      assert actual_op._hemul._use_split_rescale is False
+      if cd==1:
+       assert actual_op._hemul._he_rescale._polynomial_factory.__self__ is provider
+       assert nested(actual_op._no_relin_operator)==[]
+       count=controls_equal(actual_op._hemul._he_rescale,expected_op._hemul._he_rescale)
+      else:
+       assert nested(actual_op._hemul)==[]
+       assert actual_op._post_rescale._polynomial_factory.__self__ is provider
+       count=controls_equal(actual_op._post_rescale,expected_op._post_rescale)
+      expected=expected_op.mul(a_in,b_in);actual=actual_op.mul(a_in,b_in);same(actual,expected)
+>     error=float(np.max(np.abs(client.decrypt_slots_batch(actual)-values*(-.7*values))));assert error<2e-6,error
+                                                                                          ^^^^^^^^^^^^^^^^^^^^^^^
+E     AssertionError: 1.3907766864690307e-05
+E     assert 1.3907766864690307e-05 < 2e-06
+
+cadathlon/tests/test_scoped_nested_rescale.py:99: AssertionError
+=========================== short test summary info ============================
+FAILED cadathlon/tests/test_scoped_nested_rescale.py::test_secure_cd1_cd2_facades_legacy_cd2_and_retirement
+1 failed, 9 passed in 14.90s

@@ -1,0 +1,133 @@
+{
+  "created_utc": "2026-11-04T06:31:31.238370+00:00",
+  "findings": [
+    "supervise serializes report before final publication.close, then propagates a close error; a normal scientific failure and an ordinary escaped OSError both become OS exit1 through the original entry boundary.",
+    "accept_candidate_worker checks code0 for passed and code1 for failed. It does not establish normal return after publication; parent collect uses the same supervise boundary.",
+    "Selected signal handlers raise KeyboardInterrupt for TERM/INT/HUP or deferred cancellation, never SystemExit. They are restored before final publication.",
+    "After final report serialization, reviewed publication close uses Output.close -> finish -> os.close. Ordinary OS failures are OSError subclasses; no selected local helper creates SystemExit0.",
+    "Model/capture/asset cleanup completes before scientific report publication. Selected local cleanup implementations contain no explicit SystemExit call.",
+    "No concrete unmodified ordinary cleanup/signal route to late SystemExit0 was identified. Synthetic injected SystemExit0 tests cover the exception contract; they do not demonstrate such a naturally reachable current path."
+  ],
+  "function_spans": {
+    "backend_environment.py": {
+      "import_scope": {
+        "last_line": 77,
+        "line": 32
+      }
+    },
+    "checker_process.py": {
+      "accept_candidate_worker": {
+        "last_line": 120,
+        "line": 82
+      },
+      "collect": {
+        "last_line": 718,
+        "line": 611
+      },
+      "dispatch": {
+        "last_line": 729,
+        "line": 721
+      },
+      "signals": {
+        "last_line": 313,
+        "line": 254
+      },
+      "supervise": {
+        "last_line": 495,
+        "line": 415
+      }
+    },
+    "checker_runtime.py": {
+      "execute_candidate": {
+        "last_line": 253,
+        "line": 174
+      }
+    },
+    "cleanup_origin.py": {},
+    "entry.py": {
+      "main": {
+        "last_line": 212,
+        "line": 199
+      }
+    },
+    "freeze_io.py": {
+      "close": {
+        "last_line": 167,
+        "line": 164
+      },
+      "reopen": {
+        "last_line": 117,
+        "line": 104
+      },
+      "write": {
+        "last_line": 159,
+        "line": 127
+      }
+    },
+    "input_gate.py": {
+      "model_assets": {
+        "last_line": 211,
+        "line": 189
+      }
+    },
+    "native_capture.py": {
+      "_restore": {
+        "last_line": 139,
+        "line": 136
+      }
+    },
+    "native_observer.py": {
+      "__exit__": {
+        "last_line": 229,
+        "line": 227
+      },
+      "_restore": {
+        "last_line": 135,
+        "line": 105
+      }
+    }
+  },
+  "limits": [
+    "This is scoped static source review, not an exhaustive guarantee about native-library finalizers or arbitrary injected callbacks.",
+    "stderr absence is not a positive normal-return certificate. Observed traceback may reject a run; silence does not repair the failed-run exit1 ambiguity.",
+    "A new consumer cannot repair the old producer terminal contract. Original139 failed attempts remain inadmissible for reconstruction/revision under the root decision.",
+    "An original139 PASS with exit0 may be assessed within the ordinary reviewed-code scope; this receipt does not certify any actual result."
+  ],
+  "reviewed_source_sha256": {
+    "backend_environment.py": "6fa66a13f96ce86fab6a2e44184fcb27bd8e0e0e2a3320f51395dfdc408c640d",
+    "checker_process.py": "b1fda655ff4c8a933e0ccceed8ff6d4cd0e8c7e9e7f9f86c05a90be35cc79694",
+    "checker_runtime.py": "9056fd5fdff32f75d17b54b3d6c252f8ae4faf7a09519f9dee2a67b4446bfe85",
+    "cleanup_origin.py": "d74e991cc17121752e355f6313bb597ed0f6be887aa7b4a2007c7288c6448c75",
+    "entry.py": "175c8884f4753a9a59fdb27e270dc8b7bc089c13511b1329b04a902fec8edbe3",
+    "freeze_io.py": "4db4dba8ac9b5215cfdcc5089ea62da27f7086079704fea263254397d2e5363d",
+    "input_gate.py": "44b3629ad486a0035515ef1de50265de39caf8dc8dceecc578209cd060606ac7",
+    "native_capture.py": "4d6d20e7682ae45d37ffe77d82ba29ce598949a970d335d103c4087479074093",
+    "native_observer.py": "c066b72afa5f8f427071f21b423e1ea740a23fe65887397dccb1ecff63d6bc27"
+  },
+  "reviewed_sources_unchanged": true,
+  "schema": "qwen-candidate-terminal-reachability-source-review-v1",
+  "scope": "Selected frozen139 local lifecycle source only; no actual candidate outcome, private journal, calibration, model, validation, backend execution, or dynamic probe.",
+  "selected_explicit_system_exit_calls": [
+    {
+      "expression": "SystemExit(main())",
+      "line": 216,
+      "source": "entry.py"
+    }
+  ],
+  "source_count": 139,
+  "source_manifest_sha256": "ccd5834b83b9dfec2d3ea988fb395a61ec4b05ce3f2f54621f29200cbbb8e06a",
+  "source_root": "/tmp/qwen-expanded-candidate-checker-ready-v2-20261104",
+  "successor_design": {
+    "all_escaped_BaseException_in_dispatch_maps_to_70": true,
+    "argparse_help_and_usage_outside_dispatch_boundary": true,
+    "diagnostics_best_effort_must_not_change_infrastructure_status": true,
+    "frozen_sources_modified": false,
+    "infrastructure_status": 70,
+    "intentional_final_SystemExit_outside_boundary": true,
+    "normal_status_requires_exact_int": true,
+    "scientific_normal_statuses": [
+      0,
+      1
+    ]
+  }
+}

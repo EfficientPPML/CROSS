@@ -1,0 +1,100 @@
+"""Collect one CPU pinned-QKV file-boundary component, including failed attempts."""
+from pathlib import Path
+import argparse,hashlib,io,json,os,shutil,sys,tarfile,tempfile,time,uuid
+LAB=Path(__file__).resolve().parents[1];ROOT=LAB/'checkout';HERE=Path(__file__).resolve().parent
+sys.path.insert(0,str(ROOT/'cadathlon/validation'))
+import check_transformer_suite as process
+
+def sources():
+ paths=[*ROOT.rglob('*.py'),ROOT/'cadathlon/common/Makefile.problem',*HERE.glob('*.py'),LAB/'source_origin.json',LAB/'prior_transport_sources.json',*LAB.glob('test_*.py')]
+ return {str(p):p.read_bytes() for p in sorted(set(paths)) if '__pycache__' not in p.parts}
+def hashes(mapping):return {name:hashlib.sha256(data).hexdigest() for name,data in mapping.items()}
+def copy_json(source,destination):
+ value=json.loads(source.read_text());process.write_json(destination,value);return value
+
+def run(args):
+ args.output.mkdir(parents=True,exist_ok=False);started=time.perf_counter();snapshot=sources();before=hashes(snapshot)
+ report={'scope':'Reusable streaming-linear module: two distinct pinned BERT embedding rows through full768x768 layer0 Q/K/V in a separate keyless process; CPU component only.','passed':False,'full_bert_evaluated':False,'mrpc_accuracy_evaluated':False,'scoring_calibrated':False,'source_hashes_start':before,'stages':{},'wrapper_pid':os.getpid(),'cpu_affinity':sorted(os.sched_getaffinity(0)),'software':process.software_versions(),'gate':1e-6,'environment':{k:os.environ.get(k) for k in ('JAX_PLATFORMS','OMP_NUM_THREADS','OPENBLAS_NUM_THREADS')}}
+ with tarfile.open(args.output/'sources.tar.gz','w:gz') as stream:
+  for name,data in snapshot.items():
+   p=Path(name);member='repository/'+str(p.relative_to(ROOT)) if p.is_relative_to(ROOT) else 'prototype/'+p.name
+   info=tarfile.TarInfo(member);info.size=len(data);info.mode=0o644;stream.addfile(info,io.BytesIO(data))
+ report['source_archive_sha256']=process.sha256(args.output/'sources.tar.gz');process.write_json(args.output/'report.json',report)
+ owned=None;owned_fd=None;identity=None;active=None;caught=None;crypto_start=None
+ # Reuse the reviewed collector's process-group/termination/evidence cleanup.
+ # This standalone CPU component explicitly overrides its TPU runner defaults.
+ process.child_environment_overrides=lambda:{'CROSS_ROOT':str(ROOT),'JAX_PLATFORMS':'cpu','PYTHONUNBUFFERED':'1','CROSS_LEVEL_PARAMS_MAX':'1','CROSS_BARRETT_NTT_CONTEXT_CACHE_CAPACITY':'2'}
+ try:
+  owned=Path(tempfile.mkdtemp(prefix='cross-bert-qkv-component-'));report['owned_component_directory']=str(owned)
+  owned_fd,identity=process.open_owned_directory(owned);request_id=uuid.uuid4().hex
+  report['owned_component_directory_identity']=identity;report['request_id']=request_id;process.write_json(args.output/'report.json',report)
+  stages=[('client-preprocess',[str(args.preprocess_python),str(HERE/'assets.py'),'--snapshot',str(args.snapshot),'--private',str(owned/'client_only'),'--model',str(owned/'model')])]
+  stages += [(label,[sys.executable,str(HERE/'component.py'),phase,'--root',str(owned),'--request-id',request_id]) for label,phase in [('client-encrypt','setup'),('keyless-server','server'),('client-decrypt','finish')]]
+  for label,command in stages:
+   if label=='client-encrypt':crypto_start=time.perf_counter()
+   directory=args.output/label;directory.mkdir();active=directory
+   print(f'Starting {label}; outputs {directory}',flush=True)
+   record=process.run_case(command,directory,timeout=None,cleanup_grace_s=30.)
+   if not isinstance(record,dict):raise TypeError('case collector returned invalid evidence')
+   report['stages'][label]=record;active=None
+   record['passed']=(record.get('returncode')==0 and not record.get('error') and record.get('result',{}).get('passed') is True and record.get('process_reaped') is True and record.get('public_key_store_removed') is True and record.get('owned_directory_handle_closed') is True)
+   process.write_json(directory/'process.json',record);process.write_json(args.output/'report.json',report)
+   if not record['passed']:raise RuntimeError(f'{label} failed; inspect preserved artifacts')
+   if label=='client-preprocess':
+    report['preprocessing']=copy_json(owned/'client_only/preprocessing.json',args.output/'preprocessing.json');copy_json(owned/'model/model_manifest.json',args.output/'model_manifest.json')
+   if label=='client-encrypt':
+    copy_json(owned/'public/public_manifest.json',args.output/'public_manifest.json');copy_json(owned/'upload/transport.json',args.output/'request_transport.json')
+   if label=='client-decrypt':
+    report['cryptographic_subprocess_total_s']=time.perf_counter()-crypto_start
+    copy_json(owned/'download/responses.json',args.output/'responses.json')
+    for kind in ('query','key','value'):copy_json(owned/'download'/kind/'transport.json',args.output/(kind+'_transport.json'))
+  report['all_component_gates_passed']=True
+ except BaseException as error:
+  caught=error;report['error']=f'{type(error).__name__}: {error}'
+ finally:
+  if active is not None:
+   # An entered case with unavailable evidence has unknown process ownership.
+   # Never infer safety from only the preceding completed stages.
+   try:
+    row=json.loads((active/'process.json').read_text())
+    if not isinstance(row,dict) or row.get('process_reaped') is not True:raise ValueError('active stage cleanup is not proven')
+    report['stages'][active.name]=row
+   except BaseException as error:
+    report['stages'][active.name]={'passed':False,'process_reaped':False,'error':'active stage process cleanup unknown','evidence_read_error':f'{type(error).__name__}: {error}'}
+    if caught is None:caught=error
+    else:caught.add_note('Active stage evidence also failed: '+str(error))
+  report['all_processes_reaped']=all(isinstance(row,dict) and row.get('process_reaped') is True for row in report['stages'].values())
+  report['owned_component_directory_removed']=owned is None
+  if owned is not None:
+   try:
+    if not report['all_processes_reaped']:raise RuntimeError('owned process cleanup unknown; component files retained')
+    if owned_fd is None or identity is None:raise RuntimeError('directory ownership not pinned; component files retained')
+    report['owned_component_directory_removed']=process.remove_owned_directory(owned,owned_fd,identity)
+   except BaseException as error:
+    report['cleanup_error']=f'{type(error).__name__}: {error}'
+    if caught is None:caught=error
+    else:caught.add_note('Component cleanup also failed: '+str(error))
+  report['owned_directory_handle_closed']=owned_fd is None
+  if owned_fd is not None:
+   try:os.close(owned_fd);report['owned_directory_handle_closed']=True
+   except BaseException as error:
+    report['directory_handle_cleanup_error']=f'{type(error).__name__}: {error}'
+    if caught is None:caught=error
+    else:caught.add_note('Directory handle cleanup also failed: '+str(error))
+  try:report['source_hashes_end']=hashes(sources());report['source_files_unchanged']=report['source_hashes_end']==before
+  except BaseException as error:
+   report['source_files_unchanged']=False;report['source_verification_error']=str(error)
+   if caught is None:caught=error
+   else:caught.add_note('Source verification also failed: '+str(error))
+  report['elapsed_s']=time.perf_counter()-started
+  report['passed']=caught is None and report.get('all_component_gates_passed') is True and report['all_processes_reaped'] and report['owned_component_directory_removed'] and report['owned_directory_handle_closed'] and report['source_files_unchanged']
+  try:process.write_json(args.output/'report.json',report)
+  except BaseException as error:
+   if caught is None:raise
+   caught.add_note('Final report write also failed: '+str(error))
+ if caught is not None and not isinstance(caught,Exception):raise caught
+ print(json.dumps({k:report.get(k) for k in ('passed','error','elapsed_s','cryptographic_subprocess_total_s','all_processes_reaped','owned_component_directory_removed','source_files_unchanged')}),flush=True)
+ return 0 if report['passed'] else 1
+if __name__=='__main__':
+ p=argparse.ArgumentParser(description=__doc__);p.add_argument('--output',type=Path,required=True);p.add_argument('--snapshot',type=Path,required=True);p.add_argument('--preprocess-python',type=Path,default=Path('/tmp/cross-pretrained-validation-env/bin/python'));a=p.parse_args()
+ with process.termination_signals():raise SystemExit(run(a))

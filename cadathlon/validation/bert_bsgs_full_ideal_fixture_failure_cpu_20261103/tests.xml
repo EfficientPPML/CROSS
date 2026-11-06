@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="80" time="101.627" timestamp="2026-11-03T23:33:14.896614+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_full_model_owner" name="test_callback_factory_binding_is_fixed[False]" time="2.775" /><testcase classname="test_full_model_owner" name="test_callback_factory_binding_is_fixed[True]" time="1.735" /><testcase classname="test_full_model_owner" name="test_entry_guards_before_primitives[ctx_secret]" time="1.783" /><testcase classname="test_full_model_owner" name="test_entry_guards_before_primitives[cache_secret]" time="1.749" /><testcase classname="test_full_model_owner" name="test_entry_guards_before_primitives[parameters_secret]" time="1.798" /><testcase classname="test_full_model_owner" name="test_entry_guards_before_primitives[callback]" time="1.799" /><testcase classname="test_full_model_owner" name="test_entry_guards_before_primitives[positions]" time="1.829" /><testcase classname="test_full_model_owner" name="test_entry_guards_before_primitives[contract]" time="1.732" /><testcase classname="test_full_model_owner" name="test_entry_guards_before_primitives[scale]" time="1.751" /><testcase classname="test_full_model_owner" name="test_entry_guards_before_primitives[keys]" time="1.741" /><testcase classname="test_full_model_owner" name="test_entry_guards_before_primitives[map]" time="1.737" /><testcase classname="test_full_model_owner" name="test_entry_guards_before_primitives[eval_none]" time="1.770" /><testcase classname="test_full_model_owner" name="test_entry_guards_before_primitives[eval_placeholder]" time="1.739" /><testcase classname="test_full_model_owner" name="test_entry_guards_before_primitives[eval_dtype]" time="1.789" /><testcase classname="test_full_model_owner" name="test_entry_guards_before_primitives[context]" time="1.727" /><testcase classname="test_full_model_owner" name="test_entry_guards_before_primitives[bound_owner]" time="1.825" /><testcase classname="test_full_model_owner" name="test_entry_guards_before_primitives[source_nsd]" time="1.728" /><testcase classname="test_full_model_owner" name="test_entry_guards_before_primitives[source_scale]" time="1.818" /><testcase classname="test_full_model_owner" name="test_entry_guards_before_primitives[source_level]" time="1.739" /><testcase classname="test_full_model_owner" name="test_entry_guards_before_primitives[capture]" time="1.794" /><testcase classname="test_full_model_owner" name="test_callback_lifetime_guards_without_full_graph[current]" time="1.765" /><testcase classname="test_full_model_owner" name="test_callback_lifetime_guards_without_full_graph[original]" time="1.759" /><testcase classname="test_full_model_owner" name="test_callback_lifetime_guards_without_full_graph[captured]" time="1.754" /><testcase classname="test_full_model_owner" name="test_callback_lifetime_guards_without_full_graph[sibling]" time="1.759" /><testcase classname="test_full_model_owner" name="test_callback_lifetime_guards_without_full_graph[callback]" time="1.748" /><testcase classname="test_full_model_owner" name="test_callback_lifetime_guards_without_full_graph[key]" time="1.740" /><testcase classname="test_full_model_owner" name="test_callback_lifetime_guards_without_full_graph[reentry]" time="1.735" /><testcase classname="test_full_model_owner" name="test_callback_lifetime_guards_without_full_graph[cancel]" time="1.750" /><testcase classname="test_full_model_owner" name="test_outer_evaluate_releases_borrowers_after_callback[cancel]" time="2.193" /><testcase classname="test_full_model_owner" name="test_outer_evaluate_releases_borrowers_after_callback[reentry]" time="2.195" /><testcase classname="test_full_model_owner" name="test_complete_head_harness_retains_ciphertext_payload_shape" time="2.435" /><testcase classname="test_full_model_owner" name="test_joined_all12_actual_ciphertext_connections_all_slots[15]" time="20.851"><failure message="AttributeError: 'NoneType' object has no attribute 'ff_ctx'">test_full_model_owner.py:278: in test_joined_all12_actual_ciphertext_connections_all_slots
+    result=owner.evaluate(sources,capture_checkpoints=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+encrypted_bert_full_model.py:181: in evaluate
+    attention_result=child.evaluate(current)
+                     ^^^^^^^^^^^^^^^^^^^^^^^
+test_full_model_owner.py:268: in attention
+    result=attention_impl(child,inputs);trace['attention'][child.layer]=result.outputs;return result
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+encrypted_bert_layer_attention.py:184: in evaluate
+    probabilities=self.softmaxes[index].evaluate_tile(scores);del scores
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_bert_layer_softmax.py:132: in evaluate_tile
+    value=self._note('round'+str(row['index']),self.round.evaluate_tile(value),row['output_level'],actual)
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_bert_normalization_round.py:158: in evaluate_tile
+    guard();reduction._note(f'normalization inverse y{update}',estimate);guard();reduction._forget(estimate)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_score_reduction.py:206: in _note
+    self.progress(label,value,dict(self.counts))
+checkout/cadathlon/common/encrypted_bert_normalization_round.py:139: in observed
+    def observed(*args):callback(*args);guard()
+                        ^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_bert_layer_softmax.py:75: in _callback
+    if self.progress is not None:self.progress(label,value,dict(counts))
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+encrypted_bert_layer_attention.py:109: in _callback
+    self._guard();state=self._fingerprint(value)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^
+encrypted_bert_layer_attention.py:106: in _fingerprint
+    def _fingerprint(self,value):return self.attention._fingerprint(value)
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+encrypted_bert_bsgs_attention.py:81: in _fingerprint
+    return self._guard_owner._fingerprint(value)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+encrypted_bsgs_score_routing.py:194: in _fingerprint
+    field = ntt.ff_ctx
+            ^^^^^^^^^^
+E   AttributeError: 'NoneType' object has no attribute 'ff_ctx'</failure></testcase><testcase classname="test_full_model_owner" name="test_joined_all12_actual_ciphertext_connections_all_slots[128]" time="22.765"><failure message="AttributeError: 'NoneType' object has no attribute 'ff_ctx'">test_full_model_owner.py:278: in test_joined_all12_actual_ciphertext_connections_all_slots
+    result=owner.evaluate(sources,capture_checkpoints=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+encrypted_bert_full_model.py:181: in evaluate
+    attention_result=child.evaluate(current)
+                     ^^^^^^^^^^^^^^^^^^^^^^^
+test_full_model_owner.py:268: in attention
+    result=attention_impl(child,inputs);trace['attention'][child.layer]=result.outputs;return result
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+encrypted_bert_layer_attention.py:184: in evaluate
+    probabilities=self.softmaxes[index].evaluate_tile(scores);del scores
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_bert_layer_softmax.py:132: in evaluate_tile
+    value=self._note('round'+str(row['index']),self.round.evaluate_tile(value),row['output_level'],actual)
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_bert_normalization_round.py:158: in evaluate_tile
+    guard();reduction._note(f'normalization inverse y{update}',estimate);guard();reduction._forget(estimate)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_score_reduction.py:206: in _note
+    self.progress(label,value,dict(self.counts))
+checkout/cadathlon/common/encrypted_bert_normalization_round.py:139: in observed
+    def observed(*args):callback(*args);guard()
+                        ^^^^^^^^^^^^^^^
+checkout/cadathlon/common/encrypted_bert_layer_softmax.py:75: in _callback
+    if self.progress is not None:self.progress(label,value,dict(counts))
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+encrypted_bert_layer_attention.py:109: in _callback
+    self._guard();state=self._fingerprint(value)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^
+encrypted_bert_layer_attention.py:106: in _fingerprint
+    def _fingerprint(self,value):return self.attention._fingerprint(value)
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+encrypted_bert_bsgs_attention.py:81: in _fingerprint
+    return self._guard_owner._fingerprint(value)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+encrypted_bsgs_score_routing.py:194: in _fingerprint
+    field = ntt.ff_ctx
+            ^^^^^^^^^^
+E   AttributeError: 'NoneType' object has no attribute 'ff_ctx'</failure></testcase><testcase classname="test_bsgs_full_collector" name="test_fixed_case_summary[15]" time="0.001" /><testcase classname="test_bsgs_full_collector" name="test_fixed_case_summary[128]" time="0.004" /><testcase classname="test_bsgs_full_collector" name="test_case_failures_rejected[missing_stage]" time="0.000" /><testcase classname="test_bsgs_full_collector" name="test_case_failures_rejected[failed_stage]" time="0.000" /><testcase classname="test_bsgs_full_collector" name="test_case_failures_rejected[nan]" time="0.000" /><testcase classname="test_bsgs_full_collector" name="test_case_failures_rejected[bad_count]" time="0.000" /><testcase classname="test_bsgs_full_collector" name="test_case_failures_rejected[bad_refresh]" time="0.000" /><testcase classname="test_bsgs_full_collector" name="test_case_failures_rejected[domain_stop]" time="0.000" /><testcase classname="test_bsgs_full_collector" name="test_case_failures_rejected[missing_domain]" time="0.000" /><testcase classname="test_bsgs_full_collector" name="test_case_failures_rejected[independent_stop]" time="0.001" /><testcase classname="test_bsgs_full_collector" name="test_case_failures_rejected[wrong_positions]" time="0.001" /><testcase classname="test_bsgs_full_collector" name="test_case_failures_rejected[wrong_K]" time="0.000" /><testcase classname="test_bsgs_full_collector" name="test_case_failures_rejected[prediction]" time="0.000" /><testcase classname="test_bsgs_full_collector" name="test_case_failures_rejected[head]" time="0.000" /><testcase classname="test_bsgs_full_collector" name="test_case_failures_rejected[gate]" time="0.000" /><testcase classname="test_bsgs_full_collector" name="test_case_failures_rejected[boolean_count]" time="0.000" /><testcase classname="test_bsgs_full_collector" name="test_source_substitution_precedes_external_reports_and_assets[encrypted_bert_full_model.py]" time="0.004" /><testcase classname="test_bsgs_full_collector" name="test_source_substitution_precedes_external_reports_and_assets[encrypted_bert_layer_attention.py]" time="0.003" /><testcase classname="test_bsgs_full_collector" name="test_source_substitution_precedes_external_reports_and_assets[test_full_model_owner.py]" time="0.003" /><testcase classname="test_bsgs_full_collector" name="test_source_substitution_precedes_external_reports_and_assets[ideal_primitives.py]" time="0.003" /><testcase classname="test_bsgs_full_collector" name="test_source_substitution_precedes_external_reports_and_assets[encrypted_bsgs_score_routing.py]" time="0.005" /><testcase classname="test_bsgs_full_collector" name="test_source_substitution_precedes_external_reports_and_assets[candidate_manifest.json]" time="0.003" /><testcase classname="test_bsgs_full_collector" name="test_source_substitution_precedes_external_reports_and_assets[full_model_reference.py]" time="0.003" /><testcase classname="test_bsgs_full_collector" name="test_source_substitution_precedes_external_reports_and_assets[collector_overlay_manifest.json]" time="0.003" /><testcase classname="test_bsgs_full_collector" name="test_source_substitution_precedes_external_reports_and_assets[baseline_source_manifest.json]" time="0.003" /><testcase classname="test_bsgs_full_collector" name="test_actual_public_predecessor_and_overlay_identity" time="0.081" /><testcase classname="test_bsgs_full_collector" name="test_archive_readback_rejects_invalid_inventory[duplicate]" time="0.002" /><testcase classname="test_bsgs_full_collector" name="test_archive_readback_rejects_invalid_inventory[nonregular]" time="0.001" /><testcase classname="test_bsgs_full_collector" name="test_archive_readback_rejects_invalid_inventory[wrongbytes]" time="0.001" /><testcase classname="test_bsgs_full_collector" name="test_output_subtree_excluded_from_fixed_source_inventory" time="0.005" /><testcase classname="test_bsgs_full_collector" name="test_failed_first_case_does_not_lose_second_evidence" time="0.014" /><testcase classname="test_bsgs_full_collector" name="test_success_requires_both_cases_and_terminal" time="0.026" /><testcase classname="test_bsgs_full_collector" name="test_incomplete_execution_fails_and_retains[missing]" time="0.007" /><testcase classname="test_bsgs_full_collector" name="test_incomplete_execution_fails_and_retains[count]" time="0.025" /><testcase classname="test_bsgs_full_collector" name="test_incomplete_execution_fails_and_retains[group]" time="0.023" /><testcase classname="test_bsgs_full_collector" name="test_incomplete_execution_fails_and_retains[wait]" time="0.003" /><testcase classname="test_bsgs_full_collector" name="test_true_body_primary_survives_cleanup_errors[KeyboardInterrupt]" time="0.003" /><testcase classname="test_bsgs_full_collector" name="test_true_body_primary_survives_cleanup_errors[SystemExit]" time="0.002" /><testcase classname="test_bsgs_full_collector" name="test_true_body_primary_survives_cleanup_errors[ValueError]" time="0.002" /><testcase classname="test_bsgs_full_collector" name="test_cleanup_cancellation_supersedes_ordinary_cleanup" time="0.023" /><testcase classname="test_bsgs_full_collector" name="test_snapshot_creation_failure_preserves_failed_report" time="0.002" /><testcase classname="test_bsgs_full_collector" name="test_outer_restoration_failure_republishes_failure" time="0.023" /><testcase classname="test_bsgs_full_collector" name="test_cleanup_scope_exit_republishes_failure" time="0.022" /><testcase classname="test_bsgs_full_collector" name="test_real_clean_child_wait_and_group_absence" time="0.015" /><testcase classname="test_bsgs_full_collector" name="test_late_provenance_drift_cannot_pass[source]" time="0.024" /><testcase classname="test_bsgs_full_collector" name="test_late_provenance_drift_cannot_pass[asset]" time="0.039" /><testcase classname="test_bsgs_full_collector" name="test_prerequisite_failure_never_reads_fixture_bodies" time="0.001" /></testsuite></testsuites>

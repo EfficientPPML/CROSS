@@ -1,0 +1,207 @@
+"""Collector transaction/process evidence checks; mocked encryption only."""
+from pathlib import Path
+from types import SimpleNamespace as NS
+import hashlib,importlib.util,json,os,sys
+import pytest
+HERE=Path(__file__).resolve().parent
+sys.path.insert(0,str(HERE))
+spec=importlib.util.spec_from_file_location('stage3_test_collect',HERE/'collect.py')
+collect=importlib.util.module_from_spec(spec);spec.loader.exec_module(collect)
+
+
+@pytest.fixture
+def case(tmp_path,monkeypatch):
+    monkeypatch.setenv('JAX_PLATFORMS','cpu')
+    keys=tmp_path/'keys';(keys/'client_private').mkdir(parents=True);(keys/'public_keys').mkdir()
+    model=tmp_path/'model';model.mkdir();private=tmp_path/'fixture-private';private.mkdir()
+    sentinel=private/'input';sentinel.write_bytes(b'retained private input')
+    fixture=tmp_path/'fixture-evidence';fixture.mkdir()
+    fixture_raw=collect.key_gate.canonical(dict(schema='bert-upstream-size0-input-fixture-v1',private_workspace=str(private)))
+    (fixture/'report.json').write_bytes(fixture_raw)
+    authorized=({'context_id':'c'*64,'public_keys':keys/'public_keys','public_manifest':{},'key_report_sha256':'1'*64,'key_source_archive_sha256':'2'*64},
+        {'context_id':'c'*64,'model_id':'m'*64,'server_data':model/'server_data','model_report_sha256':'3'*64,'model_manifest_sha256':'4'*64},
+        {'preprocessed_input':sentinel,'input_sha256':'5'*64,'fixture_report_sha256':collect.key_gate.digest(fixture_raw),'private_workspace':private,'valid_token_count':32})
+    events=[];failure={};owners=[]
+    raw={'runtime/stage/server_inputs/p60_profile_and_refresh.json':b'{}',
+         'runtime/stage/server_inputs/twelve_layer_plan.json':b'{}','worker.py':b'# mocked worker\n','marker.py':b'# frozen\n'}
+    monkeypatch.setattr(collect,'sources',lambda:dict(raw))
+    def authenticate(**kw):
+        events.append('gates')
+        if failure.get('gate'):raise failure['gate']
+        return authorized
+    monkeypatch.setattr(collect.stage3_worker,'authenticate',authenticate)
+    monkeypatch.setattr(collect.client_keys,'public_contract',lambda *a:({'degree':131072,'q_towers':list(range(100))},[]))
+    monkeypatch.setattr(collect.shutil,'disk_usage',lambda p:NS(free=10<<30,total=20<<30))
+    def asset(path):events.append('asset');return {'model.safetensors':'7'*64,'config.json':'8'*64}[Path(path).name]
+    monkeypatch.setitem(sys.modules,'server_public_model',NS(CHECKPOINT_SHA256='7'*64,CONFIG_SHA256='8'*64,file_sha=asset))
+    monkeypatch.setitem(sys.modules,'file_stages',NS(MODEL_ID='model',REVISION='revision'))
+    monkeypatch.setattr(collect.process,'software_versions',lambda:{'test_only':True})
+    original_owner=collect.client_keys._OwnedDirectory
+    class Owner(original_owner):
+        def __init__(self,path):super().__init__(path);owners.append(self)
+        def remove(self):
+            events.append('remove')
+            if failure.get('remove'):raise failure['remove']
+            return super().remove()
+        def close(self):
+            events.append('close');super().close()
+            if failure.get('close'):raise failure['close']
+    monkeypatch.setattr(collect.client_keys,'_OwnedDirectory',Owner)
+    readback=dict(sample_count=1,tile_count=8,public_batch_sha256='b'*64,input_digest='d'*64,private_input_sha256='5'*64,
+        private_binding_verified=True,private_request_permissions_verified=True,ciphertext_payload_bytes=800*(1<<20),tiles=[{'tile':i} for i in range(8)])
+    def binding(owner,paths,expected):
+        owner.check();p=Path(paths['upload']);info=p.stat();q=keys/'client_private/requests.json';qi=q.stat()
+        return dict(upload=str(p),upload_identity=[info.st_dev,info.st_ino],public_batch_sha256='b'*64,
+            private_request_identity=[qi.st_dev,qi.st_ino],private_request_sha256=hashlib.sha256(q.read_bytes()).hexdigest())
+    monkeypatch.setattr(collect,'upload_binding',binding)
+    def launch(command,directory,*,timeout,cleanup_grace_s):
+        events.append('launch');assert timeout is None and cleanup_grace_s>=30
+        assert Path(command[1]).parent.name=='execution_source'
+        flags={command[i]:command[i+1] for i in range(2,len(command),2)}
+        io=Path(flags['--io-workspace']);(io/'upload').mkdir()
+        q=keys/'client_private/requests.json';q.write_bytes(b'request');q.chmod(0o600)
+        if failure.get('launch'):raise failure['launch']
+        before=collect.hashes(raw)
+        worker=dict(passed=True,actual_client_encode_started=True,actual_client_encode_completed=True,readback_complete=True,
+            all_eight_ordered_payloads_validated=True,source_files_unchanged=True,keygen_decrypt_native_model_forbidden=True,
+            forbidden_attempts=[],source_hashes_start=before,source_hashes_end=before,
+            prerequisite=collect.stage3_worker.prerequisite_summary(*authorized),asset_hashes_start={'model.safetensors':'7'*64,'config.json':'8'*64},
+            asset_hashes_end={'model.safetensors':'7'*64,'config.json':'8'*64},readback=readback,elapsed_s=1.)
+        if failure.get('worker'):worker.update(failure['worker'])
+        collect.write(directory/'worker_report.json',worker)
+        record=dict(returncode=0,process_reaped=True,public_key_store_removed=True,owned_directory_handle_closed=True,
+            result=dict(passed=True,context_id='c'*64,model_id='m'*64,public_batch_sha256='b'*64,
+                worker_report_sha256=collect.process.sha256(directory/'worker_report.json')))
+        if failure.get('process'):record.update(failure['process'])
+        if failure.get('source'):raw['marker.py']=b'# changed\n'
+        collect.write(directory/'process.json',record)
+        return record
+    monkeypatch.setattr(collect.process,'run_case',launch)
+    args=dict(output=tmp_path/'evidence',key_evidence=tmp_path/'key-evidence',key_report_sha256='1'*64,key_workspace=keys,
+        model_evidence=tmp_path/'model-evidence',model_report_sha256='3'*64,model_workspace=model,
+        fixture_evidence=fixture,fixture_report_sha256=collect.key_gate.digest(fixture_raw),snapshot=tmp_path/'assets',
+        workspace_parent=tmp_path,execute=True)
+    return NS(args=args,events=events,raw=raw,owners=owners,failure=failure,authorized=authorized,keys=keys,model=model,
+        private=private,sentinel=sentinel,fixture=fixture,readback=readback)
+
+
+def report(c):return json.loads((c.args['output']/'report.json').read_text())
+
+
+def test_success_retains_upload_private_pair_and_exact_sources(case):
+    r=collect.run(**case.args)
+    assert r['passed'] and r['actual_encryption'] and r['io_workspace_retained']
+    assert r['source_files_unchanged'] and r['source_archive_verified'] and r['all_processes_reaped']
+    assert Path(r['io_workspace'],'upload').is_dir() and (case.keys/'client_private/requests.json').is_file()
+    assert 'remove' not in case.events and case.events[-1]=='close'
+    assert case.events.index('gates')<case.events.index('asset')<case.events.index('launch')
+    assert case.owners[0].fd is None and case.owners[0].parent_fd is None
+
+
+def test_preflight_only_removes_own_empty_io_never_external_keys(case):
+    case.args['execute']=False;r=collect.run(**case.args)
+    assert r['passed'] and not r['actual_encryption'] and not r['actual_execution_attempted']
+    assert not Path(r['io_workspace']).exists() and case.keys.is_dir() and case.sentinel.read_bytes()==b'retained private input'
+    assert 'launch' not in case.events and case.events[-2:]==['remove','close']
+
+
+@pytest.mark.parametrize('target',['keys','model','private'])
+@pytest.mark.parametrize('alias',[False,True])
+@pytest.mark.parametrize('which',['output','workspace_parent'])
+def test_containment_rejected_before_any_output_or_private_mutation(case,tmp_path,target,alias,which):
+    base=getattr(case,target)
+    if alias:
+        link=tmp_path/('alias-'+target);link.symlink_to(base,target_is_directory=True);base=link
+    case.args[which]=base/'must-not-exist'
+    before=case.sentinel.stat();content=case.sentinel.read_bytes()
+    with pytest.raises(ValueError,match='outside external'):collect.run(**case.args)
+    assert not case.args['output'].exists() and not (base/'must-not-exist').exists()
+    assert case.sentinel.read_bytes()==content and case.sentinel.stat()==before and not case.events
+
+
+def test_fixture_report_hash_precedes_any_output_or_private_read(case,monkeypatch):
+    case.args['fixture_report_sha256']='0'*64
+    with pytest.raises(ValueError,match='report identity'):collect.run(**case.args)
+    assert not case.args['output'].exists() and not case.events
+
+
+def test_failed_prerequisite_publishes_failed_attempt_without_assets_or_workspace(case):
+    case.failure['gate']=ValueError('pending stage2')
+    with pytest.raises(ValueError,match='pending stage2'):collect.run(**case.args)
+    r=report(case);assert not r['passed'] and not r['actual_execution_attempted'] and case.events==['gates'] and not case.owners
+
+
+@pytest.mark.parametrize('flag',['process_reaped','public_key_store_removed','owned_directory_handle_closed'])
+def test_failed_process_evidence_retains_owned_io_and_private_pair(case,flag):
+    case.failure['process']={flag:False}
+    with pytest.raises(ValueError,match='worker failed'):collect.run(**case.args)
+    r=report(case);assert not r['passed'] and not r['all_processes_reaped'] and r['io_workspace_retained']
+    assert Path(r['io_workspace'],'upload').is_dir() and (case.keys/'client_private/requests.json').exists()
+    assert 'remove' not in case.events and case.owners[0].fd is None
+
+
+def test_unknown_active_child_fails_closed_retains_everything_and_primary(case):
+    error=KeyboardInterrupt('parent cancellation');case.failure['launch']=error
+    with pytest.raises(KeyboardInterrupt) as caught:collect.run(**case.args)
+    assert caught.value is error
+    r=report(case);assert not r['passed'] and not r['all_processes_reaped'] and r['io_workspace_retained']
+    assert r['remaining_artifacts']['upload']['present'] and r['remaining_artifacts']['private_requests']['present']
+    assert 'remove' not in case.events and any('active process evidence' in n for n in error.__notes__)
+
+
+def test_worker_binding_failure_retains_upload_for_review(case):
+    case.failure['worker']={'source_hashes_end':{}}
+    with pytest.raises(ValueError,match='worker/source/phase'):collect.run(**case.args)
+    r=report(case);assert not r['passed'] and r['all_processes_reaped'] and r['io_workspace_retained']
+
+
+def test_out_of_order_or_missing_upload_proof_rejected(case):
+    case.readback['tiles'][7]['tile']=6
+    with pytest.raises(ValueError,match='eight-tile'):collect.run(**case.args)
+    assert not report(case)['passed'] and report(case)['io_workspace_retained']
+
+
+def test_source_mutation_cannot_publish_pass(case):
+    case.failure['source']=True;r=collect.run(**case.args)
+    assert not r['passed'] and not r['source_files_unchanged'] and r['io_workspace_retained']
+
+
+def test_initial_write_failure_attempts_fresh_terminal_publication(case,monkeypatch):
+    original=collect.write;calls=[]
+    def write(path,value):
+        calls.append(1)
+        if len(calls)==1:raise OSError('initial publication')
+        original(path,value)
+    monkeypatch.setattr(collect,'write',write)
+    with pytest.raises(OSError,match='initial publication'):collect.run(**case.args)
+    assert not report(case)['passed'] and not case.events and not case.owners
+
+
+def test_metadata_failure_removes_only_unused_owned_io(case,monkeypatch):
+    monkeypatch.setattr(collect.process,'software_versions',lambda:(_ for _ in ()).throw(ValueError('metadata unavailable')))
+    with pytest.raises(ValueError,match='metadata unavailable'):collect.run(**case.args)
+    assert not report(case)['passed'] and len(case.owners)==1 and not case.owners[0].path.exists()
+    assert case.keys.is_dir() and case.sentinel.exists() and case.events[-2:]==['remove','close']
+
+
+def test_final_write_does_not_replace_primary_cancellation(case,monkeypatch):
+    original=collect.write;error=KeyboardInterrupt('primary');case.failure['launch']=error
+    def write(path,value):
+        if path==case.args['output']/'report.json' and 'source_hashes_end' in value:raise OSError('terminal publication')
+        original(path,value)
+    monkeypatch.setattr(collect,'write',write)
+    with pytest.raises(KeyboardInterrupt) as caught:collect.run(**case.args)
+    assert caught.value is error and any('terminal publication' in n for n in error.__notes__)
+    assert 'remove' not in case.events and case.owners[0].fd is None
+
+
+def test_cleanup_only_cancellation_wins_ordinary_failure_attempts_close(case):
+    case.args['execute']=False;case.failure['remove']=OSError('ordinary cleanup');error=KeyboardInterrupt('cancel cleanup');case.failure['close']=error
+    with pytest.raises(KeyboardInterrupt) as caught:collect.run(**case.args)
+    assert caught.value is error and case.events[-2:]==['remove','close']
+    r=report(case);assert not r['passed'] and len(r['cleanup_errors'])==2 and case.owners[0].fd is None
+
+
+def test_collector_and_worker_imports_are_local_not_dormant_runtime():
+    assert Path(collect.__file__).resolve()==HERE/'collect.py'
+    assert Path(collect.stage3_worker.__file__).resolve()==HERE/'worker.py'

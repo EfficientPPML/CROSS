@@ -1,0 +1,9 @@
+# Authenticated final classifier scale enclosure
+
+This isolated public helper exposes `accepts_scale(scale, *, profile_bytes, manifest_bytes)` for the five file-stage client. It binds the fixed BERT-v2 manifest and common N131072/CD2/depth49/p60/dnum8 profile. It does not accept a server-provided expected scale as its trust anchor.
+
+The final classifier is a real L3→L2 weighted sum. Its existing metadata computes `T = fl(delta * D)`, `q = fl(T / s)`, `P = fl(s * q)`, and `fl(P / D)`, where the Python integer divisor is the product of Q limbs 6 and 7. For every finite positive source scale with accepted finite intermediates, the exact normality margins prove that both quotient and product satisfy the binary64 relative rounding bound. Thus P lies in the exact rational interval T(1±2^-53)^2. Enumerating its representable floats and performing the actual final division yields the enclosing scale set **{1.1467305003699402e18, 1.1467305003699405e18, 1.1467305003699406e18}**. The set is not a reachability claim and does not require observed refresh scales to be exactly canonical or one ULP away.
+
+Thirteen tests passed with eleven source/public-input files unchanged and every tar member read back. They include exact endpoint/neighbour checks, invalid inputs and altered public identities, 2,052 extreme/random source-scale probes using the actual frozen affine metadata body, and actual public backward/static-Newton/tanh scale-plan replay for canonical and adjacent refresh scales. External AST source bytes are included in the archive. No model, input activations, keys, context, encryption or HE was executed.
+
+This checks metadata only. Ciphertext authentication, correct payloads, CKKS error, nonlinear domains and full-model numerical gates remain separate obligations. Run `python verify.py` to verify archived evidence and rerun the public enclosure independently of the scratch paths.

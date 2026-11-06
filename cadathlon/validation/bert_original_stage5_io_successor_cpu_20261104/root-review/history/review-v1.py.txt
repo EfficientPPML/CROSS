@@ -1,0 +1,60 @@
+from pathlib import Path
+import ast,datetime,hashlib,json,os,subprocess,tarfile,xml.etree.ElementTree as ET
+repo=Path('/home/jianming_gatech/CROSS');lab=Path('/tmp/bert-original-stage5-io-successor-20261104');out=Path('/tmp/bert-original-stage5-io-preflight-v1-20261104');archive=repo/'cadathlon/validation/bert_original_stage5_io_successor_cpu_20261104'
+sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest();read=lambda p:json.loads(p.read_bytes())
+r=read(out/'report.json');i=read(out/'installed.json');term=read(out/'terminal_observation.json');expected=r['source_hashes_start']
+assert sha(out/'report.json')=='a95c198760c9a07a5362f0decdd608e7f8294de51e938cde00f328bff6bba3b2'
+assert sha(out/'sources.tar.gz')=='72c5e02bad85a0759cfe381ef5aa4deda7d51b360e6d1fe3197dd88dc04b0eb9'
+assert len(expected)==122 and expected==r['source_hashes_end']==i['source_hashes_start']==i['source_hashes_end']==read(out/'source_manifest.json')
+with tarfile.open(out/'sources.tar.gz')as tar:
+ members=tar.getmembers();assert len(members)==len({m.name for m in members})==122
+ assert sum(m.size for m in members)<32<<20
+ assert all(m.isfile()and not Path(m.name).is_absolute()and '..'not in Path(m.name).parts and m.size<=16<<20 for m in members)
+ blobs={m.name:tar.extractfile(m).read()for m in members}
+ assert {n:hashlib.sha256(b).hexdigest()for n,b in blobs.items()}==expected
+assert all(sha(lab/n)==v for n,v in expected.items())
+for obj in (r,i):
+ for k in ('passed','body_complete','termination_scope_completed','cleanup_completed','source_files_unchanged'):assert obj[k]is True
+assert r['actual_HE']is r['actual_client_decode']is False
+assert r['source_archive_verified']and r['all_started_children_reaped']
+assert sha(out/'installed.json')==r['installed_report_sha256']==term['installed_sha256']
+assert i['all_forbidden_entries_restored']and i['allowed_client_entries_unchanged']and i['default_completion_api_verified']
+assert all(i[k]is False for k in ('actual_client_decode','actual_contexts','actual_keys','payload_reads','private_reads','native_model'))
+assert len(i['denied_entries'])==len(set(i['denied_entries']))==i['denied_count']==21
+cases=list(ET.parse(out/'tests.xml').iter('testcase'));assert len(cases)==r['test_count']==279 and not any(x.findall(k)for x in cases for k in ('failure','error','skipped'))
+guard=i['source_guard_end'];assert len(guard['loaded_local_modules'])==40
+assert i['source_guard_start']['fresh']and guard['passed']and guard['parent_source_count']==89 and guard['source_count']==122
+for row in guard['loaded_local_modules'].values():assert expected[row['path']]==row['sha256']
+parent=read(lab/'client_89_sources.json');overlays=guard['overlays'];assert len(parent)==89 and len(overlays)==7
+assert {n for n,v in parent.items()if expected[n]!=v}==set(overlays)
+assert all(expected[n]==v for n,v in overlays.items())
+assert blobs['runtime/stage/file_stages.py']==blobs['baseline/file_stages.py']
+assert not any('combined_server_gate' in name for name in blobs)
+def definitions(blob):return {n.name:ast.dump(n,include_attributes=False)for n in ast.parse(blob).body if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef,ast.ClassDef))}
+old=definitions(blobs['baseline/request_lifecycle.py']);new=definitions(blobs['runtime/stage/request_lifecycle.py'])
+for name in ('record_completed','retire_completed','_paths'):assert old[name]==new[name]
+assert expected['stage4_gate.py']==parent['stage4_gate.py'] and expected['stage4_source_manifest.json']==parent['stage4_source_manifest.json']
+assert len(read(lab/'stage4_source_manifest.json'))==217
+assert term['session_id']==29062 and term['observed_exit_code']==0 and term['session_reaped']and term['report_sha256']==sha(out/'report.json')
+pids={r['pid']};groups=set()
+for row in r['children']:
+ p=row['process'];pids.add(p['pid']);groups.add(p['process_group']);assert p['direct_returncode']==0 and not p['cleanup_errors'] and not p['signals_sent']
+ assert all(p[k]is True for k in ('direct_child_reaped','group_empty_verified','cleanup_completed'))
+assert all(not Path('/proc',str(pid)).exists()for pid in pids)
+for process in Path('/proc').iterdir():
+ if not process.name.isdigit():continue
+ try:pg=int((process/'stat').read_text().rsplit(')',1)[1].split()[2])
+ except(OSError,ValueError):continue
+ assert pg not in groups
+for n in ('report.json','installed.json','terminal_observation.json','sources.tar.gz','source_manifest.json','tests.xml','tests.log','installed.log'):assert sha(out/n)==sha(archive/'measured'/n)
+subprocess.run([os.sys.executable,str(archive/'verify.py'),'--current',str(lab)],check=True)
+receipt=dict(schema='root-original-stage5-io-preparation-review-v1',checked_at_utc=datetime.datetime.now(datetime.timezone.utc).isoformat(),passed=True,sources=122,tests=279,installed_denials=21,loaded_origins=40,report_sha256=sha(out/'report.json'),source_archive_sha256=sha(out/'sources.tar.gz'),source_current_start_end_archive_equal=True,parent89_unchanged_files=82,overlays=overlays,original217_producer_gate_unchanged=True,original_default_handler_receipt_retirement_unchanged=True,outer_session=29062,outer_exit_code=0,outer_reaped_attested_by_owner=True,collector_children_groups_absent=True,actual_client_decode=False,actual_client_launch_authorized=False,scope='Preparation and reachable IO/startup failure repairs; actual decode requires authenticated completed original217-source producer and separately pinned launch.')
+dst=Path('/tmp/bert-original-stage5-io-root-review-20261104');dst.mkdir();(dst/'preparation.json').write_text(json.dumps(receipt,indent=2,sort_keys=True)+'\n')
+for name,raw in {'root-review/preparation.json':(dst/'preparation.json').read_bytes(),'root-review/review-executed.py.txt':Path(__file__).read_bytes()}.items():
+ p=archive/name;p.parent.mkdir(exist_ok=True);assert not p.exists();p.write_bytes(raw)
+m=read(archive/'files.sha256.json')
+for n,v in m.items():assert sha(archive/n)==v,n
+for n in ('root-review/preparation.json','root-review/review-executed.py.txt'):m[n]=sha(archive/n)
+(archive/'files.sha256.json').write_text(json.dumps(m,indent=2,sort_keys=True)+'\n')
+subprocess.run(['git','add','-f','--',*[str(archive/n)for n in ('root-review/preparation.json','root-review/review-executed.py.txt','files.sha256.json')]],cwd=repo,check=True)
+print(json.dumps(receipt,sort_keys=True))

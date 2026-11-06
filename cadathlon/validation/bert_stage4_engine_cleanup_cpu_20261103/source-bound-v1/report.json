@@ -1,0 +1,54 @@
+{
+  "passed": true,
+  "source_hashes_before": {
+    "run_checks.py": "49dd05208a49592c361ad159143f7b946aa689d8c61ca805a604d220dec9fc7e",
+    "source_origin.json": "f6aa67c6bfbb12da2cdc9bfb4b1a5c91bc0a679779c77381c7d589a955c4ac4c",
+    "before/full_model_engine.py": "841fb5a5f635a10a5e2f3f84b04361816deda11ab1869f0472e1acc00507f009",
+    "before/test_cleanup_regressions.py": "dc209c6cc9a6fd4d5fb4778246350fffb3b4167f5f871198ba0a703f52d4102d",
+    "before/test_full_model_engine.py": "d8b3d7b14f6490ebf4cbe581c24d85b1d729b63115d21a0e80e9c6cebeb2b8ff",
+    "candidate/full_model_engine.py": "57b3e365a66da8bc999c577a88bcefef481c68b77afce0818a0fcf13b7b227a4",
+    "candidate/test_cleanup_regressions.py": "71c3d7040be172c662ec932bacab3350db66dce5b75804b3971c51f393fefda4",
+    "candidate/test_full_model_engine.py": "d8b3d7b14f6490ebf4cbe581c24d85b1d729b63115d21a0e80e9c6cebeb2b8ff"
+  },
+  "scope": "Mocked engine cleanup and real process-local signals only; no model/crypto/forward.",
+  "command": [
+    "/tmp/cross-pretrained-validation-env/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "--tb=short",
+    "test_full_model_engine.py",
+    "test_cleanup_regressions.py",
+    "--junitxml=/tmp/bert-stage4-engine-cleanup-20261103/source-bound-v1/tests.xml"
+  ],
+  "cpu_affinity": [
+    168,
+    169,
+    170,
+    171
+  ],
+  "child_pid": 1555650,
+  "test_exit_code": 0,
+  "tests": {
+    "tests": 21,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "source_hashes_after": {
+    "run_checks.py": "49dd05208a49592c361ad159143f7b946aa689d8c61ca805a604d220dec9fc7e",
+    "source_origin.json": "f6aa67c6bfbb12da2cdc9bfb4b1a5c91bc0a679779c77381c7d589a955c4ac4c",
+    "before/full_model_engine.py": "841fb5a5f635a10a5e2f3f84b04361816deda11ab1869f0472e1acc00507f009",
+    "before/test_cleanup_regressions.py": "dc209c6cc9a6fd4d5fb4778246350fffb3b4167f5f871198ba0a703f52d4102d",
+    "before/test_full_model_engine.py": "d8b3d7b14f6490ebf4cbe581c24d85b1d729b63115d21a0e80e9c6cebeb2b8ff",
+    "candidate/full_model_engine.py": "57b3e365a66da8bc999c577a88bcefef481c68b77afce0818a0fcf13b7b227a4",
+    "candidate/test_cleanup_regressions.py": "71c3d7040be172c662ec932bacab3350db66dce5b75804b3971c51f393fefda4",
+    "candidate/test_full_model_engine.py": "d8b3d7b14f6490ebf4cbe581c24d85b1d729b63115d21a0e80e9c6cebeb2b8ff"
+  },
+  "sources_unchanged": true,
+  "source_archive_sha256": "51b492f8da5a263f5fdf13bd80fe5e8258afd73556448cdade88229333376199",
+  "archive_verified": true,
+  "original_frozen_sources_unchanged": true,
+  "child_reaped": true,
+  "elapsed_s": 0.17609334700682666
+}

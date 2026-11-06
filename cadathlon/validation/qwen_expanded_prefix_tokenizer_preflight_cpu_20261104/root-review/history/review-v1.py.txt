@@ -1,0 +1,43 @@
+from pathlib import Path
+import datetime,hashlib,json,os,tarfile,xml.etree.ElementTree as ET
+lab=Path('/tmp/qwen-expanded-prefix-token-freeze-v2-20261104');out=Path('/tmp/qwen-expanded-prefix-token-freeze-preflight-v2-20261104');manifest=Path('/tmp/qwen-expanded-prefix-token-freeze-sources-v2-20261104.json')
+sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest();read=lambda p:json.loads(p.read_bytes())
+m=read(manifest);r=read(out/'report.json');w=read(out/'worker/report.json');t=read(out/'terminal_observation.json')
+assert sha(manifest)=='99f60b4b4401ca246364127984af69df739f1fd0c4afa96e5e962558d44cde54'
+assert sha(out/'report.json')=='e8f3e1ab64e2f1bc17273ee7cbac74b5c4c7cfc42fe3ee547b4112207f0fed31'
+assert sha(out/'sources.tar.gz')=='5447e799a8662338ddcfb4de0cdb02cc60e4a1a45c257f3af2e9b5b8b7dbe097'
+assert len(m)==33 and m==r['source_hashes_start']==r['source_hashes_end']==w['source_hashes_start']==w['source_hashes_end']==read(out/'source_manifest.json')
+assert all(sha(lab/n)==v and sha(out/'execution_source'/n)==v for n,v in m.items())
+with tarfile.open(out/'sources.tar.gz')as tar:
+ members=tar.getmembers();assert len(members)==len({v.name for v in members})==33 and sum(v.size for v in members)==664713
+ assert all(v.isfile()and not Path(v.name).is_absolute()and '..'not in Path(v.name).parts and v.size<4<<20 for v in members)
+ assert {v.name:hashlib.sha256(tar.extractfile(v).read()).hexdigest()for v in members}==m
+assert all(r[k]is True and w[k]is True for k in ('passed','complete','cleanup_completed','signal_restoration_completed','source_files_unchanged'))
+assert r['audit_denials']==w['audit_denials']==[] and r['actual_tokenizer_stage']is False
+assert w['tests']==91 and w['failures']==w['errors']==w['skipped']==w['pytest_returncode']==0
+assert set(w['installed_import_denials'])=={'torch','transformers','jax','jaxlib','jaxite_word','tensorflow'}
+cases=list(ET.parse(out/'worker/tests.xml').iter('testcase'));assert len(cases)==91 and not any(c.findall(k)for c in cases for k in ('failure','error','skipped'))
+assert r['worker_report_sha256']==sha(out/'worker/report.json')and r['child_returncode']==0 and r['child_reaped']and r['child_group_absent']
+assert t['session_id']==79760 and t['outer_returncode']==0 and t['outer_reaped']and t['report_sha256']==sha(out/'report.json')
+for pid in (r['pid'],r['child_pid']):assert not Path('/proc',str(pid)).exists()
+try:os.killpg(r['child_pgid'],0)
+except ProcessLookupError:pass
+else:raise AssertionError('preflight group remains')
+assert read(lab/'execution_authorization.json')=={'execute':False}
+assert sha(lab/'public/protocol.json')=='eea8e4b38b4c2719e63a0aa13028150564901305e9e5f1f9d0f2985c821cb70f'
+assert sha(lab/'public/validation_design.json')=='848514ff4870392a21aacabb960245d9c8bee028b182c79109d9a033caeed863'
+for n,pin in read(lab/'public_pins.json').items():assert sha(lab/'public'/n)==pin['sha256']
+review_paths=[Path('/tmp/qwen-prefix-freeze-lifecycle-review-20261104/successor-v2/preflight_readback.json'),Path('/tmp/qwen-prefix-freeze-lifecycle-review-20261104/successor-v2/report.json'),Path('/tmp/qwen-token-entry-alias-review-20261104/successor-v2/report.json'),Path('/tmp/qwen-token-entry-review-v2-20261104/report.json')]
+for p in review_paths:assert read(p)['passed']is True
+security=read(review_paths[0]);assert security['candidate_source_count']==33 and security['source_manifest_sha256']==sha(manifest)and security['report_sha256']==sha(out/'report.json')
+for p in review_paths[2:]:
+ v=read(p);assert v['source_count']==33 and v['source_hashes_before']==v['source_hashes_after']==m
+ for row in v['cases']:
+  assert row['direct_child_waited']and row['pid_absent']and row['process_group_absent']and row['requirement_passed']
+actual=Path('/tmp/qwen-expanded-prefix-token-freeze-actual-v1-20261104');private=Path('/tmp/qwen-expanded-prefix-token-inputs-20261104-v1')
+assert not actual.exists()and not actual.is_symlink()and not private.exists()and not private.is_symlink()
+receipt=dict(schema='root-qwen-prefix-tokenizer-launch-review-v1',checked_at_utc=datetime.datetime.now(datetime.timezone.utc).isoformat(),passed=True,source_manifest_sha256=sha(manifest),preflight_report_sha256=sha(out/'report.json'),preflight_source_archive_sha256=sha(out/'sources.tar.gz'),sources=33,synthetic_tests=91,installed_import_denials=6,source_current_execution_start_end_archive_equal=True,outer_session=79760,outer_exit_code=0,outer_reaped=True,independent_review_sha256={str(p):sha(p)for p in review_paths},historical32_preserved=True,input_bodies_read=False,tokenizer_assets_read=False,model_forward=False,coefficient_selection=False,scope='Authorize only fixed input/tokenizer authentication, original-prefix expansion, new authored prompt tokenization and conservative input overlap proof; no model/selection/HE.',evidence_output=str(actual),private_output=str(private),cpu_affinity=[104,105,106,107])
+review=Path('/tmp/qwen-expanded-prefix-token-freeze-root-review-20261104');review.mkdir();rp=review/'launch_review.json';rp.write_text(json.dumps(receipt,indent=2,sort_keys=True)+'\n');(review/'review-executed.py.txt').write_bytes(Path(__file__).read_bytes())
+grant=dict(schema='qwen-expanded-prefix-tokenizer-grant-v1',execute=True,scope='tokenizer-only',source_manifest_sha256=sha(manifest),protocol_sha256=sha(lab/'public/protocol.json'),private_output=str(private),evidence_output=str(actual),model_forward=False,coefficient_selection=False,preflight_report_sha256=sha(out/'report.json'),independent_review_sha256=sha(rp))
+gp=review/'grant.json';gp.write_text(json.dumps(grant,indent=2,sort_keys=True)+'\n')
+print(json.dumps({'review_sha256':sha(rp),'grant_sha256':sha(gp),'grant':str(gp),'sources':33,'tests':91,'tokenizer_only':True,'actual_inputs_read':False}))

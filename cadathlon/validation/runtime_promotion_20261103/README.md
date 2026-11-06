@@ -1,0 +1,7 @@
+The reviewed 32-file runtime candidate and its two-file collector follow-up were applied locally after the bounded Qwen test2 process exited and released its TPU lease. Every live before/after hash was checked against the exact tested source bytes; both patch checks and whitespace checks passed. The collector follow-up replaces two files already in the 32-file union.
+
+The preceding integration passed 362 tests and 9 subtests, plus separate second-device guards; the collector follow-up passed 90 tests. These source-bound checks are archived separately and were not relabeled. Fresh P1 student-v2 and P3 compact-v1 TPU evaluations passed in 257.56s and 145.00s externally, with all measured sources unchanged and cleanup complete. Their matching local calibration aggregates now replace the earlier public reports; the previous bytes remain preserved. No commit, push or external publication occurred.
+
+The calibration launcher records dedicated host affinity 0–127 and concurrent, isolated encrypted CPU routing work on cores 144–147. The TPU is exclusively leased to one evaluator at a time. This overrides the earlier plan's quiet-host suggestion explicitly; old/new elapsed times are not a controlled speedup comparison.
+
+`p1_launch.json` and `p3_launch.json` retain the exact launch commands, host allocation, sampled concurrent process/load records and terminal status. The collector logs and exact launcher are preserved alongside them. The P1/P3 measurement archives are separate sibling directories.

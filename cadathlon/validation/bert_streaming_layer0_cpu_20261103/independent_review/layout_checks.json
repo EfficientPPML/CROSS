@@ -1,0 +1,102 @@
+{
+  "passed": true,
+  "scope": "Independent NumPy-only row-packed attention semantics; no encrypted claim.\n\nNo labels, pretrained coefficients or analytic approximations are fitted. Exact\nexp/division are only the plaintext oracle for validating the layout schedule.\n",
+  "slots": 65536,
+  "features": 4096,
+  "rows_per_tile": 16,
+  "tiles": 8,
+  "tokens": 128,
+  "heads": 12,
+  "head_dimension": 64,
+  "checks": [
+    {
+      "name": "every_local_key_row_broadcast",
+      "rows": 16,
+      "exact": true
+    },
+    {
+      "name": "head_local_reduction_with_nonzero_padding_sentinels",
+      "heads": 12,
+      "rows": 16,
+      "exact": true
+    },
+    {
+      "name": "nonpower_hidden768_reduction_without_cross_row_wrap",
+      "exact": true
+    },
+    {
+      "name": "all_keys",
+      "valid_keys": 128,
+      "all_query_max_abs_error": 1.0408340855860843e-16,
+      "padded_query_max_abs_error": null,
+      "padded_query_outputs_nonzero": null
+    },
+    {
+      "name": "tile_boundaries_and_padding",
+      "valid_keys": 11,
+      "all_query_max_abs_error": 1.3877787807814457e-16,
+      "padded_query_max_abs_error": 1.3877787807814457e-16,
+      "padded_query_outputs_nonzero": true
+    },
+    {
+      "name": "single_last_key",
+      "valid_keys": 1,
+      "all_query_max_abs_error": 0.0,
+      "padded_query_max_abs_error": 0.0,
+      "padded_query_outputs_nonzero": true
+    },
+    {
+      "name": "fully_masked_rejected",
+      "passed": true
+    }
+  ],
+  "observed_rotation_indices": [
+    1,
+    2,
+    4,
+    8,
+    16,
+    32,
+    64,
+    128,
+    256,
+    512,
+    1024,
+    2048,
+    4096,
+    8192,
+    12288,
+    16384,
+    20480,
+    24576,
+    28672,
+    32768,
+    36864,
+    40960,
+    45056,
+    49152,
+    53248,
+    57344,
+    61440,
+    63488,
+    64512,
+    65024,
+    65280,
+    65408,
+    65472,
+    65504,
+    65520,
+    65528,
+    65532,
+    65534,
+    65535
+  ],
+  "source_sha256": "281288bddfa56dcb689375b82fbb930955dd93cf0b57344147299e4933614db8",
+  "source_unchanged": true,
+  "seconds": 3.236062796000624,
+  "limitations": [
+    "Exact exp/division are plaintext comparison operations, not an encrypted implementation.",
+    "This tests direct-index token broadcasting; binary-composed alignment is inventoried separately.",
+    "No pretrained block, polynomial bounds/depth, CKKS error or memory measurement is validated."
+  ]
+}

@@ -1,0 +1,178 @@
+FFF.                                                                     [100%]
+=================================== FAILURES ===================================
+_______ test_cleanup_origin_is_not_promoted_to_body_primary[public_read] _______
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-616/test_cleanup_origin_is_not_pro0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x752e3e641ba0>
+origin = 'public_read'
+
+    @pytest.mark.parametrize('origin',['public_read','report_read','report_write'])
+    def test_cleanup_origin_is_not_promoted_to_body_primary(tmp_path,monkeypatch,origin):
+        path=tmp_path/'public';path.write_bytes(b'x')
+        owner=OwnedOutput(tmp_path/'owned').acquire();report=owner.path/'report.json';owner.write(report,{'passed':False})
+        original_close=os.close;calls=[]
+        def close(fd):
+            original_close(fd);calls.append(fd)
+            if len(calls)==1:raise OSError('nested helper cleanup only')
+        try:
+            with monkeypatch.context()as patch:
+                patch.setattr(os,'close',close)
+                if origin=='public_read':p.read(path)
+                elif origin=='report_read':owner.read(report)
+                else:owner.write(report,{'passed':False,'step':2})
+        except OSError as primary:
+            late=KeyboardInterrupt('later cleanup cancellation')
+            final=p.Finalizer(primary)
+            final.attempt('later cleanup',lambda:(_ for _ in()).throw(late))
+>           with pytest.raises(KeyboardInterrupt)as result:final.raise_failure()
+                                                           ^^^^^^^^^^^^^^^^^^^^^
+
+test_nested_cleanup.py:24: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+component_protocol.py:18: in raise_failure
+    raise self.primary
+test_nested_cleanup.py:17: in test_cleanup_origin_is_not_promoted_to_body_primary
+    if origin=='public_read':p.read(path)
+                             ^^^^^^^^^^^^
+component_protocol.py:38: in read
+    finally:state.close(fd)
+            ^^^^^^^^^^^^^^^
+component_transport.py:75: in close
+    self.cleanup('Transport descriptor close also failed', lambda: os.close(fd))
+component_transport.py:65: in cleanup
+    try: action()
+         ^^^^^^^^
+component_transport.py:75: in <lambda>
+    self.cleanup('Transport descriptor close also failed', lambda: os.close(fd))
+                                                                   ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fd = 13
+
+    def close(fd):
+        original_close(fd);calls.append(fd)
+>       if len(calls)==1:raise OSError('nested helper cleanup only')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: nested helper cleanup only
+E       later cleanup: KeyboardInterrupt('later cleanup cancellation')
+
+test_nested_cleanup.py:13: OSError
+_______ test_cleanup_origin_is_not_promoted_to_body_primary[report_read] _______
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-616/test_cleanup_origin_is_not_pro1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x752e3c2f0dd0>
+origin = 'report_read'
+
+    @pytest.mark.parametrize('origin',['public_read','report_read','report_write'])
+    def test_cleanup_origin_is_not_promoted_to_body_primary(tmp_path,monkeypatch,origin):
+        path=tmp_path/'public';path.write_bytes(b'x')
+        owner=OwnedOutput(tmp_path/'owned').acquire();report=owner.path/'report.json';owner.write(report,{'passed':False})
+        original_close=os.close;calls=[]
+        def close(fd):
+            original_close(fd);calls.append(fd)
+            if len(calls)==1:raise OSError('nested helper cleanup only')
+        try:
+            with monkeypatch.context()as patch:
+                patch.setattr(os,'close',close)
+                if origin=='public_read':p.read(path)
+                elif origin=='report_read':owner.read(report)
+                else:owner.write(report,{'passed':False,'step':2})
+        except OSError as primary:
+            late=KeyboardInterrupt('later cleanup cancellation')
+            final=p.Finalizer(primary)
+            final.attempt('later cleanup',lambda:(_ for _ in()).throw(late))
+>           with pytest.raises(KeyboardInterrupt)as result:final.raise_failure()
+                                                           ^^^^^^^^^^^^^^^^^^^^^
+
+test_nested_cleanup.py:24: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+component_protocol.py:18: in raise_failure
+    raise self.primary
+test_nested_cleanup.py:18: in test_cleanup_origin_is_not_promoted_to_body_primary
+    elif origin=='report_read':owner.read(report)
+                               ^^^^^^^^^^^^^^^^^^
+publication.py:66: in read
+    finally:state.close(item)
+            ^^^^^^^^^^^^^^^^^
+component_transport.py:75: in close
+    self.cleanup('Transport descriptor close also failed', lambda: os.close(fd))
+component_transport.py:65: in cleanup
+    try: action()
+         ^^^^^^^^
+component_transport.py:75: in <lambda>
+    self.cleanup('Transport descriptor close also failed', lambda: os.close(fd))
+                                                                   ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fd = 14
+
+    def close(fd):
+        original_close(fd);calls.append(fd)
+>       if len(calls)==1:raise OSError('nested helper cleanup only')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: nested helper cleanup only
+E       later cleanup: KeyboardInterrupt('later cleanup cancellation')
+
+test_nested_cleanup.py:13: OSError
+______ test_cleanup_origin_is_not_promoted_to_body_primary[report_write] _______
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-616/test_cleanup_origin_is_not_pro2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x752e3e8e0f30>
+origin = 'report_write'
+
+    @pytest.mark.parametrize('origin',['public_read','report_read','report_write'])
+    def test_cleanup_origin_is_not_promoted_to_body_primary(tmp_path,monkeypatch,origin):
+        path=tmp_path/'public';path.write_bytes(b'x')
+        owner=OwnedOutput(tmp_path/'owned').acquire();report=owner.path/'report.json';owner.write(report,{'passed':False})
+        original_close=os.close;calls=[]
+        def close(fd):
+            original_close(fd);calls.append(fd)
+            if len(calls)==1:raise OSError('nested helper cleanup only')
+        try:
+            with monkeypatch.context()as patch:
+                patch.setattr(os,'close',close)
+                if origin=='public_read':p.read(path)
+                elif origin=='report_read':owner.read(report)
+                else:owner.write(report,{'passed':False,'step':2})
+        except OSError as primary:
+            late=KeyboardInterrupt('later cleanup cancellation')
+            final=p.Finalizer(primary)
+            final.attempt('later cleanup',lambda:(_ for _ in()).throw(late))
+>           with pytest.raises(KeyboardInterrupt)as result:final.raise_failure()
+                                                           ^^^^^^^^^^^^^^^^^^^^^
+
+test_nested_cleanup.py:24: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+component_protocol.py:18: in raise_failure
+    raise self.primary
+test_nested_cleanup.py:19: in test_cleanup_origin_is_not_promoted_to_body_primary
+    else:owner.write(report,{'passed':False,'step':2})
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+publication.py:44: in write
+    finally:state.close(item)
+            ^^^^^^^^^^^^^^^^^
+component_transport.py:75: in close
+    self.cleanup('Transport descriptor close also failed', lambda: os.close(fd))
+component_transport.py:65: in cleanup
+    try: action()
+         ^^^^^^^^
+component_transport.py:75: in <lambda>
+    self.cleanup('Transport descriptor close also failed', lambda: os.close(fd))
+                                                                   ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fd = 14
+
+    def close(fd):
+        original_close(fd);calls.append(fd)
+>       if len(calls)==1:raise OSError('nested helper cleanup only')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: nested helper cleanup only
+E       later cleanup: KeyboardInterrupt('later cleanup cancellation')
+
+test_nested_cleanup.py:13: OSError
+=========================== short test summary info ============================
+FAILED test_nested_cleanup.py::test_cleanup_origin_is_not_promoted_to_body_primary[public_read]
+FAILED test_nested_cleanup.py::test_cleanup_origin_is_not_promoted_to_body_primary[report_read]
+FAILED test_nested_cleanup.py::test_cleanup_origin_is_not_promoted_to_body_primary[report_write]
+3 failed, 1 passed in 0.62s

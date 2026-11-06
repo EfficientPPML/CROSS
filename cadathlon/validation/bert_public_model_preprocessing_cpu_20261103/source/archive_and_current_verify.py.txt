@@ -1,0 +1,60 @@
+"""Public metadata/source archive only; no model/key/private payload reads."""
+from pathlib import Path
+import ast,hashlib,json,shutil,stat,tarfile
+LAB=Path('/tmp/bert-public-model-stage2-v2-component-20261103');E=LAB/'actual-v2';OUT=Path('/home/jianming_gatech/CROSS/cadathlon/validation/bert_public_model_preprocessing_cpu_20261103')
+sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+canonical=lambda x:(json.dumps(x,sort_keys=True,separators=(',',':'),allow_nan=False)+'\n').encode()
+REPORT='5b9589b51828d066706c4c46a6404d8c52fcd67a2c9aa9f3f57c73df8caeefe0';TAR='e7c5ac0b864cbcabecdaec84deb6a85c568914e95e655191c092465653b7bcec'
+
+def main():
+    assert sha(E/'report.json')==REPORT and sha(E/'sources.tar.gz')==TAR
+    r=json.loads((E/'report.json').read_text());w=json.loads((E/'worker/worker_report.json').read_text());m=json.loads((E/'model_manifest.json').read_text());p=r['worker_process']
+    assert all(r[n]is True for n in ('passed','execute','actual_preprocessing','model_workspace_retained','all_processes_reaped','source_files_unchanged','source_archive_verified','cleanup_completed'))
+    assert not r['model_forward'] and not r['encryption']
+    assert type(p['returncode'])is int and p['returncode']==0 and p['result']['passed']is True and not p.get('error')
+    assert all(p[n]is True for n in ('process_reaped','public_key_store_removed','owned_directory_handle_closed'))
+    assert p['result']['worker_report_sha256']==sha(E/'worker/worker_report.json')
+    assert all(w[n]is True for n in ('passed','actual_server_preprocess_called','readback_complete','all_readback_fp64_immutable','source_files_unchanged','keygen_and_codecs_forbidden','context_construction_forbidden'))
+    assert not w['forbidden_attempts'] and not any(w[n] for n in ('model_forward','encryption','context_constructed'))
+    assert w['tensor_count']==196 and w['matrix_count']==74 and w['public_model_manifest']==m
+    assert w['asset_hashes_start']==w['asset_hashes_end']==r['asset_hashes_start']==r['asset_hashes_end']
+    assert w['prerequisite']==r['prerequisite'] and r['prerequisite']['key_report_sha256']=='022cbdf687273e765668184f32cb7cd501d371c4220916e1c8f02574cf3a7f08'
+    assert m['context_id']==r['context_id']==p['result']['context_id']==r['prerequisite']['context_id']
+    assert m['model_id']==r['model_id']==p['result']['model_id']==hashlib.sha256(canonical({k:v for k,v in m.items() if k!='model_id'})).hexdigest()
+    assert sha(E/'model_manifest.json')==r['model_manifest_sha256']
+    before=r['source_hashes_start'];assert len(before)==65 and before==r['source_hashes_end']==w['source_hashes_start']==w['source_hashes_end']==json.loads((E/'source_manifest.json').read_text())
+    assert {n:sha(LAB/n) for n in before}=={n:sha(E/'execution_source'/n) for n in before}==before
+    with tarfile.open(E/'sources.tar.gz') as tar:
+        members=tar.getmembers();assert len(members)==len({x.name for x in members})==65 and all(x.isfile() for x in members)
+        raw={x.name:tar.extractfile(x).read() for x in members};assert {n:hashlib.sha256(b).hexdigest() for n,b in raw.items()}==before
+    # Public descriptor pins and shapes from the exact measured source only.
+    tree=ast.parse(raw['checkout/stage/server_public_model.py']);pins=next(ast.literal_eval(n.value) for n in tree.body if isinstance(n,ast.Assign) and any(isinstance(t,ast.Name) and t.id=='TENSOR_SHA256' for t in n.targets))
+    fn=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='tensor_shapes');scope={};exec(compile(ast.Module(body=[fn],type_ignores=[]),'<captured public shape function>','exec'),scope);shapes=scope['tensor_shapes']()
+    assert len(m['tensors'])==len(pins)==len(shapes)==196 and sum(len(s)==2 for s in shapes.values())==74
+    for index,(name,shape) in enumerate(shapes.items()):
+        d=m['tensors'][name];assert set(d)=={'dtype','file','file_sha256','shape','tensor_sha256'} and d['shape']==list(shape) and d['dtype']=='<f4' and d['tensor_sha256']==pins[name] and d['file']==f'tensor_{index:03d}.npy'
+    # The generic helper's top-level passed field is an unused initializer.
+    helper=ast.parse(raw['checkout/check_transformer_suite.py']);fn=next(n for n in helper.body if isinstance(n,ast.FunctionDef) and n.name=='run_case')
+    stores=[n for n in ast.walk(fn) if isinstance(n,ast.Subscript) and isinstance(n.ctx,ast.Store) and isinstance(n.value,ast.Name) and n.value.id=='record' and isinstance(n.slice,ast.Constant) and n.slice.value=='passed']
+    assert not stores and p['passed']is False
+    assert not any(Path('/proc/'+str(pid)).exists() for pid in (1602616,1602620,r['wrapper_pid'],p['pid']))
+    for path,identity in ((Path(r['model_workspace']),r['model_workspace_identity']),(Path(r['model_cache']),r['model_cache_identity'])):
+        state=path.lstat();assert stat.S_ISDIR(state.st_mode) and [state.st_dev,state.st_ino]==identity
+    cache_manifest=Path(r['model_cache'])/'model_manifest.json';assert cache_manifest.lstat().st_size<1<<20 and stat.S_ISREG(cache_manifest.lstat().st_mode)
+    assert cache_manifest.read_bytes()==(E/'model_manifest.json').read_bytes()
+    selected=['report.json','model_manifest.json','source_manifest.json','sources.tar.gz','worker/worker_report.json','worker/stdout.json','worker/stderr.log','worker/process.json']
+    OUT.mkdir(exist_ok=False)
+    for n in selected:
+        target=OUT/'measured'/n;target.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(E/n,target);assert sha(target)==sha(E/n)
+    shutil.copy2(LAB/'actual-v2.log',OUT/'run.log');(OUT/'source').mkdir();shutil.copy2(__file__,OUT/'source/archive_and_current_verify.py.txt')
+    summary=dict(passed=True,scope='Actual public model preprocessing and strict immutable tensor readback only; no model forward, context, encryption/decryption or full HE inference.',
+        observed_session=42995,observed_exit_code=0,terminal_reaping_owner='/root',independently_observed_pids_absent=[1602616,1602620],
+        source_count=65,source_current_copy_archive_unchanged=True,report_sha256=REPORT,source_archive_sha256=TAR,
+        model_id=r['model_id'],context_id=r['context_id'],model_manifest_sha256=r['model_manifest_sha256'],public_tensor_count=196,public_matrix_count=74,
+        worker_elapsed_s=w['elapsed_s'],collector_elapsed_s=r['elapsed_s'],cpu_affinity=r['cpu_affinity'],
+        retained_workspace_identity=r['model_workspace_identity'],retained_cache_identity=r['model_cache_identity'],
+        generic_process_passed_field=False,generic_process_passed_scope='run_case initializes record.passed=False and does not update it. The genuine outcome is separately returncode0, result.passedTrue, strict worker report and collector gates; raw evidence is unchanged.',
+        no_key_private_or_model_payloads_read_or_copied_for_archive=True,
+        root_independent_verification='Root separately reported65 current/execution/tar sources, worker/assets/source manifest, PID absence and stage3-v2 model_gate.authenticate PASS. This is a recorded parent attestation, not a new root artifact.')
+    (OUT/'summary.json').write_text(json.dumps(summary,indent=2)+'\n');print(json.dumps({'archive':str(OUT),'sources':65,'tensors':196,'matrices':74,'passed':True}))
+if __name__=='__main__':main()

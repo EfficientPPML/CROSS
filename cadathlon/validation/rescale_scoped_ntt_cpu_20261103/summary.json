@@ -1,0 +1,53 @@
+{
+  "scope": "Optional rescale-facade table construction only; no full refresh, model, TPU or calibration claim.",
+  "passed": true,
+  "tests_passed": 97,
+  "subtests_passed": 3,
+  "skips": [
+    {
+      "name": "test_guards_fall_back[other_device]",
+      "reason": "requires two logical CPU devices; run with --xla_force_host_platform_device_count=2"
+    },
+    {
+      "name": "test_actual_secure_keyless_refresh_and_continuation",
+      "reason": "opt-in large secure bootstrap"
+    },
+    {
+      "name": "test_actual_deep_profile_bounded_refresh_and_continuation",
+      "reason": "opt-in deep-profile bounded bootstrap"
+    }
+  ],
+  "pytest_seconds": 122.613,
+  "source_count_union": 174,
+  "source_files_unchanged": true,
+  "source_archive_sha256": "80315832d4c2105c3c50d38c4893e90b95eeccd59f330c83a3551cff6e6c3949",
+  "patch_sha256": "290c6330af2af9b27ae138fa48a19df0b5136f046d3686d2160f01ff2b8e22fe",
+  "patch_after": "Five-candidate integration patch91ccdbb67c457fd4f3a2636e92316d2385a88e3036f5e5963fafa5b465ab1c61",
+  "changed_files": {
+    "cadathlon/common/encrypted_ntt.py": {
+      "before_sha256": "87c3f8a18359617bc7c18f148bbba9bfccb9412180883be0a22053f110efa1cc",
+      "after_sha256": "3836626216fc145a854fc31d87722883cf92e837e3cf7fa54e2b7b23baa39ba2"
+    },
+    "cadathlon/tests/test_scoped_rescale_ntt.py": {
+      "before_sha256": null,
+      "after_sha256": "9f9b8406b118d1c34d190e8086149e94930efac18e19196cc720ab2a44f5f366"
+    },
+    "jaxite_word/he_ops.py": {
+      "before_sha256": "8e0534d508602f3835e03c02be82764650ca854ca372c68f945177377e1e6d55",
+      "after_sha256": "be3d8fbab96782e454c49f50b544ff9c4b8b185abfbdffe20b005e8e37d22b98"
+    },
+    "jaxite_word/he_params.py": {
+      "before_sha256": "beb358c35ab477a703ea379554e922d7558ca5e84651ae8fc574677490b51937",
+      "after_sha256": "d4b5a6802996c1084e3654cba4ebc7e3b71b68c1fe1866c9aaef7b839846a202"
+    },
+    "jaxite_word/rescale.py": {
+      "before_sha256": "7244fd87e9cf00168201e3a85d7a7c17259525f68ba82b4cebf64fe84757c73c",
+      "after_sha256": "bdfb603bf377fb2d53cd9d75d78066a91ffdf2567e56053eeb47907bae810b20"
+    }
+  },
+  "rescale_arithmetic_unchanged": true,
+  "hemul_nested_rescales_unchanged": true,
+  "bootstrap_unchanged": true,
+  "failed_fixture_scope": "Initial failure used a normalization-only level-lowering helper on nsd2; corrected9-case test passed. The later source-hashed interim failure assumed fresh ciphertexts carry an explicit nsd attribute instead of the permitted implicit1. Both were validation-fixture failures, not observed payload/parity failures; final checks preserve attribute presence. Failed logs and verified interim source bytes are retained.",
+  "review": "Root and security agent independent read-only reviews found no blocker."
+}

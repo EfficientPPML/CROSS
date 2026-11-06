@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "/tmp/bert-ranked-client-reference-20261103/installed_probe.py", line 85, in <module>
+    raise SystemExit(main(**vars(p.parse_args())))
+                     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/bert-ranked-client-reference-20261103/installed_probe.py", line 70, in main
+    if p.suffix=='.py':loaded[name]=dict(file=p.name,sha256=hashlib.sha256(p.read_bytes()).hexdigest())
+                                                                           ~~~~~~~~~~~~^^
+  File "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_abc.py", line 625, in read_bytes
+    with self.open(mode='rb') as f:
+         ~~~~~~~~~^^^^^^^^^^^
+  File "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/bert-ranked-client-reference-20261103/_ops.py'

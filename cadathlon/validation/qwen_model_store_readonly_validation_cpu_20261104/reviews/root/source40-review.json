@@ -1,0 +1,36 @@
+{
+  "schema": "qwen-model-readonly-root-source-review-v1",
+  "source_root": "/tmp/qwen-model-store-readonly-20261104",
+  "source_manifest_sha256": "a089a3906d2cd6a6f823f1c9c6f5084faeafc70b9bb08ece1cd63c04da0aa3b7",
+  "source_archive_sha256": "c535a43ab941f733c05dc32f513ee4fc4f20e491287e543c104e755016294af8",
+  "handoff_sha256": "ee2a2d63d6861fcad343292fe154fb898a080bc2dba1a748f07ff44d25d24271",
+  "source_inventory_passed": true,
+  "canonical_compact_source_map": true,
+  "source_files": 40,
+  "unchanged_parent_sources": 29,
+  "new_files": 11,
+  "inventory_and_ast_verification_chunk": "5bb9d4",
+  "source_read_chunks": ["bb9fae", "9bc4f8", "3b8fed", "ad3c3a", "593587", "32cef4", "546866"],
+  "runtime_pins": {
+    "model_entry.py": "da5419d98165734208606d1edba90df2cf35e977714a32b99ff2f74ac96e45ba",
+    "model_output.py": "85f3a7722f9d3019f518ec382fe9386610594805b6e9b87d0ab08d43498b348c",
+    "model_validation_grant.py": "c180475654773cb548cae06d40d18653fcb144a955c63361b68749b745a08093",
+    "model_validation_process.py": "d18a767e1e4e4de7c77e02e64e549eb1d57889d70e5aa42eaed186a9163bf1b2"
+  },
+  "accepted_for_focused_tests": false,
+  "required_corrections": [
+    "origins() must independently require the direct CLI __main__.__file__ to remain model_entry.py with the expected None spec. Foreign main file/spec values outside ROOT currently escape checks. Any imported canonical model_entry must satisfy both origins, without its present exemption.",
+    "Run a final sticky audit check after publication and before restoring os.open. The current success decision predates publication and audit.close checks wrapper identity only, so a swallowed late denial could otherwise leave normal status0. Cleanup must still be attempted if the check fails."
+  ],
+  "successor_authorized": "Isolated narrow source successor only; preserve this40-source snapshot and all29 parent bytes. Declare exact code/provenance changes and hold new map/archive for review.",
+  "source_review_limits": [
+    "These are source findings; no old runtime failure was reproduced.",
+    "Four NumPy Python source pins and three origins do not establish a complete installed binary closure.",
+    "Trusted Python source/grant/audit contract, not arbitrary same-user or native-finalizer confinement.",
+    "No source promotion, actual parameter inventory, body reads, execution grant or downstream model authority."
+  ],
+  "candidate_imports": false,
+  "tests_executed": 0,
+  "parameter_body_reads": false,
+  "actual_execution_authorized": false
+}

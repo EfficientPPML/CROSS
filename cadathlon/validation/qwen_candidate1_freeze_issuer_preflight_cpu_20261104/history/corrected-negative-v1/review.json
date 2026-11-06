@@ -1,0 +1,22 @@
+{
+  "direct_exec_exit_code": 1,
+  "expected_failures": 1,
+  "persistent_session": null,
+  "schema": "qwen-freeze-issuer-legacy-bundle-negative-v1",
+  "scope": "Synthetic/public only; no actual report/private/model/token bodies.",
+  "source_archive_sha256": "e95a09ab1c7bf558b19140f32ff2eb992a4122f6424606c724889b2097c42335",
+  "source_hashes_after": {
+    "freeze_admission.py": "7113ade5c0919a3d0139b6d46174a3f8d1854b2c0843c7e618d6a71648349aa1",
+    "freeze_issuer.py": "30641f6b362795cef5cce5f98fd99adbc8e9c54646f2fc1e7f507a943d4cadda",
+    "legacy_bundle.json": "8f7293db7937862089ced3998110dd8c1f80d601030f76a12a85bab949c76dd2",
+    "test_legacy_closure.py": "fb9bc187a4b4d008ebb0e83b1748c9d189d2dba123e2d390d9a1766ef975375f"
+  },
+  "source_hashes_before": {
+    "freeze_admission.py": "7113ade5c0919a3d0139b6d46174a3f8d1854b2c0843c7e618d6a71648349aa1",
+    "freeze_issuer.py": "30641f6b362795cef5cce5f98fd99adbc8e9c54646f2fc1e7f507a943d4cadda",
+    "legacy_bundle.json": "8f7293db7937862089ced3998110dd8c1f80d601030f76a12a85bab949c76dd2",
+    "test_legacy_closure.py": "fb9bc187a4b4d008ebb0e83b1748c9d189d2dba123e2d390d9a1766ef975375f"
+  },
+  "test_only_delta": "Original negative preserved. Removed assertions coupled to implementation PIN_FIELDS and replaced dynamically packed fixture with exact frozen original synthetic byte bundle. Successor test can now reach issue() with the identical legacy bytes and pins, without importing old fixture constructors.",
+  "tests": 1
+}

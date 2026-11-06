@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="6" skipped="0" tests="8" time="14.725" timestamp="2026-11-04T09:03:12.564484+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_cohort_binding_review" name="test_refresh_wrapper_accessors_bound[before-refresh]" time="2.272"><failure message="Failed: DID NOT RAISE ValueError">method = 'refresh', when = 'before'
+
+    @pytest.mark.parametrize('method',['refresh','check'])
+    @pytest.mark.parametrize('when',['before','callback'])
+    def test_refresh_wrapper_accessors_bound(method,when):
+        holder={}
+        def substitute():
+            binding=holder['owner'].refresh_binding
+            if method=='refresh':binding.refresh=lambda value,**kwargs:helper.Value(value.polynomial,25)
+            else:binding.check=lambda:None
+        def callback(label,value,metadata):
+            if when=='callback'and label.endswith('source_branch_mask'):substitute()
+        arithmetic,_,owner=helper.make(8,callback=callback);holder['owner']=owner
+        if when=='before':substitute()
+&gt;       with pytest.raises(ValueError):owner.evaluate_tile(helper.Value(helper.scores(8,0),21),query_tile=0)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_cohort_binding_review.py:19: Failed</failure></testcase><testcase classname="test_cohort_binding_review" name="test_refresh_wrapper_accessors_bound[before-check]" time="1.301"><failure message="Failed: DID NOT RAISE ValueError">method = 'check', when = 'before'
+
+    @pytest.mark.parametrize('method',['refresh','check'])
+    @pytest.mark.parametrize('when',['before','callback'])
+    def test_refresh_wrapper_accessors_bound(method,when):
+        holder={}
+        def substitute():
+            binding=holder['owner'].refresh_binding
+            if method=='refresh':binding.refresh=lambda value,**kwargs:helper.Value(value.polynomial,25)
+            else:binding.check=lambda:None
+        def callback(label,value,metadata):
+            if when=='callback'and label.endswith('source_branch_mask'):substitute()
+        arithmetic,_,owner=helper.make(8,callback=callback);holder['owner']=owner
+        if when=='before':substitute()
+&gt;       with pytest.raises(ValueError):owner.evaluate_tile(helper.Value(helper.scores(8,0),21),query_tile=0)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_cohort_binding_review.py:19: Failed</failure></testcase><testcase classname="test_cohort_binding_review" name="test_refresh_wrapper_accessors_bound[callback-refresh]" time="2.286"><failure message="Failed: DID NOT RAISE ValueError">method = 'refresh', when = 'callback'
+
+    @pytest.mark.parametrize('method',['refresh','check'])
+    @pytest.mark.parametrize('when',['before','callback'])
+    def test_refresh_wrapper_accessors_bound(method,when):
+        holder={}
+        def substitute():
+            binding=holder['owner'].refresh_binding
+            if method=='refresh':binding.refresh=lambda value,**kwargs:helper.Value(value.polynomial,25)
+            else:binding.check=lambda:None
+        def callback(label,value,metadata):
+            if when=='callback'and label.endswith('source_branch_mask'):substitute()
+        arithmetic,_,owner=helper.make(8,callback=callback);holder['owner']=owner
+        if when=='before':substitute()
+&gt;       with pytest.raises(ValueError):owner.evaluate_tile(helper.Value(helper.scores(8,0),21),query_tile=0)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_cohort_binding_review.py:19: Failed</failure></testcase><testcase classname="test_cohort_binding_review" name="test_refresh_wrapper_accessors_bound[callback-check]" time="1.302"><failure message="Failed: DID NOT RAISE ValueError">method = 'check', when = 'callback'
+
+    @pytest.mark.parametrize('method',['refresh','check'])
+    @pytest.mark.parametrize('when',['before','callback'])
+    def test_refresh_wrapper_accessors_bound(method,when):
+        holder={}
+        def substitute():
+            binding=holder['owner'].refresh_binding
+            if method=='refresh':binding.refresh=lambda value,**kwargs:helper.Value(value.polynomial,25)
+            else:binding.check=lambda:None
+        def callback(label,value,metadata):
+            if when=='callback'and label.endswith('source_branch_mask'):substitute()
+        arithmetic,_,owner=helper.make(8,callback=callback);holder['owner']=owner
+        if when=='before':substitute()
+&gt;       with pytest.raises(ValueError):owner.evaluate_tile(helper.Value(helper.scores(8,0),21),query_tile=0)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_cohort_binding_review.py:19: Failed</failure></testcase><testcase classname="test_cohort_binding_review" name="test_original_cohort_vector_factory_bound[before]" time="2.319"><failure message="Failed: DID NOT RAISE ValueError">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x715a771ee2c0&gt;
+when = 'before'
+
+    @pytest.mark.parametrize('when',['before','callback'])
+    def test_original_cohort_vector_factory_bound(monkeypatch,when):
+        original=helper.batched._vectors
+        def wrong(*args):
+            values=list(original(*args));values[3]=np.frombuffer((values[3]*.5).tobytes(),dtype='&lt;f8')
+            return tuple(values)
+        def substitute():monkeypatch.setattr(helper.batched,'_vectors',wrong)
+        def callback(label,value,metadata):
+            if when=='callback'and label.startswith('C0.')and label.endswith('.base_exp'):substitute()
+        arithmetic,_,owner=helper.make(8,callback=callback)
+        if when=='before':substitute()
+&gt;       with pytest.raises(ValueError):owner.evaluate_tile(helper.Value(helper.scores(8,0),21),query_tile=0)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_cohort_binding_review.py:33: Failed</failure></testcase><testcase classname="test_cohort_binding_review" name="test_original_cohort_vector_factory_bound[callback]" time="2.291"><failure message="Failed: DID NOT RAISE ValueError">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x715a771ee2c0&gt;
+when = 'callback'
+
+    @pytest.mark.parametrize('when',['before','callback'])
+    def test_original_cohort_vector_factory_bound(monkeypatch,when):
+        original=helper.batched._vectors
+        def wrong(*args):
+            values=list(original(*args));values[3]=np.frombuffer((values[3]*.5).tobytes(),dtype='&lt;f8')
+            return tuple(values)
+        def substitute():monkeypatch.setattr(helper.batched,'_vectors',wrong)
+        def callback(label,value,metadata):
+            if when=='callback'and label.startswith('C0.')and label.endswith('.base_exp'):substitute()
+        arithmetic,_,owner=helper.make(8,callback=callback)
+        if when=='before':substitute()
+&gt;       with pytest.raises(ValueError):owner.evaluate_tile(helper.Value(helper.scores(8,0),21),query_tile=0)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_cohort_binding_review.py:33: Failed</failure></testcase><testcase classname="test_cohort_binding_review" name="test_clean_real_owner_control[2]" time="0.474" /><testcase classname="test_cohort_binding_review" name="test_clean_real_owner_control[8]" time="2.300" /></testsuite></testsuites>

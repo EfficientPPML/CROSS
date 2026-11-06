@@ -1,0 +1,51 @@
+{
+  "processes": [
+    {
+      "affinity": [
+        108,
+        109,
+        110,
+        111
+      ],
+      "command": [
+        "/tmp/cross-pretrained-validation-env/bin/python",
+        "-I",
+        "-B",
+        "/tmp/qwen-key-producer-boundary-proof-20261104/preparation-v1/executed_driver.py"
+      ],
+      "observed_live": true,
+      "pgid": 4047988,
+      "pid": 4047988,
+      "role": "outer",
+      "start_ticks": 16127871,
+      "state": "S"
+    },
+    {
+      "affinity": [
+        108,
+        109,
+        110,
+        111
+      ],
+      "command": [
+        "/tmp/cross-pretrained-validation-env/bin/python",
+        "-I",
+        "-B",
+        "/tmp/qwen-key-producer-boundary-proof-20261104/preparation-v1/worker_driver.py",
+        "/tmp/qwen-key-producer-boundary-proof-20261104/preparation-v1/run_config.json",
+        "51b185a2ec124a7594aafa13d0d4016b54777d9fd2e31f628b72751fd169730a"
+      ],
+      "observed_live": true,
+      "pgid": 4048002,
+      "pid": 4048002,
+      "role": "worker",
+      "start_ticks": 16127883,
+      "state": "R"
+    }
+  ],
+  "schema": "qwen-key-producer-root-live-observation-v1",
+  "scope": "Independent public process identity observation only",
+  "self_recorded_live_sha256": "905dd6a328b3fbd125d99c835ba9ac6ca51fcc91ce5a36a2df056739fc738031",
+  "terminal_admitted": false,
+  "utc": "2026-11-04T13:08:42.070700+00:00"
+}

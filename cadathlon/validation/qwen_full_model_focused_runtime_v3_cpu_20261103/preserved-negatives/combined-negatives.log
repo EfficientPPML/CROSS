@@ -1,0 +1,144 @@
+FFFFFF                                                                   [100%]
+=================================== FAILURES ===================================
+______________ test_fixed_profile_rejected_before_any_body[dnum] _______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d6d0c4408a0>
+change = 'dnum'
+
+    @pytest.mark.parametrize("change",["dnum","ordered_q"])
+    def test_fixed_profile_rejected_before_any_body(monkeypatch,change):
+        base=f.Arithmetic
+        class Altered(base):
+            def __init__(self):
+                super().__init__()
+                if change=="dnum":self.ctx.dnum=self.ctx._param_cache.dnum=4
+                else:
+                    q=list(self.ctx.q_towers);q[0],q[1]=q[1],q[0]
+                    self.ctx.q_towers=self.ctx._param_cache.q_towers=tuple(q)
+        monkeypatch.setattr(f,"Arithmetic",Altered)
+>       with pytest.raises(ValueError):f.build(monkeypatch)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_profile_negative.py:14: Failed
+____________ test_fixed_profile_rejected_before_any_body[ordered_q] ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d6d0c4402b0>
+change = 'ordered_q'
+
+    @pytest.mark.parametrize("change",["dnum","ordered_q"])
+    def test_fixed_profile_rejected_before_any_body(monkeypatch,change):
+        base=f.Arithmetic
+        class Altered(base):
+            def __init__(self):
+                super().__init__()
+                if change=="dnum":self.ctx.dnum=self.ctx._param_cache.dnum=4
+                else:
+                    q=list(self.ctx.q_towers);q[0],q[1]=q[1],q[0]
+                    self.ctx.q_towers=self.ctx._param_cache.q_towers=tuple(q)
+        monkeypatch.setattr(f,"Arithmetic",Altered)
+>       with pytest.raises(ValueError):f.build(monkeypatch)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_profile_negative.py:14: Failed
+__________ test_partial_setup_failure_always_retires_active[OSError] ___________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d6d0c475370>
+error = <class 'OSError'>
+
+    @pytest.mark.parametrize("error",[OSError,KeyboardInterrupt,SystemExit,MemoryError])
+    def test_partial_setup_failure_always_retires_active(monkeypatch,error):
+        base=runtime.QwenFullModel
+        class FailingSetup(base):
+            armed=False
+            def __setattr__(self,name,value):
+                if name=="_refs" and self.armed:
+                    object.__setattr__(self,"armed",False)
+                    raise error("chosen setup failure")
+                super().__setattr__(name,value)
+        monkeypatch.setattr(runtime,"QwenFullModel",FailingSetup)
+        o,a,b,r,p,x=build(monkeypatch);o.armed=True
+        with pytest.raises(error,match="chosen setup"):o.evaluate(x)
+>       assert not o._active and o._borrowed==() and not a.calls and not p.calls and not runtime._QUARANTINE
+E       assert (not True)
+E        +  where True = <test_setup_scope.test_partial_setup_failure_always_retires_active.<locals>.FailingSetup object at 0x7d6d09feb620>._active
+
+test_setup_scope.py:17: AssertionError
+_____ test_partial_setup_failure_always_retires_active[KeyboardInterrupt] ______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d6d09f1ae00>
+error = <class 'KeyboardInterrupt'>
+
+    @pytest.mark.parametrize("error",[OSError,KeyboardInterrupt,SystemExit,MemoryError])
+    def test_partial_setup_failure_always_retires_active(monkeypatch,error):
+        base=runtime.QwenFullModel
+        class FailingSetup(base):
+            armed=False
+            def __setattr__(self,name,value):
+                if name=="_refs" and self.armed:
+                    object.__setattr__(self,"armed",False)
+                    raise error("chosen setup failure")
+                super().__setattr__(name,value)
+        monkeypatch.setattr(runtime,"QwenFullModel",FailingSetup)
+        o,a,b,r,p,x=build(monkeypatch);o.armed=True
+        with pytest.raises(error,match="chosen setup"):o.evaluate(x)
+>       assert not o._active and o._borrowed==() and not a.calls and not p.calls and not runtime._QUARANTINE
+E       assert (not True)
+E        +  where True = <test_setup_scope.test_partial_setup_failure_always_retires_active.<locals>.FailingSetup object at 0x7d6d09feaba0>._active
+
+test_setup_scope.py:17: AssertionError
+_________ test_partial_setup_failure_always_retires_active[SystemExit] _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d6d09f1b460>
+error = <class 'SystemExit'>
+
+    @pytest.mark.parametrize("error",[OSError,KeyboardInterrupt,SystemExit,MemoryError])
+    def test_partial_setup_failure_always_retires_active(monkeypatch,error):
+        base=runtime.QwenFullModel
+        class FailingSetup(base):
+            armed=False
+            def __setattr__(self,name,value):
+                if name=="_refs" and self.armed:
+                    object.__setattr__(self,"armed",False)
+                    raise error("chosen setup failure")
+                super().__setattr__(name,value)
+        monkeypatch.setattr(runtime,"QwenFullModel",FailingSetup)
+        o,a,b,r,p,x=build(monkeypatch);o.armed=True
+        with pytest.raises(error,match="chosen setup"):o.evaluate(x)
+>       assert not o._active and o._borrowed==() and not a.calls and not p.calls and not runtime._QUARANTINE
+E       assert (not True)
+E        +  where True = <test_setup_scope.test_partial_setup_failure_always_retires_active.<locals>.FailingSetup object at 0x7d6d0c468050>._active
+
+test_setup_scope.py:17: AssertionError
+________ test_partial_setup_failure_always_retires_active[MemoryError] _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d6d09f6b650>
+error = <class 'MemoryError'>
+
+    @pytest.mark.parametrize("error",[OSError,KeyboardInterrupt,SystemExit,MemoryError])
+    def test_partial_setup_failure_always_retires_active(monkeypatch,error):
+        base=runtime.QwenFullModel
+        class FailingSetup(base):
+            armed=False
+            def __setattr__(self,name,value):
+                if name=="_refs" and self.armed:
+                    object.__setattr__(self,"armed",False)
+                    raise error("chosen setup failure")
+                super().__setattr__(name,value)
+        monkeypatch.setattr(runtime,"QwenFullModel",FailingSetup)
+        o,a,b,r,p,x=build(monkeypatch);o.armed=True
+        with pytest.raises(error,match="chosen setup"):o.evaluate(x)
+>       assert not o._active and o._borrowed==() and not a.calls and not p.calls and not runtime._QUARANTINE
+E       assert (not True)
+E        +  where True = <test_setup_scope.test_partial_setup_failure_always_retires_active.<locals>.FailingSetup object at 0x7d6d0c468050>._active
+
+test_setup_scope.py:17: AssertionError
+=========================== short test summary info ============================
+FAILED test_profile_negative.py::test_fixed_profile_rejected_before_any_body[dnum]
+FAILED test_profile_negative.py::test_fixed_profile_rejected_before_any_body[ordered_q]
+FAILED test_setup_scope.py::test_partial_setup_failure_always_retires_active[OSError]
+FAILED test_setup_scope.py::test_partial_setup_failure_always_retires_active[KeyboardInterrupt]
+FAILED test_setup_scope.py::test_partial_setup_failure_always_retires_active[SystemExit]
+FAILED test_setup_scope.py::test_partial_setup_failure_always_retires_active[MemoryError]
+6 failed in 33.91s

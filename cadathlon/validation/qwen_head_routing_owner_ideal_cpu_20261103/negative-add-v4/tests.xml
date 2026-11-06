@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="11" skipped="0" tests="14" time="0.655" timestamp="2026-11-03T14:42:13.180000+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_head_routing" name="test_bad_add_metadata_is_rejected_without_next_work[level-20-head]" time="0.031"><failure message="AssertionError: assert ([{'rotate': 2, 'weighted': 1, 'multiply': 1, 'add': 1}] and {'rotate': 3,...: 1, 'add': 1} == {'rotate': 2,...: 1, 'add': 1}&#10;  &#10;  Omitting 3 identical items, use -vv to show&#10;  Differing items:&#10;  {'rotate': 3} != {'rotate': 2}&#10;  Use -v to get more diff)">phase = 'head', field = 'level', bad = 20
+
+    @pytest.mark.parametrize('phase',['head','cross_key'])
+    @pytest.mark.parametrize('field,bad',[('level',20),('_ckks_scale',1.0),('_ckks_nsd',True),('degree',131072.0),('degree_layout',('wrong',)),('moduli',(17,19)),('num_moduli',True)])
+    def test_bad_add_metadata_is_rejected_without_next_work(phase,field,bad):
+        o=owner((0,1));a=o.arithmetic;original=a.add;seen=[]
+        def add(x,y):
+            out=original(x,y)
+            target=1 if phase=='head' else 15 # seven reductions per key then cross-key add
+            if a.calls['add']==target:setattr(out,field,bad);seen.append(dict(a.calls))
+            return out
+        a.add=add
+        with pytest.raises(ValueError):o.scores(tile(2,2048),(tile(2,2048),),query_tile=0)
+&gt;       assert seen and dict(a.calls)==seen[0] and o.last_run is None and not o._active
+E       AssertionError: assert ([{'rotate': 2, 'weighted': 1, 'multiply': 1, 'add': 1}] and {'rotate': 3,...: 1, 'add': 1} == {'rotate': 2,...: 1, 'add': 1}
+E         
+E         Omitting 3 identical items, use -vv to show
+E         Differing items:
+E         {'rotate': 3} != {'rotate': 2}
+E         Use -v to get more diff)
+
+test_head_routing.py:213: AssertionError</failure></testcase><testcase classname="test_head_routing" name="test_bad_add_metadata_is_rejected_without_next_work[level-20-cross_key]" time="0.043"><failure message="Failed: DID NOT RAISE ValueError">phase = 'cross_key', field = 'level', bad = 20
+
+    @pytest.mark.parametrize('phase',['head','cross_key'])
+    @pytest.mark.parametrize('field,bad',[('level',20),('_ckks_scale',1.0),('_ckks_nsd',True),('degree',131072.0),('degree_layout',('wrong',)),('moduli',(17,19)),('num_moduli',True)])
+    def test_bad_add_metadata_is_rejected_without_next_work(phase,field,bad):
+        o=owner((0,1));a=o.arithmetic;original=a.add;seen=[]
+        def add(x,y):
+            out=original(x,y)
+            target=1 if phase=='head' else 15 # seven reductions per key then cross-key add
+            if a.calls['add']==target:setattr(out,field,bad);seen.append(dict(a.calls))
+            return out
+        a.add=add
+&gt;       with pytest.raises(ValueError):o.scores(tile(2,2048),(tile(2,2048),),query_tile=0)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_head_routing.py:212: Failed</failure></testcase><testcase classname="test_head_routing" name="test_bad_add_metadata_is_rejected_without_next_work[_ckks_scale-1.0-head]" time="0.050"><failure message="Failed: DID NOT RAISE ValueError">phase = 'head', field = '_ckks_scale', bad = 1.0
+
+    @pytest.mark.parametrize('phase',['head','cross_key'])
+    @pytest.mark.parametrize('field,bad',[('level',20),('_ckks_scale',1.0),('_ckks_nsd',True),('degree',131072.0),('degree_layout',('wrong',)),('moduli',(17,19)),('num_moduli',True)])
+    def test_bad_add_metadata_is_rejected_without_next_work(phase,field,bad):
+        o=owner((0,1));a=o.arithmetic;original=a.add;seen=[]
+        def add(x,y):
+            out=original(x,y)
+            target=1 if phase=='head' else 15 # seven reductions per key then cross-key add
+            if a.calls['add']==target:setattr(out,field,bad);seen.append(dict(a.calls))
+            return out
+        a.add=add
+&gt;       with pytest.raises(ValueError):o.scores(tile(2,2048),(tile(2,2048),),query_tile=0)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_head_routing.py:212: Failed</failure></testcase><testcase classname="test_head_routing" name="test_bad_add_metadata_is_rejected_without_next_work[_ckks_scale-1.0-cross_key]" time="0.035"><failure message="Failed: DID NOT RAISE ValueError">phase = 'cross_key', field = '_ckks_scale', bad = 1.0
+
+    @pytest.mark.parametrize('phase',['head','cross_key'])
+    @pytest.mark.parametrize('field,bad',[('level',20),('_ckks_scale',1.0),('_ckks_nsd',True),('degree',131072.0),('degree_layout',('wrong',)),('moduli',(17,19)),('num_moduli',True)])
+    def test_bad_add_metadata_is_rejected_without_next_work(phase,field,bad):
+        o=owner((0,1));a=o.arithmetic;original=a.add;seen=[]
+        def add(x,y):
+            out=original(x,y)
+            target=1 if phase=='head' else 15 # seven reductions per key then cross-key add
+            if a.calls['add']==target:setattr(out,field,bad);seen.append(dict(a.calls))
+            return out
+        a.add=add
+&gt;       with pytest.raises(ValueError):o.scores(tile(2,2048),(tile(2,2048),),query_tile=0)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_head_routing.py:212: Failed</failure></testcase><testcase classname="test_head_routing" name="test_bad_add_metadata_is_rejected_without_next_work[_ckks_nsd-True-head]" time="0.022"><failure message="AssertionError: assert ([{'rotate': 2, 'weighted': 1, 'multiply': 1, 'add': 1}] and {'rotate': 3,...: 1, 'add': 1} == {'rotate': 2,...: 1, 'add': 1}&#10;  &#10;  Omitting 3 identical items, use -vv to show&#10;  Differing items:&#10;  {'rotate': 3} != {'rotate': 2}&#10;  Use -v to get more diff)">phase = 'head', field = '_ckks_nsd', bad = True
+
+    @pytest.mark.parametrize('phase',['head','cross_key'])
+    @pytest.mark.parametrize('field,bad',[('level',20),('_ckks_scale',1.0),('_ckks_nsd',True),('degree',131072.0),('degree_layout',('wrong',)),('moduli',(17,19)),('num_moduli',True)])
+    def test_bad_add_metadata_is_rejected_without_next_work(phase,field,bad):
+        o=owner((0,1));a=o.arithmetic;original=a.add;seen=[]
+        def add(x,y):
+            out=original(x,y)
+            target=1 if phase=='head' else 15 # seven reductions per key then cross-key add
+            if a.calls['add']==target:setattr(out,field,bad);seen.append(dict(a.calls))
+            return out
+        a.add=add
+        with pytest.raises(ValueError):o.scores(tile(2,2048),(tile(2,2048),),query_tile=0)
+&gt;       assert seen and dict(a.calls)==seen[0] and o.last_run is None and not o._active
+E       AssertionError: assert ([{'rotate': 2, 'weighted': 1, 'multiply': 1, 'add': 1}] and {'rotate': 3,...: 1, 'add': 1} == {'rotate': 2,...: 1, 'add': 1}
+E         
+E         Omitting 3 identical items, use -vv to show
+E         Differing items:
+E         {'rotate': 3} != {'rotate': 2}
+E         Use -v to get more diff)
+
+test_head_routing.py:213: AssertionError</failure></testcase><testcase classname="test_head_routing" name="test_bad_add_metadata_is_rejected_without_next_work[_ckks_nsd-True-cross_key]" time="0.039" /><testcase classname="test_head_routing" name="test_bad_add_metadata_is_rejected_without_next_work[degree-131072.0-head]" time="0.022"><failure message="AssertionError: assert ([{'rotate': 2, 'weighted': 1, 'multiply': 1, 'add': 1}] and {'rotate': 3,...: 1, 'add': 1} == {'rotate': 2,...: 1, 'add': 1}&#10;  &#10;  Omitting 3 identical items, use -vv to show&#10;  Differing items:&#10;  {'rotate': 3} != {'rotate': 2}&#10;  Use -v to get more diff)">phase = 'head', field = 'degree', bad = 131072.0
+
+    @pytest.mark.parametrize('phase',['head','cross_key'])
+    @pytest.mark.parametrize('field,bad',[('level',20),('_ckks_scale',1.0),('_ckks_nsd',True),('degree',131072.0),('degree_layout',('wrong',)),('moduli',(17,19)),('num_moduli',True)])
+    def test_bad_add_metadata_is_rejected_without_next_work(phase,field,bad):
+        o=owner((0,1));a=o.arithmetic;original=a.add;seen=[]
+        def add(x,y):
+            out=original(x,y)
+            target=1 if phase=='head' else 15 # seven reductions per key then cross-key add
+            if a.calls['add']==target:setattr(out,field,bad);seen.append(dict(a.calls))
+            return out
+        a.add=add
+        with pytest.raises(ValueError):o.scores(tile(2,2048),(tile(2,2048),),query_tile=0)
+&gt;       assert seen and dict(a.calls)==seen[0] and o.last_run is None and not o._active
+E       AssertionError: assert ([{'rotate': 2, 'weighted': 1, 'multiply': 1, 'add': 1}] and {'rotate': 3,...: 1, 'add': 1} == {'rotate': 2,...: 1, 'add': 1}
+E         
+E         Omitting 3 identical items, use -vv to show
+E         Differing items:
+E         {'rotate': 3} != {'rotate': 2}
+E         Use -v to get more diff)
+
+test_head_routing.py:213: AssertionError</failure></testcase><testcase classname="test_head_routing" name="test_bad_add_metadata_is_rejected_without_next_work[degree-131072.0-cross_key]" time="0.039" /><testcase classname="test_head_routing" name="test_bad_add_metadata_is_rejected_without_next_work[degree_layout-bad4-head]" time="0.025"><failure message="AssertionError: assert ([{'rotate': 2, 'weighted': 1, 'multiply': 1, 'add': 1}] and {'rotate': 3,...: 1, 'add': 1} == {'rotate': 2,...: 1, 'add': 1}&#10;  &#10;  Omitting 3 identical items, use -vv to show&#10;  Differing items:&#10;  {'rotate': 3} != {'rotate': 2}&#10;  Use -v to get more diff)">phase = 'head', field = 'degree_layout', bad = ('wrong',)
+
+    @pytest.mark.parametrize('phase',['head','cross_key'])
+    @pytest.mark.parametrize('field,bad',[('level',20),('_ckks_scale',1.0),('_ckks_nsd',True),('degree',131072.0),('degree_layout',('wrong',)),('moduli',(17,19)),('num_moduli',True)])
+    def test_bad_add_metadata_is_rejected_without_next_work(phase,field,bad):
+        o=owner((0,1));a=o.arithmetic;original=a.add;seen=[]
+        def add(x,y):
+            out=original(x,y)
+            target=1 if phase=='head' else 15 # seven reductions per key then cross-key add
+            if a.calls['add']==target:setattr(out,field,bad);seen.append(dict(a.calls))
+            return out
+        a.add=add
+        with pytest.raises(ValueError):o.scores(tile(2,2048),(tile(2,2048),),query_tile=0)
+&gt;       assert seen and dict(a.calls)==seen[0] and o.last_run is None and not o._active
+E       AssertionError: assert ([{'rotate': 2, 'weighted': 1, 'multiply': 1, 'add': 1}] and {'rotate': 3,...: 1, 'add': 1} == {'rotate': 2,...: 1, 'add': 1}
+E         
+E         Omitting 3 identical items, use -vv to show
+E         Differing items:
+E         {'rotate': 3} != {'rotate': 2}
+E         Use -v to get more diff)
+
+test_head_routing.py:213: AssertionError</failure></testcase><testcase classname="test_head_routing" name="test_bad_add_metadata_is_rejected_without_next_work[degree_layout-bad4-cross_key]" time="0.044" /><testcase classname="test_head_routing" name="test_bad_add_metadata_is_rejected_without_next_work[moduli-bad5-head]" time="0.025"><failure message="AssertionError: assert ([{'rotate': 2, 'weighted': 1, 'multiply': 1, 'add': 1}] and {'rotate': 3,...: 1, 'add': 1} == {'rotate': 2,...: 1, 'add': 1}&#10;  &#10;  Omitting 3 identical items, use -vv to show&#10;  Differing items:&#10;  {'rotate': 3} != {'rotate': 2}&#10;  Use -v to get more diff)">phase = 'head', field = 'moduli', bad = (17, 19)
+
+    @pytest.mark.parametrize('phase',['head','cross_key'])
+    @pytest.mark.parametrize('field,bad',[('level',20),('_ckks_scale',1.0),('_ckks_nsd',True),('degree',131072.0),('degree_layout',('wrong',)),('moduli',(17,19)),('num_moduli',True)])
+    def test_bad_add_metadata_is_rejected_without_next_work(phase,field,bad):
+        o=owner((0,1));a=o.arithmetic;original=a.add;seen=[]
+        def add(x,y):
+            out=original(x,y)
+            target=1 if phase=='head' else 15 # seven reductions per key then cross-key add
+            if a.calls['add']==target:setattr(out,field,bad);seen.append(dict(a.calls))
+            return out
+        a.add=add
+        with pytest.raises(ValueError):o.scores(tile(2,2048),(tile(2,2048),),query_tile=0)
+&gt;       assert seen and dict(a.calls)==seen[0] and o.last_run is None and not o._active
+E       AssertionError: assert ([{'rotate': 2, 'weighted': 1, 'multiply': 1, 'add': 1}] and {'rotate': 3,...: 1, 'add': 1} == {'rotate': 2,...: 1, 'add': 1}
+E         
+E         Omitting 3 identical items, use -vv to show
+E         Differing items:
+E         {'rotate': 3} != {'rotate': 2}
+E         Use -v to get more diff)
+
+test_head_routing.py:213: AssertionError</failure></testcase><testcase classname="test_head_routing" name="test_bad_add_metadata_is_rejected_without_next_work[moduli-bad5-cross_key]" time="0.044"><failure message="Failed: DID NOT RAISE ValueError">phase = 'cross_key', field = 'moduli', bad = (17, 19)
+
+    @pytest.mark.parametrize('phase',['head','cross_key'])
+    @pytest.mark.parametrize('field,bad',[('level',20),('_ckks_scale',1.0),('_ckks_nsd',True),('degree',131072.0),('degree_layout',('wrong',)),('moduli',(17,19)),('num_moduli',True)])
+    def test_bad_add_metadata_is_rejected_without_next_work(phase,field,bad):
+        o=owner((0,1));a=o.arithmetic;original=a.add;seen=[]
+        def add(x,y):
+            out=original(x,y)
+            target=1 if phase=='head' else 15 # seven reductions per key then cross-key add
+            if a.calls['add']==target:setattr(out,field,bad);seen.append(dict(a.calls))
+            return out
+        a.add=add
+&gt;       with pytest.raises(ValueError):o.scores(tile(2,2048),(tile(2,2048),),query_tile=0)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_head_routing.py:212: Failed</failure></testcase><testcase classname="test_head_routing" name="test_bad_add_metadata_is_rejected_without_next_work[num_moduli-True-head]" time="0.041"><failure message="Failed: DID NOT RAISE ValueError">phase = 'head', field = 'num_moduli', bad = True
+
+    @pytest.mark.parametrize('phase',['head','cross_key'])
+    @pytest.mark.parametrize('field,bad',[('level',20),('_ckks_scale',1.0),('_ckks_nsd',True),('degree',131072.0),('degree_layout',('wrong',)),('moduli',(17,19)),('num_moduli',True)])
+    def test_bad_add_metadata_is_rejected_without_next_work(phase,field,bad):
+        o=owner((0,1));a=o.arithmetic;original=a.add;seen=[]
+        def add(x,y):
+            out=original(x,y)
+            target=1 if phase=='head' else 15 # seven reductions per key then cross-key add
+            if a.calls['add']==target:setattr(out,field,bad);seen.append(dict(a.calls))
+            return out
+        a.add=add
+&gt;       with pytest.raises(ValueError):o.scores(tile(2,2048),(tile(2,2048),),query_tile=0)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_head_routing.py:212: Failed</failure></testcase><testcase classname="test_head_routing" name="test_bad_add_metadata_is_rejected_without_next_work[num_moduli-True-cross_key]" time="0.041"><failure message="Failed: DID NOT RAISE ValueError">phase = 'cross_key', field = 'num_moduli', bad = True
+
+    @pytest.mark.parametrize('phase',['head','cross_key'])
+    @pytest.mark.parametrize('field,bad',[('level',20),('_ckks_scale',1.0),('_ckks_nsd',True),('degree',131072.0),('degree_layout',('wrong',)),('moduli',(17,19)),('num_moduli',True)])
+    def test_bad_add_metadata_is_rejected_without_next_work(phase,field,bad):
+        o=owner((0,1));a=o.arithmetic;original=a.add;seen=[]
+        def add(x,y):
+            out=original(x,y)
+            target=1 if phase=='head' else 15 # seven reductions per key then cross-key add
+            if a.calls['add']==target:setattr(out,field,bad);seen.append(dict(a.calls))
+            return out
+        a.add=add
+&gt;       with pytest.raises(ValueError):o.scores(tile(2,2048),(tile(2,2048),),query_tile=0)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_head_routing.py:212: Failed</failure></testcase></testsuite></testsuites>

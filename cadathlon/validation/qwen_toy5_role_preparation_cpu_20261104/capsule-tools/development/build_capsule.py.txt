@@ -1,0 +1,126 @@
+"""Explicit public whitelist assembly. Never enumerates test fixture trees."""
+from pathlib import Path
+import hashlib,json,os,stat,tarfile
+C=Path('/tmp/qwen_toy5_role_preparation_cpu_20261104')
+P=Path('/tmp/qwen-toy5-role-focused-proof-20261104/preparation-v1')
+S=Path('/tmp/qwen-toy5-role-focused-tests-20261104')
+R=Path('/tmp/qwen-toy5-actual-checkpoint-runtime-v4-20261104')
+OUT=Path(__file__).resolve().parent
+sha=lambda raw:hashlib.sha256(raw).hexdigest()
+pretty=lambda value:(json.dumps(value,sort_keys=True,indent=2,allow_nan=False)+'\n').encode()
+compact=lambda value:(json.dumps(value,sort_keys=True,separators=(',',':'),allow_nan=False)+'\n').encode()
+def j(p):return json.loads(p.read_bytes())
+assert not C.exists();C.mkdir()
+origins={};generated=[]
+def cp(source,target,expected=None,limit=64<<20):
+    source=Path(source);dest=C/target
+    assert target not in origins and not dest.exists()and '..'not in Path(target).parts
+    before=source.lstat();assert stat.S_ISREG(before.st_mode)and not source.is_symlink()and before.st_size<=limit
+    raw=source.read_bytes();assert source.lstat()==before and len(raw)==before.st_size
+    if expected is not None:assert sha(raw)==expected,(source,sha(raw),expected)
+    dest.parent.mkdir(parents=True,exist_ok=True);dest.write_bytes(raw)
+    origins[target]=dict(source=str(source),sha256=sha(raw),bytes=len(raw))
+def gen(name,raw):
+    assert name not in origins and not(C/name).exists();(C/name).parent.mkdir(parents=True,exist_ok=True)
+    (C/name).write_bytes(raw);generated.append(name)
+source_map=j(P/'sources-before.json');runtime=j(S/'runtime-map.json')
+cp(P/'sources.tar.gz','sources/final427.tar.gz','269a3661b3a84309bed36c7527c7ccedf06c086b1dd9e907e269b0a03b87380b')
+cp(P/'sources-before.json','sources/final427.json','43a7e90b04a2b99edfb953a7724c3a50580dcff844c2da987a32ec1da7a41df9')
+cp(S/'runtime-map.json','sources/runtime389.json','d82d68101c1f3ddc7f18b6ae4492aa7618d779012babaf9ed85355dfab927fea')
+# Exactly declared source additions, never an arbitrary source-tree walk.
+readable={}
+for name,digest in source_map.items():
+    if not name.startswith('runtime/'):
+        target='selected-tests/'+name;cp(S/name,target,digest);readable[target]=name
+for name,digest in runtime.items():
+    if (('/'not in name and(name.startswith('q5_')or name in('SOURCE_DESIGN.md','FOCUSED_TEST_PROPOSAL.md','RESOURCE_STATUS.json','source_selection.json','copy_origins.json','initial_overlays.json','owner_correction_history.json','owner_edge_correction_history.json','owner_table_snapshot_history.json','cleanup.py','cleanup_origin.py','qwen_finalizer.py','core_source_manifest.json','parent250_sources.json')))
+        or name.startswith('provenance/')):
+        target='selected-runtime/'+name;cp(R/name,target,digest);readable[target]='runtime/'+name
+lineages=[]
+versions=[('18',Path('/tmp/qwen-toy5-actual-key-io-layer-20261104'),Path('/tmp/qwen-toy5-actual-key-io-layer-handoff-20261104')),
+ ('382',Path('/tmp/qwen-toy5-actual-checkpoint-runtime-20261104'),Path('/tmp/qwen-toy5-actual-checkpoint-runtime-handoff-20261104')),
+ ('385',Path('/tmp/qwen-toy5-actual-checkpoint-runtime-v2-20261104'),Path('/tmp/qwen-toy5-actual-checkpoint-runtime-v2-handoff-20261104')),
+ ('387',Path('/tmp/qwen-toy5-actual-checkpoint-runtime-v3-20261104'),Path('/tmp/qwen-toy5-actual-checkpoint-runtime-v3-handoff-20261104')),
+ ('389',R,Path('/tmp/qwen-toy5-actual-checkpoint-runtime-v4-handoff-20261104'))]
+for label,root,handoff in versions:
+    table=j(handoff/'sources.json');assert len(table)==int(label)
+    map_target='lineage/'+label+'/sources.json';cp(handoff/'sources.json',map_target)
+    cp(handoff/'handoff.json','lineage/'+label+'/handoff.json')
+    for name in ('source-review.json','explicit-additions.json','capture_source.py','build_source.py','build_capture_source.py'):
+        if(handoff/name).is_file():cp(handoff/name,'lineage/'+label+'/'+name)
+    overrides={}
+    for name,digest in table.items():
+        assert sha((root/name).read_bytes())==digest
+        if runtime.get(name)!=digest:
+            target='lineage/'+label+'/overrides/'+name;cp(root/name,target,digest);overrides[name]=target
+    lineages.append(dict(label=label,count=len(table),map=map_target,map_sha256=sha((handoff/'sources.json').read_bytes()),
+        source_root=str(root),base='sources/final427.tar.gz::runtime/',overrides=overrides,
+        original_tar_included=False,historical_archive_hash_scope='receipt provenance only; original tar bytes are omitted',
+        portable_file_map_reconstruction=True))
+proof_names=['README.md','executed_driver.py','worker_driver.py','inspect_children.py','prepare_source.py',
+ 'before_executed_driver.py','before_worker_driver.py','executed_driver.py.patch','worker_driver.py.patch',
+ 'run_config.json','driver_provenance.json','launch-proposal.json','handoff.json','source-handoff.json','static-review.json',
+ 'sources-after.json','execution-after.json','tests.log','tests.xml','report.json','worker-audit.json',
+ 'worker-early.json','worker-terminal.json','worker-owner-terminal.json','collector-terminal.json',
+ 'live-observation.json','child-artifact-review.json',
+ 'development/ast-v1/history.json','development/ast-v1/executed_driver.py.txt','development/ast-v1/worker_driver.py.txt',
+ 'development/ast-v1/inspect_children.py.txt','development/ast-v1/prepare_source.py.txt','development/ast-v1/run_config.json.txt']
+for name in proof_names:cp(P/name,'proof/'+name)
+# Fixed names already authenticated by independent terminal readback.
+pins=j(Path('/tmp/qwen-toy5-role-terminal-cnn-review-20261104/child-files.json'));assert len(pins)==392
+for relative,pin in sorted(pins.items()):
+    assert relative.startswith('pytest-owned/')and '/owned_io/'not in relative and '/owned_assets/'not in relative
+    assert Path(relative).name in {'parent-live.json','parent-terminal.json','child-early.json','child-terminal.json','result.json','stdout.log','stderr.log'}
+    cp(P/relative,'children/'+relative,pin['sha256'],1<<20)
+review_groups=[
+ ('root-source427','/tmp/qwen-toy5-role-focused-root-source-review-20261104',['review.json']),
+ ('root-harness-terminal','/tmp/qwen-toy5-role-focused-root-harness-review-20261104',['review.json','owner-live.json','terminal-review.json']),
+ ('peer-terminal','/tmp/qwen-toy5-role-terminal-cnn-review-20261104',['review.json','review_public.py','child-files.json','process-absence.json']),
+ ('root-runtime','/tmp/qwen-toy5-actual-runtime-root-review-20261104',['review.json','setup-owner-addendum.json','correction385-review.json','correction389-review.json']),
+ ('peer-runtime382','/tmp/qwen-toy5-actual-runtime-cnn-review-20261104',['review.json','review_source.py']),
+ ('root-architecture','/tmp/qwen-toy5-role-focused-root-test-review-20261104',['architecture-v3-review.json']),
+ ('root-owned-publication','/tmp/qwen-toy5-owned-publication-source-handoff-20261104',['handoff.json'])]
+for target,root,names in review_groups:
+    for name in names:cp(Path(root)/name,'reviews/'+target+'/'+name)
+for label,path in [('52','/tmp/qwen-toy5-role-focused-test-architecture-20261104'),('55-v2','/tmp/qwen-toy5-role-focused-test-architecture-v2-20261104'),('55-v3','/tmp/qwen-toy5-role-focused-test-architecture-v3-20261104')]:
+    root=Path(path);index=j(root/'index.json')
+    # Author-generated architecture files are fixed public plan artifacts.
+    for name in ('PLAN.md','CASES.json','DEFINITION_IMPORTS.json','HISTORY.json','IMPORT_SEAMS.json','SOURCE_REFS.json','SUCCESSOR_REQUIREMENTS.json','index.json'):
+        if(root/name).is_file():cp(root/name,'plans/'+label+'/'+name)
+for name in ('handoff.json','constructor-source-pins.json'):
+    cp(Path('/tmp/qwen-toy5-role-focused-test-architecture-handoff-20261104')/name,'plans/52/handoff-'+name)
+cp(Path('/tmp/qwen-toy5-role-focused-test-architecture-handoff-v3-20261104/handoff.json'),'plans/55-v3/handoff.json')
+for name in ('handoff.json','static-review.json','freeze_sources.py'):
+    cp(Path('/tmp/qwen-toy5-role-focused-test-handoff-20261104')/name,'sources/test-handoff/'+name)
+report=j(P/'report.json');art=j(P/'child-artifact-review.json')
+summary=dict(schema='qwen-toy5-role-preparation-capsule-v1',passed=True,scope=report['scope'],
+    source_count=427,runtime_count=389,test_count=55,owned_test_children=56,recorded_total_processes=58,
+    root_owner=dict(session=79231,launch_tool='9220a4',terminal_tool='ecf1c0',exit_code=0,reaped=True),
+    root_independent_live=True,peer_live_or_wait_claim=False,peer_postexit_process_group_absence=True,
+    child_regular_artifacts=392,aliases_metadata=len(art['aliases']),fixture_metadata_entries=len(art['fixture_metadata']),
+    fifo_metadata_only=[r['path']for r in art['fixture_metadata']if r['kind']=='fifo_metadata_only'],
+    source_manifest_sha256=sha((P/'sources-before.json').read_bytes()),source_archive_sha256=sha((P/'sources.tar.gz').read_bytes()),
+    report_sha256=sha((P/'report.json').read_bytes()),root_terminal_sha256=sha((C/'reviews/root-harness-terminal/terminal-review.json').read_bytes()),
+    peer_terminal_sha256=sha((C/'reviews/peer-terminal/review.json').read_bytes()),readable_source_members=readable,
+    lineages=lineages,numpy_allowed_child_count=10,numpy_pinned_source_count=4,numpy_observed_module_origin_count=3,
+    arithmetic_rerun=False,actual_generation=False,native_backend=False,device_capacity=False,actual_role=False,HE=False,
+    no_fixture_body_copies=True,reference='Separate original fixed-toy replay/checkpoint preparation evidence is linked; no inherited48/140 test result is promoted into this55 proof.',
+    historical_original_tar_bytes_included=False)
+gen('summary.json',pretty(summary))
+gen('README.md',b'''# Qwen toy5 role and ownership preparation\n\nThe single root-owned focused run passed all **55 tests in 56 owned children** against **427 source files**, including the unchanged nested389 runtime. Root session79231 launched with9220a4 and returned normally with ecf1c0; root recorded live collector/worker identities and their direct terminal/reap. Public receipts identify all58 processes and groups as absent. The independent peer checked source/archive/XML/receipt bindings and post-exit absence; it did not own the wait or observe them live.\n\nThe proof covers synthetic authority joins, recorded203-key generation and constructor/cache/NTT ownership, partial returns and original barriers, real tiny owned serializer/assets/publication I/O, all47 recorded public artifact checks before private entry, immutable full65536 decode snapshots, and disabled-entry70/help0/usage2 behavior. The seven child files are retained exactly (392 receipts/logs). Real NumPy is selected in ten child cases; four source hashes and three observed module origins are pinned, without a full native NumPy dependency claim. The default decoder ABI/approximation arguments are exercised against a recording codec; actual decryption is not executed.\n\nThis is synthetic preparation. No genuine RNG/key generation, security predicate, backend/context/device/capacity observation, borrowed model/key/ciphertext body, actual role, HE inference, encrypted first-divergence localization, full-model acceptance or measured acceleration is established. Actual entry and the native/runtime issuer remain unavailable. Original fixed-toy arithmetic preparation is separate: [prior checkpoint capsule](../qwen_toy5_checkpoint_preparation_cpu_20261104/README.md). Its48/140 results are not additional tests in this run.\n\nThe exact final427 source archive is included once. Its nested389 source supplies the base for portable reconstruction of18/382/385/387/389 source maps using explicitly bundled overrides. Historical original tar bytes are omitted; their digests remain receipt provenance and cannot be rehashed offline. Readable selected runtime/test files are verified against archive members. Source-only reviews, original plan52 and expanded55 plans, ownership correction history, root-authored I/O provenance and the harness AST authoring correction remain intact with their original statuses.\n\nRun `python -I -B verify.py` for portable hashes, closed-whitelist, archive/source lineage, ordered XML and public receipt checks. `--current` additionally compares only explicitly listed original public sources/proofs and the four NumPy source files. The verifier imports no candidate/test, executes no test or validator, and does not stat/read fixture roots or follow pytest aliases. The deliberately retained FIFO and other fixture paths exist here only as producer lstat metadata. No fixture bodies are bundled.\n\nRoot owns repository publication and VALIDATION updates; this capsule supplies no execution grant.\n''')
+gen('HISTORY.md',b'''# Preserved history\n\nThe18-source layer and source382 were unexecuted source checkpoints. Source review identified the separate Polynomial ABI, explicit client NTT ownership, clean registry/mirror retirement and nonblocking public-assets open requirements; the exact patches/source provenance remain bundled.\n\nThe382 review then identified InputOwner close tombstoning and returned moduli-array ownership gaps, followed by setup-owned returned/attached NTT/finite-field tables. Intermediate385 and387 were preserved. The final389 captures the original owner/table graph before rescans, rejects foreign replacement before acquiring its wait, and attempts original barriers. These are source findings and corrections, not observed HE failures. Source/runtime arithmetic and selected core remain unchanged.\n\nThe original52-case architecture gained three narrowly owned I/O cases: real tiny PublicAssets clean retirement, FIFO/nonregular rejection with a pre-open nonblocking sentinel, and Exporter clean registry/mirror retirement. The accepted55 plan preserves earlier semantic fields; two target labels were updated during the389 handoff. Root authored only the11-case owned-publication module; an independent source review is retained.\n\nTest-source authoring corrected a test-finder file/spec origin issue, direct-wait/starttick/primary preservation, and an explicit20-helper allowlist before freeze. A lexical-space error was caught by stdlib AST parsing in a preserved child draft; no candidate import/collection/test occurred. A separate metadata-authoring SyntaxError occurred before script execution. AUTHORING_HISTORY.md retains the exact scope.\n\nHarness preparation similarly caught a missing lexical space with stdlib AST parsing (8a777b), before any test import or run. The pre-correction files/history are under proof/development/ast-v1; corrected preparation completed with46ff83. This is authoring history, not a failed focused run. The focused427/55 proof ran once and passed. No inherited suite was rerun.\n\nRoot source/harness reviews retain their pre-execution wording. Root owner-live and terminal records add the later observed execution/reap authority. The independent peer terminal receipt separately checks58 post-exit process/group identities; it does not invent another live observation or wait.\n''')
+cp(Path(__file__),'capsule-tools/build_capsule.py')
+# Verifier is separately source-authored and copied before final closed indexing.
+cp(OUT/'verify.py','verify.py')
+gen('copy_origins.json',pretty(origins))
+generated.extend(['WHITELIST.json','SHA256SUMS'])
+whitelist=sorted(list(origins)+generated)
+assert len(whitelist)==len(set(whitelist))
+(C/'WHITELIST.json').write_bytes(pretty(dict(schema='closed-public-capsule-whitelist-v1',files=whitelist,
+    copied_files=len(origins),generated_files=len(generated),fixture_bodies=False,aliases=False,
+    policy='Only named public source/proof/review files; no recursive /tmp or fixture capture.')))
+index={n:sha((C/n).read_bytes())for n in whitelist if n!='SHA256SUMS'}
+(C/'SHA256SUMS').write_text(''.join(d+'  '+n+'\n'for n,d in sorted(index.items())))
+assert sorted(p.relative_to(C).as_posix()for p in C.rglob('*')if p.is_file())==whitelist
+print(json.dumps(dict(capsule=str(C),files=len(whitelist),copied=len(origins),indexed=len(index),
+    index_sha256=sha((C/'SHA256SUMS').read_bytes()),whitelist_sha256=sha((C/'WHITELIST.json').read_bytes())),sort_keys=True))

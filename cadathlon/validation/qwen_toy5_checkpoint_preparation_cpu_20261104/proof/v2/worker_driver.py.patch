@@ -1,0 +1,12 @@
+--- failed-preparation-v1/worker_driver.py
++++ unrun-preparation-v2/worker_driver.py
+@@ -43,7 +43,8 @@
+ selected = config['selected_files']
+ assert type(selected) is list and selected and len(selected) == len(set(selected))
+ assert all(type(n) is str and n.startswith('test_') and n.endswith('.py') and '/' not in n for n in selected)
+-status = pytest.main(['-q', '-p', 'no:cacheprovider', '--rootdir=' + str(source),
++assert config['pytest_config_path'] == '/dev/null'
++status = pytest.main(['-q', '-c', '/dev/null', '-p', 'no:cacheprovider', '--rootdir=' + str(source),
+                      '--confcutdir=' + str(source), '--import-mode=importlib',
+                      '--basetemp=' + str(basetemp),
+                      *[str(source / n) for n in selected],

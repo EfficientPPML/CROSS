@@ -1,0 +1,480 @@
+--- a/jaxite_word/he_params.py
++++ b/jaxite_word/he_params.py
+@@ -2,7 +2,7 @@
+ 
+ ``HEParameterCache`` computes NTT twiddle factors, finite-field reduction
+ contexts, and psi/inv_psi arrays once at max level. Per-level BConv parameters
+-(which cannot be sliced) are computed separately. The module also owns
++(which cannot be sliced) are computed on first use in deterministic lazy mode. The module also owns
+ versioned ring-security generation and the corresponding command-line entry
+ point.
+ 
+@@ -85,6 +85,83 @@
+   PInvModq: jnp.ndarray
+ 
+ 
++def _build_level_bconv_params(level, num_q_l, q_at_level, qp_at_level,
++                             num_p, dnum, ff_context_cls, perf_test):
++  """Build BConv parameters for key-switch decomposition + approx-mod-down."""
++  q_at_level, qp_at_level = list(q_at_level), list(qp_at_level)
++  sizeQl = num_q_l
++  sizeP = num_p
++  alpha = (sizeQl + dnum - 1) // dnum
++  numPartQl = (sizeQl + alpha - 1) // alpha
++
++  # Partition indices for key-switch decomposition
++  original_moduli_extract_index = []
++  for i in range(sizeQl):
++    if i % alpha == 0:
++      original_moduli_extract_index.append([i])
++    else:
++      original_moduli_extract_index[-1].append(i)
++
++  select_tower_index = []
++  non_select_tower_index = []
++  restore_indices = []
++  control_indices_list = []
++
++  # Key-switch decomposition configs (dnum partitions)
++  for part in range(numPartQl):
++    sel_index = original_moduli_extract_index[part]
++    non_sel_index = [i for i in range(len(qp_at_level)) if i not in sel_index]
++    select_tower_index.append(jnp.array(sel_index, jnp.uint16))
++    non_select_tower_index.append(jnp.array(non_sel_index, jnp.uint16))
++    control_indices_list.append((sel_index, non_sel_index))
++
++    concat_order = sel_index + non_sel_index
++    restore_index = [0] * len(concat_order)
++    for pos, val in enumerate(concat_order):
++      restore_index[val] = pos
++    restore_indices.append(jnp.array(restore_index, dtype=jnp.uint16))
++
++  # Approx-mod-down config: P -> Q
++  extend_indices = list(range(sizeQl, sizeQl + sizeP))
++  rotate_indices = list(range(sizeQl))
++  control_indices_list.append((extend_indices, rotate_indices))
++
++  # Create BConv through the backend hook and generate controls
++  bconv_obj = bconv.make_bconv(ff_context_cls, qp_at_level)
++  bconv_obj.control_gen(control_indices_list, perf_test=perf_test)
++
++  # P^{-1} mod q_i for each Q modulus at this level
++  P = 1
++  for p in qp_at_level[num_q_l:]:
++    P *= p
++  PInvModq = jnp.asarray(
++      [util.modinv(P, q) for q in q_at_level], dtype=jnp.uint32
++  ).reshape(num_q_l)
++
++  return LevelBConvParams(
++      level=level,
++      num_q=num_q_l,
++      bconv=bconv_obj,
++      select_tower_index=select_tower_index,
++      non_select_tower_index=non_select_tower_index,
++      restore_indices=restore_indices,
++      PInvModq=PInvModq,
++  )
++
++
++@dataclass(frozen=True)
++class _DeferredBConvParameters:
++  """Immutable public inputs only; no cache/key owner or bound callback."""
++
++  specification: tuple
++  device: object
++
++  def __deepcopy__(self, memo):
++    # All inputs (integers, tuples, backend class and device) are immutable.
++    # Avoid asking deepcopy to pickle a JAX Device before materialization.
++    return self
++
++
+ @dataclass
+ class LevelParams:
+   """All parameters for a specific level."""
+@@ -99,6 +176,26 @@
+   inv_psi_q: jnp.ndarray
+   psi_qp: jnp.ndarray
+   inv_psi_qp: jnp.ndarray
++
++  def __getattribute__(self, name):
++    # Direct field reads and dataclass helpers keep their existing contract.
++    # A caller-provided None or replacement value retains its ordinary meaning.
++    value = object.__getattribute__(self, name)
++    if name == 'bconv_params' and isinstance(value, _DeferredBConvParameters):
++      # A retained LevelParams can outlive its cache. Preserve the construction
++      # device even when the first read happens in a different default scope.
++      with jax.default_device(value.device):
++        value = _build_level_bconv_params(*value.specification)
++      # Failed construction leaves the immutable specification retryable.
++      object.__setattr__(self, name, value)
++    return value
++
++  def __getstate__(self):
++    # JAX Device objects in the pending public specification are not pickleable.
++    # Serialize the same materialized controls as the original eager dataclass.
++    state = vars(self).copy()
++    state['bconv_params'] = self.bconv_params
++    return state
+ 
+   @property
+   def sliced_barrett_q(self):
+@@ -685,12 +782,24 @@
+         axis=-1,
+     )
+ 
+-    # BConv params
+-    bconv_params = self._build_bconv_params(
+-        level, num_q_l, q_at_level, qp_at_level
+-    )
+-
+-    return LevelParams(
++    # Ordinary NTT/finite-field lookups do not consume BConv controls. Keep
++    # eager mode and synthetic perf-test generation order unchanged; otherwise
++    # direct bconv_params/get_bconv_params reads build those controls on demand.
++    bconv_params = None
++    if self._lazy_level_params and not self.perf_test:
++      devices = jnp.asarray(0, dtype=jnp.uint8).devices()
++      if len(devices) == 1:
++        bconv_params = _DeferredBConvParameters(
++            (level, num_q_l, tuple(q_at_level), tuple(qp_at_level), self.num_p,
++             self.dnum, self.ff_context_cls, self.perf_test),
++            next(iter(devices)),
++        )
++    if bconv_params is None:
++      bconv_params = self._build_bconv_params(
++          level, num_q_l, q_at_level, qp_at_level
++      )
++
++    params = LevelParams(
+         num_q=num_q_l,
+         sliced_ntt_q=sliced_ntt_q,
+         sliced_ff_q=sliced_ff_q,
+@@ -702,66 +811,13 @@
+         psi_qp=psi_qp,
+         inv_psi_qp=inv_psi_qp,
+     )
++    return params
+ 
+   def _build_bconv_params(self, level, num_q_l, q_at_level, qp_at_level):
+-    """Build BConv parameters for key-switch decomposition + approx-mod-down."""
+-    sizeQl = num_q_l
+-    sizeP = self.num_p
+-    alpha = (sizeQl + self.dnum - 1) // self.dnum
+-    numPartQl = (sizeQl + alpha - 1) // alpha
+-
+-    # Partition indices for key-switch decomposition
+-    original_moduli_extract_index = []
+-    for i in range(sizeQl):
+-      if i % alpha == 0:
+-        original_moduli_extract_index.append([i])
+-      else:
+-        original_moduli_extract_index[-1].append(i)
+-
+-    select_tower_index = []
+-    non_select_tower_index = []
+-    restore_indices = []
+-    control_indices_list = []
+-
+-    # Key-switch decomposition configs (dnum partitions)
+-    for part in range(numPartQl):
+-      sel_index = original_moduli_extract_index[part]
+-      non_sel_index = [i for i in range(len(qp_at_level)) if i not in sel_index]
+-      select_tower_index.append(jnp.array(sel_index, jnp.uint16))
+-      non_select_tower_index.append(jnp.array(non_sel_index, jnp.uint16))
+-      control_indices_list.append((sel_index, non_sel_index))
+-
+-      concat_order = sel_index + non_sel_index
+-      restore_index = [0] * len(concat_order)
+-      for pos, val in enumerate(concat_order):
+-        restore_index[val] = pos
+-      restore_indices.append(jnp.array(restore_index, dtype=jnp.uint16))
+-
+-    # Approx-mod-down config: P -> Q
+-    extend_indices = list(range(sizeQl, sizeQl + sizeP))
+-    rotate_indices = list(range(sizeQl))
+-    control_indices_list.append((extend_indices, rotate_indices))
+-
+-    # Create BConv through the backend hook and generate controls
+-    bconv_obj = bconv.make_bconv(self.ff_context_cls, qp_at_level)
+-    bconv_obj.control_gen(control_indices_list, perf_test=self.perf_test)
+-
+-    # P^{-1} mod q_i for each Q modulus at this level
+-    P = 1
+-    for p in self.p_towers:
+-      P *= p
+-    PInvModq = jnp.asarray(
+-        [util.modinv(P, q) for q in q_at_level], dtype=jnp.uint32
+-    ).reshape(num_q_l)
+-
+-    return LevelBConvParams(
+-        level=level,
+-        num_q=num_q_l,
+-        bconv=bconv_obj,
+-        select_tower_index=select_tower_index,
+-        non_select_tower_index=non_select_tower_index,
+-        restore_indices=restore_indices,
+-        PInvModq=PInvModq,
++    """Build BConv parameters from public metadata only."""
++    return _build_level_bconv_params(
++        level, num_q_l, q_at_level, qp_at_level, self.num_p, self.dnum,
++        self.ff_context_cls, self.perf_test,
+     )
+ 
+   # ================================================================
+--- /dev/null
++++ b/cadathlon/tests/test_lazy_bconv.py
+@@ -0,0 +1,252 @@
++"""Demand-built public BConv controls preserve field, device and owner semantics."""
++import copy
++import dataclasses
++import gc
++from pathlib import Path
++import pickle
++import sys
++import weakref
++
++import numpy as np
++import pytest
++
++ROOT = Path(__file__).resolve().parents[2]
++sys.path.insert(0, str(ROOT))
++sys.path.insert(0, str(ROOT/'cadathlon/common'))
++from jaxite_word import he_params
++import jax
++import finite_field
++
++jax.config.update('jax_enable_x64', True)
++RECORDS = []
++
++
++def make_cache(cd=2, backend=finite_field.BarrettContext, perf=False):
++    # Public-control fixture only, deliberately not an encrypted/security proof.
++    cache = he_params.HEParameterCache(
++        [12289, 40961, 65537, 114689], [147457, 163841],
++        16, 16, 2, cd, finite_field_context=backend, perf_test=perf)
++    key = np.zeros((2, 256, 6), dtype=np.uint32)
++    cache.initialize(key, key)
++    return cache
++
++
++def assert_public_equal(left, right, seen=None):
++    """Compare every stored public control recursively, including backend data."""
++    seen = set() if seen is None else seen
++    pair = (id(left), id(right))
++    if pair in seen:
++        return
++    seen.add(pair)
++    if isinstance(left, (np.ndarray, jax.Array)):
++        assert left.dtype == right.dtype and left.shape == right.shape
++        np.testing.assert_array_equal(left, right)
++    elif isinstance(left, dict):
++        assert left.keys() == right.keys()
++        for name in left:
++            assert_public_equal(left[name], right[name], seen)
++    elif isinstance(left, (list, tuple)):
++        assert type(left) is type(right) and len(left) == len(right)
++        for a, b in zip(left, right):
++            assert_public_equal(a, b, seen)
++    elif hasattr(left, '__dict__') and not isinstance(left, type):
++        assert type(left) is type(right)
++        assert_public_equal(vars(left), vars(right), seen)
++    else:
++        assert left == right
++
++
++@pytest.mark.parametrize('cd', [1, 2])
++@pytest.mark.parametrize('backend', [finite_field.BarrettContext, finite_field.MontgomeryContext])
++def test_lookup_does_not_build_unused_controls_and_direct_field_is_exact(monkeypatch, cd, backend):
++    monkeypatch.delenv('CROSS_EAGER_LEVEL_PARAMS', raising=False)
++    calls = []
++    original = he_params._build_level_bconv_params
++    def track(*args):
++        calls.append(args[0])
++        return original(*args)
++    monkeypatch.setattr(he_params, '_build_level_bconv_params', track)
++    cache = make_cache(cd, backend)
++    for level in range(cache.max_level + 1):
++        for getter in (cache.get_sliced_ntt_q, cache.get_sliced_ff_q, cache.get_psi_q,
++                       cache.get_inv_psi_q, cache.get_psi_qp, cache.get_inv_psi_qp):
++            getter(level)
++    assert calls == []
++    for level in range(cache.max_level + 1):
++        params = cache._level(level)
++        deferred = vars(params)['bconv_params']
++        assert isinstance(deferred, he_params._DeferredBConvParameters)
++        q = cache.q_moduli_at_level(level)
++        expected = original(level, len(q), q, q + cache.p_towers,
++                            cache.num_p, cache.dnum, backend, False)
++        actual = params.bconv_params
++        assert actual is cache.get_bconv_params(level)
++        assert calls[-1] == level and calls.count(level) == 1
++        assert_public_equal(actual, expected)
++        assert isinstance(vars(params)['bconv_params'], he_params.LevelBConvParams)
++
++
++@pytest.mark.parametrize('eager,perf', [(True, False), (False, True), (True, True)])
++def test_eager_and_perf_generation_order_stays_eager(monkeypatch, eager, perf):
++    monkeypatch.setenv('CROSS_EAGER_LEVEL_PARAMS', '1' if eager else '0')
++    calls = []
++    original = he_params._build_level_bconv_params
++    def track(*args):
++        calls.append((args[0], args[-1]))
++        return original(*args)
++    monkeypatch.setattr(he_params, '_build_level_bconv_params', track)
++    cache = make_cache(perf=perf)
++    if eager:
++        assert calls == [(level, perf) for level in range(cache.max_level + 1)]
++    else:
++        assert calls == []
++        cache.get_sliced_ntt_q(0)
++        assert calls == [(0, True)]
++    assert all(isinstance(vars(p)['bconv_params'], he_params.LevelBConvParams)
++               for p in cache.level_params.values())
++
++
++def test_retained_parameters_use_immutable_spec_after_owner_collection(monkeypatch):
++    monkeypatch.delenv('CROSS_EAGER_LEVEL_PARAMS', raising=False)
++    cache = make_cache()
++    params = cache._level(0)
++    q = cache.q_moduli_at_level(0)
++    expected = cache._build_bconv_params(0, len(q), q, q + cache.p_towers)
++    pending = vars(params)['bconv_params']
++    assert copy.deepcopy(pending) is pending
++    cache_ref = weakref.ref(cache)
++    keys = weakref.ref(cache.eval_key_a_full)
++    cache.q_towers.reverse()
++    cache.p_towers.reverse()
++    cache.dnum = 99
++    del cache
++    jax.clear_caches()
++    gc.collect()
++    assert cache_ref() is None and keys() is None
++    assert_public_equal(params.bconv_params, expected)
++
++
++def test_retry_manual_replacement_and_dataclass_helpers(monkeypatch):
++    monkeypatch.delenv('CROSS_EAGER_LEVEL_PARAMS', raising=False)
++    cache = make_cache()
++    params = cache._level(0)
++    pending = vars(params)['bconv_params']
++    original = he_params._build_level_bconv_params
++    with monkeypatch.context() as patch:
++        def fail(*args):
++            raise RuntimeError('injected public-control construction failure')
++        patch.setattr(he_params, '_build_level_bconv_params', fail)
++        with pytest.raises(RuntimeError, match='injected public-control'):
++            params.bconv_params
++    assert vars(params)['bconv_params'] is pending
++    actual = params.bconv_params
++    assert isinstance(actual, he_params.LevelBConvParams)
++    assert dataclasses.replace(params).bconv_params is actual
++    assert isinstance(dataclasses.asdict(params)['bconv_params'], dict)
++    assert '_DeferredBConvParameters' not in repr(params)
++    other = cache._level(1)
++    other.bconv_params = None
++    assert other.bconv_params is None
++    replacement = object()
++    other.bconv_params = replacement
++    assert other.bconv_params is replacement
++    assert he_params._build_level_bconv_params is original
++
++
++def test_eviction_rebuild_keeps_retained_parameters_valid(monkeypatch):
++    monkeypatch.delenv('CROSS_EAGER_LEVEL_PARAMS', raising=False)
++    monkeypatch.setenv('CROSS_LEVEL_PARAMS_MAX', '1')
++    cache = make_cache()
++    old = cache._level(0)
++    cache.get_sliced_ntt_q(1)
++    assert list(cache.level_params) == [1]
++    new = cache._level(0)
++    assert old is not new
++    assert_public_equal(old.bconv_params, new.bconv_params)
++
++
++@pytest.mark.parametrize('operation', ['pickle4', 'pickle5', 'copy', 'deepcopy'])
++def test_unmaterialized_parameters_remain_serializable(monkeypatch, operation):
++    monkeypatch.delenv('CROSS_EAGER_LEVEL_PARAMS', raising=False)
++    cache = make_cache()
++    params = cache._level(0)
++    assert isinstance(vars(params)['bconv_params'], he_params._DeferredBConvParameters)
++    if operation.startswith('pickle'):
++        restored = pickle.loads(pickle.dumps(params, protocol=int(operation[-1])))
++    else:
++        restored = getattr(copy, operation)(params)
++    assert isinstance(vars(params)['bconv_params'], he_params.LevelBConvParams)
++    assert isinstance(vars(restored)['bconv_params'], he_params.LevelBConvParams)
++    assert_public_equal(restored, params)
++
++
++def test_delayed_read_keeps_original_construction_device(monkeypatch):
++    if len(jax.devices()) < 2:
++        pytest.skip('requires two logical CPU devices')
++    monkeypatch.delenv('CROSS_EAGER_LEVEL_PARAMS', raising=False)
++    first, second = jax.devices()[:2]
++    with jax.default_device(first):
++        cache = make_cache()
++        params = cache._level(0)
++    assert vars(params)['bconv_params'].device == first
++    with jax.default_device(second):
++        controls = params.bconv_params
++    assert controls.PInvModq.devices() == {first}
++    assert all(a.devices() == {first} for a in controls.select_tower_index)
++
++
++from test_encrypted_tensor_only import ring, server_for, assert_same
++
++
++def test_secure_compiled_chain_matches_eager_with_no_cached_bconv_build(ring, monkeypatch):
++    from encrypted_packed_qwen import CompiledArithmetic
++    from encrypted_ntt import enable_scoped_ntt_subsets
++    from jaxite_word import ckks_ctx, key_gen
++    from support import require_secure_execution
++    client = ring[0]
++    ordinary = server = provider = None
++    try:
++        with monkeypatch.context() as patch:
++            patch.setenv('CROSS_EAGER_LEVEL_PARAMS', '1')
++            ordinary = server_for(ring, 2)
++        expected_ops = CompiledArithmetic(ordinary)
++        values = np.stack([np.linspace(-.4, .4, client.num_slots),
++                           .3*np.sin(np.arange(client.num_slots)/17)])
++        ciphertext = client.encrypt_slots_batch(values)
++        expected_linear = expected_ops.weighted_sum([ciphertext], [.7], bias=.02)
++        expected = expected_ops.multiply(expected_linear, expected_linear)
++        expected.polynomial.block_until_ready()
++        def forbidden(*args, **kwargs):
++            raise AssertionError('unexpected BConv/key generation or server codec call')
++        with monkeypatch.context() as patch:
++            patch.delenv('CROSS_EAGER_LEVEL_PARAMS', raising=False)
++            patch.setattr(he_params, '_build_level_bconv_params', forbidden)
++            for module in {key_gen, sys.modules['key_gen']}:
++                for name in ('gen_pke_pair', 'gen_evaluation_key', 'gen_rotation_key', 'key_switch_gen'):
++                    patch.setattr(module, name, forbidden)
++            server = server_for(ring, 2)
++            for name in ('encrypt', 'decrypt', 'encrypt_slots', 'decrypt_slots',
++                         'encrypt_slots_batch', 'decrypt_slots_batch'):
++                patch.setattr(server, name, forbidden)
++            provider = enable_scoped_ntt_subsets(server)
++            arithmetic = CompiledArithmetic(server, low_memory=True, preserve_dispatch_cache=True)
++            actual_linear = arithmetic.weighted_sum([ciphertext], [.7], bias=.02)
++            actual = arithmetic.multiply(actual_linear, actual_linear)
++            assert_same(actual_linear, expected_linear)
++            assert_same(actual, expected)
++            rings = require_secure_execution(server, actual)
++            decoded = np.asarray(client.decrypt_slots_batch(actual))
++            error = float(np.max(np.abs(decoded-(.7*values+.02)**2)))
++            assert error < 2e-6
++            assert arithmetic._level(actual) == 0 and actual._ckks_nsd == 1
++            RECORDS.append(dict(kind='secure_eager_lazy_chain_parity', batch=2,
++                all_slots_checked=int(values.size), max_abs_error=error,
++                fixed_max_abs_error_gate=2e-6, payload_and_metadata_exact=True,
++                lazy_bconv_builder_forbidden=True, dual_key_generation_guards=True,
++                keyless_server=True, execution_rings=rings))
++    finally:
++        if provider is not None:
++            provider.close()
++        for context in (server, ordinary):
++            if context is not None:
++                ckks_ctx.evict_context_caches(context)

@@ -1,0 +1,24 @@
+"""Actual inherited source-size and capture regressions; source metadata only."""
+from pathlib import Path
+import io,tarfile
+import collect,key_gate
+HERE=Path(__file__).resolve().parent
+
+
+def test_gate_inventory_dependency_is_captured_in_execution_snapshot():
+    raw=(HERE/'key_source_manifest.json').read_bytes()
+    assert key_gate.KEY_SOURCE_FILE==HERE/'key_source_manifest.json'
+    assert key_gate.digest(raw)==key_gate.KEY_SOURCE_SHA256=='b98e852d6111a63bbe2f25c5e811c8b56469100e85c3a3af7a26f86688adf4c7'
+    assert collect.sources()['key_source_manifest.json']==raw
+    assert len(key_gate.parse(raw))==58
+
+
+def test_actual_first_handler_archive_with_6461050_byte_plan_passes_bound():
+    raw=(HERE/'key_source_archive_fixture.tar.gz').read_bytes()
+    assert collect.sources()['key_source_archive_fixture.tar.gz']==raw
+    expected=key_gate.parse((HERE/'key_source_manifest.json').read_bytes())
+    with tarfile.open(fileobj=io.BytesIO(raw)) as archive:
+        sizes={m.name:m.size for m in archive.getmembers()}
+    assert sizes['stage/server_inputs/twelve_layer_plan.json']==6461050
+    assert max(sizes.values())>2<<20 and max(sizes.values())<=8<<20 and sum(sizes.values())<=16<<20
+    key_gate.verify_source_archive(raw,expected)

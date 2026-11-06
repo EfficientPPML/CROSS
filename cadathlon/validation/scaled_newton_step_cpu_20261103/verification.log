@@ -1,0 +1,70 @@
+{
+  "scope": "Read-only independent audit of two recorded CKKS component runs.\n\nNo encryption is rerun. This checks exact source bytes, recorded pass/fail\narithmetic, full Q/P products and coverage, and current process absence.\n",
+  "verification_passed": true,
+  "verified_utc": "2026-11-03T02:30:14.543452+00:00",
+  "runs": {
+    "low_precision": {
+      "recorded_passed": false,
+      "verified_source_count": 98,
+      "source_archive_sha256": "d26adf7a5d9da80df51025c80a2c7b83ae7abdaa84aa18c5596f581def7661dd",
+      "report_sha256": "453ea2ea617e9d8391ca01af3da63f4ef092e73b16867bae5131088e409b1308",
+      "driver_sha256": "80f50b7fef18c348bf76e0f1141339321229ff5add47d7de08e62ac0c8981f45",
+      "log_sha256": "0436d55d7d078748e14b3070f92e7fb70e9e2a0f2bcfce7f71fa3f4bbc44798b",
+      "actual_log2_QP": 196.49563955986537,
+      "QP_bit_length": 197,
+      "security_bit_length_ceiling": 218,
+      "P_partition_coverage": true,
+      "source_start_end_and_archive_bytes_match": true,
+      "logged_checks_match_report": true,
+      "recorded_cleanup_errors": [],
+      "elapsed_s": 9.0447351959956,
+      "errors": {
+        "product": 6.930273248606511e-07,
+        "correction": 1.932221452638494e-05,
+        "newton_update": 0.00011597507910821037
+      }
+    },
+    "high_precision": {
+      "recorded_passed": true,
+      "verified_source_count": 98,
+      "source_archive_sha256": "6d537d7a30de70b88108f95d0fc0f5243deb8903e03456e027acc88a2da09e44",
+      "report_sha256": "1dfecaa5f5c64ee09644d5a43cd571dfc95ecaa6c8c9ba8e289c85676041360a",
+      "driver_sha256": "3919d68e87558be40da3778184440b888cdb519764fadad3825d090461b55f24",
+      "log_sha256": "825be3d2663e7511c8adef7a5eeb66168e202d71c0a6a6e0af22649aa8f06a23",
+      "actual_log2_QP": 318.991937256538,
+      "QP_bit_length": 319,
+      "security_bit_length_ceiling": 438,
+      "P_partition_coverage": true,
+      "source_start_end_and_archive_bytes_match": true,
+      "logged_checks_match_report": true,
+      "recorded_cleanup_errors": [],
+      "elapsed_s": 10.65200372399704,
+      "errors": {
+        "product": 1.6846635197964588e-11,
+        "correction": 5.258764534943339e-10,
+        "newton_update": 4.165593203708795e-09
+      }
+    }
+  },
+  "same97_runtime_sources": true,
+  "same105_public_fixture_generator": true,
+  "fixture_generator_sha256": "1c86f9b6f6844a9d43daafb868564e1741969b651c808e40eea70787c81636ac",
+  "same_fixed_server_circuit": true,
+  "server_circuit_sha256": "ae5695d9838191708b6618cb3fbfacabc31b6369dea7244a97b0d8e3964667be",
+  "matching_processes_at_verification": [],
+  "terminal_status": {
+    "low_precision": {
+      "exit_code": 1,
+      "source": "Observed by parent orchestrator before archive review; independently confirmed process absent."
+    },
+    "high_precision": {
+      "exit_code": null,
+      "source": "Success report complete; independently confirmed process absent and exec session57270 closed. Numeric exit code unavailable; not inferred."
+    }
+  },
+  "limitations": [
+    "Audit verifies stored bytes and report consistency; it does not recreate ciphertexts or independently measure errors.",
+    "Only one Newton update is covered, with105 distinct public cases repeated over4096/8192slots. No full reciprocal, refresh, softmax or model result.",
+    "Two different secure ring/precision profiles and fresh keys were used; no controlled performance comparison."
+  ]
+}

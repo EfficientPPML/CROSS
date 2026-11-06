@@ -1,0 +1,136 @@
+"""Verify and whitelist-copy completed routing evidence; no numerical imports."""
+from pathlib import Path, PurePosixPath
+import argparse
+import hashlib
+import json
+import math
+import re
+import shutil
+import stat
+import tarfile
+
+
+def require(condition, message):
+    if not condition:
+        raise ValueError(message)
+
+
+def sha(path):
+    require(stat.S_ISREG(path.lstat().st_mode), f'not a regular file: {path}')
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def archive_hashes(path):
+    with tarfile.open(path) as archive:
+        result = {}
+        for item in archive.getmembers():
+            name = PurePosixPath(item.name)
+            require(item.isfile() and not name.is_absolute() and '..' not in name.parts,
+                    f'non-source archive member: {item.name}')
+            require(name.suffix in {'.py', '.patch'}, f'non-source suffix: {item.name}')
+            require(item.name not in result, f'duplicate source: {item.name}')
+            result[item.name] = hashlib.sha256(archive.extractfile(item).read()).hexdigest()
+        return result
+
+
+def aggregate_only(value):
+    forbidden = {'secret_key', 'private_key', 'sk', 'payload', 'ciphertext',
+                 'ciphertexts', 'embeddings', 'decrypted', 'logits', 'labels', 'predictions'}
+    if isinstance(value, dict):
+        for key, item in value.items():
+            require(key.lower() not in forbidden, f'private/per-input field: {key}')
+            aggregate_only(item)
+    elif isinstance(value, list):
+        for item in value:
+            aggregate_only(item)
+    elif isinstance(value, float):
+        require(math.isfinite(value), 'nonfinite report value')
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('source', type=Path)
+    parser.add_argument('destination', type=Path)
+    parser.add_argument('--observed-exit-code', type=int, required=True)
+    args = parser.parse_args()
+    base = args.source.resolve()
+    require(args.observed_exit_code == 0, 'missing authoritative terminal exit0')
+    reports = {}
+    for name in ('encrypted-result/report.json', 'preflight/report.json', 'adapter_semantics.json'):
+        obj = json.loads((base/name).read_text()); aggregate_only(obj); reports[name] = obj
+    report = reports['encrypted-result/report.json']
+    require(report.get('passed') is True and report['cpu_only'], 'encrypted result failed')
+    require(not report.get('preflight_only'), 'result is preflight only')
+    require(report['source_files_unchanged'] and report['source_hashes_before'] == report['source_hashes_after'], 'changed encrypted sources')
+    require(len(report['source_hashes_before']) == 97, 'unexpected encrypted source inventory')
+    require(archive_hashes(base/'encrypted-result/sources.tar.gz') == report['source_hashes_before'], 'encrypted archive bytes mismatch')
+    require({name: sha(base/name) for name in report['source_hashes_before']} == report['source_hashes_before'], 'isolated frozen sources changed before archive')
+    preflight = reports['preflight/report.json']
+    require(preflight['preflight_only'] and preflight['checks'] == {}, 'preflight contains encrypted claim')
+    require(preflight['source_hashes_before'] == preflight['source_hashes_after'] == archive_hashes(base/'preflight/sources.tar.gz'), 'preflight archive bytes mismatch')
+    semantic = reports['adapter_semantics.json']
+    require(semantic['passed'] and semantic['source_files_unchanged'] and semantic['forward_and_roundtrip_exact'], 'adapter semantics failed')
+    require(semantic['source_hashes_before'] == semantic['source_hashes_after'] == {name: sha(base/name) for name in semantic['source_hashes_before']}, 'adapter sources mismatch')
+    require(report['cleanup_errors'] == [] and report['public_key_store_removed'], 'cleanup failure')
+    require(not Path(report['owned_public_key_parent']).exists(), 'owned public key directory retained')
+    pids = (735608, 735609)
+    require(all(not Path(f'/proc/{pid}').exists() for pid in pids), 'recorded process remains')
+    require(report['keyless_server'] and set(report['key_generation_guards']) == {'key_gen', 'jaxite_word.key_gen'}, 'separation guards differ')
+    require(report['cpu_affinity'] == [144, 145, 146, 147], 'unexpected affinity')
+    ring = report['ring']
+    require((ring['degree'], ring['slots'], ring['depth'], ring['dnum'], ring['degree_layout']) == (131072, 65536, 18, 4, [256, 512]), 'unexpected ring/layout')
+    require(len(ring['q_towers']) == 38 and len(ring['p_towers']) == 10, 'unexpected Q/P')
+    require(math.isclose(sum(math.log2(x) for x in ring['q_towers'] + ring['p_towers']), ring['actual_log2_qp'], rel_tol=1e-14), 'actual QP mismatch')
+    require(ring['security_bits'] == 128 and (ring['key_tile'], ring['offset']) == (7, 15), 'wrong profile/map')
+    require(report['fixed_absolute_error_gate'] == 1e-6, 'changed numerical gate')
+    for name, level in (('forward', 9), ('roundtrip', 0)):
+        check = report['checks'][name]
+        require(check['passed'] and check['metadata_ok'] and check['level'] == level and check['slots_checked'] == 65536, f'{name} check incomplete')
+        require(check['max_abs_error'] <= 1e-6 and check['inactive_max_abs'] <= 1e-6, f'{name} numerical failure')
+    counts = {'public_multiplications': 34, 'actual_composite_rescales': 34,
+              'public_multiplication_levels': 18, 'rotations': 18, 'additions': 16}
+    require(report['counts'] == semantic['counts'] == counts, 'operation inventory mismatch')
+    log = (base/'encrypted-run.log').read_text()
+    require(re.search(r'Exit status: 0\s*$', log) is not None, 'GNU time exit status missing')
+    require('Elapsed (wall clock) time (h:mm:ss or m:ss): 2:46:23' in log, 'external elapsed mismatch')
+    selected = {
+        'encrypted-result/report.json': 'report.json',
+        'encrypted-result/sources.tar.gz': 'sources.tar.gz',
+        'encrypted-run.log': 'run.log',
+        'check_secure_routing.py': 'check_secure_routing.py.txt',
+        'score_layout.py': 'score_layout.py.txt',
+        'check_adapter_semantics.py': 'check_adapter_semantics.py.txt',
+        'adapter_semantics.json': 'adapter_semantics.json',
+        'preflight/report.json': 'preflight/report.json',
+        'preflight/sources.tar.gz': 'preflight/sources.tar.gz',
+        'input_patches/combined_runtime.patch': 'input_patches/combined_runtime.patch',
+        'input_patches/hemul_followup.patch': 'input_patches/hemul_followup.patch',
+        'input_patches/guarded_dispatch.patch': 'input_patches/guarded_dispatch.patch',
+    }
+    destination = args.destination.resolve(); destination.mkdir(parents=True, exist_ok=False)
+    hashes = {}
+    for src, dst in selected.items():
+        original = base/src; target = destination/dst
+        expected = sha(original); target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(original, target)
+        require(sha(target) == sha(original) == expected, f'copy changed: {src}')
+        hashes[dst] = expected
+    shutil.copyfile(Path(__file__), destination/'verify_archive.py.txt')
+    verification = dict(scope='Read-only completed-evidence verification and whitelist copy; no new cryptographic execution.',
+        passed=True, observed_tool_session=46728, observed_terminal_exit_code=args.observed_exit_code,
+        terminal_observation='Assistant authoritatively reaped exec session46728 before archive.',
+        recorded_processes_absent=list(pids), owned_public_key_directory_absent=True,
+        encrypted_exact_source_files=97, encrypted_source_archive_verified=True,
+        preflight_exact_source_archive_verified=True, private_arrays_or_keys_copied=False,
+        internal_elapsed_s=report['elapsed_s'], external_elapsed_s=9983,
+        external_elapsed_resolution_s=1, peak_host_rss_kib=report['peak_host_rss_kib'],
+        forward_max_abs_error=report['checks']['forward']['max_abs_error'],
+        roundtrip_max_abs_error=report['checks']['roundtrip']['max_abs_error'],
+        source_directory=str(base), copied_artifact_sha256=hashes,
+        verifier_sha256=sha(Path(__file__)))
+    (destination/'verification.json').write_text(json.dumps(verification, indent=2, allow_nan=False)+'\n')
+    print(json.dumps(verification, indent=2, allow_nan=False))
+
+
+if __name__ == '__main__':
+    main()

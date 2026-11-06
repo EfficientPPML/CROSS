@@ -1,0 +1,265 @@
+....................FFFFFFFFF                                            [100%]
+=================================== FAILURES ===================================
+_________ test_all_ranked_handler_counts_order_and_complete_receipt[1] _________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-383/test_all_ranked_handler_counts0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x72f2588242b0>
+size = 1
+
+    @pytest.mark.parametrize('size',[1,2,3])
+    def test_all_ranked_handler_counts_order_and_complete_receipt(tmp_path,monkeypatch,size):
+        paths,state,refs=flow(tmp_path,monkeypatch,size=size);initialize(paths)
+>       encoded=stages.client_encode_encrypt_input(paths);batch=json.loads((paths['upload']/'batch.json').read_text())
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_handlers.py:119: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+runtime/stage/file_stages.py:116: in client_encode_encrypt_input
+    _capacity(paths['upload'],count,8*((100<<20)+65536))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-383/test_all_ranked_handler_counts0/upload')
+count = 100, per_sample = 839385088
+
+    def _capacity(path,count,per_sample):
+        needed=count*per_sample+(1<<30)
+        if shutil.disk_usage(Path(path).parent).free<needed:
+>           raise OSError('insufficient filesystem capacity for complete ciphertext batch')
+E           OSError: insufficient filesystem capacity for complete ciphertext batch
+
+runtime/stage/file_stages.py:79: OSError
+_________ test_all_ranked_handler_counts_order_and_complete_receipt[2] _________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-383/test_all_ranked_handler_counts1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x72f2563dafd0>
+size = 2
+
+    @pytest.mark.parametrize('size',[1,2,3])
+    def test_all_ranked_handler_counts_order_and_complete_receipt(tmp_path,monkeypatch,size):
+        paths,state,refs=flow(tmp_path,monkeypatch,size=size);initialize(paths)
+>       encoded=stages.client_encode_encrypt_input(paths);batch=json.loads((paths['upload']/'batch.json').read_text())
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_handlers.py:119: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+runtime/stage/file_stages.py:116: in client_encode_encrypt_input
+    _capacity(paths['upload'],count,8*((100<<20)+65536))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-383/test_all_ranked_handler_counts1/upload')
+count = 200, per_sample = 839385088
+
+    def _capacity(path,count,per_sample):
+        needed=count*per_sample+(1<<30)
+        if shutil.disk_usage(Path(path).parent).free<needed:
+>           raise OSError('insufficient filesystem capacity for complete ciphertext batch')
+E           OSError: insufficient filesystem capacity for complete ciphertext batch
+
+runtime/stage/file_stages.py:79: OSError
+_________ test_all_ranked_handler_counts_order_and_complete_receipt[3] _________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-383/test_all_ranked_handler_counts2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x72f25626da30>
+size = 3
+
+    @pytest.mark.parametrize('size',[1,2,3])
+    def test_all_ranked_handler_counts_order_and_complete_receipt(tmp_path,monkeypatch,size):
+        paths,state,refs=flow(tmp_path,monkeypatch,size=size);initialize(paths)
+>       encoded=stages.client_encode_encrypt_input(paths);batch=json.loads((paths['upload']/'batch.json').read_text())
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_handlers.py:119: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+runtime/stage/file_stages.py:116: in client_encode_encrypt_input
+    _capacity(paths['upload'],count,8*((100<<20)+65536))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-383/test_all_ranked_handler_counts2/upload')
+count = 408, per_sample = 839385088
+
+    def _capacity(path,count,per_sample):
+        needed=count*per_sample+(1<<30)
+        if shutil.disk_usage(Path(path).parent).free<needed:
+>           raise OSError('insufficient filesystem capacity for complete ciphertext batch')
+E           OSError: insufficient filesystem capacity for complete ciphertext batch
+
+runtime/stage/file_stages.py:79: OSError
+_ test_last_ranked_record_cancellation_preserves_keys_and_primary[last_upload] _
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-383/test_last_ranked_record_cancel0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x72f2563df020>
+failure = 'last_upload'
+
+    @pytest.mark.parametrize('failure',['last_upload','last_compute'])
+    def test_last_ranked_record_cancellation_preserves_keys_and_primary(tmp_path,monkeypatch,failure):
+        paths,state,_=flow(tmp_path,monkeypatch,size=1);initialize(paths);state.failure=failure
+        with pytest.raises(KeyboardInterrupt):
+>           stages.client_encode_encrypt_input(paths);stages.server_encrypted_compute(server_paths(paths))
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_handlers.py:141: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+runtime/stage/file_stages.py:116: in client_encode_encrypt_input
+    _capacity(paths['upload'],count,8*((100<<20)+65536))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-383/test_last_ranked_record_cancel0/upload')
+count = 100, per_sample = 839385088
+
+    def _capacity(path,count,per_sample):
+        needed=count*per_sample+(1<<30)
+        if shutil.disk_usage(Path(path).parent).free<needed:
+>           raise OSError('insufficient filesystem capacity for complete ciphertext batch')
+E           OSError: insufficient filesystem capacity for complete ciphertext batch
+
+runtime/stage/file_stages.py:79: OSError
+_ test_last_ranked_record_cancellation_preserves_keys_and_primary[last_compute] _
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-383/test_last_ranked_record_cancel1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x72f2563df350>
+failure = 'last_compute'
+
+    @pytest.mark.parametrize('failure',['last_upload','last_compute'])
+    def test_last_ranked_record_cancellation_preserves_keys_and_primary(tmp_path,monkeypatch,failure):
+        paths,state,_=flow(tmp_path,monkeypatch,size=1);initialize(paths);state.failure=failure
+        with pytest.raises(KeyboardInterrupt):
+>           stages.client_encode_encrypt_input(paths);stages.server_encrypted_compute(server_paths(paths))
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_handlers.py:141: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+runtime/stage/file_stages.py:116: in client_encode_encrypt_input
+    _capacity(paths['upload'],count,8*((100<<20)+65536))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-383/test_last_ranked_record_cancel1/upload')
+count = 100, per_sample = 839385088
+
+    def _capacity(path,count,per_sample):
+        needed=count*per_sample+(1<<30)
+        if shutil.disk_usage(Path(path).parent).free<needed:
+>           raise OSError('insufficient filesystem capacity for complete ciphertext batch')
+E           OSError: insufficient filesystem capacity for complete ciphertext batch
+
+runtime/stage/file_stages.py:79: OSError
+____________ test_last_response_scale_rejected_before_first_decrypt ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-383/test_last_response_scale_rejec0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x72f2563b7a50>
+
+    def test_last_response_scale_rejected_before_first_decrypt(tmp_path,monkeypatch):
+        paths,state,_=flow(tmp_path,monkeypatch,size=1);initialize(paths)
+>       stages.client_encode_encrypt_input(paths);stages.server_encrypted_compute(server_paths(paths))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_handlers.py:149: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+runtime/stage/file_stages.py:116: in client_encode_encrypt_input
+    _capacity(paths['upload'],count,8*((100<<20)+65536))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-383/test_last_response_scale_rejec0/upload')
+count = 100, per_sample = 839385088
+
+    def _capacity(path,count,per_sample):
+        needed=count*per_sample+(1<<30)
+        if shutil.disk_usage(Path(path).parent).free<needed:
+>           raise OSError('insufficient filesystem capacity for complete ciphertext batch')
+E           OSError: insufficient filesystem capacity for complete ciphertext batch
+
+runtime/stage/file_stages.py:79: OSError
+__ test_full408_receipt_replacement_prevents_any_retirement[last_nested_file] __
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-383/test_full408_receipt_replaceme0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x72f2563b7b50>
+mutation = 'last_nested_file'
+
+    @pytest.mark.parametrize('mutation',['last_nested_file','same_inode','new_child'])
+    def test_full408_receipt_replacement_prevents_any_retirement(tmp_path,monkeypatch,mutation):
+        paths,state,refs=flow(tmp_path,monkeypatch,size=3);initialize(paths)
+>       stages.client_encode_encrypt_input(paths);stages.server_encrypted_compute(server_paths(paths));stages.client_decrypt_decode(paths)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_handlers.py:158: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+runtime/stage/file_stages.py:116: in client_encode_encrypt_input
+    _capacity(paths['upload'],count,8*((100<<20)+65536))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-383/test_full408_receipt_replaceme0/upload')
+count = 408, per_sample = 839385088
+
+    def _capacity(path,count,per_sample):
+        needed=count*per_sample+(1<<30)
+        if shutil.disk_usage(Path(path).parent).free<needed:
+>           raise OSError('insufficient filesystem capacity for complete ciphertext batch')
+E           OSError: insufficient filesystem capacity for complete ciphertext batch
+
+runtime/stage/file_stages.py:79: OSError
+_____ test_full408_receipt_replacement_prevents_any_retirement[same_inode] _____
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-383/test_full408_receipt_replaceme1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x72f256397980>
+mutation = 'same_inode'
+
+    @pytest.mark.parametrize('mutation',['last_nested_file','same_inode','new_child'])
+    def test_full408_receipt_replacement_prevents_any_retirement(tmp_path,monkeypatch,mutation):
+        paths,state,refs=flow(tmp_path,monkeypatch,size=3);initialize(paths)
+>       stages.client_encode_encrypt_input(paths);stages.server_encrypted_compute(server_paths(paths));stages.client_decrypt_decode(paths)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_handlers.py:158: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+runtime/stage/file_stages.py:116: in client_encode_encrypt_input
+    _capacity(paths['upload'],count,8*((100<<20)+65536))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-383/test_full408_receipt_replaceme1/upload')
+count = 408, per_sample = 839385088
+
+    def _capacity(path,count,per_sample):
+        needed=count*per_sample+(1<<30)
+        if shutil.disk_usage(Path(path).parent).free<needed:
+>           raise OSError('insufficient filesystem capacity for complete ciphertext batch')
+E           OSError: insufficient filesystem capacity for complete ciphertext batch
+
+runtime/stage/file_stages.py:79: OSError
+_____ test_full408_receipt_replacement_prevents_any_retirement[new_child] ______
+
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-383/test_full408_receipt_replaceme2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x72f2561e8320>
+mutation = 'new_child'
+
+    @pytest.mark.parametrize('mutation',['last_nested_file','same_inode','new_child'])
+    def test_full408_receipt_replacement_prevents_any_retirement(tmp_path,monkeypatch,mutation):
+        paths,state,refs=flow(tmp_path,monkeypatch,size=3);initialize(paths)
+>       stages.client_encode_encrypt_input(paths);stages.server_encrypted_compute(server_paths(paths));stages.client_decrypt_decode(paths)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_ranked_handlers.py:158: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+runtime/stage/file_stages.py:116: in client_encode_encrypt_input
+    _capacity(paths['upload'],count,8*((100<<20)+65536))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-383/test_full408_receipt_replaceme2/upload')
+count = 408, per_sample = 839385088
+
+    def _capacity(path,count,per_sample):
+        needed=count*per_sample+(1<<30)
+        if shutil.disk_usage(Path(path).parent).free<needed:
+>           raise OSError('insufficient filesystem capacity for complete ciphertext batch')
+E           OSError: insufficient filesystem capacity for complete ciphertext batch
+
+runtime/stage/file_stages.py:79: OSError
+=========================== short test summary info ============================
+FAILED test_ranked_handlers.py::test_all_ranked_handler_counts_order_and_complete_receipt[1]
+FAILED test_ranked_handlers.py::test_all_ranked_handler_counts_order_and_complete_receipt[2]
+FAILED test_ranked_handlers.py::test_all_ranked_handler_counts_order_and_complete_receipt[3]
+FAILED test_ranked_handlers.py::test_last_ranked_record_cancellation_preserves_keys_and_primary[last_upload]
+FAILED test_ranked_handlers.py::test_last_ranked_record_cancellation_preserves_keys_and_primary[last_compute]
+FAILED test_ranked_handlers.py::test_last_response_scale_rejected_before_first_decrypt
+FAILED test_ranked_handlers.py::test_full408_receipt_replacement_prevents_any_retirement[last_nested_file]
+FAILED test_ranked_handlers.py::test_full408_receipt_replacement_prevents_any_retirement[same_inode]
+FAILED test_ranked_handlers.py::test_full408_receipt_replacement_prevents_any_retirement[new_child]
+9 failed, 20 passed in 1.73s

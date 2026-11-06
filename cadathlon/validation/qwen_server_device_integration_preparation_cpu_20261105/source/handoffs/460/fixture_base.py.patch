@@ -1,0 +1,16 @@
+--- parent459/fixture_base.py
++++ successor460/fixture_base.py
+@@ -199,7 +199,12 @@
+         assert 'jax'not in sys.modules
+         path=self.test_root/'recording_jax.py';spec=importlib.util.spec_from_file_location('jax',path)
+         value=importlib.util.module_from_spec(spec);self.temporary['jax']=value;sys.modules['jax']=value
+-        spec.loader.exec_module(value);self.jax=value;value.MODE=self.mode;value.EVENTS=self.events
++        # SourceFileLoader probes a bytecode cache even with -B. Compile the
++        # exact selected recording source directly so the real audit observes
++        # only the declared public source, retaining the honest file/spec.
++        raw=path.read_bytes();assert self.sha(raw)==self.loader.full_map['recording_jax.py']
++        exec(compile(raw,str(path),'exec',dont_inherit=True),value.__dict__)
++        self.jax=value;value.MODE=self.mode;value.EVENTS=self.events
+         self._profile_codes[value.Device.memory_stats.__code__]='sample'
+         self.seams.append(dict(owner='sys.modules',export='jax',label='owned recording_jax with honest file/spec/source hash; no backend import'))
+     def native_seams(self,*,acquire=True,synchronize=True,sync_denial_after_load=False):

@@ -1,0 +1,20 @@
+............F.....                                                       [100%]
+=================================== FAILURES ===================================
+_ test_candidate_keeps_original_one_over32_gate_and_rejects_giant_noise[real] __
+
+component = 'real'
+
+    @pytest.mark.parametrize('component',['real','imag'])
+    def test_candidate_keeps_original_one_over32_gate_and_rejects_giant_noise(component):
+        q,Q,scale=d.public_geometry();N=131072;values=[0]*N;values[0 if component=='real'else N//2]=2**1024
+        env,calls=d.make_decoder(values,candidate=True);assert env['_DECODE_STDDEV_LIMIT']==1/32
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore',RuntimeWarning)
+>           with pytest.raises(env['ApproximationErrorTooHigh']):env['_fast_decode'](SimpleNamespace(shape=(N,40)),SimpleNamespace(q_towers=q,num_slots=N//2),scale)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE ApproximationErrorTooHigh
+
+/tmp/bert-toy5-overflow-diagnosis-20261104/sources/test_conversion.py:38: Failed
+=========================== short test summary info ============================
+FAILED ../../tmp/bert-toy5-overflow-diagnosis-20261104/sources/test_conversion.py::test_candidate_keeps_original_one_over32_gate_and_rejects_giant_noise[real]
+1 failed, 17 passed in 0.24s

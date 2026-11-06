@@ -1,0 +1,68 @@
+{
+  "scope": "CPU regression of all five reconstructed runtime/collector candidates in an isolated checkout; explicit opt-in secure checks remain separate evidence.",
+  "he_tpu_validation": false,
+  "command": [
+    "taskset",
+    "-c",
+    "136-139",
+    "/home/jianming_gatech/miniconda3/envs/jaxite/bin/python",
+    "-m",
+    "pytest",
+    "cadathlon/tests",
+    "jaxite_word/ckks_ctx_test.py",
+    "jaxite_word/codec_preparation_test.py",
+    "jaxite_word/uniform_encoding_test.py",
+    "jaxite_word/mapping_compile_test.py",
+    "jaxite_word/bsgs_test.py",
+    "jaxite_word/packing_test.py",
+    "jaxite_word/composite_prime_gen_test.py",
+    "jaxite_word/bootstrapping_test.py",
+    "jaxite_word/key_gen_test.py",
+    "jaxite_word/herot_test.py",
+    "jaxite_word/hemul_test.py",
+    "-q",
+    "--junitxml=/tmp/cross-all-candidates-20261103/evidence/junit.xml"
+  ],
+  "environment": {
+    "JAX_PLATFORMS": "cpu",
+    "OMP_NUM_THREADS": "4",
+    "OPENBLAS_NUM_THREADS": "4",
+    "CROSS_ROOT": "/tmp/cross-all-candidates-20261103/checkout",
+    "CROSS_TEST_SECURE_REFRESH": "0",
+    "CROSS_TEST_BOUNDED_REFRESH": "0",
+    "CROSS_TEST_SECURE_POLYNOMIAL": "0",
+    "BOOTSTRAP_TEST_N4096": "0",
+    "BOOTSTRAP_TEST_N8192": "0"
+  },
+  "source_file_count": 320,
+  "source_archive": "sources.tar.gz",
+  "review_base_commit": "98ca6833397069e4228c265d75fef64884218a28",
+  "versions": {
+    "jax": "0.12.0.1",
+    "jaxlib": "0.12.0.1",
+    "numpy": "2.5.4",
+    "torch": "2.15.0+cpu",
+    "libtpu": "0.0.50.1",
+    "pytest": "9.2.0"
+  },
+  "python": "3.13.18 | packaged by Anaconda, Inc. | (main, Oct 27 2026, 00:57:03) [GCC 14.3.0]",
+  "started_utc": "2026-11-03T02:28:29.511976+00:00",
+  "returncode": 0,
+  "parent_elapsed_s": 360.00167109599715,
+  "completed_utc": "2026-11-03T02:34:29.513668+00:00",
+  "source_unchanged": true,
+  "changed_sources": [],
+  "pytest_suites": [
+    {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "11",
+      "tests": "1235",
+      "time": "357.030",
+      "timestamp": "2026-11-03T02:28:29.633126+00:00",
+      "hostname": "t1v-n-a4e6c486-w-0"
+    }
+  ],
+  "passed": true
+}

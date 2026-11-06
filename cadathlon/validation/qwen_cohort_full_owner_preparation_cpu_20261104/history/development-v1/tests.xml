@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="12" time="165.971" timestamp="2026-11-04T09:37:19.755162+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_cohort_full_integration" name="test_actual_full_factory_and_join_real_v23_pv[1-0]" time="7.920" /><testcase classname="test_cohort_full_integration" name="test_actual_full_factory_and_join_real_v23_pv[8-0]" time="21.607" /><testcase classname="test_cohort_full_integration" name="test_actual_full_factory_and_join_real_v23_pv[19-0]" time="38.634" /><testcase classname="test_cohort_full_integration" name="test_actual_full_factory_and_join_real_v23_pv[32-3]" time="41.851" /><testcase classname="test_cohort_full_integration" name="test_real_full_factory_selects_bound_cohort_for_arbitrary_layer[0]" time="7.789" /><testcase classname="test_cohort_full_integration" name="test_real_full_factory_selects_bound_cohort_for_arbitrary_layer[13]" time="7.772" /><testcase classname="test_cohort_full_integration" name="test_real_full_factory_selects_bound_cohort_for_arbitrary_layer[27]" time="7.839" /><testcase classname="test_cohort_full_integration" name="test_parent_callback_replacement_retains_entered_child[refresh]" time="8.099" /><testcase classname="test_cohort_full_integration" name="test_parent_callback_replacement_retains_entered_child[check]" time="8.060" /><testcase classname="test_cohort_full_integration" name="test_parent_callback_replacement_retains_entered_child[descriptor]" time="8.092" /><testcase classname="test_cohort_full_integration" name="test_parent_callback_replacement_retains_entered_child[body]" time="8.077"><failure message="ValueError: retained join source/result changed">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x75b825c63230&gt;
+mutation = 'body'
+
+    @pytest.mark.parametrize('mutation',['refresh','check','descriptor','body'])
+    def test_parent_callback_replacement_retains_entered_child(monkeypatch,mutation):
+        held={};originals=[];error=KeyboardInterrupt('synthetic public primary')
+        def progress(label,value,metadata):
+            if '.softmax.C0.'not in label or not label.endswith('normalized_t.refresh'):return
+            child=held['child'];originals.append(weakref.ref(value.polynomial))
+            if mutation=='body':value.polynomial=np.zeros(65536);raise error
+            if mutation=='descriptor':object.__setattr__(child.softmax.cohorts[0][0],'refresh_bound',16.)
+            else:setattr(child.softmax.refresh_binding,mutation,lambda *args,**kwargs:value)
+        owner,a,r=setup(monkeypatch,leaf.positions(8),progress);child=owner._make_attention(0);held['child']=child
+        values=inputs(8)
+        with pytest.raises(KeyboardInterrupt if mutation=='body'else ValueError)as caught:
+            owner._child_call('layer0.attention',child,lambda:child.evaluate(values))
+        if mutation=='body':assert caught.value is error
+        gc.collect();assert originals[0]()is not None and join._QUARANTINE and cohort._QUARANTINE
+        assert owner._child is child and child.softmax._failure is not None
+        assert child.last_run is None and child.softmax.last_run is None
+&gt;       with pytest.raises(RuntimeError):owner._full_guard()
+                                         ^^^^^^^^^^^^^^^^^^^
+
+test_cohort_full_integration.py:154: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+checkout/cadathlon/common/encrypted_qwen_full_model.py:161: in _full_guard
+    self.parameters.check();self.outer.check();self._check_refs()
+                                               ^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;encrypted_qwen_full_model.QwenFullModel object at 0x75b820840cd0&gt;
+
+    def _check_refs(self):
+        for value,arrays,state in (*self._refs.values(),*self._phase_refs.values()):
+&gt;           if value.polynomial is not arrays[0] or self._fingerprint(value)!=state:raise ValueError('retained join source/result changed')
+                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           ValueError: retained join source/result changed
+
+checkout/cadathlon/common/encrypted_qwen_attention_join.py:264: ValueError</failure></testcase><testcase classname="test_cohort_full_integration" name="test_no_model_backend_imported_or_parameter_helper_called" time="0.005" /></testsuite></testsuites>

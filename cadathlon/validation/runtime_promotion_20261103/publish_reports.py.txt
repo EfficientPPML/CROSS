@@ -1,0 +1,129 @@
+"""Publish only verified local calibration aggregates and update their handouts."""
+import hashlib
+import json
+from pathlib import Path
+import shutil
+import statistics
+
+ROOT = Path('/home/jianming_gatech/CROSS')
+V = ROOT / 'cadathlon/validation'
+P1 = V / 'p1_student_post_promotion_20261103'
+P3 = V / 'p3_compact_post_promotion_20261103'
+def read(path):
+    return json.loads(path.read_text())
+def write(path, value):
+    temporary = path.with_suffix(path.suffix + '.tmp')
+    temporary.write_text(json.dumps(value, indent=2, allow_nan=False)+'\n')
+    temporary.replace(path)
+c1, c3 = read(P1/'collection.json'), read(P3/'process.json')
+r1, r3 = read(P1/'report.json'), c3['result']
+assert c1['passed'] and c1['returncode'] == 0 and c1['source_files_unchanged']
+assert c3['passed'] and c3['returncode'] == 0 and c3['source_files_unchanged']
+assert r1['passed'] and r1['cleanup_passed'] and r3['passed']
+assert c1['external_evaluation_elapsed_s'] <= 300 and c3['evaluator_process_elapsed_s'] <= 300
+assert (P1/'report.json').read_bytes() == (P1/'calibration/report.json').read_bytes()
+suite = ROOT/'cadathlon/non_agent_pset/p1_benchmark/src/suite'
+manifest = read(suite/'baseline_manifest_student.json')
+assert manifest['evaluation_id'] == r1['evaluation_id']
+assert read(suite/manifest['evaluation_report']) == r1
+old = read(V/'p1_student_suite.json')
+assert old['evaluation_id'] != r1['evaluation_id'], 'already published'
+aggregate = dict(r1)
+aggregate.update(
+    self_score=read(P1/'self_score.json'), command=c1['command'],
+    external_process_elapsed_s=c1['external_evaluation_elapsed_s'],
+    collection_archive=P1.name+'/', exact_source_inventory=P1.name+'/source_inventory.json',
+    calibration_report=manifest['evaluation_report'],
+    calibration_manifest_sha256=hashlib.sha256((suite/'baseline_manifest_student.json').read_bytes()).hexdigest(),
+    historical_pre_v2_evidence=old['historical_pre_v2_evidence'],
+    historical_previous_student_v2_evidence='p1_student_v2_baseline_20261102/report.json',
+    limits=old['limits'] + ['This post-promotion run used CPU affinity0–127 with an independent encrypted CPU routing job on144–147. Its timing is not a controlled speedup comparison with the earlier host allocation.'])
+write(V/'p1_student_suite.json', aggregate)
+write(V/'p3_compact_baseline.json', r3)
+local_p3 = ROOT/'cadathlon/non_agent_pset/p3_cnn/src/suite/run/compact-baseline/report.json'
+local_p3.parent.mkdir(parents=True, exist_ok=True)
+write(local_p3, r3)
+
+t1 = f"{c1['external_evaluation_elapsed_s']:.2f}"
+t3 = f"{c3['evaluator_process_elapsed_s']:.2f}"
+medians = [statistics.median(c['server_s']) for c in r3['cases'].values()]
+errors = [c['max_abs_error'] for c in r3['cases'].values()]
+for name in ('cadathlon/README.md', 'cadathlon/ORGANIZER.md',
+             'cadathlon/non_agent_pset/p1_benchmark/README.md',
+             'cadathlon/non_agent_pset/p1_benchmark/doc/problem.md',
+             'cadathlon/non_agent_pset/p3_cnn/README.md',
+             'cadathlon/non_agent_pset/p3_cnn/doc/problem.md'):
+    path=ROOT/name
+    text=path.read_text().replace('260.38', t1).replace('148.35', t3)
+    text=text.replace('(4m20s)', '(4m18s)').replace('(2m28s)', '(2m25s)')
+    text=text.replace('maximum logit errors below\n2.2e-8. The measured server medians were 0.02112s and 0.01966s.',
+                      f'maximum logit errors of\n{errors[0]:.2e} and {errors[1]:.2e}. The measured server medians were {medians[0]:.5f}s and {medians[1]:.5f}s.')
+    path.write_text(text)
+
+path=ROOT/'cadathlon/VALIDATION.md'
+text=path.read_text()
+row=next(line for line in text.splitlines() if line.startswith('| 5. About five minutes'))
+text=text.replace(row,
+    f'| 5. About five minutes per full evaluation | **Both shorter schedules revalidated after runtime promotion.** P1 student-v2 ranks C3/C4 and completed its full upstream harness schedule in {t1}s, including three repeats per case, archiving, cleanup and calibration publication. Both 100-image cases passed on one/eight chips; all 103 measured files stayed unchanged. P3 compact-v1 completed both smaller CNNs in {t3}s, including setup, warmups, three repeats per model and cleanup; all 119 measured files stayed unchanged. Matching new calibrations are archived below. The six-case legacy schedule and pretrained transformer workloads are outside these five-minute results. |')
+text=text.replace('scorer. This is the current short-schedule calibration.',
+                  'scorer. This historical calibration is retained unchanged; the later post-promotion calibration below is now current.')
+text=text.replace('archived for review; it has **not been applied** to the live runtime and adds\nno full-model, accelerator or HBM claim.',
+                  'archived for review. It was unapplied at that checkpoint and was later included\nin the reviewed runtime promotion below. The component checkpoint adds no\nfull-model, accelerator or HBM claim.')
+text=text.replace('source from archived base bytes. This remains an isolated, unapplied candidate;\nthe live Qwen proof retains its original frozen runtime.',
+                  'source from archived base bytes. This was an isolated, unapplied candidate\nat that checkpoint. After the Qwen proof exited, it was included in the later\nruntime promotion below; Qwen retains its original frozen source evidence.')
+text=text.replace('A fresh release checkpoint after the two recalibrations and the P2 staging\nrepair contains **222 files**.',
+                  'The pre-promotion release checkpoint after the earlier recalibrations and\nP2 staging repair contains **222 files**.')
+text=text.replace('`validation/p1_student_suite.json` contains the full 260.38-second student-v2\nC3/C4 harness evaluation and self-score. Exact source bytes, raw logs, complete\nreports and external timing are preserved in\n`validation/p1_student_v2_baseline_20261102/`.',
+                  f'`validation/p1_student_suite.json` contains the full {t1}-second post-promotion\nstudent-v2 C3/C4 harness evaluation and self-score. Exact source bytes, raw logs,\ncomplete reports and external timing are preserved in\n`validation/p1_student_post_promotion_20261103/`. The earlier 260.38-second\ncalibration remains in `validation/p1_student_v2_baseline_20261102/`.')
+text=text.replace('The baseline self-score is **10/20**, with zero speed bonus. The current\n`validation/p3_compact_baseline.json` contains that fresh report; the prior\n153.01-second calibration is preserved byte-for-byte as',
+                  'That historical baseline self-score is **10/20**, with zero speed bonus.\nThe current `validation/p3_compact_baseline.json` now contains the later\npost-promotion report described below; the prior 153.01-second calibration\nis preserved byte-for-byte as')
+paragraph=f'''The [runtime promotion](validation/runtime_promotion_20261103/promotion.json)
+applied the reviewed 32-file union after the Qwen process exited and released
+its source freeze. Every changed file matched the exact tested bytes. The
+[final integration](validation/runtime_followup_integration_cpu_20261103/summary.json)
+passed **362 tests and 9 subtests**, with **4 explicit skips**, plus two
+separately passing device guards. It includes facade and nested rescale NTT
+reuse and serialization-safe deferred BConv construction. The separate
+[collector follow-up](validation/transformer_collector_outer_failure_cpu_20261103/summary.json)
+passed **90 tests**, preserving primary cancellations and truthful failed
+metadata when initial inspection or final publication fails. The broader
+lazy-BConv checkpoint passed **1,146 tests and 93 subtests**, with 12 skips.
+These are CPU/component results; ring profiles and bootstrap arithmetic were
+not changed by this promotion.
+
+Fresh complete TPU evaluations then passed against those promoted sources:
+P1 student-v2 took **{c1['external_evaluation_elapsed_s']:.6f}s externally**
+(**{r1['elapsed_s']:.6f}s internally**), with all 103 source files unchanged,
+96/100 accuracy and complete own-cleartext agreement for both C3/C4 cases.
+Its evaluation ID is `{r1['evaluation_id']}` and its baseline self-score is
+**30 execution points, zero speed points**. The [P1 archive](validation/{P1.name}/README.md)
+retains exact sources, aggregate proofs, process status and raw logs.
+P3 compact-v1 took **{c3['evaluator_process_elapsed_s']:.6f}s externally**
+(**{r3['elapsed_s']:.6f}s internally**), with all 119 source/fixture files
+unchanged. Both models passed, with maximum errors **{errors[0]:.5e}** and
+**{errors[1]:.5e}**, exact top-1 agreement and server medians
+**{medians[0]:.8f}s** / **{medians[1]:.8f}s**. Its self-score is **10/20**,
+with zero speed bonus. The [P3 archive](validation/{P3.name}/process.json)
+preserves the separate current calibration. All owned evaluation processes
+exited zero and were reaped, and cleanup completed.
+
+These runs held the TPU exclusively and used CPU affinity 0–127 while an
+independent encrypted CPU routing proof continued on cores 144–147. Their
+recorded conditions differ from the older calibration's CPU allocation;
+the new elapsed times establish the updated schedules' budgets, rather than
+an isolated optimization speedup. Historical reports and the prior release
+bytes remain unchanged. Full BERT/Qwen six-case encrypted sweeps,
+pretrained/file-stage integration and full-workload calibration remain open.
+
+'''
+anchor='Environment for this review: Python 3.13.18'
+assert anchor in text
+text=text.replace(anchor,paragraph+anchor,1)
+path.write_text(text)
+promotion=V/'runtime_promotion_20261103/README.md'
+text=promotion.read_text().replace('Fresh P1 student-v2 and P3 compact-v1 TPU evaluations are being collected before replacing their published local calibrations.',
+    f'Fresh P1 student-v2 and P3 compact-v1 TPU evaluations passed in {t1}s and {t3}s externally, with all measured sources unchanged and cleanup complete. Their matching local calibration aggregates now replace the earlier public reports; the previous bytes remain preserved.')
+promotion.write_text(text)
+shutil.copyfile(__file__, V/'runtime_promotion_20261103/publish_reports.py.txt')
+print(json.dumps({'p1_elapsed_s': t1, 'p3_elapsed_s': t3, 'p1_id':r1['evaluation_id'],
+                  'public_reports_updated': True, 'external_publication': False}, indent=2))

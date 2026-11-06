@@ -1,0 +1,227 @@
+{
+  "candidate_imported": false,
+  "capacity_observation": false,
+  "checks": {
+    "all_reviewed_bytes_unchanged_at_end": true,
+    "four_current_and_archive_exact": true,
+    "fourteen_pure_references_exact": true,
+    "thirteen_instance_field_sets_exact": true
+  },
+  "closed_types": {
+    "keygen_authority.ActualKeygenIntent": [
+      "public",
+      "raw"
+    ],
+    "keygen_authority.ExpectedLaunchPins": [
+      "raw"
+    ],
+    "keygen_authority.ExpectedReadyPins": [
+      "raw"
+    ],
+    "keygen_authority.GeneratedKeyReadiness": [
+      "launch",
+      "public_manifest_bytes",
+      "report_bytes",
+      "outer_bytes",
+      "root_review_bytes",
+      "expected_pins"
+    ],
+    "keygen_authority.LaunchAdmission": [
+      "intent",
+      "grant_bytes",
+      "model",
+      "expected_pins"
+    ],
+    "model_admission.ExpectedModelPins": [
+      "raw"
+    ],
+    "model_admission.ModelAdmission": [
+      "public",
+      "manifest_bytes",
+      "report_bytes",
+      "outer_bytes",
+      "review_bytes",
+      "expected_pins"
+    ],
+    "qwen_file_contract.PublicContract": [
+      "blobs"
+    ],
+    "qwen_scientific_admission.ExpectedScientificPins": [
+      "raw"
+    ],
+    "qwen_scientific_admission.ScientificAdmission": [
+      "public",
+      "model",
+      "readiness",
+      "request_bytes",
+      "request_manifest_bytes",
+      "statement_bytes",
+      "proof_bytes",
+      "expected_pins"
+    ],
+    "qwen_server_admission.ExpectedServerPhasePins": [
+      "raw"
+    ],
+    "qwen_server_admission.ServerPhaseAdmission": [
+      "public",
+      "model",
+      "readiness",
+      "request_bytes",
+      "request_manifest_bytes",
+      "grant_bytes",
+      "expected_pins",
+      "scientific"
+    ],
+    "qwen_server_authority_packet.ServerPacket": [
+      "public",
+      "raw",
+      "expected_sha256",
+      "phase",
+      "scientific_proofs",
+      "dependency_policy",
+      "role_policy",
+      "resource_policy",
+      "resource_review"
+    ]
+  },
+  "collection_or_tests": false,
+  "execution_authorized": false,
+  "explicit_source_defaults": [
+    {
+      "expressions": [
+        "None"
+      ],
+      "function": "integer",
+      "module": "client_role_common"
+    },
+    {
+      "expressions": [
+        "None"
+      ],
+      "function": "integer",
+      "module": "freeze_admission"
+    },
+    {
+      "expressions": [
+        "None"
+      ],
+      "function": "_integer",
+      "module": "keygen_authority"
+    },
+    {
+      "expressions": [
+        "None"
+      ],
+      "function": "_integer",
+      "module": "model_admission"
+    },
+    {
+      "expressions": [
+        "None",
+        "None"
+      ],
+      "function": "ciphertext_binding",
+      "module": "qwen_file_contract"
+    },
+    {
+      "expressions": [
+        "None",
+        "None"
+      ],
+      "function": "artifact",
+      "module": "qwen_file_contract"
+    },
+    {
+      "expressions": [
+        "None"
+      ],
+      "function": "checked_artifact",
+      "module": "qwen_file_contract"
+    },
+    {
+      "expressions": [
+        "32 << 20"
+      ],
+      "function": "_json",
+      "module": "qwen_scientific_admission"
+    },
+    {
+      "expressions": [
+        "1 << 16"
+      ],
+      "function": "_closed",
+      "module": "qwen_scientific_admission"
+    },
+    {
+      "expressions": [
+        "2 << 20"
+      ],
+      "function": "_bytes",
+      "module": "qwen_server_authority_packet"
+    }
+  ],
+  "findings": [
+    {
+      "detail": "When registry status is checking, a nested check raises before assigning failed. If the trusted checker catches that rejection, the outer check can complete and overwrite the registry with active. This does not satisfy the intended sticky failure on every reentry attempt.",
+      "id": "SNAPSHOT-REENTRY",
+      "location": "AdmissionSnapshot.check status guard before checking/try",
+      "required_delta": "Poison the original state on reentry and verify the original in-progress state is still valid before restoring active; retain exact original graph.",
+      "status": "source finding; no execution"
+    },
+    {
+      "detail": "_ISSUED is sticky, but full validator/final callback/graph-comparison failures before the guard is registered do not retain the captured graph in a process-owned failure registry. The caller may retain the packet, but the helper itself does not yet meet its conservative failure-retention intention.",
+      "id": "SNAPSHOT-CAPTURE-RETENTION",
+      "location": "capture_admitted between graph capture and _REGISTRY insertion",
+      "required_delta": "Retain original packet/graph/bindings/checker on post-capture failure without granting an active guard.",
+      "status": "source finding; no execution"
+    }
+  ],
+  "guard_sha256": "69a9bc77612aa9e21f7afa178a43741b0bda9475de35e5bbc4e750e9fd1bf6d0",
+  "limits": [
+    "The snapshot does not recursively freeze pure-module mutable global values, function __globals__ dictionaries, closure cells or mutable contents behind class metadata values; source/callback trust must explicitly exclude those mutations. It does not defend arbitrary guard-private-global/interpreter mutation.",
+    "Existing exported bindings are checked, not an exact entire module-global name set. This is an identity snapshot after a trusted full validation boundary, not independent validation of callable code against source bytes.",
+    "CALL_HIERARCHY records the earlier backend/loader source trace before process integration. It supplies no timings, speedup or memory-capacity authority; process-local optimization and terminal full reauthentication remain unintegrated.",
+    "The8192 object inventory bound was source-inspected only; no actual admission graph, proof instance or generated dataclass/runtime import was constructed."
+  ],
+  "no_unresolved_blockers": false,
+  "process_integration": false,
+  "proof_or_body_reads": false,
+  "pure_source_hashes": {
+    "client_role_common.py": "c48e5238941161f511f8e0caa73d4bea4e96ae87af23fec1c1b4e9d013c32ead",
+    "freeze_admission.py": "a4828b8073dcaad3950ce5cc733fbdbe614a073c7664c3766001b63b176577b6",
+    "freeze_issuer.py": "2ef43770c589dcf01aadd66b7d43a52bc1a3e57b0105aa25b56674fb463951da",
+    "keygen_authority.py": "95e26a99fa2a09241349d437fcf8aa5e22e6287125ad82602d637f618112a94a",
+    "keygen_boundary_pins.py": "f18ddb73d5554b4413b13491cf174fa98c111bad909e54240f3108e161b97065",
+    "model_admission.py": "60bb47d044649625a5c1d9870256aed7b6d7a3bf53c49b5267bcfc4919d098d3",
+    "public_source_pins.py": "672a953faf0cc8cd4ecae644c981bf1a50bbf7eb98e3b69fdb46d7d613cdfeab",
+    "qwen_file_contract.py": "25e81bbe50bea14c5f00eebc82165e8d135d515ebc5467c6c19b3f3a211ad004",
+    "qwen_key_contract.py": "49c7e502f84b48e461a4588ce490f94f6aea9fa11d90e7cc657ea8238fc15bb5",
+    "qwen_public_parse.py": "d29919969c9950a86d2e663f5392c401742e6306a0ed7c9ad7ab3ea2f4e830f0",
+    "qwen_scientific_admission.py": "5765835681558215c9ef02cdb7cc590e644cc9ab43ec06995977100a051bb711",
+    "qwen_server_admission.py": "a096e5ff32439621696901bd8aa0839687208370bfde5d8a38d0c5f83aeba808",
+    "qwen_server_authority_packet.py": "40817e55db31bf133ff180f6244b0b9d4840d788d59d6323006fa2b4d3b2b41a",
+    "scientific_source_pins.py": "975ade5f591fa62fd95f7e349cfa42343c6f673f11828a66f0034772e9af2703"
+  },
+  "review_completed": true,
+  "review_script_sha256": "c393eb08d9a11c4015e8ac7b0abaa85004cfa8798010a4ee997d39cf37c5e02d",
+  "runtime_probe": false,
+  "schema": "qwen-admission-snapshot-source-peer-review-v1",
+  "source_archive_sha256": "898365d5e5a9969e61541177a4270da5c49d9be9e06f312146033ce9560e1e90",
+  "source_checks_passed": true,
+  "source_conclusions": [
+    "All13 explicit graph field sets match the exact held packet27 types. The reachable stored values are exact admitted dataclasses, immutable tuples and exact byte/string values; computed store/ID properties are not retained fields and remain external integration responsibilities.",
+    "Graph checks reject replaced instance dictionaries, fields, equal replacement objects, tuple members and unknown mutable payload types. Original bytes/strings cannot change in place; containing field/tuple identity supplies their binding.",
+    "Selected module objects, file/spec-origin identities, existing selected function/class exports, complete class descriptor identities, function code/defaults and keyword-default identities are checked before object field access.",
+    "Source-declared function defaults are None or immutable integer ceilings; selected class defaults are None/False where present. No concrete valid-admission default incompatibility was identified by source read. Generated dataclass behavior and actual import assembly remain unexecuted.",
+    "PID, thread identifier and thread-object checks prevent ordinary transfer to another process/thread. A failed ordinary check marks the original state failed and retains references; clean retirement checks once then deletes the registry entry and does not permit a second capture.",
+    "The initial graph precedes full packet validation and is compared afterward, preventing a final binding callback from swapping unvalidated proof fields before publication. An original trusted check_bindings callback and independently authenticated initial source closure remain prerequisites.",
+    "The guard is process-local only, issues no grant, leaves full public validators unchanged and does not replace live held-file, source/origin/audit, backend/security, capacity or original-owner retirement checks."
+  ],
+  "source_hashes": {
+    "CALL_HIERARCHY.md": "1bc3f96e12ed030499e498c7e35f33c007160bdd5b2ec04db1618c54955b27a2",
+    "DESIGN.md": "d5c92fffb6dc2939eadb0c18cd585ac825929661ff9d33d03a6f7666b8428ac3",
+    "qwen_admission_snapshot.py": "69a9bc77612aa9e21f7afa178a43741b0bda9475de35e5bbc4e750e9fd1bf6d0",
+    "source_refs.json": "b47d40ad7a817dc24aad236b6745684ee0a4ba84512e544570dbd45cb65c257a"
+  },
+  "source_manifest_sha256": "7676af6f7b07ba8aa0c0a1613e63b8b75007946b374cc616b82ff4527b11c2bf"
+}

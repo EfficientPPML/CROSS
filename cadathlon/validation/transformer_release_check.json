@@ -1,0 +1,313 @@
+{
+  "handouts": {
+    "p2_bert": {
+      "pages": 8,
+      "out_of_bounds": [],
+      "experimental_status_pages": [
+        5
+      ],
+      "required_text": {
+        "experimental-unvalidated": true,
+        "preflight": true,
+        "requested": true,
+        "CROSS_PUBLIC_KEY_DIRECTORY": true
+      },
+      "sha256": {
+        "problem.md": "bffe9e084610de62e1193b008d399cb88ba5289973d2badc9e092073ad38a324",
+        "problem.html": "3b87fabc44095e97e8b0ba2f4bd500911e6d81c0a1e357359f4266d67348bff0",
+        "problem.pdf": "82562269e3f8f3b33dc384f233beb54d38a1dc6ddc80638049d4640635838e8e"
+      }
+    },
+    "p4_qwen": {
+      "pages": 7,
+      "out_of_bounds": [],
+      "experimental_status_pages": [
+        6
+      ],
+      "required_text": {
+        "experimental-unvalidated": true,
+        "preflight": true,
+        "requested": true,
+        "CROSS_PUBLIC_KEY_DIRECTORY": true
+      },
+      "sha256": {
+        "problem.md": "72059c01acf5608d43c82377f2e083c0a7c1fdbf996b0ec3e0ca6a1a17394972",
+        "problem.html": "ce22d62580a70ef73a7f80247b97f4b15971f6f4cb483448444a769b109c09fd",
+        "problem.pdf": "6170c61bcb7cee6818eb4634c6d6718126ef75334a9d10747e7df39db5bcfcf8"
+      }
+    }
+  },
+  "packaging_and_runner_tests": {
+    "passed": 25,
+    "seconds": 3.81,
+    "command": "JAX_PLATFORMS=cpu OPENBLAS_NUM_THREADS=1 python -m pytest cadathlon/tests/test_package.py cadathlon/tests/test_transformer_runner.py -q"
+  },
+  "scope": "Archive dependency/import validation and diagnostic metadata only; no encrypted transformer accuracy or TPU timing claim.",
+  "public_evidence_recursive_audit": {
+    "p1_student_suite.json": {
+      "matching_fields": [
+        {
+          "path": "label",
+          "type": "str",
+          "count": null
+        },
+        {
+          "path": "cases.C3.harness_verdict.predictions_written",
+          "type": "int",
+          "count": null
+        },
+        {
+          "path": "cases.C3.harness_verdict.labels_written",
+          "type": "int",
+          "count": null
+        },
+        {
+          "path": "cases.C4.harness_verdict.predictions_written",
+          "type": "int",
+          "count": null
+        },
+        {
+          "path": "cases.C4.harness_verdict.labels_written",
+          "type": "int",
+          "count": null
+        },
+        {
+          "path": "source_sha256.cadathlon/non_agent_pset/p1_benchmark/src/suite/stages/client_key_generation.py",
+          "type": "str",
+          "count": null
+        },
+        {
+          "path": "first_complete_evaluation.label",
+          "type": "str",
+          "count": null
+        },
+        {
+          "path": "first_complete_evaluation.cases.C3.harness_verdict.predictions_written",
+          "type": "int",
+          "count": null
+        },
+        {
+          "path": "first_complete_evaluation.cases.C3.harness_verdict.labels_written",
+          "type": "int",
+          "count": null
+        },
+        {
+          "path": "first_complete_evaluation.cases.C4.harness_verdict.predictions_written",
+          "type": "int",
+          "count": null
+        },
+        {
+          "path": "first_complete_evaluation.cases.C4.harness_verdict.labels_written",
+          "type": "int",
+          "count": null
+        },
+        {
+          "path": "self_score.cases.C3.harness_verdict.predictions_written",
+          "type": "int",
+          "count": null
+        },
+        {
+          "path": "self_score.cases.C3.harness_verdict.labels_written",
+          "type": "int",
+          "count": null
+        },
+        {
+          "path": "self_score.cases.C4.harness_verdict.predictions_written",
+          "type": "int",
+          "count": null
+        },
+        {
+          "path": "self_score.cases.C4.harness_verdict.labels_written",
+          "type": "int",
+          "count": null
+        }
+      ],
+      "arrays": [
+        {
+          "path": "cases.C3.reasons",
+          "length": 0,
+          "element_types": []
+        },
+        {
+          "path": "cases.C4.reasons",
+          "length": 0,
+          "element_types": []
+        },
+        {
+          "path": "first_complete_evaluation.cases.C3.reasons",
+          "length": 0,
+          "element_types": []
+        },
+        {
+          "path": "first_complete_evaluation.cases.C4.reasons",
+          "length": 0,
+          "element_types": []
+        },
+        {
+          "path": "limits",
+          "length": 4,
+          "element_types": [
+            "str"
+          ]
+        },
+        {
+          "path": "self_score.cases.C3.reasons",
+          "length": 0,
+          "element_types": []
+        },
+        {
+          "path": "self_score.cases.C4.reasons",
+          "length": 0,
+          "element_types": []
+        },
+        {
+          "path": "self_score.ranked_case_ids",
+          "length": 2,
+          "element_types": [
+            "str"
+          ]
+        }
+      ]
+    },
+    "p3_compact_baseline.json": {
+      "matching_fields": [],
+      "arrays": [
+        {
+          "path": "schedule",
+          "length": 2,
+          "element_types": [
+            "str"
+          ]
+        },
+        {
+          "path": "cases.student1.in.execution_rings",
+          "length": 1,
+          "element_types": [
+            "dict"
+          ]
+        },
+        {
+          "path": "cases.student1.in.execution_rings[0].q_towers",
+          "length": 8,
+          "element_types": [
+            "int"
+          ]
+        },
+        {
+          "path": "cases.student1.in.execution_rings[0].p_towers",
+          "length": 2,
+          "element_types": [
+            "int"
+          ]
+        },
+        {
+          "path": "cases.student1.in.end_to_end_s",
+          "length": 3,
+          "element_types": [
+            "float"
+          ]
+        },
+        {
+          "path": "cases.student1.in.server_s",
+          "length": 3,
+          "element_types": [
+            "float"
+          ]
+        },
+        {
+          "path": "cases.student1.in.warmup_s",
+          "length": 1,
+          "element_types": [
+            "float"
+          ]
+        },
+        {
+          "path": "cases.student1.in.warmup_server_s",
+          "length": 1,
+          "element_types": [
+            "float"
+          ]
+        },
+        {
+          "path": "cases.student2.in.execution_rings",
+          "length": 1,
+          "element_types": [
+            "dict"
+          ]
+        },
+        {
+          "path": "cases.student2.in.execution_rings[0].q_towers",
+          "length": 8,
+          "element_types": [
+            "int"
+          ]
+        },
+        {
+          "path": "cases.student2.in.execution_rings[0].p_towers",
+          "length": 2,
+          "element_types": [
+            "int"
+          ]
+        },
+        {
+          "path": "cases.student2.in.end_to_end_s",
+          "length": 3,
+          "element_types": [
+            "float"
+          ]
+        },
+        {
+          "path": "cases.student2.in.server_s",
+          "length": 3,
+          "element_types": [
+            "float"
+          ]
+        },
+        {
+          "path": "cases.student2.in.warmup_s",
+          "length": 1,
+          "element_types": [
+            "float"
+          ]
+        },
+        {
+          "path": "cases.student2.in.warmup_server_s",
+          "length": 1,
+          "element_types": [
+            "float"
+          ]
+        },
+        {
+          "path": "devices",
+          "length": 1,
+          "element_types": [
+            "str"
+          ]
+        },
+        {
+          "path": "device_kinds",
+          "length": 1,
+          "element_types": [
+            "str"
+          ]
+        },
+        {
+          "path": "device_memory",
+          "length": 1,
+          "element_types": [
+            "dict"
+          ]
+        }
+      ]
+    }
+  },
+  "release": {
+    "files": 201,
+    "sha256": "2453ba0294fc11ce86ca1397296fd2cca1c17ca3f5692025070ffc29c6bfbccf",
+    "public_evidence": [
+      "p1_student_suite.json",
+      "p3_compact_baseline.json"
+    ],
+    "no_per_image_or_private_payloads_found": true
+  }
+}

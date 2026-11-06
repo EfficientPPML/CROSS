@@ -1,0 +1,29 @@
+{"phase": "authenticated_fixture", "name": "checkpoint_embedding_row0_S1", "elapsed_s": 3.1016525879967958}
+Traceback (most recent call last):
+  File "/tmp/qwen-full-model-trajectory-v2-20261104/actual-v1/execution/trajectory_worker.py", line 131, in <module>
+    if __name__=='__main__':raise SystemExit(main())
+                                             ~~~~^^
+  File "/tmp/qwen-full-model-trajectory-v2-20261104/actual-v1/execution/trajectory_worker.py", line 129, in main
+    report=finish(args.output/'report.json',lambda:execute(args.fixture,args.output),write,lambda p:p.read_bytes(),termination=termination_signals,shield=cleanup_signals)
+  File "/tmp/qwen-full-model-trajectory-v2-20261104/actual-v1/execution/finish.py", line 8, in finish
+    with termination():report=call()
+                              ~~~~^^
+  File "/tmp/qwen-full-model-trajectory-v2-20261104/actual-v1/execution/trajectory_worker.py", line 129, in <lambda>
+    report=finish(args.output/'report.json',lambda:execute(args.fixture,args.output),write,lambda p:p.read_bytes(),termination=termination_signals,shield=cleanup_signals)
+                                                   ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/qwen-full-model-trajectory-v2-20261104/actual-v1/execution/trajectory_worker.py", line 122, in execute
+    raise primary
+  File "/tmp/qwen-full-model-trajectory-v2-20261104/actual-v1/execution/trajectory_worker.py", line 56, in execute
+    reference=forward(embeddings,positions,manifest_bytes=manifest_bytes,config_bytes=config_bytes,matrix=parameters.matrix,gamma=parameters.gamma)
+  File "/tmp/qwen-full-model-trajectory-v2-20261104/actual-v1/execution/full_reference.py", line 132, in forward
+    last=norm(value[-1:],gamma('final.inverse_sqrt'),config['rms_norm_eps'],m['nonlinear']['final.inverse_sqrt'],'final.inverse_sqrt',records)
+  File "/tmp/qwen-full-model-trajectory-v2-20261104/actual-v1/execution/full_reference.py", line 46, in norm
+    if rule['method']=='polynomial':inverse=polynomial(variance,rule,label,records)
+                                            ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/qwen-full-model-trajectory-v2-20261104/actual-v1/execution/full_reference.py", line 30, in polynomial
+    observe(records,label,np.asarray(value)*factor,rule['domain'])
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/qwen-full-model-trajectory-v2-20261104/actual-v1/execution/full_reference.py", line 27, in observe
+    if row['below'] or row['above'] or row['nonfinite']:raise DomainFailure(label,row)
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+full_reference.DomainFailure: independent declared domain failure: final.inverse_sqrt

@@ -1,0 +1,83 @@
+................FFFFF............................FFFF................... [ 46%]
+........................................................................ [ 92%]
+...........                                                              [100%]
+=================================== FAILURES ===================================
+_ test_softmax_planner_observes_actual_masked_and_padded_polynomial_inputs[2] __
+cadathlon/tests/test_transformer_layout.py:164: in test_softmax_planner_observes_actual_masked_and_padded_polynomial_inputs
+    spec.loader.exec_module(planner)
+<frozen importlib._bootstrap_external>:1023: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1160: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1218: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/tmp/cross-combined-cpu-20261102/checkout/cadathlon/validation/plan_transformer_polynomials.py'
+_ test_softmax_planner_observes_actual_masked_and_padded_polynomial_inputs[3] __
+cadathlon/tests/test_transformer_layout.py:164: in test_softmax_planner_observes_actual_masked_and_padded_polynomial_inputs
+    spec.loader.exec_module(planner)
+<frozen importlib._bootstrap_external>:1023: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1160: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1218: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/tmp/cross-combined-cpu-20261102/checkout/cadathlon/validation/plan_transformer_polynomials.py'
+_ test_softmax_planner_observes_actual_masked_and_padded_polynomial_inputs[4] __
+cadathlon/tests/test_transformer_layout.py:164: in test_softmax_planner_observes_actual_masked_and_padded_polynomial_inputs
+    spec.loader.exec_module(planner)
+<frozen importlib._bootstrap_external>:1023: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1160: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1218: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/tmp/cross-combined-cpu-20261102/checkout/cadathlon/validation/plan_transformer_polynomials.py'
+_ test_softmax_planner_observes_actual_masked_and_padded_polynomial_inputs[5] __
+cadathlon/tests/test_transformer_layout.py:164: in test_softmax_planner_observes_actual_masked_and_padded_polynomial_inputs
+    spec.loader.exec_module(planner)
+<frozen importlib._bootstrap_external>:1023: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1160: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1218: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/tmp/cross-combined-cpu-20261102/checkout/cadathlon/validation/plan_transformer_polynomials.py'
+_ test_softmax_planner_observes_actual_masked_and_padded_polynomial_inputs[6] __
+cadathlon/tests/test_transformer_layout.py:164: in test_softmax_planner_observes_actual_masked_and_padded_polynomial_inputs
+    spec.loader.exec_module(planner)
+<frozen importlib._bootstrap_external>:1023: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1160: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1218: in get_data
+    ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/tmp/cross-combined-cpu-20261102/checkout/cadathlon/validation/plan_transformer_polynomials.py'
+______ test_starter_and_oracle_preflight_are_explicit[p2_bert-bert_he.py] ______
+cadathlon/tests/test_transformer_runner.py:193: in test_starter_and_oracle_preflight_are_explicit
+    assert report["implementation_status"] == status
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'implementation_status'
+______ test_starter_and_oracle_preflight_are_explicit[p4_qwen-qwen_he.py] ______
+cadathlon/tests/test_transformer_runner.py:193: in test_starter_and_oracle_preflight_are_explicit
+    assert report["implementation_status"] == status
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'implementation_status'
+___ test_goldens_fail_with_oracle_diagnostic_before_jax[p2_bert-bert_he.py] ____
+cadathlon/tests/test_transformer_runner.py:207: in test_goldens_fail_with_oracle_diagnostic_before_jax
+    assert "plaintext numerical oracle" in report["error"]
+E   AssertionError: assert 'plaintext numerical oracle' in 'Set CROSS_ROOT to the CROSS checkout'
+___ test_goldens_fail_with_oracle_diagnostic_before_jax[p4_qwen-qwen_he.py] ____
+cadathlon/tests/test_transformer_runner.py:207: in test_goldens_fail_with_oracle_diagnostic_before_jax
+    assert "plaintext numerical oracle" in report["error"]
+E   AssertionError: assert 'plaintext numerical oracle' in 'Set CROSS_ROOT to the CROSS checkout'
+=========================== short test summary info ============================
+FAILED cadathlon/tests/test_transformer_layout.py::test_softmax_planner_observes_actual_masked_and_padded_polynomial_inputs[2]
+FAILED cadathlon/tests/test_transformer_layout.py::test_softmax_planner_observes_actual_masked_and_padded_polynomial_inputs[3]
+FAILED cadathlon/tests/test_transformer_layout.py::test_softmax_planner_observes_actual_masked_and_padded_polynomial_inputs[4]
+FAILED cadathlon/tests/test_transformer_layout.py::test_softmax_planner_observes_actual_masked_and_padded_polynomial_inputs[5]
+FAILED cadathlon/tests/test_transformer_layout.py::test_softmax_planner_observes_actual_masked_and_padded_polynomial_inputs[6]
+FAILED cadathlon/tests/test_transformer_runner.py::test_starter_and_oracle_preflight_are_explicit[p2_bert-bert_he.py]
+FAILED cadathlon/tests/test_transformer_runner.py::test_starter_and_oracle_preflight_are_explicit[p4_qwen-qwen_he.py]
+FAILED cadathlon/tests/test_transformer_runner.py::test_goldens_fail_with_oracle_diagnostic_before_jax[p2_bert-bert_he.py]
+FAILED cadathlon/tests/test_transformer_runner.py::test_goldens_fail_with_oracle_diagnostic_before_jax[p4_qwen-qwen_he.py]
+9 failed, 146 passed in 22.75s

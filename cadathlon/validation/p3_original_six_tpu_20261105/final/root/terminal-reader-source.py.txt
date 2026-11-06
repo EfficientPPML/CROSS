@@ -1,0 +1,143 @@
+"""Admit the original terminal P3 run and retire only its empty owned key parent.
+
+Run only after root's original session81235 returns a terminal result.
+Standard library only; never imports or reruns the candidate/backend.
+"""
+import argparse
+import ast
+import hashlib
+import io
+import json
+import math
+import os
+import re
+import stat
+import tarfile
+from datetime import datetime, timezone
+from pathlib import Path
+
+BASE=Path('/tmp/p3-original-six-preparation-20261105')
+RUN=BASE/'run-v1'
+REPO=Path('/home/jianming_gatech/CROSS')
+OUTPUT=BASE/'root-terminal-admission-20261105.json'
+PENDING=BASE/'root-terminal-cleanup-pending-20261105.json'
+sha=lambda b:hashlib.sha256(b).hexdigest()
+READS={}
+def read(p):
+ p=Path(p);assert stat.S_ISREG(p.lstat().st_mode)
+ b=p.read_bytes();assert READS.setdefault(str(p),b)==b,str(p)+' changed during verification'
+ return b
+def get(p):return json.loads(read(p))
+def absent(ident):
+ try:os.kill(ident,0)
+ except ProcessLookupError:return 'absent_ESRCH'
+ raise AssertionError('Recorded completed PID/group still exists: '+str(ident))
+def dump(n):return ast.dump(n,include_attributes=False)
+def expr(s):return dump(ast.parse(s,mode='eval').body)
+def finite(n):return type(n) in (int,float) and math.isfinite(n) and n>=0
+def save(p,d):
+ with p.open('x') as f:f.write(json.dumps(d,indent=2,sort_keys=True)+'\n')
+
+args=argparse.ArgumentParser()
+args.add_argument('--terminal-receipt',type=Path,required=True)
+a=args.parse_args()
+assert not OUTPUT.exists() and not PENDING.exists(),'Never overwrite terminal/cleanup history'
+terminal_raw=read(a.terminal_receipt);terminal=json.loads(terminal_raw)
+assert terminal['original_session']==81235 and terminal['exit_code']==0 and terminal['terminal'] is True
+assert re.fullmatch('[0-9a-f]{6}',terminal['tool_chunk'])
+assert terminal['source']=='original tools.write_stdin result; recorded by root'
+collector_absence={str(n):absent(n) for n in (1598331,-1598331)}
+assert not Path('/proc/1598331').exists()
+
+report_raw=read(RUN/'report.json');report=json.loads(report_raw)
+cases=['test'+str(i)+'.in' for i in range(1,7)]
+assert report['complete'] is True and report['passed'] is True and 'active_case' not in report and 'error' not in report
+assert report['schedule']==cases and set(report['cases'])==set(cases)
+assert report['collector_pid']==1598331 and report['cpu_affinity']==list(range(160,168))
+assert report['profile']=='original' and report['warmups']==0 and report['repeats']==1 and report['healthy_case_timeout_s'] is None
+prep_raw=read(BASE/'preparation.json');assert sha(prep_raw)=='80e3b7fab9e439df7fe62a42ef98ef69288ff366f5a0b4ad07dcaedc3cd75a65'
+prep=json.loads(prep_raw);sources=get(BASE/'sources.json');aux=get(BASE/'auxiliary.json')
+assert len(sources)==128 and len(aux)==1
+assert report['source_files_unchanged'] is True
+assert sources==report['source_hashes_start']==report['source_hashes_end']==get(RUN/'source-start.json')==get(RUN/'source-end.json')
+assert sha(read(RUN/'sources.tar.gz'))==report['source_archive_sha256']=='a5e8b41586e683bb6eb23d57266195bfcb0206acb94f2f1a4af9fef6636074eb'
+assert sha(read(BASE/'sources.tar.gz'))==prep['archive_sha256']=='07450d3d707c263616b4ffc8e1150ff0c45a821fa4b9b1f5a2cd867d6cbffec1'
+archive_data={}
+for path,expected in [(RUN/'sources.tar.gz',sources),(BASE/'sources.tar.gz',sources|aux)]:
+ with tarfile.open(fileobj=io.BytesIO(read(path)),mode='r:gz') as archive:
+  members=archive.getmembers();assert len(members)==len(expected) and {m.name for m in members}==set(expected)
+  for m in members:
+   assert m.isfile() and not m.issym() and not m.islnk() and not Path(m.name).is_absolute() and '..' not in Path(m.name).parts
+   raw=archive.extractfile(m).read();assert sha(raw)==expected[m.name]
+   assert archive_data.setdefault(m.name,raw)==raw
+for name,digest in (sources|aux).items():
+ root,rel=name.split('/',1);assert root in ('repo','collector')
+ prepared=BASE/('checkout' if root=='repo' else 'collector')/rel
+ original=REPO/rel if root=='repo' else Path(prep['source_collector'])/rel
+ assert sha(read(prepared))==sha(read(original))==digest
+
+he=ast.parse(archive_data['repo/jaxite_word/he_params.py'])
+table,=[n.value for n in he.body if isinstance(n,ast.Assign) and any(isinstance(x,ast.Name) and x.id=='_OPENFHE_CEILINGS_RAW' for x in n.targets)]
+mapping,=[v for k,v in zip(table.keys,table.values) if dump(k)==expr('(CostModel.CLASSICAL,128)')]
+ceilings=ast.literal_eval(mapping)
+runner=ast.parse(archive_data['repo/cadathlon/non_agent_pset/p3_cnn/src/runner.py'])
+run,=[n for n in runner.body if isinstance(n,ast.FunctionDef) and n.name=='run']
+tests={dump(n.test) for n in ast.walk(run) if isinstance(n,ast.If) and any(isinstance(x,ast.Raise) for x in n.body)}
+assert expr('not np.all(np.abs(output - expected) <= 0.02 + 0.01 * np.abs(expected))') in tests
+assert expr('errors["top1_agreement"] < 0.99') in tests
+helper=ast.parse(archive_data['collector/process_helpers.py'])
+run_case,=[n for n in helper.body if isinstance(n,ast.FunctionDef) and n.name=='run_case']
+popen,=[n for n in ast.walk(run_case) if isinstance(n,ast.Call) and ast.unparse(n.func)=='subprocess.Popen']
+assert any(k.arg=='start_new_session' and isinstance(k.value,ast.Constant) and k.value.value is True for k in popen.keywords)
+
+records=[];raw_pins={};wrappers=[];children=[]
+for i,case in enumerate(cases,1):
+ folder=RUN/('test'+str(i));assert {p.name for p in folder.iterdir()}=={'process.json','stdout.json','stderr.log','time.txt','source-after.json'}
+ process=get(folder/'process.json');result=get(folder/'stdout.json')
+ assert process==report['cases'][case] and process['result']==result and get(folder/'source-after.json')==sources
+ for flag in ('passed','source_files_unchanged','process_reaped','public_key_store_removed','owned_directory_handle_closed'):assert process[flag] is True
+ assert process['returncode']==0 and 'error' not in process and process['timeout_s'] is None
+ command=['/usr/bin/time','-v','-o',str(folder/'time.txt'),'/home/jianming_gatech/miniconda3/envs/jaxite/bin/python',str(BASE/'collector/check_p3_original_six.py'),'--repo',str(BASE/'checkout'),'--child-runner',str(BASE/'checkout/cadathlon/non_agent_pset/p3_cnn/src/runner.py'),'--','--case',str(BASE/'checkout/cadathlon/non_agent_pset/p3_cnn/test'/case),'--baseline','--warmups','0','--repeats','1']
+ assert process['command']==command
+ fixture=json.loads(archive_data['repo/cadathlon/non_agent_pset/p3_cnn/test/'+case])
+ model='lenet' if i<=3 else 'alexnet_tiny';batch=(1,2,4)[(i-1)%3]
+ assert fixture['model']==model and fixture['batch']==batch
+ assert result['case']==case and result['batch']==batch and result['implementation']=='baseline.py'
+ assert result['mode']=='HE-synthetic-smoke' and result['device'].startswith('TPU_') and result['trained_accuracy_evaluated'] is False
+ for flag in ('passed','cold_start_included','mapping_release_included'):assert result[flag] is True
+ assert result['warmup_s']==result['warmup_server_s']==[]
+ assert len(result['server_s'])==len(result['end_to_end_s'])==1
+ for name in ('setup_s','median_s','total_s','max_abs_error','nrmse','top1_agreement'):assert finite(result[name])
+ assert 0.99<=result['top1_agreement']<=1
+ assert 0<result['server_s'][0]<=result['end_to_end_s'][0]<=result['total_s']<=process['process_elapsed_s']
+ assert result['setup_s']+result['end_to_end_s'][0]<=result['total_s']
+ ring,=result['execution_rings'];assert ring['security_bits']==128 and ring['security_model']=='classical'
+ assert ring['degree']==32768 and ring['num_slots']==16384 and ring['num_q']==16 and ring['num_p']==4
+ assert len(ring['q_towers'])==16 and len(ring['p_towers'])==4
+ qp=math.prod(ring['q_towers']+ring['p_towers'])
+ assert qp.bit_length()==605<=ceilings[32768]==881
+ assert abs(math.log2(qp)-ring['log2_QP'])<1e-10
+ time_text=read(folder/'time.txt').decode();assert re.search(r'Exit status: 0\s*$',time_text)
+ rss=int(re.search(r'Maximum resident set size \(kbytes\): (\d+)',time_text).group(1));assert rss==process['peak_child_rss_kib']
+ pid=process['pid'];assert type(pid) is int and pid>0 and pid not in wrappers;wrappers.append(pid)
+ absence={str(n):absent(n) for n in (pid,-pid)}
+ child=Path(process['owned_public_key_directory']);assert child.parent==Path('/dev/shm/cross-p3-original-six-key-parent-f383y30c')
+ assert child.name.startswith('cross-transformer-case-') and not os.path.lexists(child) and str(child) not in children;children.append(str(child))
+ for p in folder.iterdir():raw_pins[str(p.relative_to(RUN))]=sha(read(p))
+ records.append(dict(case=case,model=model,batch=batch,passed=True,max_abs_error=result['max_abs_error'],nrmse=result['nrmse'],top1_agreement=result['top1_agreement'],setup_s=result['setup_s'],request_s=result['end_to_end_s'][0],server_s=result['server_s'][0],runner_total_s=result['total_s'],external_s=process['process_elapsed_s'],GNU_time_max_RSS_KiB=rss,reported_QP_integer_bits=qp.bit_length(),security_ceiling=ceilings[32768],wrapper_pid=pid,wrapper_and_source_bound_group_absence=absence,child_directory_absent=str(child),inner_pid_live_identity_claim=False))
+
+assert finite(report['elapsed_s']) and report['elapsed_s']>=sum(r['external_s'] for r in records)
+assert read(RUN/'report.json')==report_raw
+key_parent=Path('/dev/shm/cross-p3-original-six-key-parent-f383y30c');before=key_parent.lstat()
+assert stat.S_ISDIR(before.st_mode) and (before.st_dev,before.st_ino,before.st_uid,before.st_gid,stat.S_IMODE(before.st_mode))==(24,4064,2002,2002,0o700)
+assert list(key_parent.iterdir())==[]
+verifier_bytes=read(Path(__file__))
+for path,body in READS.items():assert Path(path).read_bytes()==body,path+' changed before parent cleanup'
+identity=dict(device=before.st_dev,inode=before.st_ino,uid=before.st_uid,gid=before.st_gid,mode=stat.S_IMODE(before.st_mode))
+pending=dict(observed_utc=datetime.now(timezone.utc).isoformat(),original_session=81235,terminal_receipt_sha256=sha(terminal_raw),report_sha256=sha(report_raw),collector_absence=collector_absence,owned_key_parent=str(key_parent),identity=identity,empty_before_cleanup=True,case_count=6,source_count=128,all_checks_before_parent_removal=True)
+save(PENDING,pending)
+again=key_parent.lstat();assert (again.st_dev,again.st_ino)==(before.st_dev,before.st_ino)
+key_parent.rmdir();assert not os.path.lexists(key_parent)
+record=dict(schema='root-original-p3-six-terminal-admission-v1',observed_utc=datetime.now(timezone.utc).isoformat(),passed=True,complete=True,original_session=81235,terminal_tool_chunk=terminal['tool_chunk'],exit_code=0,terminal_receipt_path=str(a.terminal_receipt),terminal_receipt_sha256=sha(terminal_raw),report_sha256=sha(report_raw),source_archive_sha256=report['source_archive_sha256'],measured_sources=128,prepared_sources=129,all_start_after_end_current_archive_sources_exact=True,collector_absence=collector_absence,cases=records,case_file_hashes=raw_pins,elapsed_s=report['elapsed_s'],owned_key_parent_removed=str(key_parent),owned_key_parent_original_identity=identity,cleanup_pending_receipt_sha256=sha(PENDING.read_bytes()),source_gates='Every logit tolerance .02+.01*abs(reference), top1 >=.99; actual reported full QP integer bit length within classical128 ceiling',limits=['Recorded source-bound synthetic encrypted TPU evidence, no independent recomputation of unretained decrypted logits','GNU time RSS is not peak HBM or continuously sampled aggregate memory','Original cold six-case profile, not compact five-minute or trained/ranked accuracy','Group ownership for later cases is source-bound; no invented inner PID or direct child wait'],candidate_rerun=False,verifier_path=str(Path(__file__)),verifier_sha256=sha(Path(__file__).read_bytes()))
+save(OUTPUT,record)
+print(json.dumps(dict(path=str(OUTPUT),sha256=sha(OUTPUT.read_bytes()),passed=True,cases=6,elapsed_s=report['elapsed_s'],owned_key_parent_removed=True)))

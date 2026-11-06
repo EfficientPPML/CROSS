@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="4" skipped="0" tests="4" time="0.040" timestamp="2026-11-04T02:38:57.336769+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_lifecycle" name="test_real_read_body_primary_survives_close_cancellation[entry-bounded]" time="0.001"><failure message="AssertionError: assert KeyboardInterrupt('cleanup') is ValueError('body')">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7fab93e2c8a0&gt;
+module = &lt;module 'entry' from '/tmp/qwen-prefix-freeze-lifecycle-review-20261104/negative-v1/entry.py'&gt;
+function = 'bounded'
+
+    @pytest.mark.parametrize('module,function',[(entry,'bounded'),(freeze_io,'read')])
+    def test_real_read_body_primary_survives_close_cancellation(monkeypatch,module,function):
+        body=ValueError('body');cancel=KeyboardInterrupt('cleanup')
+        def fail_body(fd):raise body
+        def fail_close(fd):raise cancel
+        real=module.os
+        fake=NS(**{n:getattr(real,n) for n in dir(real)})
+        fake.open=lambda *a,**k:7;fake.fstat=fail_body;fake.close=fail_close
+        monkeypatch.setattr(module,'os',fake)
+        observed=None
+        try:getattr(module,function)('/synthetic/file',32) if module is entry else module.read('/synthetic/file')
+        except BaseException as error:observed=error
+&gt;       assert observed is body
+E       AssertionError: assert KeyboardInterrupt('cleanup') is ValueError('body')
+
+test_lifecycle.py:26: AssertionError</failure></testcase><testcase classname="test_lifecycle" name="test_real_read_body_primary_survives_close_cancellation[freeze_io-read]" time="0.001"><failure message="AssertionError: assert KeyboardInterrupt('cleanup') is ValueError('body')">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7fab93e2c050&gt;
+module = &lt;module 'freeze_io' from '/tmp/qwen-prefix-freeze-lifecycle-review-20261104/negative-v1/freeze_io.py'&gt;
+function = 'read'
+
+    @pytest.mark.parametrize('module,function',[(entry,'bounded'),(freeze_io,'read')])
+    def test_real_read_body_primary_survives_close_cancellation(monkeypatch,module,function):
+        body=ValueError('body');cancel=KeyboardInterrupt('cleanup')
+        def fail_body(fd):raise body
+        def fail_close(fd):raise cancel
+        real=module.os
+        fake=NS(**{n:getattr(real,n) for n in dir(real)})
+        fake.open=lambda *a,**k:7;fake.fstat=fail_body;fake.close=fail_close
+        monkeypatch.setattr(module,'os',fake)
+        observed=None
+        try:getattr(module,function)('/synthetic/file',32) if module is entry else module.read('/synthetic/file')
+        except BaseException as error:observed=error
+&gt;       assert observed is body
+E       AssertionError: assert KeyboardInterrupt('cleanup') is ValueError('body')
+
+test_lifecycle.py:26: AssertionError</failure></testcase><testcase classname="test_lifecycle" name="test_terminal_leader_remaining_owned_group_is_retired" time="0.000"><failure message="AssertionError: [('wait',)]&#10;assert False&#10; +  where False = any(&lt;generator object test_terminal_leader_remaining_owned_group_is_retired.&lt;locals&gt;.&lt;genexpr&gt; at 0x7fab93e68860&gt;)">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7fab93ed05f0&gt;
+
+    def test_terminal_leader_remaining_owned_group_is_retired(monkeypatch):
+        calls=[]
+        class Child:
+            pid=123;returncode=0
+            def poll(self):return 0
+            def wait(self,*a,**k):calls.append(('wait',));return 0
+        real=p.os;fake=NS(**{n:getattr(real,n) for n in dir(real)})
+        fake.killpg=lambda pid,sig:calls.append(('killpg',pid,sig))
+        monkeypatch.setattr(p,'os',fake)
+        monkeypatch.setattr(p,'group_absent',lambda pid:False)
+        try:p.retire(Child(),None)
+        except RuntimeError:pass
+&gt;       assert any(x[0]=='killpg' for x in calls),calls
+E       AssertionError: [('wait',)]
+E       assert False
+E        +  where False = any(&lt;generator object test_terminal_leader_remaining_owned_group_is_retired.&lt;locals&gt;.&lt;genexpr&gt; at 0x7fab93e68860&gt;)
+
+test_lifecycle.py:41: AssertionError</failure></testcase><testcase classname="test_lifecycle" name="test_output_close_failure_cannot_leave_success_report" time="0.000"><failure message="AssertionError: assert ([{'passed': True, 'complete': True, 'pid': 2632389, 'source_hashes_start': {'a': 'b'}, ...}] and True is False)">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7fab940e3350&gt;
+
+    def test_output_close_failure_cannot_leave_success_report(monkeypatch):
+        receipts=[]
+        class Output:
+            def __init__(self,path):self.path=path
+            def json(self,name,report):receipts.append(dict(report))
+            def close(self,primary=None):
+                if self.path=='public':raise OSError('final output close')
+        monkeypatch.setattr(p,'Output',Output)
+        monkeypatch.setattr(p,'grant_check',lambda *a:{})
+        monkeypatch.setattr(p,'install_audit',lambda *a:[])
+        monkeypatch.setattr(p,'signals',nullcontext)
+        monkeypatch.setattr(p,'source_end',lambda *a:{'a':'b'})
+        monkeypatch.setattr(p.freeze_logic,'execute',lambda *a:{'passed':True,'complete':True})
+        monkeypatch.setattr(p,'importlib',NS(metadata=NS(version=lambda *a:'synthetic')))
+        monkeypatch.setitem(sys.modules,'tokenizers',NS(Tokenizer=NS(from_str=lambda *a:None)))
+        args=NS(output='public',private_output='private',manifest_sha256='x',grant_sha256='y')
+        with pytest.raises(OSError,match='final output close'):
+            p.worker(args,{'a':'b'},{},{},Path('/unused'))
+&gt;       assert receipts and receipts[-1]['passed'] is False
+E       AssertionError: assert ([{'passed': True, 'complete': True, 'pid': 2632389, 'source_hashes_start': {'a': 'b'}, ...}] and True is False)
+
+test_lifecycle.py:62: AssertionError</failure></testcase></testsuite></testsuites>

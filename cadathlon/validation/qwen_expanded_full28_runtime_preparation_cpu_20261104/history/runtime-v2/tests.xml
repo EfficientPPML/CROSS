@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="4" skipped="0" tests="79" time="552.781" timestamp="2026-11-04T08:13:56.982774+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_expanded_fixture" name="test_period_alias_is_real_noop[0]" time="0.003" /><testcase classname="test_expanded_fixture" name="test_period_alias_is_real_noop[65536]" time="0.003" /><testcase classname="test_expanded_fixture" name="test_period_alias_is_real_noop[-65536]" time="0.003" /><testcase classname="test_expanded_fixture" name="test_exact_inventory_and_unplanned_rotation_rejected" time="0.009" /><testcase classname="test_expanded_fixture" name="test_removing_planned_key_rejects_before_primitive" time="0.003" /><testcase classname="test_expanded_fixture" name="test_logical_queue_bytes_match_actual_public_prefix[2]" time="0.004"><failure message="ImportError: cannot import name 'MatrixDiagonals' from 'encrypted_packed_qwen' (unknown location)">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x738440bd49d0&gt;
+level = 2
+
+    @pytest.mark.parametrize('level',[2,3,25,49])
+    def test_logical_queue_bytes_match_actual_public_prefix(monkeypatch,level):
+        from join_ideal import install_matrix
+        from ideal_primitives import Q
+&gt;       import encrypted_packed_transformer as packed
+
+test_expanded_fixture.py:33: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    """Experimental ciphertext-only packed toy transformer graphs.
+    
+    Activations use (batch, query, key, feature) slots, with public zero padding.
+    Client codecs are separate from the keyless arithmetic. Polynomial domains
+    are explicit toy contracts, not guarantees for pretrained checkpoints.
+    Full encrypted graph validation is required before any reference claim.
+    """
+    from dataclasses import dataclass
+    from collections import deque
+    from contextlib import closing
+    import math
+    import numpy as np
+    
+&gt;   from encrypted_packed_qwen import CompiledArithmetic, MatrixDiagonals
+E   ImportError: cannot import name 'MatrixDiagonals' from 'encrypted_packed_qwen' (unknown location)
+
+checkout/cadathlon/common/encrypted_packed_transformer.py:14: ImportError</failure></testcase><testcase classname="test_expanded_fixture" name="test_logical_queue_bytes_match_actual_public_prefix[3]" time="0.004"><failure message="ImportError: cannot import name 'MatrixDiagonals' from 'encrypted_packed_qwen' (unknown location)">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7384432203e0&gt;
+level = 3
+
+    @pytest.mark.parametrize('level',[2,3,25,49])
+    def test_logical_queue_bytes_match_actual_public_prefix(monkeypatch,level):
+        from join_ideal import install_matrix
+        from ideal_primitives import Q
+&gt;       import encrypted_packed_transformer as packed
+
+test_expanded_fixture.py:33: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    """Experimental ciphertext-only packed toy transformer graphs.
+    
+    Activations use (batch, query, key, feature) slots, with public zero padding.
+    Client codecs are separate from the keyless arithmetic. Polynomial domains
+    are explicit toy contracts, not guarantees for pretrained checkpoints.
+    Full encrypted graph validation is required before any reference claim.
+    """
+    from dataclasses import dataclass
+    from collections import deque
+    from contextlib import closing
+    import math
+    import numpy as np
+    
+&gt;   from encrypted_packed_qwen import CompiledArithmetic, MatrixDiagonals
+E   ImportError: cannot import name 'MatrixDiagonals' from 'encrypted_packed_qwen' (unknown location)
+
+checkout/cadathlon/common/encrypted_packed_transformer.py:14: ImportError</failure></testcase><testcase classname="test_expanded_fixture" name="test_logical_queue_bytes_match_actual_public_prefix[25]" time="0.004"><failure message="ImportError: cannot import name 'MatrixDiagonals' from 'encrypted_packed_qwen' (unknown location)">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x738440bf4a70&gt;
+level = 25
+
+    @pytest.mark.parametrize('level',[2,3,25,49])
+    def test_logical_queue_bytes_match_actual_public_prefix(monkeypatch,level):
+        from join_ideal import install_matrix
+        from ideal_primitives import Q
+&gt;       import encrypted_packed_transformer as packed
+
+test_expanded_fixture.py:33: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    """Experimental ciphertext-only packed toy transformer graphs.
+    
+    Activations use (batch, query, key, feature) slots, with public zero padding.
+    Client codecs are separate from the keyless arithmetic. Polynomial domains
+    are explicit toy contracts, not guarantees for pretrained checkpoints.
+    Full encrypted graph validation is required before any reference claim.
+    """
+    from dataclasses import dataclass
+    from collections import deque
+    from contextlib import closing
+    import math
+    import numpy as np
+    
+&gt;   from encrypted_packed_qwen import CompiledArithmetic, MatrixDiagonals
+E   ImportError: cannot import name 'MatrixDiagonals' from 'encrypted_packed_qwen' (unknown location)
+
+checkout/cadathlon/common/encrypted_packed_transformer.py:14: ImportError</failure></testcase><testcase classname="test_expanded_fixture" name="test_logical_queue_bytes_match_actual_public_prefix[49]" time="0.004"><failure message="ImportError: cannot import name 'MatrixDiagonals' from 'encrypted_packed_qwen' (unknown location)">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x738440b79150&gt;
+level = 49
+
+    @pytest.mark.parametrize('level',[2,3,25,49])
+    def test_logical_queue_bytes_match_actual_public_prefix(monkeypatch,level):
+        from join_ideal import install_matrix
+        from ideal_primitives import Q
+&gt;       import encrypted_packed_transformer as packed
+
+test_expanded_fixture.py:33: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    """Experimental ciphertext-only packed toy transformer graphs.
+    
+    Activations use (batch, query, key, feature) slots, with public zero padding.
+    Client codecs are separate from the keyless arithmetic. Polynomial domains
+    are explicit toy contracts, not guarantees for pretrained checkpoints.
+    Full encrypted graph validation is required before any reference claim.
+    """
+    from dataclasses import dataclass
+    from collections import deque
+    from contextlib import closing
+    import math
+    import numpy as np
+    
+&gt;   from encrypted_packed_qwen import CompiledArithmetic, MatrixDiagonals
+E   ImportError: cannot import name 'MatrixDiagonals' from 'encrypted_packed_qwen' (unknown location)
+
+checkout/cadathlon/common/encrypted_packed_transformer.py:14: ImportError</failure></testcase><testcase classname="test_full_owner" name="test_actual_objects_flow_and_last_row_only[1]" time="10.285" /><testcase classname="test_full_owner" name="test_actual_objects_flow_and_last_row_only[8]" time="10.320" /><testcase classname="test_full_owner" name="test_actual_objects_flow_and_last_row_only[16]" time="10.273" /><testcase classname="test_full_owner" name="test_actual_objects_flow_and_last_row_only[19]" time="10.858" /><testcase classname="test_full_owner" name="test_actual_objects_flow_and_last_row_only[32]" time="10.848" /><testcase classname="test_full_owner" name="test_construction_bindings[before-linear_scale]" time="7.025" /><testcase classname="test_full_owner" name="test_construction_bindings[before-linear_strategy]" time="7.011" /><testcase classname="test_full_owner" name="test_construction_bindings[before-linear_ctx]" time="6.999" /><testcase classname="test_full_owner" name="test_construction_bindings[before-linear_finish]" time="6.978" /><testcase classname="test_full_owner" name="test_construction_bindings[before-linear_low_memory]" time="6.986" /><testcase classname="test_full_owner" name="test_construction_bindings[before-compiler]" time="6.978" /><testcase classname="test_full_owner" name="test_construction_bindings[before-keys]" time="6.989" /><testcase classname="test_full_owner" name="test_construction_bindings[before-provider]" time="6.980" /><testcase classname="test_full_owner" name="test_construction_bindings[before-outer]" time="7.000" /><testcase classname="test_full_owner" name="test_construction_bindings[before-contract]" time="6.976" /><testcase classname="test_full_owner" name="test_construction_bindings[before-factory]" time="7.006" /><testcase classname="test_full_owner" name="test_construction_bindings[first-linear_scale]" time="7.058" /><testcase classname="test_full_owner" name="test_construction_bindings[first-linear_strategy]" time="7.052" /><testcase classname="test_full_owner" name="test_construction_bindings[first-linear_ctx]" time="7.066" /><testcase classname="test_full_owner" name="test_construction_bindings[first-linear_finish]" time="7.046" /><testcase classname="test_full_owner" name="test_construction_bindings[first-linear_low_memory]" time="7.060" /><testcase classname="test_full_owner" name="test_construction_bindings[first-compiler]" time="7.060" /><testcase classname="test_full_owner" name="test_construction_bindings[first-keys]" time="7.065" /><testcase classname="test_full_owner" name="test_construction_bindings[first-provider]" time="7.066" /><testcase classname="test_full_owner" name="test_construction_bindings[first-outer]" time="7.066" /><testcase classname="test_full_owner" name="test_construction_bindings[first-contract]" time="7.079" /><testcase classname="test_full_owner" name="test_construction_bindings[first-factory]" time="7.098" /><testcase classname="test_full_owner" name="test_callback_retains_values_and_children[original]" time="7.070" /><testcase classname="test_full_owner" name="test_callback_retains_values_and_children[current]" time="7.056" /><testcase classname="test_full_owner" name="test_callback_retains_values_and_children[pending]" time="7.060" /><testcase classname="test_full_owner" name="test_callback_retains_values_and_children[refs]" time="7.067" /><testcase classname="test_full_owner" name="test_callback_retains_values_and_children[child_method]" time="7.061" /><testcase classname="test_full_owner" name="test_callback_retains_values_and_children[child_progress]" time="7.074" /><testcase classname="test_full_owner" name="test_callback_retains_values_and_children[result_metadata]" time="7.095" /><testcase classname="test_full_owner" name="test_primary_and_failure_quarantine[RuntimeError]" time="7.094" /><testcase classname="test_full_owner" name="test_primary_and_failure_quarantine[KeyboardInterrupt]" time="7.093" /><testcase classname="test_full_owner" name="test_primary_and_failure_quarantine[SystemExit]" time="7.085" /><testcase classname="test_full_owner" name="test_reentry" time="7.079" /><testcase classname="test_full_owner" name="test_final_phases_retained_metadata[final.select_last-current]" time="10.137" /><testcase classname="test_full_owner" name="test_final_phases_retained_metadata[final.select_last-original]" time="10.163" /><testcase classname="test_full_owner" name="test_final_phases_retained_metadata[final.row_to_zero-current]" time="10.171" /><testcase classname="test_full_owner" name="test_final_phases_retained_metadata[final.row_to_zero-original]" time="10.194" /><testcase classname="test_full_owner" name="test_final_phases_retained_metadata[final.input.refresh0-current]" time="10.171" /><testcase classname="test_full_owner" name="test_final_phases_retained_metadata[final.input.refresh0-original]" time="10.185" /><testcase classname="test_full_owner" name="test_final_phases_retained_metadata[final.norm.output-current]" time="10.252" /><testcase classname="test_full_owner" name="test_final_phases_retained_metadata[final.norm.output-original]" time="10.275" /><testcase classname="test_full_owner" name="test_final_phases_retained_metadata[logits.37-current]" time="10.389" /><testcase classname="test_full_owner" name="test_final_phases_retained_metadata[logits.37-original]" time="10.402" /><testcase classname="test_full_owner" name="test_final_phases_retained_metadata[logits.37-retained_logit]" time="10.422" /><testcase classname="test_full_owner" name="test_literal_refresh_scales_and_output_metadata" time="10.412" /><testcase classname="test_full_owner" name="test_bad_entry_before_load[level-24]" time="7.116" /><testcase classname="test_full_owner" name="test_bad_entry_before_load[_ckks_nsd-True]" time="7.118" /><testcase classname="test_full_owner" name="test_bad_entry_before_load[num_moduli-1]" time="7.099" /><testcase classname="test_full_owner" name="test_bad_entry_before_load[_ckks_scale-nan]" time="7.102" /><testcase classname="test_full_owner" name="test_borrowed_tags_and_owned_cleanup" time="10.383" /><testcase classname="test_profile" name="test_fixed_profile_rejected_before_any_body[dnum]" time="4.727" /><testcase classname="test_profile" name="test_fixed_profile_rejected_before_any_body[ordered_q]" time="4.739" /><testcase classname="test_setup_scope" name="test_partial_setup_failure_always_retires_active[OSError]" time="7.098" /><testcase classname="test_setup_scope" name="test_partial_setup_failure_always_retires_active[KeyboardInterrupt]" time="7.098" /><testcase classname="test_setup_scope" name="test_partial_setup_failure_always_retires_active[SystemExit]" time="7.115" /><testcase classname="test_setup_scope" name="test_partial_setup_failure_always_retires_active[MemoryError]" time="7.097" /><testcase classname="test_full_callback_negative" name="test_saved_child_callback_is_construction_bound[before]" time="7.097" /><testcase classname="test_full_callback_negative" name="test_saved_child_callback_is_construction_bound[first]" time="7.149" /><testcase classname="test_full_returned" name="test_returned_arrays_survive_bad_metadata[Attention]" time="7.165" /><testcase classname="test_full_returned" name="test_returned_arrays_survive_bad_metadata[Tail]" time="7.195" /><testcase classname="test_full_returned" name="test_returned_arrays_survive_bad_metadata[Final]" time="10.282" /><testcase classname="test_full_returned" name="test_pre_return_failure_keeps_whole_owner[RuntimeError]" time="7.188" /><testcase classname="test_full_returned" name="test_pre_return_failure_keeps_whole_owner[KeyboardInterrupt]" time="7.174" /><testcase classname="test_full_returned" name="test_pre_return_failure_keeps_whole_owner[SystemExit]" time="7.158" /><testcase classname="test_full_entry_failure" name="test_initial_snapshot_failure_leaves_inactive" time="7.121" /></testsuite></testsuites>

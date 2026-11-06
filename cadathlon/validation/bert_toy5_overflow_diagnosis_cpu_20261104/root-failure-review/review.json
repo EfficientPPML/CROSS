@@ -1,0 +1,67 @@
+{
+  "schema": "bert-toy5-independent-terminal-root-review-v1",
+  "review_passed": true,
+  "case_passed": false,
+  "case_files_sha256": {
+    "process.json": "b7a023be44edb8b5da77a8d5465a4440751408bd84ea5e8553586deb567208f9",
+    "stdout.json": "7ed64f930abac56e841cac540c09a295520a663fb0cf634ed9f88608235cef97",
+    "stderr.log": "70f1e18c570fbf27d57594211b1ed272af68eb3d910a268faa829370807f433f",
+    "security_device.json": "f2b0c6f8a5ed3c07d394f8b19a22eb3f6a433feb4f3549dd53299b23e288e318",
+    "resources.json": "dbe6f7b5cd61efccb9652417a57e73cb725cb3b2aa14893e0abed830f0162046",
+    "resource_samples.jsonl": "cac17407cac2909517106444c4a2900b4bc64b79cfb89c975dd5c619417ac26c"
+  },
+  "source_count": 199,
+  "source_archive_sha256": "bc0ad1b2a3796fe4ecb5944d68f3ca65561ad5740357470a1e634cc243ec387b",
+  "current_archive_sources_equal": true,
+  "parent_report_sha256": "cfa7e816443b3be04c53e1be0d7a0e7cfe7f54437bbcd546c177ffb7703a00b9",
+  "completed_cases_at_checkpoint": 9,
+  "prior_passes": 7,
+  "failed_cases": [
+    "bert/test4",
+    "bert/test5"
+  ],
+  "original_sweep_still_running": true,
+  "active_case": "qwen/test5",
+  "parent_terminal_or_global_final_source_check_claim": false,
+  "child_pid": 2610682,
+  "child_pgid": 2610682,
+  "live_group_observation_tool_chunk": "5556dd",
+  "parent_reported_child_reaped": true,
+  "independently_verified_child_and_group_absent": true,
+  "owned_key_path_absent": true,
+  "owned_key_identity": {
+    "device": 24,
+    "inode": 2467
+  },
+  "error_type": "OverflowError",
+  "error": "int too large to convert to float",
+  "refresh_completions": 8,
+  "output_q_limbs": 40,
+  "output_scale": 6.8994011570896904e+16,
+  "output_nsd": 1,
+  "actual_qp_log2": 3490.161581036245,
+  "actual_qp_ceil_bits": 3491,
+  "security_ceiling_bits": 3523,
+  "both_recorded_boundaries_tpu": true,
+  "security_report_overall_passed": false,
+  "decoded_metrics_available": false,
+  "external_process_elapsed_s": 19834.479544978007,
+  "resources": {
+    "samples": 18957,
+    "sample_interval_s": 1.0,
+    "sampled_peak_process_tree_rss_bytes": 151212969984,
+    "scope": "Sampled sum of RSS for observed owned process-group/descendant tree; shared pages can be counted twice, transient peaks/escaped descendants can be missed. Not an OS sandbox or a continuous peak guarantee."
+  },
+  "fixture": {
+    "batch": 2,
+    "sequence_length": 12,
+    "hidden": 24,
+    "intermediate": 48,
+    "heads": 4,
+    "layers": 3,
+    "seed": 9505
+  },
+  "scope": "Actual encrypted public toy failure; no full pretrained model, ranked accuracy, calibrated score or precise throw-site claim",
+  "source_diagnosis_limit": "The output metadata boundary completed, but no traceback or ciphertext coefficient bodies are retained; exact throw site remains unlocalized.",
+  "review_script_sha256": "2edcd0cd5eec1a35b225a9b9836c9b2adb2eee6b8841e0805e80bc71e301f641"
+}

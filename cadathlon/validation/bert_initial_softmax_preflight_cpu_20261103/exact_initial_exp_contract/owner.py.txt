@@ -1,0 +1,162 @@
+"""Experimental frozen-v2 BERT initial softmax, before its five square rounds.
+
+All operations use one borrowed keyless full-slot CD2 context. There is no
+refresh, client codec, exact-softmax substitution, or ciphertext range test.
+The declared centered-score/denominator domains are public caller contracts.
+This component alone does not implement attention, a BERT block or full model.
+"""
+from dataclasses import dataclass
+import hashlib,json,math
+import numpy as np
+from encrypted_integer_affine import backward_scale_plan
+from encrypted_scaled_newton import integer_newton_updates
+from encrypted_score_reduction import ScoreReduction,ScoreReductionLayout,SLOTS
+
+MANIFEST_SHA256='4e2277beea7189aa1d77b168c500c8a175f6c630afa520fcc6b38cb5a179cff9'
+EXP_SHA256='64c193dd47fbbc6f850b14a35dad72803d35a2353497aba4db8061b217fe41dd'
+POWER_SHA256='5173fba9463c2962090f8ddeb64953ef60ad8ba700b2cd37573aba1e11b6c59a'
+
+@dataclass(frozen=True)
+class InitialSoftmaxContract:
+    exponential_coefficients: tuple
+    source_manifest_sha256: str=MANIFEST_SHA256
+    centered_domain: tuple=(-16.,16.)
+    exponential_domain: tuple=(-.5,.5)
+    squarings: int=5
+    initial_domain: tuple=(.5,2.)
+    initial_seed: float=.8
+    initial_updates: int=6
+
+    def __post_init__(self):
+        c=np.asarray(self.exponential_coefficients)
+        if (c.dtype.kind not in 'fiu' or c.shape!=(9,) or not np.isfinite(c).all()
+                or hashlib.sha256(c.astype('<f8').tobytes()).hexdigest()!=EXP_SHA256
+                or self.source_manifest_sha256!=MANIFEST_SHA256
+                or self.centered_domain!=(-16.,16.) or self.exponential_domain!=(-.5,.5)
+                or type(self.squarings)is not int or self.squarings!=5
+                or self.initial_domain!=(.5,2.) or type(self.initial_seed)is not float or self.initial_seed!=.8
+                or type(self.initial_updates)is not int or self.initial_updates!=6):
+            raise ValueError('exact frozen BERT v2 initial-softmax contract required')
+        power=np.polynomial.chebyshev.cheb2poly(c.astype(np.float64))
+        if hashlib.sha256(power.astype('<f8').tobytes()).hexdigest()!=POWER_SHA256:
+            raise ValueError('power conversion differs from the frozen candidate arithmetic')
+        object.__setattr__(self,'exponential_coefficients',tuple(map(float,c)))
+
+    @classmethod
+    def from_manifest_bytes(cls,raw):
+        if not isinstance(raw,bytes) or hashlib.sha256(raw).hexdigest()!=MANIFEST_SHA256:
+            raise ValueError('exact frozen v2 manifest bytes required')
+        model=json.loads(raw)
+        return cls(tuple(model['base_exp']['coefficients']))
+
+    @property
+    def power_coefficients(self):
+        return tuple(map(float,np.polynomial.chebyshev.cheb2poly(self.exponential_coefficients)))
+
+
+def initial_softmax_plan(q_moduli,*,input_level,canonical_scale):
+    q=tuple(q_moduli)
+    if (type(input_level)is not int or input_level<24 or len(q)!=2*(input_level+1)
+            or len(set(q))!=len(q) or any(type(x)is not int or x<=1 for x in q)
+            or isinstance(canonical_scale,(bool,np.bool_)) or not isinstance(canonical_scale,(int,float))
+            or not math.isfinite(canonical_scale) or canonical_scale<=0):
+        raise ValueError('static full-slot CD2 plan needs22 levels plus two continuation levels')
+    denominator=input_level-9;inverse=denominator-11
+    divisor=q[2*inverse]*q[2*inverse+1]
+    # Base exp and denominator use the canonical scale. Choose the inverse
+    # scale for a real product near that same scale; do not assign metadata.
+    scale=backward_scale_plan(q[:2*(denominator+1)],input_scale=canonical_scale,
+        first_output_level=denominator-1,updates=6,final_scale=float(divisor))
+    product_scale=canonical_scale*scale['rows'][-1]['scale']/divisor
+    if not math.isfinite(product_scale) or product_scale<=0:raise ValueError('unrepresentable product scale')
+    return dict(input_level=input_level,consumed_levels=22,reserved_output_levels=2,
+        levels={'score_mean':input_level-2,'normalized_t':input_level-3,'base_exp':input_level-7,
+                'mean_exp':denominator,'inverse':inverse,'base_times_inverse':input_level-21,'probabilities':input_level-22},
+        static_inverse_scale_plan=scale,actual_product_scale=product_scale,
+        final_scale=canonical_scale,initial_updates=6,first_weight=-.8*.8,first_bias=2*.8,
+        future_normalized_squarings=5,implemented_squaring_rounds=0)
+
+
+class BertInitialSoftmax:
+    """One complete masked initial probability tile; full65536 physical slots.
+
+    Each row may have its own public subset of the128 keys. A partial last
+    query tile uses explicit valid_rows. Output key/head/query padding is zero
+    in the ideal circuit. No implicit refresh or bound-aware owner is allowed.
+    """
+    def __init__(self,arithmetic,layout,contract,*,progress=None):
+        if not isinstance(contract,InitialSoftmaxContract):raise TypeError('expected frozen initial-softmax contract')
+        if not isinstance(layout,ScoreReductionLayout):raise TypeError('expected full-slot ScoreReductionLayout')
+        self.arithmetic,self.layout,self.contract=arithmetic,layout,contract
+        self.reduction=ScoreReduction(arithmetic,layout,progress=progress)
+        self.last_plan=None
+
+    @staticmethod
+    def rotation_indices():return ScoreReductionLayout.rotation_indices()
+
+    @staticmethod
+    def _forget(value):
+        for name in tuple(vars(value)):
+            if name.startswith('_public_'):delattr(value,name)
+        return value
+
+    def evaluate_tile(self,value,*,capture_checkpoints=False):
+        if type(capture_checkpoints)is not bool:raise ValueError('checkpoint option must be an explicit bool')
+        self.reduction._validate(value,24)
+        arithmetic=self.arithmetic;context=arithmetic.ctx;cache=context._param_cache
+        input_level=arithmetic._level(value);input_scale=value._ckks_scale
+        q=tuple(cache.q_moduli_at_level(input_level))
+        plan=initial_softmax_plan(q,input_level=input_level,canonical_scale=arithmetic.scale)
+        contract=self.contract;layout=self.layout
+        snapshots={};original=value
+        fingerprint=self.reduction._value_fingerprint(value)
+        def guard():
+            self.reduction._guard_context()
+            if (self.arithmetic is not arithmetic or arithmetic.ctx is not context or context._param_cache is not cache
+                    or self.layout is not layout or self.contract is not contract
+                    or tuple(cache.q_moduli_at_level(input_level))!=q
+                    or self.reduction._value_fingerprint(original)!=fingerprint):
+                raise ValueError('initial-softmax static input/context/contract changed')
+        # The local callback wrapper validates the captured input immediately,
+        # before the reduction may execute its next rotate/add primitive.
+        callback=self.reduction.progress
+        def observed_progress(*args):
+            callback(*args);guard()
+        reduction=ScoreReduction(arithmetic,layout,
+            progress=observed_progress if callback is not None else None)
+        def note(name,result):
+            guard();self._forget(result)
+            if arithmetic._level(result)!=plan['levels'][name] or type(result._ckks_nsd)is not int or result._ckks_nsd!=1:
+                raise RuntimeError('initial-softmax primitive depth/NSD differs')
+            if capture_checkpoints:snapshots[name]=result
+            reduction._note('initial softmax '+name,result);guard();self._forget(result)
+            return result
+        mean=note('score_mean',reduction.mean(value))
+        # Frozen center/32 then exp domain map*2 is exactly the power-of-two
+        # coefficient1/16. Public masking is applied before polynomial powers.
+        t=note('normalized_t',arithmetic.weighted_sum([value,mean],
+            [layout.input_mask/16.,-layout.input_mask/16.]))
+        del mean,value
+        terms={1:t}
+        def power(n):
+            if n not in terms:terms[n]=self._forget(arithmetic.multiply(power(n//2),power((n+1)//2)))
+            return terms[n]
+        coefficients=contract.power_coefficients
+        base=note('base_exp',arithmetic.weighted_sum([power(i) for i in range(1,9)],
+            [coefficients[i]*layout.input_mask for i in range(1,9)],bias=coefficients[0]*layout.input_mask))
+        terms.clear();del t
+        denominator=note('mean_exp',reduction.mean_with_dummy(base,
+            domain=contract.initial_domain,inactive_dummy=1.))
+        inverse=None
+        for update,inverse in integer_newton_updates(arithmetic,denominator,normalization_factor=1,
+                initial_estimate=contract.initial_seed,updates=contract.initial_updates,
+                first_output_scale=plan['static_inverse_scale_plan']['initial_target_scale']):
+            guard();reduction._note(f'initial softmax inverse update{update}',inverse);guard()
+        inverse=note('inverse',inverse);del denominator
+        product=note('base_times_inverse',arithmetic.multiply(base,inverse));del base,inverse
+        if product._ckks_scale!=plan['actual_product_scale']:
+            raise RuntimeError('initial-softmax product scale differs from actual recurrence')
+        output=note('probabilities',arithmetic.weighted_sum([product],[layout.mean_weight]));del product
+        if output._ckks_scale!=arithmetic.scale:raise RuntimeError('initial-softmax output scale differs')
+        self.last_plan=plan
+        return (output,snapshots) if capture_checkpoints else output

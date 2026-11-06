@@ -1,0 +1,35 @@
+F.........................                                               [100%]
+=================================== FAILURES ===================================
+________________ test_actual_secure_parameters_without_backend _________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x795384de3bb0>
+
+    def test_actual_secure_parameters_without_backend(monkeypatch):
+     import jax
+     monkeypatch.setattr(jax,'devices',lambda:(_ for _ in ()).throw(AssertionError('backend forbidden')))
+>    assert abs(check_parameters(parameters())-206.9965209854861)<1e-10
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/bert-qkv-file-component-20261103/prototype/test_component.py:22: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/tmp/bert-qkv-file-component-20261103/prototype/contracts.py:24: in check_parameters
+    from jaxite_word import he_params
+/tmp/bert-qkv-file-component-20261103/checkout/jaxite_word/he_params.py:33: in <module>
+    import bconv
+/tmp/bert-qkv-file-component-20261103/checkout/jaxite_word/bconv.py:17: in <module>
+    _is_nvidia = "NVIDIA" in jax.devices()[0].device_kind
+                             ^^^^^^^^^^^^^
+/tmp/bert-qkv-file-component-20261103/prototype/test_component.py:21: in <lambda>
+    monkeypatch.setattr(jax,'devices',lambda:(_ for _ in ()).throw(AssertionError('backend forbidden')))
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+.0 = <tuple_iterator object at 0x795370bfd750>
+
+>   monkeypatch.setattr(jax,'devices',lambda:(_ for _ in ()).throw(AssertionError('backend forbidden')))
+E   AssertionError: backend forbidden
+
+/tmp/bert-qkv-file-component-20261103/prototype/test_component.py:21: AssertionError
+=========================== short test summary info ============================
+FAILED ../../tmp/bert-qkv-file-component-20261103/prototype/test_component.py::test_actual_secure_parameters_without_backend
+1 failed, 25 passed in 0.64s

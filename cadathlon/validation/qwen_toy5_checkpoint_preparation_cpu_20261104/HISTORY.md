@@ -1,0 +1,9 @@
+# Preserved history
+
+1. The original seven-module runtime was source-authored only. Its AST syntax correction and original pre-fix oracle text remain in `source/parent250/readable/history/`; no runtime failure was observed for that authoring correction.
+2. The initial source-capture helper compared full stat results, including access time after reading. It failed before source-map/archive publication. The stable identity comparison was corrected; both helper versions and its exact authoring-history receipt remain under `source/v1/history/`. This was a capture-tool failure, not a test or numerical failure.
+3. The root-authorized first focused run selected 48 tests and returned 42 passes/6 failures. The fixture included all 38 internal refresh start/complete phase events. The exact failed proof, logs, XML, source archive, harness, root terminal and owner receipts remain under `proof/v1` and `reviews/root-v1`.
+4. The separate successor changes only the fixture's semantic phase selection, retaining all expected indices/assertions and runtime250. Exact before-source, patch, correction and source-authoring script are under `source/v2/history/`. The harness successor also adds explicit `-c /dev/null` and derived source/config pins; both build scripts and exact patches are retained.
+5. Root separately authorized and owned the corrected run. All 48 tests passed; root independently checked exact source/execution/start/end/archive, XML, audit and terminal/absence evidence. The terminal peer readback is separate from the pre-execution source/harness reviews. No tests were rerun while assembling this capsule.
+
+The original handoffs retain their historical unexecuted/preparation-only flags. The version 1 failure is not hidden or reclassified. Neither root late observation establishes an independent live identity observation.

@@ -1,0 +1,16 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+____ test_callback_forgets_annotations_on_current_and_earlier_owned_outputs ____
+test_first_attention_guards.py:44: in test_callback_forgets_annotations_on_current_and_earlier_owned_outputs
+    assert not any(k.startswith('_public_') for k in vars(current))
+E   assert not True
+E    +  where True = any(<generator object test_callback_forgets_annotations_on_current_and_earlier_owned_outputs.<locals>.<genexpr> at 0x763008713ed0>)
+_______ test_distinct_bound_aware_linear_arithmetic_rejected_before_work _______
+test_first_attention_guards.py:55: in test_distinct_bound_aware_linear_arithmetic_rejected_before_work
+    with pytest.raises((TypeError,ValueError),match='bound'):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE any of (TypeError, ValueError)
+=========================== short test summary info ============================
+FAILED test_first_attention_guards.py::test_callback_forgets_annotations_on_current_and_earlier_owned_outputs
+FAILED test_first_attention_guards.py::test_distinct_bound_aware_linear_arithmetic_rejected_before_work
+2 failed, 5 deselected in 0.27s

@@ -1,0 +1,46 @@
+..........F.                                                             [100%]
+=================================== FAILURES ===================================
+_________ test_parent_callback_replacement_retains_entered_child[body] _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75b825c63230>
+mutation = 'body'
+
+    @pytest.mark.parametrize('mutation',['refresh','check','descriptor','body'])
+    def test_parent_callback_replacement_retains_entered_child(monkeypatch,mutation):
+        held={};originals=[];error=KeyboardInterrupt('synthetic public primary')
+        def progress(label,value,metadata):
+            if '.softmax.C0.'not in label or not label.endswith('normalized_t.refresh'):return
+            child=held['child'];originals.append(weakref.ref(value.polynomial))
+            if mutation=='body':value.polynomial=np.zeros(65536);raise error
+            if mutation=='descriptor':object.__setattr__(child.softmax.cohorts[0][0],'refresh_bound',16.)
+            else:setattr(child.softmax.refresh_binding,mutation,lambda *args,**kwargs:value)
+        owner,a,r=setup(monkeypatch,leaf.positions(8),progress);child=owner._make_attention(0);held['child']=child
+        values=inputs(8)
+        with pytest.raises(KeyboardInterrupt if mutation=='body'else ValueError)as caught:
+            owner._child_call('layer0.attention',child,lambda:child.evaluate(values))
+        if mutation=='body':assert caught.value is error
+        gc.collect();assert originals[0]()is not None and join._QUARANTINE and cohort._QUARANTINE
+        assert owner._child is child and child.softmax._failure is not None
+        assert child.last_run is None and child.softmax.last_run is None
+>       with pytest.raises(RuntimeError):owner._full_guard()
+                                         ^^^^^^^^^^^^^^^^^^^
+
+test_cohort_full_integration.py:154: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+checkout/cadathlon/common/encrypted_qwen_full_model.py:161: in _full_guard
+    self.parameters.check();self.outer.check();self._check_refs()
+                                               ^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <encrypted_qwen_full_model.QwenFullModel object at 0x75b820840cd0>
+
+    def _check_refs(self):
+        for value,arrays,state in (*self._refs.values(),*self._phase_refs.values()):
+>           if value.polynomial is not arrays[0] or self._fingerprint(value)!=state:raise ValueError('retained join source/result changed')
+                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           ValueError: retained join source/result changed
+
+checkout/cadathlon/common/encrypted_qwen_attention_join.py:264: ValueError
+=========================== short test summary info ============================
+FAILED test_cohort_full_integration.py::test_parent_callback_replacement_retains_entered_child[body]
+1 failed, 11 passed in 165.97s (0:02:45)

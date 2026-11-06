@@ -1,0 +1,52 @@
+{
+  "utc": "2026-11-04T03:49:10.651685+00:00",
+  "source_root": "/tmp/qwen-expanded-prefix-observer-runtime-20261104",
+  "source_hashes": {
+    "model_runtime.py": "8f70640d64c92e7e5aea388d8ff6249c6b4a606c48535640361fbcf0ab695773",
+    "native_observer.py": "c066b72afa5f8f427071f21b423e1ea740a23fe65887397dccb1ecff63d6bc27",
+    "ranges.py": "90da6e7a1e209044bc0771139e62f6bc87e8d06e35d413257d104e22a4a3b4eb",
+    "workload.py": "536acf21d4e1027e1aa602bc3a523b06037a61b02395d1326ebc115a90b0e61f",
+    "observed_reference.py": "582ebe0f985a56f0dc37f9e357c9675519357fbe3b45681d91132fd9865c14d4",
+    "reference.py": "667c8483648adcf583212b0f828347614423c1c1401807f4f9512612f74aa147",
+    "arithmetic.py": "9689b843b4ec2d0a0ef724dbdca7a516e9a4f23da83f83af5571da13380e9a6f",
+    "test_model_runtime.py": "0d3f21aa2e3ee580c3277bf747c7ebfc311d04c2cc8f486281b00b6c1c099c19",
+    "cleanup_origin.py": "d74e991cc17121752e355f6313bb597ed0f6be887aa7b4a2007c7288c6448c75"
+  },
+  "lifecycle_source_hashes": {
+    "observer_process.py": "1c6af351196b0c942cd474272de90864377b3c81f291a42c1d7813b5cd34f694",
+    "input_gate.py": "44b3629ad486a0035515ef1de50265de39caf8dc8dceecc578209cd060606ac7",
+    "freeze_io.py": "4db4dba8ac9b5215cfdcc5089ea62da27f7086079704fea263254397d2e5363d",
+    "cleanup_origin.py": "d74e991cc17121752e355f6313bb597ed0f6be887aa7b4a2007c7288c6448c75"
+  },
+  "prior_review_sha256": "3cc630b786e65cd9ea920570ec62ecb298397052d415d2b083047da50e0637b9",
+  "scope": "Independent read-only source review; no input/model/token/public parameter bodies or test/runtime execution",
+  "status": "No remaining concrete blocker found in this scoped current-source review",
+  "journal_delta": "Both native/exact private successful records now retain full finite sufficient-statistics observations, bound to the existing canonical ranges_sha256; no raw activations or logits are added. The actual observed object already entered each matching Aggregate. Test code independently rehashes observations and checks113 sites.",
+  "lifecycle_checks": [
+    "Genuine body protected before cleanup; sticky same-object rethrows cannot retag it; cleanup-only cancellation precedence preserved",
+    "All3 authenticated model assets rechecked on exit with attempt-all handling, including after body or earlier postcheck failure",
+    "Borrowed calibration file and parent ownership/mode/size/hash checked before/after read and final recheck; input body never removed",
+    "Signal original mask queried before mutation and original handlers captured before setter calls; main-thread scope limitation explicit",
+    "Output acquired fresh and reopened only by retained inode; final publication follows cleanup/signal restoration attempts; external exit0 required even if final descriptor-close fails after writing report",
+    "Retire now attempts KILL/direct wait/final group observation after TERM/poll faults; child_cleanup retains current direct/group status on failure",
+    "Collector acceptance now requires complete/cleanup/restoration/terminal/source flags; actual observer additionally requires admissible initial selection/calibration reauthentication/private close"
+  ],
+  "found_and_resolved": [
+    {
+      "issue": "Finite nrmse overflow could produce invalid strict JSON",
+      "resolution": "Null metric with failed flags, source regression read"
+    },
+    {
+      "issue": "retire TERM/poll failure could skip later retirement attempts",
+      "resolution": "Current attempt-all retire and final reporting reviewed; no execution claim"
+    }
+  ],
+  "review_does_not_claim": [
+    "No actual model/candidate result",
+    "No independent rerun of tests",
+    "No real process stress",
+    "No OS isolation or process-wide signal atomicity",
+    "No actual execution authorization"
+  ],
+  "final_delta": "Narrow read: escaped cleanup-origin failure in action/outer scope now forces cleanup_completed false; every failed terminal clears initial_selection_admissible. Arithmetic and nine prior source pins unchanged. No new blocker found; no execution."
+}

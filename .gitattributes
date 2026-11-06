@@ -1,0 +1,87 @@
+# Preserve the required space prefix on empty context lines in archived diffs.
+# Whitespace checks remain enabled for the applied source files.
+cadathlon/validation/*.patch whitespace=-blank-at-eol
+cadathlon/validation/**/*.patch whitespace=-blank-at-eol
+cadathlon/validation/**/root-review/*.diff whitespace=-blank-at-eol
+# Exact historical source copies retain upstream whitespace for hash verification.
+cadathlon/validation/**/sources/** -whitespace
+# Keep raw test diagnostics byte-for-byte, including traceback whitespace.
+cadathlon/validation/**/*.log -whitespace
+cadathlon/validation/**/*.xml -whitespace
+# Preserve this measured raw patch's trailing blank line as part of its hash.
+cadathlon/validation/bert_qk_component_prelaunch_cpu_20261103/routing_helper.patch -whitespace
+cadathlon/validation/integer_newton_promotion_cpu_20261103/candidate.patch -whitespace
+cadathlon/validation/qwen_native_calibration_cpu_20261103/observed_reference.py -whitespace
+cadathlon/validation/qwen_calibration_candidate1_cpu_20261103/arithmetic.py -whitespace
+cadathlon/validation/qwen_approximate_calibration_smoke_cpu_20261103/arithmetic.py -whitespace
+cadathlon/validation/qwen_approximate_calibration_cpu_20261103/arithmetic.py -whitespace
+cadathlon/validation/qwen_heldout_candidate1_cpu_20261103/arithmetic.py -whitespace
+cadathlon/validation/qwen_calibration_candidate2_cpu_20261103/arithmetic.py -whitespace
+cadathlon/validation/bert_first_attention_owner_cpu_20261103/source/ideal_primitives.py -whitespace
+cadathlon/validation/bert_all_row_norm_owner_ideal_cpu_20261103/source/encrypted_bert_all_row_norm.py -whitespace
+cadathlon/validation/bert_all_row_norm_owner_ideal_cpu_20261103/development-v1-retained/checkout/cadathlon/common/encrypted_bert_all_row_norm.py -whitespace
+cadathlon/validation/bert_all_ffn_tile_owner_cpu_20261103/candidate/encrypted_bert_all_row_norm.py -whitespace
+# Preserve the exact frozen loader byte sequence captured by the handler proof.
+cadathlon/validation/bert_full_file_stages_mocked_cpu_20261103/source/key_contexts.py whitespace=-blank-at-eol
+# Exact source-bound loader successor retains inherited whitespace.
+cadathlon/validation/prepared_rotation_loader_mock_cpu_20261103/key_contexts.py whitespace=-blank-at-eol
+# Exact RMSNorm evidence retains the measured final blank line in these sources.
+cadathlon/validation/qwen_rmsnorm_owner_ideal_cpu_20261103/ideal_primitives.py whitespace=-blank-at-eof
+cadathlon/validation/qwen_rmsnorm_owner_ideal_cpu_20261103/inputs/frozen_arithmetic.py whitespace=-blank-at-eof
+cadathlon/validation/qwen_rmsnorm_owner_ideal_cpu_20261103/preserved-development-v1/ideal_primitives.py whitespace=-blank-at-eof
+cadathlon/validation/qwen_softmax_silu_bounds_public_20261103/inputs/arithmetic.py whitespace=-blank-at-eof
+cadathlon/validation/qwen_causal_softmax_public_design_20261103/inputs/frozen_arithmetic.py whitespace=-blank-at-eof
+cadathlon/validation/qwen_causal_softmax_owner_ideal_cpu_20261103/inputs/frozen_arithmetic.py whitespace=-blank-at-eof
+cadathlon/validation/qwen_causal_softmax_synchronous_cpu_20261103/execution_references/key_contexts.py whitespace=-blank-at-eol
+cadathlon/validation/qwen_causal_softmax_synchronous_cpu_20261103/inputs/frozen_arithmetic.py whitespace=-blank-at-eof
+# Retain the exact reviewed Qwen loader bytes in the public evidence copy.
+cadathlon/validation/qwen_file_engine_integration_preparation_cpu_20261104/source/qwen_key_loader.py whitespace=-blank-at-eol
+# Preserve unified-diff context markers in the reviewed writer patch evidence.
+cadathlon/validation/qwen_key_producer_preparation_cpu_20261104/history/writer-plan/proposed.patch.txt whitespace=-blank-at-eol
+# Preserve unified-diff context markers in the reviewed parameter-reader patch.
+cadathlon/validation/qwen_model_stage_preparation_cpu_20261104/source/parameter_identity.patch.txt whitespace=-blank-at-eol
+# Preserve unified-diff context markers in the reviewed authority harness patches.
+cadathlon/validation/qwen_keygen_authority_preparation_cpu_20261104/harness/executed_driver.py.patch whitespace=-blank-at-eol
+cadathlon/validation/qwen_keygen_authority_preparation_cpu_20261104/harness/worker_driver.py.patch whitespace=-blank-at-eol
+# Preserve exact context markers in readonly validation source/history patches.
+cadathlon/validation/qwen_model_store_readonly_validation_cpu_20261104/actual/source/readable/readonly_successor.patch.txt whitespace=-blank-at-eol
+cadathlon/validation/qwen_model_store_readonly_validation_cpu_20261104/focused/executed_driver.py.patch.txt whitespace=-blank-at-eol
+cadathlon/validation/qwen_model_store_readonly_validation_cpu_20261104/focused/worker_driver.py.patch.txt whitespace=-blank-at-eol
+cadathlon/validation/qwen_model_store_readonly_validation_cpu_20261104/history/focused-v2/child_ownership.patch.txt whitespace=-blank-at-eol
+cadathlon/validation/qwen_model_store_readonly_validation_cpu_20261104/metadata/executed8/ownership.patch.txt whitespace=-blank-at-eol
+# Preserve the frozen arithmetic bytes in the full-HE public plan evidence.
+cadathlon/validation/qwen_candidate3_full_he_plan_public_20261103/inputs/arithmetic.py whitespace=-blank-at-eof
+
+# Preserve exact diff context in the held-parent writer and harness evidence.
+cadathlon/validation/qwen_keygen_held_parent_preparation_cpu_20261104/source74/writer.patch whitespace=-blank-at-eol
+cadathlon/validation/qwen_keygen_held_parent_preparation_cpu_20261104/focused83/executed_driver.py.patch whitespace=-blank-at-eol
+cadathlon/validation/qwen_keygen_held_parent_preparation_cpu_20261104/focused83/worker_driver.py.patch whitespace=-blank-at-eol
+cadathlon/validation/qwen_keygen_held_parent_preparation_cpu_20261104/authority28/writer-prerequisite.patch whitespace=-blank-at-eol
+# Preserve exact diff context in the client-authority fixture and harness history.
+cadathlon/validation/qwen_client_role_authority_preparation_cpu_20261104/history/harness-correction/metadata-only.patch.txt whitespace=-blank-at-eol
+cadathlon/validation/qwen_client_role_authority_preparation_cpu_20261104/history/source53/test-corrections.patch.txt whitespace=-blank-at-eol
+# Preserve exact unified-diff context in the proc-self negative-probe history.
+cadathlon/validation/qwen_proc_self_audit_preparation_cpu_20261104/keygen/negative-read-correction/SCOPE.md.patch.txt whitespace=-blank-at-eol
+cadathlon/validation/qwen_proc_self_audit_preparation_cpu_20261104/keygen/negative-read-correction/proc_self_probe.py.patch.txt whitespace=-blank-at-eol
+# Preserve exact unified-diff context in the Q5 arithmetic provenance.
+cadathlon/validation/qwen_toy5_checkpoint_preparation_cpu_20261104/source/parent250/readable/provenance/arithmetic-from-toy4.patch.txt whitespace=-blank-at-eol
+# Preserve exact unified-diff context in the snapshot guard and harness history.
+cadathlon/validation/qwen_server_admission_snapshot_preparation_cpu_20261104/failed/evidence/executed_driver.py.patch whitespace=-blank-at-eol
+cadathlon/validation/qwen_server_admission_snapshot_preparation_cpu_20261104/failed/evidence/worker_driver.py.patch whitespace=-blank-at-eol
+cadathlon/validation/qwen_server_admission_snapshot_preparation_cpu_20261104/history/guard-v2/guard.patch whitespace=-blank-at-eol,-blank-at-eof
+cadathlon/validation/qwen_server_admission_snapshot_preparation_cpu_20261104/history/tests-v3/source.patch whitespace=-blank-at-eol
+cadathlon/validation/qwen_server_admission_snapshot_preparation_cpu_20261104/measured/executed_driver.py.patch whitespace=-blank-at-eol
+# Preserve exact unified-diff context in device component and test history.
+cadathlon/validation/qwen_device_capacity_preparation_cpu_20261104/history/device-v2/source.patch whitespace=-blank-at-eol,-blank-at-eof
+cadathlon/validation/qwen_device_capacity_preparation_cpu_20261104/history/tests-v1/parent_owner_adaptation.patch whitespace=-blank-at-eol
+cadathlon/validation/qwen_device_capacity_preparation_cpu_20261104/measured/executed_driver.py.patch whitespace=-blank-at-eol
+cadathlon/validation/qwen_device_capacity_preparation_cpu_20261104/measured/worker_driver.py.patch whitespace=-blank-at-eol
+# Preserve the original final blank line in the frozen server integration patch.
+cadathlon/validation/qwen_server_snapshot_integration_preparation_cpu_20261104/lineage/390/source.patch whitespace=-blank-at-eol,-blank-at-eof
+# Preserve exact frozen source and patch bytes in the Q5 role evidence.
+cadathlon/validation/qwen_toy5_role_preparation_cpu_20261104/selected-runtime/provenance/q5_key_readers.py.patch whitespace=-blank-at-eol,-blank-at-eof
+cadathlon/validation/qwen_toy5_role_preparation_cpu_20261104/selected-runtime/q5_key_loader.py whitespace=-blank-at-eol
+# Keep final snapshot and patch evidence byte-identical to their recorded hashes.
+cadathlon/validation/p3_original_six_tpu_20261105/final/builder.py whitespace=-blank-at-eof
+cadathlon/validation/p3_original_six_tpu_20261105/final/verify.py whitespace=-blank-at-eof
+cadathlon/validation/qwen_server_device_integration_preparation_cpu_20261105/source/handoffs/460/TEST_SCOPE.md.patch whitespace=-blank-at-eol,-blank-at-eof

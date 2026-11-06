@@ -1,0 +1,247 @@
+--- /dev/null
++++ b/cadathlon/common/encrypted_bert_all_ffn.py
+@@ -0,0 +1,231 @@
++"""Complete isolated twelve-layer FFN/residual/MLP norm over one valid row tile.
++
++Two explicit full-slot refreshes use caller-assumed B128 input and the frozen
++layer-indexed public GELU envelope. No decoded ranges, codec, key generation or implicit
++refresh is used. Whole-chain HE/domain accuracy remains unvalidated.
++"""
++from collections.abc import Mapping
++from types import MappingProxyType
++import hashlib
++import math
++import numpy as np
++
++from encrypted_bert_all_gelu import BertGelu, BertGeluContract
++from encrypted_fullslot_refresh_binding import FullSlotRefreshBinding, typed
++from encrypted_scale_planning import weighted_sum_scale, drop_divisor
++
++TENSORS = {0: {'intermediate.bias': ((3072,), 'b279856af79c545cdb2f914e02e9a953204152319f160e484ebfcc8d6b825774'),
++     'intermediate.weight': ((3072, 768), '9a0c8aa79b2bac48fc35f37b6695d253080f7eedd556b70b65411aab9c319fd3'),
++     'output.bias': ((768,), '744629ad72bdc326f22cd92c6429610c06ed41dd3a2fedd307d3f01f861638b9'),
++     'output.weight': ((768, 3072), '754a718ad071ca9ec27790aee1b82dc9db41cc3ef90c6c73a90ada8668f6fa0d')},
++ 1: {'intermediate.bias': ((3072,), '1178f6555a12ebab731d65f1ef4e86825c41cc218266f37601fb2bfbd290af93'),
++     'intermediate.weight': ((3072, 768), '1f0484087c7995968611527bec325da22ff1557b59aec586b749ffd7bc80e16d'),
++     'output.bias': ((768,), 'e85913bbdead5aaba5eb28544040cac7d020f8b943d509dcf23064c7eac3c40d'),
++     'output.weight': ((768, 3072), '5cbdc79e05f28dd68d3a57c30834a0b2beec337b7a8c27bed15885eda997cb35')},
++ 2: {'intermediate.bias': ((3072,), 'fbe47ae7b52ce92fafdfaf78d0f6401afef34a09e4ab9e635d764b126c13897a'),
++     'intermediate.weight': ((3072, 768), '51a2ee2649dc7b60d5979dbff4878adea194e3be8f1740759826454a2c171fc2'),
++     'output.bias': ((768,), 'cf57db5e9f5c392b9e7e2bbe89d1e9a96542c3458b19e029b5ee4ddbb46e195a'),
++     'output.weight': ((768, 3072), '805a2f6ad0d3ab65df5571b3cd29069250b708215fb1b5b09e6e2aac54aa2674')},
++ 3: {'intermediate.bias': ((3072,), '69799a8b95a65ecf4f1704773880a292b60e341993fed3db70cbb220b5e1f253'),
++     'intermediate.weight': ((3072, 768), 'b0fbb462453815217117759dfbc7ccf01d901714fdc46020037c967cd60784b4'),
++     'output.bias': ((768,), '51acba7460387d88652e3d066447d7d80f2f6812fa400144339d10d9d55df9fd'),
++     'output.weight': ((768, 3072), '0a6e6ad2670ae04df7515948eebae3d44969fbe50669bda9e56ed7cb1134bba3')},
++ 4: {'intermediate.bias': ((3072,), '4e69519448ce87cd5cf68c210bb2347d36df5d3f9f228f7cd4ed755b117b6ac7'),
++     'intermediate.weight': ((3072, 768), '7357293696739a774307362c023afdd3f663dc3fce5d2aaa97f630173b484504'),
++     'output.bias': ((768,), '88899dc48d4dedefc59e3972c5cded3af2941a71842806a5e24ef0d51a1bdf7c'),
++     'output.weight': ((768, 3072), 'b81897cc9b3dd3e89c1eeb9b65212db130346f309a339feab088dfc8db3ec495')},
++ 5: {'intermediate.bias': ((3072,), '0a725fee4ce0dec55902a00f0e624649ba079d0c99448df821328cf80406422f'),
++     'intermediate.weight': ((3072, 768), '595fa1ca028cb6b3ed1e59314cfcce33d9c930949a0508d2952a6274fa4ca8dd'),
++     'output.bias': ((768,), '82f83d9b89060ee88d6cb1d36a927c28104c140ff4a109140bca3f67b785acde'),
++     'output.weight': ((768, 3072), '3c681293ab1fbb222e49d36caaa95662e663c441c9751cf88b6fc624f63cbb57')},
++ 6: {'intermediate.bias': ((3072,), '8eaefee26791f3b39a906f4e47afe423ac29da46978e0054599ab7308e414a46'),
++     'intermediate.weight': ((3072, 768), '938a41ec46eefaf709eb1638ec1e9d3105d05636678fc77846147c69ab32061e'),
++     'output.bias': ((768,), '61f197a77d3d8bf78770ac27f01ad1e26082008d52d4aa746bd2bf081cc840e0'),
++     'output.weight': ((768, 3072), 'b4230f3018a58784346b104c86d8acdd60459cd12d43983194ffb02e5e1bfadb')},
++ 7: {'intermediate.bias': ((3072,), 'b82b75188bcfaeb69883b9551f3ae50bae4ea679c8a0b2248ede339361a0a6ba'),
++     'intermediate.weight': ((3072, 768), 'f3ed256a2a9ea1c76fa600bc7960e835a6160e789fca9d04c75486dcfa09e773'),
++     'output.bias': ((768,), '2026af55894c9ab1bccaa5d5ce3ab6c4884e1992f0f8fea6345aafbfd8f1e55a'),
++     'output.weight': ((768, 3072), 'ee98097cc9d95744f093ec1bca068de96bd02ec2325b75fdf3c88403488e66b1')},
++ 8: {'intermediate.bias': ((3072,), '0613cfd3daed9169e5bd462456e9803bbb291c03b0bb513cc3c240c8a2a79a6a'),
++     'intermediate.weight': ((3072, 768), '95bb55ddc5b9ff05165c5974f38dad86aafc13c732d6084ae8a198f8c0c1f9b5'),
++     'output.bias': ((768,), '31066e27803904a84bd6bfc048473bb374ccf52d212c4be0296464a86867da6c'),
++     'output.weight': ((768, 3072), '677a5f5938c959783d926209ed6974e8bed0a59a1ae04fb6b5529f89710de2ec')},
++ 9: {'intermediate.bias': ((3072,), 'fef4a372b34dd291728adbc23eb944b888841adea998f1bbcd0c3fe7e601e7e3'),
++     'intermediate.weight': ((3072, 768), '7e03b05477e1e30da50fdad94f4208f5c910652aa3d841f7a6c2be8af27a8c5f'),
++     'output.bias': ((768,), '7ff247b3200b8ef5a717fdde467afaaeca19b78144d486f238b0e70c4d30de81'),
++     'output.weight': ((768, 3072), '3437ecc7e00a1efd8c90e0b30188b1b3da7c7fdc52058b25d51258dd30a44bd1')},
++ 10: {'intermediate.bias': ((3072,), '48e30b1e29626dd37ffeac20c4a165cde0c832782361d95e1995eddec2b245e4'),
++      'intermediate.weight': ((3072, 768),
++                              'aba24dbc1bd8d8e73ef200cc5071088123cf758e7cfcbade9001f2b3465b19ff'),
++      'output.bias': ((768,), 'eb641b20b75160d24248f3f957dcaa7aa085669c0a0e7ae1bc6656fc72d754e1'),
++      'output.weight': ((768, 3072), 'c55d5c68b6656e4b90f50356bb556107800f0eea23da2da47dfe9ccc287d8402')},
++ 11: {'intermediate.bias': ((3072,), '020fdadeea09418c1bf7d4010ba16cb713bd2b1ecfc896e6968a60667fa36cb6'),
++      'intermediate.weight': ((3072, 768),
++                              '22890cc787dbf0b573a397d7e41a6ffe1e3b3161abc14e6cff5e65767ed57b9e'),
++      'output.bias': ((768,), '69960b262fba7bad0d288e83780d2835e709c0ae6a1156c27100b618153a30b3'),
++      'output.weight': ((768, 3072), '08c251bd3b1bb6826b27deb59d6d9c51ecd21d2a4d7320736bad6b7ea9753623')}}
++GELU_REFRESH_BOUNDS = (16.,64.,32.,32.,32.,32.,16.,64.,64.,64.,64.,16.)
++
++
++def freeze_weights(arrays, layer):
++    if type(layer) is not int or layer not in TENSORS:
++        raise ValueError('exact layer integer in0..11 required')
++    tensors = TENSORS[layer]
++    if not isinstance(arrays, Mapping) or set(arrays) != set(tensors):
++        raise ValueError('all four pinned full-width FFN tensors required')
++    result = {}
++    for name, (shape, expected) in tensors.items():
++        a = np.asarray(arrays[name])
++        if a.dtype.kind not in 'fiu' or a.shape != shape or not np.isfinite(a).all():
++            raise ValueError('invalid FFN tensor '+name)
++        with np.errstate(over='ignore', invalid='ignore'):
++            raw = a.astype('<f4')
++            lift = raw.astype('<f8')
++        if (not np.isfinite(raw).all() or not np.array_equal(a, lift)
++                or hashlib.sha256(raw.tobytes()).hexdigest() != expected):
++            raise ValueError('FFN tensor differs from exact pinned FP32 lift: '+name)
++        result[name] = np.frombuffer(lift.tobytes(), dtype='<f8').reshape(shape)
++    return MappingProxyType(result)
++
++
++class BertFFNTile:
++    def __init__(self, arithmetic, linear, refresher, arrays, manifest_bytes, gamma, beta,
++                 *, layer, original_positions, progress=None):
++        from encrypted_chained_streaming_linear import ChainedStreamingLinear
++        from encrypted_bert_all_row_norm import BertRowLayerNorm
++        if not isinstance(linear, ChainedStreamingLinear):
++            raise TypeError('promoted chained streaming linear required')
++        if (type(original_positions) is not tuple or not 1 <= len(original_positions) <= 16
++                or any(type(x) is not int or not 0 <= x < 128 for x in original_positions)
++                or tuple(sorted(set(original_positions))) != original_positions):
++            raise ValueError('one ordered compact valid query tile with original positions required')
++        if progress is not None and not callable(progress):
++            raise TypeError('progress must be callable or None')
++        self.arithmetic, self.linear, self.refresher = arithmetic, linear, refresher
++        self.model = freeze_weights(arrays, layer)
++        self.layer = layer
++        self._layer = typed(layer)
++        self.gelu_bound = GELU_REFRESH_BOUNDS[layer]
++        self.original_positions, self.progress = original_positions, progress
++        self.refresh_binding = FullSlotRefreshBinding(arithmetic, refresher)
++        self.gelu = BertGelu(arithmetic, BertGeluContract(manifest_bytes, layer), progress=self._callback)
++        self.normalizer = BertRowLayerNorm(arithmetic, manifest_bytes, gamma, beta,
++                                        site=f'{layer}.mlp', epsilon=1e-12, progress=self._callback)
++        normalizer = self.normalizer
++        self._active = False
++        self._source = self._source_state = None
++        self._retained = []
++        self.last_run = None
++        self._norm_progress = normalizer.progress
++        self._bound = (arithmetic, linear, refresher, normalizer, self.model, self.refresh_binding,
++                       self.gelu, progress, linear.arithmetic, linear.layout)
++        self._positions = original_positions
++        self._weights = self._weight_state()
++        self.required_keys = tuple(sorted(set(linear.required_rotation_indices(self.model['intermediate.weight'], linear.layout))
++                                  | set(linear.required_rotation_indices(self.model['output.weight'], linear.layout))))
++        self._required_keys = self.required_keys
++        self._guard()
++
++    def _weight_state(self):
++        return tuple((n, id(v), v.dtype.str, v.shape, v.strides, v.flags.writeable) for n, v in self.model.items())
++
++    def _fingerprint(self, value): return self.gelu._metadata._value_fingerprint(value)
++
++    def _guard(self):
++        now = (self.arithmetic, self.linear, self.refresher, self.normalizer, self.model,
++               self.refresh_binding, self.gelu, self.progress, self.linear.arithmetic, self.linear.layout)
++        if any(a is not b for a, b in zip(now, self._bound)):
++            raise ValueError('construction-bound FFN owner changed')
++        if (typed(self.layer) != self._layer
++                or typed(self.gelu_bound) != typed(GELU_REFRESH_BOUNDS[self.layer])
++                or typed(self.gelu.contract.layer) != self._layer
++                or typed(self.original_positions) != typed(self._positions) or self._weight_state() != self._weights
++                or typed(self.required_keys) != typed(self._required_keys)
++                or self.normalizer.progress is not self._norm_progress):
++            raise ValueError('public FFN model/position/key/callback contract changed')
++        ctx = self.arithmetic.ctx
++        if (self.linear.ctx is not ctx or self.linear.arithmetic.ctx is not ctx
++                or self.normalizer.arithmetic is not self.arithmetic
++                or self.normalizer.contract.site != f'{self.layer}.mlp'
++                or typed(self.linear.layout.slots) != (int, 65536)
++                or typed(self.linear.layout.features) != (int, 4096)
++                or self.arithmetic.refresher is not None or self.linear.arithmetic.refresher is not None
++                or callable(getattr(self.linear.arithmetic, 'declare_bound', None))
++                or typed(self.linear.arithmetic.scale) != typed(self.arithmetic.scale)):
++            raise ValueError('one static borrowed full-slot context required')
++        self.refresh_binding.check(); self.gelu._guard(); self.normalizer._guard()
++        from encrypted_chained_streaming_linear import require_chained_rotation_keys
++        require_chained_rotation_keys(ctx, self.required_keys)
++        if self._source is not None and self._fingerprint(self._source) != self._source_state:
++            raise ValueError('FFN original input changed')
++        if any(self._fingerprint(v) != state for v, state in self._retained):
++            raise ValueError('FFN retained residual changed')
++
++    def _callback(self, label, value, counts):
++        self._guard()
++        state = self._fingerprint(value)
++        if self.progress is not None: self.progress('FFN '+label, value, dict(counts))
++        self._guard()
++        if self._fingerprint(value) != state:
++            raise ValueError('FFN callback changed result metadata or payload')
++        for current in (value, *(v for v, _ in self._retained)):
++            for name in tuple(vars(current)):
++                if name.startswith('_public_'): delattr(current, name)
++
++    def _note(self, label, value, stages):
++        self._guard()
++        self.gelu._validate(value, 0)
++        for name in tuple(vars(value)):
++            if name.startswith('_public_'): delattr(value, name)
++        self._callback(label, value, {})
++        stages.append(dict(stage=label, level=self.arithmetic._level(value), scale=value._ckks_scale))
++        return value
++
++    def _linear(self, value, name, stages):
++        level = self.arithmetic._level(value)
++        expected = weighted_sum_scale([value._ckks_scale], self.arithmetic.scale,
++                    drop_divisor(self.arithmetic.ctx._param_cache.q_moduli_at_level(level), level))['output_scale']
++        result = self.linear.linear_tile(value, self.model[name+'.weight'], self.model[name+'.bias'],
++                                       valid_rows=len(self.original_positions))
++        if self.arithmetic._level(result) != level-1 or typed(result._ckks_scale) != typed(expected):
++            raise ValueError('dense output differs from actual scale/level plan')
++        return self._note(name+' dense', result, stages)
++
++    def evaluate_tile(self, value):
++        self._guard()
++        if self._active: raise ValueError('FFN tile cannot be reentered')
++        self.gelu._validate(value, 2)
++        self._active = True
++        self._source, self._source_state = value, self._fingerprint(value)
++        self.last_run = None
++        stages = []
++        try:
++            residual = self._note('input B128 refresh', self.refresh_binding.refresh(value, public_bound=128.), stages)
++            self._retained.append((residual, self._fingerprint(residual)))
++            middle = self._linear(residual, 'intermediate', stages)
++            activated = self._note('GELU', self.gelu.evaluate_tile(middle), stages)
++            refreshed = self._note('GELU refresh', self.refresh_binding.refresh(activated, public_bound=self.gelu_bound), stages)
++            output = self._linear(refreshed, 'output', stages)
++            combined = self.arithmetic.add(output, residual)
++            if self.arithmetic._level(combined) != 24 or typed(combined._ckks_scale) != typed(output._ckks_scale):
++                raise ValueError('residual addition changed actual first-operand metadata')
++            combined = self._note('residual', combined, stages)
++            self._retained.clear()
++            result = self.normalizer.normalize_tile(combined, valid_rows=len(self.original_positions),
++                                                   original_positions=self.original_positions)
++            final = self._note('MLP normalization', result.output, stages)
++            expected_level = 24 - (self.normalizer.inverse_evaluator.polynomial_depth(self.normalizer.approximation) + 5)
++            if self.arithmetic._level(final) != expected_level or expected_level < 2:
++                raise ValueError('full FFN tail differs from its selected norm continuation level')
++            self.last_run = dict(actual_metadata=stages, explicit_refresh_bounds=[128.,self.gelu_bound],
++                                layer=self.layer, gelu_degree=self.gelu.contract.degree,
++                                normalization_method=self.normalizer.contract.method,
++                                normalization_degree=self.normalizer.contract.degree,
++                                output_level=expected_level,
++                                original_positions=self.original_positions,
++                                range_verified=False, encrypted_error_verified=False)
++            return result
++        finally:
++            self._retained.clear()
++            self._source = self._source_state = None
++            self._active = False
+--- a/cadathlon/common/encrypted_fullslot_refresh_binding.py
++++ b/cadathlon/common/encrypted_fullslot_refresh_binding.py
+@@ -108,8 +108,8 @@
+     def refresh(self, value, *, public_bound):
+         self.check()
+         if self._active: raise ValueError('borrowed refresh binding cannot be reentered')
+-        if type(public_bound) is not float or public_bound not in (16., 128.):
+-            raise ValueError('FFN uses only the fixed B128-input/B16-GELU contracts')
++        if type(public_bound) is not float or public_bound not in (2., 16., 32., 64., 128.):
++            raise ValueError('only the fixed B2/B16/B32/B64/B128 public contracts are supported')
+         self._validate(value, 2)
+         before = self._metadata._value_fingerprint(value)
+         self._active = True

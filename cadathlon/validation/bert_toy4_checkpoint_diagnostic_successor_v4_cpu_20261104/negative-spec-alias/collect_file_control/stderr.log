@@ -1,0 +1,15 @@
+Traceback (most recent call last):
+  File "<string>", line 15, in <module>
+    runpy.run_path(sys.argv[0],run_name='__main__')
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 294, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/tmp/bert-toy4-spec-alias-review-20261104/negative-v1/source/collect.py", line 46, in <module>
+    _BOOTSTRAP=guard0.bootstrap(args0.source_manifest,args0.source_manifest_sha256,root=HERE,entry=__file__)
+  File "/tmp/bert-toy4-spec-alias-review-20261104/negative-v1/source/source_guard.py", line 138, in bootstrap
+    report=check(expected,root,fresh=True,entry=entry);report['manifest_sha256']=pin
+  File "/tmp/bert-toy4-spec-alias-review-20261104/negative-v1/source/source_guard.py", line 127, in check
+    if fresh and not allowed:raise ValueError('helper/runtime preloaded or aliased before source gate: '+name)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: helper/runtime preloaded or aliased before source gate: review_unknown_alias

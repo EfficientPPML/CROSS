@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/snapshot_child.py", line 218, in <module>
+    if __name__=='__main__':main()
+                            ~~~~^^
+  File "/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/snapshot_child.py", line 63, in main
+    public=file_module.PublicContract((('synthetic-public-marker',b'synthetic non-proof metadata'),))
+  File "<string>", line 4, in __init__
+  File "/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/runtime/qwen_file_contract.py", line 45, in __post_init__
+    def __post_init__(self):self.check()
+                            ~~~~~~~~~~^^
+  File "/tmp/qwen-server-admission-snapshot-focused-proof-20261104/preparation-v1/execution/runtime/qwen_file_contract.py", line 51, in check
+    if type(self.blobs)is not tuple or len(self.blobs)!=len(PUBLIC_PINS):raise ValueError('public source state changed')
+                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: public source state changed

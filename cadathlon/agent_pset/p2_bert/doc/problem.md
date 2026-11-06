@@ -140,14 +140,14 @@ file-based harness establishes full benchmark completion.
 
 Work in four milestones:
 
-1. **P4.1 — establish evaluation:** reproduce the benchmark's plaintext
+1. **P2.1 — establish evaluation:** reproduce the benchmark's plaintext
    BERT/MRPC results and connect the CROSS submission to its stage interfaces.
-2. **P4.2 — enable CROSS operations on TPUs:** implement and validate encrypted
+2. **P2.2 — enable CROSS operations on TPUs:** implement and validate encrypted
    transformer operators and a full-width encoder block, extending CROSS as
    needed.
-3. **P4.3 — enable full BERT on TPUs:** execute all 12 layers, pooler and
+3. **P2.3 — enable full BERT on TPUs:** execute all 12 layers, pooler and
    classifier with CROSS and pass the benchmark evaluation gates below.
-4. **P4.4 — improve benchmark results:** profile the working implementation,
+4. **P2.4 — improve benchmark results:** profile the working implementation,
    optimize CROSS and your BERT execution, and rerun the same benchmark
    instances. Report the latency and throughput before and after each change
    and the resulting performance points under section 4.
@@ -212,7 +212,30 @@ make test                  # your CROSS implementation; TODOs initially fail
 make submit                # local ../submission.tar.gz, no upload
 ```
 
+`make preflight` checks interfaces without initializing an accelerator and
+fails for the unimplemented starter. A preflight pass does not validate
+encryption. `bert_reference.py` is a separately selectable,
+**experimental-unvalidated toy encrypted circuit**, not a measured BERT
+baseline. It has not passed all six encrypted fixtures and does not implement
+the full-model file-based harness stages. Its preflight therefore reports
+those missing stages. Select a module explicitly with
+`--implementation bert_reference.py`; use `--require-tpu` for actual TPU
+smoke measurements. The result retains its implementation status and labels
+the device count as requested, rather than claiming verified utilization.
+`CROSS_PUBLIC_KEY_DIRECTORY` selects a directory with sufficient space for
+its large temporary public evaluation keys. Neither interface checks nor
+operator tests establish full-model accuracy or a scoring calibration.
+
 Clone and stage the pinned benchmark in a separate workspace:
+
+Staging copies the shared Python runtime into `submissions/_cross_common/`
+and records its exact file hashes in `cross_staging_manifest.json`. The file
+stages and experimental adapter imports use these local copies and reject
+missing or changed helpers; restage after source changes. `CROSS_ROOT` still
+selects the patched core library. This dependency closure does not supply the
+five encrypted file-stage implementations or establish full-model correctness.
+Select staged adapters with the matching `submissions/runner.py` in a fresh
+process; the resolver rejects mixing helper copies from different runs.
 
 ```bash
 git clone https://github.com/fhe-benchmarking/BERT.git /tmp/bert-upstream

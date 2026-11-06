@@ -1,0 +1,146 @@
+"""One-process public/synthetic preparation only; no actual execution mode.
+
+Run from an externally copied execution tree with a separately pinned manifest.
+The caller owns direct wait/group-absence and the independent outer receipt.
+Historical collectors/verifiers are explicitly unavailable through this entry.
+"""
+from pathlib import Path,PurePosixPath
+import argparse,hashlib,importlib.abc,json,os,stat,sys,time,xml.etree.ElementTree as ET
+
+TESTS=('test_expanded_contract.py','test_expanded_fixture.py','test_full_plan.py','test_full_owner.py',
+       'test_profile.py','test_setup_scope.py','test_full_callback_negative.py','test_full_returned.py','test_full_entry_failure.py')
+EXPECTED_TESTS=176
+FORBIDDEN=('jax','jaxlib','torch','transformers','safetensors')
+HISTORICAL=('collect_focused','collect_public','collect_tail','verify_public','verify_tail','audit_public','apply_successor')
+INFRASTRUCTURE_EXIT=70
+def digest(raw):return hashlib.sha256(raw).hexdigest()
+def canonical(value):return (json.dumps(value,sort_keys=True,indent=2,allow_nan=False)+'\n').encode()
+def source_map(root,expected):
+    result={}
+    for name in expected:
+        pure=PurePosixPath(name)
+        if type(name)is not str or pure.is_absolute() or '..' in pure.parts or str(pure)!=name:raise ValueError('unsafe source name')
+        path=root/name
+        if not path.resolve().is_relative_to(root) or path.is_symlink() or not stat.S_ISREG(path.stat().st_mode):raise ValueError('source must be a held regular file')
+        result[name]=digest(path.read_bytes())
+    if result!=expected:raise ValueError('source closure differs')
+    return result
+class PublicAudit(importlib.abc.MetaPathFinder):
+    def __init__(self,out):self.out=out;self.denied=[];self.pending_write=None
+    def deny(self,kind,value):
+        self.denied.append(dict(kind=kind,value=str(value)));raise PermissionError('public preparation boundary')
+    def find_spec(self,fullname,path=None,target=None):
+        if fullname.split('.')[0] in FORBIDDEN+HISTORICAL:self.deny('forbidden_module',fullname)
+        return None
+    def __call__(self,event,args):
+        if event=='import' and args and str(args[0]).split('.')[0] in FORBIDDEN+HISTORICAL:self.deny('forbidden_import',args[0])
+        if event in ('socket.connect','socket.bind'):self.deny('network',event)
+        if event!='open' or not args or not isinstance(args[0],(str,bytes,os.PathLike)):return
+        name=os.fsdecode(args[0]);path=Path(os.path.abspath(name))
+        if self.pending_write is not None and name==self.pending_write[0]:
+            self.output_check();path=self.out/name
+        if path.suffix.lower() in ('.npy','.npz','.safetensors','.parquet') or '/cross_validation_assets/' in str(path) or any(s in str(path) for s in ('tokenized_','validation_inputs','calibration_inputs','client_gamma_fixtures','candidate-checker-private')):
+            self.deny('parameter_input_or_private_body',path)
+        mode=args[1] if len(args)>1 else None;flags=args[2] if len(args)>2 else 0
+        writing=(isinstance(mode,str) and any(c in mode for c in 'wax+')) or (type(flags)is int and bool(flags&(os.O_WRONLY|os.O_RDWR|os.O_CREAT|os.O_TRUNC)))
+        if writing:
+            if not path.is_relative_to(self.out):self.deny('write_outside_owned_output',path)
+            self.output_check()
+def terminal_status(action):
+    try:
+        status=action()
+        if type(status)is not int or status not in (0,1):raise TypeError('exact normal preparation return required')
+        return status
+    except BaseException as error:
+        try:print(type(error).__name__,file=sys.stderr,flush=True)
+        except BaseException:pass
+        return INFRASTRUCTURE_EXIT
+def run(args):
+    if not sys.dont_write_bytecode or not __debug__:raise RuntimeError('isolated bytecode-disabled assertion-enabled process required')
+    root=Path(__file__).resolve().parent;original=Path(args.original_root).resolve();manifest=Path(args.source_manifest)
+    raw=manifest.read_bytes()
+    if digest(raw)!=args.manifest_sha256:raise ValueError('external source manifest hash differs')
+    expected=json.loads(raw)
+    if not isinstance(expected,dict) or not expected or any(type(n)is not str or type(h)is not str or len(h)!=64 for n,h in expected.items()):raise ValueError('exact source manifest map required')
+    if 'prepare_expanded.py' not in expected:raise ValueError('entry must be bound in the source closure')
+    execution_before=source_map(root,expected);original_before=source_map(original,expected)
+    if sorted(os.sched_getaffinity(0))!=[112,113,114,115]:raise ValueError('fixed public preparation CPU lane required')
+    out=Path(args.output).absolute()
+    if out.is_relative_to(root) or out.is_relative_to(original):raise ValueError('output must be separate from both source trees')
+    out.mkdir(mode=0o700,parents=False,exist_ok=False) # ownership before failure publication
+    identity=(out.stat().st_dev,out.stat().st_ino);held=None;primary=None;audit=None
+    report=dict(schema='qwen-expanded-full-owner-preparation-v1',passed=False,scientific_calibration_verified=False,
+        actual_execution_authorized=False,wholegraph_executed=False,parameter_bodies_read=False,encrypted_execution=False,
+        outer_receipt_required=True,pid=os.getpid(),ppid=os.getppid(),pgid=os.getpgrp(),cpu_affinity=sorted(os.sched_getaffinity(0)),
+        source_manifest_sha256=args.manifest_sha256,execution_root=str(root),original_root=str(original),
+        execution_sources_before=execution_before,original_sources_before=original_before,scope='Public certificates/contracts and synthetic component stand-ins; no learned graph, model, HE or calibration run.')
+    def check():
+        s=out.lstat()
+        if not stat.S_ISDIR(s.st_mode) or (s.st_dev,s.st_ino)!=identity:raise ValueError('owned output identity changed')
+    def publish(name,value):
+        check();raw=canonical(value);fd=None
+        try:
+            if audit is not None:audit.pending_write=(name+'.tmp',held)
+            try:fd=os.open(name+'.tmp',os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600,dir_fd=held)
+            finally:
+                if audit is not None:audit.pending_write=None
+            view=memoryview(raw)
+            while view:
+                count=os.write(fd,view)
+                if count<=0:raise OSError('short output write')
+                view=view[count:]
+        finally:
+            if fd is not None:os.close(fd)
+        check();os.replace(name+'.tmp',name,src_dir_fd=held,dst_dir_fd=held)
+    start=time.monotonic()
+    try:
+        held=os.open(out,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
+        if (os.fstat(held).st_dev,os.fstat(held).st_ino)!=identity:raise ValueError('held output differs')
+        (out/'tmp').mkdir();os.environ['TMPDIR']=str(out/'tmp');os.environ['PYTEST_DISABLE_PLUGIN_AUTOLOAD']='1'
+        os.environ['JAX_PLATFORMS']='cpu';os.environ['CUDA_VISIBLE_DEVICES']='';os.environ['PYTHONDONTWRITEBYTECODE']='1'
+        audit=PublicAudit(out);audit.output_check=check;sys.meta_path.insert(0,audit);sys.addaudithook(audit)
+        sys.path[:0]=[str(root),str(root/'checkout/cadathlon/common')]
+        import derive_expanded
+        report['fresh_derivation']=derive_expanded.verify_generated()
+        import pytest
+        code=pytest.main(['-q','-p','no:cacheprovider',*[str(root/n) for n in TESTS],'--rootdir='+str(root),'--junitxml='+str(out/'tests.xml')])
+        report['test_exit_code']=int(code)
+        rows=list(ET.parse(out/'tests.xml').getroot().iter('testcase'))
+        report['tests']=dict(tests=len(rows),failures=sum(x.find('failure')is not None for x in rows),errors=sum(x.find('error')is not None for x in rows),skipped=sum(x.find('skipped')is not None for x in rows))
+        if type(code)is not int and not isinstance(code,int):raise TypeError('invalid pytest result')
+        if int(code)!=0 or report['tests']!=dict(tests=EXPECTED_TESTS,failures=0,errors=0,skipped=0):raise ValueError('all selected checks must pass')
+        import plan_full
+        plan=plan_full.derive();publish('public_plan.json',plan);report['public_plan_sha256']=digest(canonical(plan))
+        report['actions_completed']=True
+    except BaseException as error:
+        primary=error;report['error_type']=type(error).__name__
+    finally:
+        for label,action in (('execution_sources_after',lambda:source_map(root,expected)),('original_sources_after',lambda:source_map(original,expected))):
+            try:report[label]=action()
+            except BaseException as error:
+                report[label+'_error']=type(error).__name__
+                if primary is None:primary=error
+                elif error is not primary:primary.add_note(label+': '+type(error).__name__)
+        report['denied_attempts']=audit.denied if audit else [];report['loaded_forbidden_modules']=[n for n in FORBIDDEN+HISTORICAL if n in sys.modules]
+        report['elapsed_s']=time.monotonic()-start
+        report['passed']=primary is None and report.get('actions_completed')is True and not report['denied_attempts'] and not report['loaded_forbidden_modules']
+        try:
+            if held is not None:publish('report.json',report)
+        except BaseException as error:
+            if primary is None:primary=error
+            elif error is not primary:primary.add_note('publication: '+type(error).__name__)
+        finally:
+            if held is not None:
+                fd,held=held,None
+                try:os.close(fd)
+                except BaseException as error:
+                    if primary is None:primary=error
+                    elif error is not primary:primary.add_note('output close: '+type(error).__name__)
+    if primary is not None:raise primary
+    print(json.dumps(dict(passed=report['passed'],tests=report['tests'],sources=len(expected))))
+    return 0
+def main():
+    p=argparse.ArgumentParser(description='Public/synthetic preparation only; no actual execution mode')
+    p.add_argument('--source-manifest',required=True);p.add_argument('--manifest-sha256',required=True);p.add_argument('--original-root',required=True);p.add_argument('--output',required=True)
+    args=p.parse_args();return terminal_status(lambda:run(args))
+if __name__=='__main__':raise SystemExit(main())

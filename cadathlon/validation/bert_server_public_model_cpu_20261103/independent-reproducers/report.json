@@ -1,0 +1,19 @@
+{
+  "source_sha256": "4cd310ff86550997e6ce488d766dfa982f95dc4a158b07f289cfc028096141a0",
+  "source_unchanged": true,
+  "cases": [
+    {
+      "case": "cleanup masks cancellation",
+      "raised": "OSError",
+      "message": "secondary-cleanup-error",
+      "primary_preserved": false
+    },
+    {
+      "case": "path replacement",
+      "raised": "RuntimeError",
+      "replacement_survives": false,
+      "original_owned_survives": true
+    }
+  ],
+  "scope": "Injected public-writer/cleanup failures only; no private inputs or crypto."
+}

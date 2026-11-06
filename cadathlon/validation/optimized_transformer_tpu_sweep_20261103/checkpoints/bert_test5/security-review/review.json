@@ -1,0 +1,166 @@
+{
+  "actual_ring": {
+    "classical128_ceiling": 3523,
+    "context_dnum_values": [
+      null,
+      4
+    ],
+    "degree": 131072,
+    "integer_security_gate": true,
+    "max_level": 49,
+    "moduli_distinct_below2pow31_and_ntt_congruent": true,
+    "num_p": 24,
+    "num_q": 100,
+    "p_coverage_margin_log2": 18.845501896918677,
+    "p_covers_four_consecutive25_tower_partitions": true,
+    "p_log2": 718.4953793981985,
+    "q_log2": 2771.666201638047,
+    "qp_integer_bit_length": 3491,
+    "qp_log2": 3490.161581036245,
+    "slots": 65536
+  },
+  "case_public_bytes_unchanged": true,
+  "case_public_sha256": {
+    "process.json": "b7a023be44edb8b5da77a8d5465a4440751408bd84ea5e8553586deb567208f9",
+    "resource_samples.jsonl": "cac17407cac2909517106444c4a2900b4bc64b79cfb89c975dd5c619417ac26c",
+    "resources.json": "dbe6f7b5cd61efccb9652417a57e73cb725cb3b2aa14893e0abed830f0162046",
+    "security_device.json": "f2b0c6f8a5ed3c07d394f8b19a22eb3f6a433feb4f3549dd53299b23e288e318",
+    "stderr.log": "70f1e18c570fbf27d57594211b1ed272af68eb3d910a268faa829370807f433f",
+    "stdout.json": "7ed64f930abac56e841cac540c09a295520a663fb0cf634ed9f88608235cef97"
+  },
+  "case_root": "/tmp/cross-optimized-twelve-20261103/evidence/bert/test5",
+  "created_utc": "2026-11-04T06:54:56.639076+00:00",
+  "current_manifest_archive_equal": true,
+  "event_summaries": [
+    {
+      "boundary": "input",
+      "devices": [
+        {
+          "coords": [
+            0,
+            0,
+            0
+          ],
+          "device_kind": "TPU v6 lite",
+          "id": 0,
+          "local_hardware_id": 0,
+          "memory_stats": {
+            "bytes_in_use": 7000639488,
+            "bytes_limit": 33546039296,
+            "bytes_reservable_limit": 31922633728,
+            "bytes_reserved": 201326592,
+            "largest_alloc_size": 260046848,
+            "largest_free_block_bytes": 26159660032,
+            "num_allocs": 422,
+            "peak_bytes_in_use": 7105497600,
+            "peak_bytes_reserved": 201326592
+          },
+          "platform": "tpu",
+          "platform_version": "TFRT TPU v6 lite\nBuilt on Oct 22 2026 00:45:19 (1792655119) cl/1004524046",
+          "process_index": 0,
+          "slice_index": null
+        }
+      ],
+      "nsd": null,
+      "payload_bytes": 104857600,
+      "physical_q_towers": 100,
+      "scale": 6.89940115708969e+16,
+      "scale_hex": "0x1.ea3b603ea0000p+55",
+      "shape": [
+        1,
+        2,
+        256,
+        512,
+        100
+      ]
+    },
+    {
+      "boundary": "output",
+      "devices": [
+        {
+          "coords": [
+            0,
+            0,
+            0
+          ],
+          "device_kind": "TPU v6 lite",
+          "id": 0,
+          "local_hardware_id": 0,
+          "memory_stats": {
+            "bytes_in_use": 17880946176,
+            "bytes_limit": 33546039296,
+            "bytes_reservable_limit": 9899480576,
+            "bytes_reserved": 1500528640,
+            "largest_alloc_size": 520093696,
+            "largest_free_block_bytes": 10455209472,
+            "num_allocs": 1149,
+            "peak_bytes_in_use": 29580395008,
+            "peak_bytes_reserved": 1798881280
+          },
+          "platform": "tpu",
+          "platform_version": "TFRT TPU v6 lite\nBuilt on Oct 22 2026 00:45:19 (1792655119) cl/1004524046",
+          "process_index": 0,
+          "slice_index": null
+        }
+      ],
+      "nsd": 1,
+      "payload_bytes": 41943040,
+      "physical_q_towers": 40,
+      "scale": 6.8994011570896904e+16,
+      "scale_hex": "0x1.ea3b603ea0001p+55",
+      "shape": [
+        1,
+        2,
+        256,
+        512,
+        40
+      ]
+    }
+  ],
+  "interpretation": [
+    "validation_sweep.gate calls the unchanged require_secure_execution before appending either event; both recorded events therefore attest that original live-context/ciphertext security gate returned.",
+    "The gate checks actual context Q/P security, sigma/default threshold, secret distribution and ciphertext ring membership. Sigma/distribution are not independently serialized here; only the gate-return evidence supports those checks.",
+    "The dnum-null context and dnum4 context expose identical actual Q/P; the null field is retained, not converted into a second decomposition claim.",
+    "benchmark_session synchronizes evaluator result then performs output security gate before session.decrypt, metrics and check_output. Output event is not decoded correctness evidence.",
+    "security_device.passedFalse/errorSystemExit1 is the instrumented wrapper preserving runner failure, not an observed ring-security rejection.",
+    "TPU placement and device memory are checkpoint observations, not proof of every internal operation or continuous peak. Process-tree RSS is sampled, may double-count shared pages, and is not device HBM.",
+    "No benchmark sample or decoded error/prediction metric exists in the failed runner result. The outer process elapsed time is not a validated model benchmark.",
+    "Overflow location is left to the separate source diagnosis; public evidence has no traceback or ciphertext values to prove a precise arithmetic cause.",
+    "The twelve-case sweep remains independently owned and active; this failed-case review does not establish an overall sweep pass."
+  ],
+  "key_directory_absent_at_review": true,
+  "original_runner_returncode": 1,
+  "outcome": "Preserved FAILURE: runner OverflowError after both recorded security/device boundaries. No decoded numerical metrics or prediction result published.",
+  "output_scale_change": {
+    "delta": 8.0,
+    "scope": "Observed metadata only, not an identified overflow cause or numerical gate.",
+    "ulp": 8.0
+  },
+  "process_group_absent_at_review": true,
+  "process_pid": 2610682,
+  "recorded_handle_close": true,
+  "recorded_key_cleanup": true,
+  "resources": {
+    "process_elapsed_s": 19834.479544978007,
+    "recorded_output_device_peak_bytes": 29580395008,
+    "sampled_process_tree_rss_peak_bytes": 151212969984,
+    "samples": 18957,
+    "scope": "Sampled sum of RSS for observed owned process-group/descendant tree; shared pages can be counted twice, transient peaks/escaped descendants can be missed. Not an OS sandbox or a continuous peak guarantee."
+  },
+  "returncode_basis": "Pinned process.json recorded direct-child wait; reviewer observes present absence, not a second wait.",
+  "reviewed_source_sha256": {
+    "cadathlon/agent_pset/p2_bert/src/bert_optimized_reference.py": "9de11db08941090c22b5f654f973ac526126a84c88df3080bdd08071e4ce5507",
+    "cadathlon/agent_pset/p2_bert/src/runner.py": "3561ae1920119b352a0a804bab58659ab6d4bed34a7ab2ef46ea537279eaa9f4",
+    "cadathlon/common/support.py": "458111de25dbae4418c474670cf45a2d39e8e6ba40b75c2d17ad8f96cbaaa40f",
+    "cadathlon/common/transformer_runner.py": "9d4c6c8c53544d05046651b55224ce5b254d34a3bea445f65484e26e0f49ac55",
+    "cadathlon/validation/check_transformer_suite.py": "cfb528c04bd4c7e5044db22371dacebdd1068b2c3d96804b6de6b5374c1e92f6",
+    "jaxite_word/he_params.py": "b34f2a938598ef9fd1f9de157db3400c48befcb60866751449742917e2e3fccc",
+    "jaxite_word/util.py": "b34c675b50ae774cdb0ad913f8fc9c2f955b60bf4745006d3f81d7c013565026",
+    "validation_sweep.py": "357a9f35b22bf8b78a84f10ef5dd0365ae51f12fbbb24ee934397896d36fe16a"
+  },
+  "schema": "bert-toy5-security-device-public-review-v1",
+  "scope": "Public failed-case/source/resource evidence only. No TPU/backend invocation, ciphertext/key/private/model body read, decryption, numerical rerun, or source change.",
+  "source_archive_sha256": "bc0ad1b2a3796fe4ecb5944d68f3ca65561ad5740357470a1e634cc243ec387b",
+  "source_count": 199,
+  "source_manifest_sha256": "1fbca19a43f0830f4beb9ad00659c5b79e01ea10d89aa6466801340373f210bc"
+}

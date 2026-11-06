@@ -1,0 +1,47 @@
+
+==================================== ERRORS ====================================
+___________________ ERROR collecting test_grouped_loader.py ____________________
+test_grouped_loader.py:9: in <module>
+    from test_prepared_loader import integrated,mapped
+<frozen importlib._bootstrap>:1369: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1340: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:935: in _load_unlocked
+    ???
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/_pytest/assertion/rewrite.py:185: in exec_module
+    exec(co, module.__dict__)
+test_prepared_loader.py:9: in <module>
+    from test_key_contexts import case,assert_restored
+<frozen importlib._bootstrap>:1369: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1340: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:935: in _load_unlocked
+    ???
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/_pytest/assertion/rewrite.py:185: in exec_module
+    exec(co, module.__dict__)
+test_key_contexts.py:9: in <module>
+    from test_client_keys import mocked,generate,PROFILE,RAW_PLAN
+<frozen importlib._bootstrap>:1369: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1340: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:935: in _load_unlocked
+    ???
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/_pytest/assertion/rewrite.py:185: in exec_module
+    exec(co, module.__dict__)
+test_client_keys.py:9: in <module>
+    PROFILE=(PLAN/'p60_profile_and_refresh.json').read_bytes();RAW_PLAN=(PLAN/'twelve_layer_plan.json').read_bytes()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_abc.py:625: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py:537: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   FileNotFoundError: [Errno 2] No such file or directory: '/tmp/bert-ordinary-group-parity-20261103/server_inputs/p60_profile_and_refresh.json'
+=========================== short test summary info ============================
+ERROR test_grouped_loader.py - FileNotFoundError: [Errno 2] No such file or d...
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 0.23s

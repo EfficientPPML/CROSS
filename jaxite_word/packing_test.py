@@ -205,6 +205,26 @@ class RingDerivationTest(absltest.TestCase):
     self.assertEqual(packed.depth, 2)
     self.assertEqual(int(packed.ring_config.logical_num_q), 3)
 
+  def test_explicit_digits_can_reduce_ring_without_weakening_security(self):
+    import he_params
+    program = nn.vectorize(_chain(), (1, 2, 2))
+    packed = packing.pack(program, packing.PackingPolicy(
+        scaling_mod_size=42, first_mod_size=43, register_word_size=24,
+        composite_degree=2, dnum=4))
+    self.assertEqual(packed.depth, 3)
+    self.assertEqual(packed.ring_config.dnum, 4)
+    self.assertEqual(packed.ring_config.degree, 8192)
+    self.assertTrue(he_params.qp_is_secure(
+        packed.ring_config.q_towers, packed.ring_config.p_towers,
+        packed.ring_config.degree, packed.ring_config.target))
+
+  def test_invalid_explicit_digits_are_rejected(self):
+    program = nn.vectorize(_chain(), (1, 2, 2))
+    for dnum in (0, -1, 5, True, 1.5):
+      with self.subTest(dnum=dnum):
+        with self.assertRaises((TypeError, ValueError)):
+          packing.pack(program, packing.PackingPolicy(dnum=dnum))
+
   def test_an_explicit_security_target_is_used(self):
     program = nn.vectorize(_chain(), (1, 2, 2))
     default = packing.pack(program)

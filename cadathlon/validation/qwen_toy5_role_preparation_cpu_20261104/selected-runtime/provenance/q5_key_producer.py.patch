@@ -1,0 +1,208 @@
+--- /tmp/qwen-key-generation-held-parent-20261104/qwen_key_producer.py
++++ q5_key_producer.py
+@@ -1,24 +1,33 @@
+-"""Qwen166 producer composition, recording seam only; actual role denied.
+-
+-Pre-generation intent never invents the random context/manifest identities.
+-Returned descriptors are internal consistency evidence, not external admission.
++"""Q5 retained key generation sequence. Public actual entry remains denied.
++
++A successful internal generation return provides writer-attested consistency
++only. Setup may reopen its own retained outputs under the same preauthorized
++role owner. Later roles require an independently admitted setup terminal chain.
+ """
+ from dataclasses import dataclass
+ from pathlib import Path
+-import json,math,re
++import json,re
+ from cleanup import cleanup_signals
+ from cleanup_origin import protect_body
+ from qwen_finalizer import Finalizer
+-from qwen_file_contract import PublicContract,canonical,same,sha,hash_value
+-from qwen_key_contract import (PublicProfile,ExpectedIds,KEYGEN,bindings,public_body,
+-    authenticate_public,authenticate_private)
+-
++from q5_key_contract import (PublicProfile,ExpectedIds,KEYGEN,bindings,public_body,
++    authenticate_public,authenticate_private,canonical,parse,sha,hash_value)
+ _QUARANTINE=[]
+ NONCE=re.compile(r'[A-Za-z0-9_-]{1,128}\Z')
+ CORE_MANIFEST_SHA256='11353173bbf8e2796813d0feb6f69fac308775c7b13cc164900170f32bc62088'
+ 
++def same(a,b,message):
++    if type(a)is not type(b):raise ValueError(message)
++    if type(a)is dict:
++        if set(a)!=set(b):raise ValueError(message)
++        for k in a:same(a[k],b[k],message)
++    elif type(a)in(list,tuple):
++        if len(a)!=len(b):raise ValueError(message)
++        for x,y in zip(a,b):same(x,y,message)
++    elif a!=b:raise ValueError(message)
++
+ def create_actual_key_producer(*args,**kwargs):
+-    raise PermissionError('Qwen key generation has no independently admitted actual entry')
++    raise PermissionError('Q5 setup entry has no independently admitted actual closure/resource grant')
+ 
+ def _accessor(value):return(getattr(value,'__self__',None),getattr(value,'__func__',value))
+ def _same_accessor(a,b):return all(x is y for x,y in zip(_accessor(a),_accessor(b)))
+@@ -30,48 +39,39 @@
+ 
+ @dataclass(frozen=True)
+ class GenerationIntent:
+-    public:PublicContract
++    profile:PublicProfile
+     raw:bytes
+     def check(self):
+-        if type(self)is not GenerationIntent or type(self.public)is not PublicContract or type(self.raw)is not bytes or not 0<len(self.raw)<=65536:
+-            raise TypeError('exact immutable generation intent required')
+-        values=self.public.check();v=json.loads(self.raw)
+-        keys={'schema','nonce','model_id','generation_source_manifest_sha256','core_source_manifest_sha256',
+-            'request_producer_source_manifest_sha256','response_consumer_source_manifest_sha256',
+-            'keygen_source_sha256','public_root','private_root','bindings','parameters','resource_policy',
+-            'actual_execution_enabled','execution_grant_sha256','scientific_freeze_sha256','heldout_terminal_sha256'}
+-        if type(v)is not dict or set(v)!=keys or canonical(v)!=self.raw:raise ValueError('canonical exact generation intent schema required')
+-        if v['schema']!='qwen-key-generation-intent-v1'or type(v['nonce'])is not str or not NONCE.fullmatch(v['nonce']):raise ValueError('generation schema/nonce differs')
+-        for n in ('model_id','generation_source_manifest_sha256','core_source_manifest_sha256','request_producer_source_manifest_sha256','response_consumer_source_manifest_sha256','keygen_source_sha256'):hash_value(v[n])
+-        if v['keygen_source_sha256']!=KEYGEN or v['core_source_manifest_sha256']!=CORE_MANIFEST_SHA256:raise ValueError('fixed keygen/core source identity differs')
+-        if v['actual_execution_enabled']is not False or any(v[n]is not None for n in ('execution_grant_sha256','scientific_freeze_sha256','heldout_terminal_sha256')):
+-            raise PermissionError('this source successor is recording-only, not an actual grant consumer')
+-        profile=PublicProfile.from_bytes(values['inputs/profile_audit.json'],values['inputs/actual_key_plan.json'])
+-        same(v['parameters'],self.public.profile(),'generation/full public physical profile differs')
+-        same(v['parameters'],profile.parameters,'generation/key physical profile differs')
+-        same(v['bindings'],bindings(),'generation candidate/source bindings differ')
+-        same(v['resource_policy'],resource_policy(profile),'fixed logical generation storage/descriptor policy differs')
+-        a=_path(v['public_root']);b=_path(v['private_root']);source=Path(__file__).resolve().parent
+-        if a==b or a in b.parents or b in a.parents or any(p==source or source in p.parents for p in (a,b)):
+-            raise ValueError('fresh public/private outputs must be disjoint from each other and source')
+-        return v,profile
+-    @classmethod
+-    def build(cls,public,*,nonce,model_id,generation_sources,request_producer_sources,response_consumer_sources,public_root,private_root):
+-        if type(public)is not PublicContract:raise TypeError('exact full public contract required')
+-        values=public.check();profile=PublicProfile.from_bytes(values['inputs/profile_audit.json'],values['inputs/actual_key_plan.json'])
+-        raw=canonical(dict(schema='qwen-key-generation-intent-v1',nonce=nonce,model_id=model_id,
+-            generation_source_manifest_sha256=generation_sources,core_source_manifest_sha256=CORE_MANIFEST_SHA256,
+-            request_producer_source_manifest_sha256=request_producer_sources,response_consumer_source_manifest_sha256=response_consumer_sources,
+-            keygen_source_sha256=KEYGEN,public_root=public_root,private_root=private_root,bindings=bindings(),parameters=profile.parameters,
+-            resource_policy=resource_policy(profile),actual_execution_enabled=False,execution_grant_sha256=None,scientific_freeze_sha256=None,heldout_terminal_sha256=None))
+-        result=cls(public,raw);result.check();return result
+-
+-def resource_policy(profile):
+-    rows=profile.arrays;raw=sum(s.raw_bytes for s in rows);secret=profile.secret.raw_bytes
+-    return dict(schema='qwen-key-generation-logical-resources-v1',public_arrays=335,private_arrays=1,
+-        public_required_bytes=raw+len(rows)*4096+(1<<30),private_required_bytes=secret+4096+(1<<20),
+-        owned_descriptors=342,temporary_descriptor_allowance=8,required_descriptor_soft_limit=350,
+-        scope='logical output files and bounded writer temporaries only; backend/runtime descriptors and working memory excluded')
++        if type(self)is not GenerationIntent or type(self.profile)is not PublicProfile:
++            raise TypeError('exact Q5 generation intent/profile required')
++        self.profile.check();v=parse(self.raw,1<<16)
++        names={'schema','nonce','model_id','generation_source_manifest_sha256','generation_source_archive_sha256',
++            'core_source_manifest_sha256','request_producer_source_manifest_sha256','response_consumer_source_manifest_sha256',
++            'keygen_source_sha256','public_root','private_root','parents','bindings','parameters','logical_resources',
++            'setup_preauthorization_sha256','actual_execution_enabled'}
++        if type(v)is not dict or set(v)!=names or canonical(v)!=self.raw or v['schema']!='qwen-toy5-generation-intent-v1':
++            raise ValueError('closed Q5 pre-generation intent required')
++        if type(v['nonce'])is not str or not NONCE.fullmatch(v['nonce']):raise ValueError('bounded setup nonce required')
++        for n in ('model_id','generation_source_manifest_sha256','generation_source_archive_sha256','core_source_manifest_sha256',
++                  'request_producer_source_manifest_sha256','response_consumer_source_manifest_sha256','keygen_source_sha256','setup_preauthorization_sha256'):
++            hash_value(v[n])
++        if v['keygen_source_sha256']!=KEYGEN or v['core_source_manifest_sha256']!=CORE_MANIFEST_SHA256:
++            raise ValueError('fixed Q5 original keygen/core source differs')
++        if v['actual_execution_enabled']is not False:raise PermissionError('source preparation never grants key generation')
++        same(v['parameters'],self.profile.parameters,'original Q5 profile differs')
++        same(v['bindings'],bindings(),'fixed Q5 case/source bindings differ')
++        same(v['logical_resources'],self.profile.resources,'logical storage facts differ; these are not capacity')
++        roots=[_path(v[n])for n in ('public_root','private_root')]
++        if roots[0]==roots[1]or roots[0]in roots[1].parents or roots[1]in roots[0].parents:raise ValueError('separate public/private roots required')
++        if type(v['parents'])is not dict or set(v['parents'])!={'public','private'}:raise ValueError('two independent parent expectations required')
++        for label,path in zip(('public','private'),roots):
++            parent=v['parents'][label]
++            if type(parent)is not dict or set(parent)!={'path','device','inode','mode'}or _path(parent['path'])!=path.parent:
++                raise ValueError('externally pinned original parent differs')
++            for k in ('device','inode','mode'):
++                if type(parent[k])is not int or parent[k]<(1 if k=='inode'else 0):raise ValueError('typed parent identity required')
++            if parent['mode']>4095:raise ValueError('parent mode differs')
++        return v,self.profile
+ 
+ @dataclass(frozen=True)
+ class RecordingDependencies:
+@@ -110,21 +110,25 @@
+         raise ValueError('key-switch generator metadata differs')
+ 
+ 
+-def _generate_for_recording(intent,dependencies):
++def _generate_bound(intent,dependencies):
+     """Exercise sequence/ownership with recording crypto; never import a backend.
+ 
+     Real KeyStore can be exercised separately on small owned files. Full physical
+-    335-array cryptography, host capacity and security predicates remain explicit
++    203-array cryptography, host capacity and security predicates remain explicit
+     recording seams here; even a successful return is not ready for consumption.
+     """
+-    if type(intent)is not GenerationIntent or type(dependencies)is not RecordingDependencies:raise TypeError('exact recording intent/dependencies required')
++    if type(intent)is not GenerationIntent:raise TypeError('exact Q5 generation intent required')
++    if type(dependencies)is not RecordingDependencies:
++        from q5_actual_dependencies import ActualGenerationDependencies
++        if type(dependencies)is not ActualGenerationDependencies:raise TypeError('source-fixed generation dependencies required')
++    synthetic=type(dependencies)is RecordingDependencies
+     intent_value,profile=intent.check();dependencies.check()
+     captured=tuple(getattr(dependencies,n)for n in ('source_check','security_check','capacity_check','store_factory','gen_pke_pair','gen_evaluation_key','gen_rotation_key','shield'))
+     source_check,security_check,capacity_check,factory,pke,evaluation,rotation,shield=captured
+-    original_intent=intent.raw;original_public=intent.public;original_blobs=intent.public.blobs;p=profile.parameters;parameter_bytes=canonical(p)
++    original_intent=intent.raw;original_public=intent.profile;original_blobs=(intent.profile.profile_bytes,intent.profile.plan_bytes);p=profile.parameters;parameter_bytes=canonical(p)
+     owners=[];methods=[];retained=[];result=None;primary=None;cleanup_report={};public_raw=None;private_raw=None
+     def guard():
+-        if intent.raw is not original_intent or intent.public is not original_public or intent.public.blobs is not original_blobs:raise ValueError('original generation intent binding changed')
++        if intent.raw is not original_intent or intent.profile is not original_public or intent.profile.profile_bytes is not original_blobs[0] or intent.profile.plan_bytes is not original_blobs[1]:raise ValueError('original generation intent binding changed')
+         intent.check();dependencies.check();same(intent_value,json.loads(original_intent),'parsed generation intent changed');same(p,json.loads(parameter_bytes),'generation parameters changed')
+         now=tuple(getattr(dependencies,n)for n in ('source_check','security_check','capacity_check','store_factory','gen_pke_pair','gen_evaluation_key','gen_rotation_key','shield'))
+         if any(not _same_accessor(a,b)for a,b in zip(now,captured)):raise ValueError('recording generation dependency changed')
+@@ -133,9 +137,9 @@
+                 if not _same_accessor(getattr(owner,name),method):raise ValueError('original generation store accessor changed')
+     def source():
+         guard();observed=source_check(intent);guard()
+-        same(observed,dict(source_manifest_sha256=intent_value['generation_source_manifest_sha256'],core_source_manifest_sha256=CORE_MANIFEST_SHA256,keygen_source_sha256=KEYGEN,source_unchanged=True,synthetic_only=True),'recording source prerequisite differs')
++        same(observed,dict(source_manifest_sha256=intent_value['generation_source_manifest_sha256'],core_source_manifest_sha256=CORE_MANIFEST_SHA256,keygen_source_sha256=KEYGEN,source_unchanged=True,synthetic_only=synthetic),'recording source prerequisite differs')
+     def acquire(root,specs,private):
+-        owner=factory(root,specs,private=private,shield=shield)
++        owner=factory(root,specs,expected_parent=canonical(intent_value['parents']['private'if private else'public']),private=private,shield=shield)
+         # Retain before touching any returned accessor; partial acquisition is
+         # quarantined if the trusted factory returns a malformed owner.
+         owners.append(owner);row={};methods.append(row)
+@@ -148,9 +152,9 @@
+     try:
+         source()
+         security=security_check(p);guard()
+-        same(security,dict(qp_secure=True,p_coverage=True,sigma=p['sigma'],secret_distribution=p['secret_distribution'],synthetic_only=True),'recording security prerequisite differs')
++        same(security,dict(qp_secure=True,p_coverage=True,sigma=p['sigma'],secret_distribution=p['secret_distribution'],synthetic_only=synthetic),'recording security prerequisite differs')
+         capacity=capacity_check(intent_value);guard()
+-        same(capacity,dict(public_root=intent_value['public_root'],private_root=intent_value['private_root'],fresh_disjoint_roots=True,storage_capacity=True,descriptor_capacity=True,synthetic_only=True),'recording destination/capacity prerequisite differs')
++        same(capacity,dict(public_root=intent_value['public_root'],private_root=intent_value['private_root'],fresh_disjoint_roots=True,storage_capacity=True,descriptor_capacity=True,synthetic_only=synthetic),'recording destination/capacity prerequisite differs')
+         pub=acquire(intent_value['public_root'],profile.arrays,False);priv=acquire(intent_value['private_root'],(profile.secret,),True)
+         source()  # Includes post-acquisition binding checks, before first RNG seam.
+         specs={s.name:s for s in profile.arrays}
+@@ -175,7 +179,7 @@
+         same(pub['verify'](),arrays,'stored public inventory differs');guard()
+         same(priv['verify'](),{'secret.npy':secret_record},'stored private inventory differs');guard()
+         body=public_body(profile,arrays,KEYGEN);public_manifest=body|dict(context_id=sha(canonical(body)));public_raw=canonical(public_manifest)
+-        private_manifest=dict(schema='cross-qwen-full-private-keys-v1',context_id=public_manifest['context_id'],public_manifest_sha256=sha(public_raw),bindings=bindings(),secret=secret_record);private_raw=canonical(private_manifest)
++        private_manifest=dict(schema='cross-qwen-toy5-private-keys-v1',context_id=public_manifest['context_id'],public_manifest_sha256=sha(public_raw),bindings=bindings(),secret=secret_record);private_raw=canonical(private_manifest)
+         # Internal consistency only. These self-derived expectations are never
+         # returned as external admission or a FilesAdmission authority object.
+         expected=ExpectedIds(public_manifest['context_id'],sha(public_raw),KEYGEN,intent_value['model_id'],intent_value['request_producer_source_manifest_sha256'],intent_value['response_consumer_source_manifest_sha256'],sha(private_raw))
+@@ -192,7 +196,7 @@
+                     type(row['device'])is not int or row['device']<0 or type(row['inode'])is not int or row['inode']<=0 or row['private']is not private):
+                 raise ValueError('typed retained root identity differs')
+         roots=json.loads(canonical(roots));source()
+-        result=dict(schema='qwen-key-generation-recording-completion-v1',scope='trusted recording seams only; not generated real keys or independently ready',intent_sha256=sha(original_intent),generation_source_manifest_sha256=intent_value['generation_source_manifest_sha256'],core_source_manifest_sha256=CORE_MANIFEST_SHA256,keygen_source_sha256=KEYGEN,bindings=bindings(),model_id=intent_value['model_id'],request_producer_source_manifest_sha256=intent_value['request_producer_source_manifest_sha256'],response_consumer_source_manifest_sha256=intent_value['response_consumer_source_manifest_sha256'],context_id=public_manifest['context_id'],public_manifest_sha256=sha(public_raw),private_manifest_sha256=sha(private_raw),rotations=166,public_arrays=335,private_arrays=1,roots=roots,cleanup_completed=False,source_postcheck_completed=False,actual_execution_enabled=False,independent_outer_receipt_sha256=None,terminal_ready=False)
++        result=dict(schema='qwen-toy5-internal-generation-completion-v1',scope='internal setup writer consistency only; independent terminal readiness is absent',synthetic_only=synthetic,intent_sha256=sha(original_intent),generation_source_manifest_sha256=intent_value['generation_source_manifest_sha256'],core_source_manifest_sha256=CORE_MANIFEST_SHA256,keygen_source_sha256=KEYGEN,bindings=bindings(),model_id=intent_value['model_id'],request_producer_source_manifest_sha256=intent_value['request_producer_source_manifest_sha256'],response_consumer_source_manifest_sha256=intent_value['response_consumer_source_manifest_sha256'],context_id=public_manifest['context_id'],public_manifest_sha256=sha(public_raw),private_manifest_sha256=sha(private_raw),rotations=100,public_arrays=203,private_arrays=1,roots=roots,cleanup_completed=False,source_postcheck_completed=False,actual_execution_enabled=False,independent_outer_receipt_sha256=None,terminal_ready=False)
+     except BaseException as error:primary=protect_body(error)
+     finally:
+         # These original objects/callables live independently of public mirrors.
+@@ -209,7 +213,7 @@
+         chosen=final.selected()
+         if chosen is not None:
+             _QUARANTINE.append((intent,dependencies,captured,original_public,original_blobs,original_owners,original_methods,original_retained,public_raw,private_raw,result,cleanup_report,chosen));raise chosen
+-    if result is None:raise RuntimeError('recording generation did not return a complete result')
++    if result is None:raise RuntimeError('Q5 generation did not return a complete result')
+     result['cleanup_completed']=True;result['source_postcheck_completed']=True
+     retained.clear()
+     return GeneratedManifests(public_raw,private_raw,canonical(result))

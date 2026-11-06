@@ -1,0 +1,102 @@
+{
+  "passed": true,
+  "scope": "First BERT attention sublayer, exact public metadata/count plan only.",
+  "execution": "Public NumPy/binary64 metadata only; no JAX, model forward, context, keys, ciphertext or HE.",
+  "operations_K128": {
+    "public_valid_query_count": 128,
+    "query_tiles": 8,
+    "key_value_tiles": 8,
+    "dense_map_count": 32,
+    "stages": {
+      "dense_maps": {
+        "rotations": 2752,
+        "ct_products": 0,
+        "pt_products": 49120,
+        "rescales": 768
+      },
+      "query_tiles_QK_and_PV": {
+        "rotations": 69248,
+        "ct_products": 2048,
+        "pt_products": 57344,
+        "rescales": 6144
+      },
+      "initial_softmaxes": {
+        "rotations": 224,
+        "ct_products": 144,
+        "pt_products": 128,
+        "rescales": 208
+      },
+      "normalization_rounds": {
+        "rotations": 560,
+        "ct_products": 1040,
+        "pt_products": 120,
+        "rescales": 1160
+      },
+      "final_refresh_output_masks": {
+        "rotations": 0,
+        "ct_products": 0,
+        "pt_products": 8,
+        "rescales": 8
+      },
+      "attention_layernorms": {
+        "rotations": 336,
+        "ct_products": 104,
+        "pt_products": 128,
+        "rescales": 144
+      }
+    },
+    "nonbootstrap_total": {
+      "rotations": 73120,
+      "ct_products": 3336,
+      "pt_products": 106848,
+      "rescales": 8432
+    },
+    "bounded_meta10_refresh_calls": 40,
+    "scope": "Public valid-query compaction; still all8 K/V tiles and128 key routes per query tile. Refresh internals, level drops, encoding, additions and I/O excluded."
+  },
+  "resources": {
+    "rotation_key_pair_bytes": 956301312,
+    "raw_rotation_GiB": 114.890625,
+    "relinearization_pair_bytes": 956301312,
+    "public_key_bytes": 104857600,
+    "secret_key_client_only_bytes": 52428800,
+    "ciphertext_bytes_by_level": {
+      "49": 104857600,
+      "48": 102760448,
+      "45": 96468992,
+      "25": 54525952,
+      "24": 52428800,
+      "23": 50331648,
+      "22": 48234496,
+      "21": 46137344,
+      "20": 44040192,
+      "10": 23068672,
+      "9": 20971520,
+      "7": 16777216,
+      "5": 12582912
+    },
+    "all_X_Q_K_V_payload_bytes": 3305111552,
+    "saved_K_V_plus_one_X_Q_bytes": 1851785216,
+    "dense_64_baby_payload_at_top_bytes": 6710886400,
+    "all8_final_output_bytes": 167772160,
+    "caution": "Raw payload/key accounting only: format copies, compiler/NTT controls, mmap residency, pending groups and bootstrap workspace are additional. No peak-memory or runtime claim."
+  },
+  "probability_refresh": {
+    "public_bound": 2.0,
+    "engineering_margin_only": true,
+    "fullslot_B2_measured": false,
+    "input_reserve": 2,
+    "output_level": 25,
+    "period": 65536,
+    "aliases": 1,
+    "meta_precision": 10,
+    "ideal_max_before_precondition": 1.0,
+    "ideal_max_after_precondition": 0.5,
+    "actual_p60_adjustment_divisor": 64,
+    "ideal_base_max": 0.0078125,
+    "full_bound_base_max": 0.015625,
+    "base_signed_capacity": 0.805644171585833,
+    "restored_error_multiplier": 2.0,
+    "caveat": "Actual encoding/input/refresh errors and repeated nonlinear domain coverage remain unproved; B16/B128 evidence does not certify B2."
+  }
+}

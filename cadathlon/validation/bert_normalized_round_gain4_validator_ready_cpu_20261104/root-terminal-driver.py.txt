@@ -1,0 +1,45 @@
+from pathlib import Path
+import json,hashlib,tarfile,xml.etree.ElementTree as ET,os,datetime
+ROOT=Path('/tmp/bert-normalized-round-gain4-validator-ready-20261104')
+PROOF=Path('/tmp/bert-normalized-round-gain4-validator-ready-preflight-v1-20261104')
+OUT=Path(__file__).resolve().parent
+sha=lambda b:hashlib.sha256(b).hexdigest()
+manifest=Path('/tmp/gain4-validator-ready-sources-20261104.json')
+assert sha(manifest.read_bytes())=='e0bfcee1ab85f8750e576de24bdbdf13faf4f0b8abe66ecef55b3403a084cce0'
+m=json.loads(manifest.read_bytes());assert len(m)==187
+for base in (ROOT,PROOF/'execution_source'):
+ actual={str(p.relative_to(base)):sha(p.read_bytes())for p in base.rglob('*')if p.is_file()and '__pycache__'not in p.parts and '.pytest_cache'not in p.parts}
+ assert actual==m
+assert json.loads((PROOF/'source_manifest.json').read_bytes())==m
+assert sha((PROOF/'report.json').read_bytes())=='75d8bf2225337ae9dea63e59cd6d1fdd6ff59a7d024b96c988ae2c0185cecad7'
+assert sha((PROOF/'sources.tar.gz').read_bytes())=='ccefaa4c2ec41371660aecbbb618f67951b6a144b898a20fe04a743db15e4654'
+with tarfile.open(PROOF/'sources.tar.gz','r:gz')as t:
+ members=t.getmembers();assert len(members)==len({x.name for x in members})==187 and all(x.isfile()for x in members)
+ assert {x.name:sha(t.extractfile(x).read())for x in members}==m
+r=json.loads((PROOF/'report.json').read_bytes());assert r['execute']is False and r['schema']=='gain4-validator-successor-preflight-v1'
+assert r['source_hashes_start']==r['source_hashes_end']==m
+for k in ('passed','all_direct_children_reaped','all_owned_groups_empty','process_cleanup_completed','source_files_unchanged','source_archive_verified','terminal_scope_completed','termination_scope_completed','no_private_or_ciphertext_payload_read','no_encrypted_execution'):assert r[k]is True,k
+assert r['cleanup_errors']==[] and not r.get('error')
+assert r['source_archive_sha256']==sha((PROOF/'sources.tar.gz').read_bytes())
+f=r['fresh_source_guard'];assert f['passed']is True and f['fresh']is True and f['source_count']==187 and f['source_bytes']==16558865 and f['manifest_sha256']==sha(manifest.read_bytes())
+assert all(v in m for v in f['static_imports'].values())
+for name,count in (('mock_tests',543),('installed_denials',10)):
+ assert r[name]==dict(errors=0,exit_code=0,failures=0,skipped=0,tests=count)
+ xml=ET.parse(PROOF/(name+'.xml'));assert len(xml.findall('.//testcase'))==count
+ assert not any(xml.findall('.//'+n)for n in ('error','failure','skipped'))
+ assert sum(c['name']==name for c in r['children'])==1
+for c in r['children']:
+ assert c['direct_returncode']==0 and c['cleanup_errors']==[] and c['signals_sent']==[]
+ for k in ('cleanup_completed','direct_child_reaped','group_empty_verified'):assert c[k]is True
+owner_path=Path('/tmp/bert-gain4-validator-ready-owner-terminal-20261104/owner-terminal.json')
+assert sha(owner_path.read_bytes())=='16a1994d9d3190e745cd26454e38eff64cf399d4396a6010631a04e1fd8bf7d5'
+o=json.loads(owner_path.read_bytes());assert(o['outer_session'],o['outer_tool_chunk'],o['outer_exit_code'],o['outer_reaped'])==(31093,'510590',0,True)
+for pid in o['observed_absent_pids']:assert not Path('/proc',str(pid)).exists()
+for pgid in o['observed_absent_groups']:
+ try:os.killpg(pgid,0)
+ except ProcessLookupError:pass
+ else:raise AssertionError('owned group remains')
+source_review=OUT/'source-review.json';assert sha(source_review.read_bytes())=='a6ccee49989aad9663380ebb2ff46e2bea97cc3fa9f113cd349aea24bf13c38f'
+receipt=dict(schema='root-gain4-validator-ready-preflight-review-v1',utc=datetime.datetime.now(datetime.timezone.utc).isoformat(),passed=True,source_count=187,tests=543,installed_tests=10,source_manifest_sha256=sha(manifest.read_bytes()),report_sha256=sha((PROOF/'report.json').read_bytes()),archive_sha256=sha((PROOF/'sources.tar.gz').read_bytes()),source_review_sha256=sha(source_review.read_bytes()),owner_terminal_sha256=sha(owner_path.read_bytes()),owner_session=31093,owner_tool_chunk='510590',owner_exit_code=0,owner_reaped=True,all_owned_groups_absent=True,source_current_execution_start_end_archive_equal=True,legacy_fixture_server_enabled=False,validator_ready=True,runtime_changes=[],actual_execution_performed=False,scope='Source-bound public/synthetic readiness with exact completed server and independent root receipt. Actual validation is a separate root-authorized invocation; numeric gates and original185/163 sources unchanged.')
+out=OUT/'terminal-review.json';assert not out.exists();out.write_text(json.dumps(receipt,indent=2,sort_keys=True)+'\n')
+print(json.dumps({'receipt':str(out),'sha256':sha(out.read_bytes()),'passed':True,'tests':543,'installed':10}))

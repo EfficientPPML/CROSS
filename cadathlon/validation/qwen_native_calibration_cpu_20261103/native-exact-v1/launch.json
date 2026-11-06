@@ -1,0 +1,19 @@
+{
+  "session_id": 69018,
+  "session_owner": "security_review",
+  "shell_pid": 1082114,
+  "time_wrapper_pid": 1082124,
+  "python_pid": 1082125,
+  "cpu_affinity": [
+    140,
+    141,
+    142,
+    143
+  ],
+  "threads": 4,
+  "offline": true,
+  "model": "native/exact only",
+  "no_he_jax_tpu": true,
+  "healthy_run_has_no_imposed_timeout": true,
+  "command": "OPENBLAS_NUM_THREADS=4 OMP_NUM_THREADS=4 MKL_NUM_THREADS=4 HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 taskset -c 140-143 /usr/bin/time -v -o native-exact-v1.time /tmp/cross-pretrained-validation-env/bin/python calibrate.py --output native-exact-v1"
+}

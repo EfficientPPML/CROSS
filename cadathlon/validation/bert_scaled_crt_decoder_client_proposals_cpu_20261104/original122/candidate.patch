@@ -1,0 +1,121 @@
+--- parent/README_CLIENT.md
++++ proposal/README_CLIENT.md
+@@ -1,15 +1,43 @@
+ # Original217 stage5 descriptor successor (preparation)
+ 
+-Exact89 parent plus five named runtime IO overlays plus two top-level consumer reader overlays. The handler, original default completion receipt destination, old217 server source gate, all prior producer identities, arithmetic and P2 gates are unchanged. The modern source-gated worker/collector and bounded private readback are explicit new consumer files; historical wrappers remain captured and unselected. No combined286 gate, response root or optional completion API is imported or accepted. Current preparation uses synthetic inputs only, with installed denied-entry probes. Actual decode needs independent completed217 evidence and a separate root launch grant.
++Exact89 parent plus five named runtime IO overlays, two top-level consumer reader overlays and one reviewed decoder overlay. The handler, original default completion receipt destination, old217 server source gate, all prior producer identities, encrypted arithmetic and P2 gates are unchanged; the decoder change is described below. The modern source-gated worker/collector and bounded private readback are explicit new consumer files; historical wrappers remain captured and unselected. No combined286 gate, response root or optional completion API is imported or accepted. Current preparation uses synthetic inputs only, with installed denied-entry probes. Actual decode needs independent completed217 evidence and a separate root launch grant.
+ 
+ The selected entrypoints are `original_client_worker.py` and `original_client_collect.py`; inherited `worker.py`, `collect.py`, `preflight.py` and the old consumer `dependencies.check()` are provenance only and unselected. The old dependency JSON remains exact because the original217 producer gate uses its separately reviewed source inventory. The successor's loader identity is checked by the explicit current source guard, never substituted into old key-generation or producer provenance.
+ 
+ The private readback uses bounded descriptor IO from `client_io`; the original P2 comparator is unchanged. Completed numeric failure produces complete retained evidence with `passed:false` and exit1. An original completed receipt must be absent before decoding. Only that default receipt may be added to the original private directory; every preexisting key/request file and its metadata remain checked. No receipt or borrowed artifact is retired. Result/evidence paths must be disjoint from all borrowed trees, including both publicly authenticated private fixture/reference roots, before publication. Source bootstrap failure cannot write a worker report into an unauthenticated location.
+ 
+-The static source guard captures122 sources (89 parent plus33 explicitly named files), with exactly seven replacements (five runtime, two top-level gates) and82 unchanged parent files. The new source archive uses32MiB total/16MiB member limits; original producer bounds remain unchanged. Preparation includes all confirmed descriptor/read/stream/tree/write cleanup regressions, source/phase/terminal tests, the exact old217 gate, default receipt tests and21 installed forbidden entrypoint calls. No retained input, reference, key, model or ciphertext is read during preparation. The source-bound run executes from frozen HERE; the actual collector, if separately authorized later, creates an exact execution copy.
++The static source guard captures122 sources (89 parent plus33 explicitly named files), with exactly eight replacements (six runtime, two top-level gates) and81 unchanged parent files. The new source archive uses32MiB total/16MiB member limits; original producer bounds remain unchanged. Preparation includes all confirmed descriptor/read/stream/tree/write cleanup regressions, source/phase/terminal tests, the exact old217 gate, default receipt tests and21 installed forbidden entrypoint calls. No retained input, reference, key, model or ciphertext is read during preparation. The source-bound run executes from frozen HERE; the actual collector, if separately authorized later, creates an exact execution copy.
+ 
+ The selected reader call graph and explicit exclusions are in READERS.md. The earlier114 draft is preserved separately before the expanded key_gate/input_gate/transport repairs. Public producer authentication logic and independently pinned inventories remain unchanged even where their shared current-consumer byte reader is repaired.
+ 
+ Actual entry CLIs require isolated Python startup (`python -I -B`) and caller-pinned `--source-manifest`/`--source-manifest-sha256`. Before importing any local helper, inline stdlib bootstrap verifies entry and bootstrap bytes against that external manifest digest, then the authenticated bootstrap checks every explicit source and rejects preloaded local helpers. Only then are client helpers/gates importable. The collector passes an exact current execution manifest to its isolated worker. In-process test APIs are not an untrusted import sandbox; fresh actual CLI bootstrap is the claimed boundary.
+ 
+ Fresh actual source trees must contain no undeclared Python source, bytecode or native-extension file, including namespace-package shadows. Bootstrap rejects all source-tree symlinks and unknown-name preloaded modules whose file or spec origin points inside the source tree. The actual isolated collector/worker disable bytecode writes; source copies are made only from the explicit manifest. This detects ordinary import substitution and does not claim an OS sandbox against concurrent same-user mutation.
++
++## Source-only decoder proposal
++
++This new isolated proposal copies the completed clean consumer closure and adds
++the reviewed `ckks_ctx.py` decoder SHA 9675b300d507fd9c6a3d03656c9df325d8da68a9331b4c92def0512784d0dc26.
++It changes only the host conversion of centered CRT coefficients: the existing
++`float(value) * scale_inv` path remains exact when conversion succeeds, and an
++overflowing conversion uses the exact binary64 scale ratio. FFT, approximation
++validation, decryption, ciphertext/key formats, parameter profile, lifecycle and
++P2 acceptance are unchanged. The local guard explicitly admits this decoder;
++all old producer source maps and gates remain literal predecessor bytes.
++
++Only four files differ from the clean122/125 parent: this README, the decoder,
++the guard's overlay dictionary, and the existing source-guard test expectation
++plus decoder/alias assertions. No new test case or selected entrypoint is added.
++The historical client preflight does not attest these new bytes: this proposal
++has had source/AST/hash inspection only, with no backend import, installed probe,
++full preflight, payload/private read or client execution. A separately reviewed
++complete client proof and launch grant remain required.
++
++The authenticated final BERT L2 response has six fixed Q towers: their product
++is181 bits and centered coefficients are at most180 bits. This final boundary
++therefore uses the unchanged successful-float path. The proposal is compatible
++decoder robustness preparation, not a claimed fix for an observed full-BERT
++failure, evidence of numerical accuracy, or recovery of the separate toy5 run.
++Keep the actual source copy free of bytecode/import shadows and launch only via
++the existing isolated externally pinned CLI. Do not rewrite old producer maps
++to the new consumer hash or touch any current server response/request ledger.
+--- parent/client_source_guard.py
++++ proposal/client_source_guard.py
+@@ -9,7 +9,7 @@
+ HERE=Path(__file__).resolve().parent
+ PARENT_SHA='4caa7697ea5260f0ea88f144452873fc87d71d551e9d8033a909da03cfb48882'
+ REPORT_SHA='274ec333531f42e0ca76cd8b6ec2ef508dcf0dd9c1366ac9350c3e52f093c424'
+-OVERLAYS={'runtime/stage/request_lifecycle.py': 'de6f72504035b17d5c1dea4e3456c5dc269cdebc1f96bbe153a9b18b36c100a4', 'runtime/stage/client_keys.py': 'd6a2aac4e8ecf483e250a793a341cc6e451e2e9471ad8725e7699f720c7cfa76', 'runtime/stage/key_contexts.py': '056627ee3080f3d6ec7445ceb2f25171b49c7fc08eb256449a656b100f5853f0', 'runtime/stage/file_stage_io.py': 'e50d0ea824ab0be181bd891c725f371ce9f594b79a72e7215b7c8cb8f4e37a42', 'key_gate.py': '19f791eeb448d44d09e7a02e194539d318e8409104086910f7af3dfd3bce075b', 'input_gate.py': '6476dcc96764a3ac61807f551184fcc180a52d7486c4a22484254cfdb79e9451', 'runtime/stage/transport.py': 'd9c393184957c8ee26b05818a5ac9e647b0e0528b7a8eba4f191e3fbce837a49'}
++OVERLAYS={'runtime/stage/request_lifecycle.py': 'de6f72504035b17d5c1dea4e3456c5dc269cdebc1f96bbe153a9b18b36c100a4', 'runtime/stage/client_keys.py': 'd6a2aac4e8ecf483e250a793a341cc6e451e2e9471ad8725e7699f720c7cfa76', 'runtime/stage/key_contexts.py': '056627ee3080f3d6ec7445ceb2f25171b49c7fc08eb256449a656b100f5853f0', 'runtime/stage/file_stage_io.py': 'e50d0ea824ab0be181bd891c725f371ce9f594b79a72e7215b7c8cb8f4e37a42', 'key_gate.py': '19f791eeb448d44d09e7a02e194539d318e8409104086910f7af3dfd3bce075b', 'input_gate.py': '6476dcc96764a3ac61807f551184fcc180a52d7486c4a22484254cfdb79e9451', 'runtime/stage/transport.py': 'd9c393184957c8ee26b05818a5ac9e647b0e0528b7a8eba4f191e3fbce837a49', 'runtime/jaxite_word/ckks_ctx.py': '9675b300d507fd9c6a3d03656c9df325d8da68a9331b4c92def0512784d0dc26'}
+ NEW=('client_89_sources.json', 'client_89_report.json', 'client_io.py', 'client_processes.py', 'client_source_guard.py', 'client_preflight.py', 'client_installed_probe.py', 'README_CLIENT.md', 'original_public_readback.py', 'original_client_readback.py', 'original_client_worker.py', 'original_client_collect.py', 'test_client_io.py', 'test_receipt_io.py', 'test_client_descriptor_io.py', 'test_client_source_guard.py', 'test_original_client_worker.py', 'test_original_client_collect.py', 'test_original_client_readback.py', 'test_original_default.py', 'baseline/file_stages.py', 'baseline/request_lifecycle.py', 'baseline/client_keys.py', 'baseline/key_contexts.py', 'baseline/file_stage_io.py', 'baseline/key_gate.py', 'baseline/input_gate.py', 'baseline/transport.py', 'test_prerequisite_readers.py', 'test_original_transport_io.py', 'READERS.md', 'client_bootstrap.py', 'test_client_bootstrap.py')
+ ENTRY=('client_preflight', 'client_installed_probe', 'client_io', 'client_source_guard', 'original_public_readback', 'original_client_readback', 'original_client_worker', 'original_client_collect', 'client_processes', 'stage4_gate', 'key_gate', 'model_gate', 'stage3_gate', 'reference_gate', 'input_gate', 'boundaries', 'cleanup', 'terminal', 'client_metrics')
+ 
+--- parent/runtime/jaxite_word/ckks_ctx.py
++++ proposal/runtime/jaxite_word/ckks_ctx.py
+@@ -1689,6 +1689,27 @@
+   _check_decode_stddev(_decode_approximation_stddev(values, conjugate))
+ 
+ 
++def _scale_centered_crt_coefficient(value: int, scale: float, scale_inv: float) -> float:
++  """Scale a centered CRT integer without overflowing its initial conversion.
++
++  Preserve the existing binary64 operations when integer conversion succeeds.
++  Only an overflowing integer conversion takes the exact binary64 scale's
++  integer-ratio path. A nonrepresentable scaled result still raises; the decode
++  approximation check is unchanged.
++  """
++  try:
++    raw = float(value)
++  except OverflowError:
++    numerator, denominator = float(scale).as_integer_ratio()
++    try:
++      return (value * denominator) / numerator
++    except OverflowError as error:
++      raise OverflowError(
++          'CKKS unit-scale coefficient is not representable as binary64'
++      ) from error
++  return raw * scale_inv
++
++
+ def _fast_decode(
+     coef_rns: np.ndarray,
+     ctx,
+@@ -1731,11 +1752,11 @@
+     r = combined[i * gap]
+     if r > Big_half:
+       r -= Big
+-    reals[i] = float(r) * scale_inv
++    reals[i] = _scale_centered_crt_coefficient(r, scale, scale_inv)
+     im = combined[i * gap + Nh]
+     if im > Big_half:
+       im -= Big
+-    imags[i] = float(im) * scale_inv
++    imags[i] = _scale_centered_crt_coefficient(im, scale, scale_inv)
+ 
+   cur = reals + 1j * imags
+ 
+--- parent/test_client_source_guard.py
++++ proposal/test_client_source_guard.py
+@@ -9,11 +9,13 @@
+  for n,b in raw.items():p=root/n;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(b)
+  return root,g.io.hashes(raw)
+ 
+-def test_complete_static_closure_and_seven_overlays(source):
++def test_complete_static_closure_and_eight_overlays(source):
+  root,expected=source;r=g.check_sources(expected,root,modules={})
+- assert r['passed']and r['parent_source_count']==89 and len(r['overlays'])==7
++ assert r['passed']and r['parent_source_count']==89 and len(r['overlays'])==8
+  assert r['critical_resolution']['file_stages']=='runtime/stage/file_stages.py'
+  assert r['critical_resolution']['client_installed_probe']=='client_installed_probe.py'
++ assert r['overlays']['runtime/jaxite_word/ckks_ctx.py']=='9675b300d507fd9c6a3d03656c9df325d8da68a9331b4c92def0512784d0dc26'
++ assert r['critical_resolution']['ckks_ctx']==r['critical_resolution']['jaxite_word.ckks_ctx']=='runtime/jaxite_word/ckks_ctx.py'
+  assert all(v in expected for v in r['reachable_local_modules'].values())
+ 
+ @pytest.mark.parametrize('name',['client_io.py','original_client_worker.py','stage4_gate.py','runtime/stage/transport.py'])

@@ -1,0 +1,89 @@
+"""Whitelist terminal factored-routing evidence; never copy keys or payloads."""
+from pathlib import Path,PurePosixPath
+import argparse,hashlib,json,math,re,stat,tarfile
+LAB=Path('/tmp/factored-shallow-score-component-20261103');RUN=LAB/'encrypted-v1'
+def require(ok,message):
+    if not ok:raise ValueError(message)
+def read(path):
+    require(stat.S_ISREG(path.lstat().st_mode),'nonregular evidence: '+str(path))
+    return path.read_bytes()
+def sha(path):return hashlib.sha256(read(path)).hexdigest()
+def aggregate(value):
+    forbidden={'secret_key','private_key','sk','payload','ciphertext','ciphertexts','embeddings',
+        'decrypted','logits','labels','predictions','input_ids','token_ids'}
+    if isinstance(value,dict):
+        for key,child in value.items():
+            require(key.lower() not in forbidden,'private-valued field: '+key);aggregate(child)
+    elif isinstance(value,list):
+        for child in value:aggregate(child)
+    elif isinstance(value,float):require(math.isfinite(value),'nonfinite report field')
+def main():
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('destination',type=Path)
+    parser.add_argument('--observed-exit-code',type=int,required=True);args=parser.parse_args()
+    report=json.loads(read(RUN/'report.json'));raw=json.loads(read(RUN/'numerical.json'))
+    process=json.loads(read(RUN/'process/process.json'))
+    for value in (report,raw,process):aggregate(value)
+    require(process.get('process_reaped')is True,'child not reaped')
+    require(process.get('public_key_store_removed')is True and process.get('owned_directory_handle_closed')is True,'owned cleanup not verified')
+    require(not Path(process['owned_public_key_directory']).exists(),'owned key directory remains')
+    require(raw.get('cleanup_completed')is True,'primitive/context cleanup did not complete')
+    pids=[1214190,1214191,process['pid']]
+    require(all(not Path('/proc/'+str(pid)).exists() for pid in pids),'recorded process remains')
+    before=report['source_hashes_start'];after=report['source_hashes_end']
+    require(len(before)==111 and before==after and report['source_files_unchanged'],'source snapshot changed')
+    require(raw['source_hashes_start']==raw['source_hashes_end']==before and raw['source_files_unchanged'],'proof source closure differs')
+    require(sha(RUN/'sources.tar.gz')==report['source_archive_sha256'],'source archive digest changed')
+    expected={}
+    for name,digest in before.items():
+        source=Path(name);member=str(source.relative_to(LAB))
+        require(member not in expected,'source path collision');expected[member]=digest
+        require(sha(source)==digest,'current measured source changed: '+name)
+    actual={}
+    with tarfile.open(RUN/'sources.tar.gz') as archive:
+        for member in archive.getmembers():
+            path=PurePosixPath(member.name)
+            require(member.isfile() and not path.is_absolute() and '..' not in path.parts,'unsafe archive member')
+            require(member.name not in actual,'duplicate archive member')
+            actual[member.name]=hashlib.sha256(archive.extractfile(member).read()).hexdigest()
+    require(actual==expected,'source archive byte mismatch')
+    passed=report.get('passed')is True
+    require((args.observed_exit_code==0)==passed,'terminal status differs from report')
+    require(report['cpu_affinity']==raw['cpu_affinity']==[152,153,154,155],'wrong affinity')
+    require(raw['fixed_absolute_error_gate']==1e-6,'changed numerical gate')
+    if passed:
+        require(raw.get('passed')is True and process.get('returncode')==0 and not process.get('error'),'failed nested proof')
+        require(raw.get('all_twelve_outputs_before_client_decode')is True and raw.get('no_refresh')is True,'phase boundary differs')
+        require(raw.get('codecs_and_both_keygen_aliases_guarded')is True and raw.get('keyless_server')is True,'keyless boundary differs')
+        require(raw.get('inputs_unchanged')is True and raw.get('retained_outputs_unchanged')is True,'ciphertext identity changed')
+        require(raw.get('actual_security_and_P_coverage_checked_before_keygen')is True,'security preflight missing')
+        require(len(raw['checks'])==len(raw['phases'])==12,'incomplete route checkpoints')
+        for check in raw['checks'].values():
+            require(check['passed'] and check['slots_checked']==65536 and check['absolute_error_gate']==1e-6,'failed all-slot gate')
+        for case in ('canonical','noncanonical'):
+            phases=[row for row in raw['phases'] if row['case']==case]
+            require([row['level'] for row in phases]==[4,3,3,3,2,1],'route level sequence differs')
+            require(all(type(row['nsd'])is int and row['nsd']==1 for row in phases),'NSD mismatch')
+    outer=read(LAB/'encrypted-v1.log').decode()
+    match=re.search(r'Exit status: (\d+)\s*$',outer);require(match and int(match.group(1))==args.observed_exit_code,'external exit differs')
+    rss=re.search(r'Maximum resident set size \(kbytes\): (\d+)',outer)
+    wall=re.search(r'Elapsed \(wall clock\) time \(h:mm:ss or m:ss\): ([\d:.]+)',outer)
+    require(rss and wall,'external resources missing')
+    elapsed=sum(float(value)*60**i for i,value in enumerate(reversed(wall.group(1).split(':'))))
+    selected={RUN/name:'measured/'+name for name in ('report.json','numerical.json','sources.tar.gz',
+        'process/process.json','process/stderr.log','process/stdout.json') if (RUN/name).is_file()}
+    selected[LAB/'encrypted-v1.log']='run.log';selected[Path(__file__).resolve()]='verify_archive.py.txt'
+    for path in selected:
+        require(path.suffix not in ('.npz','.npy'),'binary array selected')
+        if path.suffix=='.json':aggregate(json.loads(read(path)))
+    dest=args.destination.resolve();dest.mkdir(parents=True,exist_ok=False);copied={}
+    for path,name in selected.items():
+        data=read(path);target=dest/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(data)
+        require(sha(target)==sha(path),'archive copy changed');copied[name]=sha(target)
+    verification=dict(passed=True,component_passed=passed,observed_tool_session=45984,
+        observed_terminal_exit_code=args.observed_exit_code,recorded_processes_absent=pids,
+        measured_source_files=len(before),exact_archive_verified=True,owned_key_directory_absent=True,
+        private_arrays_keys_ciphertexts_copied=False,external_elapsed_s=elapsed,peak_rss_kib=int(rss.group(1)),
+        internal_elapsed_s=report['elapsed_s'],copied_artifact_sha256=copied)
+    (dest/'verification.json').write_text(json.dumps(verification,indent=2)+'\n')
+    print(json.dumps(verification,indent=2))
+if __name__=='__main__':main()

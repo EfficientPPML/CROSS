@@ -1,0 +1,89 @@
+.FF                                                                      [100%]
+=================================== FAILURES ===================================
+________________ test_changed_field_class_rejected_before_work _________________
+
+    def test_changed_field_class_rejected_before_work():
+        a=Arithmetic();a.ctx._param_cache.ff_context_cls=type('OriginalBarrett',(),{})
+>       owner=BSGSScoreRouting(a,FactoredScoreLayout(0,0))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/bert-bsgs-score-routing-owner-20261103/metadata_tests/review_repros/test_review_guards.py:22: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/tmp/bert-bsgs-score-routing-owner-20261103/metadata_tests/review_repros/encrypted_bsgs_score_routing.py:79: in __init__
+    self._guard()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <encrypted_bsgs_score_routing.BSGSScoreRouting object at 0x729d9ffdbed0>
+
+    def _guard(self):
+        a, c = self.arithmetic, self.ctx
+        current = (a, c, c._param_cache, self.layout, self.progress)
+        if any(x is not y for x, y in zip(current, self._borrowed)):
+            raise ValueError('borrowed owner/context/layout/callback changed')
+        if a.ctx is not c or self._cache is not c._param_cache:
+            raise ValueError('borrowed arithmetic context changed')
+        if self._failed_arrays:
+            raise ValueError('previous synchronization failure remains unresolved')
+        if self._context_fingerprint() != self._context_state:
+            raise ValueError('context metadata changed')
+        if typed((self.layout.key_tile, self.layout.offset)) != self._layout_state:
+            raise ValueError('layout metadata changed')
+        dependencies = tuple(getattr(owner, name) for owner, name in (
+            (FactoredScoreLayout, 'tile_shift'), (ShallowScoreLayout, 'row_keys'),
+            (ShallowScoreLayout, 'head_diagonals'), (ShallowScoreLayout, 'key_diagonals')))
+        if (type(self.layout) is not FactoredScoreLayout or
+                any(x is not y for x, y in zip(dependencies, self._layout_dependencies))):
+            raise ValueError('layout inherited accessor changed')
+        self.layout.__post_init__()
+        k = c._param_cache
+>       from finite_field import BarrettContext
+E       ModuleNotFoundError: No module named 'finite_field'
+
+/tmp/bert-bsgs-score-routing-owner-20261103/metadata_tests/review_repros/encrypted_bsgs_score_routing.py:152: ModuleNotFoundError
+___________ test_later_callback_cannot_leave_owned_prior_annotations ___________
+
+    def test_later_callback_cannot_leave_owned_prior_annotations():
+        source=Value(np.arange(SLOTS,dtype=np.float64));saved=[]
+        def callback(label,value,counts):
+            if label=='head compaction':saved.append(value)
+            else:saved[0]._public_bound='stale callback assertion'
+>       owner=BSGSScoreRouting(Arithmetic(),FactoredScoreLayout(0,0),progress=callback)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/bert-bsgs-score-routing-owner-20261103/metadata_tests/review_repros/test_review_guards.py:32: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/tmp/bert-bsgs-score-routing-owner-20261103/metadata_tests/review_repros/encrypted_bsgs_score_routing.py:79: in __init__
+    self._guard()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <encrypted_bsgs_score_routing.BSGSScoreRouting object at 0x729d9e7cc910>
+
+    def _guard(self):
+        a, c = self.arithmetic, self.ctx
+        current = (a, c, c._param_cache, self.layout, self.progress)
+        if any(x is not y for x, y in zip(current, self._borrowed)):
+            raise ValueError('borrowed owner/context/layout/callback changed')
+        if a.ctx is not c or self._cache is not c._param_cache:
+            raise ValueError('borrowed arithmetic context changed')
+        if self._failed_arrays:
+            raise ValueError('previous synchronization failure remains unresolved')
+        if self._context_fingerprint() != self._context_state:
+            raise ValueError('context metadata changed')
+        if typed((self.layout.key_tile, self.layout.offset)) != self._layout_state:
+            raise ValueError('layout metadata changed')
+        dependencies = tuple(getattr(owner, name) for owner, name in (
+            (FactoredScoreLayout, 'tile_shift'), (ShallowScoreLayout, 'row_keys'),
+            (ShallowScoreLayout, 'head_diagonals'), (ShallowScoreLayout, 'key_diagonals')))
+        if (type(self.layout) is not FactoredScoreLayout or
+                any(x is not y for x, y in zip(dependencies, self._layout_dependencies))):
+            raise ValueError('layout inherited accessor changed')
+        self.layout.__post_init__()
+        k = c._param_cache
+>       from finite_field import BarrettContext
+E       ModuleNotFoundError: No module named 'finite_field'
+
+/tmp/bert-bsgs-score-routing-owner-20261103/metadata_tests/review_repros/encrypted_bsgs_score_routing.py:152: ModuleNotFoundError
+=========================== short test summary info ============================
+FAILED ../../tmp/bert-bsgs-score-routing-owner-20261103/metadata_tests/review_repros/test_review_guards.py::test_changed_field_class_rejected_before_work
+FAILED ../../tmp/bert-bsgs-score-routing-owner-20261103/metadata_tests/review_repros/test_review_guards.py::test_later_callback_cannot_leave_owned_prior_annotations
+2 failed, 1 passed in 0.09s

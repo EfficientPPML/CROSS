@@ -1,0 +1,34 @@
+...................................................F.................... [ 80%]
+..................                                                       [100%]
+=================================== FAILURES ===================================
+____________ test_final_publication_failure_prevents_success_return ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7b6690464c30>
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-138/test_final_publication_failure0')
+
+    def test_final_publication_failure_prevents_success_return(monkeypatch, tmp_path):
+        args = prepare_evaluation(monkeypatch, tmp_path)
+        real_write = suite.write_json
+        def fail_final_write(path, value):
+            if 'elapsed_s' in value:
+                raise OSError('cannot publish final success')
+            return real_write(path, value)
+        monkeypatch.setattr(suite, 'write_json', fail_final_write)
+        with pytest.raises(OSError, match='cannot publish final success'):
+            suite.evaluate(args)
+        report = json.loads((args.output / 'report.json').read_text())
+>       assert len(report['cases']) == 6 and report['passed'] is False
+E       AssertionError: assert (5 == 6)
+E        +  where 5 = len({'test1.in': {'passed': True, 'returncode': 0, 'process_reaped': True, 'public_key_store_removed': True, ...}, 'test2......}, 'test4.in': {'passed': True, 'returncode': 0, 'process_reaped': True, 'public_key_store_removed': True, ...}, ...})
+
+cadathlon/tests/test_transformer_suite.py:354: AssertionError
+----------------------------- Captured stdout call -----------------------------
+Starting test1.in; raw output: /tmp/pytest-of-jianming_gatech/pytest-138/test_final_publication_failure0/evidence/test1
+Starting test2.in; raw output: /tmp/pytest-of-jianming_gatech/pytest-138/test_final_publication_failure0/evidence/test2
+Starting test3.in; raw output: /tmp/pytest-of-jianming_gatech/pytest-138/test_final_publication_failure0/evidence/test3
+Starting test4.in; raw output: /tmp/pytest-of-jianming_gatech/pytest-138/test_final_publication_failure0/evidence/test4
+Starting test5.in; raw output: /tmp/pytest-of-jianming_gatech/pytest-138/test_final_publication_failure0/evidence/test5
+Starting test6.in; raw output: /tmp/pytest-of-jianming_gatech/pytest-138/test_final_publication_failure0/evidence/test6
+=========================== short test summary info ============================
+FAILED cadathlon/tests/test_transformer_suite.py::test_final_publication_failure_prevents_success_return
+1 failed, 89 passed in 5.59s

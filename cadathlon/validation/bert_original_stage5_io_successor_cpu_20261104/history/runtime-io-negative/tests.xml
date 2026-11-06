@@ -1,0 +1,634 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="23" skipped="0" tests="24" time="0.423" timestamp="2026-11-04T01:39:58.717442+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_client_descriptor_io" name="test_fdopen_construction_cannot_leak_descriptor[read]" time="0.010"><failure message="AssertionError: constructor failure lost an owned/duplicated descriptor&#10;assert not [15]&#10; +  where [15] = remaining()&#10; +    where remaining = &lt;test_client_descriptor_io.IO object at 0x782d99e942f0&gt;.remaining">files = namespace(root=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-550/test_fdopen_construction_canno0'), path=PosixPath(...1f23fe8d7755b54a6'}, owner=namespace(fd=13, private=False, check=&lt;function files.&lt;locals&gt;.&lt;lambda&gt; at 0x782d991adda0&gt;))
+helper = 'read'
+
+    @pytest.mark.parametrize('helper', ['read', 'sha', 'map'])
+    def test_fdopen_construction_cannot_leak_descriptor(files, helper):
+        io = IO()
+        primary = ValueError('synthetic fdopen construction failure')
+        io.os.fdopen = lambda *a, **k: (_ for _ in ()).throw(primary)
+        api = load(io.os)
+        borrowed = None
+        try:
+            try:
+                if helper == 'read':
+                    result = api.keys['_read'](files.parent, files.path.name, 1024)
+                    assert result == files.path.read_bytes()
+                elif helper == 'sha':
+                    borrowed = os.open(files.path, os.O_RDONLY)
+                    result = api.keys['_sha_fd'](borrowed)
+                    assert result == hashlib.sha256(files.path.read_bytes()).hexdigest()
+                else:
+                    result, _ = api.ctx['_map_array'](files.owner, files.array.name, files.descriptor, (2, 2), (7, 11))
+                    result._mmap.close()
+            except ValueError as error:
+                assert error is primary
+&gt;           assert not io.remaining(), 'constructor failure lost an owned/duplicated descriptor'
+E           AssertionError: constructor failure lost an owned/duplicated descriptor
+E           assert not [15]
+E            +  where [15] = remaining()
+E            +    where remaining = &lt;test_client_descriptor_io.IO object at 0x782d99e942f0&gt;.remaining
+
+test_client_descriptor_io.py:124: AssertionError</failure></testcase><testcase classname="test_client_descriptor_io" name="test_fdopen_construction_cannot_leak_descriptor[sha]" time="0.008"><failure message="AssertionError: constructor failure lost an owned/duplicated descriptor&#10;assert not [15]&#10; +  where [15] = remaining()&#10; +    where remaining = &lt;test_client_descriptor_io.IO object at 0x782d99d3bd90&gt;.remaining">files = namespace(root=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-550/test_fdopen_construction_canno1'), path=PosixPath(...1f23fe8d7755b54a6'}, owner=namespace(fd=13, private=False, check=&lt;function files.&lt;locals&gt;.&lt;lambda&gt; at 0x782d979e8360&gt;))
+helper = 'sha'
+
+    @pytest.mark.parametrize('helper', ['read', 'sha', 'map'])
+    def test_fdopen_construction_cannot_leak_descriptor(files, helper):
+        io = IO()
+        primary = ValueError('synthetic fdopen construction failure')
+        io.os.fdopen = lambda *a, **k: (_ for _ in ()).throw(primary)
+        api = load(io.os)
+        borrowed = None
+        try:
+            try:
+                if helper == 'read':
+                    result = api.keys['_read'](files.parent, files.path.name, 1024)
+                    assert result == files.path.read_bytes()
+                elif helper == 'sha':
+                    borrowed = os.open(files.path, os.O_RDONLY)
+                    result = api.keys['_sha_fd'](borrowed)
+                    assert result == hashlib.sha256(files.path.read_bytes()).hexdigest()
+                else:
+                    result, _ = api.ctx['_map_array'](files.owner, files.array.name, files.descriptor, (2, 2), (7, 11))
+                    result._mmap.close()
+            except ValueError as error:
+                assert error is primary
+&gt;           assert not io.remaining(), 'constructor failure lost an owned/duplicated descriptor'
+E           AssertionError: constructor failure lost an owned/duplicated descriptor
+E           assert not [15]
+E            +  where [15] = remaining()
+E            +    where remaining = &lt;test_client_descriptor_io.IO object at 0x782d99d3bd90&gt;.remaining
+
+test_client_descriptor_io.py:124: AssertionError</failure></testcase><testcase classname="test_client_descriptor_io" name="test_fdopen_construction_cannot_leak_descriptor[map]" time="0.008"><failure message="AssertionError: constructor failure lost an owned/duplicated descriptor&#10;assert not [15]&#10; +  where [15] = remaining()&#10; +    where remaining = &lt;test_client_descriptor_io.IO object at 0x782d9796c910&gt;.remaining">files = namespace(root=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-550/test_fdopen_construction_canno2'), path=PosixPath(...1f23fe8d7755b54a6'}, owner=namespace(fd=13, private=False, check=&lt;function files.&lt;locals&gt;.&lt;lambda&gt; at 0x782d979e8d60&gt;))
+helper = 'map'
+
+    @pytest.mark.parametrize('helper', ['read', 'sha', 'map'])
+    def test_fdopen_construction_cannot_leak_descriptor(files, helper):
+        io = IO()
+        primary = ValueError('synthetic fdopen construction failure')
+        io.os.fdopen = lambda *a, **k: (_ for _ in ()).throw(primary)
+        api = load(io.os)
+        borrowed = None
+        try:
+            try:
+                if helper == 'read':
+                    result = api.keys['_read'](files.parent, files.path.name, 1024)
+                    assert result == files.path.read_bytes()
+                elif helper == 'sha':
+                    borrowed = os.open(files.path, os.O_RDONLY)
+                    result = api.keys['_sha_fd'](borrowed)
+                    assert result == hashlib.sha256(files.path.read_bytes()).hexdigest()
+                else:
+                    result, _ = api.ctx['_map_array'](files.owner, files.array.name, files.descriptor, (2, 2), (7, 11))
+                    result._mmap.close()
+            except ValueError as error:
+                assert error is primary
+&gt;           assert not io.remaining(), 'constructor failure lost an owned/duplicated descriptor'
+E           AssertionError: constructor failure lost an owned/duplicated descriptor
+E           assert not [15]
+E            +  where [15] = remaining()
+E            +    where remaining = &lt;test_client_descriptor_io.IO object at 0x782d9796c910&gt;.remaining
+
+test_client_descriptor_io.py:124: AssertionError</failure></testcase><testcase classname="test_client_descriptor_io" name="test_read_primary_survives_all_descriptor_closes[ValueError-read]" time="0.009"><failure message="AssertionError: assert OSError('synthetic post-close failure') is ValueError('synthetic metadata read primary')&#10; +  where OSError('synthetic post-close failure') = &lt;ExceptionInfo OSError('synthetic post-close failure') tblen=3&gt;.value">files = namespace(root=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-550/test_read_primary_survives_all0'), path=PosixPath(...1f23fe8d7755b54a6'}, owner=namespace(fd=13, private=False, check=&lt;function files.&lt;locals&gt;.&lt;lambda&gt; at 0x782d979e9800&gt;))
+helper = 'read', kind = &lt;class 'ValueError'&gt;
+
+    @pytest.mark.parametrize('helper', ['read', 'manifest'])
+    @pytest.mark.parametrize('kind', [ValueError, KeyboardInterrupt, SystemExit])
+    def test_read_primary_survives_all_descriptor_closes(files, helper, kind):
+        io = IO()
+        primary = kind('synthetic metadata read primary')
+    
+        class Stream:
+            def __init__(self, fd): self.fd = fd
+            def __enter__(self): return self
+            def read(self, maximum): raise primary
+            def __exit__(self, *args): os.close(self.fd)
+    
+        io.os.fdopen = lambda fd, *a, **k: Stream(fd)
+        io.os.read = lambda *a: (_ for _ in ()).throw(primary)
+    
+        def close(fd):
+            io.close(fd)
+            raise OSError('synthetic post-close failure')
+    
+        io.os.close = close
+        api = load(io.os)
+        try:
+            with pytest.raises(BaseException) as got:
+                if helper == 'read': api.keys['_read'](files.parent, files.path.name, 1024)
+                else: api.files['read_manifest'](files.path)
+&gt;           assert got.value is primary
+E           AssertionError: assert OSError('synthetic post-close failure') is ValueError('synthetic metadata read primary')
+E            +  where OSError('synthetic post-close failure') = &lt;ExceptionInfo OSError('synthetic post-close failure') tblen=3&gt;.value
+
+test_client_descriptor_io.py:156: AssertionError</failure></testcase><testcase classname="test_client_descriptor_io" name="test_read_primary_survives_all_descriptor_closes[ValueError-manifest]" time="0.008"><failure message="AssertionError: assert OSError('synthetic post-close failure') is ValueError('synthetic metadata read primary')&#10; +  where OSError('synthetic post-close failure') = &lt;ExceptionInfo OSError('synthetic post-close failure') tblen=4&gt;.value">files = namespace(root=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-550/test_read_primary_survives_all1'), path=PosixPath(...1f23fe8d7755b54a6'}, owner=namespace(fd=13, private=False, check=&lt;function files.&lt;locals&gt;.&lt;lambda&gt; at 0x782d979e99e0&gt;))
+helper = 'manifest', kind = &lt;class 'ValueError'&gt;
+
+    @pytest.mark.parametrize('helper', ['read', 'manifest'])
+    @pytest.mark.parametrize('kind', [ValueError, KeyboardInterrupt, SystemExit])
+    def test_read_primary_survives_all_descriptor_closes(files, helper, kind):
+        io = IO()
+        primary = kind('synthetic metadata read primary')
+    
+        class Stream:
+            def __init__(self, fd): self.fd = fd
+            def __enter__(self): return self
+            def read(self, maximum): raise primary
+            def __exit__(self, *args): os.close(self.fd)
+    
+        io.os.fdopen = lambda fd, *a, **k: Stream(fd)
+        io.os.read = lambda *a: (_ for _ in ()).throw(primary)
+    
+        def close(fd):
+            io.close(fd)
+            raise OSError('synthetic post-close failure')
+    
+        io.os.close = close
+        api = load(io.os)
+        try:
+            with pytest.raises(BaseException) as got:
+                if helper == 'read': api.keys['_read'](files.parent, files.path.name, 1024)
+                else: api.files['read_manifest'](files.path)
+&gt;           assert got.value is primary
+E           AssertionError: assert OSError('synthetic post-close failure') is ValueError('synthetic metadata read primary')
+E            +  where OSError('synthetic post-close failure') = &lt;ExceptionInfo OSError('synthetic post-close failure') tblen=4&gt;.value
+
+test_client_descriptor_io.py:156: AssertionError</failure></testcase><testcase classname="test_client_descriptor_io" name="test_read_primary_survives_all_descriptor_closes[KeyboardInterrupt-read]" time="0.008"><failure message="AssertionError: assert OSError('synthetic post-close failure') is KeyboardInterrupt('synthetic metadata read primary')&#10; +  where OSError('synthetic post-close failure') = &lt;ExceptionInfo OSError('synthetic post-close failure') tblen=3&gt;.value">files = namespace(root=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-550/test_read_primary_survives_all2'), path=PosixPath(...1f23fe8d7755b54a6'}, owner=namespace(fd=13, private=False, check=&lt;function files.&lt;locals&gt;.&lt;lambda&gt; at 0x782d979e87c0&gt;))
+helper = 'read', kind = &lt;class 'KeyboardInterrupt'&gt;
+
+    @pytest.mark.parametrize('helper', ['read', 'manifest'])
+    @pytest.mark.parametrize('kind', [ValueError, KeyboardInterrupt, SystemExit])
+    def test_read_primary_survives_all_descriptor_closes(files, helper, kind):
+        io = IO()
+        primary = kind('synthetic metadata read primary')
+    
+        class Stream:
+            def __init__(self, fd): self.fd = fd
+            def __enter__(self): return self
+            def read(self, maximum): raise primary
+            def __exit__(self, *args): os.close(self.fd)
+    
+        io.os.fdopen = lambda fd, *a, **k: Stream(fd)
+        io.os.read = lambda *a: (_ for _ in ()).throw(primary)
+    
+        def close(fd):
+            io.close(fd)
+            raise OSError('synthetic post-close failure')
+    
+        io.os.close = close
+        api = load(io.os)
+        try:
+            with pytest.raises(BaseException) as got:
+                if helper == 'read': api.keys['_read'](files.parent, files.path.name, 1024)
+                else: api.files['read_manifest'](files.path)
+&gt;           assert got.value is primary
+E           AssertionError: assert OSError('synthetic post-close failure') is KeyboardInterrupt('synthetic metadata read primary')
+E            +  where OSError('synthetic post-close failure') = &lt;ExceptionInfo OSError('synthetic post-close failure') tblen=3&gt;.value
+
+test_client_descriptor_io.py:156: AssertionError</failure></testcase><testcase classname="test_client_descriptor_io" name="test_read_primary_survives_all_descriptor_closes[KeyboardInterrupt-manifest]" time="0.008"><failure message="AssertionError: assert OSError('synthetic post-close failure') is KeyboardInterrupt('synthetic metadata read primary')&#10; +  where OSError('synthetic post-close failure') = &lt;ExceptionInfo OSError('synthetic post-close failure') tblen=4&gt;.value">files = namespace(root=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-550/test_read_primary_survives_all3'), path=PosixPath(...1f23fe8d7755b54a6'}, owner=namespace(fd=13, private=False, check=&lt;function files.&lt;locals&gt;.&lt;lambda&gt; at 0x782d979eaa20&gt;))
+helper = 'manifest', kind = &lt;class 'KeyboardInterrupt'&gt;
+
+    @pytest.mark.parametrize('helper', ['read', 'manifest'])
+    @pytest.mark.parametrize('kind', [ValueError, KeyboardInterrupt, SystemExit])
+    def test_read_primary_survives_all_descriptor_closes(files, helper, kind):
+        io = IO()
+        primary = kind('synthetic metadata read primary')
+    
+        class Stream:
+            def __init__(self, fd): self.fd = fd
+            def __enter__(self): return self
+            def read(self, maximum): raise primary
+            def __exit__(self, *args): os.close(self.fd)
+    
+        io.os.fdopen = lambda fd, *a, **k: Stream(fd)
+        io.os.read = lambda *a: (_ for _ in ()).throw(primary)
+    
+        def close(fd):
+            io.close(fd)
+            raise OSError('synthetic post-close failure')
+    
+        io.os.close = close
+        api = load(io.os)
+        try:
+            with pytest.raises(BaseException) as got:
+                if helper == 'read': api.keys['_read'](files.parent, files.path.name, 1024)
+                else: api.files['read_manifest'](files.path)
+&gt;           assert got.value is primary
+E           AssertionError: assert OSError('synthetic post-close failure') is KeyboardInterrupt('synthetic metadata read primary')
+E            +  where OSError('synthetic post-close failure') = &lt;ExceptionInfo OSError('synthetic post-close failure') tblen=4&gt;.value
+
+test_client_descriptor_io.py:156: AssertionError</failure></testcase><testcase classname="test_client_descriptor_io" name="test_read_primary_survives_all_descriptor_closes[SystemExit-read]" time="0.008"><failure message="AssertionError: assert OSError('synthetic post-close failure') is SystemExit('synthetic metadata read primary')&#10; +  where OSError('synthetic post-close failure') = &lt;ExceptionInfo OSError('synthetic post-close failure') tblen=3&gt;.value">files = namespace(root=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-550/test_read_primary_survives_all4'), path=PosixPath(...1f23fe8d7755b54a6'}, owner=namespace(fd=13, private=False, check=&lt;function files.&lt;locals&gt;.&lt;lambda&gt; at 0x782d979eaca0&gt;))
+helper = 'read', kind = &lt;class 'SystemExit'&gt;
+
+    @pytest.mark.parametrize('helper', ['read', 'manifest'])
+    @pytest.mark.parametrize('kind', [ValueError, KeyboardInterrupt, SystemExit])
+    def test_read_primary_survives_all_descriptor_closes(files, helper, kind):
+        io = IO()
+        primary = kind('synthetic metadata read primary')
+    
+        class Stream:
+            def __init__(self, fd): self.fd = fd
+            def __enter__(self): return self
+            def read(self, maximum): raise primary
+            def __exit__(self, *args): os.close(self.fd)
+    
+        io.os.fdopen = lambda fd, *a, **k: Stream(fd)
+        io.os.read = lambda *a: (_ for _ in ()).throw(primary)
+    
+        def close(fd):
+            io.close(fd)
+            raise OSError('synthetic post-close failure')
+    
+        io.os.close = close
+        api = load(io.os)
+        try:
+            with pytest.raises(BaseException) as got:
+                if helper == 'read': api.keys['_read'](files.parent, files.path.name, 1024)
+                else: api.files['read_manifest'](files.path)
+&gt;           assert got.value is primary
+E           AssertionError: assert OSError('synthetic post-close failure') is SystemExit('synthetic metadata read primary')
+E            +  where OSError('synthetic post-close failure') = &lt;ExceptionInfo OSError('synthetic post-close failure') tblen=3&gt;.value
+
+test_client_descriptor_io.py:156: AssertionError</failure></testcase><testcase classname="test_client_descriptor_io" name="test_read_primary_survives_all_descriptor_closes[SystemExit-manifest]" time="0.008"><failure message="AssertionError: assert OSError('synthetic post-close failure') is SystemExit('synthetic metadata read primary')&#10; +  where OSError('synthetic post-close failure') = &lt;ExceptionInfo OSError('synthetic post-close failure') tblen=4&gt;.value">files = namespace(root=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-550/test_read_primary_survives_all5'), path=PosixPath(...1f23fe8d7755b54a6'}, owner=namespace(fd=13, private=False, check=&lt;function files.&lt;locals&gt;.&lt;lambda&gt; at 0x782d979eafc0&gt;))
+helper = 'manifest', kind = &lt;class 'SystemExit'&gt;
+
+    @pytest.mark.parametrize('helper', ['read', 'manifest'])
+    @pytest.mark.parametrize('kind', [ValueError, KeyboardInterrupt, SystemExit])
+    def test_read_primary_survives_all_descriptor_closes(files, helper, kind):
+        io = IO()
+        primary = kind('synthetic metadata read primary')
+    
+        class Stream:
+            def __init__(self, fd): self.fd = fd
+            def __enter__(self): return self
+            def read(self, maximum): raise primary
+            def __exit__(self, *args): os.close(self.fd)
+    
+        io.os.fdopen = lambda fd, *a, **k: Stream(fd)
+        io.os.read = lambda *a: (_ for _ in ()).throw(primary)
+    
+        def close(fd):
+            io.close(fd)
+            raise OSError('synthetic post-close failure')
+    
+        io.os.close = close
+        api = load(io.os)
+        try:
+            with pytest.raises(BaseException) as got:
+                if helper == 'read': api.keys['_read'](files.parent, files.path.name, 1024)
+                else: api.files['read_manifest'](files.path)
+&gt;           assert got.value is primary
+E           AssertionError: assert OSError('synthetic post-close failure') is SystemExit('synthetic metadata read primary')
+E            +  where OSError('synthetic post-close failure') = &lt;ExceptionInfo OSError('synthetic post-close failure') tblen=4&gt;.value
+
+test_client_descriptor_io.py:156: AssertionError</failure></testcase><testcase classname="test_client_descriptor_io" name="test_manifest_cleanup_only_cancellation_outranks_prior_close_error[KeyboardInterrupt]" time="0.008"><failure message="AssertionError: assert OSError('file close') is KeyboardInterrupt('directory close')&#10; +  where OSError('file close') = &lt;ExceptionInfo OSError('file close') tblen=4&gt;.value">files = namespace(root=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-550/test_manifest_cleanup_only_can0'), path=PosixPath(...1f23fe8d7755b54a6'}, owner=namespace(fd=13, private=False, check=&lt;function files.&lt;locals&gt;.&lt;lambda&gt; at 0x782d979e9e40&gt;))
+kind = &lt;class 'KeyboardInterrupt'&gt;
+
+    @pytest.mark.parametrize('kind', [KeyboardInterrupt, SystemExit])
+    def test_manifest_cleanup_only_cancellation_outranks_prior_close_error(files, kind):
+        io = IO()
+        ordinary, cancellation = OSError('file close'), kind('directory close')
+    
+        def close(fd):
+            io.close(fd)
+            raise ordinary if len(io.closed) == 1 else cancellation
+    
+        io.os.close = close
+        api = load(io.os)
+        try:
+            with pytest.raises(BaseException) as got: api.files['read_manifest'](files.path)
+&gt;           assert got.value is cancellation
+E           AssertionError: assert OSError('file close') is KeyboardInterrupt('directory close')
+E            +  where OSError('file close') = &lt;ExceptionInfo OSError('file close') tblen=4&gt;.value
+
+test_client_descriptor_io.py:176: AssertionError</failure></testcase><testcase classname="test_client_descriptor_io" name="test_manifest_cleanup_only_cancellation_outranks_prior_close_error[SystemExit]" time="0.008"><failure message="AssertionError: assert OSError('file close') is SystemExit('directory close')&#10; +  where OSError('file close') = &lt;ExceptionInfo OSError('file close') tblen=4&gt;.value">files = namespace(root=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-550/test_manifest_cleanup_only_can1'), path=PosixPath(...1f23fe8d7755b54a6'}, owner=namespace(fd=13, private=False, check=&lt;function files.&lt;locals&gt;.&lt;lambda&gt; at 0x782d979e8f40&gt;))
+kind = &lt;class 'SystemExit'&gt;
+
+    @pytest.mark.parametrize('kind', [KeyboardInterrupt, SystemExit])
+    def test_manifest_cleanup_only_cancellation_outranks_prior_close_error(files, kind):
+        io = IO()
+        ordinary, cancellation = OSError('file close'), kind('directory close')
+    
+        def close(fd):
+            io.close(fd)
+            raise ordinary if len(io.closed) == 1 else cancellation
+    
+        io.os.close = close
+        api = load(io.os)
+        try:
+            with pytest.raises(BaseException) as got: api.files['read_manifest'](files.path)
+&gt;           assert got.value is cancellation
+E           AssertionError: assert OSError('file close') is SystemExit('directory close')
+E            +  where OSError('file close') = &lt;ExceptionInfo OSError('file close') tblen=4&gt;.value
+
+test_client_descriptor_io.py:176: AssertionError</failure></testcase><testcase classname="test_client_descriptor_io" name="test_map_primary_survives_stream_and_descriptor_cleanup[ValueError-header]" time="0.049"><failure message="AssertionError: assert OSError('synthetic stream close') is ValueError('synthetic map body primary')&#10; +  where OSError('synthetic stream close') = &lt;ExceptionInfo OSError('synthetic stream close') tblen=4&gt;.value">files = namespace(root=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-550/test_map_primary_survives_stre0'), path=PosixPath(...1f23fe8d7755b54a6'}, owner=namespace(fd=13, private=False, check=&lt;function files.&lt;locals&gt;.&lt;lambda&gt; at 0x782d97830a40&gt;))
+phase = 'header', kind = &lt;class 'ValueError'&gt;
+
+    @pytest.mark.parametrize('phase', ['header', 'map'])
+    @pytest.mark.parametrize('kind', [ValueError, KeyboardInterrupt, SystemExit])
+    def test_map_primary_survives_stream_and_descriptor_cleanup(files, phase, kind):
+        io = IO()
+        primary, secondary = kind('synthetic map body primary'), OSError('synthetic stream close')
+        count = 0
+    
+        def fdopen(fd, mode, **kwargs):
+            nonlocal count
+            if sys._getframe(1).f_code.co_name == '_sha_fd':
+                return os.fdopen(fd, mode, **kwargs)
+            count += 1
+            if count == (1 if phase == 'header' else 2):
+                return FaultyStream(fd, mode, kwargs, secondary)
+            return os.fdopen(fd, mode, **kwargs)
+    
+        io.os.fdopen = fdopen
+        fmt = SimpleNamespace(**{n: getattr(np.lib.format, n) for n in dir(np.lib.format)})
+        np_fake = SimpleNamespace(**{n: getattr(np, n) for n in dir(np)})
+        np_fake.lib = SimpleNamespace(format=fmt)
+        if phase == 'header': fmt.read_magic = lambda *a: (_ for _ in ()).throw(primary)
+        else: np_fake.memmap = lambda *a, **k: (_ for _ in ()).throw(primary)
+        api = load(io.os, np_fake)
+        try:
+            with pytest.raises(BaseException) as got:
+                api.ctx['_map_array'](files.owner, files.array.name, files.descriptor, (2, 2), (7, 11))
+&gt;           assert got.value is primary
+E           AssertionError: assert OSError('synthetic stream close') is ValueError('synthetic map body primary')
+E            +  where OSError('synthetic stream close') = &lt;ExceptionInfo OSError('synthetic stream close') tblen=4&gt;.value
+
+test_client_descriptor_io.py:225: AssertionError</failure></testcase><testcase classname="test_client_descriptor_io" name="test_map_primary_survives_stream_and_descriptor_cleanup[ValueError-map]" time="0.008"><failure message="AssertionError: assert OSError('synthetic stream close') is ValueError('synthetic map body primary')&#10; +  where OSError('synthetic stream close') = &lt;ExceptionInfo OSError('synthetic stream close') tblen=4&gt;.value">files = namespace(root=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-550/test_map_primary_survives_stre1'), path=PosixPath(...1f23fe8d7755b54a6'}, owner=namespace(fd=13, private=False, check=&lt;function files.&lt;locals&gt;.&lt;lambda&gt; at 0x782d94b2ec00&gt;))
+phase = 'map', kind = &lt;class 'ValueError'&gt;
+
+    @pytest.mark.parametrize('phase', ['header', 'map'])
+    @pytest.mark.parametrize('kind', [ValueError, KeyboardInterrupt, SystemExit])
+    def test_map_primary_survives_stream_and_descriptor_cleanup(files, phase, kind):
+        io = IO()
+        primary, secondary = kind('synthetic map body primary'), OSError('synthetic stream close')
+        count = 0
+    
+        def fdopen(fd, mode, **kwargs):
+            nonlocal count
+            if sys._getframe(1).f_code.co_name == '_sha_fd':
+                return os.fdopen(fd, mode, **kwargs)
+            count += 1
+            if count == (1 if phase == 'header' else 2):
+                return FaultyStream(fd, mode, kwargs, secondary)
+            return os.fdopen(fd, mode, **kwargs)
+    
+        io.os.fdopen = fdopen
+        fmt = SimpleNamespace(**{n: getattr(np.lib.format, n) for n in dir(np.lib.format)})
+        np_fake = SimpleNamespace(**{n: getattr(np, n) for n in dir(np)})
+        np_fake.lib = SimpleNamespace(format=fmt)
+        if phase == 'header': fmt.read_magic = lambda *a: (_ for _ in ()).throw(primary)
+        else: np_fake.memmap = lambda *a, **k: (_ for _ in ()).throw(primary)
+        api = load(io.os, np_fake)
+        try:
+            with pytest.raises(BaseException) as got:
+                api.ctx['_map_array'](files.owner, files.array.name, files.descriptor, (2, 2), (7, 11))
+&gt;           assert got.value is primary
+E           AssertionError: assert OSError('synthetic stream close') is ValueError('synthetic map body primary')
+E            +  where OSError('synthetic stream close') = &lt;ExceptionInfo OSError('synthetic stream close') tblen=4&gt;.value
+
+test_client_descriptor_io.py:225: AssertionError</failure></testcase><testcase classname="test_client_descriptor_io" name="test_map_primary_survives_stream_and_descriptor_cleanup[KeyboardInterrupt-header]" time="0.010"><failure message="AssertionError: assert OSError('synthetic stream close') is KeyboardInterrupt('synthetic map body primary')&#10; +  where OSError('synthetic stream close') = &lt;ExceptionInfo OSError('synthetic stream close') tblen=4&gt;.value">files = namespace(root=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-550/test_map_primary_survives_stre2'), path=PosixPath(...1f23fe8d7755b54a6'}, owner=namespace(fd=13, private=False, check=&lt;function files.&lt;locals&gt;.&lt;lambda&gt; at 0x782d94b2fa60&gt;))
+phase = 'header', kind = &lt;class 'KeyboardInterrupt'&gt;
+
+    @pytest.mark.parametrize('phase', ['header', 'map'])
+    @pytest.mark.parametrize('kind', [ValueError, KeyboardInterrupt, SystemExit])
+    def test_map_primary_survives_stream_and_descriptor_cleanup(files, phase, kind):
+        io = IO()
+        primary, secondary = kind('synthetic map body primary'), OSError('synthetic stream close')
+        count = 0
+    
+        def fdopen(fd, mode, **kwargs):
+            nonlocal count
+            if sys._getframe(1).f_code.co_name == '_sha_fd':
+                return os.fdopen(fd, mode, **kwargs)
+            count += 1
+            if count == (1 if phase == 'header' else 2):
+                return FaultyStream(fd, mode, kwargs, secondary)
+            return os.fdopen(fd, mode, **kwargs)
+    
+        io.os.fdopen = fdopen
+        fmt = SimpleNamespace(**{n: getattr(np.lib.format, n) for n in dir(np.lib.format)})
+        np_fake = SimpleNamespace(**{n: getattr(np, n) for n in dir(np)})
+        np_fake.lib = SimpleNamespace(format=fmt)
+        if phase == 'header': fmt.read_magic = lambda *a: (_ for _ in ()).throw(primary)
+        else: np_fake.memmap = lambda *a, **k: (_ for _ in ()).throw(primary)
+        api = load(io.os, np_fake)
+        try:
+            with pytest.raises(BaseException) as got:
+                api.ctx['_map_array'](files.owner, files.array.name, files.descriptor, (2, 2), (7, 11))
+&gt;           assert got.value is primary
+E           AssertionError: assert OSError('synthetic stream close') is KeyboardInterrupt('synthetic map body primary')
+E            +  where OSError('synthetic stream close') = &lt;ExceptionInfo OSError('synthetic stream close') tblen=4&gt;.value
+
+test_client_descriptor_io.py:225: AssertionError</failure></testcase><testcase classname="test_client_descriptor_io" name="test_map_primary_survives_stream_and_descriptor_cleanup[KeyboardInterrupt-map]" time="0.008"><failure message="AssertionError: assert OSError('synthetic stream close') is KeyboardInterrupt('synthetic map body primary')&#10; +  where OSError('synthetic stream close') = &lt;ExceptionInfo OSError('synthetic stream close') tblen=4&gt;.value">files = namespace(root=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-550/test_map_primary_survives_stre3'), path=PosixPath(...1f23fe8d7755b54a6'}, owner=namespace(fd=13, private=False, check=&lt;function files.&lt;locals&gt;.&lt;lambda&gt; at 0x782d94b2ff60&gt;))
+phase = 'map', kind = &lt;class 'KeyboardInterrupt'&gt;
+
+    @pytest.mark.parametrize('phase', ['header', 'map'])
+    @pytest.mark.parametrize('kind', [ValueError, KeyboardInterrupt, SystemExit])
+    def test_map_primary_survives_stream_and_descriptor_cleanup(files, phase, kind):
+        io = IO()
+        primary, secondary = kind('synthetic map body primary'), OSError('synthetic stream close')
+        count = 0
+    
+        def fdopen(fd, mode, **kwargs):
+            nonlocal count
+            if sys._getframe(1).f_code.co_name == '_sha_fd':
+                return os.fdopen(fd, mode, **kwargs)
+            count += 1
+            if count == (1 if phase == 'header' else 2):
+                return FaultyStream(fd, mode, kwargs, secondary)
+            return os.fdopen(fd, mode, **kwargs)
+    
+        io.os.fdopen = fdopen
+        fmt = SimpleNamespace(**{n: getattr(np.lib.format, n) for n in dir(np.lib.format)})
+        np_fake = SimpleNamespace(**{n: getattr(np, n) for n in dir(np)})
+        np_fake.lib = SimpleNamespace(format=fmt)
+        if phase == 'header': fmt.read_magic = lambda *a: (_ for _ in ()).throw(primary)
+        else: np_fake.memmap = lambda *a, **k: (_ for _ in ()).throw(primary)
+        api = load(io.os, np_fake)
+        try:
+            with pytest.raises(BaseException) as got:
+                api.ctx['_map_array'](files.owner, files.array.name, files.descriptor, (2, 2), (7, 11))
+&gt;           assert got.value is primary
+E           AssertionError: assert OSError('synthetic stream close') is KeyboardInterrupt('synthetic map body primary')
+E            +  where OSError('synthetic stream close') = &lt;ExceptionInfo OSError('synthetic stream close') tblen=4&gt;.value
+
+test_client_descriptor_io.py:225: AssertionError</failure></testcase><testcase classname="test_client_descriptor_io" name="test_map_primary_survives_stream_and_descriptor_cleanup[SystemExit-header]" time="0.008"><failure message="AssertionError: assert OSError('synthetic stream close') is SystemExit('synthetic map body primary')&#10; +  where OSError('synthetic stream close') = &lt;ExceptionInfo OSError('synthetic stream close') tblen=4&gt;.value">files = namespace(root=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-550/test_map_primary_survives_stre4'), path=PosixPath(...1f23fe8d7755b54a6'}, owner=namespace(fd=13, private=False, check=&lt;function files.&lt;locals&gt;.&lt;lambda&gt; at 0x782d94ba4900&gt;))
+phase = 'header', kind = &lt;class 'SystemExit'&gt;
+
+    @pytest.mark.parametrize('phase', ['header', 'map'])
+    @pytest.mark.parametrize('kind', [ValueError, KeyboardInterrupt, SystemExit])
+    def test_map_primary_survives_stream_and_descriptor_cleanup(files, phase, kind):
+        io = IO()
+        primary, secondary = kind('synthetic map body primary'), OSError('synthetic stream close')
+        count = 0
+    
+        def fdopen(fd, mode, **kwargs):
+            nonlocal count
+            if sys._getframe(1).f_code.co_name == '_sha_fd':
+                return os.fdopen(fd, mode, **kwargs)
+            count += 1
+            if count == (1 if phase == 'header' else 2):
+                return FaultyStream(fd, mode, kwargs, secondary)
+            return os.fdopen(fd, mode, **kwargs)
+    
+        io.os.fdopen = fdopen
+        fmt = SimpleNamespace(**{n: getattr(np.lib.format, n) for n in dir(np.lib.format)})
+        np_fake = SimpleNamespace(**{n: getattr(np, n) for n in dir(np)})
+        np_fake.lib = SimpleNamespace(format=fmt)
+        if phase == 'header': fmt.read_magic = lambda *a: (_ for _ in ()).throw(primary)
+        else: np_fake.memmap = lambda *a, **k: (_ for _ in ()).throw(primary)
+        api = load(io.os, np_fake)
+        try:
+            with pytest.raises(BaseException) as got:
+                api.ctx['_map_array'](files.owner, files.array.name, files.descriptor, (2, 2), (7, 11))
+&gt;           assert got.value is primary
+E           AssertionError: assert OSError('synthetic stream close') is SystemExit('synthetic map body primary')
+E            +  where OSError('synthetic stream close') = &lt;ExceptionInfo OSError('synthetic stream close') tblen=4&gt;.value
+
+test_client_descriptor_io.py:225: AssertionError</failure></testcase><testcase classname="test_client_descriptor_io" name="test_map_primary_survives_stream_and_descriptor_cleanup[SystemExit-map]" time="0.008"><failure message="AssertionError: assert OSError('synthetic stream close') is SystemExit('synthetic map body primary')&#10; +  where OSError('synthetic stream close') = &lt;ExceptionInfo OSError('synthetic stream close') tblen=4&gt;.value">files = namespace(root=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-550/test_map_primary_survives_stre5'), path=PosixPath(...1f23fe8d7755b54a6'}, owner=namespace(fd=13, private=False, check=&lt;function files.&lt;locals&gt;.&lt;lambda&gt; at 0x782d94ba58a0&gt;))
+phase = 'map', kind = &lt;class 'SystemExit'&gt;
+
+    @pytest.mark.parametrize('phase', ['header', 'map'])
+    @pytest.mark.parametrize('kind', [ValueError, KeyboardInterrupt, SystemExit])
+    def test_map_primary_survives_stream_and_descriptor_cleanup(files, phase, kind):
+        io = IO()
+        primary, secondary = kind('synthetic map body primary'), OSError('synthetic stream close')
+        count = 0
+    
+        def fdopen(fd, mode, **kwargs):
+            nonlocal count
+            if sys._getframe(1).f_code.co_name == '_sha_fd':
+                return os.fdopen(fd, mode, **kwargs)
+            count += 1
+            if count == (1 if phase == 'header' else 2):
+                return FaultyStream(fd, mode, kwargs, secondary)
+            return os.fdopen(fd, mode, **kwargs)
+    
+        io.os.fdopen = fdopen
+        fmt = SimpleNamespace(**{n: getattr(np.lib.format, n) for n in dir(np.lib.format)})
+        np_fake = SimpleNamespace(**{n: getattr(np, n) for n in dir(np)})
+        np_fake.lib = SimpleNamespace(format=fmt)
+        if phase == 'header': fmt.read_magic = lambda *a: (_ for _ in ()).throw(primary)
+        else: np_fake.memmap = lambda *a, **k: (_ for _ in ()).throw(primary)
+        api = load(io.os, np_fake)
+        try:
+            with pytest.raises(BaseException) as got:
+                api.ctx['_map_array'](files.owner, files.array.name, files.descriptor, (2, 2), (7, 11))
+&gt;           assert got.value is primary
+E           AssertionError: assert OSError('synthetic stream close') is SystemExit('synthetic map body primary')
+E            +  where OSError('synthetic stream close') = &lt;ExceptionInfo OSError('synthetic stream close') tblen=4&gt;.value
+
+test_client_descriptor_io.py:225: AssertionError</failure></testcase><testcase classname="test_client_descriptor_io" name="test_private_output_write_primary_survives_stream_cleanup[ValueError]" time="0.008"><failure message="AssertionError: assert OSError('synthetic stream close') is ValueError('synthetic output write')&#10; +  where OSError('synthetic stream close') = &lt;ExceptionInfo OSError('synthetic stream close') tblen=5&gt;.value">files = namespace(root=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-550/test_private_output_write_prim0'), path=PosixPath(...1f23fe8d7755b54a6'}, owner=namespace(fd=13, private=False, check=&lt;function files.&lt;locals&gt;.&lt;lambda&gt; at 0x782d94ba5c60&gt;))
+kind = &lt;class 'ValueError'&gt;
+
+    @pytest.mark.parametrize('kind', [ValueError, KeyboardInterrupt, SystemExit])
+    def test_private_output_write_primary_survives_stream_cleanup(files, kind):
+        io = IO()
+        primary, secondary = kind('synthetic output write'), OSError('synthetic stream close')
+        io.os.fdopen = lambda fd, mode, **kw: FaultyStream(fd, mode, kw, secondary, primary)
+        api = load(io.os)
+        output = files.root / 'new-private-result'
+        try:
+            with pytest.raises(BaseException) as got:
+                with api.files['new_file'](output, b'synthetic'):
+                    pytest.fail('failed write cannot enter transaction')
+&gt;           assert got.value is primary
+E           AssertionError: assert OSError('synthetic stream close') is ValueError('synthetic output write')
+E            +  where OSError('synthetic stream close') = &lt;ExceptionInfo OSError('synthetic stream close') tblen=5&gt;.value
+
+test_client_descriptor_io.py:242: AssertionError</failure></testcase><testcase classname="test_client_descriptor_io" name="test_private_output_write_primary_survives_stream_cleanup[KeyboardInterrupt]" time="0.008"><failure message="AssertionError: assert OSError('synthetic stream close') is KeyboardInterrupt('synthetic output write')&#10; +  where OSError('synthetic stream close') = &lt;ExceptionInfo OSError('synthetic stream close') tblen=5&gt;.value">files = namespace(root=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-550/test_private_output_write_prim1'), path=PosixPath(...1f23fe8d7755b54a6'}, owner=namespace(fd=13, private=False, check=&lt;function files.&lt;locals&gt;.&lt;lambda&gt; at 0x782d94ba40e0&gt;))
+kind = &lt;class 'KeyboardInterrupt'&gt;
+
+    @pytest.mark.parametrize('kind', [ValueError, KeyboardInterrupt, SystemExit])
+    def test_private_output_write_primary_survives_stream_cleanup(files, kind):
+        io = IO()
+        primary, secondary = kind('synthetic output write'), OSError('synthetic stream close')
+        io.os.fdopen = lambda fd, mode, **kw: FaultyStream(fd, mode, kw, secondary, primary)
+        api = load(io.os)
+        output = files.root / 'new-private-result'
+        try:
+            with pytest.raises(BaseException) as got:
+                with api.files['new_file'](output, b'synthetic'):
+                    pytest.fail('failed write cannot enter transaction')
+&gt;           assert got.value is primary
+E           AssertionError: assert OSError('synthetic stream close') is KeyboardInterrupt('synthetic output write')
+E            +  where OSError('synthetic stream close') = &lt;ExceptionInfo OSError('synthetic stream close') tblen=5&gt;.value
+
+test_client_descriptor_io.py:242: AssertionError</failure></testcase><testcase classname="test_client_descriptor_io" name="test_private_output_write_primary_survives_stream_cleanup[SystemExit]" time="0.008"><failure message="AssertionError: assert OSError('synthetic stream close') is SystemExit('synthetic output write')&#10; +  where OSError('synthetic stream close') = &lt;ExceptionInfo OSError('synthetic stream close') tblen=5&gt;.value">files = namespace(root=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-550/test_private_output_write_prim2'), path=PosixPath(...1f23fe8d7755b54a6'}, owner=namespace(fd=13, private=False, check=&lt;function files.&lt;locals&gt;.&lt;lambda&gt; at 0x782d94ba5620&gt;))
+kind = &lt;class 'SystemExit'&gt;
+
+    @pytest.mark.parametrize('kind', [ValueError, KeyboardInterrupt, SystemExit])
+    def test_private_output_write_primary_survives_stream_cleanup(files, kind):
+        io = IO()
+        primary, secondary = kind('synthetic output write'), OSError('synthetic stream close')
+        io.os.fdopen = lambda fd, mode, **kw: FaultyStream(fd, mode, kw, secondary, primary)
+        api = load(io.os)
+        output = files.root / 'new-private-result'
+        try:
+            with pytest.raises(BaseException) as got:
+                with api.files['new_file'](output, b'synthetic'):
+                    pytest.fail('failed write cannot enter transaction')
+&gt;           assert got.value is primary
+E           AssertionError: assert OSError('synthetic stream close') is SystemExit('synthetic output write')
+E            +  where OSError('synthetic stream close') = &lt;ExceptionInfo OSError('synthetic stream close') tblen=5&gt;.value
+
+test_client_descriptor_io.py:242: AssertionError</failure></testcase><testcase classname="test_client_descriptor_io" name="test_private_output_cleanup_only_cancellation_priority[KeyboardInterrupt]" time="0.010"><failure message="AssertionError: assert OSError('file close') is KeyboardInterrupt('parent close')&#10; +  where OSError('file close') = &lt;ExceptionInfo OSError('file close') tblen=5&gt;.value">files = namespace(root=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-550/test_private_output_cleanup_on0'), path=PosixPath(...1f23fe8d7755b54a6'}, owner=namespace(fd=13, private=False, check=&lt;function files.&lt;locals&gt;.&lt;lambda&gt; at 0x782d94ba71a0&gt;))
+kind = &lt;class 'KeyboardInterrupt'&gt;
+
+    @pytest.mark.parametrize('kind', [KeyboardInterrupt, SystemExit])
+    def test_private_output_cleanup_only_cancellation_priority(files, kind):
+        io = IO()
+        ordinary, cancellation = OSError('file close'), kind('parent close')
+    
+        def close(fd):
+            io.close(fd)
+            raise ordinary if len(io.closed) == 1 else cancellation
+    
+        io.os.close = close
+        api = load(io.os)
+        try:
+            with pytest.raises(BaseException) as got:
+                with api.files['new_file'](files.root / 'new-private-result', b'synthetic'): pass
+&gt;           assert got.value is cancellation
+E           AssertionError: assert OSError('file close') is KeyboardInterrupt('parent close')
+E            +  where OSError('file close') = &lt;ExceptionInfo OSError('file close') tblen=5&gt;.value
+
+test_client_descriptor_io.py:263: AssertionError</failure></testcase><testcase classname="test_client_descriptor_io" name="test_private_output_cleanup_only_cancellation_priority[SystemExit]" time="0.010"><failure message="AssertionError: assert OSError('file close') is SystemExit('parent close')&#10; +  where OSError('file close') = &lt;ExceptionInfo OSError('file close') tblen=5&gt;.value">files = namespace(root=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-550/test_private_output_cleanup_on1'), path=PosixPath(...1f23fe8d7755b54a6'}, owner=namespace(fd=13, private=False, check=&lt;function files.&lt;locals&gt;.&lt;lambda&gt; at 0x782d94b8c180&gt;))
+kind = &lt;class 'SystemExit'&gt;
+
+    @pytest.mark.parametrize('kind', [KeyboardInterrupt, SystemExit])
+    def test_private_output_cleanup_only_cancellation_priority(files, kind):
+        io = IO()
+        ordinary, cancellation = OSError('file close'), kind('parent close')
+    
+        def close(fd):
+            io.close(fd)
+            raise ordinary if len(io.closed) == 1 else cancellation
+    
+        io.os.close = close
+        api = load(io.os)
+        try:
+            with pytest.raises(BaseException) as got:
+                with api.files['new_file'](files.root / 'new-private-result', b'synthetic'): pass
+&gt;           assert got.value is cancellation
+E           AssertionError: assert OSError('file close') is SystemExit('parent close')
+E            +  where OSError('file close') = &lt;ExceptionInfo OSError('file close') tblen=5&gt;.value
+
+test_client_descriptor_io.py:263: AssertionError</failure></testcase><testcase classname="test_client_descriptor_io" name="test_private_output_initial_fstat_failure_closes_parent" time="0.008"><failure message="AssertionError: initial parent snapshot failed before protected cleanup&#10;assert not [14]&#10; +  where [14] = remaining()&#10; +    where remaining = &lt;test_client_descriptor_io.IO object at 0x782d947275d0&gt;.remaining">files = namespace(root=PosixPath('/tmp/pytest-of-jianming_gatech/pytest-550/test_private_output_initial_fs0'), path=PosixPath(...1f23fe8d7755b54a6'}, owner=namespace(fd=13, private=False, check=&lt;function files.&lt;locals&gt;.&lt;lambda&gt; at 0x782d94ba6840&gt;))
+
+    def test_private_output_initial_fstat_failure_closes_parent(files):
+        io = IO()
+        primary = ValueError('synthetic initial parent fstat')
+        io.os.fstat = lambda *a: (_ for _ in ()).throw(primary)
+        api = load(io.os)
+        try:
+            with pytest.raises(ValueError) as got:
+                with api.files['new_file'](files.root / 'new-private-result', b'synthetic'): pass
+            assert got.value is primary
+&gt;           assert not io.remaining(), 'initial parent snapshot failed before protected cleanup'
+E           AssertionError: initial parent snapshot failed before protected cleanup
+E           assert not [14]
+E            +  where [14] = remaining()
+E            +    where remaining = &lt;test_client_descriptor_io.IO object at 0x782d947275d0&gt;.remaining
+
+test_client_descriptor_io.py:279: AssertionError</failure></testcase><testcase classname="test_client_descriptor_io" name="test_original_metadata_map_and_private_write_formats" time="0.011" /></testsuite></testsuites>

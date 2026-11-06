@@ -1,0 +1,8 @@
+{
+  "original": "key_gate.py",
+  "original_sha256": "26b707b031e45e4650623e9fb435edd03be693951ecf274e495145b8366eb11a",
+  "changes": [
+    "read uses original explicit descriptor and fdopen(closefd=False), eliminating dup handoff leak",
+    "share reviewed explicit stream/descriptor close-origin tracking, preserving body failures and cleanup-only cancellation"
+  ]
+}

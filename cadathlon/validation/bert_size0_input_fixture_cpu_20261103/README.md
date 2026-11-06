@@ -1,0 +1,15 @@
+This is an exact upstream size0/seed42 **client input preparation** check. It performs dataset selection and tokenization only. It does not execute embeddings, an encoder, a classifier, keys or encrypted arithmetic, and is not ranked model evidence.
+
+The final focused checkpoint passed 20 tests; actual preparation passed in 3.31843 seconds. Sessions9056 and21813 were observed reaped with exit0. All22 selected source files match before, archive and after, including the identical focused-test and preparation source sets. The installed dependency entry points are recorded with package versions; this is not a hermetic environment claim.
+
+The upstream harness derives generator seed191664963 from base seed42 using `default_rng(42).integers(0, 0x7fffffff)`. Size0 means one MRPC validation record. The unmodified exporter sorts its sampled row ordinals and writes the dataset's original `idx` as `target_idx`; label order is preserved. The RNG is recreated inside the upstream repeated-run loop, despite its comment about distinct seeds. This fixture preserves that behavior.
+
+Exact AST-extracted upstream exporter and preprocessing function bodies execute with two explicit local seams: the dataset loader returns the authenticated revision-pinned MRPC validation parquet, and the tokenizer lookup resolves the authenticated f150 BERT snapshot with offline-only loading. Original top-level model/test imports are not executed. Model construction and module forwards are guarded during tokenization. Independent selection reconstruction and `encode_plus` reproduce the exact output bytes. The sole record has128 tokens and32 valid positions.
+
+MRPC revision `bcdcba79d07bc864c1c254ccfcedcce55bcc9a8c` has parquet SHA256 `33c007dbf5bfa8463d87a13e6226df8c0fcf2596c2cd39d0f3bb79754e00f50f`. BERT revision `f150c1d609d1e50dd5e2e5408661cfac8339277c` binds all five checkpoint/config/tokenizer asset hashes, before and after. Checkpoint bytes are hashed only; they are never decoded into model tensors here.
+
+The first development run had18 passes and2 infrastructure failures because the strict source reader refused upstream `submissions/params.py`, which is a symlink to `../harness/params.py`. Its exact sources and log are retained. Final provenance binds the symlink text, resolved path and target bytes, without relaxing private-file reads.
+
+The successful private workspace is deliberately retained outside this archive, mode0700 with all six files mode0600. Its path, device/inode, input file hashes and preprocessed path are in the report. Text, token arrays, target IDs and labels are not archived. The client must authenticate the externally pinned report and current private bytes before use; self-declared hashes are not an authenticity authority. Held-directory identity checks detect replacement but are not an OS sandbox against arbitrary same-user mutations.
+
+`verify_archive.py` checks this source-bound evidence offline. Its optional `--private` also verifies the still-retained workspace identity and private file bytes, without printing their contents.

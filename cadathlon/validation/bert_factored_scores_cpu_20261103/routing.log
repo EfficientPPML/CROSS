@@ -1,0 +1,63 @@
+{
+  "scope": "Exact public mask/rotation network checks; no ciphertext arithmetic.",
+  "passed": true,
+  "all128_forward_and_inverse_maps_equal_direct": true,
+  "period": 65536,
+  "alias_count": 1,
+  "score_shape": [
+    16,
+    2,
+    128,
+    16
+  ],
+  "upper_chunk_per_query": "inactive safe dummy denominator1; no secret data is discarded",
+  "source_files_unchanged": true,
+  "elapsed_s": 0.4808288529966376,
+  "planning": {
+    "full128_sequence_query_tiles": 8,
+    "forward_plus_inverse_requested_rotations_per_example": 18176,
+    "forward_plus_inverse_power_composed_rotations_per_example": 27392,
+    "direct_key_count": 30,
+    "direct_key_indices": [
+      16,
+      32,
+      63,
+      64,
+      126,
+      128,
+      252,
+      256,
+      504,
+      512,
+      768,
+      1024,
+      1280,
+      1536,
+      1792,
+      63744,
+      64000,
+      64256,
+      64512,
+      64768,
+      65024,
+      65032,
+      65280,
+      65284,
+      65408,
+      65410,
+      65472,
+      65473,
+      65504,
+      65520
+    ],
+    "power_key_count": 24,
+    "forward_mapping_depth": 9,
+    "inverse_mapping_depth": 9,
+    "optional_forward_depth_if_anchor_mask_folds_into_existing_head_reduction": 8
+  },
+  "limitations": [
+    "Only public routing semantics and operation counts; no encrypted key-switch noise, refresh or TPU performance.",
+    "Additional routing levels can trigger more refreshes; output period65536 has no alias averaging.",
+    "The retained normalized-squaring circuit still needs226 abstract levels and can form reciprocals above the validated bound16."
+  ]
+}

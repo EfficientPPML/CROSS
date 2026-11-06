@@ -1,0 +1,161 @@
+{
+  "passed": true,
+  "scope": "All12 full-width actual-loop ideal FFN composition; no encrypted execution.",
+  "layer": 9,
+  "K": 15,
+  "tiles": 1,
+  "physical_slots_checked": 65536,
+  "actual_loop_vs_independent_polynomial_gate": 1e-08,
+  "max_abs_errors": {
+    "middle": 1.7763568394002505e-14,
+    "activated": 2.906008766956347e-14,
+    "dense": 1.2129186544029835e-13,
+    "residual": 1.213473765915296e-13,
+    "output": 1.1013412404281553e-13
+  },
+  "polynomial_vs_native_function_max_abs": 1.9229141020815632e-05,
+  "native_function_oracle": "Independent dense matmul/exact-erf GELU/exact LayerNorm; no new native-framework model run.",
+  "domain_observations": {
+    "gelu_input_min": -22.475942066416955,
+    "gelu_input_max": 32.88894092022782,
+    "mlp_variance_min": 0.9816125086783993,
+    "mlp_variance_max": 222.8299044351995,
+    "input_max_abs": 46.32687173844178,
+    "gelu_max_abs": 32.888940918464655
+  },
+  "gelu_padding_polynomial_at_zero": 3.6665598884266792e-06,
+  "original_positions": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14
+  ],
+  "identity_refresh_calls": 2,
+  "actual_primitive_counts": {
+    "rotate": 286,
+    "weighted_sum": 445,
+    "add": 164,
+    "multiply": 320
+  },
+  "public_plaintext_products": 8479,
+  "public_operation_plan": {
+    "matrices": {
+      "intermediate": {
+        "active_diagonals": 3839,
+        "n1": 64,
+        "giant_groups": 60,
+        "rotations": 122,
+        "required_keys": [
+          1,
+          64,
+          61760
+        ]
+      },
+      "output": {
+        "active_diagonals": 3839,
+        "n1": 64,
+        "giant_groups": 60,
+        "rotations": 122,
+        "required_keys": [
+          1,
+          64,
+          61760
+        ]
+      }
+    },
+    "norm_method": "balanced_chebyshev",
+    "norm_degree": 128,
+    "gelu_degree": 192,
+    "per_tile_primitive_calls": {
+      "rotate": 286,
+      "weighted_sum": 445,
+      "multiply": 320,
+      "add": 164
+    },
+    "per_tile_public_plaintext_terms": 8479,
+    "identity_refresh_calls_per_tile": 2,
+    "full_refresh_cost_included": false
+  },
+  "metadata": [
+    {
+      "actual_metadata": [
+        {
+          "stage": "input B128 refresh",
+          "level": 25,
+          "scale": 1.1467305003699406e+18
+        },
+        {
+          "stage": "intermediate dense",
+          "level": 24,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "GELU",
+          "level": 6,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "GELU refresh",
+          "level": 25,
+          "scale": 1.1467305003699404e+18
+        },
+        {
+          "stage": "output dense",
+          "level": 24,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "residual",
+          "level": 24,
+          "scale": 1.1467305003699405e+18
+        },
+        {
+          "stage": "MLP normalization",
+          "level": 3,
+          "scale": 1.1467305003699405e+18
+        }
+      ],
+      "explicit_refresh_bounds": [
+        128.0,
+        64.0
+      ],
+      "layer": 9,
+      "gelu_degree": 192,
+      "normalization_method": "balanced_chebyshev",
+      "normalization_degree": 128,
+      "output_level": 3,
+      "original_positions": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14
+      ],
+      "range_verified": false,
+      "encrypted_error_verified": false
+    }
+  ],
+  "elapsed_s": 3.0151048219995573,
+  "encrypted_or_refresh_error_claim": false
+}

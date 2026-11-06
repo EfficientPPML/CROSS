@@ -1,0 +1,1179 @@
+FFFFFFFFFFFFFFFFFFFFFFFFF...........                                     [100%]
+=================================== FAILURES ===================================
+_________________ test_snapshot_integration[runtime_hot_clean] _________________
+
+scenario = 'runtime_hot_clean'
+tmp_path = PosixPath('/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_integration_runt0')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_integration(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'integration_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+        try:os.killpg(proc.pid,0)
+        except ProcessLookupError:group_absent=True
+        else:group_absent=False
+        with(tmp_path/'parent-terminal.json').open('x')as stream:
+            json.dump(dict(schema='qwen-snapshot-integration-owned-child-v1',pid=proc.pid,owned_session_pgid=proc.pid,
+                observed_pgid=observed_pgid,exit_code=code,reaped=True,group_absent=group_absent,
+                scenario=scenario,child_result_read=False),stream,sort_keys=True);stream.write('\n')
+        assert group_absent
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('runtime_hot_clean', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-snapshot-integration-focused-proof...^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         TypeError: original source-fixed Python callback required
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py:46: AssertionError
+______________ test_snapshot_integration[runtime_pending_checks] _______________
+
+scenario = 'runtime_pending_checks'
+tmp_path = PosixPath('/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_integration_runt1')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_integration(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'integration_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+        try:os.killpg(proc.pid,0)
+        except ProcessLookupError:group_absent=True
+        else:group_absent=False
+        with(tmp_path/'parent-terminal.json').open('x')as stream:
+            json.dump(dict(schema='qwen-snapshot-integration-owned-child-v1',pid=proc.pid,owned_session_pgid=proc.pid,
+                observed_pgid=observed_pgid,exit_code=code,reaped=True,group_absent=group_absent,
+                scenario=scenario,child_result_read=False),stream,sort_keys=True);stream.write('\n')
+        assert group_absent
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('runtime_pending_checks', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-snapshot-integration-focused-...^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         TypeError: original source-fixed Python callback required
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py:46: AssertionError
+_____________ test_snapshot_integration[runtime_caught_transition] _____________
+
+scenario = 'runtime_caught_transition'
+tmp_path = PosixPath('/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_integration_runt2')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_integration(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'integration_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+        try:os.killpg(proc.pid,0)
+        except ProcessLookupError:group_absent=True
+        else:group_absent=False
+        with(tmp_path/'parent-terminal.json').open('x')as stream:
+            json.dump(dict(schema='qwen-snapshot-integration-owned-child-v1',pid=proc.pid,owned_session_pgid=proc.pid,
+                observed_pgid=observed_pgid,exit_code=code,reaped=True,group_absent=group_absent,
+                scenario=scenario,child_result_read=False),stream,sort_keys=True);stream.write('\n')
+        assert group_absent
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('runtime_caught_transition', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-snapshot-integration-focus...^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         TypeError: original source-fixed Python callback required
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py:46: AssertionError
+______________ test_snapshot_integration[snapshot_caught_reentry] ______________
+
+scenario = 'snapshot_caught_reentry'
+tmp_path = PosixPath('/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_integration_snap0')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_integration(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'integration_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+        try:os.killpg(proc.pid,0)
+        except ProcessLookupError:group_absent=True
+        else:group_absent=False
+        with(tmp_path/'parent-terminal.json').open('x')as stream:
+            json.dump(dict(schema='qwen-snapshot-integration-owned-child-v1',pid=proc.pid,owned_session_pgid=proc.pid,
+                observed_pgid=observed_pgid,exit_code=code,reaped=True,group_absent=group_absent,
+                scenario=scenario,child_result_read=False),stream,sort_keys=True);stream.write('\n')
+        assert group_absent
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('snapshot_caught_reentry', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-snapshot-integration-focused...^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         TypeError: original source-fixed Python callback required
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py:46: AssertionError
+______________ test_snapshot_integration[export_require_runtime] _______________
+
+scenario = 'export_require_runtime'
+tmp_path = PosixPath('/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_integration_expo0')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_integration(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'integration_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+        try:os.killpg(proc.pid,0)
+        except ProcessLookupError:group_absent=True
+        else:group_absent=False
+        with(tmp_path/'parent-terminal.json').open('x')as stream:
+            json.dump(dict(schema='qwen-snapshot-integration-owned-child-v1',pid=proc.pid,owned_session_pgid=proc.pid,
+                observed_pgid=observed_pgid,exit_code=code,reaped=True,group_absent=group_absent,
+                scenario=scenario,child_result_read=False),stream,sort_keys=True);stream.write('\n')
+        assert group_absent
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('export_require_runtime', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-snapshot-integration-focused-...^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         TypeError: original source-fixed Python callback required
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py:46: AssertionError
+_______________ test_snapshot_integration[export_runtime_action] _______________
+
+scenario = 'export_runtime_action'
+tmp_path = PosixPath('/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_integration_expo1')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_integration(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'integration_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+        try:os.killpg(proc.pid,0)
+        except ProcessLookupError:group_absent=True
+        else:group_absent=False
+        with(tmp_path/'parent-terminal.json').open('x')as stream:
+            json.dump(dict(schema='qwen-snapshot-integration-owned-child-v1',pid=proc.pid,owned_session_pgid=proc.pid,
+                observed_pgid=observed_pgid,exit_code=code,reaped=True,group_absent=group_absent,
+                scenario=scenario,child_result_read=False),stream,sort_keys=True);stream.write('\n')
+        assert group_absent
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('export_runtime_action', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-snapshot-integration-focused-p...^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         TypeError: original source-fixed Python callback required
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py:46: AssertionError
+___________ test_snapshot_integration[export_backend_runtime_check] ____________
+
+scenario = 'export_backend_runtime_check'
+tmp_path = PosixPath('/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_integration_expo2')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_integration(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'integration_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+        try:os.killpg(proc.pid,0)
+        except ProcessLookupError:group_absent=True
+        else:group_absent=False
+        with(tmp_path/'parent-terminal.json').open('x')as stream:
+            json.dump(dict(schema='qwen-snapshot-integration-owned-child-v1',pid=proc.pid,owned_session_pgid=proc.pid,
+                observed_pgid=observed_pgid,exit_code=code,reaped=True,group_absent=group_absent,
+                scenario=scenario,child_result_read=False),stream,sort_keys=True);stream.write('\n')
+        assert group_absent
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('export_backend_runtime_check', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-snapshot-integration-fo...^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         TypeError: original source-fixed Python callback required
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py:46: AssertionError
+________ test_snapshot_integration[export_backend_runtime_constructor] _________
+
+scenario = 'export_backend_runtime_constructor'
+tmp_path = PosixPath('/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_integration_expo3')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_integration(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'integration_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+        try:os.killpg(proc.pid,0)
+        except ProcessLookupError:group_absent=True
+        else:group_absent=False
+        with(tmp_path/'parent-terminal.json').open('x')as stream:
+            json.dump(dict(schema='qwen-snapshot-integration-owned-child-v1',pid=proc.pid,owned_session_pgid=proc.pid,
+                observed_pgid=observed_pgid,exit_code=code,reaped=True,group_absent=group_absent,
+                scenario=scenario,child_result_read=False),stream,sort_keys=True);stream.write('\n')
+        assert group_absent
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('export_backend_runtime_constructor', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-snapshot-integrat...^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         TypeError: original source-fixed Python callback required
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py:46: AssertionError
+________________ test_snapshot_integration[cleanup_is_cleanup] _________________
+
+scenario = 'cleanup_is_cleanup'
+tmp_path = PosixPath('/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_integration_clea0')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_integration(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'integration_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+        try:os.killpg(proc.pid,0)
+        except ProcessLookupError:group_absent=True
+        else:group_absent=False
+        with(tmp_path/'parent-terminal.json').open('x')as stream:
+            json.dump(dict(schema='qwen-snapshot-integration-owned-child-v1',pid=proc.pid,owned_session_pgid=proc.pid,
+                observed_pgid=observed_pgid,exit_code=code,reaped=True,group_absent=group_absent,
+                scenario=scenario,child_result_read=False),stream,sort_keys=True);stream.write('\n')
+        assert group_absent
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('cleanup_is_cleanup', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-snapshot-integration-focused-proo...^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         TypeError: original source-fixed Python callback required
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py:46: AssertionError
+___________________ test_snapshot_integration[cleanup_mark] ____________________
+
+scenario = 'cleanup_mark'
+tmp_path = PosixPath('/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_integration_clea1')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_integration(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'integration_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+        try:os.killpg(proc.pid,0)
+        except ProcessLookupError:group_absent=True
+        else:group_absent=False
+        with(tmp_path/'parent-terminal.json').open('x')as stream:
+            json.dump(dict(schema='qwen-snapshot-integration-owned-child-v1',pid=proc.pid,owned_session_pgid=proc.pid,
+                observed_pgid=observed_pgid,exit_code=code,reaped=True,group_absent=group_absent,
+                scenario=scenario,child_result_read=False),stream,sort_keys=True);stream.write('\n')
+        assert group_absent
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('cleanup_mark', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-snapshot-integration-focused-proof-2026...^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         TypeError: original source-fixed Python callback required
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py:46: AssertionError
+_________________ test_snapshot_integration[runtime_ids_bytes] _________________
+
+scenario = 'runtime_ids_bytes'
+tmp_path = PosixPath('/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_integration_runt3')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_integration(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'integration_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+        try:os.killpg(proc.pid,0)
+        except ProcessLookupError:group_absent=True
+        else:group_absent=False
+        with(tmp_path/'parent-terminal.json').open('x')as stream:
+            json.dump(dict(schema='qwen-snapshot-integration-owned-child-v1',pid=proc.pid,owned_session_pgid=proc.pid,
+                observed_pgid=observed_pgid,exit_code=code,reaped=True,group_absent=group_absent,
+                scenario=scenario,child_result_read=False),stream,sort_keys=True);stream.write('\n')
+        assert group_absent
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('runtime_ids_bytes', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-snapshot-integration-focused-proof...^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         TypeError: original source-fixed Python callback required
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py:46: AssertionError
+_______________ test_snapshot_integration[runtime_input_digest] ________________
+
+scenario = 'runtime_input_digest'
+tmp_path = PosixPath('/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_integration_runt4')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_integration(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'integration_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+        try:os.killpg(proc.pid,0)
+        except ProcessLookupError:group_absent=True
+        else:group_absent=False
+        with(tmp_path/'parent-terminal.json').open('x')as stream:
+            json.dump(dict(schema='qwen-snapshot-integration-owned-child-v1',pid=proc.pid,owned_session_pgid=proc.pid,
+                observed_pgid=observed_pgid,exit_code=code,reaped=True,group_absent=group_absent,
+                scenario=scenario,child_result_read=False),stream,sort_keys=True);stream.write('\n')
+        assert group_absent
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('runtime_input_digest', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-snapshot-integration-focused-pr...^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         TypeError: original source-fixed Python callback required
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py:46: AssertionError
+______________ test_snapshot_integration[derived_ids_dictionary] _______________
+
+scenario = 'derived_ids_dictionary'
+tmp_path = PosixPath('/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_integration_deri0')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_integration(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'integration_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+        try:os.killpg(proc.pid,0)
+        except ProcessLookupError:group_absent=True
+        else:group_absent=False
+        with(tmp_path/'parent-terminal.json').open('x')as stream:
+            json.dump(dict(schema='qwen-snapshot-integration-owned-child-v1',pid=proc.pid,owned_session_pgid=proc.pid,
+                observed_pgid=observed_pgid,exit_code=code,reaped=True,group_absent=group_absent,
+                scenario=scenario,child_result_read=False),stream,sort_keys=True);stream.write('\n')
+        assert group_absent
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('derived_ids_dictionary', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-snapshot-integration-focused-...^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         TypeError: original source-fixed Python callback required
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py:46: AssertionError
+__________________ test_snapshot_integration[runtime_control] __________________
+
+scenario = 'runtime_control'
+tmp_path = PosixPath('/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_integration_runt5')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_integration(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'integration_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+        try:os.killpg(proc.pid,0)
+        except ProcessLookupError:group_absent=True
+        else:group_absent=False
+        with(tmp_path/'parent-terminal.json').open('x')as stream:
+            json.dump(dict(schema='qwen-snapshot-integration-owned-child-v1',pid=proc.pid,owned_session_pgid=proc.pid,
+                observed_pgid=observed_pgid,exit_code=code,reaped=True,group_absent=group_absent,
+                scenario=scenario,child_result_read=False),stream,sort_keys=True);stream.write('\n')
+        assert group_absent
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('runtime_control', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-snapshot-integration-focused-proof-2...^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         TypeError: original source-fixed Python callback required
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py:46: AssertionError
+____________________ test_snapshot_integration[audit_flags] ____________________
+
+scenario = 'audit_flags'
+tmp_path = PosixPath('/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_integration_audi0')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_integration(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'integration_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+        try:os.killpg(proc.pid,0)
+        except ProcessLookupError:group_absent=True
+        else:group_absent=False
+        with(tmp_path/'parent-terminal.json').open('x')as stream:
+            json.dump(dict(schema='qwen-snapshot-integration-owned-child-v1',pid=proc.pid,owned_session_pgid=proc.pid,
+                observed_pgid=observed_pgid,exit_code=code,reaped=True,group_absent=group_absent,
+                scenario=scenario,child_result_read=False),stream,sort_keys=True);stream.write('\n')
+        assert group_absent
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('audit_flags', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-snapshot-integration-focused-proof-20261...^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         TypeError: original source-fixed Python callback required
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py:46: AssertionError
+______________ test_snapshot_integration[guard_check_descriptor] _______________
+
+scenario = 'guard_check_descriptor'
+tmp_path = PosixPath('/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_integration_guar0')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_integration(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'integration_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+        try:os.killpg(proc.pid,0)
+        except ProcessLookupError:group_absent=True
+        else:group_absent=False
+        with(tmp_path/'parent-terminal.json').open('x')as stream:
+            json.dump(dict(schema='qwen-snapshot-integration-owned-child-v1',pid=proc.pid,owned_session_pgid=proc.pid,
+                observed_pgid=observed_pgid,exit_code=code,reaped=True,group_absent=group_absent,
+                scenario=scenario,child_result_read=False),stream,sort_keys=True);stream.write('\n')
+        assert group_absent
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('guard_check_descriptor', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-snapshot-integration-focused-...^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         TypeError: original source-fixed Python callback required
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py:46: AssertionError
+________________ test_snapshot_integration[source_read_export] _________________
+
+scenario = 'source_read_export'
+tmp_path = PosixPath('/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_integration_sour0')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_integration(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'integration_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+        try:os.killpg(proc.pid,0)
+        except ProcessLookupError:group_absent=True
+        else:group_absent=False
+        with(tmp_path/'parent-terminal.json').open('x')as stream:
+            json.dump(dict(schema='qwen-snapshot-integration-owned-child-v1',pid=proc.pid,owned_session_pgid=proc.pid,
+                observed_pgid=observed_pgid,exit_code=code,reaped=True,group_absent=group_absent,
+                scenario=scenario,child_result_read=False),stream,sort_keys=True);stream.write('\n')
+        assert group_absent
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('source_read_export', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-snapshot-integration-focused-proo...^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         TypeError: original source-fixed Python callback required
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py:46: AssertionError
+_____________ test_snapshot_integration[environment_callback_code] _____________
+
+scenario = 'environment_callback_code'
+tmp_path = PosixPath('/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_integration_envi0')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_integration(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'integration_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+        try:os.killpg(proc.pid,0)
+        except ProcessLookupError:group_absent=True
+        else:group_absent=False
+        with(tmp_path/'parent-terminal.json').open('x')as stream:
+            json.dump(dict(schema='qwen-snapshot-integration-owned-child-v1',pid=proc.pid,owned_session_pgid=proc.pid,
+                observed_pgid=observed_pgid,exit_code=code,reaped=True,group_absent=group_absent,
+                scenario=scenario,child_result_read=False),stream,sort_keys=True);stream.write('\n')
+        assert group_absent
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('environment_callback_code', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-snapshot-integration-focus...^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         TypeError: original source-fixed Python callback required
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py:46: AssertionError
+_____________ test_snapshot_integration[backend_before_key_scope] ______________
+
+scenario = 'backend_before_key_scope'
+tmp_path = PosixPath('/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_integration_back0')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_integration(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'integration_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+        try:os.killpg(proc.pid,0)
+        except ProcessLookupError:group_absent=True
+        else:group_absent=False
+        with(tmp_path/'parent-terminal.json').open('x')as stream:
+            json.dump(dict(schema='qwen-snapshot-integration-owned-child-v1',pid=proc.pid,owned_session_pgid=proc.pid,
+                observed_pgid=observed_pgid,exit_code=code,reaped=True,group_absent=group_absent,
+                scenario=scenario,child_result_read=False),stream,sort_keys=True);stream.write('\n')
+        assert group_absent
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('backend_before_key_scope', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-snapshot-integration-focuse...^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         TypeError: original source-fixed Python callback required
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py:46: AssertionError
+________________ test_snapshot_integration[backend_forwarding] _________________
+
+scenario = 'backend_forwarding'
+tmp_path = PosixPath('/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_integration_back1')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_integration(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'integration_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+        try:os.killpg(proc.pid,0)
+        except ProcessLookupError:group_absent=True
+        else:group_absent=False
+        with(tmp_path/'parent-terminal.json').open('x')as stream:
+            json.dump(dict(schema='qwen-snapshot-integration-owned-child-v1',pid=proc.pid,owned_session_pgid=proc.pid,
+                observed_pgid=observed_pgid,exit_code=code,reaped=True,group_absent=group_absent,
+                scenario=scenario,child_result_read=False),stream,sort_keys=True);stream.write('\n')
+        assert group_absent
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('backend_forwarding', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-snapshot-integration-focused-proo...^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         TypeError: original source-fixed Python callback required
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py:46: AssertionError
+___________________ test_snapshot_integration[wrong_handle] ____________________
+
+scenario = 'wrong_handle'
+tmp_path = PosixPath('/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_integration_wron0')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_integration(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'integration_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+        try:os.killpg(proc.pid,0)
+        except ProcessLookupError:group_absent=True
+        else:group_absent=False
+        with(tmp_path/'parent-terminal.json').open('x')as stream:
+            json.dump(dict(schema='qwen-snapshot-integration-owned-child-v1',pid=proc.pid,owned_session_pgid=proc.pid,
+                observed_pgid=observed_pgid,exit_code=code,reaped=True,group_absent=group_absent,
+                scenario=scenario,child_result_read=False),stream,sort_keys=True);stream.write('\n')
+        assert group_absent
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('wrong_handle', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-snapshot-integration-focused-proof-2026...^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         TypeError: original source-fixed Python callback required
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py:46: AssertionError
+___________________ test_snapshot_integration[secret_direct] ___________________
+
+scenario = 'secret_direct'
+tmp_path = PosixPath('/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_integration_secr0')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_integration(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'integration_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+        try:os.killpg(proc.pid,0)
+        except ProcessLookupError:group_absent=True
+        else:group_absent=False
+        with(tmp_path/'parent-terminal.json').open('x')as stream:
+            json.dump(dict(schema='qwen-snapshot-integration-owned-child-v1',pid=proc.pid,owned_session_pgid=proc.pid,
+                observed_pgid=observed_pgid,exit_code=code,reaped=True,group_absent=group_absent,
+                scenario=scenario,child_result_read=False),stream,sort_keys=True);stream.write('\n')
+        assert group_absent
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('secret_direct', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-snapshot-integration-focused-proof-202...^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         TypeError: original source-fixed Python callback required
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py:46: AssertionError
+___________________ test_snapshot_integration[secret_cache] ____________________
+
+scenario = 'secret_cache'
+tmp_path = PosixPath('/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_integration_secr1')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_integration(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'integration_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+        try:os.killpg(proc.pid,0)
+        except ProcessLookupError:group_absent=True
+        else:group_absent=False
+        with(tmp_path/'parent-terminal.json').open('x')as stream:
+            json.dump(dict(schema='qwen-snapshot-integration-owned-child-v1',pid=proc.pid,owned_session_pgid=proc.pid,
+                observed_pgid=observed_pgid,exit_code=code,reaped=True,group_absent=group_absent,
+                scenario=scenario,child_result_read=False),stream,sort_keys=True);stream.write('\n')
+        assert group_absent
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('secret_cache', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-snapshot-integration-focused-proof-2026...^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         TypeError: original source-fixed Python callback required
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py:46: AssertionError
+_________________ test_snapshot_integration[secret_parameters] _________________
+
+scenario = 'secret_parameters'
+tmp_path = PosixPath('/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_integration_secr2')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_integration(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'integration_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+        try:os.killpg(proc.pid,0)
+        except ProcessLookupError:group_absent=True
+        else:group_absent=False
+        with(tmp_path/'parent-terminal.json').open('x')as stream:
+            json.dump(dict(schema='qwen-snapshot-integration-owned-child-v1',pid=proc.pid,owned_session_pgid=proc.pid,
+                observed_pgid=observed_pgid,exit_code=code,reaped=True,group_absent=group_absent,
+                scenario=scenario,child_result_read=False),stream,sort_keys=True);stream.write('\n')
+        assert group_absent
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('secret_parameters', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-snapshot-integration-focused-proof...^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         TypeError: original source-fixed Python callback required
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py:46: AssertionError
+_____________ test_snapshot_integration[publisher_digest_mismatch] _____________
+
+scenario = 'publisher_digest_mismatch'
+tmp_path = PosixPath('/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/pytest-owned/test_snapshot_integration_publ0')
+
+    @pytest.mark.parametrize('scenario',CASES,ids=CASES)
+    def test_snapshot_integration(scenario,tmp_path):
+        result=tmp_path/'result.json';observed_pgid=None
+        env=dict(os.environ)
+        for name in('PYTHONPATH','PYTHONHOME','PYTEST_ADDOPTS','PYTEST_PLUGINS'):env.pop(name,None)
+        env['PYTHONDONTWRITEBYTECODE']='1'
+        with(tmp_path/'child.log').open('xb')as log:
+            proc=subprocess.Popen([sys.executable,'-I','-B',str(HERE/'integration_child.py'),scenario,str(HERE),str(result)],
+                cwd=tmp_path,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            try:
+                try:observed_pgid=os.getpgid(proc.pid)
+                except ProcessLookupError:pass
+                if observed_pgid is not None:assert observed_pgid==proc.pid
+                code=proc.wait()
+            except BaseException as primary:
+                try:
+                    try:os.killpg(proc.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned group cleanup: '+repr(cleanup))
+                finally:
+                    try:proc.wait()
+                    except BaseException as cleanup:
+                        if cleanup is not primary:primary.add_note('owned direct wait: '+repr(cleanup))
+                raise
+        try:os.killpg(proc.pid,0)
+        except ProcessLookupError:group_absent=True
+        else:group_absent=False
+        with(tmp_path/'parent-terminal.json').open('x')as stream:
+            json.dump(dict(schema='qwen-snapshot-integration-owned-child-v1',pid=proc.pid,owned_session_pgid=proc.pid,
+                observed_pgid=observed_pgid,exit_code=code,reaped=True,group_absent=group_absent,
+                scenario=scenario,child_result_read=False),stream,sort_keys=True);stream.write('\n')
+        assert group_absent
+>       assert code==0,(scenario,(tmp_path/'child.log').read_text()[-8192:])
+E       AssertionError: ('publisher_digest_mismatch', 'Traceback (most recent call last):
+E           File "/tmp/qwen-server-snapshot-integration-focus...^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         TypeError: original source-fixed Python callback required
+E         ')
+E       assert 1 == 0
+
+/tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py:46: AssertionError
+=========================== short test summary info ============================
+FAILED ../../tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py::test_snapshot_integration[runtime_hot_clean]
+FAILED ../../tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py::test_snapshot_integration[runtime_pending_checks]
+FAILED ../../tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py::test_snapshot_integration[runtime_caught_transition]
+FAILED ../../tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py::test_snapshot_integration[snapshot_caught_reentry]
+FAILED ../../tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py::test_snapshot_integration[export_require_runtime]
+FAILED ../../tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py::test_snapshot_integration[export_runtime_action]
+FAILED ../../tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py::test_snapshot_integration[export_backend_runtime_check]
+FAILED ../../tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py::test_snapshot_integration[export_backend_runtime_constructor]
+FAILED ../../tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py::test_snapshot_integration[cleanup_is_cleanup]
+FAILED ../../tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py::test_snapshot_integration[cleanup_mark]
+FAILED ../../tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py::test_snapshot_integration[runtime_ids_bytes]
+FAILED ../../tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py::test_snapshot_integration[runtime_input_digest]
+FAILED ../../tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py::test_snapshot_integration[derived_ids_dictionary]
+FAILED ../../tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py::test_snapshot_integration[runtime_control]
+FAILED ../../tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py::test_snapshot_integration[audit_flags]
+FAILED ../../tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py::test_snapshot_integration[guard_check_descriptor]
+FAILED ../../tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py::test_snapshot_integration[source_read_export]
+FAILED ../../tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py::test_snapshot_integration[environment_callback_code]
+FAILED ../../tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py::test_snapshot_integration[backend_before_key_scope]
+FAILED ../../tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py::test_snapshot_integration[backend_forwarding]
+FAILED ../../tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py::test_snapshot_integration[wrong_handle]
+FAILED ../../tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py::test_snapshot_integration[secret_direct]
+FAILED ../../tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py::test_snapshot_integration[secret_cache]
+FAILED ../../tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py::test_snapshot_integration[secret_parameters]
+FAILED ../../tmp/qwen-server-snapshot-integration-focused-proof-20261104/preparation-v1/execution/test_snapshot_integration.py::test_snapshot_integration[publisher_digest_mismatch]
+25 failed, 11 passed in 34.09s

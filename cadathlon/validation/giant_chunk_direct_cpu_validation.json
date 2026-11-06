@@ -1,0 +1,155 @@
+{
+  "passed": true,
+  "status": "Direct runtime patch tested only in isolated checkout; not promoted",
+  "scope": "Direct PackedTransformer runtime patch in isolated checkout; exact secure linear component and ideal complete graph regressions; no full encrypted graph/TPU claim",
+  "source_file_count": 196,
+  "source_files_unchanged": true,
+  "archive_source_hashes_verified": true,
+  "counts": {
+    "passed": 146,
+    "failed": 0,
+    "skipped": 0
+  },
+  "seconds": 89.13672623800085,
+  "source_provenance": {
+    "original_source_sha256": "f0467c3fdfdee9be2d51978c07e93b8fb3e9025f46af0c32388c2d1484d0804c",
+    "direct_source_sha256": "79a108247afc4efd2dcb3eba3b9dbd8fe8b858bf32019eef7252971dd76cbe29",
+    "candidate_method_exact_text_equal": true,
+    "scope": "Direct-runtime patch candidate; tests not yet run"
+  },
+  "module_origins": {
+    "encrypted_packed_transformer": "/tmp/giant-chunk-integrated/checkout/cadathlon/common/encrypted_packed_transformer.py",
+    "encrypted_bounded_transformer": "/tmp/giant-chunk-integrated/checkout/cadathlon/common/encrypted_bounded_transformer.py",
+    "jaxite_word.ckks_ctx": "/tmp/giant-chunk-integrated/checkout/jaxite_word/ckks_ctx.py"
+  },
+  "counting": "146-test direct-runtime run overlaps the preceding39-test subclass candidate run; counts are not summed",
+  "memory_scope": {
+    "default_extra_payload_bytes": 268435456,
+    "maximum_pending_count": 8,
+    "rule": "min(groups,8,1+floor(extra_payload_budget/output_payload_bytes))",
+    "guarantee": "Additional queued ciphertext payload beyond the existing singleton baseline is capped; consumed wrappers retire before the next chunk",
+    "excluded": "Not a total HBM guarantee: babies, accumulator, NTT/key/control arrays, plaintexts and primitive working buffers are outside this payload accounting",
+    "evidence": "Weak-reference peak/retirement/failure tests; actual secure outputs share same-level NTT contexts; high-degree accounting is public shape arithmetic without allocating large-ring ciphertexts",
+    "measured_cpu_process_max_rss_kib": 588432
+  },
+  "crypto_scope": {
+    "degree": 8192,
+    "depth": 1,
+    "dnum": 2,
+    "q_count": 4,
+    "p_count": 3,
+    "actual_log2_qp": 206.9977101580269,
+    "security_bits": 128
+  },
+  "cases": [
+    {
+      "number": 0,
+      "bounded": false,
+      "variants": [
+        {
+          "candidate": false,
+          "seconds": 11.050655566999922,
+          "max_abs_error": 6.472274105551179e-12,
+          "cache_clears": 6,
+          "groups": 4,
+          "output_payload_bytes": 131072,
+          "pending_limit": 1
+        },
+        {
+          "candidate": true,
+          "seconds": 8.506208683000295,
+          "max_abs_error": 6.472274105551179e-12,
+          "cache_clears": 4,
+          "groups": 4,
+          "output_payload_bytes": 131072,
+          "pending_limit": 3
+        }
+      ],
+      "exact_payload_and_metadata": true
+    },
+    {
+      "number": 0,
+      "bounded": true,
+      "variants": [
+        {
+          "candidate": false,
+          "seconds": 10.946747428999515,
+          "max_abs_error": 6.472274105551179e-12,
+          "cache_clears": 6,
+          "groups": 4,
+          "output_payload_bytes": 131072,
+          "pending_limit": 1
+        },
+        {
+          "candidate": true,
+          "seconds": 8.445863613000256,
+          "max_abs_error": 6.472274105551179e-12,
+          "cache_clears": 4,
+          "groups": 4,
+          "output_payload_bytes": 131072,
+          "pending_limit": 3
+        }
+      ],
+      "exact_payload_and_metadata": true
+    },
+    {
+      "number": 1,
+      "bounded": false,
+      "variants": [
+        {
+          "candidate": false,
+          "seconds": 8.162597566999466,
+          "max_abs_error": 4.569351407662792e-12,
+          "cache_clears": 4,
+          "groups": 3,
+          "output_payload_bytes": 131072,
+          "pending_limit": 1
+        },
+        {
+          "candidate": true,
+          "seconds": 5.713969330998225,
+          "max_abs_error": 4.569351407662792e-12,
+          "cache_clears": 2,
+          "groups": 3,
+          "output_payload_bytes": 131072,
+          "pending_limit": 3
+        }
+      ],
+      "exact_payload_and_metadata": true
+    },
+    {
+      "number": 1,
+      "bounded": true,
+      "variants": [
+        {
+          "candidate": false,
+          "seconds": 8.209220076001657,
+          "max_abs_error": 4.569351407662792e-12,
+          "cache_clears": 4,
+          "groups": 3,
+          "output_payload_bytes": 131072,
+          "pending_limit": 1
+        },
+        {
+          "candidate": true,
+          "seconds": 5.749932421000267,
+          "max_abs_error": 4.569351407662792e-12,
+          "cache_clears": 2,
+          "groups": 3,
+          "output_payload_bytes": 131072,
+          "pending_limit": 3
+        }
+      ],
+      "exact_payload_and_metadata": true
+    }
+  ],
+  "timing_scope": "Development CPU component observations, not accelerator/model/calibration performance claims",
+  "artifacts": {
+    "giant_chunk_direct_cpu.json": "e80351d39eca6964f39a36b6b7f83177334b0c41bf4aef7b2f74c786c4c039fe",
+    "giant_chunk_direct_cpu.log": "36def66e9de8f1318db841124b1247fd2f92c6b6574a8c069aef8840a3942df0",
+    "giant_chunk_direct_secure_cpu.json": "01a3aeeb87ddbccece04cd70b2c03f3cc40b33c1f54334d4359d41cf54cffb0c",
+    "giant_chunk_direct_queue_accounting.json": "fc85e0237f25828c443d5565723cadf433f0ddb123e755921782aee08b7a4689",
+    "giant_chunk_direct_runtime.patch": "d5127c3cd966a700d1a40731eda7df73cf63d79c4701c18ec8b5442307059be0",
+    "giant_chunk_direct_cpu_sources.tar.gz": "5650e5b4aa0141b973e8eaa91005e7d9f81d22505ee57d545181d90021b9392f"
+  }
+}

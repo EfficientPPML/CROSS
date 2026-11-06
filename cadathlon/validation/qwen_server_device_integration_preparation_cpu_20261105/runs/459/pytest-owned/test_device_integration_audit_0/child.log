@@ -1,0 +1,43 @@
+Traceback (most recent call last):
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/owned_child.py", line 111, in <module>
+    try:main()
+        ~~~~^^
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/owned_child.py", line 76, in main
+    detail=importlib.import_module(name).run(fixture,case)
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/cases_audit.py", line 55, in run
+    f.start();assert audit.initialization_enabled and audit.native_binding[0]is f.device
+    ~~~~~~~^^
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/fixture_base.py", line 274, in start
+    result=self.device.start();assert result[0]is self.core
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/runtime/qwen_server_device_owner.py", line 291, in start
+    def start(self,*,_original=_dispatch):return _original(self,'start')
+                                                 ~~~~~~~~~^^^^^^^^^^^^^^
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/runtime/qwen_server_device_owner.py", line 242, in _dispatch
+    row['initialize'](row['permit']);_observe(row,'post_init');row['mode']='observed'
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/runtime/qwen_device_capacity.py", line 227, in initialize_once
+    device=_hook(record,3)
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/runtime/qwen_device_capacity.py", line 119, in _hook
+    result=fn(phase,blobs,*args)
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/runtime/qwen_server_process.py", line 47, in device_capacity_initialize
+    return _DEVICE_HOOK[0]('initialize',phase,blobs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/runtime/qwen_server_device_owner.py", line 211, in hook
+    if action=='initialize':return _initialize(row)
+                                   ~~~~~~~~~~~^^^^^
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/runtime/qwen_server_device_owner.py", line 172, in _initialize
+    _guard(row)
+    ~~~~~~^^^^^
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/runtime/qwen_server_device_owner.py", line 104, in _guard
+    _identity(row);row['binding_check']();_identity(row)
+                   ~~~~~~~~~~~~~~~~~~~~^^
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/fixture_base.py", line 252, in binding_check
+    def binding_check():return self.device_bindings()
+                               ~~~~~~~~~~~~~~~~~~~~^^
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/fixture_base.py", line 239, in device_bindings
+    self.entry.origins(self.expected,core_enabled=self.gate.core_enabled);self.audit.check()
+                                                                          ~~~~~~~~~~~~~~~~^^
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/runtime/qwen_server_dependencies.py", line 450, in check
+    if self.denials:raise PermissionError('sticky server audit denial')
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: sticky server audit denial

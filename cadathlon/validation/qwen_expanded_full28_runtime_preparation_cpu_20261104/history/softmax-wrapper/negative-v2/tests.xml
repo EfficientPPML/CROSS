@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="1" failures="0" skipped="0" tests="1" time="0.106" timestamp="2026-11-04T09:09:36.054127+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="" name="test_wrapper_callback" time="0.000"><error message="collection failure">/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/_pytest/python.py:528: in importtestmodule
+    mod = import_path(
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/_pytest/pathlib.py:640: in import_path
+    importlib.import_module(module_name)
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+&lt;frozen importlib._bootstrap&gt;:1404: in _gcd_import
+    ???
+&lt;frozen importlib._bootstrap&gt;:1369: in _find_and_load
+    ???
+&lt;frozen importlib._bootstrap&gt;:1340: in _find_and_load_unlocked
+    ???
+&lt;frozen importlib._bootstrap&gt;:935: in _load_unlocked
+    ???
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/_pytest/assertion/rewrite.py:176: in exec_module
+    source_hash, co = _rewrite_test(fn, self.config)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/_pytest/assertion/rewrite.py:339: in _rewrite_test
+    tree = ast.parse(source, filename=strfn)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/ast.py:50: in parse
+    return compile(source, filename, mode, flags,
+E     File "/tmp/qwen-unbatched-softmax-wrapper-review-20261104/negative-v2/test_wrapper_callback.py", line 49
+E       observed.update(rejected=isinstance(caught,ValueError),error_type=type(caught).__name__if caught else None,
+E                                                                                                 ^^^^^^
+E   SyntaxError: invalid syntax</error></testcase></testsuite></testsuites>

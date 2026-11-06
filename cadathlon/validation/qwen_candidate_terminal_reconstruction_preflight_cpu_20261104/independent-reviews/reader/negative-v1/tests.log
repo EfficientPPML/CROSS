@@ -1,0 +1,60 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+______________ test_uncertain_descriptor_never_retried[journals] _______________
+
+kind = 'journals'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ecfe95b62c0>
+
+    @pytest.mark.parametrize("kind",["journals","calibration"])
+    def test_uncertain_descriptor_never_retried(kind,monkeypatch):
+        p.FAILURE_QUARANTINE.clear();calls=[]
+        def close(fd):
+            calls.append(fd)
+            if fd==101:raise OSError("uncertain close")
+        monkeypatch.setattr(p.os,"close",close)
+        owner=(p.JournalStore if kind=="journals" else p.CalibrationRead).__new__(p.JournalStore if kind=="journals" else p.CalibrationRead)
+        owner.fd=101;owner.closed=False
+        if kind=="calibration":owner.parent=102
+        with pytest.raises(OSError):owner.close()
+        expected=list(calls)
+        try:owner.close()
+        except BaseException:pass
+>       assert calls==expected,"uncertain descriptor must not be retried"
+E       AssertionError: uncertain descriptor must not be retried
+E       assert [101, 101] == [101]
+E         
+E         Left contains one more item: 101
+E         Use -v to get more diff
+
+test_uncertain.py:18: AssertionError
+_____________ test_uncertain_descriptor_never_retried[calibration] _____________
+
+kind = 'calibration'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ecfe95b68b0>
+
+    @pytest.mark.parametrize("kind",["journals","calibration"])
+    def test_uncertain_descriptor_never_retried(kind,monkeypatch):
+        p.FAILURE_QUARANTINE.clear();calls=[]
+        def close(fd):
+            calls.append(fd)
+            if fd==101:raise OSError("uncertain close")
+        monkeypatch.setattr(p.os,"close",close)
+        owner=(p.JournalStore if kind=="journals" else p.CalibrationRead).__new__(p.JournalStore if kind=="journals" else p.CalibrationRead)
+        owner.fd=101;owner.closed=False
+        if kind=="calibration":owner.parent=102
+        with pytest.raises(OSError):owner.close()
+        expected=list(calls)
+        try:owner.close()
+        except BaseException:pass
+>       assert calls==expected,"uncertain descriptor must not be retried"
+E       AssertionError: uncertain descriptor must not be retried
+E       assert [101, 102, 101] == [101, 102]
+E         
+E         Left contains one more item: 101
+E         Use -v to get more diff
+
+test_uncertain.py:18: AssertionError
+=========================== short test summary info ============================
+FAILED test_uncertain.py::test_uncertain_descriptor_never_retried[journals]
+FAILED test_uncertain.py::test_uncertain_descriptor_never_retried[calibration]
+2 failed in 0.03s

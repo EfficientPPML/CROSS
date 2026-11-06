@@ -1,0 +1,67 @@
+..................................FFF.........                           [100%]
+=================================== FAILURES ===================================
+_ test_primary_exception_identity_preserved_public_message_redacted[ValueError] _
+
+mocked_run = namespace(args={'output': PosixPath('/tmp/pytest-of-jianming_gatech/pytest-372/test_primary_exception_identit0/result'....json': PosixPath('/tmp/pytest-of-jianming_gatech/pytest-372/test_primary_exception_identit0/candidate/origins.json')})
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d0c3ba6b410>
+failure_type = <class 'ValueError'>
+
+    @pytest.mark.parametrize('failure_type',[ValueError,KeyboardInterrupt,SystemExit])
+    def test_primary_exception_identity_preserved_public_message_redacted(mocked_run,monkeypatch,failure_type):
+        m=mocked_run;error=failure_type('PRIVATE_TOKENS_LABELS_LOGITS_MARKER')
+        def fail(*a):raise error
+        monkeypatch.setattr(c,'evaluate_unique',fail)
+        with pytest.raises(failure_type) as caught:c.run(**m.args)
+        assert caught.value is error
+        raw=(m.args['output']/'report.json').read_text();r=json.loads(raw)
+        assert 'PRIVATE_TOKENS_LABELS_LOGITS_MARKER' not in raw and not r['passed']
+>       assert m.owners[0].closed and r['cleanup_completed']
+E       assert (True and False)
+E        +  where True = <test_ranked_reference.FakeBackend object at 0x7d0c3ba236f0>.closed
+
+test_ranked_reference.py:177: AssertionError
+_ test_primary_exception_identity_preserved_public_message_redacted[KeyboardInterrupt] _
+
+mocked_run = namespace(args={'output': PosixPath('/tmp/pytest-of-jianming_gatech/pytest-372/test_primary_exception_identit1/result'....json': PosixPath('/tmp/pytest-of-jianming_gatech/pytest-372/test_primary_exception_identit1/candidate/origins.json')})
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d0c395b0680>
+failure_type = <class 'KeyboardInterrupt'>
+
+    @pytest.mark.parametrize('failure_type',[ValueError,KeyboardInterrupt,SystemExit])
+    def test_primary_exception_identity_preserved_public_message_redacted(mocked_run,monkeypatch,failure_type):
+        m=mocked_run;error=failure_type('PRIVATE_TOKENS_LABELS_LOGITS_MARKER')
+        def fail(*a):raise error
+        monkeypatch.setattr(c,'evaluate_unique',fail)
+        with pytest.raises(failure_type) as caught:c.run(**m.args)
+        assert caught.value is error
+        raw=(m.args['output']/'report.json').read_text();r=json.loads(raw)
+        assert 'PRIVATE_TOKENS_LABELS_LOGITS_MARKER' not in raw and not r['passed']
+>       assert m.owners[0].closed and r['cleanup_completed']
+E       assert (True and False)
+E        +  where True = <test_ranked_reference.FakeBackend object at 0x7d0c3b98fd10>.closed
+
+test_ranked_reference.py:177: AssertionError
+_ test_primary_exception_identity_preserved_public_message_redacted[SystemExit] _
+
+mocked_run = namespace(args={'output': PosixPath('/tmp/pytest-of-jianming_gatech/pytest-372/test_primary_exception_identit2/result'....json': PosixPath('/tmp/pytest-of-jianming_gatech/pytest-372/test_primary_exception_identit2/candidate/origins.json')})
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d0c395b1c80>
+failure_type = <class 'SystemExit'>
+
+    @pytest.mark.parametrize('failure_type',[ValueError,KeyboardInterrupt,SystemExit])
+    def test_primary_exception_identity_preserved_public_message_redacted(mocked_run,monkeypatch,failure_type):
+        m=mocked_run;error=failure_type('PRIVATE_TOKENS_LABELS_LOGITS_MARKER')
+        def fail(*a):raise error
+        monkeypatch.setattr(c,'evaluate_unique',fail)
+        with pytest.raises(failure_type) as caught:c.run(**m.args)
+        assert caught.value is error
+        raw=(m.args['output']/'report.json').read_text();r=json.loads(raw)
+        assert 'PRIVATE_TOKENS_LABELS_LOGITS_MARKER' not in raw and not r['passed']
+>       assert m.owners[0].closed and r['cleanup_completed']
+E       assert (True and False)
+E        +  where True = <test_ranked_reference.FakeBackend object at 0x7d0c3b9f5bf0>.closed
+
+test_ranked_reference.py:177: AssertionError
+=========================== short test summary info ============================
+FAILED test_ranked_reference.py::test_primary_exception_identity_preserved_public_message_redacted[ValueError]
+FAILED test_ranked_reference.py::test_primary_exception_identity_preserved_public_message_redacted[KeyboardInterrupt]
+FAILED test_ranked_reference.py::test_primary_exception_identity_preserved_public_message_redacted[SystemExit]
+3 failed, 43 passed in 11.45s

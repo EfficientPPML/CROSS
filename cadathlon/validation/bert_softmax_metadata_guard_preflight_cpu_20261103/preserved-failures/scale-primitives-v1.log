@@ -1,0 +1,17 @@
+........................................F.....                           [100%]
+=================================== FAILURES ===================================
+______ test_zero_first_weight_still_owns_scale_and_reordering_changes_it _______
+
+executor = (<function executor.<locals>.<lambda> at 0x7c0daffa0720>, [])
+
+    def test_zero_first_weight_still_owns_scale_and_reordering_changes_it(executor):
+        evaluate,_=executor;level=38;divisor=plan.drop_divisor(Q,level)
+        candidates=[DELTA*x for x in (.73,.81,1.,1.17,1.31)]
+>       pair=next((a,b) for a in candidates for b in candidates if
+            plan.affine_scale(a,DELTA,divisor)['output_scale']!=plan.affine_scale(b,DELTA,divisor)['output_scale'])
+E       StopIteration
+
+/tmp/bert-weighted-scale-plan-fix-20261103/test_scale_primitives.py:94: StopIteration
+=========================== short test summary info ============================
+FAILED ../../tmp/bert-weighted-scale-plan-fix-20261103/test_scale_primitives.py::test_zero_first_weight_still_owns_scale_and_reordering_changes_it
+1 failed, 45 passed in 0.09s

@@ -1,0 +1,124 @@
+from pathlib import Path as CanaryPath
+CanaryPath('/tmp/bert-gain4-validator-v2-root-review-20261104/validator_worker/must_not_exist.txt').write_text("unverified helper ran\n")
+"""Public-only validator successor contracts; producer and consumer stay distinct."""
+from pathlib import Path
+import sys
+HERE=Path(__file__).resolve().parent
+sys.path[:0]=[str(HERE),str(HERE/'runtime/stage'),str(HERE/'common'),str(HERE/'runtime')]
+import component_protocol as protocol
+import component_contract as contract
+import component_key_gate as key_gate
+import producer_gate
+
+RUNTIME_OVERLAYS={
+ 'runtime/stage/client_keys.py':'d6a2aac4e8ecf483e250a793a341cc6e451e2e9471ad8725e7699f720c7cfa76',
+ 'runtime/stage/key_contexts.py':'056627ee3080f3d6ec7445ceb2f25171b49c7fc08eb256449a656b100f5853f0'}
+METADATA_OVERLAYS={'execution_authorization.json','gain4_component_overlays.json','source_inventory.json'}
+TERMINAL_SCHEMA='gain4-validator-successor-terminal-v1'
+
+
+def inspect_sources(expected):
+    if protocol.hashes(protocol.sources())!=expected:raise ValueError('consumer source closure differs')
+    checked=producer_gate.inspect();old=checked['producer_sources']
+    if not set(old)<=set(expected):raise ValueError('complete original163 source names required')
+    changed={n for n in old if expected[n]!=old[n]}
+    if changed!=set(RUNTIME_OVERLAYS)|METADATA_OVERLAYS:raise ValueError('only two runtime and three metadata overlays allowed')
+    for name,pin in RUNTIME_OVERLAYS.items():
+        if expected.get(name)!=pin:raise ValueError('reviewed client IO overlay differs')
+    if key_gate.parse(key_gate.read(HERE/'execution_authorization.json'))!={'ready':False}:
+        raise ValueError('legacy fixture/server entrypoints must remain disabled')
+    if type(key_gate.parse(key_gate.read(HERE/'execution_authorization.json'))['ready'])is not bool:
+        raise ValueError('exact disabled legacy flag required')
+    profile,plan=protocol.check_sources(expected)
+    protocol.imported_sources(expected)
+    import validator_source_guard
+    validator_source_guard.check(expected,HERE,fresh=False)
+    return profile,plan,checked
+
+
+def require_ready():
+    value=key_gate.parse(key_gate.read(HERE/'validator_authorization.json'))
+    wanted={'schema':'gain4-validator-only-authorization-v1','ready':True,'stage':'validate','execution_authorized':True}
+    if type(value)is not dict or set(value)!=set(wanted)or any(type(value[n])is not type(v)or value[n]!=v for n,v in wanted.items()):
+        raise ValueError('validator execution remains disabled pending independent review')
+    bound=producer_gate.bindings()
+    if bound['server_report_sha256']is None or bound['server_root_review_sha256']is None:
+        raise ValueError('completed reviewed producer server remains pending')
+    receipt=key_gate.read(HERE/'producer_server_root_review.json')
+    if protocol.sha(receipt)!=bound['server_root_review_sha256']:raise ValueError('independent producer terminal review differs')
+    return bound
+
+
+def prior_gates(config):
+    receipts={}
+    for stage,authenticate in (('fixture',producer_gate.authenticate_fixture),('server',producer_gate.authenticate_server)):
+        receipts[stage]=authenticate(config[stage+'_evidence'],config[stage+'_report_sha256'],
+            workspace=config['workspace'],workspace_identity=config['workspace_identity'],request=config['request_contract'])
+    if receipts['fixture']['readback']['input_digest']!=receipts['server']['readback']['input_digest']:
+        raise ValueError('producer server/fixture input binding differs')
+    return receipts
+
+
+def preceding_config(fixture_evidence,fixture_sha,server_evidence,server_sha):
+    # Check fixed public pins before even reading the supplied fixture receipt.
+    bound=producer_gate.bindings()
+    if fixture_sha!=bound['fixture_report_sha256']:raise ValueError('fixed fixture terminal pin required')
+    if bound['server_report_sha256']is None or server_sha!=bound['server_report_sha256']:
+        raise ValueError('reviewed producer server pin pending or different')
+    raw=key_gate.read(Path(fixture_evidence)/'report.json')
+    if protocol.sha(raw)!=fixture_sha:raise ValueError('fixture receipt differs')
+    report=key_gate.parse(raw);request=contract.validate_contract(report.get('request_contract'))
+    workspace=Path(report.get('workspace',''));identity=report.get('workspace_identity')
+    if workspace!=Path('/tmp')/('cross-normalized-gain4-'+request['nonce']):raise ValueError('nonce-bound retained workspace required')
+    config=dict(stage='validate',workspace=str(workspace),workspace_identity=identity,request_contract=request,
+        fixture_evidence=str(fixture_evidence),fixture_report_sha256=fixture_sha,
+        server_evidence=str(server_evidence),server_report_sha256=server_sha)
+    prior_gates(config)
+    return request,workspace,identity
+
+
+def separate(path, protected):
+    resolved=Path(path).absolute().resolve()
+    for item in protected:
+        target=Path(item).absolute().resolve()
+        if resolved==target or resolved.is_relative_to(target)or target.is_relative_to(resolved):
+            raise ValueError('validator output must be separate from every retained/source/evidence root before publication')
+
+
+def validate_config(config):
+    # Call only the unchanged typed configuration validator, never its run/main.
+    import component_worker
+    if type(config)is not dict or config.get('stage')!='validate':raise ValueError('validator-only stage required')
+    return component_worker.validate_config(config)
+
+
+def protected(config):
+    return [HERE,config['workspace'],config['key_workspace'],config['key_evidence'],config['fixture_evidence'],config['server_evidence']]
+
+
+def validate_numeric_report(worker):
+    import math
+    proof=contract.numerical_plan();rows=worker.get('numeric_checkpoints')
+    if (worker.get('numeric_validation_complete')is not True or worker.get('all54_authenticated_before_private_read')is not True
+            or type(rows)is not list or len(rows)!=54):raise ValueError('all54 completed fixed numerical gates required')
+    def passed(row):
+        if type(row)is not dict or row.get('passed')is not True:raise ValueError('failed numeric gate cannot authorize success')
+        value=row.get('max_abs_error')
+        if type(value)is not float or not math.isfinite(value)or value<0 or value>1e-6:raise ValueError('strict finite original1e-6 gate required')
+    for i,(row,wanted)in enumerate(zip(rows,proof['checkpoints'])):
+        for name,value in dict(index=i,case=wanted['case'],label=wanted['label'],slots=65536,level=wanted['level'],scale=wanted['scale'],absolute_gate=1e-6).items():
+            if type(row.get(name))is not type(value)or row[name]!=value:raise ValueError('typed fixed checkpoint metadata differs')
+        passed(row)
+    derived=worker.get('derived_checks')
+    if type(derived)is not dict or set(derived)!={r['name']for r in proof['cases']}:raise ValueError('both fixed derived gate sets required')
+    for case in proof['cases']:
+        updates=case['updates']
+        names={f'{prefix}{i:02}'for prefix in ('invariant','true_residual_vs_original')for i in range(1,updates+1)}
+        names|={'final_true_inverse','final_true_relative_residual','final_true_normalized_quotient'}
+        if type(derived[case['name']])is not dict or set(derived[case['name']])!=names:raise ValueError('complete unchanged derived gates required')
+        for row in derived[case['name']].values():passed(row)
+    summary=worker.get('numeric_summary')
+    wanted=dict(checkpoints=54,physical_slots=54*65536,maximum_absolute_error=max(r['max_abs_error']for r in rows),absolute_gate=1e-6,passed=True)
+    if type(summary)is not dict or set(summary)!=set(wanted)or any(type(summary[n])is not type(v)or summary[n]!=v for n,v in wanted.items()):
+        raise ValueError('fixed numerical summary differs')
+    return True

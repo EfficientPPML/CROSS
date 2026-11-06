@@ -1,0 +1,62 @@
+{
+  "schema": "qwen-whole28-fixed-trajectory-v1",
+  "candidate_sha256": "7f6478a6bc710f3d2a370198e075e6ba8b0e55c144d981bca0eed59eaf176333",
+  "runtime_predecessor_sha256": "b2c9835810bbea1e180659a951250443feeb7b450c0fc220e78d53c7eb0770a5",
+  "calibration": {
+    "root": "/tmp/qwen-candidate3-calibration-20261103",
+    "report": "full-v1/report.json",
+    "report_sha256": "1e827000cc0368853f2e8932ec17ee5f318e973e3c80f67652790491fcf7c628",
+    "archive": "full-v1/sources.tar.gz",
+    "archive_sha256": "aaa1006c120b58a97f1dafdee132d9da2d6308ed5a7924a2d47a9d3d16a16d00",
+    "tokens": "calibration/tokenized_calibration_inputs.json",
+    "tokens_sha256": "3bebd28b45ac57652d875c8ca2145aab07bdde4a2aa8c8deb36b96adeb5a1ac2"
+  },
+  "assets": {
+    "root": "/home/jianming_gatech/cross_validation_assets/qwen/c1899de289a04d12100db370d81485cdf75e47ca",
+    "sha256": {
+      "config.json": "660db3b73d788119c04535e48cf9be5f55bc3100841a718637ae695b442f27dd",
+      "model.safetensors": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b"
+    }
+  },
+  "public_parameters": {
+    "qkv_directory": "/tmp/qwen-qkv-attention-join-20261103/public_qkv_parameters",
+    "decoder_directory": "/tmp/qwen-decoder-parameters-20261103/actual-v1/public_matrices",
+    "gamma_path": "/tmp/qwen-rmsnorm-owner-20261103/client_gamma_fixtures.npz",
+    "gamma_sha256": "5f40efb5fac32037999ac8aff5f01bae7f937dd0f1d308b2a694883d01b4ef30"
+  },
+  "fixtures": [
+    {
+      "name": "checkpoint_embedding_row0_S1",
+      "sequence": 1,
+      "selector": "embedding_row0",
+      "positions": [
+        0
+      ]
+    },
+    {
+      "name": "first_original_calibration_S8",
+      "sequence": 8,
+      "selector": "first_file_order_sequence_length8",
+      "positions": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    }
+  ],
+  "gates": {
+    "ideal_absolute": 1e-08,
+    "operator_count": 421,
+    "block_count": 28,
+    "logits": 151936,
+    "output_physical_slots": 2490368,
+    "all_declared_domains": true,
+    "all_primitive_finite": true
+  },
+  "scope": "NumPy full-slot actual owner loops with identity refresh; no model forward, JAX/HE, native intermediate, labels or fresh/heldout reads. Gates are ideal arithmetic gates, not a new native benchmark."
+}

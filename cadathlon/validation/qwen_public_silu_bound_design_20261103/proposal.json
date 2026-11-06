@@ -1,0 +1,326 @@
+{
+  "schema": "qwen-public-gate-bound-design-v2-proposal",
+  "status": "design_only_not_selected_or_model_evaluated",
+  "existing_result": {
+    "candidate1_manifest_sha256": "d16cfe0eaf4079b1e782790dcff277ed6901aa7ea1376ee7877b40b54dde93a2",
+    "calibration_contexts": 416,
+    "calibration_passed": true,
+    "original_validation_entries": 112,
+    "original_validation_passed": false,
+    "original_validation_result_unchanged": true
+  },
+  "selection_sources_allowed": [
+    "Pinned public checkpoint weights/configuration",
+    "The previously frozen calibration inputs and calibration-only trajectories",
+    "Public analytic error certificates and predeclared targets"
+  ],
+  "selection_sources_forbidden": [
+    "Original held-out extrema, logits, errors or token choices",
+    "Any output or domain observations from the new validation proposal"
+  ],
+  "public_gate_bound": {
+    "per_layer_shapes": {
+      "post_rms_gamma": [
+        1024
+      ],
+      "gate_weight": [
+        3072,
+        1024
+      ]
+    },
+    "formula": "B[l,j]=sqrt(1024*sum_i (W_gate[l,j,i]*gamma_post[l,i])^2)",
+    "derivation": "Cauchy: |<W_j*gamma,x>| <= ||W_j*gamma||2 ||x||2; sqrt(mean(x^2)+eps)>=||x||2/sqrt(1024).",
+    "assumptions": [
+      "Positive epsilon",
+      "No gate projection bias; fail if a bias tensor exists or configuration differs",
+      "Pinned exact binary32 public tensor values",
+      "Exact-real native operator algebra; finite-precision and CKKS errors are separate"
+    ],
+    "outward_algorithm": "Compute every weighted-square term and sum as exact dyadic Fractions; choose a binary64 sqrt endpoint whose exact rational square encloses the result. Multiply any explicitly certified rational norm-error factor and round the resulting Fraction outward.",
+    "report_inventory": "All28 layers and3072 rows per layer; tensor hashes plus per-row bound and layer maximum; no model forward or activation reads.",
+    "fixed_checkpoint_weight_pass_executed": false
+  },
+  "approximate_norm_extension": {
+    "condition": "On a declared variance domain, a UNIFORM certificate |sqrt(v)*p(v)-1|<=delta and the SAME x,v relation yields |gate_j| <= (1+delta)*B_j.",
+    "candidate_domain_rule": "Use symmetric per-layer [-max_j outward((1+delta)*B_j), +max_j outward((1+delta)*B_j)] unless a separately specified per-channel implementation is approved. Do not select a smaller domain from held-out extrema.",
+    "grid_is_not_certificate": true,
+    "existing_newton_option": "The candidate1 exact rounded-first-affine residual certificate can supply ideal-real uniform delta on its declared domain, excluding later finite-precision/CKKS errors.",
+    "existing_polynomial_option": "For power or balanced-Chebyshev, certify the actual rounded public circuit polynomial over the entire variance interval, for example exact-rational residual polynomial 1-v*p(v)^2 plus Bernstein/interval subdivision; grid targets alone cannot supply delta.",
+    "unsolved_conditions": [
+      "Calibration variance domains still need coverage; public gate bound does not certify inverse-sqrt input domains.",
+      "An independently perturbed encrypted variance can break the norm relation.",
+      "With output error e before the gate, add ||W_j||2*||e||2; gate linear arithmetic needs its own error term.",
+      "Native float32 and NumPy/HE execution errors are not automatically covered by the exact-real bound.",
+      "Bound magnitudes and feasible SiLU degree/rational depth are unknown until the public-weight pass and interval certificates; no implicit precision or refresh guarantee."
+    ]
+  },
+  "candidate1_post_norm_contract_inventory": {
+    "0": {
+      "method": "polynomial",
+      "strategy": "power",
+      "degree": 12,
+      "iterations": null,
+      "depth": 6,
+      "certificate_scope": null
+    },
+    "1": {
+      "method": "polynomial",
+      "strategy": "power",
+      "degree": 16,
+      "iterations": null,
+      "depth": 6,
+      "certificate_scope": null
+    },
+    "2": {
+      "method": "polynomial",
+      "strategy": "power",
+      "degree": 32,
+      "iterations": null,
+      "depth": 7,
+      "certificate_scope": null
+    },
+    "3": {
+      "method": "newton",
+      "strategy": null,
+      "degree": null,
+      "iterations": 21,
+      "depth": 81,
+      "certificate_scope": "Actual rounded initial affine, followed by exact-real Newton updates. No later binary64 or CKKS error bound."
+    },
+    "4": {
+      "method": "newton",
+      "strategy": null,
+      "degree": null,
+      "iterations": 20,
+      "depth": 77,
+      "certificate_scope": "Actual rounded initial affine, followed by exact-real Newton updates. No later binary64 or CKKS error bound."
+    },
+    "5": {
+      "method": "newton",
+      "strategy": null,
+      "degree": null,
+      "iterations": 20,
+      "depth": 77,
+      "certificate_scope": "Actual rounded initial affine, followed by exact-real Newton updates. No later binary64 or CKKS error bound."
+    },
+    "6": {
+      "method": "newton",
+      "strategy": null,
+      "degree": null,
+      "iterations": 20,
+      "depth": 77,
+      "certificate_scope": "Actual rounded initial affine, followed by exact-real Newton updates. No later binary64 or CKKS error bound."
+    },
+    "7": {
+      "method": "newton",
+      "strategy": null,
+      "degree": null,
+      "iterations": 19,
+      "depth": 73,
+      "certificate_scope": "Actual rounded initial affine, followed by exact-real Newton updates. No later binary64 or CKKS error bound."
+    },
+    "8": {
+      "method": "newton",
+      "strategy": null,
+      "degree": null,
+      "iterations": 19,
+      "depth": 73,
+      "certificate_scope": "Actual rounded initial affine, followed by exact-real Newton updates. No later binary64 or CKKS error bound."
+    },
+    "9": {
+      "method": "newton",
+      "strategy": null,
+      "degree": null,
+      "iterations": 19,
+      "depth": 73,
+      "certificate_scope": "Actual rounded initial affine, followed by exact-real Newton updates. No later binary64 or CKKS error bound."
+    },
+    "10": {
+      "method": "newton",
+      "strategy": null,
+      "degree": null,
+      "iterations": 19,
+      "depth": 73,
+      "certificate_scope": "Actual rounded initial affine, followed by exact-real Newton updates. No later binary64 or CKKS error bound."
+    },
+    "11": {
+      "method": "newton",
+      "strategy": null,
+      "degree": null,
+      "iterations": 18,
+      "depth": 69,
+      "certificate_scope": "Actual rounded initial affine, followed by exact-real Newton updates. No later binary64 or CKKS error bound."
+    },
+    "12": {
+      "method": "newton",
+      "strategy": null,
+      "degree": null,
+      "iterations": 18,
+      "depth": 69,
+      "certificate_scope": "Actual rounded initial affine, followed by exact-real Newton updates. No later binary64 or CKKS error bound."
+    },
+    "13": {
+      "method": "newton",
+      "strategy": null,
+      "degree": null,
+      "iterations": 17,
+      "depth": 65,
+      "certificate_scope": "Actual rounded initial affine, followed by exact-real Newton updates. No later binary64 or CKKS error bound."
+    },
+    "14": {
+      "method": "newton",
+      "strategy": null,
+      "degree": null,
+      "iterations": 17,
+      "depth": 65,
+      "certificate_scope": "Actual rounded initial affine, followed by exact-real Newton updates. No later binary64 or CKKS error bound."
+    },
+    "15": {
+      "method": "newton",
+      "strategy": null,
+      "degree": null,
+      "iterations": 17,
+      "depth": 65,
+      "certificate_scope": "Actual rounded initial affine, followed by exact-real Newton updates. No later binary64 or CKKS error bound."
+    },
+    "16": {
+      "method": "newton",
+      "strategy": null,
+      "degree": null,
+      "iterations": 17,
+      "depth": 65,
+      "certificate_scope": "Actual rounded initial affine, followed by exact-real Newton updates. No later binary64 or CKKS error bound."
+    },
+    "17": {
+      "method": "newton",
+      "strategy": null,
+      "degree": null,
+      "iterations": 16,
+      "depth": 61,
+      "certificate_scope": "Actual rounded initial affine, followed by exact-real Newton updates. No later binary64 or CKKS error bound."
+    },
+    "18": {
+      "method": "newton",
+      "strategy": null,
+      "degree": null,
+      "iterations": 15,
+      "depth": 57,
+      "certificate_scope": "Actual rounded initial affine, followed by exact-real Newton updates. No later binary64 or CKKS error bound."
+    },
+    "19": {
+      "method": "newton",
+      "strategy": null,
+      "degree": null,
+      "iterations": 15,
+      "depth": 57,
+      "certificate_scope": "Actual rounded initial affine, followed by exact-real Newton updates. No later binary64 or CKKS error bound."
+    },
+    "20": {
+      "method": "newton",
+      "strategy": null,
+      "degree": null,
+      "iterations": 14,
+      "depth": 53,
+      "certificate_scope": "Actual rounded initial affine, followed by exact-real Newton updates. No later binary64 or CKKS error bound."
+    },
+    "21": {
+      "method": "newton",
+      "strategy": null,
+      "degree": null,
+      "iterations": 14,
+      "depth": 53,
+      "certificate_scope": "Actual rounded initial affine, followed by exact-real Newton updates. No later binary64 or CKKS error bound."
+    },
+    "22": {
+      "method": "newton",
+      "strategy": null,
+      "degree": null,
+      "iterations": 13,
+      "depth": 49,
+      "certificate_scope": "Actual rounded initial affine, followed by exact-real Newton updates. No later binary64 or CKKS error bound."
+    },
+    "23": {
+      "method": "polynomial",
+      "strategy": "chebyshev",
+      "degree": 256,
+      "iterations": null,
+      "depth": 18,
+      "certificate_scope": null
+    },
+    "24": {
+      "method": "polynomial",
+      "strategy": "chebyshev",
+      "degree": 256,
+      "iterations": null,
+      "depth": 18,
+      "certificate_scope": null
+    },
+    "25": {
+      "method": "polynomial",
+      "strategy": "chebyshev",
+      "degree": 192,
+      "iterations": null,
+      "depth": 18,
+      "certificate_scope": null
+    },
+    "26": {
+      "method": "polynomial",
+      "strategy": "chebyshev",
+      "degree": 192,
+      "iterations": null,
+      "depth": 18,
+      "certificate_scope": null
+    },
+    "27": {
+      "method": "polynomial",
+      "strategy": "chebyshev",
+      "degree": 128,
+      "iterations": null,
+      "depth": 16,
+      "certificate_scope": null
+    }
+  },
+  "protocol_sequence": [
+    "Root reviews this design and exact public-source implementation.",
+    "Verify pinned model/config/public tensor inventory; compute all outward public gate bounds without any model execution.",
+    "Verify the proposed fresh validation raw-text fixture and tokenizer-only uniqueness/disjointness against ALL earlier calibration and original validation token sequences, separately for each token length. Reject collisions before freezing final new inputs.",
+    "Freeze new calibration/selection protocol, analytic targets and maximum candidate budget before selection. No old held-out feedback is allowed to fit coefficients; this new design is explicitly motivated by its failure category.",
+    "Certify post-normalization multiplier errors or record unsupported sites; select a candidate only from public weights and calibration sources. Preserve all unsupported conditioning/depth failures.",
+    "Freeze candidate sources/coefficients/domains before approximate calibration; evaluate all288 prefills+64teacher+64free calibration contexts with unchanged gates.",
+    "Only after a complete successful frozen calibration and root review, open the fresh validation workload for model evaluation. Run48prefills+32teacher+32free with strict native same-prefix comparisons and stopped-suffix records.",
+    "Preserve original validation failure separately. New-set success is a new experiment and does not replace the original published workload results or claim encrypted execution."
+  ],
+  "fresh_validation": {
+    "path": "fresh_validation_proposal.json",
+    "sha256": "09bc0837526d4b53e7eb33255ab6cd698bb2631f64b8a065b1f092ec9872cc51",
+    "raw_distinct_texts": 56,
+    "prefill_counts": {
+      "8": 16,
+      "16": 16,
+      "32": 16
+    },
+    "decode_seeds": 8,
+    "decode_steps": 4,
+    "tokenizer_policy": "Pinned tokenizer; no chat template, no padding or artificial repetition; at least32 naturally tokenized tokens before truncation; exact selected S.",
+    "token_id_uniqueness_and_disjointness": "pending tokenizer-only preflight after design review",
+    "model_evaluated": false,
+    "outputs_observed": false
+  },
+  "gates": {
+    "operator_block_nrmse": 0.05,
+    "full_logit_nrmse": 0.1,
+    "nrmse_floor": 0.01,
+    "prefill_top1_aggregate_required": "ceil(.9*48)=44; per-suite rates separately reported",
+    "teacher_required": "ceil(.9*32)=29",
+    "complete_free_sequences_required": "ceil(.75*8)=6",
+    "exact_native_semantics": {
+      "max_abs": 0.001,
+      "nrmse": 1e-05,
+      "top1": true
+    },
+    "all_domains_and_all_required_contexts": true,
+    "he_scope": "Separate untested gates; no keygen/JAX/HE/TPU in this proposal"
+  },
+  "no_model_execution": true,
+  "no_coefficient_selection": true
+}

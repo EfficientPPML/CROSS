@@ -1,0 +1,14 @@
+{
+  "scope": "Archive packaging verifier only; measured sources and results unchanged",
+  "first_tool_observation": {
+    "exit_code": 1,
+    "location": "verify.py:29",
+    "error": "AssertionError: five observed profile fields were compared to the four-element expected tuple (131072,38,10,4)"
+  },
+  "preservation_rerun": {
+    "exit_code": 1,
+    "log": "verify-v1.log",
+    "error": "Index assertion rejected newly added packaging-history files before the index was regenerated"
+  },
+  "repair": "Expected profile includes measured max_level 18; complete public index regenerated; portable/current verification then passed."
+}

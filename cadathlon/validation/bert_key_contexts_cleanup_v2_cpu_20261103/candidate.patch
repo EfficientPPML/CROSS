@@ -1,0 +1,58 @@
+--- a/runtime/stage/key_contexts.py
++++ b/runtime/stage/key_contexts.py
+@@ -227,12 +227,28 @@
+     except BaseException as error:primary=error;raise
+     finally:
+         shield=[];deferred=[]
++        cancellation_signals=(signal.SIGINT,signal.SIGTERM,signal.SIGHUP)
+         if threading.current_thread() is threading.main_thread():
+             def remember_signal(signum,frame):deferred.append(signum)
+-            for signum in (signal.SIGINT,signal.SIGTERM,signal.SIGHUP):
+-                def install(sig=signum):
+-                    original=signal.getsignal(sig);signal.signal(sig,remember_signal);shield.append((sig,original))
+-                attempt('cleanup signal shield',install)
++            # Query without mutation first: SIG_BLOCK may change the mask and
++            #then raise before returning its previous value.
++            previous_mask=attempt('cleanup original signal mask',
++                lambda:signal.pthread_sigmask(signal.SIG_BLOCK,()))
++            if previous_mask is not None:
++                try:
++                    attempt('cleanup signal block',
++                        lambda:signal.pthread_sigmask(signal.SIG_BLOCK,cancellation_signals))
++                    for signum in cancellation_signals:
++                        def install(sig=signum):
++                            original=signal.getsignal(sig)
++                            # Track before mutation: a setter can change the
++                            #process handler and then raise or deliver a signal.
++                            shield.append((sig,original))
++                            signal.signal(sig,remember_signal)
++                        attempt('cleanup signal shield',install)
++                finally:
++                    attempt('cleanup setup mask restoration',
++                        lambda:signal.pthread_sigmask(signal.SIG_SETMASK,previous_mask))
+         readiness_known=True
+         # Lazy rotation-key conversions can be created after setup. Keep all
+         #still-reachable formatted device arrays until their barriers run.
+@@ -279,7 +295,21 @@
+         for owner in reversed(owners):attempt('key directory close',owner.close)
+         for module,name,original in reversed(patches):attempt('guard restoration',lambda m=module,n=name,o=original:setattr(m,n,o))
+         _ACTIVE.release()
+-        for signum,original in reversed(shield):attempt('cleanup signal restoration',lambda s=signum,o=original:signal.signal(s,o))
++        if shield:
++            previous_mask=attempt('cleanup original restoration mask',
++                lambda:signal.pthread_sigmask(signal.SIG_BLOCK,()))
++            try:
++                if previous_mask is not None:
++                    attempt('cleanup restoration signal block',
++                        lambda:signal.pthread_sigmask(signal.SIG_BLOCK,cancellation_signals))
++                for signum,original in reversed(shield):
++                    attempt('cleanup signal restoration',lambda s=signum,o=original:signal.signal(s,o))
++            finally:
++                if previous_mask is not None:
++                    # Pending cancellation can invoke the caller's restored
++                    #handler here; keep body-primary/cleanup-only precedence.
++                    attempt('cleanup final mask restoration',
++                        lambda:signal.pthread_sigmask(signal.SIG_SETMASK,previous_mask))
+         if deferred:
+             def cancellation():raise KeyboardInterrupt('signals deferred until key cleanup completed: '+repr(deferred))
+             attempt('deferred cleanup cancellation',cancellation)

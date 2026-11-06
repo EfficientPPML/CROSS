@@ -1,0 +1,34 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+______ test_before_entry_replacement_rejected_before_any_work[arithmetic] ______
+
+field = 'arithmetic'
+
+    @pytest.mark.parametrize('field',('arithmetic','contract'))
+    def test_before_entry_replacement_rejected_before_any_work(field):
+        ops=Arithmetic();owner=initial.BertInitialSoftmax(ops,ScoreReductionLayout(np.ones(128,bool)),fresh_contract())
+        replacement=Arithmetic() if field=='arithmetic' else fresh_contract()
+        setattr(owner,field,replacement)
+>       with pytest.raises(ValueError):owner.evaluate_tile(Value(np.zeros(SLOTS)))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+/tmp/bert-softmax-guard-scale-v2-20261103/test_initial_bindings.py:15: Failed
+_______ test_before_entry_replacement_rejected_before_any_work[contract] _______
+
+field = 'contract'
+
+    @pytest.mark.parametrize('field',('arithmetic','contract'))
+    def test_before_entry_replacement_rejected_before_any_work(field):
+        ops=Arithmetic();owner=initial.BertInitialSoftmax(ops,ScoreReductionLayout(np.ones(128,bool)),fresh_contract())
+        replacement=Arithmetic() if field=='arithmetic' else fresh_contract()
+        setattr(owner,field,replacement)
+>       with pytest.raises(ValueError):owner.evaluate_tile(Value(np.zeros(SLOTS)))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+/tmp/bert-softmax-guard-scale-v2-20261103/test_initial_bindings.py:15: Failed
+=========================== short test summary info ============================
+FAILED ../../tmp/bert-softmax-guard-scale-v2-20261103/test_initial_bindings.py::test_before_entry_replacement_rejected_before_any_work[arithmetic]
+FAILED ../../tmp/bert-softmax-guard-scale-v2-20261103/test_initial_bindings.py::test_before_entry_replacement_rejected_before_any_work[contract]
+2 failed in 0.19s

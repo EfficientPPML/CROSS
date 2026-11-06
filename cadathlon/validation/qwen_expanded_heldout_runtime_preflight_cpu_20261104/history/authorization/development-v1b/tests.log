@@ -1,0 +1,573 @@
+FFF.....................FFFFFFFFFFFF...FFF........................F..... [ 66%]
+.....................................                                    [100%]
+=================================== FAILURES ===================================
+_ test_complete_public_chain_and_distinct_grant_admit_without_io[heldout-True] _
+
+mode = 'heldout', passed = True
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x775409b1ec40>
+
+    @pytest.mark.parametrize('mode,passed',[('heldout',True),('row0',True),('row0',False)])
+    def test_complete_public_chain_and_distinct_grant_admit_without_io(mode,passed,monkeypatch):
+        data,grant,evidence=fixture(mode,passed)
+        with monkeypatch.context() as isolated:
+            isolated.setattr(gate.input_gate,'read',lambda *a,**k:pytest.fail('external read'))
+            isolated.setattr(gate.input_gate.os,'stat',lambda *a,**k:pytest.fail('external stat'))
+            isolated.setattr(gate.input_gate.os,'open',lambda *a,**k:pytest.fail('external open'))
+>           value=admit(data,grant,evidence)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_heldout_authorization.py:112: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_heldout_authorization.py:97: in admit
+    return gate.authenticate(raw,f.sha(raw),evidence,**args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:246: in authenticate
+    row = _grant(grant_bytes)
+          ^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:87: in _grant
+    if key.endswith('_sha256'): freeze.digest(row[key])
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = ['a0d51de4174906040618da68832a632fae00a8547b2e8c9ad1cee55a11028f0c']
+
+    def digest(value):
+        if type(value)is not str or re.fullmatch('[0-9a-f]{64}',value)is None:
+>           raise ValueError('Exact external digest required')
+E           ValueError: Exact external digest required
+
+freeze_admission.py:25: ValueError
+__ test_complete_public_chain_and_distinct_grant_admit_without_io[row0-True] ___
+
+mode = 'row0', passed = True
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x775409bb3890>
+
+    @pytest.mark.parametrize('mode,passed',[('heldout',True),('row0',True),('row0',False)])
+    def test_complete_public_chain_and_distinct_grant_admit_without_io(mode,passed,monkeypatch):
+        data,grant,evidence=fixture(mode,passed)
+        with monkeypatch.context() as isolated:
+            isolated.setattr(gate.input_gate,'read',lambda *a,**k:pytest.fail('external read'))
+            isolated.setattr(gate.input_gate.os,'stat',lambda *a,**k:pytest.fail('external stat'))
+            isolated.setattr(gate.input_gate.os,'open',lambda *a,**k:pytest.fail('external open'))
+>           value=admit(data,grant,evidence)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_heldout_authorization.py:112: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_heldout_authorization.py:97: in admit
+    return gate.authenticate(raw,f.sha(raw),evidence,**args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:246: in authenticate
+    row = _grant(grant_bytes)
+          ^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:87: in _grant
+    if key.endswith('_sha256'): freeze.digest(row[key])
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = ['a0d51de4174906040618da68832a632fae00a8547b2e8c9ad1cee55a11028f0c']
+
+    def digest(value):
+        if type(value)is not str or re.fullmatch('[0-9a-f]{64}',value)is None:
+>           raise ValueError('Exact external digest required')
+E           ValueError: Exact external digest required
+
+freeze_admission.py:25: ValueError
+__ test_complete_public_chain_and_distinct_grant_admit_without_io[row0-False] __
+
+mode = 'row0', passed = False
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7754099e0490>
+
+    @pytest.mark.parametrize('mode,passed',[('heldout',True),('row0',True),('row0',False)])
+    def test_complete_public_chain_and_distinct_grant_admit_without_io(mode,passed,monkeypatch):
+        data,grant,evidence=fixture(mode,passed)
+        with monkeypatch.context() as isolated:
+            isolated.setattr(gate.input_gate,'read',lambda *a,**k:pytest.fail('external read'))
+            isolated.setattr(gate.input_gate.os,'stat',lambda *a,**k:pytest.fail('external stat'))
+            isolated.setattr(gate.input_gate.os,'open',lambda *a,**k:pytest.fail('external open'))
+>           value=admit(data,grant,evidence)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_heldout_authorization.py:112: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_heldout_authorization.py:97: in admit
+    return gate.authenticate(raw,f.sha(raw),evidence,**args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:246: in authenticate
+    row = _grant(grant_bytes)
+          ^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:87: in _grant
+    if key.endswith('_sha256'): freeze.digest(row[key])
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = ['a0d51de4174906040618da68832a632fae00a8547b2e8c9ad1cee55a11028f0c']
+
+    def digest(value):
+        if type(value)is not str or re.fullmatch('[0-9a-f]{64}',value)is None:
+>           raise ValueError('Exact external digest required')
+E           ValueError: Exact external digest required
+
+freeze_admission.py:25: ValueError
+_______ test_direct_entry_replays_all_immutable_bindings[default_ready] ________
+
+kind = 'default_ready'
+
+    @pytest.mark.parametrize('kind',['default_ready','source_added','source_changed','source_missing','forged_manifest',
+        'forged_policy','forged_validation','forged_mode','forged_frozen','duplicate_evidence','mutable_evidence'])
+    def test_direct_entry_replays_all_immutable_bindings(kind):
+>       data,g,e=fixture();value=admit(data,g,e)
+                                 ^^^^^^^^^^^^^^^
+
+test_heldout_authorization.py:141: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_heldout_authorization.py:97: in admit
+    return gate.authenticate(raw,f.sha(raw),evidence,**args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:246: in authenticate
+    row = _grant(grant_bytes)
+          ^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:87: in _grant
+    if key.endswith('_sha256'): freeze.digest(row[key])
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = ['a0d51de4174906040618da68832a632fae00a8547b2e8c9ad1cee55a11028f0c']
+
+    def digest(value):
+        if type(value)is not str or re.fullmatch('[0-9a-f]{64}',value)is None:
+>           raise ValueError('Exact external digest required')
+E           ValueError: Exact external digest required
+
+freeze_admission.py:25: ValueError
+________ test_direct_entry_replays_all_immutable_bindings[source_added] ________
+
+kind = 'source_added'
+
+    @pytest.mark.parametrize('kind',['default_ready','source_added','source_changed','source_missing','forged_manifest',
+        'forged_policy','forged_validation','forged_mode','forged_frozen','duplicate_evidence','mutable_evidence'])
+    def test_direct_entry_replays_all_immutable_bindings(kind):
+>       data,g,e=fixture();value=admit(data,g,e)
+                                 ^^^^^^^^^^^^^^^
+
+test_heldout_authorization.py:141: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_heldout_authorization.py:97: in admit
+    return gate.authenticate(raw,f.sha(raw),evidence,**args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:246: in authenticate
+    row = _grant(grant_bytes)
+          ^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:87: in _grant
+    if key.endswith('_sha256'): freeze.digest(row[key])
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = ['a0d51de4174906040618da68832a632fae00a8547b2e8c9ad1cee55a11028f0c']
+
+    def digest(value):
+        if type(value)is not str or re.fullmatch('[0-9a-f]{64}',value)is None:
+>           raise ValueError('Exact external digest required')
+E           ValueError: Exact external digest required
+
+freeze_admission.py:25: ValueError
+_______ test_direct_entry_replays_all_immutable_bindings[source_changed] _______
+
+kind = 'source_changed'
+
+    @pytest.mark.parametrize('kind',['default_ready','source_added','source_changed','source_missing','forged_manifest',
+        'forged_policy','forged_validation','forged_mode','forged_frozen','duplicate_evidence','mutable_evidence'])
+    def test_direct_entry_replays_all_immutable_bindings(kind):
+>       data,g,e=fixture();value=admit(data,g,e)
+                                 ^^^^^^^^^^^^^^^
+
+test_heldout_authorization.py:141: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_heldout_authorization.py:97: in admit
+    return gate.authenticate(raw,f.sha(raw),evidence,**args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:246: in authenticate
+    row = _grant(grant_bytes)
+          ^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:87: in _grant
+    if key.endswith('_sha256'): freeze.digest(row[key])
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = ['a0d51de4174906040618da68832a632fae00a8547b2e8c9ad1cee55a11028f0c']
+
+    def digest(value):
+        if type(value)is not str or re.fullmatch('[0-9a-f]{64}',value)is None:
+>           raise ValueError('Exact external digest required')
+E           ValueError: Exact external digest required
+
+freeze_admission.py:25: ValueError
+_______ test_direct_entry_replays_all_immutable_bindings[source_missing] _______
+
+kind = 'source_missing'
+
+    @pytest.mark.parametrize('kind',['default_ready','source_added','source_changed','source_missing','forged_manifest',
+        'forged_policy','forged_validation','forged_mode','forged_frozen','duplicate_evidence','mutable_evidence'])
+    def test_direct_entry_replays_all_immutable_bindings(kind):
+>       data,g,e=fixture();value=admit(data,g,e)
+                                 ^^^^^^^^^^^^^^^
+
+test_heldout_authorization.py:141: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_heldout_authorization.py:97: in admit
+    return gate.authenticate(raw,f.sha(raw),evidence,**args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:246: in authenticate
+    row = _grant(grant_bytes)
+          ^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:87: in _grant
+    if key.endswith('_sha256'): freeze.digest(row[key])
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = ['a0d51de4174906040618da68832a632fae00a8547b2e8c9ad1cee55a11028f0c']
+
+    def digest(value):
+        if type(value)is not str or re.fullmatch('[0-9a-f]{64}',value)is None:
+>           raise ValueError('Exact external digest required')
+E           ValueError: Exact external digest required
+
+freeze_admission.py:25: ValueError
+______ test_direct_entry_replays_all_immutable_bindings[forged_manifest] _______
+
+kind = 'forged_manifest'
+
+    @pytest.mark.parametrize('kind',['default_ready','source_added','source_changed','source_missing','forged_manifest',
+        'forged_policy','forged_validation','forged_mode','forged_frozen','duplicate_evidence','mutable_evidence'])
+    def test_direct_entry_replays_all_immutable_bindings(kind):
+>       data,g,e=fixture();value=admit(data,g,e)
+                                 ^^^^^^^^^^^^^^^
+
+test_heldout_authorization.py:141: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_heldout_authorization.py:97: in admit
+    return gate.authenticate(raw,f.sha(raw),evidence,**args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:246: in authenticate
+    row = _grant(grant_bytes)
+          ^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:87: in _grant
+    if key.endswith('_sha256'): freeze.digest(row[key])
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = ['a0d51de4174906040618da68832a632fae00a8547b2e8c9ad1cee55a11028f0c']
+
+    def digest(value):
+        if type(value)is not str or re.fullmatch('[0-9a-f]{64}',value)is None:
+>           raise ValueError('Exact external digest required')
+E           ValueError: Exact external digest required
+
+freeze_admission.py:25: ValueError
+_______ test_direct_entry_replays_all_immutable_bindings[forged_policy] ________
+
+kind = 'forged_policy'
+
+    @pytest.mark.parametrize('kind',['default_ready','source_added','source_changed','source_missing','forged_manifest',
+        'forged_policy','forged_validation','forged_mode','forged_frozen','duplicate_evidence','mutable_evidence'])
+    def test_direct_entry_replays_all_immutable_bindings(kind):
+>       data,g,e=fixture();value=admit(data,g,e)
+                                 ^^^^^^^^^^^^^^^
+
+test_heldout_authorization.py:141: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_heldout_authorization.py:97: in admit
+    return gate.authenticate(raw,f.sha(raw),evidence,**args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:246: in authenticate
+    row = _grant(grant_bytes)
+          ^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:87: in _grant
+    if key.endswith('_sha256'): freeze.digest(row[key])
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = ['a0d51de4174906040618da68832a632fae00a8547b2e8c9ad1cee55a11028f0c']
+
+    def digest(value):
+        if type(value)is not str or re.fullmatch('[0-9a-f]{64}',value)is None:
+>           raise ValueError('Exact external digest required')
+E           ValueError: Exact external digest required
+
+freeze_admission.py:25: ValueError
+_____ test_direct_entry_replays_all_immutable_bindings[forged_validation] ______
+
+kind = 'forged_validation'
+
+    @pytest.mark.parametrize('kind',['default_ready','source_added','source_changed','source_missing','forged_manifest',
+        'forged_policy','forged_validation','forged_mode','forged_frozen','duplicate_evidence','mutable_evidence'])
+    def test_direct_entry_replays_all_immutable_bindings(kind):
+>       data,g,e=fixture();value=admit(data,g,e)
+                                 ^^^^^^^^^^^^^^^
+
+test_heldout_authorization.py:141: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_heldout_authorization.py:97: in admit
+    return gate.authenticate(raw,f.sha(raw),evidence,**args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:246: in authenticate
+    row = _grant(grant_bytes)
+          ^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:87: in _grant
+    if key.endswith('_sha256'): freeze.digest(row[key])
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = ['a0d51de4174906040618da68832a632fae00a8547b2e8c9ad1cee55a11028f0c']
+
+    def digest(value):
+        if type(value)is not str or re.fullmatch('[0-9a-f]{64}',value)is None:
+>           raise ValueError('Exact external digest required')
+E           ValueError: Exact external digest required
+
+freeze_admission.py:25: ValueError
+________ test_direct_entry_replays_all_immutable_bindings[forged_mode] _________
+
+kind = 'forged_mode'
+
+    @pytest.mark.parametrize('kind',['default_ready','source_added','source_changed','source_missing','forged_manifest',
+        'forged_policy','forged_validation','forged_mode','forged_frozen','duplicate_evidence','mutable_evidence'])
+    def test_direct_entry_replays_all_immutable_bindings(kind):
+>       data,g,e=fixture();value=admit(data,g,e)
+                                 ^^^^^^^^^^^^^^^
+
+test_heldout_authorization.py:141: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_heldout_authorization.py:97: in admit
+    return gate.authenticate(raw,f.sha(raw),evidence,**args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:246: in authenticate
+    row = _grant(grant_bytes)
+          ^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:87: in _grant
+    if key.endswith('_sha256'): freeze.digest(row[key])
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = ['a0d51de4174906040618da68832a632fae00a8547b2e8c9ad1cee55a11028f0c']
+
+    def digest(value):
+        if type(value)is not str or re.fullmatch('[0-9a-f]{64}',value)is None:
+>           raise ValueError('Exact external digest required')
+E           ValueError: Exact external digest required
+
+freeze_admission.py:25: ValueError
+_______ test_direct_entry_replays_all_immutable_bindings[forged_frozen] ________
+
+kind = 'forged_frozen'
+
+    @pytest.mark.parametrize('kind',['default_ready','source_added','source_changed','source_missing','forged_manifest',
+        'forged_policy','forged_validation','forged_mode','forged_frozen','duplicate_evidence','mutable_evidence'])
+    def test_direct_entry_replays_all_immutable_bindings(kind):
+>       data,g,e=fixture();value=admit(data,g,e)
+                                 ^^^^^^^^^^^^^^^
+
+test_heldout_authorization.py:141: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_heldout_authorization.py:97: in admit
+    return gate.authenticate(raw,f.sha(raw),evidence,**args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:246: in authenticate
+    row = _grant(grant_bytes)
+          ^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:87: in _grant
+    if key.endswith('_sha256'): freeze.digest(row[key])
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = ['a0d51de4174906040618da68832a632fae00a8547b2e8c9ad1cee55a11028f0c']
+
+    def digest(value):
+        if type(value)is not str or re.fullmatch('[0-9a-f]{64}',value)is None:
+>           raise ValueError('Exact external digest required')
+E           ValueError: Exact external digest required
+
+freeze_admission.py:25: ValueError
+_____ test_direct_entry_replays_all_immutable_bindings[duplicate_evidence] _____
+
+kind = 'duplicate_evidence'
+
+    @pytest.mark.parametrize('kind',['default_ready','source_added','source_changed','source_missing','forged_manifest',
+        'forged_policy','forged_validation','forged_mode','forged_frozen','duplicate_evidence','mutable_evidence'])
+    def test_direct_entry_replays_all_immutable_bindings(kind):
+>       data,g,e=fixture();value=admit(data,g,e)
+                                 ^^^^^^^^^^^^^^^
+
+test_heldout_authorization.py:141: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_heldout_authorization.py:97: in admit
+    return gate.authenticate(raw,f.sha(raw),evidence,**args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:246: in authenticate
+    row = _grant(grant_bytes)
+          ^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:87: in _grant
+    if key.endswith('_sha256'): freeze.digest(row[key])
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = ['a0d51de4174906040618da68832a632fae00a8547b2e8c9ad1cee55a11028f0c']
+
+    def digest(value):
+        if type(value)is not str or re.fullmatch('[0-9a-f]{64}',value)is None:
+>           raise ValueError('Exact external digest required')
+E           ValueError: Exact external digest required
+
+freeze_admission.py:25: ValueError
+______ test_direct_entry_replays_all_immutable_bindings[mutable_evidence] ______
+
+kind = 'mutable_evidence'
+
+    @pytest.mark.parametrize('kind',['default_ready','source_added','source_changed','source_missing','forged_manifest',
+        'forged_policy','forged_validation','forged_mode','forged_frozen','duplicate_evidence','mutable_evidence'])
+    def test_direct_entry_replays_all_immutable_bindings(kind):
+>       data,g,e=fixture();value=admit(data,g,e)
+                                 ^^^^^^^^^^^^^^^
+
+test_heldout_authorization.py:141: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_heldout_authorization.py:97: in admit
+    return gate.authenticate(raw,f.sha(raw),evidence,**args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:246: in authenticate
+    row = _grant(grant_bytes)
+          ^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:87: in _grant
+    if key.endswith('_sha256'): freeze.digest(row[key])
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = ['a0d51de4174906040618da68832a632fae00a8547b2e8c9ad1cee55a11028f0c']
+
+    def digest(value):
+        if type(value)is not str or re.fullmatch('[0-9a-f]{64}',value)is None:
+>           raise ValueError('Exact external digest required')
+E           ValueError: Exact external digest required
+
+freeze_admission.py:25: ValueError
+____ test_returned_dict_views_and_input_dict_mutation_cannot_mutate_binding ____
+
+    def test_returned_dict_views_and_input_dict_mutation_cannot_mutate_binding():
+>       data,g,e=fixture();value=admit(data,g,e)
+                                 ^^^^^^^^^^^^^^^
+
+test_heldout_authorization.py:157: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_heldout_authorization.py:97: in admit
+    return gate.authenticate(raw,f.sha(raw),evidence,**args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:246: in authenticate
+    row = _grant(grant_bytes)
+          ^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:87: in _grant
+    if key.endswith('_sha256'): freeze.digest(row[key])
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = ['a0d51de4174906040618da68832a632fae00a8547b2e8c9ad1cee55a11028f0c']
+
+    def digest(value):
+        if type(value)is not str or re.fullmatch('[0-9a-f]{64}',value)is None:
+>           raise ValueError('Exact external digest required')
+E           ValueError: Exact external digest required
+
+freeze_admission.py:25: ValueError
+_ test_closure_pins_are_external_to_self_consistent_root_receipt[reconstruction_source_manifest_sha256] _
+
+field = 'reconstruction_source_manifest_sha256'
+
+    @pytest.mark.parametrize('field',['reconstruction_source_manifest_sha256','reconstruction_source_archive_sha256',
+        'reconstruction_grant_sha256'])
+    def test_closure_pins_are_external_to_self_consistent_root_receipt(field):
+        data,g,e=fixture();g['reviewed_reconstruction_pins'][0][field]='0'*64
+>       with pytest.raises(ValueError,match='Independently reviewed'):admit(data,g,e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'Independently reviewed'
+E         Actual message: 'Exact external digest required'
+
+test_heldout_authorization.py:179: AssertionError
+_ test_closure_pins_are_external_to_self_consistent_root_receipt[reconstruction_source_archive_sha256] _
+
+field = 'reconstruction_source_archive_sha256'
+
+    @pytest.mark.parametrize('field',['reconstruction_source_manifest_sha256','reconstruction_source_archive_sha256',
+        'reconstruction_grant_sha256'])
+    def test_closure_pins_are_external_to_self_consistent_root_receipt(field):
+        data,g,e=fixture();g['reviewed_reconstruction_pins'][0][field]='0'*64
+>       with pytest.raises(ValueError,match='Independently reviewed'):admit(data,g,e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'Independently reviewed'
+E         Actual message: 'Exact external digest required'
+
+test_heldout_authorization.py:179: AssertionError
+_ test_closure_pins_are_external_to_self_consistent_root_receipt[reconstruction_grant_sha256] _
+
+field = 'reconstruction_grant_sha256'
+
+    @pytest.mark.parametrize('field',['reconstruction_source_manifest_sha256','reconstruction_source_archive_sha256',
+        'reconstruction_grant_sha256'])
+    def test_closure_pins_are_external_to_self_consistent_root_receipt(field):
+        data,g,e=fixture();g['reviewed_reconstruction_pins'][0][field]='0'*64
+>       with pytest.raises(ValueError,match='Independently reviewed'):admit(data,g,e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'Independently reviewed'
+E         Actual message: 'Exact external digest required'
+
+test_heldout_authorization.py:179: AssertionError
+_________________ test_role_bounds_exact_no_large_allocations __________________
+
+    def test_role_bounds_exact_no_large_allocations():
+        _,g,_=fixture('row0')
+        for name in g['public_evidence']:
+            maximum=(16 if name=='heldout_report'else 1)<<20
+            old=g['public_evidence'][name]['bytes'];g['public_evidence'][name]['bytes']=maximum
+>           assert gate.public_requests(encoded(g))[name]['bytes']==maximum
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_heldout_authorization.py:219: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+heldout_authorization.py:117: in public_requests
+    return _grant(grant_bytes)['public_evidence']
+           ^^^^^^^^^^^^^^^^^^^
+heldout_authorization.py:87: in _grant
+    if key.endswith('_sha256'): freeze.digest(row[key])
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = ['a0d51de4174906040618da68832a632fae00a8547b2e8c9ad1cee55a11028f0c']
+
+    def digest(value):
+        if type(value)is not str or re.fullmatch('[0-9a-f]{64}',value)is None:
+>           raise ValueError('Exact external digest required')
+E           ValueError: Exact external digest required
+
+freeze_admission.py:25: ValueError
+=========================== short test summary info ============================
+FAILED test_heldout_authorization.py::test_complete_public_chain_and_distinct_grant_admit_without_io[heldout-True]
+FAILED test_heldout_authorization.py::test_complete_public_chain_and_distinct_grant_admit_without_io[row0-True]
+FAILED test_heldout_authorization.py::test_complete_public_chain_and_distinct_grant_admit_without_io[row0-False]
+FAILED test_heldout_authorization.py::test_direct_entry_replays_all_immutable_bindings[default_ready]
+FAILED test_heldout_authorization.py::test_direct_entry_replays_all_immutable_bindings[source_added]
+FAILED test_heldout_authorization.py::test_direct_entry_replays_all_immutable_bindings[source_changed]
+FAILED test_heldout_authorization.py::test_direct_entry_replays_all_immutable_bindings[source_missing]
+FAILED test_heldout_authorization.py::test_direct_entry_replays_all_immutable_bindings[forged_manifest]
+FAILED test_heldout_authorization.py::test_direct_entry_replays_all_immutable_bindings[forged_policy]
+FAILED test_heldout_authorization.py::test_direct_entry_replays_all_immutable_bindings[forged_validation]
+FAILED test_heldout_authorization.py::test_direct_entry_replays_all_immutable_bindings[forged_mode]
+FAILED test_heldout_authorization.py::test_direct_entry_replays_all_immutable_bindings[forged_frozen]
+FAILED test_heldout_authorization.py::test_direct_entry_replays_all_immutable_bindings[duplicate_evidence]
+FAILED test_heldout_authorization.py::test_direct_entry_replays_all_immutable_bindings[mutable_evidence]
+FAILED test_heldout_authorization.py::test_returned_dict_views_and_input_dict_mutation_cannot_mutate_binding
+FAILED test_heldout_authorization.py::test_closure_pins_are_external_to_self_consistent_root_receipt[reconstruction_source_manifest_sha256]
+FAILED test_heldout_authorization.py::test_closure_pins_are_external_to_self_consistent_root_receipt[reconstruction_source_archive_sha256]
+FAILED test_heldout_authorization.py::test_closure_pins_are_external_to_self_consistent_root_receipt[reconstruction_grant_sha256]
+FAILED test_heldout_authorization.py::test_role_bounds_exact_no_large_allocations
+19 failed, 90 passed in 0.43s

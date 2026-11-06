@@ -1,0 +1,407 @@
+{
+  "scope": "Training-native ranges and first frozen public analytic-function candidate. No approximate training/validation or HE execution yet.",
+  "training_examples": 3668,
+  "training_labels_loaded": false,
+  "native_collection_elapsed_s": 353.35262680100277,
+  "training_source_count": 29,
+  "candidate_manifest_sha256": "6602f5fe489379b9325d16fb41bd0edbe29fcfafb338495fb40567159d5cb2a4",
+  "training_trajectory_coverage_established": false,
+  "validation_trajectory_coverage_established": false,
+  "normalizations": {
+    "0.attention": {
+      "method": "power",
+      "degree": 12,
+      "iterations": 6,
+      "inverse_depth": 6,
+      "row_norm_depth_including_reductions_and_affine": 11,
+      "fits_28_with_two_level_reserve": true,
+      "balanced_polynomial_alternative_inverse_depth": 10,
+      "balanced_alternative_row_norm_depth": 15,
+      "balanced_alternative_current_helper_supported": true
+    },
+    "0.mlp": {
+      "method": "power",
+      "degree": 16,
+      "iterations": 7,
+      "inverse_depth": 6,
+      "row_norm_depth_including_reductions_and_affine": 11,
+      "fits_28_with_two_level_reserve": true,
+      "balanced_polynomial_alternative_inverse_depth": 10,
+      "balanced_alternative_row_norm_depth": 15,
+      "balanced_alternative_current_helper_supported": true
+    },
+    "1.attention": {
+      "method": "power",
+      "degree": 16,
+      "iterations": 6,
+      "inverse_depth": 6,
+      "row_norm_depth_including_reductions_and_affine": 11,
+      "fits_28_with_two_level_reserve": true,
+      "balanced_polynomial_alternative_inverse_depth": 10,
+      "balanced_alternative_row_norm_depth": 15,
+      "balanced_alternative_current_helper_supported": true
+    },
+    "1.mlp": {
+      "method": "newton",
+      "degree": 48,
+      "iterations": 9,
+      "inverse_depth": 33,
+      "row_norm_depth_including_reductions_and_affine": 38,
+      "fits_28_with_two_level_reserve": false,
+      "balanced_polynomial_alternative_inverse_depth": 14,
+      "balanced_alternative_row_norm_depth": 19,
+      "balanced_alternative_current_helper_supported": false
+    },
+    "2.attention": {
+      "method": "power",
+      "degree": 12,
+      "iterations": 6,
+      "inverse_depth": 6,
+      "row_norm_depth_including_reductions_and_affine": 11,
+      "fits_28_with_two_level_reserve": true,
+      "balanced_polynomial_alternative_inverse_depth": 10,
+      "balanced_alternative_row_norm_depth": 15,
+      "balanced_alternative_current_helper_supported": true
+    },
+    "2.mlp": {
+      "method": "newton",
+      "degree": 48,
+      "iterations": 9,
+      "inverse_depth": 33,
+      "row_norm_depth_including_reductions_and_affine": 38,
+      "fits_28_with_two_level_reserve": false,
+      "balanced_polynomial_alternative_inverse_depth": 14,
+      "balanced_alternative_row_norm_depth": 19,
+      "balanced_alternative_current_helper_supported": false
+    },
+    "3.attention": {
+      "method": "power",
+      "degree": 16,
+      "iterations": 6,
+      "inverse_depth": 6,
+      "row_norm_depth_including_reductions_and_affine": 11,
+      "fits_28_with_two_level_reserve": true,
+      "balanced_polynomial_alternative_inverse_depth": 10,
+      "balanced_alternative_row_norm_depth": 15,
+      "balanced_alternative_current_helper_supported": true
+    },
+    "3.mlp": {
+      "method": "power",
+      "degree": 32,
+      "iterations": 8,
+      "inverse_depth": 7,
+      "row_norm_depth_including_reductions_and_affine": 12,
+      "fits_28_with_two_level_reserve": true,
+      "balanced_polynomial_alternative_inverse_depth": 12,
+      "balanced_alternative_row_norm_depth": 17,
+      "balanced_alternative_current_helper_supported": true
+    },
+    "4.attention": {
+      "method": "power",
+      "degree": 16,
+      "iterations": 6,
+      "inverse_depth": 6,
+      "row_norm_depth_including_reductions_and_affine": 11,
+      "fits_28_with_two_level_reserve": true,
+      "balanced_polynomial_alternative_inverse_depth": 10,
+      "balanced_alternative_row_norm_depth": 15,
+      "balanced_alternative_current_helper_supported": true
+    },
+    "4.mlp": {
+      "method": "power",
+      "degree": 32,
+      "iterations": 8,
+      "inverse_depth": 7,
+      "row_norm_depth_including_reductions_and_affine": 12,
+      "fits_28_with_two_level_reserve": true,
+      "balanced_polynomial_alternative_inverse_depth": 12,
+      "balanced_alternative_row_norm_depth": 17,
+      "balanced_alternative_current_helper_supported": true
+    },
+    "5.attention": {
+      "method": "power",
+      "degree": 16,
+      "iterations": 7,
+      "inverse_depth": 6,
+      "row_norm_depth_including_reductions_and_affine": 11,
+      "fits_28_with_two_level_reserve": true,
+      "balanced_polynomial_alternative_inverse_depth": 10,
+      "balanced_alternative_row_norm_depth": 15,
+      "balanced_alternative_current_helper_supported": true
+    },
+    "5.mlp": {
+      "method": "newton",
+      "degree": 48,
+      "iterations": 9,
+      "inverse_depth": 33,
+      "row_norm_depth_including_reductions_and_affine": 38,
+      "fits_28_with_two_level_reserve": false,
+      "balanced_polynomial_alternative_inverse_depth": 14,
+      "balanced_alternative_row_norm_depth": 19,
+      "balanced_alternative_current_helper_supported": false
+    },
+    "6.attention": {
+      "method": "power",
+      "degree": 24,
+      "iterations": 7,
+      "inverse_depth": 7,
+      "row_norm_depth_including_reductions_and_affine": 12,
+      "fits_28_with_two_level_reserve": true,
+      "balanced_polynomial_alternative_inverse_depth": 12,
+      "balanced_alternative_row_norm_depth": 17,
+      "balanced_alternative_current_helper_supported": true
+    },
+    "6.mlp": {
+      "method": "power",
+      "degree": 32,
+      "iterations": 8,
+      "inverse_depth": 7,
+      "row_norm_depth_including_reductions_and_affine": 12,
+      "fits_28_with_two_level_reserve": true,
+      "balanced_polynomial_alternative_inverse_depth": 12,
+      "balanced_alternative_row_norm_depth": 17,
+      "balanced_alternative_current_helper_supported": true
+    },
+    "7.attention": {
+      "method": "power",
+      "degree": 24,
+      "iterations": 7,
+      "inverse_depth": 7,
+      "row_norm_depth_including_reductions_and_affine": 12,
+      "fits_28_with_two_level_reserve": true,
+      "balanced_polynomial_alternative_inverse_depth": 12,
+      "balanced_alternative_row_norm_depth": 17,
+      "balanced_alternative_current_helper_supported": true
+    },
+    "7.mlp": {
+      "method": "newton",
+      "degree": 48,
+      "iterations": 9,
+      "inverse_depth": 33,
+      "row_norm_depth_including_reductions_and_affine": 38,
+      "fits_28_with_two_level_reserve": false,
+      "balanced_polynomial_alternative_inverse_depth": 14,
+      "balanced_alternative_row_norm_depth": 19,
+      "balanced_alternative_current_helper_supported": false
+    },
+    "8.attention": {
+      "method": "power",
+      "degree": 24,
+      "iterations": 7,
+      "inverse_depth": 7,
+      "row_norm_depth_including_reductions_and_affine": 12,
+      "fits_28_with_two_level_reserve": true,
+      "balanced_polynomial_alternative_inverse_depth": 12,
+      "balanced_alternative_row_norm_depth": 17,
+      "balanced_alternative_current_helper_supported": true
+    },
+    "8.mlp": {
+      "method": "newton",
+      "degree": 96,
+      "iterations": 11,
+      "inverse_depth": 41,
+      "row_norm_depth_including_reductions_and_affine": 46,
+      "fits_28_with_two_level_reserve": false,
+      "balanced_polynomial_alternative_inverse_depth": 16,
+      "balanced_alternative_row_norm_depth": 21,
+      "balanced_alternative_current_helper_supported": false
+    },
+    "9.attention": {
+      "method": "power",
+      "degree": 24,
+      "iterations": 7,
+      "inverse_depth": 7,
+      "row_norm_depth_including_reductions_and_affine": 12,
+      "fits_28_with_two_level_reserve": true,
+      "balanced_polynomial_alternative_inverse_depth": 12,
+      "balanced_alternative_row_norm_depth": 17,
+      "balanced_alternative_current_helper_supported": true
+    },
+    "9.mlp": {
+      "method": "newton",
+      "degree": 128,
+      "iterations": 11,
+      "inverse_depth": 41,
+      "row_norm_depth_including_reductions_and_affine": 46,
+      "fits_28_with_two_level_reserve": false,
+      "balanced_polynomial_alternative_inverse_depth": 16,
+      "balanced_alternative_row_norm_depth": 21,
+      "balanced_alternative_current_helper_supported": false
+    },
+    "10.attention": {
+      "method": "power",
+      "degree": 24,
+      "iterations": 7,
+      "inverse_depth": 7,
+      "row_norm_depth_including_reductions_and_affine": 12,
+      "fits_28_with_two_level_reserve": true,
+      "balanced_polynomial_alternative_inverse_depth": 12,
+      "balanced_alternative_row_norm_depth": 17,
+      "balanced_alternative_current_helper_supported": true
+    },
+    "10.mlp": {
+      "method": "newton",
+      "degree": 128,
+      "iterations": 12,
+      "inverse_depth": 45,
+      "row_norm_depth_including_reductions_and_affine": 50,
+      "fits_28_with_two_level_reserve": false,
+      "balanced_polynomial_alternative_inverse_depth": 16,
+      "balanced_alternative_row_norm_depth": 21,
+      "balanced_alternative_current_helper_supported": false
+    },
+    "11.attention": {
+      "method": "power",
+      "degree": 32,
+      "iterations": 8,
+      "inverse_depth": 7,
+      "row_norm_depth_including_reductions_and_affine": 12,
+      "fits_28_with_two_level_reserve": true,
+      "balanced_polynomial_alternative_inverse_depth": 12,
+      "balanced_alternative_row_norm_depth": 17,
+      "balanced_alternative_current_helper_supported": true
+    },
+    "11.mlp": {
+      "method": "power",
+      "degree": 24,
+      "iterations": 7,
+      "inverse_depth": 7,
+      "row_norm_depth_including_reductions_and_affine": 12,
+      "fits_28_with_two_level_reserve": true,
+      "balanced_polynomial_alternative_inverse_depth": 12,
+      "balanced_alternative_row_norm_depth": 17,
+      "balanced_alternative_current_helper_supported": true
+    }
+  },
+  "gelu": {
+    "0": {
+      "degree": 64,
+      "domain": [
+        -21,
+        14
+      ],
+      "balanced_depth": 14,
+      "FFN_depth": 16
+    },
+    "1": {
+      "degree": 96,
+      "domain": [
+        -19,
+        36
+      ],
+      "balanced_depth": 16,
+      "FFN_depth": 18
+    },
+    "2": {
+      "degree": 96,
+      "domain": [
+        -19,
+        26
+      ],
+      "balanced_depth": 16,
+      "FFN_depth": 18
+    },
+    "3": {
+      "degree": 96,
+      "domain": [
+        -29,
+        15
+      ],
+      "balanced_depth": 16,
+      "FFN_depth": 18
+    },
+    "4": {
+      "degree": 96,
+      "domain": [
+        -31,
+        20
+      ],
+      "balanced_depth": 16,
+      "FFN_depth": 18
+    },
+    "5": {
+      "degree": 96,
+      "domain": [
+        -33,
+        15
+      ],
+      "balanced_depth": 16,
+      "FFN_depth": 18
+    },
+    "6": {
+      "degree": 64,
+      "domain": [
+        -23,
+        13
+      ],
+      "balanced_depth": 14,
+      "FFN_depth": 16
+    },
+    "7": {
+      "degree": 128,
+      "domain": [
+        -28,
+        40
+      ],
+      "balanced_depth": 16,
+      "FFN_depth": 18
+    },
+    "8": {
+      "degree": 128,
+      "domain": [
+        -38,
+        44
+      ],
+      "balanced_depth": 16,
+      "FFN_depth": 18
+    },
+    "9": {
+      "degree": 192,
+      "domain": [
+        -43,
+        41
+      ],
+      "balanced_depth": 18,
+      "FFN_depth": 20
+    },
+    "10": {
+      "degree": 96,
+      "domain": [
+        -20,
+        38
+      ],
+      "balanced_depth": 16,
+      "FFN_depth": 18
+    },
+    "11": {
+      "degree": 48,
+      "domain": [
+        -14,
+        12
+      ],
+      "balanced_depth": 14,
+      "FFN_depth": 16
+    }
+  },
+  "softmax_squarings": {
+    "0": 5,
+    "1": 7,
+    "2": 7,
+    "3": 7,
+    "4": 6,
+    "5": 7,
+    "6": 7,
+    "7": 6,
+    "8": 6,
+    "9": 6,
+    "10": 6,
+    "11": 6
+  },
+  "maximum_public_K_reciprocal_iterations": 13,
+  "initial_command_failure": "selection-tests-v1.log: taskset requested unavailable CPUs180-183; Python did not start. Subsequent source-final selection tests passed on172-175.",
+  "limitations": [
+    "Depth arithmetic excludes refresh, layout-specific routing outside the row helper, nonlinear error propagation and concurrent memory.",
+    "Balanced inverse-sqrt alternatives are analytic candidates; current row normalization helper does not implement that strategy for these degrees.",
+    "All parameter domains are empirical training-derived intervals, not certificates for arbitrary inputs or approximate trajectories."
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "child_exit_code": 1,
+  "child_group_absent": true,
+  "child_pid": 2854859,
+  "child_pid_absent": true,
+  "child_reaped": true,
+  "expected_negative_confirmed": true,
+  "finding": "cleanup_ran is set before signals(shield=True) construction outside try. Construction failure skips all resource/source/owned-output cleanup; outer fallback sees cleanup_ran true. Genuine body remains primary.",
+  "schema": "qwen-checker-shield-construction-review-v1",
+  "scope": "Exact production supervise/accumulate AST with synthetic resources; no full test rerun, model/backend, private/token/calibration/validation or HE execution.",
+  "source_archive_sha256": "85bb76e09a6b964b9995fcaf2704062b55a2c09c470c0a4a7ed0aa5537d869e6",
+  "source_hashes_after": {
+    "checker_process.py": "78dcaf23feb59ee82e6d911946e320454cb129d01107439ec0b1c080cbd7e56e",
+    "cleanup_origin.py": "d74e991cc17121752e355f6313bb597ed0f6be887aa7b4a2007c7288c6448c75",
+    "collect.py": "c3122cfdab4cb3730226af7402e01cbc06c5ea98e65edb0510d23ddf37dbb922",
+    "probe.py": "2eb36225228908a581b10b484792575bc66e676e9acd8c7af16081b7a6790186"
+  },
+  "source_hashes_before": {
+    "checker_process.py": "78dcaf23feb59ee82e6d911946e320454cb129d01107439ec0b1c080cbd7e56e",
+    "cleanup_origin.py": "d74e991cc17121752e355f6313bb597ed0f6be887aa7b4a2007c7288c6448c75",
+    "collect.py": "c3122cfdab4cb3730226af7402e01cbc06c5ea98e65edb0510d23ddf37dbb922",
+    "probe.py": "2eb36225228908a581b10b484792575bc66e676e9acd8c7af16081b7a6790186"
+  },
+  "test_counts": {
+    "errors": 0,
+    "failures": 3,
+    "pgid": 2854859,
+    "pid": 2854859,
+    "skips": 0,
+    "tests": 4
+  }
+}

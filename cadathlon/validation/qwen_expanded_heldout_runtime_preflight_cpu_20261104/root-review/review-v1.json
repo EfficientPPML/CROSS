@@ -1,0 +1,40 @@
+{
+  "schema": "qwen-heldout167-narrow-root-source-review-v1",
+  "source_review_completed": true,
+  "passed": false,
+  "ready_for_full_preflight": false,
+  "source_manifest_sha256": "7c54f2b9acfa0b8ba4d12bc9676259298db013f41196856bc71a1f1e77215098",
+  "source_count": 167,
+  "parent139_exact": true,
+  "reviewed_sources": {
+    "heldout_entry.py": "4e89e36d1bff9022a0d86e9e9d1a0040d7f3979d5e9ffb9f8efe916e47a45bd6",
+    "heldout_process.py": "965e2f0bb8f433a3c0c200b0d22f3a7618e2ac63e2735a0bb0ebb5206358c0ab",
+    "heldout_runtime.py": "60c5c0de7664027f8406f55f81ee33c5927a396a206925d9b01561642fd1d0d7",
+    "heldout_adapters.py": "75c51952c6f3916d4294306b8b9f14f806fc4ad91ef9271ef7bc87825c6ba2d7",
+    "heldout_dispatch.py": "75052e2552f0322d4c9046f99d616088d59b71bb6cd3b28488f5c992d5752bf6",
+    "heldout_authorization.py": "92f77823272bd676b928e2033bc139f1db7f2d723eadea4f76123f1d4b19fcac",
+    "heldout_input_gate.py": "ce4828e33e204d0e0a5f34b2e05fb8d5f72598bef5e4f53429d0f34998a37550",
+    "freeze_admission.py": "a4828b8073dcaad3950ce5cc733fbdbe614a073c7664c3766001b63b176577b6",
+    "heldout_protected_paths.json": "923004889ce96c33723b1bd8713b7e271bbc20a9eccfa661048329969763c5d3",
+    "heldout_runtime_policy.json": "594bbd0eabf6abdcac85d2c2d243c168c9a88aabcf06e09cd182c6a9328ae984"
+  },
+  "unchanged_numeric_methods_inherited": true,
+  "scope": "Public source/AST and existing synthetic receipt read only; no model/backend execution, private input, candidate outcome or heldout body reads",
+  "source_findings": [
+    "New heldout/row0 adapter overrides workload identity and aggregation only; measurement, metrics, domains and independent embeddings are inherited unchanged.",
+    "Separate runtime reauthenticates freeze/grant before validation body and model access; row0 constructs no ValidationReader.",
+    "PASS retains1120/2 actual native calls. Known invalid native/exact comparisons may complete a scientific failure with honest partial counters; no feedback/revision is authorized.",
+    "Confirmed validation-read state survives later exceptions and final recheck failures; process-owned telemetry cannot be overwritten by numerical result fields.",
+    "The actual candidate private and public outcome roots are declared protected source metadata. Lexical denial avoids inspecting those roots during preparation."
+  ],
+  "repaired_read_state_negative_sha256": "bca6ad859afe18d573c1892520e7e654c8dc0a5c4c0293e0cf5b443ca11ddc6c",
+  "repaired_read_state_successor_sha256": "25337f83479a02e49c045f0de20745dd8245da564be4eafa9b99f3c1471559ad",
+  "unresolved_concrete_findings": [
+    {
+      "issue": "The current row0 authorization gate requires a complete scientific heldout result, adding a prerequisite absent from the frozen protocol.",
+      "resolution": "Separate successor must admit independently root-granted row0 from the same firstcalPASS freeze, with honest none/retired prior-attempt state and no scientific-result relabeling, tuning or retry."
+    }
+  ],
+  "development439_note": "Owner reports439 development checks; metadata/docs changed afterward. This is not a source-bound439 proof or actual execution authorization.",
+  "review_script_sha256": "7be66ddbbf8176d73a4c6ef33657e09fe72fc342d492b6c6d90ffbae2d5c34bc"
+}

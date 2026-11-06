@@ -1,0 +1,34 @@
+F
+=================================== FAILURES ===================================
+_________________ test_complete_five_round_composition[7-2-1] __________________
+
+keys = 1, valid = 7, continuation = 2
+
+    @pytest.mark.parametrize('keys', [1, 15, 128])
+    @pytest.mark.parametrize('valid,continuation', [(7, 2), (16, 17)])
+    def test_complete_five_round_composition(keys, valid, continuation):
+>       ops, refresh, graph, layout = setup(keys, valid, continuation)
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_softmax_tile.py:89: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_softmax_tile.py:62: in setup
+    refresher = IdentityRefresh(arithmetic)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+test_softmax_tile.py:29: in __init__
+    self.plan = encrypted_refresh.refresh_plan(2*SLOTS, SLOTS, (4, 4), max_level=49)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+degree = 131072, period = 65536, level_budget = (4, 4), max_level = 49
+
+    def refresh_plan(degree, period, level_budget=(2, 2), *, max_level):
+        """Return the public rotation contract and conservative normalized capacity."""
+>       from jaxite_word.bootstrapping import Bootstrap
+E       ModuleNotFoundError: No module named 'jaxite_word.bootstrapping'; 'jaxite_word' is not a package
+
+checkout/cadathlon/common/encrypted_refresh.py:130: ModuleNotFoundError
+=========================== short test summary info ============================
+FAILED test_softmax_tile.py::test_complete_five_round_composition[7-2-1] - Mo...
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed in 0.16s

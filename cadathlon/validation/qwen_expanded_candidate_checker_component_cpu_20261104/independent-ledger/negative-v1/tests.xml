@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="3" time="0.104" timestamp="2026-11-04T04:00:17.091834+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_ledger_evidence" name="test_empty_evidence_ledger_cannot_consume_complete_attempt[unmeasured_suffix]" time="0.021"><failure message="Failed: DID NOT RAISE ValueError">status = 'unmeasured_suffix'
+
+    @pytest.mark.parametrize("status",["unmeasured_suffix","unknown_status"])
+    def test_empty_evidence_ledger_cannot_consume_complete_attempt(status):
+     result=c.Result("a"*64,tuple(c.Record(entry,None,status)for entry in workload()))
+     budget=c.AttemptBudget();budget.admit("a"*64)
+&gt;    with pytest.raises(ValueError):budget.complete(result,terminal(result))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+E    Failed: DID NOT RAISE ValueError
+
+test_ledger_evidence.py:13: Failed</failure></testcase><testcase classname="test_ledger_evidence" name="test_empty_evidence_ledger_cannot_consume_complete_attempt[unknown_status]" time="0.021"><failure message="Failed: DID NOT RAISE ValueError">status = 'unknown_status'
+
+    @pytest.mark.parametrize("status",["unmeasured_suffix","unknown_status"])
+    def test_empty_evidence_ledger_cannot_consume_complete_attempt(status):
+     result=c.Result("a"*64,tuple(c.Record(entry,None,status)for entry in workload()))
+     budget=c.AttemptBudget();budget.admit("a"*64)
+&gt;    with pytest.raises(ValueError):budget.complete(result,terminal(result))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+E    Failed: DID NOT RAISE ValueError
+
+test_ledger_evidence.py:13: Failed</failure></testcase><testcase classname="test_ledger_evidence" name="test_legitimate_complete_numeric_failure_control" time="0.033" /></testsuite></testsuites>

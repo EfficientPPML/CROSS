@@ -48,10 +48,18 @@ def run(args):
     import jax
     jax.config.update("jax_enable_x64", True)
     available = jax.devices()
-    want = min(case.get("devices", 1), len(available))
+    want = case.get("devices", 1)
+    if isinstance(want, bool) or not isinstance(want, int) or want < 1:
+        raise ValueError("case devices must be a positive integer")
+    if len(available) < want:
+        raise RuntimeError(
+            f"Case requires {want} devices, but JAX reports {len(available)}. "
+            "Use a host with the required devices; cases are never silently downscaled.")
     devices = tuple(available[:want])
-    implementation = load_module(
-        Path(__file__).with_name("baseline.py" if args.baseline else "bench_opt.py"))
+    student_baseline = getattr(args, "student_baseline", False)
+    implementation = load_module(Path(__file__).with_name(
+        "baseline_student.py" if student_baseline else
+        "baseline.py" if args.baseline else "bench_opt.py"))
     started = time.perf_counter()
     service = implementation.build_service(model, shape, batch=case["batch"], devices=devices)
     setup = time.perf_counter() - started
@@ -69,7 +77,7 @@ def run(args):
             synchronize(result)
             server_time = time.perf_counter() - server_start
             _bundle_ciphertexts(result)
-            require_secure_execution(service, result)
+            actual_rings = require_secure_execution(service, result)
             output = np.asarray(service.decrypt(result), dtype=np.float64)
             elapsed = time.perf_counter() - started
             if output.shape != expected.shape:
@@ -89,6 +97,8 @@ def run(args):
         median = float(np.median(samples))
         report = {"case": args.case.name, "mode": "HE-synthetic-smoke",
                 "devices": [str(d) for d in devices], "batch": case["batch"],
+                "profile": "student" if student_baseline else "legacy-or-submission",
+                "execution_rings": actual_rings,
                 "setup_s": setup, "end_to_end_s": samples, "server_s": server_samples,
                 "warmup_s": warmup_samples, "warmup_server_s": warmup_server_samples,
                 "cold_start_included": args.warmups == 0,
@@ -108,6 +118,8 @@ def main():
     mode = p.add_mutually_exclusive_group()
     mode.add_argument("--reference", action="store_true")
     mode.add_argument("--baseline", action="store_true")
+    mode.add_argument("--student-baseline", action="store_true",
+                      help="opt-in secure N=8192 baseline; separate from legacy suite scoring")
     p.add_argument("--warmups", type=int, default=2)
     p.add_argument("--repeats", type=int, default=5)
     args = p.parse_args()

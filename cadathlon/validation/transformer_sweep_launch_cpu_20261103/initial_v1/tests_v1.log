@@ -1,0 +1,71 @@
+F....F...                                                                [100%]
+=================================== FAILURES ===================================
+_____________ test_snapshot_exact_bytes_readonly_and_detects_drift _____________
+
+prepared = (PosixPath('/tmp/pytest-of-jianming_gatech/pytest-141/test_snapshot_exact_bytes_read0/source'), PosixPath('/tmp/pytest-of-jianming_gatech/pytest-141/test_snapshot_exact_bytes_read0/snapshot'))
+
+    def test_snapshot_exact_bytes_readonly_and_detects_drift(prepared):
+        source,snapshot=prepared;manifest,raw=launch.verified_sources(snapshot)
+        assert all(not (p.stat().st_mode & 0o222) for p in snapshot.rglob('*'))
+        assert manifest['instrumentation_sha256']==launch.sha(raw[launch.PINNED_WRAPPER])
+>       changed=snapshot/'demos/extra.py';changed.parent.chmod(0o755);changed.write_text('# new unreviewed dependency\n')
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/transformer-sweep-launch-20261103/test_launch.py:69: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-141/test_snapshot_exact_bytes_read0/snapshot/demos')
+mode = 493, follow_symlinks = True
+
+    def chmod(self, mode, *, follow_symlinks=True):
+        """
+        Change the permissions of the path, like os.chmod().
+        """
+>       os.chmod(self, mode, follow_symlinks=follow_symlinks)
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-141/test_snapshot_exact_bytes_read0/snapshot/demos'
+
+miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py:738: FileNotFoundError
+---------------------------- Captured stdout setup -----------------------------
+{
+  "prepared": true,
+  "snapshot": "/tmp/pytest-of-jianming_gatech/pytest-141/test_snapshot_exact_bytes_read0/snapshot",
+  "files": 32,
+  "manifest_sha256": "8baed4724674457bb95cf8efc993718b232735a585dd69ea61cef7d1257c0daf",
+  "TPU_launched": false
+}
+________ test_initial_source_failure_records_failure_without_key_parent ________
+
+prepared = (PosixPath('/tmp/pytest-of-jianming_gatech/pytest-141/test_initial_source_failure_re0/source'), PosixPath('/tmp/pytest-of-jianming_gatech/pytest-141/test_initial_source_failure_re0/snapshot'))
+tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-141/test_initial_source_failure_re0')
+
+    def test_initial_source_failure_records_failure_without_key_parent(prepared,tmp_path):
+        _,snapshot=prepared;arguments=args(tmp_path,snapshot)
+>       path=snapshot/'demos/new.py';path.parent.chmod(0o755);path.write_text('# drift\n')
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/transformer-sweep-launch-20261103/test_launch.py:115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-141/test_initial_source_failure_re0/snapshot/demos')
+mode = 493, follow_symlinks = True
+
+    def chmod(self, mode, *, follow_symlinks=True):
+        """
+        Change the permissions of the path, like os.chmod().
+        """
+>       os.chmod(self, mode, follow_symlinks=follow_symlinks)
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-jianming_gatech/pytest-141/test_initial_source_failure_re0/snapshot/demos'
+
+miniconda3/envs/jaxite/lib/python3.13/pathlib/_local.py:738: FileNotFoundError
+---------------------------- Captured stdout setup -----------------------------
+{
+  "prepared": true,
+  "snapshot": "/tmp/pytest-of-jianming_gatech/pytest-141/test_initial_source_failure_re0/snapshot",
+  "files": 32,
+  "manifest_sha256": "770655acd903a16b763a74367a52236154717ad7f36b2749c9e8c6194d065f03",
+  "TPU_launched": false
+}
+=========================== short test summary info ============================
+FAILED ../../tmp/transformer-sweep-launch-20261103/test_launch.py::test_snapshot_exact_bytes_readonly_and_detects_drift
+FAILED ../../tmp/transformer-sweep-launch-20261103/test_launch.py::test_initial_source_failure_records_failure_without_key_parent
+2 failed, 7 passed in 1.65s

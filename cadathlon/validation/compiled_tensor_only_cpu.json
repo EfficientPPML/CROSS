@@ -1,0 +1,59 @@
+{
+  "runtime_integrated": false,
+  "secure_primitive": {
+    "passed": true,
+    "degree": 8192,
+    "q_count": 6,
+    "p_count": 2,
+    "dnum": 3,
+    "log2_qp": 184.67680580287663,
+    "security_ceiling": 218,
+    "tests": 3,
+    "elapsed_s": 42.83972144699874,
+    "max_abs_error": 7.864884678243644e-08,
+    "checks": [
+      "Exact three-component raw tensor payload, scales, NSD, levels and canonical metadata for batch one/two, genuine PTCT NSD two, unequal scales and missing scale.",
+      "Exact actual Bootstrap._he_op_mul dispatch including pre-rescale, mixed-level alignment, relinearization and post-multiply bookkeeping.",
+      "No key-switch facade construction for raw tensor; no eager multiplication construction on repeated compiled bootstrap dispatch.",
+      "Compiled executable survives binding release/global JAX clear; retired control arrays are collected.",
+      "Malformed levels/layouts/moduli/noise-scale/security metadata rejected."
+    ]
+  },
+  "insecure_complete_bootstrap": {
+    "scope": "Insecure N256 arithmetic parity only; not a deployment or security proof.",
+    "degree": 256,
+    "depth": 22,
+    "dnum": 8,
+    "period": 4,
+    "raw_ciphertext_bit_exact": true,
+    "scale_and_nsd_exact": true,
+    "eager_seconds": 260.65662165899994,
+    "optimized_seconds": [
+      88.22451328199895,
+      64.10761485699913
+    ],
+    "compile_counts": [
+      [
+        5,
+        13,
+        19,
+        7,
+        13
+      ],
+      [
+        5,
+        13,
+        19,
+        7,
+        13
+      ]
+    ],
+    "source_unchanged": true
+  },
+  "limits": [
+    "The N256 complete-bootstrap fixture explicitly patches the security guard for arithmetic parity only; it is not a deployable profile.",
+    "No TPU, large-ring bootstrap, model timing or speedup claim follows from these narrow CPU checks.",
+    "The actual BERT TPU run remains on its unchanged frozen sources."
+  ],
+  "archive_sha256": "5f2c1dc47e45289b77fd71a99830fe0d20d4fa4235e80f774c7a60d3dc998332"
+}

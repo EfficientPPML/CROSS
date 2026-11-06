@@ -1,0 +1,225 @@
+--- held390/SNAPSHOT_INTEGRATION.md
++++ successor391/SNAPSHOT_INTEGRATION.md
+@@ -1,6 +1,6 @@
+ # Retained server snapshot integration — held source only
+ 
+-This isolated successor preserves the exact 387-file parent separately and selects the unchanged `qwen_admission_snapshot.py` digest `8790711a1a402f4c21ef444ccdb76f773b4c62cd334f5be07a49d2cd4535b395`. Only process, backend and the entry's explicit local-module name set are code overlays. `snapshot_integration.json` mechanically lists the parent changes and the 20-file binding callback closure. Older source-selection documents in this tree are preserved historical predecessor evidence; the new external map is the authoritative complete successor inventory.
++This isolated successor preserves the exact 387-file parent and the reviewed 390-file first integration separately, and selects the unchanged `qwen_admission_snapshot.py` digest `8790711a1a402f4c21ef444ccdb76f773b4c62cd334f5be07a49d2cd4535b395`. Relative to 387, only process, backend and the entry's explicit local-module name set are code overlays. Relative to 390, only process and backend code changes. `snapshot_integration.json` mechanically lists the parent changes and the 21-file binding callback closure. Older source-selection documents in this tree are preserved historical predecessor evidence; the new external map is the authoritative complete successor inventory.
+ 
+ The process captures the original guard module/spec, exported class/functions and descriptors, code/default identities and source-binding callback. The callback checks its explicit selected local source bytes, canonical file/spec origins and exact environment; it never calls the runtime, guard, packet/phase validators, capacity, audit transitions, or a reader/backend factory. The pure backend module is loaded as declarations before capture, so its original exports are not established after application callbacks. Imported function aliases are retained as exports, and the local checking helpers are compared before invocation. This is the declared trusted Python/native source boundary, not arbitrary-interpreter, private-registry or closure-cell containment.
+ 
+@@ -15,3 +15,24 @@
+ `qwen_server_resource.py`, `qwen_server_entry_status.json` and `execution_authorization.json` are exact parent bytes. Complete capacity still denies before any core/body enablement, and readiness/actual flags remain false. No factual capacity packet, backend, key/context, actual grant or new server execution is supplied.
+ 
+ No candidate source was imported, collected or executed during this authoring. The earlier 38-source/18-case snapshot proof uses synthetic non-proof values and a recording full-validator seam; it is not proof of real server admission/integration. New focused tests and independent source review are still required. No speed, full-model, encrypted accuracy or body-integrity claim is made.
++
++The second source checkpoint corrects two findings preserved against 390. The
++source reader's `read -> finish -> protect_body/select -> is_cleanup/mark` path
++uses the existing exact `cleanup_origin.py` bytes, now included in the callback's
++source/module/export/code binding. `qwen_finalizer` is not added to this hot read
++closure; its existing terminal cleanup remains unchanged.
++
++Process runtime methods/properties and internal check closures retain their
++original dispatcher/checker as source-defined defaults. The pure backend import
++now occurs after the process dispatcher and RuntimeAdmission declarations, so
++backend module loading can retain the original process checker without a late
++dynamic import. Backend constructor/check methods retain the original backend
++checker. A changed public dispatcher export is therefore checked by the original
++registry/control and snapshot guard, where the runtime failure becomes sticky,
++before a replacement dispatcher is invoked. Every actual source call uses the
++original fixed argument shape; no source call supplies the private retention
++keywords. These defaults are internal source-retention plumbing, not an injection
++API or a new defense against arbitrary private-global/default/closure mutation.
++The live runtime registry, check-only nesting, transition/pending state and
++cleanup ordering are unchanged. This correction has source/AST evidence only;
++no new integration tests have been collected or executed.
+--- held390/qwen_server_backend.py
++++ successor391/qwen_server_backend.py
+@@ -12,14 +12,16 @@
+ import stat
+ from client_role_common import raw_object
+ from qwen_file_contract import canonical,same
++from qwen_server_process import RuntimeAdmission,require_runtime,_expected_ids_bytes
+ 
+ ENGINE_NAMES=('enable','arithmetic','linear','layout','refresh','contract','parameters','owner','secure','materialize')
+ 
+ 
+-def _runtime(value):
+-    from qwen_server_process import RuntimeAdmission,require_runtime
++def _runtime(value,*,_require=require_runtime):
+     if type(value)is not RuntimeAdmission:raise PermissionError('exact source-fixed server runtime required')
+-    require_runtime(value)
++    # Retain the process checker before callbacks. It reaches the original
++    # guarded control before any changed public dispatcher can be invoked.
++    _require(value)
+     return value
+ 
+ 
+@@ -48,7 +50,6 @@
+         phase=self.backend.phase;grant=raw_object(phase.grant_bytes,1<<16,'server phase grant')
+         if client_private is not None or str(public_keys)!=grant['public_key_store']['path']:
+             raise ValueError('exact granted public-only key path required')
+-        from qwen_server_process import _expected_ids_bytes
+         if (admission.public_contract is not phase.public
+                 or admission.keys.public.raw!=phase.readiness.public_manifest_bytes
+                 or _expected_ids_bytes(admission.keys.public.expected)!=self.backend.runtime.expected_ids_bytes
+@@ -80,12 +81,12 @@
+ 
+ class ServerBackend:
+     """One process-bound set of original loader and full-model callbacks."""
+-    def __init__(self,runtime):
+-        _runtime(runtime);runtime.require_public_key_read_scope()
++    def __init__(self,runtime,*,_check_runtime=_runtime):
++        _check_runtime(runtime);runtime.require_public_key_read_scope()
+         self.runtime=runtime;self.phase=runtime.phase;self.core=runtime.core
+         from qwen_server_admission import ServerPhaseAdmission
+         if type(self.phase)is not ServerPhaseAdmission:raise TypeError('exact complete server phase required')
+-        _runtime(runtime)
++        _check_runtime(runtime)
+         modules=self.core.load(('he_params','key_gen','ckks_ctx','polynomial'))
+         self.he_params=modules['he_params'];self.key_gen=modules['key_gen']
+         self.ckks=modules['ckks_ctx'];self.polynomial=modules['polynomial']
+@@ -186,8 +187,8 @@
+             self._base_directory,self._base_map_array,self.engine,self.dependencies,self.factories)
+         self.check()
+ 
+-    def check(self):
+-        _runtime(self.runtime)
++    def check(self,*,_check_runtime=_runtime):
++        _check_runtime(self.runtime)
+         current=(self.runtime,self.phase,self.core,self.he_params,self.key_gen,self.ckks,self.polynomial,
+             self.security_identity,self.context_identity,self.polynomial_identity,self.jax,self.shield,
+             self._base_directory,self._base_map_array,self.engine,self.dependencies,self.factories)
+--- held390/qwen_server_process.py
++++ successor391/qwen_server_process.py
+@@ -25,7 +25,6 @@
+ from qwen_key_files_admission import bind_files
+ from keygen_output import Output,read,canonical_path,overlap
+ import qwen_admission_snapshot as admission_snapshot
+-import qwen_server_backend as server_backend_module
+ 
+ _QUARANTINE=[]
+ _ISSUER=object()
+@@ -40,7 +39,7 @@
+     'client_role_common.py','freeze_admission.py','freeze_issuer.py','qwen_key_contract.py',
+     'qwen_public_parse.py','public_source_pins.py','keygen_boundary_pins.py','scientific_source_pins.py',
+     'qwen_server_process.py','qwen_server_backend.py','qwen_server_entry.py',
+-    'qwen_server_dependencies.py','keygen_output.py')
++    'qwen_server_dependencies.py','keygen_output.py','cleanup_origin.py')
+ MODEL_STORAGE_SCOPES=(
+     '/tmp/qwen-qkv-attention-join-20261103/public_qkv_parameters',
+     '/tmp/qwen-decoder-parameters-20261103/actual-v1/public_matrices',
+@@ -200,10 +199,13 @@
+     return row[1](value,action,arg)
+ 
+ 
+-def require_runtime(value):
++def require_runtime(value,*,_dispatch=_runtime_action):
+     # Backend calls the source-fixed dispatcher, never a replaceable instance
+     # .check attribute or a newly supplied dataclass _control callable.
+-    _runtime_action(value,'check',None);return value
++    # The original dispatcher reaches the original registry/control and guard
++    # even if the module's public dispatcher export has been replaced. Actual
++    # source callers never supply the private retention keyword.
++    _dispatch(value,'check',None);return value
+ 
+ 
+ def resource_pins(phase):
+@@ -292,21 +294,26 @@
+     _control:object
+     _expected_ids_bytes:bytes
+     _input_digest:str
+-    def check(self):
+-        return require_runtime(self)
+-    def allow_public_key_reads(self):_runtime_action(self,'keys',None)
+-    def admit_server_bodies(self,handle):_runtime_action(self,'bodies',handle)
+-    def require_public_key_read_scope(self):_runtime_action(self,'require_keys',None)
+-    def require_server_body_scope(self):_runtime_action(self,'require_bodies',None)
++    def check(self,*,_require=require_runtime):
++        return _require(self)
++    def allow_public_key_reads(self,*,_dispatch=_runtime_action):_dispatch(self,'keys',None)
++    def admit_server_bodies(self,handle,*,_dispatch=_runtime_action):_dispatch(self,'bodies',handle)
++    def require_public_key_read_scope(self,*,_dispatch=_runtime_action):_dispatch(self,'require_keys',None)
++    def require_server_body_scope(self,*,_dispatch=_runtime_action):_dispatch(self,'require_bodies',None)
+     @property
+-    def expected_ids_bytes(self):
+-        require_runtime(self);return self._expected_ids_bytes
++    def expected_ids_bytes(self,*,_require=require_runtime):
++        _require(self);return self._expected_ids_bytes
+     @property
+-    def input_digest(self):
+-        require_runtime(self);return self._input_digest
+-
+-
+-def _runtime(packet,core,audit,audit_methods,source_check,capacity_check,files,guard_check,derived):
++    def input_digest(self,*,_require=require_runtime):
++        _require(self);return self._input_digest
++
++
++# Pure backend declarations import the original dispatcher/class only after
++# these definitions exist. No backend initialization or body access occurs.
++import qwen_server_backend as server_backend_module
++
++
++def _runtime(packet,core,audit,audit_methods,source_check,capacity_check,files,guard_check,derived,*,_require_runtime=require_runtime):
+     """Current complete-capacity callback always denies before this is reached.
+ 
+     The retained guard replaces only hot full-proof replay. Original source,
+@@ -368,7 +375,7 @@
+                     source_check();require_active();capacity_check();require_active();state['pending']='keys'
+                     try:audit_methods['enable_public_keys'](value);require_active();state['keys']=True
+                     finally:state['pending']=None
+-                    require_runtime(value);return
++                    _require_runtime(value);return
+                 finally:state['transition']=None
+             if action=='bodies':
+                 if not state['keys']or state['bodies']or state['handle']is not None:raise ValueError('one server body transition after loaded public keys required')
+@@ -382,7 +389,7 @@
+                     state['handle']=arg;state['ctx']=ctx;state['pending']='bodies'
+                     try:audit_methods['enable_server_bodies'](value);require_active();state['bodies']=True
+                     finally:state['pending']=None
+-                    require_runtime(value);return
++                    _require_runtime(value);return
+                 finally:state['transition']=None
+             raise ValueError('unselected server runtime transition')
+         except BaseException as error:
+@@ -395,14 +402,14 @@
+     _RUNTIME_CONTROLS[id(runtime)]=(runtime,control)
+     def retire():
+         nonlocal active
+-        require_runtime(runtime)
++        _require_runtime(runtime)
+         if state['handle']is not None and state['handle'].ctx is not None:raise ValueError('original loader must retire context before server terminal')
+         active=False
+         del _RUNTIME_CONTROLS[id(runtime)]
+     return runtime,retire
+ 
+ 
+-def run(args,raw_map,expected,blobs,gate,snapshot,origins):
++def run(args,raw_map,expected,blobs,gate,snapshot,origins,*,_require_runtime=require_runtime):
+     packet,profile,dep,res,records,protected,always_protected,metadata_memory=admit(args,raw_map,expected,blobs)
+     phase=packet.phase;grant=parse(phase.grant_bytes);root=grant['source_root'];pins=resource_pins(phase)
+     primary=None;audit=None;audit_methods={};audit_original_open=os.open;audit_wrapper=None;publication_enabled=False
+@@ -426,7 +433,7 @@
+         if guard_check is not None:guard_check()
+         if audit is not None:
+             audit_guard();audit_methods['check']()
+-        if runtime is not None:require_runtime(runtime)
++        if runtime is not None:_require_runtime(runtime)
+         if core is not None:core.check()
+         if set(records)!=set(path for path,row in public_records)or any(records[path]is not row for path,row in public_records):
+             raise ValueError('original public proof read bindings changed')
+@@ -479,7 +486,7 @@
+         with termination_signals():
+             response=_server_for_stage(files,grant['public_key_store']['path'],parse(phase.request_bytes),
+                 key_dependencies=backend.dependencies,factories=backend.factories)
+-        require_runtime(runtime);source_check()
++        _require_runtime(runtime);source_check()
+         if type(response)is not bytes or not response:raise ValueError('original complete response manifest bytes required')
+         origins_after=imported_origins(dep,root);same(hash_installed(dep),installed_before,'installed source changed during server stage')
+         report=dict(schema='qwen-actual-server-worker-report-v1',passed=True,complete=True,error_type=None,
+--- held390/snapshot_integration.json
++++ successor391/snapshot_integration.json
+@@ -1 +1 @@
+-{"accepted_plan_sha256":"28687cde76bdf62272c99af08286980bc3c92be96fcf2f111b3b58fbc908aa1b","actual_grants":false,"actual_readiness_changed":false,"additions":["qwen_admission_snapshot.py","SNAPSHOT_INTEGRATION.md","snapshot_integration.json"],"backend_module_capture":"pure declarations imported before snapshot capture; no backend/context construction","body_reads":false,"callback_source_closure":{"client_role_common.py":"c48e5238941161f511f8e0caa73d4bea4e96ae87af23fec1c1b4e9d013c32ead","freeze_admission.py":"a4828b8073dcaad3950ce5cc733fbdbe614a073c7664c3766001b63b176577b6","freeze_issuer.py":"2ef43770c589dcf01aadd66b7d43a52bc1a3e57b0105aa25b56674fb463951da","keygen_authority.py":"95e26a99fa2a09241349d437fcf8aa5e22e6287125ad82602d637f618112a94a","keygen_boundary_pins.py":"f18ddb73d5554b4413b13491cf174fa98c111bad909e54240f3108e161b97065","keygen_output.py":"0e901d4b461977b1339b880586cc4805ec766ab8b4733925156be540a018a8b8","model_admission.py":"60bb47d044649625a5c1d9870256aed7b6d7a3bf53c49b5267bcfc4919d098d3","public_source_pins.py":"672a953faf0cc8cd4ecae644c981bf1a50bbf7eb98e3b69fdb46d7d613cdfeab","qwen_admission_snapshot.py":"8790711a1a402f4c21ef444ccdb76f773b4c62cd334f5be07a49d2cd4535b395","qwen_file_contract.py":"25e81bbe50bea14c5f00eebc82165e8d135d515ebc5467c6c19b3f3a211ad004","qwen_key_contract.py":"49c7e502f84b48e461a4588ce490f94f6aea9fa11d90e7cc657ea8238fc15bb5","qwen_public_parse.py":"d29919969c9950a86d2e663f5392c401742e6306a0ed7c9ad7ab3ea2f4e830f0","qwen_scientific_admission.py":"5765835681558215c9ef02cdb7cc590e644cc9ab43ec06995977100a051bb711","qwen_server_admission.py":"a096e5ff32439621696901bd8aa0839687208370bfde5d8a38d0c5f83aeba808","qwen_server_authority_packet.py":"40817e55db31bf133ff180f6244b0b9d4840d788d59d6323006fa2b4d3b2b41a","qwen_server_backend.py":"814f2640cf25b9d4325ca606c42cd2653951e8ed7d179c77d6f78d2c0d93fb3c","qwen_server_dependencies.py":"9efaa452756ee578c3cb8b9df84d46a48a5ebe607b1f033ee68c7336935beac4","qwen_server_entry.py":"010f25a1140c6b759fa5305a6bcd953fbe2e0d5562fab2bfdb1514f10b3e463e","qwen_server_process.py":"a60c827c559f38b52a801f2c262bd091de2c4b690d9c0b45fcb4fc97c33f8b62","scientific_source_pins.py":"975ade5f591fa62fd95f7e349cfa42343c6f673f11828a66f0034772e9af2703"},"candidate_imports":false,"code_overlays":{"qwen_server_backend.py":{"after":"814f2640cf25b9d4325ca606c42cd2653951e8ed7d179c77d6f78d2c0d93fb3c","before":"682e5130612abcb5741f266db7164f14389aac7df1b932646c9500a22fa8b740"},"qwen_server_entry.py":{"after":"010f25a1140c6b759fa5305a6bcd953fbe2e0d5562fab2bfdb1514f10b3e463e","before":"525bbde1f1bd5053d946db59bd15976f3a86eb9367f40caaf1f9bdef019c9189"},"qwen_server_process.py":{"after":"a60c827c559f38b52a801f2c262bd091de2c4b690d9c0b45fcb4fc97c33f8b62","before":"e8347c90d359cb0dd309ed3abe8979e636ca8efb6604bd82ccbb9a9af273bc7f"}},"collection_or_tests":false,"complete_capacity_module_unchanged":true,"core_math_loader_reader_policy_unchanged":true,"device_or_capacity_probes":false,"expected_id_fields":["context_id","public_manifest_sha256","keygen_source_sha256","model_id","producer_source_manifest_sha256","consumer_source_manifest_sha256","private_manifest_sha256"],"literal_guard_sha256":"8790711a1a402f4c21ef444ccdb76f773b4c62cd334f5be07a49d2cd4535b395","parent_archive_sha256":"858ce5f5985b78e8507990685b075d86f6d6e2fbbcf48bfa86294b921aac8348","parent_manifest_sha256":"c0ecd1df1bc70bcf70ec84c13e2c4314100f4241ae7c04dbfd670b15520b18b5","parent_root":"/tmp/qwen-server-actual-runtime-20261104","parent_source_count":387,"plan_peer_review_sha256":"fd869009c2cc64326e06219536e3e4303f0d3b51817805fcf324f3707cc31786","runtime_control_registry":"issuer-owned live runtime/control references; no global proof hash/result cache; failed owners retained","schema":"qwen-server-snapshot-integration-source-v1","status":"held_unexecuted_source_successor","test_scope":"Future explicit synthetic integration proof required; no inherited18 integration PASS","unchanged_parent_files":384}
++{"accepted_plan_sha256":"28687cde76bdf62272c99af08286980bc3c92be96fcf2f111b3b58fbc908aa1b","actual_grants":false,"actual_readiness_changed":false,"additions":["qwen_admission_snapshot.py","SNAPSHOT_INTEGRATION.md","snapshot_integration.json","snapshot_dispatch_successor.json"],"backend_module_capture":"Pure declarations loaded after original process dispatcher/class definitions and before snapshot capture; no backend/context construction.","body_reads":false,"callback_source_closure":{"cleanup_origin.py":"4543b26bf1168e29bc21375c2f80a9aa99648205a9fd9aea6d5a8059c6d18175","client_role_common.py":"c48e5238941161f511f8e0caa73d4bea4e96ae87af23fec1c1b4e9d013c32ead","freeze_admission.py":"a4828b8073dcaad3950ce5cc733fbdbe614a073c7664c3766001b63b176577b6","freeze_issuer.py":"2ef43770c589dcf01aadd66b7d43a52bc1a3e57b0105aa25b56674fb463951da","keygen_authority.py":"95e26a99fa2a09241349d437fcf8aa5e22e6287125ad82602d637f618112a94a","keygen_boundary_pins.py":"f18ddb73d5554b4413b13491cf174fa98c111bad909e54240f3108e161b97065","keygen_output.py":"0e901d4b461977b1339b880586cc4805ec766ab8b4733925156be540a018a8b8","model_admission.py":"60bb47d044649625a5c1d9870256aed7b6d7a3bf53c49b5267bcfc4919d098d3","public_source_pins.py":"672a953faf0cc8cd4ecae644c981bf1a50bbf7eb98e3b69fdb46d7d613cdfeab","qwen_admission_snapshot.py":"8790711a1a402f4c21ef444ccdb76f773b4c62cd334f5be07a49d2cd4535b395","qwen_file_contract.py":"25e81bbe50bea14c5f00eebc82165e8d135d515ebc5467c6c19b3f3a211ad004","qwen_key_contract.py":"49c7e502f84b48e461a4588ce490f94f6aea9fa11d90e7cc657ea8238fc15bb5","qwen_public_parse.py":"d29919969c9950a86d2e663f5392c401742e6306a0ed7c9ad7ab3ea2f4e830f0","qwen_scientific_admission.py":"5765835681558215c9ef02cdb7cc590e644cc9ab43ec06995977100a051bb711","qwen_server_admission.py":"a096e5ff32439621696901bd8aa0839687208370bfde5d8a38d0c5f83aeba808","qwen_server_authority_packet.py":"40817e55db31bf133ff180f6244b0b9d4840d788d59d6323006fa2b4d3b2b41a","qwen_server_backend.py":"b7a3ff42847a9daf985d02fd71c5c9a3cd9e23a7b07f434b030b1ccce4129cac","qwen_server_dependencies.py":"9efaa452756ee578c3cb8b9df84d46a48a5ebe607b1f033ee68c7336935beac4","qwen_server_entry.py":"010f25a1140c6b759fa5305a6bcd953fbe2e0d5562fab2bfdb1514f10b3e463e","qwen_server_process.py":"bd0da9180dd16fa055dc2044ae11c5b96c5542ef82165a009f2d3c4cd6e9f756","scientific_source_pins.py":"975ade5f591fa62fd95f7e349cfa42343c6f673f11828a66f0034772e9af2703"},"candidate_imports":false,"code_overlays":{"qwen_server_backend.py":{"after":"b7a3ff42847a9daf985d02fd71c5c9a3cd9e23a7b07f434b030b1ccce4129cac","before":"682e5130612abcb5741f266db7164f14389aac7df1b932646c9500a22fa8b740"},"qwen_server_entry.py":{"after":"010f25a1140c6b759fa5305a6bcd953fbe2e0d5562fab2bfdb1514f10b3e463e","before":"525bbde1f1bd5053d946db59bd15976f3a86eb9367f40caaf1f9bdef019c9189"},"qwen_server_process.py":{"after":"bd0da9180dd16fa055dc2044ae11c5b96c5542ef82165a009f2d3c4cd6e9f756","before":"e8347c90d359cb0dd309ed3abe8979e636ca8efb6604bd82ccbb9a9af273bc7f"}},"collection_or_tests":false,"complete_capacity_module_unchanged":true,"core_math_loader_reader_policy_unchanged":true,"correction_history":"snapshot_dispatch_successor.json","device_or_capacity_probes":false,"expected_id_fields":["context_id","public_manifest_sha256","keygen_source_sha256","model_id","producer_source_manifest_sha256","consumer_source_manifest_sha256","private_manifest_sha256"],"literal_guard_sha256":"8790711a1a402f4c21ef444ccdb76f773b4c62cd334f5be07a49d2cd4535b395","original_dispatch":"Retained source-defined function defaults enter original runtime control before checking public dispatcher replacements; fixed ordinary source call arguments.","parent_archive_sha256":"858ce5f5985b78e8507990685b075d86f6d6e2fbbcf48bfa86294b921aac8348","parent_manifest_sha256":"c0ecd1df1bc70bcf70ec84c13e2c4314100f4241ae7c04dbfd670b15520b18b5","parent_root":"/tmp/qwen-server-actual-runtime-20261104","parent_source_count":387,"plan_peer_review_sha256":"fd869009c2cc64326e06219536e3e4303f0d3b51817805fcf324f3707cc31786","predecessor390":{"root":"/tmp/qwen-server-snapshot-runtime-20261104","source_archive_path":"/tmp/qwen-server-snapshot-runtime-handoff-20261104/sources.tar.gz","source_archive_sha256":"9bd175e441360b4dcdff986c435ac8bfc2f728b824502df0c12de80d959f4a1b","source_map_sha256":"4a9fd8e86386aa0411ada600877117161549cd0b79cbe0b3a21a026508729c40"},"runtime_control_registry":"issuer-owned live runtime/control references; no global proof hash/result cache; failed owners retained","schema":"qwen-server-snapshot-integration-source-v2","source_count":391,"status":"held_unexecuted_source_successor","test_scope":"Future explicit synthetic integration proof required; no inherited18 integration PASS","unchanged_parent_files":384}

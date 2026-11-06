@@ -1,0 +1,32 @@
+.............................................F.                          [100%]
+=================================== FAILURES ===================================
+____ test_callback_cannot_replace_dynamic_compiled_cache[constant_metadata] ____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7757f94f74d0>
+cache = 'constant_metadata'
+
+    @pytest.mark.parametrize('cache',['_constant_cache','_multiplication_bindings','compiler','binding','constant_metadata','controls'])
+    def test_callback_cannot_replace_dynamic_compiled_cache(monkeypatch,cache):
+        holder={}
+        def progress(*args):
+            a=holder['owner'].linear.arithmetic
+            if cache=='compiler':a._plaintext_multiply.compiler._executables['injected']=object()
+            elif cache=='binding':a._rescale.binding=(('injected',),object())
+            elif cache=='constant_metadata':a._constant_cache['held']._ckks_scale*=2
+            elif cache=='controls':a._multiplication_bindings[25].controls=(object(),)
+            else:getattr(a,cache)['injected']=object()
+        owner,a,b,_=build_distinct(monkeypatch,progress);holder['owner']=owner;_,tiles=inputs((0,))
+        if cache=='constant_metadata':b._constant_cache['held']=tiles[0]
+        if cache=='controls':
+            from types import SimpleNamespace
+            b._multiplication_bindings[25]=SimpleNamespace(executable=object(),controls=(object(),))
+>       with pytest.raises(ValueError,match='callback changed active compiled'):owner.evaluate(tiles)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'callback changed active compiled'
+E         Actual message: 'retained join source/result changed\nentered attention failure: borrowed owners/arrays quarantined; outer key loader must also quarantine until process exit'
+
+test_join_guards.py:106: AssertionError
+=========================== short test summary info ============================
+FAILED test_join_guards.py::test_callback_cannot_replace_dynamic_compiled_cache[constant_metadata]
+1 failed, 46 passed in 16.90s

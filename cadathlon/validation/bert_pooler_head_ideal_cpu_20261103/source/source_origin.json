@@ -1,0 +1,16 @@
+{
+  "scope": "Isolated complete BERT-v2 pooler rational tanh and pinned classifier; ideal primitive validation only",
+  "base_checkout": "/tmp/bert-v2-all-row-norm-owner-20261103/checkout",
+  "frozen_manifest_sha256": "4e2277beea7189aa1d77b168c500c8a175f6c630afa520fcc6b38cb5a179cff9",
+  "shared_refresh_binding_sha256": "5a980a5a2dec075c47385ff6b4cd75dea8dd87bd1b3c544bdcea8ada806a9cf4",
+  "public_checkpoint_sha256": "e1f8085ef673c9eb8a1a93a84270742e8aa0ccbceadef01eef15e26c44b46034",
+  "input_scope": "Fixed synthetic CLS vectors and deterministic full-slot tanh endpoints/interiors. No native encoder inputs or model inference.",
+  "matrices": "Exact FP32 lifts of all four pinned pooler/classifier tensors; no arrays archived",
+  "source_selection": "Original CLS position0 must be first in an ordered compact tile; actual chained dense source masks select row0/features0..767",
+  "arithmetic": "Rounded Chebyshev-to-power coefficients; degree12 declared/max11 nonzero; division64; original five static reciprocal updates; six rational doublings; integer bias/doubling consumes no extra level",
+  "refresh_scale_policy": "Real refresh returned metadata is checked and used to replan later actual binary64 scales without relabeling",
+  "development": {"tanh_tests":86,"tanh_seconds":5.23,"tanh_session":30254,"head_tests_before_padding_regression":27,"head_seconds":15.44,"head_session":70408,"both_exit_zero_reaped":true},
+  "review": "Transformer agent read-only review found no concrete tanh algebra, scale or retained-callback blocker; pooler/classifier review pending at source-origin creation",
+  "no_full_model_claim": true,
+  "no_encrypted_execution_claim": true
+}

@@ -1,0 +1,61 @@
+........................................................................ [ 15%]
+........................................................................ [ 30%]
+........................................................................ [ 46%]
+........................................................................ [ 61%]
+........................................................................ [ 77%]
+........................................................................ [ 92%]
+................................F                                        [100%]
+=================================== FAILURES ===================================
+_______ test_one_ulp_regression_and_real_noncanonical_product_recurrence _______
+
+executor = (<function executor.<locals>.<lambda> at 0x7a5d5c1cb2e0>, [(<class 'object'>, 78, <test_scale_metadata.Value object at...plaintext operand'), (<class 'object'>, 78, <test_scale_metadata.Value object at 0x7a5d5c32cef0>, 'compiled rescale')])
+
+    def test_one_ulp_regression_and_real_noncanonical_product_recurrence(executor):
+        evaluate,_=executor;actual=evaluate([DELTA],38,[1.])
+        assert actual._ckks_scale==math.nextafter(DELTA,0.) and actual._ckks_scale!=DELTA
+>       params,public=proof.public_parameters()
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/factored-shallow-score-component-20261103/prototype/test_scale_metadata.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/tmp/factored-shallow-score-component-20261103/prototype/proof.py:32: in public_parameters
+    from jaxite_word import he_params
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    """CKKS security generation, validation, and runtime parameter storage.
+    
+    ``HEParameterCache`` computes NTT twiddle factors, finite-field reduction
+    contexts, and psi/inv_psi arrays once at max level. Per-level BConv parameters
+    (which cannot be sliced) are computed on first use in deterministic lazy mode. The module also owns
+    versioned ring-security generation and the corresponding command-line entry
+    point.
+    
+    The reduction backend is injectable: pass `finite_field_context` (a
+    FiniteFieldContextBase subclass, default BarrettContext) and the cache derives
+    the paired NTT-ciphertext and BConv implementations through the existing
+    backend hooks (ntt_mm.ntt_ciphertext_context_for / bconv.make_bconv). Key
+    material (eval/rotation keys) is stored in standard form; the low-level
+    operators convert it to their computation format exactly once at setup.
+    """
+    import argparse
+    import os
+    from dataclasses import dataclass
+    from enum import Enum
+    from functools import lru_cache
+    import json
+    import math
+    import operator
+    from numbers import Integral
+    from pathlib import Path
+    import sys
+    from types import MappingProxyType
+    from typing import Dict, Iterable, List, Mapping, Sequence, Tuple
+    
+    import jax
+>   import jax.numpy as jnp
+E   ModuleNotFoundError: No module named 'jax.numpy'; 'jax' is not a package
+
+/tmp/factored-shallow-score-component-20261103/checkout/jaxite_word/he_params.py:31: ModuleNotFoundError
+=========================== short test summary info ============================
+FAILED ../../tmp/factored-shallow-score-component-20261103/prototype/test_scale_metadata.py::test_one_ulp_regression_and_real_noncanonical_product_recurrence
+1 failed, 464 passed in 3.62s

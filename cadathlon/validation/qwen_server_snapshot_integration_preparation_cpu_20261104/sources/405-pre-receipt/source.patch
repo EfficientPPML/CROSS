@@ -1,0 +1,16 @@
+--- failed404/integration_fixture.py
++++ unrun405/integration_fixture.py
+@@ -182,7 +182,12 @@
+         self.snapshot_check();ids=self.phase.expected_ids();digest=self.phase.input_digest
+         self.derived=(ids,self.process._expected_ids_bytes(ids),digest);self.snapshot_check()
+         callbacks={name:getattr(self.audit,name)for name in('check','install','close','enable_public_keys','enable_server_bodies')}
+-        self.runtime,self.runtime_retire=self.process._runtime(self.packet,self.core,self.audit,callbacks,self.full_boundary,self.capacity,self.files,self.snapshot_check,self.derived)
++        # Match the actual process's plain-function callback contract. These
++        # only forward to the same fixture methods; runtime requirements and
++        # every case assertion remain unchanged.
++        def source_check():return self.full_boundary()
++        def capacity_check():return self.capacity()
++        self.runtime,self.runtime_retire=self.process._runtime(self.packet,self.core,self.audit,callbacks,source_check,capacity_check,self.files,self.snapshot_check,self.derived)
+         return self.runtime
+ 
+     def backend_seams(self):

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="5" skipped="0" tests="88" time="1.349" timestamp="2026-11-04T02:03:23.218079+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_validator_common" name="test_real_consumer_and_producer_closures_are_distinct" time="0.152"><failure message="ValueError: unreviewed predecessor source drift: execution_authorization.json">def test_real_consumer_and_producer_closures_are_distinct():
+        expected=c.protocol.hashes(c.protocol.sources())
+&gt;       profile,plan,checked=c.inspect_sources(expected)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_validator_common.py:10: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+validator_common.py:30: in inspect_sources
+    profile,plan=protocol.check_sources(expected)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+component_protocol.py:78: in check_sources
+    check_predecessor()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def check_predecessor():
+        raw=key_gate.read(HERE/'routing_predecessor/report.json')
+        if sha(raw)!=PREDECESSOR_REPORT:raise ValueError('exact disabled predecessor proof required')
+        report=key_gate.parse(raw);before=report['source_hashes_start']
+        if (report['passed']is not True or report['execute']is not False or len(before)!=147
+                or before!=report['source_hashes_end']):raise ValueError('completed unchanged disabled predecessor required')
+        archive=key_gate.read(HERE/'routing_predecessor/sources.tar.gz',16&lt;&lt;20)
+        if sha(archive)!=report['source_archive_sha256']:raise ValueError('disabled predecessor archive differs')
+        key_gate.verify_source_archive(archive,before)
+        overlays=key_gate.parse(key_gate.read(HERE/'gain4_component_overlays.json'))
+        if type(overlays)is not dict or not overlays or not set(overlays)&lt;=set(before):
+            raise ValueError('explicit predecessor source overlays required')
+        for name,old in before.items():
+            if name in RETIRED_PARENT_SOURCES:
+                if (HERE/name).exists():raise ValueError('retired duplicate key plan must remain outside execution closure')
+                continue
+            expected=overlays.get(name,old);key_gate.sha_field(expected)
+&gt;           if sha((HERE/relative(name)).read_bytes())!=expected:raise ValueError('unreviewed predecessor source drift: '+name)
+                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           ValueError: unreviewed predecessor source drift: execution_authorization.json
+
+component_protocol.py:71: ValueError</failure></testcase><testcase classname="test_validator_common" name="test_arithmetic_gate_or_format_drift_rejected[component_protocol.py]" time="0.069" /><testcase classname="test_validator_common" name="test_arithmetic_gate_or_format_drift_rejected[component_worker.py]" time="0.069" /><testcase classname="test_validator_common" name="test_arithmetic_gate_or_format_drift_rejected[component_transport.py]" time="0.069" /><testcase classname="test_validator_common" name="test_arithmetic_gate_or_format_drift_rejected[component_contract.py]" time="0.069" /><testcase classname="test_validator_common" name="test_arithmetic_gate_or_format_drift_rejected[gain4_fixtures.py]" time="0.069" /><testcase classname="test_validator_common" name="test_arithmetic_gate_or_format_drift_rejected[common/encrypted_bert_normalization_gain4.py]" time="0.069" /><testcase classname="test_validator_common" name="test_wrong_io_overlay_rejected[runtime/stage/client_keys.py]" time="0.069" /><testcase classname="test_validator_common" name="test_wrong_io_overlay_rejected[runtime/stage/key_contexts.py]" time="0.069" /><testcase classname="test_validator_common" name="test_typed_validator_authorization[ready-1]" time="0.002" /><testcase classname="test_validator_common" name="test_typed_validator_authorization[ready-1.0]" time="0.001" /><testcase classname="test_validator_common" name="test_typed_validator_authorization[ready-true]" time="0.001" /><testcase classname="test_validator_common" name="test_typed_validator_authorization[stage-fixture]" time="0.001" /><testcase classname="test_validator_common" name="test_typed_validator_authorization[stage-server]" time="0.001" /><testcase classname="test_validator_common" name="test_typed_validator_authorization[execution_authorized-1]" time="0.001" /><testcase classname="test_validator_common" name="test_typed_validator_authorization[execution_authorized-False]" time="0.001" /><testcase classname="test_validator_common" name="test_true_readiness_still_requires_bound_server" time="0.001" /><testcase classname="test_validator_common" name="test_all54_and_both_original_derived_gate_sets" time="0.001" /><testcase classname="test_validator_common" name="test_numeric_or_typed_metadata_cannot_be_weakened[missing]" time="0.001" /><testcase classname="test_validator_common" name="test_numeric_or_typed_metadata_cannot_be_weakened[reordered]" time="0.001" /><testcase classname="test_validator_common" name="test_numeric_or_typed_metadata_cannot_be_weakened[bool_index]" time="0.001" /><testcase classname="test_validator_common" name="test_numeric_or_typed_metadata_cannot_be_weakened[float_level]" time="0.001" /><testcase classname="test_validator_common" name="test_numeric_or_typed_metadata_cannot_be_weakened[scale]" time="0.001" /><testcase classname="test_validator_common" name="test_numeric_or_typed_metadata_cannot_be_weakened[gate]" time="0.001" /><testcase classname="test_validator_common" name="test_numeric_or_typed_metadata_cannot_be_weakened[large]" time="0.001" /><testcase classname="test_validator_common" name="test_numeric_or_typed_metadata_cannot_be_weakened[nan]" time="0.001" /><testcase classname="test_validator_common" name="test_numeric_or_typed_metadata_cannot_be_weakened[false]" time="0.001" /><testcase classname="test_validator_common" name="test_numeric_or_typed_metadata_cannot_be_weakened[derived_missing]" time="0.001" /><testcase classname="test_validator_common" name="test_numeric_or_typed_metadata_cannot_be_weakened[derived_false]" time="0.001" /><testcase classname="test_validator_common" name="test_numeric_or_typed_metadata_cannot_be_weakened[summary]" time="0.001" /><testcase classname="test_validator_common" name="test_numeric_or_typed_metadata_cannot_be_weakened[private_order]" time="0.001" /><testcase classname="test_validator_worker" name="test_only_validate_after_old_producer_gate" time="0.008" /><testcase classname="test_validator_worker" name="test_failure_preserved_and_no_early_private_work[gate]" time="0.007" /><testcase classname="test_validator_worker" name="test_failure_preserved_and_no_early_private_work[body]" time="0.008" /><testcase classname="test_validator_worker" name="test_nonvalidator_rejected_before_publication[fixture]" time="0.001" /><testcase classname="test_validator_worker" name="test_nonvalidator_rejected_before_publication[server]" time="0.001" /><testcase classname="test_validator_worker" name="test_nonvalidator_rejected_before_publication[None]" time="0.001" /><testcase classname="test_validator_worker" name="test_nonvalidator_rejected_before_publication[True]" time="0.001" /><testcase classname="test_validator_worker" name="test_nonvalidator_rejected_before_publication[1]" time="0.001" /><testcase classname="test_validator_worker" name="test_pending_rejects_before_output_or_payload" time="0.002" /><testcase classname="test_validator_worker" name="test_standalone_output_cannot_mutate_borrowed_root[workspace]" time="0.002" /><testcase classname="test_validator_worker" name="test_standalone_output_cannot_mutate_borrowed_root[key_workspace]" time="0.002" /><testcase classname="test_validator_worker" name="test_standalone_output_cannot_mutate_borrowed_root[key_evidence]" time="0.002" /><testcase classname="test_validator_worker" name="test_standalone_output_cannot_mutate_borrowed_root[fixture_evidence]" time="0.002" /><testcase classname="test_validator_worker" name="test_standalone_output_cannot_mutate_borrowed_root[server_evidence]" time="0.002" /><testcase classname="test_validator_worker" name="test_outer_scope_restoration_controls_final_success[None-validator_worker]" time="0.005" /><testcase classname="test_validator_worker" name="test_outer_scope_restoration_controls_final_success[None-collect_validator]" time="0.005" /><testcase classname="test_validator_worker" name="test_outer_scope_restoration_controls_final_success[RuntimeError-validator_worker]" time="0.005" /><testcase classname="test_validator_worker" name="test_outer_scope_restoration_controls_final_success[RuntimeError-collect_validator]" time="0.005" /><testcase classname="test_validator_worker" name="test_outer_scope_restoration_controls_final_success[KeyboardInterrupt-validator_worker]" time="0.005" /><testcase classname="test_validator_worker" name="test_outer_scope_restoration_controls_final_success[KeyboardInterrupt-collect_validator]" time="0.005" /><testcase classname="test_validator_worker" name="test_outer_scope_restoration_controls_final_success[SystemExit-validator_worker]" time="0.005" /><testcase classname="test_validator_worker" name="test_outer_scope_restoration_controls_final_success[SystemExit-collect_validator]" time="0.005" /><testcase classname="test_validator_worker" name="test_collector_output_collision_is_unchanged" time="0.001" /><testcase classname="test_collect_validator" name="test_output_cannot_modify_retained_public_roots[keys-False]" time="0.001"><failure message="AssertionError: Regex pattern did not match.&#10;  Expected regex: 'before any write'&#10;  Actual message: 'validator output must be separate from every retained/source/evidence root before publication'">tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-566/test_output_cannot_modify_reta0')
+protected = 'keys', alias = False
+
+    @pytest.mark.parametrize('protected,alias', [('keys',False),('keys',True),('evidence',False),('evidence',True)])
+    def test_output_cannot_modify_retained_public_roots(tmp_path,protected,alias):
+        keys=tmp_path/'keys';evidence=tmp_path/'evidence';keys.mkdir();evidence.mkdir()
+        target=keys if protected=='keys'else evidence
+        if alias:
+            link=tmp_path/'alias';link.symlink_to(target,target_is_directory=True);output=link/'attempt'
+        else:output=target/'attempt'
+&gt;       with pytest.raises(ValueError,match='before any write'):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'before any write'
+E         Actual message: 'validator output must be separate from every retained/source/evidence root before publication'
+
+test_collect_validator.py:17: AssertionError</failure></testcase><testcase classname="test_collect_validator" name="test_output_cannot_modify_retained_public_roots[keys-True]" time="0.001"><failure message="AssertionError: Regex pattern did not match.&#10;  Expected regex: 'before any write'&#10;  Actual message: 'validator output must be separate from every retained/source/evidence root before publication'">tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-566/test_output_cannot_modify_reta1')
+protected = 'keys', alias = True
+
+    @pytest.mark.parametrize('protected,alias', [('keys',False),('keys',True),('evidence',False),('evidence',True)])
+    def test_output_cannot_modify_retained_public_roots(tmp_path,protected,alias):
+        keys=tmp_path/'keys';evidence=tmp_path/'evidence';keys.mkdir();evidence.mkdir()
+        target=keys if protected=='keys'else evidence
+        if alias:
+            link=tmp_path/'alias';link.symlink_to(target,target_is_directory=True);output=link/'attempt'
+        else:output=target/'attempt'
+&gt;       with pytest.raises(ValueError,match='before any write'):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'before any write'
+E         Actual message: 'validator output must be separate from every retained/source/evidence root before publication'
+
+test_collect_validator.py:17: AssertionError</failure></testcase><testcase classname="test_collect_validator" name="test_output_cannot_modify_retained_public_roots[evidence-False]" time="0.001"><failure message="AssertionError: Regex pattern did not match.&#10;  Expected regex: 'before any write'&#10;  Actual message: 'validator output must be separate from every retained/source/evidence root before publication'">tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-566/test_output_cannot_modify_reta2')
+protected = 'evidence', alias = False
+
+    @pytest.mark.parametrize('protected,alias', [('keys',False),('keys',True),('evidence',False),('evidence',True)])
+    def test_output_cannot_modify_retained_public_roots(tmp_path,protected,alias):
+        keys=tmp_path/'keys';evidence=tmp_path/'evidence';keys.mkdir();evidence.mkdir()
+        target=keys if protected=='keys'else evidence
+        if alias:
+            link=tmp_path/'alias';link.symlink_to(target,target_is_directory=True);output=link/'attempt'
+        else:output=target/'attempt'
+&gt;       with pytest.raises(ValueError,match='before any write'):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'before any write'
+E         Actual message: 'validator output must be separate from every retained/source/evidence root before publication'
+
+test_collect_validator.py:17: AssertionError</failure></testcase><testcase classname="test_collect_validator" name="test_output_cannot_modify_retained_public_roots[evidence-True]" time="0.001"><failure message="AssertionError: Regex pattern did not match.&#10;  Expected regex: 'before any write'&#10;  Actual message: 'validator output must be separate from every retained/source/evidence root before publication'">tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-566/test_output_cannot_modify_reta3')
+protected = 'evidence', alias = True
+
+    @pytest.mark.parametrize('protected,alias', [('keys',False),('keys',True),('evidence',False),('evidence',True)])
+    def test_output_cannot_modify_retained_public_roots(tmp_path,protected,alias):
+        keys=tmp_path/'keys';evidence=tmp_path/'evidence';keys.mkdir();evidence.mkdir()
+        target=keys if protected=='keys'else evidence
+        if alias:
+            link=tmp_path/'alias';link.symlink_to(target,target_is_directory=True);output=link/'attempt'
+        else:output=target/'attempt'
+&gt;       with pytest.raises(ValueError,match='before any write'):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'before any write'
+E         Actual message: 'validator output must be separate from every retained/source/evidence root before publication'
+
+test_collect_validator.py:17: AssertionError</failure></testcase><testcase classname="test_collect_validator" name="test_parent_snapshot_two_independent_children_and_terminal" time="0.022" /><testcase classname="test_collect_validator" name="test_parent_failed_child_or_cancellation_never_publishes_success[child_nonzero]" time="0.015" /><testcase classname="test_collect_validator" name="test_parent_failed_child_or_cancellation_never_publishes_success[xml_failure]" time="0.015" /><testcase classname="test_collect_validator" name="test_parent_failed_child_or_cancellation_never_publishes_success[cancel]" time="0.013" /><testcase classname="test_collect_validator" name="test_parent_failed_child_or_cancellation_never_publishes_success[orphan]" time="0.012" /><testcase classname="test_collect_validator" name="test_public_gate_failure_never_spawns_child" time="0.011" /><testcase classname="test_collect_validator" name="test_source_snapshot_rejects_traversal" time="0.001" /><testcase classname="test_producer_gate" name="test_actual_public_ready_map_and_archive" time="0.048" /><testcase classname="test_producer_gate" name="test_pending_server_fails_before_evidence_archive_or_private" time="0.001" /><testcase classname="test_producer_gate" name="test_fixed_bindings_cannot_be_replaced[schema]" time="0.001" /><testcase classname="test_producer_gate" name="test_fixed_bindings_cannot_be_replaced[producer_source_count]" time="0.001" /><testcase classname="test_producer_gate" name="test_fixed_bindings_cannot_be_replaced[producer_map_sha256]" time="0.001" /><testcase classname="test_producer_gate" name="test_fixed_bindings_cannot_be_replaced[ready_report_sha256]" time="0.001" /><testcase classname="test_producer_gate" name="test_fixed_bindings_cannot_be_replaced[ready_archive_sha256]" time="0.001" /><testcase classname="test_producer_gate" name="test_fixed_bindings_cannot_be_replaced[fixture_report_sha256]" time="0.001" /><testcase classname="test_producer_gate" name="test_fixed_bindings_cannot_be_replaced[client_io_preflight_report_sha256]" time="0.001" /><testcase classname="test_producer_gate" name="test_fixed_bindings_cannot_be_replaced[client_io_preflight_archive_sha256]" time="0.001" /><testcase classname="test_producer_gate" name="test_exact_public_identity_rejects_changed_bytes[producer_sources.json]" time="0.001" /><testcase classname="test_producer_gate" name="test_exact_public_identity_rejects_changed_bytes[component_protocol.py]" time="0.002" /><testcase classname="test_producer_gate" name="test_exact_public_identity_rejects_changed_bytes[producer_ready/report.json]" time="0.002" /><testcase classname="test_producer_gate" name="test_exact_public_identity_rejects_changed_bytes[producer_ready/sources.tar.gz]" time="0.004" /><testcase classname="test_producer_gate" name="test_server_pin_pair_schema[None-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa]" time="0.001" /><testcase classname="test_producer_gate" name="test_server_pin_pair_schema[aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-None]" time="0.001" /><testcase classname="test_producer_gate" name="test_server_pin_pair_schema[bad-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb]" time="0.001" /><testcase classname="test_producer_gate" name="test_server_pin_pair_schema[aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-True]" time="0.001" /><testcase classname="test_producer_gate" name="test_old163_map_is_passed_to_unchanged_terminal_gate[fixture]" time="0.048" /><testcase classname="test_producer_gate" name="test_old163_map_is_passed_to_unchanged_terminal_gate[server]" time="0.049" /><testcase classname="test_producer_gate" name="test_report_supplied_hash_cannot_replace_external_binding[fixture]" time="0.001" /><testcase classname="test_producer_gate" name="test_report_supplied_hash_cannot_replace_external_binding[server]" time="0.001" /><testcase classname="test_producer_gate" name="test_returned_source_map_is_not_reused_mutably" time="0.096" /></testsuite></testsuites>

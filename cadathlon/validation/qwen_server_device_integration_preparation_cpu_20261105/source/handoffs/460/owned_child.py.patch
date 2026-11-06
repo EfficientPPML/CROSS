@@ -1,0 +1,102 @@
+--- parent459/owned_child.py
++++ successor460/owned_child.py
+@@ -5,10 +5,56 @@
+ import json
+ import os
+ from pathlib import Path
++import stat
+ import sys
+ import traceback
+ 
+ DENIED=[];TEMPORARY={};PROTECTED=();OWNED=None;ROOT=None
++_ORIGINAL_OPEN=os.open
++_ORIGINAL_FSTAT=os.fstat
++_ORIGINAL_LSTAT=os.lstat
++_ORIGINAL_SCANDIR=os.scandir
++_OWNED_ID=None
++_PENDING_OPEN=None
++_EVIDENCE_FLAGS=os.O_RDWR|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW|os.O_CLOEXEC
++
++def _owned_directory(fd):
++    """Resolve an owned directory FD by bounded lstat metadata, never /proc."""
++    if type(fd)is not int or fd<0:raise PermissionError('original owned directory FD required')
++    held=_ORIGINAL_FSTAT(fd)
++    if not stat.S_ISDIR(held.st_mode)or held.st_uid!=os.geteuid():raise PermissionError('owned directory descriptor required')
++    root=_ORIGINAL_LSTAT(OWNED)
++    if (root.st_dev,root.st_ino,root.st_uid)!=_OWNED_ID:raise PermissionError('original owned fixture root changed')
++    pending=[OWNED];count=0
++    while pending:
++        directory=pending.pop();info=_ORIGINAL_LSTAT(directory);count+=1
++        if count>128:raise PermissionError('owned fixture directory inventory exceeded')
++        if not stat.S_ISDIR(info.st_mode)or info.st_uid!=os.geteuid():raise PermissionError('original owned directory spelling required')
++        if (info.st_dev,info.st_ino)==(held.st_dev,held.st_ino):return directory
++        with _ORIGINAL_SCANDIR(directory)as entries:
++            for entry in entries:
++                count+=1
++                if count>128:raise PermissionError('owned fixture entry inventory exceeded')
++                observed=entry.stat(follow_symlinks=False)
++                if stat.S_ISLNK(observed.st_mode):raise PermissionError('owned fixture alias forbidden')
++                if stat.S_ISDIR(observed.st_mode):pending.append(directory/entry.name)
++    raise PermissionError('directory FD is outside the original owned fixture root')
++
++def owned_open(path,flags,mode=0o777,*,dir_fd=None):
++    """Carry exact dir_fd context across Python's path-only open audit event."""
++    global _PENDING_OPEN
++    pending=None
++    if type(path)is str and not Path(path).is_absolute()and flags&(os.O_WRONLY|os.O_RDWR|os.O_CREAT|os.O_TRUNC|os.O_APPEND):
++        try:
++            if path not in('report.json','failure.json')or flags!=_EVIDENCE_FLAGS or mode!=0o600:
++                raise PermissionError('only the exact original evidence publication is selected')
++            directory=_owned_directory(dir_fd)
++            pending=dict(path=path,flags=flags,absolute=directory/path,consumed=False)
++        except BaseException:
++            DENIED.append(['relative_owned_write',path]);raise
++    previous=_PENDING_OPEN;_PENDING_OPEN=pending
++    try:return _ORIGINAL_OPEN(path,flags,mode,dir_fd=dir_fd)
++    finally:_PENDING_OPEN=previous
+ 
+ def canonical(value):return(json.dumps(value,sort_keys=True,separators=(',',':'),allow_nan=False)+'\n').encode()
+ def sha(raw):return hashlib.sha256(raw).hexdigest()
+@@ -31,14 +77,19 @@
+         flags=args[2]if len(args)>2 and type(args[2])is int else 0
+         if flags&(os.O_WRONLY|os.O_RDWR|os.O_CREAT|os.O_TRUNC|os.O_APPEND):
+             p=Path(path)
++            if not p.is_absolute()and _PENDING_OPEN is not None:
++                pending=_PENDING_OPEN
++                if path==pending['path']and flags==pending['flags']and pending['consumed']is False:
++                    pending['consumed']=True;p=pending['absolute']
+             if OWNED is not None and p!=OWNED and OWNED not in p.parents:
+                 DENIED.append(['outside_owned_write',path]);raise PermissionError('child writes limited to its own fixture/result root')
+ 
+ def main():
+-    global TEMPORARY,PROTECTED,OWNED,ROOT
++    global TEMPORARY,PROTECTED,OWNED,ROOT,_OWNED_ID
+     assert sys.flags.isolated and sys.dont_write_bytecode and __debug__
+     case,root_arg,out_arg,map_arg,map_sha=sys.argv[1:]
+     ROOT=Path(root_arg).resolve();OWNED=Path(out_arg).resolve();assert OWNED.is_dir()
++    owned_info=_ORIGINAL_LSTAT(OWNED);_OWNED_ID=(owned_info.st_dev,owned_info.st_ino,owned_info.st_uid)
+     start=ticks(os.getpid())
+     terminal=dict(schema='full28-device-owned-child-v1',case=case,pid=os.getpid(),pgid=os.getpgrp(),
+         starttime_ticks=start,status='entered',normal_return=False)
+@@ -61,6 +112,7 @@
+     entry,definitions=module.entry_definitions(ROOT/'runtime',provenance)
+     original_main=sys.modules['__main__'];fixture=None;result=None;primary=None
+     try:
++        os.open=owned_open
+         sys.modules['__main__']=entry;exec(definitions,entry.__dict__)
+         PROTECTED=entry.EARLY_PROTECTED
+         blobs=entry.snapshot(expected);entry.origins(expected)
+@@ -97,10 +149,13 @@
+             try:
+                 finder.check();assert not TEMPORARY and sys.getprofile()is None and not DENIED
+                 module.verify_tree(ROOT,full_map)
++                assert os.open is owned_open and _PENDING_OPEN is None
+             except BaseException as cleanup:
+                 if primary is None:primary=cleanup;raise
+                 if cleanup is not primary:primary.add_note('final source/origin restoration: '+repr(cleanup))
++            finally:os.open=_ORIGINAL_OPEN
+     assert result is not None
++    assert os.open is _ORIGINAL_OPEN and _PENDING_OPEN is None
+     result.update(original_main_restored=True,temporary_names_removed=True,profile_restored=True,
+         declared_exports_restored=True,source_unchanged=True)
+     dump(OWNED/'result.json',result)

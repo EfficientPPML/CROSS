@@ -1,0 +1,57 @@
+--- held81d7/acquire_expectations.py
++++ successor/acquire_expectations.py
+@@ -148,7 +148,7 @@
+ def write_new(directory,name,raw):
+     require(type(raw)is bytes and 0<len(raw)<=2<<20,'bounded new public metadata')
+     with opened(name,os.O_RDWR|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,dir_fd=directory) as fd:
+-        first=os.fstat(fd);require(stat.S_ISREG(first.st_mode) and stat.S_IMODE(first.st_mode)==0o600,'new file mode')
++        first=os.fstat(fd);require(stat.S_ISREG(first.st_mode) and stat.S_IMODE(first.st_mode)==0o600 and first.st_uid==os.getuid(),'new file mode/owner')
+         offset=0
+         while offset<len(raw):
+             count=os.write(fd,raw[offset:offset+65536]);require(type(count)is int and 0<count<=min(65536,len(raw)-offset),'write progress');offset+=count
+@@ -158,6 +158,7 @@
+         require(b''.join(parts)==raw and os.read(fd,1)==b'','new metadata readback')
+         held=os.fstat(fd);named=os.stat(name,dir_fd=directory,follow_symlinks=False)
+         require(identity(held)==identity(named)==identity(first) and held.st_size==named.st_size==len(raw),'new metadata identity')
++        require(held.st_uid==named.st_uid==first.st_uid==os.getuid(),'original new file owner changed')
+     os.fsync(directory)
+ 
+ def run(args):
+@@ -192,19 +193,32 @@
+     for name,row in pins['public_inputs'].items():
+         require(read_public(path(row['path']),row['maximum_bytes'],row['sha256'])==raw[name],'public provenance changed')
+     # Only a fresh evidence leaf is created; existing parent may have protected siblings.
+-    parent=output.parent;parent_chain=ancestors(parent)
++    parent=output.parent;parent_chain=ancestors(parent);parent_before=os.lstat(parent)
++    parent_owner=(identity(parent_before),parent_before.st_uid)
+     with opened(parent,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW) as parent_fd:
+-        require(identity(os.fstat(parent_fd))==parent_chain[str(parent)],'output held parent')
++        def parent_check():
++            held=os.fstat(parent_fd);named=os.lstat(parent)
++            for info in (held,named):
++                mode=stat.S_IMODE(info.st_mode)
++                require(stat.S_ISDIR(info.st_mode) and (identity(info),info.st_uid)==parent_owner,'original output parent changed')
++                require(info.st_uid in (0,os.getuid()) and (not mode&0o022 or bool(mode&stat.S_ISVTX)),'trusted owned/sticky output parent required')
++            require(identity(held)==parent_chain[str(parent)],'output held parent')
++        parent_check()
+         os.mkdir(output.name,0o700,dir_fd=parent_fd);os.fsync(parent_fd)
+         with opened(output.name,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW,dir_fd=parent_fd) as directory:
+-            owned=identity(os.fstat(directory));require(owned[2]==0o700,'output directory mode')
++            first_directory=os.fstat(directory);owned=identity(first_directory);owned_uid=first_directory.st_uid
++            require(owned[2]==0o700 and owned_uid==os.getuid(),'output directory mode/owner')
+             def output_check():
+                 require(ancestors(parent)==parent_chain,'output parent changed')
+-                require(identity(os.fstat(directory))==identity(os.stat(output.name,dir_fd=parent_fd,follow_symlinks=False))==identity(os.lstat(output))==owned,'output directory changed')
++                parent_check()
++                held=os.fstat(directory);named=os.stat(output.name,dir_fd=parent_fd,follow_symlinks=False);visible=os.lstat(output)
++                require(identity(held)==identity(named)==identity(visible)==owned,'output directory changed')
++                require(held.st_uid==named.st_uid==visible.st_uid==owned_uid==os.getuid(),'original output directory owner changed')
+             output_check();write_new(directory,'expected_stores.json',snapshot)
+             provenance=dict(schema='qwen-model-store-metadata-observation-v1',metadata_observation_completed=True,actual_model_validation=False,body_integrity_admitted=False,execution_authorized=False,body_files_opened=0,body_hashes_recomputed=False,model_id=MODEL,aggregate_manifest_sha256=AGGREGATE,catalog_sha256=CATALOG,source_pins_sha256=sha(pins_raw),script_sha256=sha(script_raw),source_and_provenance_rechecked=True,public_inputs=pins['public_inputs'],roots=ROOTS,file_count=198,matrix_files=197,gamma_files=1,observations=2,started_ns=started,finished_observation_ns=finished,expected_stores_sha256=sha(snapshot),expected_stores_bytes=len(snapshot),pid=os.getpid(),pgid=os.getpgrp(),limitation='Repeated named metadata observations are not an atomic snapshot or body integrity proof. Later held readers must reject any changed expectation. Final close requires independent exit0/reap and exact output hash before use.')
+             output_check();write_new(directory,'acquisition.json',canonical(provenance));output_check();os.fsync(directory)
+-        require(ancestors(parent)==parent_chain and identity(os.lstat(output))==owned,'final output path changed');os.fsync(parent_fd)
++        parent_check();visible=os.lstat(output)
++        require(ancestors(parent)==parent_chain and identity(visible)==owned and visible.st_uid==owned_uid==os.getuid(),'final output path/owner changed');os.fsync(parent_fd)
+     return 0
+ 
+ def deny_body_open(event,args):

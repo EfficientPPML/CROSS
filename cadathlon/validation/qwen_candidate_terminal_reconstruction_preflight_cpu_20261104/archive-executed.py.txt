@@ -1,0 +1,54 @@
+from pathlib import Path
+import json,hashlib,shutil,tarfile,xml.etree.ElementTree as ET
+ROOT=Path('/home/jianming_gatech/CROSS/cadathlon/validation/qwen_candidate_terminal_reconstruction_preflight_cpu_20261104')
+ROOT.mkdir(exist_ok=False)
+def copy(src,rel):
+ p=Path(src);q=ROOT/rel;q.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(p,q)
+def write(rel,text):
+ q=ROOT/rel;q.parent.mkdir(parents=True,exist_ok=True);q.write_text(text)
+def js(rel,data):write(rel,json.dumps(data,sort_keys=True,indent=2)+'\n')
+for v,sub in [('v1','preserved-failed40'),('v2','preflight44')]:
+ p=Path(f'/tmp/qwen-candidate-terminal-reconstruction-preflight-{v}-20261104')
+ for name in ['report.json','source_manifest.json','sources.tar.gz','stdout.log','stderr.log','worker/report.json']:
+  copy(p/name,f'{sub}/{name}')
+ if (p/'worker/tests.xml').exists():copy(p/'worker/tests.xml',f'{sub}/worker/tests.xml')
+ log=Path(str(p)+'.log')
+ if log.exists():copy(log,f'{sub}/outer.log')
+copy('/tmp/qwen-candidate-terminal-reconstruction-preflight-v2-owner-20261104.json','preflight44/owner-live.json')
+copy('/tmp/qwen-candidate-terminal-reconstruction-preflight-v2-terminal-20261104.json','preflight44/owner-terminal.json')
+lab=Path('/tmp/qwen-candidate-terminal-reconstruction-v2-20261104')
+for name in ('RUNNABLE_DESIGN.md','DESIGN.md','freeze_interface.json','review_interface.json','helper_provenance.json','reconstruction_protected_paths.json','protected_path_derivation.json'):
+ copy(lab/name,name)
+reviews=[('qwen-terminal-contract-security-review-20261104','contract'),('qwen-terminal-reconstruction-security-review-20261104','current44'),('qwen-terminal-prefix-security-review-20261104','partial-prefix'),('qwen-reconstruction-reader-security-review-20261104','reader'),('qwen-reconstruction-scope-security-review-20261104','scope')]
+allowed={'review.json','before.json','sources.tar.gz','tests.log','tests.xml','calibration-receipt.json','journal_race-receipt.json'}
+for src,dest in reviews:
+ p=Path('/tmp')/src
+ for f in p.rglob('*'):
+  if f.is_file()and f.name in allowed and 'source'not in f.relative_to(p).parts and 'sources'not in f.relative_to(p).parts:
+   copy(f,Path('independent-reviews')/dest/f.relative_to(p))
+for stem in ('qwen-terminal-reconstruction-development-v1','qwen-terminal-reconstruction-development-v2','qwen-terminal-prefix-development-v5'):
+ for suffix in ('log','xml'):
+  p=Path('/tmp')/(stem+'.'+suffix)
+  if p.exists():copy(p,Path('development')/p.name)
+# Retain development source histories without generated runtime/payload trees.
+history=Path('/tmp/qwen-candidate-terminal-contract-20261104/development-history')
+if history.exists():
+ for f in history.rglob('*'):
+  if f.is_file()and f.suffix in ('.py','.json','.xml','.log','.md')and '__pycache__'not in f.parts:
+   copy(f,Path('development/source-history')/f.relative_to(history))
+copy(__file__,'archive-executed.py.txt')
+write('README.md','''This archive records a disabled candidate3200 terminal-reconstruction preparation. The final 44-source preflight passed 139 synthetic checks in 437.767 seconds; session 99452 exited 0 and was authoritatively reaped. Wrapper 2940640 and collector 2940641 shared process group 2940640; worker 2940642 owned group 2940642. All recorded processes and both groups were absent at final observation.
+
+The checks cover recorded-statistic reconstruction of complete and failed synthetic 3200-entry ledgers, exact source and producer admission, held private-reader lifetime, private-scope exclusion, fresh isolated entrypoints, cleanup and terminal publication, and eleven denied backend imports. The worker recorded zero audit denials, no actual private-body read attempt, no model forward, no validation read, and no actual reconstruction. All 44 original and execution-tree sources equal the startup, terminal and archived bytes. The source configuration remains execute=false; an independently authenticated root grant is mandatory for either actual role.
+
+`preserved-failed40` retains the earlier startup failure unchanged: pytest's default tempfile probes were denied before any tests ran. The successor creates an owned temporary directory and resets cached tempfile state without weakening the audit. Independent capsules retain the partial-prefix, uncertain-descriptor retry, FIFO-before-type-check and protected-path findings and their identical repaired retests. Development logs are earlier synthetic evidence, not additional actual trajectories.
+
+The intended future result reconstructs recorded scalar metrics, token-prefix/argmax provenance, domain sufficient statistics and aggregates. It does not recompute metrics, argmax or invariance from activation/logit arrays. The private inventory hash is a verifier snapshot with held-descriptor readback, not a retroactive producer-signed file commitment. Original416 membership denotes workload slots, not equality of future free-running token contexts. Model provenance uses the original three public pins and the admitted producer's source-bound asset postchecks; this preparation does not reread model bodies.
+
+Path checks reject protected body opens; resolving aliases may inspect filesystem metadata before lexical rejection. Python audits and held-descriptor validators are ordinary trusted-process defenses, not an OS sandbox; relative open audit events do not expose dir_fd. Main-thread signal handling makes no arbitrary native-thread atomicity claim. Publication may fail after report bytes exist: an independent exit/reap/group/publication receipt is required and cannot be issued by the reconstructor. Freeze issuance remains a separate root-owned operation after a complete first calibration PASS and independent reconstruction.
+
+Only source archives, public reports, logs, schemas, review receipts and tests are retained. Generated synthetic private-format files, execution/temp trees, real calibration/journals/tokens/model arrays and key/ciphertext bodies are excluded. `templates/` contains non-authorizing preparation examples with execute=false and unresolved placeholders; no actual producer terminal outcome was read to create them.
+
+Run `python -B verify.py` for portable verification, or add `--current` to verify both frozen local source trees and the final execution tree. This checks evidence, not current process liveness or an actual scientific result.
+''')
+print(ROOT)

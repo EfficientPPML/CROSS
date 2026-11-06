@@ -1,0 +1,1874 @@
+{
+  "$defs": {
+    "actual_intent": {
+      "additionalProperties": false,
+      "properties": {
+        "bindings": {
+          "const": {
+            "candidate_sha256": "344954b3873a8847ececba320646f52612ca7277412c7de81a7313894e21799a",
+            "checkpoint_sha256": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b",
+            "config_sha256": "660db3b73d788119c04535e48cf9be5f55bc3100841a718637ae695b442f27dd",
+            "profile_sha256": "2b2457e50da73b9ccf87984c089afcb99586fde863a48e98b89a1b7ccf872a17",
+            "rotation_plan_sha256": "bac55debfe95752a16a9a2e849e66488f4afbb576959403a2af4698358dd32ca"
+          }
+        },
+        "core_source_manifest_sha256": {
+          "const": "11353173bbf8e2796813d0feb6f69fac308775c7b13cc164900170f32bc62088"
+        },
+        "generation_source_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "keygen_source_sha256": {
+          "const": "742e6af9e1ce9025416fa2ef68ae037bca7e772d48fbbd6ca387cc79820119c8"
+        },
+        "logical_storage": {
+          "const": {
+            "private_arrays": 1,
+            "private_files": 2,
+            "private_raw_bytes": 52428800,
+            "private_required_bytes": 53481472,
+            "public_arrays": 335,
+            "public_files": 336,
+            "public_raw_bytes": 159807176704,
+            "public_required_bytes": 160882290688,
+            "retained_store_descriptors": 342,
+            "scope": "inherited logical store allowance only; actual memory/runtime/evidence headroom requires separate reviewed policy",
+            "store_temporary_allowance": 8
+          }
+        },
+        "model_id": {
+          "const": "ee3daf8b07141134466d02a6e1c141365ac4e0f0117d62f887c416a050b04bfb"
+        },
+        "nonce": {
+          "pattern": "^[A-Za-z0-9_-]{1,128}$",
+          "type": "string"
+        },
+        "parameters": {
+          "const": {
+            "batch": 1,
+            "composite_degree": 2,
+            "degree": 131072,
+            "degree_layout": [
+              256,
+              512
+            ],
+            "dnum": 8,
+            "max_level": 49,
+            "num_slots": 65536,
+            "p_towers": [
+              851705857,
+              850395137,
+              848560129,
+              844890113,
+              844627969,
+              842530817,
+              839385089,
+              835452929,
+              833617921,
+              829685761,
+              828112897,
+              825753601,
+              824442881,
+              824180737
+            ],
+            "precision": 32,
+            "q_towers": [
+              2146959361,
+              860618753,
+              983826433,
+              862978049,
+              998244353,
+              1118568449,
+              980156417,
+              863764481,
+              977534977,
+              979107841,
+              976224257,
+              864550913,
+              972029953,
+              975175681,
+              867434497,
+              872153089,
+              971243521,
+              873725953,
+              913309697,
+              875298817,
+              907018241,
+              907542529,
+              903086081,
+              879230977,
+              899678209,
+              900464641,
+              897581057,
+              880803841,
+              896008193,
+              897318913,
+              881590273,
+              883949569,
+              894959617,
+              885522433,
+              889454593,
+              888668161,
+              969146369,
+              907804673,
+              908328961,
+              909377537,
+              962854913,
+              914096129,
+              918552577,
+              919339009,
+              958922753,
+              962592769,
+              919601153,
+              924844033,
+              958136321,
+              925892609,
+              935329793,
+              932970497,
+              951582721,
+              957349889,
+              938475521,
+              940572673,
+              948699137,
+              950009857,
+              946339841,
+              943718401,
+              1116209153,
+              995622913,
+              985661441,
+              993263617,
+              1107296257,
+              1004535809,
+              1005060097,
+              1006108673,
+              1102053377,
+              1103626241,
+              1007681537,
+              1010565121,
+              1095761921,
+              1099431937,
+              1012924417,
+              1015283713,
+              1092616193,
+              1093926913,
+              1018429441,
+              1019478017,
+              1091043329,
+              1023148033,
+              1036779521,
+              1037303809,
+              1089208321,
+              1045430273,
+              1049100289,
+              1051721729,
+              1087635457,
+              1088684033,
+              1052508161,
+              1053818881,
+              1085276161,
+              1056178177,
+              1062469633,
+              1056440321,
+              1074266113,
+              1083703297,
+              1068236801,
+              1073479681
+            ],
+            "scaling_factor": 1.1467305003699405e+18,
+            "secret_distribution": "uniform_ternary",
+            "sigma": 3.190000057220459
+          }
+        },
+        "paths": {
+          "additionalProperties": false,
+          "properties": {
+            "evidence_root": {
+              "description": "Exact canonical non-root POSIX spelling, no dot/dotdot/NUL/backslash; runtime performs semantic checks.",
+              "maxLength": 4096,
+              "minLength": 2,
+              "pattern": "^/",
+              "type": "string"
+            },
+            "private_root": {
+              "description": "Exact canonical non-root POSIX spelling, no dot/dotdot/NUL/backslash; runtime performs semantic checks.",
+              "maxLength": 4096,
+              "minLength": 2,
+              "pattern": "^/",
+              "type": "string"
+            },
+            "public_root": {
+              "description": "Exact canonical non-root POSIX spelling, no dot/dotdot/NUL/backslash; runtime performs semantic checks.",
+              "maxLength": 4096,
+              "minLength": 2,
+              "pattern": "^/",
+              "type": "string"
+            }
+          },
+          "required": [
+            "public_root",
+            "private_root",
+            "evidence_root"
+          ],
+          "type": "object"
+        },
+        "request_producer_source_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "response_consumer_source_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "schema": {
+          "const": "qwen-keygen-actual-intent-v1"
+        }
+      },
+      "required": [
+        "bindings",
+        "core_source_manifest_sha256",
+        "generation_source_manifest_sha256",
+        "keygen_source_sha256",
+        "logical_storage",
+        "model_id",
+        "nonce",
+        "parameters",
+        "paths",
+        "request_producer_source_manifest_sha256",
+        "response_consumer_source_manifest_sha256",
+        "schema"
+      ],
+      "type": "object"
+    },
+    "expected_launch_pins": {
+      "additionalProperties": false,
+      "properties": {
+        "grant_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "intent_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "model_evidence": {
+          "additionalProperties": false,
+          "properties": {
+            "expected_pins_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "manifest_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "outer_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "report_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "root_review_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "expected_pins_sha256",
+            "manifest_sha256",
+            "outer_sha256",
+            "report_sha256",
+            "root_review_sha256"
+          ],
+          "type": "object"
+        },
+        "policies": {
+          "additionalProperties": false,
+          "properties": {
+            "dependency_policy_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "resource_policy_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "resource_review_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "role_policy_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "dependency_policy_sha256",
+            "resource_policy_sha256",
+            "resource_review_sha256",
+            "role_policy_sha256"
+          ],
+          "type": "object"
+        },
+        "prelaunch_review_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "role_evidence": {
+          "additionalProperties": false,
+          "properties": {
+            "request_producer": {
+              "additionalProperties": false,
+              "properties": {
+                "execution_grant_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "readiness_review_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "source_archive_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "source_manifest_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "execution_grant_sha256",
+                "readiness_review_sha256",
+                "source_archive_sha256",
+                "source_manifest_sha256"
+              ],
+              "type": "object"
+            },
+            "response_consumer": {
+              "additionalProperties": false,
+              "properties": {
+                "execution_grant_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "readiness_review_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "source_archive_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "source_manifest_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "execution_grant_sha256",
+                "readiness_review_sha256",
+                "source_archive_sha256",
+                "source_manifest_sha256"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "request_producer",
+            "response_consumer"
+          ],
+          "type": "object"
+        },
+        "schema": {
+          "const": "qwen-keygen-launch-pins-v1"
+        },
+        "source_archive_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "source_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "source_map": {
+          "additionalProperties": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "description": "Runtime checks ordinary relative names and exact required prerequisite bytes; external review binds complete map/closure.",
+          "maxProperties": 512,
+          "minProperties": 1,
+          "propertyNames": {
+            "maxLength": 512,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "grant_sha256",
+        "intent_sha256",
+        "model_evidence",
+        "policies",
+        "prelaunch_review_sha256",
+        "role_evidence",
+        "schema",
+        "source_archive_sha256",
+        "source_manifest_sha256",
+        "source_map"
+      ],
+      "type": "object"
+    },
+    "expected_ready_pins": {
+      "additionalProperties": false,
+      "properties": {
+        "context_id": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "grant_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "intent_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "outer_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "private_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "public_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "report_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "root_review_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "schema": {
+          "const": "qwen-keygen-ready-pins-v1"
+        },
+        "source_archive_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "source_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "stores_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "context_id",
+        "grant_sha256",
+        "intent_sha256",
+        "outer_sha256",
+        "private_manifest_sha256",
+        "public_manifest_sha256",
+        "report_sha256",
+        "root_review_sha256",
+        "schema",
+        "source_archive_sha256",
+        "source_manifest_sha256",
+        "stores_sha256"
+      ],
+      "type": "object"
+    },
+    "grant": {
+      "additionalProperties": false,
+      "properties": {
+        "execute": {
+          "const": true
+        },
+        "intent_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "model_evidence": {
+          "additionalProperties": false,
+          "properties": {
+            "expected_pins_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "manifest_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "outer_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "report_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "root_review_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "expected_pins_sha256",
+            "manifest_sha256",
+            "outer_sha256",
+            "report_sha256",
+            "root_review_sha256"
+          ],
+          "type": "object"
+        },
+        "parents": {
+          "additionalProperties": false,
+          "properties": {
+            "evidence_root": {
+              "additionalProperties": false,
+              "properties": {
+                "device": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "inode": {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "mode": {
+                  "maximum": 4095,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "path": {
+                  "maxLength": 4096,
+                  "pattern": "^/",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path",
+                "device",
+                "inode",
+                "mode"
+              ],
+              "type": "object"
+            },
+            "private_root": {
+              "additionalProperties": false,
+              "properties": {
+                "device": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "inode": {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "mode": {
+                  "maximum": 4095,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "path": {
+                  "maxLength": 4096,
+                  "pattern": "^/",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path",
+                "device",
+                "inode",
+                "mode"
+              ],
+              "type": "object"
+            },
+            "public_root": {
+              "additionalProperties": false,
+              "properties": {
+                "device": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "inode": {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "mode": {
+                  "maximum": 4095,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "path": {
+                  "maxLength": 4096,
+                  "pattern": "^/",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path",
+                "device",
+                "inode",
+                "mode"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "public_root",
+            "private_root",
+            "evidence_root"
+          ],
+          "type": "object"
+        },
+        "policies": {
+          "additionalProperties": false,
+          "properties": {
+            "dependency_policy_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "resource_policy_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "resource_review_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "role_policy_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "dependency_policy_sha256",
+            "resource_policy_sha256",
+            "resource_review_sha256",
+            "role_policy_sha256"
+          ],
+          "type": "object"
+        },
+        "prelaunch_review_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "role": {
+          "const": "generate_fresh_qwen166_keys"
+        },
+        "role_evidence": {
+          "additionalProperties": false,
+          "properties": {
+            "request_producer": {
+              "additionalProperties": false,
+              "properties": {
+                "execution_grant_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "readiness_review_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "source_archive_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "source_manifest_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "execution_grant_sha256",
+                "readiness_review_sha256",
+                "source_archive_sha256",
+                "source_manifest_sha256"
+              ],
+              "type": "object"
+            },
+            "response_consumer": {
+              "additionalProperties": false,
+              "properties": {
+                "execution_grant_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "readiness_review_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "source_archive_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "source_manifest_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "execution_grant_sha256",
+                "readiness_review_sha256",
+                "source_archive_sha256",
+                "source_manifest_sha256"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "request_producer",
+            "response_consumer"
+          ],
+          "type": "object"
+        },
+        "schema": {
+          "const": "qwen-keygen-actual-grant-v1"
+        },
+        "scope": {
+          "additionalProperties": false,
+          "properties": {
+            "ciphertexts_read": {
+              "const": false
+            },
+            "ckks_context_constructed": {
+              "const": false
+            },
+            "coefficient_selection_or_revision": {
+              "const": false
+            },
+            "downstream_execution_authorized": {
+              "const": false
+            },
+            "fresh_key_generation": {
+              "const": true
+            },
+            "model_bodies_read": {
+              "const": false
+            },
+            "model_forward": {
+              "const": false
+            },
+            "new_owned_key_readback": {
+              "const": true
+            },
+            "preexisting_key_bodies_read": {
+              "const": false
+            },
+            "scientific_acceptance_claimed": {
+              "const": false
+            },
+            "token_or_calibration_bodies_read": {
+              "const": false
+            }
+          },
+          "required": [
+            "fresh_key_generation",
+            "new_owned_key_readback",
+            "preexisting_key_bodies_read",
+            "model_bodies_read",
+            "token_or_calibration_bodies_read",
+            "ciphertexts_read",
+            "ckks_context_constructed",
+            "model_forward",
+            "scientific_acceptance_claimed",
+            "coefficient_selection_or_revision",
+            "downstream_execution_authorized"
+          ],
+          "type": "object"
+        },
+        "source_archive_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "source_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "source_root": {
+          "description": "Exact canonical non-root POSIX spelling, no dot/dotdot/NUL/backslash; runtime performs semantic checks.",
+          "maxLength": 4096,
+          "minLength": 2,
+          "pattern": "^/",
+          "type": "string"
+        }
+      },
+      "required": [
+        "execute",
+        "intent_sha256",
+        "model_evidence",
+        "parents",
+        "policies",
+        "prelaunch_review_sha256",
+        "role",
+        "role_evidence",
+        "schema",
+        "scope",
+        "source_archive_sha256",
+        "source_manifest_sha256",
+        "source_root"
+      ],
+      "type": "object"
+    },
+    "outer": {
+      "additionalProperties": false,
+      "properties": {
+        "context_id": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "exit_code": {
+          "const": 0
+        },
+        "grant_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "intent_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "normal_return": {
+          "const": true
+        },
+        "pgid": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "pid": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "private_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "process_group_absent": {
+          "const": true
+        },
+        "public_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "reaped": {
+          "const": true
+        },
+        "report_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "schema": {
+          "const": "qwen-keygen-actual-outer-v1"
+        },
+        "source_archive_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "source_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "stores_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "context_id",
+        "exit_code",
+        "grant_sha256",
+        "intent_sha256",
+        "normal_return",
+        "pgid",
+        "pid",
+        "private_manifest_sha256",
+        "process_group_absent",
+        "public_manifest_sha256",
+        "reaped",
+        "report_sha256",
+        "schema",
+        "source_archive_sha256",
+        "source_manifest_sha256",
+        "stores_sha256"
+      ],
+      "type": "object"
+    },
+    "positive_report": {
+      "additionalProperties": false,
+      "properties": {
+        "audit_denials": {
+          "const": []
+        },
+        "backend": {
+          "additionalProperties": false,
+          "properties": {
+            "dependency_policy_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "genuine_backend_imports_completed": {
+              "const": true
+            },
+            "jax_enable_x64": {
+              "const": true
+            },
+            "observed_device_platforms": {
+              "items": {
+                "const": "cpu"
+              },
+              "maxItems": 64,
+              "minItems": 1,
+              "type": "array"
+            }
+          },
+          "required": [
+            "dependency_policy_sha256",
+            "observed_device_platforms",
+            "jax_enable_x64",
+            "genuine_backend_imports_completed"
+          ],
+          "type": "object"
+        },
+        "bindings": {
+          "const": {
+            "candidate_sha256": "344954b3873a8847ececba320646f52612ca7277412c7de81a7313894e21799a",
+            "checkpoint_sha256": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b",
+            "config_sha256": "660db3b73d788119c04535e48cf9be5f55bc3100841a718637ae695b442f27dd",
+            "profile_sha256": "2b2457e50da73b9ccf87984c089afcb99586fde863a48e98b89a1b7ccf872a17",
+            "rotation_plan_sha256": "bac55debfe95752a16a9a2e849e66488f4afbb576959403a2af4698358dd32ca"
+          }
+        },
+        "checks": {
+          "additionalProperties": false,
+          "properties": {
+            "all335_public_arrays_authenticated": {
+              "const": true
+            },
+            "all_owned_files_fsynced": {
+              "const": true
+            },
+            "capacity_checks_completed": {
+              "const": true
+            },
+            "cleanup_completed": {
+              "const": true
+            },
+            "external_parent_identity_checked_before_creation": {
+              "const": true
+            },
+            "final_readback_completed": {
+              "const": true
+            },
+            "model_admission_authenticated": {
+              "const": true
+            },
+            "original_owned_identity_unchanged": {
+              "const": true
+            },
+            "original_secret_operand_preserved": {
+              "const": true
+            },
+            "pre_rng_checks_completed": {
+              "const": true
+            },
+            "public_private_manifest_link_authenticated": {
+              "const": true
+            },
+            "real_security_predicates_completed": {
+              "const": true
+            },
+            "resource_admission_completed": {
+              "const": true
+            },
+            "root_and_parent_fsync_completed": {
+              "const": true
+            },
+            "secret_array_authenticated": {
+              "const": true
+            },
+            "signals_restored": {
+              "const": true
+            },
+            "source_postcheck_completed": {
+              "const": true
+            },
+            "source_precheck_completed": {
+              "const": true
+            }
+          },
+          "required": [
+            "model_admission_authenticated",
+            "source_precheck_completed",
+            "real_security_predicates_completed",
+            "resource_admission_completed",
+            "capacity_checks_completed",
+            "external_parent_identity_checked_before_creation",
+            "pre_rng_checks_completed",
+            "original_secret_operand_preserved",
+            "all335_public_arrays_authenticated",
+            "secret_array_authenticated",
+            "public_private_manifest_link_authenticated",
+            "all_owned_files_fsynced",
+            "root_and_parent_fsync_completed",
+            "final_readback_completed",
+            "original_owned_identity_unchanged",
+            "cleanup_completed",
+            "source_postcheck_completed",
+            "signals_restored"
+          ],
+          "type": "object"
+        },
+        "complete": {
+          "const": true
+        },
+        "context_id": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "core_source_manifest_sha256": {
+          "const": "11353173bbf8e2796813d0feb6f69fac308775c7b13cc164900170f32bc62088"
+        },
+        "counts": {
+          "const": {
+            "evaluation_key_pairs": 1,
+            "pke_pairs": 1,
+            "primitive_calls": 168,
+            "private_arrays": 1,
+            "private_files": 2,
+            "public_arrays": 335,
+            "public_files": 336,
+            "rotation_key_pairs": 166
+          }
+        },
+        "error_type": {
+          "const": null
+        },
+        "grant_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "intent_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "keygen_source_sha256": {
+          "const": "742e6af9e1ce9025416fa2ef68ae037bca7e772d48fbbd6ca387cc79820119c8"
+        },
+        "model_evidence": {
+          "additionalProperties": false,
+          "properties": {
+            "expected_pins_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "manifest_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "outer_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "report_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "root_review_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "expected_pins_sha256",
+            "manifest_sha256",
+            "outer_sha256",
+            "report_sha256",
+            "root_review_sha256"
+          ],
+          "type": "object"
+        },
+        "model_id": {
+          "const": "ee3daf8b07141134466d02a6e1c141365ac4e0f0117d62f887c416a050b04bfb"
+        },
+        "passed": {
+          "const": true
+        },
+        "policies": {
+          "additionalProperties": false,
+          "properties": {
+            "dependency_policy_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "resource_policy_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "resource_review_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "role_policy_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "dependency_policy_sha256",
+            "resource_policy_sha256",
+            "resource_review_sha256",
+            "role_policy_sha256"
+          ],
+          "type": "object"
+        },
+        "private_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "process": {
+          "additionalProperties": false,
+          "properties": {
+            "pgid": {
+              "minimum": 1,
+              "type": "integer"
+            },
+            "pid": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "pid",
+            "pgid"
+          ],
+          "type": "object"
+        },
+        "public_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "request_producer_source_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "response_consumer_source_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "role_evidence": {
+          "additionalProperties": false,
+          "properties": {
+            "request_producer": {
+              "additionalProperties": false,
+              "properties": {
+                "execution_grant_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "readiness_review_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "source_archive_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "source_manifest_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "execution_grant_sha256",
+                "readiness_review_sha256",
+                "source_archive_sha256",
+                "source_manifest_sha256"
+              ],
+              "type": "object"
+            },
+            "response_consumer": {
+              "additionalProperties": false,
+              "properties": {
+                "execution_grant_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "readiness_review_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "source_archive_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "source_manifest_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "execution_grant_sha256",
+                "readiness_review_sha256",
+                "source_archive_sha256",
+                "source_manifest_sha256"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "request_producer",
+            "response_consumer"
+          ],
+          "type": "object"
+        },
+        "schema": {
+          "const": "qwen-keygen-actual-report-v1"
+        },
+        "scope": {
+          "additionalProperties": false,
+          "properties": {
+            "ciphertexts_read": {
+              "const": false
+            },
+            "ckks_context_constructed": {
+              "const": false
+            },
+            "coefficient_selection_or_revision": {
+              "const": false
+            },
+            "downstream_execution_authorized": {
+              "const": false
+            },
+            "fresh_key_generation": {
+              "const": true
+            },
+            "model_bodies_read": {
+              "const": false
+            },
+            "model_forward": {
+              "const": false
+            },
+            "new_owned_key_readback": {
+              "const": true
+            },
+            "preexisting_key_bodies_read": {
+              "const": false
+            },
+            "scientific_acceptance_claimed": {
+              "const": false
+            },
+            "token_or_calibration_bodies_read": {
+              "const": false
+            }
+          },
+          "required": [
+            "fresh_key_generation",
+            "new_owned_key_readback",
+            "preexisting_key_bodies_read",
+            "model_bodies_read",
+            "token_or_calibration_bodies_read",
+            "ciphertexts_read",
+            "ckks_context_constructed",
+            "model_forward",
+            "scientific_acceptance_claimed",
+            "coefficient_selection_or_revision",
+            "downstream_execution_authorized"
+          ],
+          "type": "object"
+        },
+        "security": {
+          "const": {
+            "attack": "classical",
+            "degree": 131072,
+            "dnum": 8,
+            "key_generation_version": 3,
+            "largest_q_partition_bits": 390,
+            "noise_scale": 1,
+            "p_coverage": true,
+            "p_product_bits": 415,
+            "p_towers": 14,
+            "q_towers": 100,
+            "qp_bits": 3403,
+            "qp_inclusive_ceiling": 3523,
+            "qp_is_secure": true,
+            "secret_distribution": "uniform_ternary",
+            "sigma": 3.190000057220459,
+            "target_bits": 128
+          }
+        },
+        "source_archive_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "source_hashes_after": {
+          "additionalProperties": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "description": "Runtime checks ordinary relative names and exact required prerequisite bytes; external review binds complete map/closure.",
+          "maxProperties": 512,
+          "minProperties": 1,
+          "propertyNames": {
+            "maxLength": 512,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "source_hashes_before": {
+          "additionalProperties": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "description": "Runtime checks ordinary relative names and exact required prerequisite bytes; external review binds complete map/closure.",
+          "maxProperties": 512,
+          "minProperties": 1,
+          "propertyNames": {
+            "maxLength": 512,
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "source_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "stores": {
+          "additionalProperties": false,
+          "properties": {
+            "private": {
+              "additionalProperties": false,
+              "properties": {
+                "device": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "inode": {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "manifest": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "name": {
+                      "const": "private_manifest.json"
+                    },
+                    "sha256": {
+                      "pattern": "^[0-9a-f]{64}$",
+                      "type": "string"
+                    },
+                    "state": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "ctime_ns": {
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "device": {
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "inode": {
+                          "minimum": 1,
+                          "type": "integer"
+                        },
+                        "mode": {
+                          "const": 384
+                        },
+                        "mtime_ns": {
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "size": {
+                          "maximum": 65536,
+                          "minimum": 1,
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "device",
+                        "inode",
+                        "size",
+                        "mtime_ns",
+                        "ctime_ns",
+                        "mode"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "sha256",
+                    "state"
+                  ],
+                  "type": "object"
+                },
+                "mode": {
+                  "const": 448
+                },
+                "parent": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "device": {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "inode": {
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "mode": {
+                      "maximum": 4095,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "path": {
+                      "maxLength": 4096,
+                      "pattern": "^/",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "path",
+                    "device",
+                    "inode",
+                    "mode"
+                  ],
+                  "type": "object"
+                },
+                "path": {
+                  "description": "Exact canonical non-root POSIX spelling, no dot/dotdot/NUL/backslash; runtime performs semantic checks.",
+                  "maxLength": 4096,
+                  "minLength": 2,
+                  "pattern": "^/",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path",
+                "device",
+                "inode",
+                "mode",
+                "parent",
+                "manifest"
+              ],
+              "type": "object"
+            },
+            "public": {
+              "additionalProperties": false,
+              "properties": {
+                "device": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "inode": {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "manifest": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "name": {
+                      "const": "public_manifest.json"
+                    },
+                    "sha256": {
+                      "pattern": "^[0-9a-f]{64}$",
+                      "type": "string"
+                    },
+                    "state": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "ctime_ns": {
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "device": {
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "inode": {
+                          "minimum": 1,
+                          "type": "integer"
+                        },
+                        "mode": {
+                          "const": 384
+                        },
+                        "mtime_ns": {
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "size": {
+                          "maximum": 1048576,
+                          "minimum": 1,
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "device",
+                        "inode",
+                        "size",
+                        "mtime_ns",
+                        "ctime_ns",
+                        "mode"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "sha256",
+                    "state"
+                  ],
+                  "type": "object"
+                },
+                "mode": {
+                  "const": 448
+                },
+                "parent": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "device": {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "inode": {
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "mode": {
+                      "maximum": 4095,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "path": {
+                      "maxLength": 4096,
+                      "pattern": "^/",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "path",
+                    "device",
+                    "inode",
+                    "mode"
+                  ],
+                  "type": "object"
+                },
+                "path": {
+                  "description": "Exact canonical non-root POSIX spelling, no dot/dotdot/NUL/backslash; runtime performs semantic checks.",
+                  "maxLength": 4096,
+                  "minLength": 2,
+                  "pattern": "^/",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path",
+                "device",
+                "inode",
+                "mode",
+                "parent",
+                "manifest"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "public",
+            "private"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "audit_denials",
+        "backend",
+        "bindings",
+        "checks",
+        "complete",
+        "context_id",
+        "core_source_manifest_sha256",
+        "counts",
+        "error_type",
+        "grant_sha256",
+        "intent_sha256",
+        "keygen_source_sha256",
+        "model_evidence",
+        "model_id",
+        "passed",
+        "policies",
+        "private_manifest_sha256",
+        "process",
+        "public_manifest_sha256",
+        "request_producer_source_manifest_sha256",
+        "response_consumer_source_manifest_sha256",
+        "role_evidence",
+        "schema",
+        "scope",
+        "security",
+        "source_archive_sha256",
+        "source_hashes_after",
+        "source_hashes_before",
+        "source_manifest_sha256",
+        "stores"
+      ],
+      "type": "object"
+    },
+    "root_readiness": {
+      "additionalProperties": false,
+      "properties": {
+        "all_required_links_verified": {
+          "const": true
+        },
+        "context_id": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "current_owned_stores_verified": {
+          "const": true
+        },
+        "downstream_execution_authorized": {
+          "const": false
+        },
+        "grant_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "intent_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "model_evidence": {
+          "additionalProperties": false,
+          "properties": {
+            "expected_pins_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "manifest_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "outer_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "report_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "root_review_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "expected_pins_sha256",
+            "manifest_sha256",
+            "outer_sha256",
+            "report_sha256",
+            "root_review_sha256"
+          ],
+          "type": "object"
+        },
+        "model_id": {
+          "const": "ee3daf8b07141134466d02a6e1c141365ac4e0f0117d62f887c416a050b04bfb"
+        },
+        "outer_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "passed": {
+          "const": true
+        },
+        "policies": {
+          "additionalProperties": false,
+          "properties": {
+            "dependency_policy_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "resource_policy_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "resource_review_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "role_policy_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "dependency_policy_sha256",
+            "resource_policy_sha256",
+            "resource_review_sha256",
+            "role_policy_sha256"
+          ],
+          "type": "object"
+        },
+        "private_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "public_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "report_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "role_evidence": {
+          "additionalProperties": false,
+          "properties": {
+            "request_producer": {
+              "additionalProperties": false,
+              "properties": {
+                "execution_grant_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "readiness_review_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "source_archive_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "source_manifest_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "execution_grant_sha256",
+                "readiness_review_sha256",
+                "source_archive_sha256",
+                "source_manifest_sha256"
+              ],
+              "type": "object"
+            },
+            "response_consumer": {
+              "additionalProperties": false,
+              "properties": {
+                "execution_grant_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "readiness_review_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "source_archive_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "source_manifest_sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "execution_grant_sha256",
+                "readiness_review_sha256",
+                "source_archive_sha256",
+                "source_manifest_sha256"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "request_producer",
+            "response_consumer"
+          ],
+          "type": "object"
+        },
+        "schema": {
+          "const": "qwen-keygen-root-readiness-v1"
+        },
+        "source_archive_members_verified": {
+          "const": true
+        },
+        "source_archive_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "source_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "stores_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "all_required_links_verified",
+        "context_id",
+        "current_owned_stores_verified",
+        "downstream_execution_authorized",
+        "grant_sha256",
+        "intent_sha256",
+        "model_evidence",
+        "model_id",
+        "outer_sha256",
+        "passed",
+        "policies",
+        "private_manifest_sha256",
+        "public_manifest_sha256",
+        "report_sha256",
+        "role_evidence",
+        "schema",
+        "source_archive_members_verified",
+        "source_archive_sha256",
+        "source_manifest_sha256",
+        "stores_sha256"
+      ],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Separate bounded canonical byte arguments, not an issued grant or bundle capability. Runtime adds exact type/canonical/cross-link/required source checks. Parent identity before creation, real memory/resource sufficiency, actual role sources/grants and process/source proof remain external prerequisites. No private manifest body input.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/actual_intent"
+    },
+    {
+      "$ref": "#/$defs/expected_launch_pins"
+    },
+    {
+      "$ref": "#/$defs/grant"
+    },
+    {
+      "$ref": "#/$defs/expected_ready_pins"
+    },
+    {
+      "$ref": "#/$defs/positive_report"
+    },
+    {
+      "$ref": "#/$defs/outer"
+    },
+    {
+      "$ref": "#/$defs/root_readiness"
+    }
+  ],
+  "title": "Pure Qwen actual-keygen public authority/evidence schemas"
+}

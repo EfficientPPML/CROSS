@@ -1,0 +1,44 @@
+--- held64/qwen_key_store.py
++++ proposed-successor/qwen_key_store.py
+@@ -43,6 +43,29 @@
+             except BaseException as error:
+                 self.failed=mark(error);_QUARANTINE.append((self,fd,error));raise
+         elif self.failed is not None:raise self.failed
++
++class _NpySink:
++    """Synchronous borrowed-fd writes only; no buffer or close authority."""
++    __slots__=('_owner','_fd','_limit','_written')
++    def __init__(self,owner,limit):
++        if type(owner.fd)is not int or owner.fd<0 or type(limit)is not int or limit<=0:
++            raise ValueError('live owned descriptor and positive extent bound required')
++        self._owner=owner;self._fd=owner.fd;self._limit=limit;self._written=0
++    def _live(self):
++        if self._owner is None or self._fd is None or self._owner.fd!=self._fd:
++            raise ValueError('NPY sink descriptor has been retired')
++    def write(self,data):
++        self._live();view=memoryview(data).cast('B');size=view.nbytes
++        if size>self._limit-self._written:raise ValueError('NPY write exceeds bounded file extent')
++        offset=0
++        while offset<size:
++            self._live();part=view[offset:offset+CHUNK]
++            count=os.write(self._fd,part)
++            if type(count)is not int or not 0<count<=len(part):raise OSError('invalid NPY write progress')
++            offset+=count;self._written+=count
++        return size
++    def invalidate(self):
++        self._owner=None;self._fd=None
+ 
+ class _StoredFile(_Descriptor):
+     def __init__(self,owner,name,spec=None):
+@@ -148,8 +171,9 @@
+             if self.completed or type(name)is not str or len(self.records)>=len(self.specs)or name!=self.specs[len(self.records)].name:
+                 raise ValueError('complete ordered key arrays required')
+             spec=self.specs[len(self.records)];self.retained.append(value);a=_array(value,spec.shape,spec.moduli);self.retained.append(a)
+-            file=self._open(name,spec);state=_CloseState()
+-            with _stream(file.fd,'wb',state)as stream:np.save(stream,a,allow_pickle=False);stream.flush()
++            file=self._open(name,spec);state=_CloseState();sink=_NpySink(file,spec.raw_bytes+4096)
++            try:np.save(sink,a,allow_pickle=False)
++            finally:state.cleanup('NPY sink invalidation',sink.invalidate,sink)
+             self._seal(file)
+             record=dict(sha256=file.digest,dtype='uint32',shape=list(spec.shape),bytes=file.state[2]);spec.validate(record)
+             file.description=canonical(record);self.records.append((name,file.description));self.retained.clear();self.check();return record

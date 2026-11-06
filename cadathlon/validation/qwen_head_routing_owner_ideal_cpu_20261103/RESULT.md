@@ -1,0 +1,5 @@
+The source-bound collector completed72 tests with no skips/failures and exited0; both owned child processes were reaped and absent. All12 before/after/archive/current source files match. `verify.py` recomputes the source/key/scale plan without a backend. Exact cleanup/terminal helpers are included; this is a public ideal/mock proof, not actual key/security/HE validation.
+
+The prior add-metadata gap is preserved in `negative-add-v4`:11 of14 regressions fail against the old source, while3 were already caught by terminal layout checks. The corrected owner validates each addition against input-derived level/left-scale and exact output NSD/layout/moduli, without adding callbacks. Earlier independent oracle frequency failures and development logs remain distinct from the final frozen test result.
+
+Root independently reviewed layout/arithmetic/helper bindings/addition metadata. Security independently read GQA/RoPE/anchor routing and retained-input semantics without a demonstrated blocker. Those source reviews are not encrypted accuracy results. No main runtime promotion or HE launch was performed.

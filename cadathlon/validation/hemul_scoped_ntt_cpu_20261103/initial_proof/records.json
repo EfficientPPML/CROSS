@@ -1,0 +1,135 @@
+{
+  "exitstatus": 0,
+  "records": {
+    "test_encrypted_tensor_only": [
+      {
+        "ring_degree": 8192,
+        "depth": 2,
+        "dnum": 3,
+        "q_towers": [
+          8273921,
+          4079617,
+          1097729,
+          1130497,
+          786433,
+          1032193
+        ],
+        "p_towers": [
+          1073692673,
+          1073643521
+        ],
+        "actual_log2_qp": 184.67680580287663
+      }
+    ],
+    "test_scoped_mul_ntt": [
+      {
+        "kind": "six_field_table_parity",
+        "composite_degree": 1,
+        "skip_rescale": false,
+        "field_checks": 36,
+        "stats": {
+          "builds": 5,
+          "hits": 1
+        }
+      },
+      {
+        "kind": "six_field_table_parity",
+        "composite_degree": 2,
+        "skip_rescale": false,
+        "field_checks": 30,
+        "stats": {
+          "builds": 3,
+          "hits": 2
+        }
+      },
+      {
+        "kind": "six_field_table_parity",
+        "composite_degree": 1,
+        "skip_rescale": true,
+        "field_checks": 36,
+        "stats": {
+          "builds": 5,
+          "hits": 1
+        }
+      },
+      {
+        "kind": "six_field_table_parity",
+        "composite_degree": 2,
+        "skip_rescale": true,
+        "field_checks": 36,
+        "stats": {
+          "builds": 5,
+          "hits": 1
+        }
+      },
+      {
+        "kind": "secure_core_and_compiled_helpers",
+        "batch": 2,
+        "level": 2,
+        "six_field_checks": 42,
+        "payload_metadata_exact": true,
+        "max_abs_error": 5.097800206965708e-08,
+        "tensor_helper_constructed_no_hemul": true,
+        "relinearization_executable_reused": true
+      },
+      {
+        "kind": "secure_core_and_compiled_helpers",
+        "batch": 2,
+        "level": 1,
+        "six_field_checks": 36,
+        "payload_metadata_exact": true,
+        "max_abs_error": 5.3800451413343886e-08,
+        "tensor_helper_constructed_no_hemul": true,
+        "relinearization_executable_reused": true
+      },
+      {
+        "kind": "actual_bootstrap_mul_dispatch",
+        "batch": 2,
+        "level": 2,
+        "input_nsds": [
+          1,
+          1
+        ],
+        "payload_metadata_exact": true,
+        "max_abs_error": 5.2666731534950495e-08
+      },
+      {
+        "kind": "actual_bootstrap_mul_dispatch",
+        "batch": 2,
+        "level": 1,
+        "input_nsds": [
+          2,
+          1
+        ],
+        "payload_metadata_exact": true,
+        "max_abs_error": 2.6337630010947466e-08
+      },
+      {
+        "kind": "actual_bootstrap_mul_dispatch",
+        "batch": 2,
+        "level": 1,
+        "input_nsds": [
+          2,
+          2
+        ],
+        "payload_metadata_exact": true,
+        "max_abs_error": 1.3101554185296349e-08
+      },
+      {
+        "kind": "retirement",
+        "owners_and_controls_collected": true,
+        "executable_retained": true,
+        "stats": {
+          "builds": 33,
+          "hits": 32
+        }
+      }
+    ]
+  },
+  "versions": {
+    "jax": "0.12.0.1",
+    "jaxlib": "0.12.0.1",
+    "numpy": "2.5.4",
+    "pytest": "9.2.0"
+  }
+}

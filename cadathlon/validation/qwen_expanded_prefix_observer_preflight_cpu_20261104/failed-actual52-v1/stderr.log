@@ -1,0 +1,36 @@
+Traceback (most recent call last):
+  File "/tmp/qwen-expanded-prefix-observer-actual-v1-20261104/execution_source/entry.py", line 182, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/tmp/qwen-expanded-prefix-observer-actual-v1-20261104/execution_source/entry.py", line 178, in main
+    return observer_process.dispatch(args, raw, expected, blobs, origins)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/qwen-expanded-prefix-observer-actual-v1-20261104/execution_source/observer_process.py", line 513, in dispatch
+    return worker(args, expected, blobs, origins, root)
+  File "/tmp/qwen-expanded-prefix-observer-actual-v1-20261104/execution_source/observer_process.py", line 312, in worker
+    return supervise(output,report,action,[recheck_input,close_private],root,expected)
+  File "/tmp/qwen-expanded-prefix-observer-actual-v1-20261104/execution_source/observer_process.py", line 273, in supervise
+    raise primary
+  File "/tmp/qwen-expanded-prefix-observer-actual-v1-20261104/execution_source/observer_process.py", line 234, in supervise
+    action()
+    ~~~~~~^^
+  File "/tmp/qwen-expanded-prefix-observer-actual-v1-20261104/execution_source/observer_process.py", line 300, in action
+    report.update(model_runtime.execute(blobs,reader[0],private[0],progress))
+                  ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/qwen-expanded-prefix-observer-actual-v1-20261104/execution_source/model_runtime.py", line 326, in execute
+    from transformers import Qwen3ForCausalLM
+  File "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/__init__.py", line 26, in <module>
+    from . import dependency_versions_check
+  File "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/dependency_versions_check.py", line 16, in <module>
+    from .utils.versions import require_version, require_version_core
+  File "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/utils/__init__.py", line 25, in <module>
+    from .chat_template_utils import DocstringParsingException, TypeHintParsingException, get_json_schema
+  File "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/utils/chat_template_utils.py", line 26, in <module>
+    from .import_utils import is_jinja_available, is_torch_available, is_vision_available
+  File "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/utils/import_utils.py", line 237, in <module>
+    _tf_available = importlib.util.find_spec("tensorflow") is not None
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "<frozen importlib.util>", line 100, in find_spec
+  File "/tmp/qwen-expanded-prefix-observer-actual-v1-20261104/execution_source/entry.py", line 157, in find_spec
+    raise ImportError('backend import forbidden in this observer phase')
+ImportError: backend import forbidden in this observer phase

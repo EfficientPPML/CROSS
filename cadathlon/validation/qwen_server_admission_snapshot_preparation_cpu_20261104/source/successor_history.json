@@ -1,0 +1,21 @@
+{
+  "actual_grant": false,
+  "candidate_imported": false,
+  "collection": false,
+  "delta": "One new assertion, independent of optional parent observation. The suite retains exactly18 selected source-only cases.",
+  "execution": false,
+  "finding": "A fast child could exit before parent getpgid observation; parent previously compared reported group to observed group only when observation succeeded. Require exact-int child-reported pgid equals owned Popen pid unconditionally. start_new_session establishes ownership; this is not a fabricated live observation.",
+  "overlays": {
+    "test_snapshot_guard.py": {
+      "after": "9d9ee76eb92bdf68e531bb9f6d5f1b3bdec76e4216445ff91acb66d5db611447",
+      "before": "0a92f14bb2ce2188ca02e76ca826a150d5c879d8ac91c6c1a17e4188560886b6"
+    }
+  },
+  "parent_source_manifest_sha256": "8ecdb98742f8f79dd9988cad12a0b4b79c6b33415315c022741dc65b12ff27b2",
+  "parent_source_root": "/tmp/qwen-server-admission-snapshot-tests-20261104",
+  "preserved_parent_files": 36,
+  "runtime28_unchanged": true,
+  "runtime_negative_reproduced": false,
+  "schema": "qwen-snapshot-test-source-successor-v2",
+  "static_cases": 18
+}

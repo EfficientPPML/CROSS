@@ -1,0 +1,68 @@
+--- held385/q5_actual_process.py
++++ successor/q5_actual_process.py
+@@ -61,7 +61,7 @@
+     def __init__(self,backend,handle,slots):
+         self.backend=backend;self.handle=handle;self.ctx=handle.ctx;self.slots=slots;self.value=None;self.closed=False
+         _INPUTS[id(self)]=dict(owner=self,fixed=(backend,handle,self.ctx,slots,backend.encrypt_slots),
+-            owned=[],barriers=[],ntt_owners=[],ntt_context=None,ntt_captured=False,
++            owned=[],barriers=[],ntt_owners=[],ntt_edges=[],returned_bindings=None,ntt_context=None,ntt_captured=False,
+             value=None,state=None,entered=False,closed=False,failure=None)
+     def _record(self):
+         if self in _INPUTS_CLOSED:raise ValueError('encrypted input already retired')
+@@ -73,18 +73,31 @@
+         if self.backend is not b or self.handle is not h or self.ctx is not ctx or self.slots is not slots or h.ctx is not ctx or b.encrypt_slots is not encrypt or self.value is not r['value']or self.closed is not r['closed']:
+             raise ValueError('original setup encryption owner changed')
+         if r['closed']:raise ValueError('input encryption consumer closed')
+-        if r['ntt_captured']and getattr(ctx,'_polynomial_ntt_ctx',None)is not r['ntt_context']:
+-            raise ValueError('original setup context NTT binding changed')
++        self._check_retained(r)
+         if r['failure']is not None:raise r['failure']
+         if loaded:
+             from q5_checkpoint_arithmetic import same_state
+             if r['state']is None:raise ValueError('input encryption did not complete')
+             same_state(r['state'],numerical_plan()['profile'])
+         return r
++    def _check_retained(self,r):
++        ctx=r['fixed'][2]
++        if r['ntt_captured']and getattr(ctx,'_polynomial_ntt_ctx',None)is not r['ntt_context']:
++            raise ValueError('original setup context NTT binding changed')
++        saved=r['returned_bindings']
++        if saved is not None:
++            value,payload,moduli,ntt=saved
++            if r['value']is not value or value.polynomial is not payload or value.moduli_array is not moduli or value.ntt_ctx is not ntt:
++                raise ValueError('original returned setup arrays/NTT binding changed')
++        for ntt,ff in r['ntt_edges']:
++            if getattr(ntt,'ff_ctx',None)is not ff:
++                raise ValueError('original returned/attached finite-field owner changed')
++
+     def _retain_returned(self,r):
+         # Original encrypt may attach its NTT context and then raise before
+         # returning a ciphertext. Retain that context as well as returned NTT/ff
+         # objects; no new table/context is constructed or injected here.
++        self._check_retained(r)
+         ctx=r['fixed'][2];value=r['value'];attached=getattr(ctx,'_polynomial_ntt_ctx',None)
+         if r['ntt_captured']and attached is not r['ntt_context']:
+             raise ValueError('original attached setup NTT context changed')
+@@ -101,10 +114,13 @@
+             elif type(value)in(tuple,list):
+                 for child in value:visit(child)
+         if value is not None:
++            if r['returned_bindings']is None:r['returned_bindings']=(value,value.polynomial,value.moduli_array,value.ntt_ctx)
+             visit(value.polynomial);visit(value.moduli_array)
+         for ntt in((getattr(value,'ntt_ctx',None)if value is not None else None),attached):
+             if ntt is None:continue
+-            for owner in(ntt,getattr(ntt,'ff_ctx',None)):
++            ff=getattr(ntt,'ff_ctx',None)
++            if all(ntt is not original for original,_ in r['ntt_edges']):r['ntt_edges'].append((ntt,ff))
++            for owner in(ntt,ff):
+                 if owner is not None and all(owner is not old for old in r['ntt_owners']):
+                     r['ntt_owners'].append(owner);r['owned'].append(owner)
+         for owner in tuple(r['ntt_owners']):visit(vars(owner))
+@@ -139,6 +155,7 @@
+         owned=tuple(r['owned']);barriers=tuple(r['barriers'])
+         for value,wait in barriers:
+             final.attempt('original encrypted input/NTT array barrier',wait)
++            final.attempt('post-barrier original setup array/NTT/field bindings',lambda:self._check_retained(r))
+         r['closed']=True;self.closed=True;error=final.selected()
+         if error is not None or r['failure']is not None:
+             error=error if error is not None else r['failure'];r['failure']=error;_QUARANTINE.append((self,r,owned,error));raise error

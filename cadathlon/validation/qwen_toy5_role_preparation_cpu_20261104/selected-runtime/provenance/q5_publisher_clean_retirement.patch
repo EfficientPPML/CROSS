@@ -1,0 +1,40 @@
+--- held18/q5_checkpoint_transport.py
++++ q5_checkpoint_transport.py
+@@ -3,13 +3,14 @@
+ No key/model/private codec is imported. NumPy is supplied by an explicitly
+ admitted caller. Actual role factories remain unavailable in this source draft.
+ """
+-import hashlib,io,math,os,re,stat,struct,sys,zipfile
++import hashlib,io,math,os,re,stat,struct,sys,zipfile,weakref
+ from pathlib import Path
+ from cleanup_origin import protect_body,select
+ from q5_checkpoint_contract import canonical,parse,numerical_plan,checkpoint_row,all_checkpoints
+ from q5_actual_metadata_replay import check_refreshes
+ _QUARANTINE=[]
+ _PUBLISH_OWNERS={}
++_PUBLISH_CLOSED=weakref.WeakSet()
+ def _same_method(a,b):
+     return (getattr(a,'__self__',None)is getattr(b,'__self__',None)and
+             getattr(a,'__func__',a)is getattr(b,'__func__',b))
+@@ -248,6 +249,9 @@
+         self._write('manifest.json',lambda stream:stream.write(raw),1<<20);self.check();self.finished=True
+         return raw
+     def close(self,primary=None):
++        if self in _PUBLISH_CLOSED:
++            if primary is not None:raise primary
++            return
+         record=_publisher_owners(self)
+         if record['closed']:
+             if primary is not None:raise primary
+@@ -260,6 +264,11 @@
+             actions.append(('post-close original export bindings',lambda:_publisher_bindings(self),(self,record)))
+         try:finish(primary,actions)
+         except BaseException as error:self.failure=error;_QUARANTINE.append((self,record,originals,error));raise
++        if primary is not None or self.failure is not None:
++            self.failure=primary if primary is not None else self.failure
++            _QUARANTINE.append((self,record,originals,self.failure));return
++        self.parent=None;self.root=None;self.np=None;self.path=None;self.input_bytes=None;self.bindings_bytes=None;self.records=None;self._fixed=None
++        record.clear();_PUBLISH_OWNERS.pop(id(self));_PUBLISH_CLOSED.add(self)
+ 
+ 
+ class InputWriter(Exporter):

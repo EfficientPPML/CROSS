@@ -1,0 +1,22 @@
+{
+  "scope": "Collector/wrapper orchestration tests using real dummy CPU subprocesses; no encrypted or TPU validation claim.",
+  "passed": true,
+  "tests": 49,
+  "elapsed_s": 4.39,
+  "command": "JAX_PLATFORMS=cpu OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 taskset -c 168-171 python -m pytest -q cadathlon/tests/test_bounded_qwen2_proof.py cadathlon/tests/test_transformer_suite.py",
+  "source_sha256_after": {
+    "cadathlon/validation/check_transformer_suite.py": "e3c200254b3a9f6f124696fa7856c08c6205ef4876df4c293569307c5fccdeb9",
+    "cadathlon/validation/run_bounded_qwen2_proof.py": "afc1857798e1aafe4937188bfaf94d92d4ee105ec2fb52846163b48b792cf576",
+    "cadathlon/tests/test_transformer_suite.py": "28373bf1c67a9efb3004a9277c6bebaa11487129fd74547e642652bdebad72f3",
+    "cadathlon/tests/test_bounded_qwen2_proof.py": "8148b93b36c650cde66dcc125b5ca8c3002df3e8d7075f47b9fcf6648d90b01a"
+  },
+  "checks": [
+    "Exact archived source bytes and changed-source failure.",
+    "Numeric/device/implementation/refresh-count validation and zero-exit failed-result rejection.",
+    "Exactly three refresh start/completion markers for the source-bound Qwen2 plan.",
+    "Fresh output directory and unique owned key parent cleanup.",
+    "SIGTERM/SIGHUP child finally cleanup with configurable grace and durable failed evidence.",
+    "Shared cancellation-aware public-runner shim rejects untracked runner paths."
+  ],
+  "limitation": "Generic sweep now gives normal runner cleanup a graceful cancellation path; only the Qwen2 proof wrapper owns a removable key-parent directory if forced termination bypasses child cleanup."
+}

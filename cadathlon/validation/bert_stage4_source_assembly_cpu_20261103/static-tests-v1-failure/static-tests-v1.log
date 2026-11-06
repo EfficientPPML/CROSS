@@ -1,0 +1,12 @@
+...F......                                                               [100%]
+=================================== FAILURES ===================================
+___________________ test_conflicting_local_basename_rejected ___________________
+test_source_assembly.py:43: in test_conflicting_local_basename_rejected
+    with pytest.raises(ValueError,match='conflicting import basename'):a.audit_resolution(tmp_path)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: Regex pattern did not match.
+E     Expected regex: 'conflicting import basename'
+E     Actual message: 'unresolved assembled module: jaxite_word'
+=========================== short test summary info ============================
+FAILED test_source_assembly.py::test_conflicting_local_basename_rejected - As...
+1 failed, 9 passed in 0.74s

@@ -1,0 +1,131 @@
+"""Stage3 worker lifecycle/binding tests with mocked handlers; no crypto/model."""
+from contextlib import contextmanager
+from pathlib import Path
+from types import SimpleNamespace as NS
+import hashlib,json,sys
+import pytest
+import worker
+
+
+@pytest.fixture
+def case(tmp_path,monkeypatch):
+    source=tmp_path/'source';(source/'runtime/stage/server_inputs').mkdir(parents=True)
+    for name in ('p60_profile_and_refresh.json','twelve_layer_plan.json'):(source/'runtime/stage/server_inputs'/name).write_bytes(b'{}')
+    (source/'marker.py').write_bytes(b'# source\n');expected={'marker.py':hashlib.sha256((source/'marker.py').read_bytes()).hexdigest()}
+    manifest=tmp_path/'source_manifest.json';manifest.write_text(json.dumps(expected))
+    monkeypatch.setattr(worker,'HERE',source);monkeypatch.setenv('JAX_PLATFORMS','cpu')
+    keys=tmp_path/'keys';(keys/'client_private').mkdir(parents=True);(keys/'public_keys').mkdir()
+    io=tmp_path/'io';io.mkdir();snapshot=tmp_path/'assets';snapshot.mkdir()
+    output=tmp_path/'worker_report.json';events=[];failure={}
+    authorized=({'context_id':'c'*64,'public_keys':keys/'public_keys','public_manifest':{},'key_report_sha256':'1'*64,'key_source_archive_sha256':'2'*64},
+        {'context_id':'c'*64,'model_id':'m'*64,'server_data':tmp_path/'server_data','model_report_sha256':'3'*64,'model_manifest_sha256':'4'*64},
+        {'preprocessed_input':tmp_path/'private_input.jsonl','input_sha256':'5'*64,'fixture_report_sha256':'6'*64,'private_workspace':tmp_path/'inputprivate','valid_token_count':32})
+    def authenticate(**kw):events.append('gates');return authorized
+    monkeypatch.setattr(worker,'authenticate',authenticate)
+    def asset(path):events.append('asset');return {'model.safetensors':'7'*64,'config.json':'8'*64}[Path(path).name]
+    monkeypatch.setitem(sys.modules,'server_public_model',NS(CHECKPOINT_SHA256='7'*64,CONFIG_SHA256='8'*64,file_sha=asset))
+    readback=dict(sample_count=1,tile_count=8,public_batch_sha256='b'*64,input_digest='d'*64,private_input_sha256='5'*64,
+        private_binding_verified=True,private_request_permissions_verified=True,ciphertext_payload_bytes=8*100*(1<<20),tiles=[{'tile':i} for i in range(8)])
+    def handler(paths):
+        events.append('encrypt');Path(paths['upload']).mkdir()
+        request=Path(paths['client_private'])/'requests.json';request.write_text('{}');request.chmod(0o600)
+        if failure.get('handler'):raise failure['handler']
+        if failure.get('source'):(source/'marker.py').write_text('# changed')
+        return dict(sample_count=1,public_batch_sha256='b'*64)
+    monkeypatch.setitem(sys.modules,'file_stages',NS(MODEL_ID='model',REVISION='revision',client_encode_encrypt_input=handler))
+    def verify(*a,**kw):
+        events.append('readback')
+        if failure.get('readback'):raise failure['readback']
+        return readback
+    monkeypatch.setattr(worker.request_readback,'verify',verify)
+    @contextmanager
+    def boundary(calls):
+        events.append('guard-enter')
+        try:yield
+        finally:
+            events.append('guard-exit')
+            if failure.get('restore'):raise failure['restore']
+    monkeypatch.setattr(worker.boundaries,'encryption_only',boundary)
+    args=dict(key_evidence=tmp_path/'key-evidence',key_report_sha256='1'*64,key_workspace=keys,
+        model_evidence=tmp_path/'model-evidence',model_report_sha256='3'*64,model_workspace=tmp_path/'model',
+        fixture_evidence=tmp_path/'fixture-evidence',fixture_report_sha256='6'*64,
+        io_workspace=io,snapshot=snapshot,output=output,source_manifest=manifest)
+    return NS(args=args,events=events,authorized=authorized,failure=failure,readback=readback,output=output,keys=keys,io=io,expected=expected)
+
+
+def test_mock_handler_all_three_prerequisites_before_assets_and_encrypt(case):
+    assert worker.run(**case.args)==0
+    r=json.loads(case.output.read_text());assert r['passed'] and r['all_eight_ordered_payloads_validated']
+    assert case.events[0]=='gates' and case.events.index('guard-enter')<case.events.index('encrypt')<case.events.index('readback')<case.events.index('guard-exit')
+    assert r['source_hashes_start']==r['source_hashes_end']==case.expected
+    assert r['remaining_artifacts']['upload']['present'] and r['remaining_artifacts']['private_requests']['present']
+
+
+@pytest.mark.parametrize('gate',['key','model','input'])
+def test_actual_gate_call_order_stops_before_next_prerequisite(monkeypatch,gate):
+    events=[]
+    def f(name,result):
+        def call(*a,**kw):
+            events.append(name)
+            if name==gate:raise ValueError(name+' prerequisite')
+            return result
+        return call
+    monkeypatch.setattr(worker.key_gate,'authenticate',f('key',{}));monkeypatch.setattr(worker.model_gate,'authenticate',f('model',{}))
+    monkeypatch.setitem(sys.modules,'input_gate',NS(authenticate=f('input',{})))
+    with pytest.raises(ValueError,match=gate):worker.authenticate(key_evidence=0,key_report_sha256=0,key_workspace=0,model_evidence=0,model_report_sha256=0,model_workspace=0,fixture_evidence=0,fixture_report_sha256=0,profile_bytes=b'',plan_bytes=b'')
+    assert events==['key','model','input'][:['key','model','input'].index(gate)+1]
+
+
+def test_failed_gate_reads_no_assets_or_input_payload(case,monkeypatch):
+    monkeypatch.setattr(worker,'authenticate',lambda **kw:(_ for _ in ()).throw(ValueError('gate failed')))
+    with pytest.raises(ValueError,match='gate failed'):worker.run(**case.args)
+    r=json.loads(case.output.read_text());assert not r['passed'] and not r['actual_client_encode_started']
+    assert case.events==[] and not (case.io/'upload').exists()
+
+@pytest.mark.parametrize('name',['requests.json','completed.json'])
+def test_existing_private_pair_preserved_and_rejected_before_assets(case,name):
+    p=case.keys/'client_private'/name;p.write_bytes(b'foreign retained');
+    with pytest.raises(FileExistsError):worker.run(**case.args)
+    assert p.read_bytes()==b'foreign retained' and case.events==['gates']
+
+@pytest.mark.parametrize('kind',['handler','readback','restore'])
+def test_started_failure_retains_remaining_upload_and_private_pair(case,kind):
+    error=KeyboardInterrupt(kind);case.failure[kind]=error
+    with pytest.raises(KeyboardInterrupt) as caught:worker.run(**case.args)
+    assert caught.value is error
+    r=json.loads(case.output.read_text());assert not r['passed'] and r['actual_client_encode_started']
+    assert (case.io/'upload').is_dir() and (case.keys/'client_private/requests.json').is_file()
+    assert 'guard-exit' in case.events
+
+
+def test_unexpected_ordered_readback_fails(case):
+    case.readback['tiles'][7]['tile']=6
+    with pytest.raises(ValueError,match='eight-tile'):worker.run(**case.args)
+    assert not json.loads(case.output.read_text())['passed']
+
+
+def test_source_change_fails_without_relabeling_success(case):
+    case.failure['source']=True
+    assert worker.run(**case.args)==1
+    r=json.loads(case.output.read_text());assert not r['passed'] and not r['source_files_unchanged']
+
+
+def test_initial_publication_failure_recovers_fresh_failure_report(case,monkeypatch):
+    original=worker.write;calls=[]
+    def write(path,value):
+        calls.append(1)
+        if len(calls)==1:raise OSError('initial publication')
+        return original(path,value)
+    monkeypatch.setattr(worker,'write',write)
+    with pytest.raises(OSError,match='initial publication'):worker.run(**case.args)
+    assert not json.loads(case.output.read_text())['passed'] and not case.events
+
+
+def test_final_publication_preserves_primary_cancellation(case,monkeypatch):
+    original=worker.write;error=KeyboardInterrupt('primary');case.failure['readback']=error
+    def write(path,value):
+        if 'source_hashes_end' in value:raise OSError('terminal publication')
+        original(path,value)
+    monkeypatch.setattr(worker,'write',write)
+    with pytest.raises(KeyboardInterrupt) as caught:worker.run(**case.args)
+    assert caught.value is error and any('terminal publication' in n for n in error.__notes__)

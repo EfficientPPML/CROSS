@@ -1,0 +1,61 @@
+{
+  "schema": "qwen-terminal-freeze-interface-v2",
+  "actual_execution_authorized": false,
+  "base_freeze_schema": "qwen-first-complete-calibration-pass-freeze-v1",
+  "successor_freeze_schema": "qwen-first-complete-calibration-pass-freeze-v2",
+  "removed_attempt_fields": [
+    "outer_receipt_sha256"
+  ],
+  "added_attempt_digest_fields": [
+    "producer_outer_receipt_sha256",
+    "reconstruction_outer_receipt_sha256",
+    "reconstruction_script_sha256",
+    "reconstruction_source_manifest_sha256",
+    "reconstruction_source_archive_sha256",
+    "reconstruction_grant_sha256"
+  ],
+  "retained_attempt_review_field": "independent_review_sha256",
+  "reconstruction_outer_schema": "qwen-candidate-reconstruction-outer-v2",
+  "reconstruction_outer_exact_fields": [
+    "schema",
+    "review_sha256",
+    "script_sha256",
+    "producer_source_manifest_sha256",
+    "reconstruction_source_manifest_sha256",
+    "reconstruction_source_archive_sha256",
+    "reconstruction_grant_sha256",
+    "candidate_manifest_sha256",
+    "producer_outer_receipt_sha256",
+    "returncode",
+    "direct_child_reaped",
+    "owned_group_absent",
+    "publication_completed"
+  ],
+  "reconstruction_outer_fixed": {
+    "returncode": 0,
+    "direct_child_reaped": true,
+    "owned_group_absent": true,
+    "publication_completed": true
+  },
+  "reconstruction_outer_pin_source": "independently authenticated root grant; never the review being checked",
+  "review_schema": "qwen-candidate-recorded-statistic-review-v1",
+  "review_required_flags": [
+    "verification_passed",
+    "scientific_pass",
+    "complete_scientific_failure_eligible"
+  ],
+  "review_binding_fields": [
+    "candidate_manifest_sha256",
+    "producer_source_manifest_sha256",
+    "producer_outer_receipt_sha256",
+    "calibration_sha256",
+    "protocol_sha256",
+    "model_pins_sha256",
+    "grant_sha256",
+    "private_inventory_sha256",
+    "ledger_sha256"
+  ],
+  "first_pass_rules": "Original93 attempt coverage/gates/history unchanged; only first complete PASS freezes. Candidate1 currently supported; revision producers require a separate reviewed successor.",
+  "prior_read_flags_scope": "New candidate evaluation only; historical candidate3 row0 and tokenizer-only construction are not erased.",
+  "scope": "Contract specification, not an actual freeze, root receipt, execution grant or private-data admission. Metrics and argmax are reconstructed from recorded statistics, not recomputed from original arrays."
+}

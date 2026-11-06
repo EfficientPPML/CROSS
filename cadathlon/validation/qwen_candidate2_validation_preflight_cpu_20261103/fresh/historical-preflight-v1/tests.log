@@ -1,0 +1,17 @@
+............................F......................                      [100%]
+=================================== FAILURES ===================================
+____________ test_publication_and_requirement_order_is_fail_closed _____________
+
+    def test_publication_and_requirement_order_is_fail_closed():
+        s=(P/'validate_heldout.py').read_text()
+>       assert s.index('calibration_gate.verify(args.')<s.index('candidate_gate.verify(P)')<s.index('validation=load_validation_inputs(')<s.index('assets={')<s.index('model,loading=')
+E       assert 2242 < 1697
+E        +  where 2242 = <built-in method index of str object at 0x55f02a3a0000>('validation=load_validation_inputs(')
+E        +    where <built-in method index of str object at 0x55f02a3a0000> = '"""Strict public held-out Qwen validation, gated on frozen full calibration."""\nfrom pathlib import Path\nimport arg...arse_args()\n    with termination_signals():return collect(args)\nif __name__==\'__main__\':raise SystemExit(main())\n'.index
+E        +  and   1697 = <built-in method index of str object at 0x55f02a3a0000>('assets={')
+E        +    where <built-in method index of str object at 0x55f02a3a0000> = '"""Strict public held-out Qwen validation, gated on frozen full calibration."""\nfrom pathlib import Path\nimport arg...arse_args()\n    with termination_signals():return collect(args)\nif __name__==\'__main__\':raise SystemExit(main())\n'.index
+
+test_validation_gate.py:102: AssertionError
+=========================== short test summary info ============================
+FAILED test_validation_gate.py::test_publication_and_requirement_order_is_fail_closed
+1 failed, 50 passed in 3.59s

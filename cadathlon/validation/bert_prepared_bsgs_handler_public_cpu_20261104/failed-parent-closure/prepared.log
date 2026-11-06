@@ -1,0 +1,15 @@
+................................................F                        [100%]
+=================================== FAILURES ===================================
+__________ test_parity_closure_is_unchanged_except_explicit_two_seams __________
+test_plan.py:36: in test_parity_closure_is_unchanged_except_explicit_two_seams
+    assert set(changed)=={'runtime/stage/full_model_engine.py','joined/checkout/cadathlon/common/encrypted_streaming_linear.py'}
+E   AssertionError: assert {'joined/chec...el_engine.py'} == {'joined/chec...el_engine.py'}
+E     
+E     Extra items in the left set:
+E     'joined/encrypted_bert_layer_attention.py'
+E     'joined/encrypted_bert_full_model.py'
+E     'runtime/stage/file_stages.py'
+E     Use -v to get more diff
+=========================== short test summary info ============================
+FAILED test_plan.py::test_parity_closure_is_unchanged_except_explicit_two_seams
+1 failed, 48 passed in 0.16s

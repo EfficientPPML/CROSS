@@ -1,0 +1,76 @@
+{
+  "scope": "Isolated integration of five reviewed runtime/collector patches; live runtime remains unchanged.",
+  "passed": true,
+  "pytest_passed": 1131,
+  "pytest_skipped": 11,
+  "pytest_subtests_passed": 93,
+  "pytest_seconds": 357.04,
+  "external_seconds": 360.00167109599715,
+  "source_count": 320,
+  "exact_archive_verified": true,
+  "recorded_sources_unchanged": true,
+  "combined_patch_reconstructs_all_changed_sources": true,
+  "changed_files": 28,
+  "combined_patch_sha256": "91ccdbb67c457fd4f3a2636e92316d2385a88e3036f5e5963fafa5b465ab1c61",
+  "skips": [
+    {
+      "classname": "cadathlon.tests.test_encrypted_polynomial",
+      "name": "test_secure_inverse_sqrt_and_rmsnorm_ciphertexts",
+      "reason": "opt-in secure CKKS compilation"
+    },
+    {
+      "classname": "cadathlon.tests.test_encrypted_polynomial",
+      "name": "test_uniform_constants_match_generic_encoder_bit_for_bit",
+      "reason": "opt-in real-context codec check"
+    },
+    {
+      "classname": "cadathlon.tests.test_encrypted_polynomial",
+      "name": "test_balanced_power_inverse_sqrt_with_bounded_caches",
+      "reason": "opt-in secure balanced-power circuit"
+    },
+    {
+      "classname": "cadathlon.tests.test_encrypted_polynomial",
+      "name": "test_secure_compiled_linear_scalar_eviction_residual_and_quadratic_depth",
+      "reason": "opt-in secure linear/residual/quadratic circuits"
+    },
+    {
+      "classname": "cadathlon.tests.test_encrypted_refresh",
+      "name": "test_actual_secure_keyless_refresh_and_continuation",
+      "reason": "opt-in large secure bootstrap"
+    },
+    {
+      "classname": "cadathlon.tests.test_encrypted_refresh",
+      "name": "test_actual_deep_profile_bounded_refresh_and_continuation",
+      "reason": "opt-in deep-profile bounded bootstrap"
+    },
+    {
+      "classname": "cadathlon.tests.test_scoped_ntt",
+      "name": "test_guards_fall_back[other_device]",
+      "reason": "requires two logical CPU devices; run with --xla_force_host_platform_device_count=2"
+    },
+    {
+      "classname": "jaxite_word.packing_test.SparseLoweringTest",
+      "name": "test_diagonal_subset_and_maxima_agree_with_the_full_set_zero_conv",
+      "reason": "a zero matrix has no diagonals to subset"
+    },
+    {
+      "classname": "jaxite_word.packing_test.SparseLoweringTest",
+      "name": "test_diagonal_subset_and_maxima_agree_with_the_full_set_zero_dense",
+      "reason": "a zero matrix has no diagonals to subset"
+    },
+    {
+      "classname": "jaxite_word.bootstrapping_test.BootstrappingFunctionalTest",
+      "name": "test_n4096_meta_gate",
+      "reason": "N=4096 runs two full bootstraps (~70 min); set BOOTSTRAP_TEST_N4096=1"
+    },
+    {
+      "classname": "jaxite_word.bootstrapping_test.BootstrappingFunctionalTest",
+      "name": "test_n8192_single_pass_correctness",
+      "reason": "N=8192 runs a full bootstrap (~2 h, ~37 GB); set BOOTSTRAP_TEST_N8192=1"
+    }
+  ],
+  "full_model_evaluated": false,
+  "accelerator_evaluated": false,
+  "existing_ring_profiles_changed": false,
+  "core_bootstrap_stage_clears_changed": false
+}

@@ -1,0 +1,222 @@
+{
+  "actual_execution_authorized": false,
+  "cpu_affinity": [
+    112,
+    113,
+    114,
+    115
+  ],
+  "forbidden_roots": [
+    "flax",
+    "jax",
+    "jaxite_word",
+    "jaxlib",
+    "libtpu",
+    "safetensors",
+    "tensorflow",
+    "tokenizers",
+    "torch",
+    "torch_xla",
+    "transformers"
+  ],
+  "proof_root": "/tmp/qwen-keygen-held-parent-focused-proof-20261104/preparation-v1",
+  "runtime_module_origins": {
+    "numpy": "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/numpy/__init__.py",
+    "numpy.lib._format_impl": "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/numpy/lib/_format_impl.py",
+    "numpy.lib._npyio_impl": "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/numpy/lib/_npyio_impl.py"
+  },
+  "runtime_source_expectations": {
+    "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/numpy/__init__.py": "09295a80660f17925ae23765ce8cbd7ff7ceae968d5f2f89349f1cb74c0b9e11",
+    "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/numpy/lib/_format_impl.py": "5d7fd66e8c78d0bd9fab82e8893609ba88f7fcd3569eaebb0748f40768e85c16",
+    "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/site-packages/numpy/lib/_npyio_impl.py": "51eb4572baad1e8198f71b3488a3cbcdb81ac85aa3c15cc2708cd907198a1fb5"
+  },
+  "schema": "qwen-held-parent-focused-proof-v1",
+  "scope": "Exactly34 new held-parent cases:18 canonical/typed/identity/owned-replacement admission,5 explicit UID/sticky metadata seams,11 tiny NPY/manifest and binding/descriptor lifetimes. Exact74 runtime subtree; inherited71 tests/conftest unselected. Genuine NumPy for at most16 deterministic uint32 values and own tiny NPY files; three existing source/origin expectations. No actual keys, body/capacity inventory, backend contexts, RNG or actual role. Signal shields are nullcontext. Import guards and reviewed source scope are not an OS sandbox.",
+  "selected_files": [
+    "test_parent_admission.py",
+    "test_parent_policy.py",
+    "test_parent_lifetime.py"
+  ],
+  "selected_nodes": [
+    "test_parent_admission.py::test_parent_bytes_reject_before_any_open[missing]",
+    "test_parent_admission.py::test_parent_bytes_reject_before_any_open[none]",
+    "test_parent_admission.py::test_parent_bytes_reject_before_any_open[mutable]",
+    "test_parent_admission.py::test_parent_bytes_reject_before_any_open[duplicate]",
+    "test_parent_admission.py::test_parent_bytes_reject_before_any_open[noncanonical]",
+    "test_parent_admission.py::test_parent_bytes_reject_before_any_open[unknown]",
+    "test_parent_admission.py::test_parent_bytes_reject_before_any_open[boolean_device]",
+    "test_parent_admission.py::test_parent_bytes_reject_before_any_open[boolean_inode]",
+    "test_parent_admission.py::test_parent_bytes_reject_before_any_open[boolean_mode]",
+    "test_parent_admission.py::test_parent_bytes_reject_before_any_open[zero_inode]",
+    "test_parent_admission.py::test_parent_bytes_reject_before_any_open[relative_path]",
+    "test_parent_admission.py::test_parent_bytes_reject_before_any_open[wrong_path]",
+    "test_parent_admission.py::test_parent_bytes_reject_before_any_open[oversized]",
+    "test_parent_admission.py::test_wrong_granted_identity_opens_then_retires_parent_before_mkdir[device]",
+    "test_parent_admission.py::test_wrong_granted_identity_opens_then_retires_parent_before_mkdir[inode]",
+    "test_parent_admission.py::test_wrong_granted_identity_opens_then_retires_parent_before_mkdir[mode]",
+    "test_parent_admission.py::test_real_owned_parent_replacement_cannot_redefine_external_identity[before_open]",
+    "test_parent_admission.py::test_real_owned_parent_replacement_cannot_redefine_external_identity[after_open]",
+    "test_parent_policy.py::test_uid_and_sticky_policy_before_creation[current_owner]",
+    "test_parent_policy.py::test_uid_and_sticky_policy_before_creation[root_owner]",
+    "test_parent_policy.py::test_uid_and_sticky_policy_before_creation[untrusted_owner]",
+    "test_parent_policy.py::test_uid_and_sticky_policy_before_creation[shared_without_sticky]",
+    "test_parent_policy.py::test_uid_and_sticky_policy_before_creation[shared_with_sticky]",
+    "test_parent_lifetime.py::test_tiny_numpy_manifest_success_preserves_original_owners[False]",
+    "test_parent_lifetime.py::test_tiny_numpy_manifest_success_preserves_original_owners[True]",
+    "test_parent_lifetime.py::test_captured_parent_binding_rejects_mirror_replacement[expected_parent]",
+    "test_parent_lifetime.py::test_captured_parent_binding_rejects_mirror_replacement[parent_expectation]",
+    "test_parent_lifetime.py::test_captured_parent_binding_rejects_mirror_replacement[effective_uid]",
+    "test_parent_lifetime.py::test_captured_parent_binding_rejects_mirror_replacement[parent_uid]",
+    "test_parent_lifetime.py::test_later_parent_mode_change_fails_but_all_original_descriptors_retire",
+    "test_parent_lifetime.py::test_later_uid_change_rejects_even_an_individually_trusted_uid",
+    "test_parent_lifetime.py::test_construction_failure_preserves_primary_and_retires_original_parent[fstat]",
+    "test_parent_lifetime.py::test_construction_failure_preserves_primary_and_retires_original_parent[mkdir]",
+    "test_parent_lifetime.py::test_construction_failure_preserves_primary_and_retires_original_parent[mkdir_close]"
+  ],
+  "selected_nodes_sha256": "0fba4a4aa2892f5acd52ec3754cc156f76af005adcc0118290a74bd0f86c0129",
+  "selected_xml_cases": [
+    {
+      "classname": "test_parent_admission",
+      "name": "test_parent_bytes_reject_before_any_open[missing]"
+    },
+    {
+      "classname": "test_parent_admission",
+      "name": "test_parent_bytes_reject_before_any_open[none]"
+    },
+    {
+      "classname": "test_parent_admission",
+      "name": "test_parent_bytes_reject_before_any_open[mutable]"
+    },
+    {
+      "classname": "test_parent_admission",
+      "name": "test_parent_bytes_reject_before_any_open[duplicate]"
+    },
+    {
+      "classname": "test_parent_admission",
+      "name": "test_parent_bytes_reject_before_any_open[noncanonical]"
+    },
+    {
+      "classname": "test_parent_admission",
+      "name": "test_parent_bytes_reject_before_any_open[unknown]"
+    },
+    {
+      "classname": "test_parent_admission",
+      "name": "test_parent_bytes_reject_before_any_open[boolean_device]"
+    },
+    {
+      "classname": "test_parent_admission",
+      "name": "test_parent_bytes_reject_before_any_open[boolean_inode]"
+    },
+    {
+      "classname": "test_parent_admission",
+      "name": "test_parent_bytes_reject_before_any_open[boolean_mode]"
+    },
+    {
+      "classname": "test_parent_admission",
+      "name": "test_parent_bytes_reject_before_any_open[zero_inode]"
+    },
+    {
+      "classname": "test_parent_admission",
+      "name": "test_parent_bytes_reject_before_any_open[relative_path]"
+    },
+    {
+      "classname": "test_parent_admission",
+      "name": "test_parent_bytes_reject_before_any_open[wrong_path]"
+    },
+    {
+      "classname": "test_parent_admission",
+      "name": "test_parent_bytes_reject_before_any_open[oversized]"
+    },
+    {
+      "classname": "test_parent_admission",
+      "name": "test_wrong_granted_identity_opens_then_retires_parent_before_mkdir[device]"
+    },
+    {
+      "classname": "test_parent_admission",
+      "name": "test_wrong_granted_identity_opens_then_retires_parent_before_mkdir[inode]"
+    },
+    {
+      "classname": "test_parent_admission",
+      "name": "test_wrong_granted_identity_opens_then_retires_parent_before_mkdir[mode]"
+    },
+    {
+      "classname": "test_parent_admission",
+      "name": "test_real_owned_parent_replacement_cannot_redefine_external_identity[before_open]"
+    },
+    {
+      "classname": "test_parent_admission",
+      "name": "test_real_owned_parent_replacement_cannot_redefine_external_identity[after_open]"
+    },
+    {
+      "classname": "test_parent_policy",
+      "name": "test_uid_and_sticky_policy_before_creation[current_owner]"
+    },
+    {
+      "classname": "test_parent_policy",
+      "name": "test_uid_and_sticky_policy_before_creation[root_owner]"
+    },
+    {
+      "classname": "test_parent_policy",
+      "name": "test_uid_and_sticky_policy_before_creation[untrusted_owner]"
+    },
+    {
+      "classname": "test_parent_policy",
+      "name": "test_uid_and_sticky_policy_before_creation[shared_without_sticky]"
+    },
+    {
+      "classname": "test_parent_policy",
+      "name": "test_uid_and_sticky_policy_before_creation[shared_with_sticky]"
+    },
+    {
+      "classname": "test_parent_lifetime",
+      "name": "test_tiny_numpy_manifest_success_preserves_original_owners[False]"
+    },
+    {
+      "classname": "test_parent_lifetime",
+      "name": "test_tiny_numpy_manifest_success_preserves_original_owners[True]"
+    },
+    {
+      "classname": "test_parent_lifetime",
+      "name": "test_captured_parent_binding_rejects_mirror_replacement[expected_parent]"
+    },
+    {
+      "classname": "test_parent_lifetime",
+      "name": "test_captured_parent_binding_rejects_mirror_replacement[parent_expectation]"
+    },
+    {
+      "classname": "test_parent_lifetime",
+      "name": "test_captured_parent_binding_rejects_mirror_replacement[effective_uid]"
+    },
+    {
+      "classname": "test_parent_lifetime",
+      "name": "test_captured_parent_binding_rejects_mirror_replacement[parent_uid]"
+    },
+    {
+      "classname": "test_parent_lifetime",
+      "name": "test_later_parent_mode_change_fails_but_all_original_descriptors_retire"
+    },
+    {
+      "classname": "test_parent_lifetime",
+      "name": "test_later_uid_change_rejects_even_an_individually_trusted_uid"
+    },
+    {
+      "classname": "test_parent_lifetime",
+      "name": "test_construction_failure_preserves_primary_and_retires_original_parent[fstat]"
+    },
+    {
+      "classname": "test_parent_lifetime",
+      "name": "test_construction_failure_preserves_primary_and_retires_original_parent[mkdir]"
+    },
+    {
+      "classname": "test_parent_lifetime",
+      "name": "test_construction_failure_preserves_primary_and_retires_original_parent[mkdir_close]"
+    }
+  ],
+  "selected_xml_cases_sha256": "ee4682510fa29c11d563f51f365f398f1e90b4fd57faac2d8b7c8de4ca54c54a",
+  "source_archive_sha256": "93961105185d6c22566f8fbd315f392a75e6bdfc114dc7937c3721279d17ccbc",
+  "source_count": 83,
+  "source_manifest_encoding": "canonical sorted compact JSON plus newline",
+  "source_manifest_sha256": "50625b443ad26a88907e37ed901618b55fe3f5370ae96504b49dbaa0ca6974a1",
+  "source_root": "/tmp/qwen-key-generation-held-parent-tests-20261104",
+  "synthetic_only": true
+}

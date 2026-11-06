@@ -1,0 +1,26 @@
+{
+  "schema": "qwen-model-readonly-root-plan-review-v1",
+  "accepted_for_source_implementation": true,
+  "plan_path": "/tmp/qwen-model-stage-readonly-entry-plan-20261104/PLAN.md",
+  "plan_sha256": "dfa448c22d3a7aacca5b2ab02318def62a3906904a8844213e1facfffc788984",
+  "index_sha256": "15510d81d9f37329e5adc44e8098291c9924fdf86d5ad7597c1c58f5f50655c7",
+  "full_plan_read_chunks": ["ee40eb", "e33dce"],
+  "public_pin_verification_chunk": "c22a18",
+  "verified_plan_files": 6,
+  "verified_public_references": 25,
+  "verified_unchanged_parent_files": 29,
+  "model_stage_focused_terminal_sha256": "5c1341990f86b2535eced6f267d3ee7fff8cdfc7abbab797006ce4de063ec3c6",
+  "implementation_clarifications": [
+    "The fresh evidence directory must be canonical and disjoint from protected and input roots in both ancestor directions. Its existing trusted parent may contain sibling protected roots. Do not treat /tmp being their ancestor as an output overlap or require the existing parent to be fresh; retain parent identity and symlink checks.",
+    "Enforce exact JSON types in grant and policy validation, including bool/int distinction, all scope/resource constants, compact canonical source map digest, selected dependency/source identities and external expected-store binding.",
+    "Construct report stores from original live held identities and compare to the externally pinned metadata. Recording completion cannot supply actual validation evidence.",
+    "Only source implementation is authorized at this checkpoint. Freeze and review the completed source and focused test selection separately before execution."
+  ],
+  "peer_concrete_plan_review": "in progress; resolve concrete findings before final source freeze",
+  "current_store_inventory_authorized": false,
+  "parameter_body_reads_authorized": false,
+  "tests_authorized": false,
+  "actual_execution_grant_issued": false,
+  "downstream_model_execution_authorized": false,
+  "scope": "Source and public metadata review only. Existing positive model report/outer/root schemas remain unchanged; actual readonly grant/entry is a new isolated boundary."
+}

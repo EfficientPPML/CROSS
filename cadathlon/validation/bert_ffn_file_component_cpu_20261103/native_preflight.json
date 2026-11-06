@@ -1,0 +1,146 @@
+{
+  "scope": "Native CPU-only range/reference planning for fixed pair0 positions0/1. Exact native attention is trusted preprocessing for this isolated FFN component only; it exceeds the permitted embedding-only client boundary of a full P2 submission. No ciphertexts or accuracy/model claim.",
+  "passed": true,
+  "pair": [
+    "The committee approved the proposal.",
+    "The committee approved the proposal."
+  ],
+  "row_positions": [
+    0,
+    1
+  ],
+  "input": {
+    "shape": [
+      2,
+      768
+    ],
+    "minimum": -49.373714315343136,
+    "maximum": 2.5221129422635236,
+    "max_abs": 49.373714315343136,
+    "float64_bytes_sha256": "1118cce8c48b7a738c732ad786786ad1e45cd385c71922404ff95861c7777fbf"
+  },
+  "intermediate_linear": {
+    "shape": [
+      2,
+      3072
+    ],
+    "minimum": -10.149406737329937,
+    "maximum": 6.004864684459563,
+    "max_abs": 10.149406737329937,
+    "float64_bytes_sha256": "1f5f0b02c136fffe0233471b5ed08e75a9a774e077b3f9e29c5135dd22c21d79"
+  },
+  "raw_native_gelu": {
+    "shape": [
+      2,
+      3072
+    ],
+    "minimum": -0.16997106703821996,
+    "maximum": 6.00486467871016,
+    "max_abs": 6.00486467871016,
+    "float64_bytes_sha256": "70dd2bce23ffdd8562efb67c2748682e7bee187f033ced34d26b3f93ba24103e"
+  },
+  "raw_declared_polynomial_gelu": {
+    "shape": [
+      2,
+      3072
+    ],
+    "minimum": -0.17027697041470735,
+    "maximum": 6.005086397807463,
+    "max_abs": 6.005086397807463,
+    "float64_bytes_sha256": "ce725ad68fcfce324ebf28c9a7ce77bbde8e87aeea958c76908e632826f2507e"
+  },
+  "native_ffn": {
+    "shape": [
+      2,
+      768
+    ],
+    "minimum": -13.918859898218109,
+    "maximum": 1.2960496249570561,
+    "max_abs": 13.918859898218109,
+    "float64_bytes_sha256": "dd71bc7663551c9210e231e00a8a4453eb80a3d28027f55fc41b4c1cea95385e"
+  },
+  "declared_polynomial_ffn": {
+    "shape": [
+      2,
+      768
+    ],
+    "minimum": -13.921088055380856,
+    "maximum": 1.296134779989165,
+    "max_abs": 13.921088055380856,
+    "float64_bytes_sha256": "85722c8f93673aa2a7c47a2d511efd3fe955390daed3be9e536af4daac1ef285"
+  },
+  "independent_vs_native": {
+    "linear": {
+      "max_abs": 1.2434497875801753e-14,
+      "nrmse": 8.511952318333694e-16
+    },
+    "gelu": {
+      "max_abs": 7.993605777301127e-15,
+      "nrmse": 1.2429383736866301e-15
+    },
+    "ffn": {
+      "max_abs": 2.3092638912203256e-14,
+      "nrmse": 1.8029646730518054e-15
+    }
+  },
+  "approximation_error": {
+    "gelu_vs_native": {
+      "max_abs": 0.0004691961434029699,
+      "nrmse": 0.001375147063569522
+    },
+    "ffn_vs_native": {
+      "max_abs": 0.00248487863224367,
+      "nrmse": 0.0007941203479012088
+    }
+  },
+  "gelu_domain": [
+    -19.0,
+    11.0
+  ],
+  "gelu_domain_violations": 0,
+  "p_at_zero": 0.00012006456190527537,
+  "fixed_gelu_analytic_target": 0.001,
+  "native_gelu_approximation_target_pass": true,
+  "future_he_vs_polynomial_gate": 1e-06,
+  "original_p2_logits_gates_evaluated": false,
+  "asset_sha256": {
+    "config.json": "ec2b6cd6ce741dda6c972aea96f9d1a449cbb4b5349e688c5370a9b2f6872d30",
+    "model.safetensors": "e1f8085ef673c9eb8a1a93a84270742e8aa0ccbceadef01eef15e26c44b46034",
+    "tokenizer.json": "5b3360be30cdf39081153cf9d30bfb0503c011462fc9f77f097127c83ef0f4d9",
+    "tokenizer_config.json": "0f6d13e6f4da6f9e24f22ada6bc3be571123d858d7c0c05a8a7cd55a9c23c2e8",
+    "vocab.txt": "eeaa9875b23b04b4c54ef759d03db9d1ba1554838f8fb26c5d96fa551df93d02"
+  },
+  "tensor_sha256": {
+    "bert.encoder.layer.0.intermediate.dense.weight": "9a0c8aa79b2bac48fc35f37b6695d253080f7eedd556b70b65411aab9c319fd3",
+    "bert.encoder.layer.0.intermediate.dense.bias": "b279856af79c545cdb2f914e02e9a953204152319f160e484ebfcc8d6b825774",
+    "bert.encoder.layer.0.output.dense.weight": "754a718ad071ca9ec27790aee1b82dc9db41cc3ef90c6c73a90ada8668f6fa0d",
+    "bert.encoder.layer.0.output.dense.bias": "744629ad72bdc326f22cd92c6429610c06ed41dd3a2fedd307d3f01f861638b9"
+  },
+  "preprocessing_elapsed_s": 2.5478112069977215,
+  "source_hashes_start": {
+    "/tmp/bert-layer0-ffn-plan-20261103/native_preflight.py": "83a69a4abb490eb97484a5136937d4c4f50bce9c46b9d6ff0c4e281b5365d90b",
+    "/tmp/bert-layer0-ffn-plan-20261103/public_plan.json": "f75d8fc0bff0233a6fe2f74e75d3b29dfcd7a5fb926a1dde0b38f23cddf24d7c",
+    "/home/jianming_gatech/CROSS/cadathlon/validation/check_pretrained_bert_domains.py": "d3463f03bdfcb1a0539bf8b6333a22b9fc776231815ed120bf31a29b73f08c40",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_polynomial.py": "912283bab82fff445671fc97fb4e49be16204d75c3132203092bc7eca7fb059a"
+  },
+  "source_hashes_end": {
+    "/tmp/bert-layer0-ffn-plan-20261103/native_preflight.py": "83a69a4abb490eb97484a5136937d4c4f50bce9c46b9d6ff0c4e281b5365d90b",
+    "/tmp/bert-layer0-ffn-plan-20261103/public_plan.json": "f75d8fc0bff0233a6fe2f74e75d3b29dfcd7a5fb926a1dde0b38f23cddf24d7c",
+    "/home/jianming_gatech/CROSS/cadathlon/validation/check_pretrained_bert_domains.py": "d3463f03bdfcb1a0539bf8b6333a22b9fc776231815ed120bf31a29b73f08c40",
+    "/home/jianming_gatech/CROSS/cadathlon/common/encrypted_polynomial.py": "912283bab82fff445671fc97fb4e49be16204d75c3132203092bc7eca7fb059a"
+  },
+  "versions": {
+    "numpy": "2.5.4",
+    "torch": "2.15.0+cpu",
+    "transformers": "4.51.3",
+    "tokenizers": "0.21.4",
+    "safetensors": "0.8.0"
+  },
+  "cpu_affinity": [
+    168,
+    169,
+    170,
+    171
+  ],
+  "source_files_unchanged": true
+}

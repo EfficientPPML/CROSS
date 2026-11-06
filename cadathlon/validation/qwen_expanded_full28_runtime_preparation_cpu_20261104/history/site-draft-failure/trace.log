@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "/tmp/qwen-expanded-full-preparation-driver-v4-20261104/probe_site_roots.py", line 29, in <module>
+    parser=argparse.ArgumentParser();parser.add_argument('--driver',type=Path,required=True);parser.add_argument('--output',type=Path,required=True);a=parser.parse_args();raise SystemExit(run(a.driver,a.output))
+                                                                                                                                                                                            ~~~^^^^^^^^^^^^^^^^^^^
+  File "/tmp/qwen-expanded-full-preparation-driver-v4-20261104/probe_site_roots.py", line 17, in run
+    audit=ns['PublicAudit'](set(),owned,SimpleNamespace(check=lambda:None));rows=[]
+  File "/tmp/qwen-expanded-full-preparation-driver-v4-20261104/prepare_expanded.py", line 125, in __init__
+    self.stdlib,self.sites,self.packages=trusted_paths()
+                                         ~~~~~~~~~~~~~^^
+  File "/tmp/qwen-expanded-full-preparation-driver-v4-20261104/prepare_expanded.py", line 112, in trusted_paths
+    sites.update(Path(p).resolve() for p in site.getsitepackages())
+                                            ^^^^
+UnboundLocalError: cannot access local variable 'site' where it is not associated with a value

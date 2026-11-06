@@ -1,0 +1,185 @@
+"""Pure P/F cases against the original device packet/policy/resource gates.
+
+All documents and phase-check recordings are supplied by the source-owned
+fixture. No policy instance here is factual authority, and no device is opened.
+"""
+import json
+import os
+
+
+_COUNTERS = ("policy", "resource", "logical", "issue", "native", "open", "hook", "sample")
+_DEVICE_COUNTERS = ("issue", "native", "open", "hook", "sample")
+_REQUIRED = os.O_CLOEXEC | os.O_NOFOLLOW | os.O_NONBLOCK
+_SAFE = os.O_RDONLY | _REQUIRED
+_FLAG_CASES = {
+    "packet_native_missing_nofollow": (_SAFE & ~os.O_NOFOLLOW, "requires only nonblocking"),
+    "packet_native_missing_cloexec": (_SAFE & ~os.O_CLOEXEC, "requires only nonblocking"),
+    "packet_native_missing_nonblock": (_SAFE & ~os.O_NONBLOCK, "requires only nonblocking"),
+    "packet_native_wronly": (os.O_WRONLY | _REQUIRED, "access mode must be RDONLY or RDWR"),
+    "packet_native_invalid_accmode": (os.O_ACCMODE | _REQUIRED, "access mode must be RDONLY or RDWR"),
+    "packet_native_create": (_SAFE | os.O_CREAT, "requires only nonblocking"),
+    "packet_native_truncate": (_SAFE | os.O_TRUNC, "requires only nonblocking"),
+    "packet_native_append": (_SAFE | os.O_APPEND, "requires only nonblocking"),
+    "packet_native_unknown_bit": (_SAFE | (1 << 30), "requires only nonblocking"),
+}
+
+
+def _counts(f):
+    values = {name: f.counts[name] for name in _COUNTERS}
+    assert all(type(value) is int and value >= 0 for value in values.values())
+    return values
+
+
+def _no_later_work(f, before):
+    after = _counts(f)
+    assert all(after[name] == before[name] for name in _DEVICE_COUNTERS)
+    f.no_device_work()
+    return after
+
+
+def _clean(f, bundle):
+    before = _counts(f)
+    packet = f.packet_auth(bundle)
+    assert type(packet) is f.device_packet.DevicePacket
+    assert packet.raw is bundle["raw"]
+    assert packet.expected_sha256 == bundle["digest"]
+    assert packet.policy.phase is bundle["phase"]
+    assert packet.execution_authorized is False
+    after = _no_later_work(f, before)
+    assert all(after[name] > before[name] for name in ("policy", "resource", "logical"))
+    return bundle
+
+
+def _outer(f, bundle, edit):
+    value = json.loads(bundle["raw"])
+    edit(value)
+    raw = f.canonical(value)
+    return raw, f.sha(raw)
+
+
+def _expect_before_policy(f, bundle, *, raw=None, digest=None, original_policies=None, message):
+    before = _counts(f)
+    f.expect(
+        (ValueError,),
+        lambda: f.packet_auth(bundle, raw=raw, digest=digest, original_policies=original_policies),
+        message=message,
+    )
+    after = _no_later_work(f, before)
+    assert all(after[name] == before[name] for name in ("policy", "resource", "logical"))
+
+
+def run(f, case):
+    """One accepted P/F case; the enclosing child owns reports and cleanup."""
+    initial = _counts(f)
+    checks = []
+    group = "F" if case.startswith("packet_native_") else "P"
+
+    if case == "packet_native_rdwr_clean":
+        _clean(f, f.new_packet(flags=os.O_RDWR | _REQUIRED))
+        checks.append("independently built RDWR policy reaches real pure gates")
+    else:
+        clean = _clean(f, f.new_packet())
+        checks.append("clean safe-flags control reaches real packet/policy/resource/logical gates")
+
+        if case == "packet_clean_join":
+            checks.append("original packet type/bytes/phase retained without execution authority")
+        elif case == "packet_external_sha_before_parse":
+            # Deliberately invalid JSON plus an unrelated valid external digest:
+            # rejection must precede JSON parsing and every inner validator.
+            _expect_before_policy(
+                f, clean, raw=b"not a JSON document", digest=clean["digest"],
+                message="independently pinned bounded device sidecar required",
+            )
+            checks.append("external digest rejection before parse and inner gates")
+        elif case == "packet_closed_roles":
+            for variant in ("missing", "extra"):
+                def edit(value):
+                    if variant == "missing":
+                        del value["documents"]["access"]
+                    else:
+                        value["documents"]["unselected"] = "{}\n"
+                raw, digest = _outer(f, clean, edit)
+                _expect_before_policy(
+                    f, clean, raw=raw, digest=digest,
+                    message="exact ten public device documents",
+                )
+            checks.append("both missing and extra document roles reject before inner gates")
+        elif case == "packet_inner_bound_before_auth":
+            def edit(value):
+                value["documents"]["access"] = "x" * ((256 << 10) + 1)
+            raw, digest = _outer(f, clean, edit)
+            _expect_before_policy(
+                f, clean, raw=raw, digest=digest,
+                message="bounded device inner bytes required: access",
+            )
+            checks.append("re-pinned oversized inner document rejects before authentication")
+        elif case == "packet_original_policy_byte_join":
+            # Both sidecars are individually valid synthetic policies. Changing
+            # native flags changes selection/resource bytes and dependent pins.
+            other = _clean(f, f.new_packet(flags=os.O_RDWR | _REQUIRED))
+            originals = dict(clean["blobs"])
+            other_blobs = dict(other["blobs"])
+            assert other_blobs["resource_policy"] != originals["resource_policy"]
+            _expect_before_policy(
+                f, other,
+                original_policies={name: originals[name] for name in (
+                    "resource_policy", "resource_review", "dependency_policy")},
+                message="device and original scientific packet policy bytes differ",
+            )
+            checks.append("individually valid re-pinned sidecar rejects different original scientific policy bytes")
+        elif case == "packet_phase_source_join":
+            def edit(value):
+                pins = json.loads(value["expected_pins"])
+                original = pins["source_manifest_sha256"]
+                pins["source_manifest_sha256"] = ("1" if original[0] != "1" else "2") + original[1:]
+                value["expected_pins"] = f.canonical(pins).decode("utf-8")
+            raw, digest = _outer(f, clean, edit)
+            before = _counts(f)
+            f.expect(
+                (ValueError,), lambda: f.packet_auth(clean, raw=raw, digest=digest),
+                message="device/phase source_manifest_sha256 differs",
+            )
+            after = _no_later_work(f, before)
+            assert after["policy"] > before["policy"]
+            assert after["resource"] == before["resource"] and after["logical"] == before["logical"]
+            checks.append("re-pinned outer source mismatch reaches real phase/source semantic join")
+        elif case == "packet_workspace_review_join":
+            envelope = clean["resource"]["device"]["working_memory_bytes"]
+            assert type(envelope) is int and envelope >= 0
+            def mutate_document(role, document):
+                if role == "workspace":
+                    document["stages"]["post_init"]["additional_live_bytes"] = envelope + 1
+            bad = f.new_packet(mutate_document=mutate_document)
+            assert bad["documents"]["workspace"]["stages"]["post_init"]["additional_live_bytes"] > bad["resource"]["device"]["working_memory_bytes"]
+            before = _counts(f)
+            f.expect(
+                (ValueError,), lambda: f.packet_auth(bad),
+                message="stage exceeds independently reviewed resource envelope",
+            )
+            after = _no_later_work(f, before)
+            assert all(after[name] > before[name] for name in ("policy", "resource", "logical"))
+            checks.append("fully re-pinned workspace bound reaches real resource-envelope semantic rejection")
+        elif case in _FLAG_CASES:
+            flags, message = _FLAG_CASES[case]
+            assert (1 << 30) & (os.O_ACCMODE | _REQUIRED) == 0
+            bad = f.new_packet(flags=flags)
+            assert all(row["open_flags"] == flags for row in bad["documents"]["access"]["device_nodes"])
+            before = _counts(f)
+            f.expect((ValueError,), lambda: f.packet_auth(bad), message=message)
+            after = _no_later_work(f, before)
+            assert all(after[name] > before[name] for name in ("policy", "resource", "logical"))
+            checks.append("independently re-pinned flag negative reaches dedicated real semantic rejection")
+        else:
+            raise AssertionError("unselected P/F case: " + case)
+
+    final = _no_later_work(f, initial)
+    return {
+        "passed": True,
+        "case": case,
+        "group": group,
+        "checks": checks,
+        "counter_deltas": {name: final[name] - initial[name] for name in _COUNTERS},
+        "recording_only": True,
+        "actual_authority": False,
+        "scope": "Real pure packet/device/resource validators over source-owned synthetic metadata; no device work.",
+    }

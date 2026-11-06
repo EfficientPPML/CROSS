@@ -1,0 +1,46 @@
+FF.                                                                      [100%]
+=================================== FAILURES ===================================
+_________________ test_substituted_check_never_invoked[before] _________________
+
+when = 'before'
+
+    @pytest.mark.parametrize('when',['before','callback'])
+    def test_substituted_check_never_invoked(when):
+        calls=[];holder={}
+        def replace():holder['owner'].refresh_binding.check=lambda:calls.append('invoked')
+        def callback(label,value,metadata):
+            if when=='callback'and label.endswith('normalized_t.refresh'):replace()
+        _,_,owner=helper.make(2,callback=callback);holder['owner']=owner
+        if when=='before':replace()
+        with pytest.raises(ValueError):owner.evaluate_tile(helper.Value(helper.scores(2,0),21),query_tile=0)
+>       assert calls==[]
+E       AssertionError: assert ['invoked'] == []
+E         
+E         Left contains one more item: 'invoked'
+E         Use -v to get more diff
+
+test_binding_call_order.py:15: AssertionError
+________________ test_substituted_check_never_invoked[callback] ________________
+
+when = 'callback'
+
+    @pytest.mark.parametrize('when',['before','callback'])
+    def test_substituted_check_never_invoked(when):
+        calls=[];holder={}
+        def replace():holder['owner'].refresh_binding.check=lambda:calls.append('invoked')
+        def callback(label,value,metadata):
+            if when=='callback'and label.endswith('normalized_t.refresh'):replace()
+        _,_,owner=helper.make(2,callback=callback);holder['owner']=owner
+        if when=='before':replace()
+        with pytest.raises(ValueError):owner.evaluate_tile(helper.Value(helper.scores(2,0),21),query_tile=0)
+>       assert calls==[]
+E       AssertionError: assert ['invoked'] == []
+E         
+E         Left contains one more item: 'invoked'
+E         Use -v to get more diff
+
+test_binding_call_order.py:15: AssertionError
+=========================== short test summary info ============================
+FAILED test_binding_call_order.py::test_substituted_check_never_invoked[before]
+FAILED test_binding_call_order.py::test_substituted_check_never_invoked[callback]
+2 failed, 1 passed in 0.45s

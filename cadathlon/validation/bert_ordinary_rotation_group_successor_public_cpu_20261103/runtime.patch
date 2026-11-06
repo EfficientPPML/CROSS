@@ -1,0 +1,95 @@
+--- a/grouped_rotation.py
++++ b/grouped_rotation.py
+@@ -33,6 +33,10 @@
+     source_state: tuple
+     indices: tuple
+     provenance: dict
++    original_source_array: object=field(init=False)
++    original_result_arrays: list=field(default_factory=list)
++    original_bindings: tuple=()
++    original_controls: tuple=()
+     outputs: list=field(default_factory=list)
+     output_states: list=field(default_factory=list)
+     states: list=field(default_factory=list)
+@@ -44,6 +48,9 @@
+     digit_state: tuple=None
+     mode: str='ordinary'
+     started: bool=False
++
++    def __post_init__(self):
++        self.original_source_array=getattr(self.source,'polynomial',None)
+ 
+ 
+ class GroupedCompiledRotation(CompiledRotation):
+@@ -122,6 +129,8 @@
+             raise ValueError('bounded exact ordered integer rotation request required')
+         if progress is not None and not callable(progress):raise TypeError('progress must be callable or None')
+         require_secure_execution(self,value)
++        if not isinstance(value.polynomial,jax.Array):
++            raise TypeError('immutable JAX payload is a group API prerequisite')
+         cache=self.ctx._param_cache
+         if type(self.ctx.num_slots)is not int or self.ctx.num_slots<1:raise ValueError('invalid slot count')
+         indices=tuple(i%self.ctx.num_slots for i in indices)
+@@ -195,13 +204,16 @@
+         self._usable()
+         if self._group is not group or not self._active:raise ValueError('active group identity changed')
+         if _value_signature(group.source)!=group.source_state:raise ValueError('same-input ciphertext changed')
+-        if len(group.outputs)!=len(group.output_states) or any(_value_signature(v)!=s for v,s in zip(group.outputs,group.output_states)):
++        if len(group.outputs)!=len(group.output_states) or len(group.outputs)!=len(group.original_result_arrays) or any(_value_signature(v)!=s for v,s in zip(group.outputs,group.output_states)):
+             raise ValueError('retained rotation result changed')
+         for index,(_,signature,eligible) in group.provenance.items():
+             _,now,ok=self._lease.source(index)
+             if now!=signature or ok!=eligible:raise ValueError('authenticated key backing changed during group')
+         if group.kernel is not None and self._kernel_state(group.kernel)!=group.kernel_state:raise ValueError('rotation controls changed')
+         if group.digits is not None and _array_signature(group.digits)!=group.digit_state:raise ValueError('same-input digits changed')
++        if (len(group.bindings)!=len(group.binding_states) or len(group.bindings)!=len(group.original_bindings)
++                or any(a is not b for a,b in zip(group.bindings,group.original_bindings))):
++            raise ValueError('retained binding inventory changed')
+         for binding,state in zip(group.bindings,group.binding_states):
+             current=(id(binding),id(binding.executable),tuple(_array_signature(a) for a in binding.controls))
+             if current!=state:raise ValueError('explicit compiled controls changed')
+@@ -209,6 +221,8 @@
+     def _bind(self,group,function,operands,signature,device):
+         binding=self._group_compiler.bind(function,operands,signature=signature,device=device)
+         group.bindings.append(binding)
++        group.original_bindings+= (binding,)
++        group.original_controls+=tuple(binding.controls)
+         group.binding_states.append((id(binding),id(binding.executable),tuple(_array_signature(a) for a in binding.controls)))
+         return binding
+ 
+@@ -216,10 +230,10 @@
+     def _barriers(group):
+         import jax
+         # Attempt every readiness barrier, retaining ALL backing on any failure.
+-        values=[group.source.polynomial,*group.states]
++        values=[group.original_source_array,*group.states]
+         if group.digits is not None:values.append(group.digits)
+-        values += [a for b in group.bindings for a in b.controls]
+-        values += [v.polynomial for v in group.outputs]
++        values += list(group.original_controls)
++        values += group.original_result_arrays
+         errors=[]
+         for value in values:
+             try:jax.block_until_ready(value)
+@@ -256,15 +270,19 @@
+                     completion=self._bind(group,group.kernel._rotate_from_digits_array,(value.polynomial,group.digits,*first_state),('group-complete',level,tuple(value.shape)),device)
+             for ordinal,index in enumerate(group.indices):
+                 self._guard(group)
+-                if not index:result=value
++                if not index:
++                    result=value;group.original_result_arrays.append(group.original_source_array)
+                 elif completion is None:
+                     group.started=True;result=super().rotate(value,index)
++                    group.original_result_arrays.append(result.polynomial)
+                 else:
+                     with jax.default_device(device):
+                         state=first_state if first_state is not None and index==first_index else rotation_state_without_controls(self.ctx._param_cache,level,index)
+                         group.states.extend(a for a in state if all(a is not old for old in group.states))
+                         self._validate_state(state,level,device)
+-                        result=value._clone_with_payload(completion(value.polynomial,group.digits,*state))
++                        payload=completion(value.polynomial,group.digits,*state)
++                        group.original_result_arrays.append(payload)
++                        result=value._clone_with_payload(payload)
+                         jax.block_until_ready(result.polynomial)
+                     # Complete each key before releasing its transient facade.
+                     self.ctx._param_cache._formatted_rotation_keys.pop(index,None)

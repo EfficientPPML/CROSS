@@ -1,0 +1,41 @@
+Traceback (most recent call last):
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/owned_child.py", line 111, in <module>
+    try:main()
+        ~~~~^^
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/owned_child.py", line 76, in main
+    detail=importlib.import_module(name).run(fixture,case)
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/cases_process.py", line 272, in run
+    state = _setup_run(f, case)
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/cases_process.py", line 209, in _setup_run
+    (f.module("qwen_stage_composition"), "_server_for_stage", stage, "R: numerical stage effects with original owner transitions"),
+     ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/fixture_base.py", line 73, in module
+    def module(self,name):return importlib.import_module(name)
+                                 ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/home/jianming_gatech/miniconda3/envs/jaxite/lib/python3.13/importlib/__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1404, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1369, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1340, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/source_loader.py", line 34, in exec_module
+    exec(compile(raw,str(path),'exec'),module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/runtime/qwen_stage_composition.py", line 13, in <module>
+    from qwen_key_loader import RecordingDependencies,_load_for_stage
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/source_loader.py", line 34, in exec_module
+    exec(compile(raw,str(path),'exec'),module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/runtime/qwen_key_loader.py", line 13, in <module>
+    from qwen_key_readers import ReadDirectory,map_array,read_public,read_private,_file_state
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/source_loader.py", line 34, in exec_module
+    exec(compile(raw,str(path),'exec'),module.__dict__)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/runtime/qwen_key_readers.py", line 8, in <module>
+    import numpy as np
+  File "/tmp/qwen-full28-device-focused-proof-20261104/preparation-v3/execution/owned_child.py", line 24, in audit
+    DENIED.append(['import',str(args[0])]);raise ImportError('genuine native imports unavailable')
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ImportError: genuine native imports unavailable
+final source/origin restoration: AssertionError()

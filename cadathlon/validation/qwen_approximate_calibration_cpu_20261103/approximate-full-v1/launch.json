@@ -1,0 +1,19 @@
+{
+  "session_id": 96408,
+  "session_owner": "security_review",
+  "shell_pid": 1150567,
+  "time_wrapper_pid": 1150569,
+  "python_pid": 1150570,
+  "cpu_affinity": [
+    140,
+    141,
+    142,
+    143
+  ],
+  "threads": 4,
+  "offline": true,
+  "healthy_run_has_no_imposed_timeout": true,
+  "command": "OPENBLAS_NUM_THREADS=4 OMP_NUM_THREADS=4 MKL_NUM_THREADS=4 HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 taskset -c 140-143 /usr/bin/time -v -o approximate-full-v1.time /tmp/cross-pretrained-validation-env/bin/python check_approximate.py --output approximate-full-v1",
+  "candidate_manifest_sha256": "d16cfe0eaf4079b1e782790dcff277ed6901aa7ea1376ee7877b40b54dde93a2",
+  "scope": "416-context calibration corpus only; no held-out validation or HE"
+}

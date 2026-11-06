@@ -30,6 +30,8 @@ def build_service(model, input_shape, *, batch, devices, keys=None):
     cleartext model, inspect labels, cache results by image identity or return
     precomputed answers.
 
-    TODO: begin with baseline.py, then optimize the encrypted serving path.
+    TODO: for the default student competition begin with baseline_student.py,
+    including its packing policy and supplied-key handling. The explicit
+    legacy profile starts with baseline.py. Then optimize encrypted serving.
     """
     raise NotImplementedError("Implement build_service in bench_opt.py")

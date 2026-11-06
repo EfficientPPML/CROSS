@@ -1,0 +1,51 @@
+{
+  "passed": true,
+  "scope": "Installed Python entrypoint denial/restoration only; no context, keys, model instantiation, asset reads, encryption or decryption.",
+  "actual_entrypoints_denied": [
+    "key_gen.gen_pke_pair",
+    "key_gen.gen_evaluation_key",
+    "key_gen.gen_rotation_key",
+    "key_gen.key_switch_gen",
+    "jaxite_word.key_gen.gen_pke_pair",
+    "jaxite_word.key_gen.gen_evaluation_key",
+    "jaxite_word.key_gen.gen_rotation_key",
+    "jaxite_word.key_gen.key_switch_gen",
+    "CKKSContext.decrypt",
+    "CKKSContext.decrypt_slots",
+    "CKKSContext.decrypt_slots_batch",
+    "CKKSContext.decode",
+    "BertModel.__init__",
+    "BertEncoder.__init__",
+    "BertLayer.__init__",
+    "BertPooler.__init__",
+    "BertForSequenceClassification.__init__",
+    "BertSelfAttention.__init__",
+    "BertAttention.__init__",
+    "BertIntermediate.__init__",
+    "BertOutput.__init__"
+  ],
+  "denial_count": 21,
+  "restored_count": 21,
+  "allowed_entrypoints_unchanged": 5,
+  "keygen_modules_distinct": true,
+  "context_constructed": false,
+  "keys_generated": false,
+  "model_constructed": false,
+  "asset_payloads_read": false,
+  "encrypt_called": false,
+  "decrypt_called": false,
+  "python": "/tmp/cross-pretrained-validation-env/bin/python",
+  "versions": {
+    "numpy": "2.5.4",
+    "jax": "0.12.0.1",
+    "jaxlib": "0.12.0.1",
+    "torch": "2.15.0+cpu",
+    "transformers": "4.51.3"
+  },
+  "loaded_module_sha256": {
+    "/tmp/bert-input-encryption-stage3-component-v3-20261103/source-bound-preflight-v3/snapshot/runtime/jaxite_word/key_gen.py": "742e6af9e1ce9025416fa2ef68ae037bca7e772d48fbbd6ca387cc79820119c8",
+    "/tmp/cross-pretrained-validation-env/lib/python3.13/site-packages/transformers/models/bert/modeling_bert.py": "ef3407eae97090a4c0bfb635b3aafd4435248148e553e4ae307aa2b4aa1efcbc",
+    "/tmp/bert-input-encryption-stage3-component-v3-20261103/source-bound-preflight-v3/snapshot/boundaries.py": "56638be4b04fd3558f32742ddadeb806d7cf8bc3c450caa8f516ebf7ebe9b30e",
+    "/tmp/bert-input-encryption-stage3-component-v3-20261103/source-bound-preflight-v3/snapshot/runtime/jaxite_word/ckks_ctx.py": "bc978cb7412b55416f7ed634a689ae616a263b0f47fd9eef996ba244f2505db6"
+  }
+}

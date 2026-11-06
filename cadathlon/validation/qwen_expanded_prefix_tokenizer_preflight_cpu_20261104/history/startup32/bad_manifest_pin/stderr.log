@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/tmp/qwen-token-entry-review-20261104/bad_manifest_pin/source/entry.py", line 167, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/tmp/qwen-token-entry-review-20261104/bad_manifest_pin/source/entry.py", line 160, in main
+    raw, expected, blobs, origins = authenticate(args.manifest, args.manifest_sha256)
+                                    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/qwen-token-entry-review-20261104/bad_manifest_pin/source/entry.py", line 74, in authenticate
+    raise ValueError('external source manifest SHA256 differs')
+ValueError: external source manifest SHA256 differs

@@ -1,0 +1,30 @@
+................................F....................................... [ 66%]
+.....................................                                    [100%]
+=================================== FAILURES ===================================
+_______ test_direct_entry_replays_all_immutable_bindings[forged_frozen] ________
+
+kind = 'forged_frozen'
+
+    @pytest.mark.parametrize('kind',['default_ready','source_added','source_changed','source_missing','forged_manifest',
+        'forged_policy','forged_validation','forged_mode','forged_frozen','duplicate_evidence','mutable_evidence'])
+    def test_direct_entry_replays_all_immutable_bindings(kind):
+        data,g,e=fixture();value=admit(data,g,e)
+        if kind=='default_ready':data['execution_authorization.json']=encoded({'execute':True})
+        elif kind=='source_added':data['new.py']=b'not in original source closure'
+        elif kind=='source_changed':data['public/model_pins.json']+=b' '
+        elif kind=='source_missing':data.pop('checker_protected_paths.json')
+        elif kind=='forged_manifest':value=replace(value,manifest_bytes=b'{}')
+        elif kind=='forged_policy':value=replace(value,policy_bytes=b'{}')
+        elif kind=='forged_validation':value=replace(value,validation_bytes=b'{}')
+        elif kind=='forged_mode':value=replace(value,mode='row0')
+        elif kind=='forged_frozen':value=replace(value,frozen=replace(value.frozen,ordinal=True))
+        elif kind=='duplicate_evidence':value=replace(value,evidence_bytes=value.evidence_bytes+(value.evidence_bytes[0],))
+        else:value=replace(value,evidence_bytes=list(value.evidence_bytes))
+>       with pytest.raises((ValueError,KeyError)):gate.require_authorized(value,data)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE any of (ValueError, KeyError)
+
+test_heldout_authorization.py:153: Failed
+=========================== short test summary info ============================
+FAILED test_heldout_authorization.py::test_direct_entry_replays_all_immutable_bindings[forged_frozen]
+1 failed, 108 passed in 1.32s

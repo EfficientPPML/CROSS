@@ -1,0 +1,36 @@
+--- held382/q5_ciphertext_owner.py
++++ successor/q5_ciphertext_owner.py
+@@ -75,10 +75,12 @@
+             shapes=dict(batch=1,num_elements=2,num_moduli=len(q),degree=131072,precision=32,degree_layout=(256,512))
+             parameters=dict(moduli=list(q),ntt_ctx=ntt_context)
+             value=backend.polynomial.Polynomial.from_array(array,shapes,parameters);r['value']=value;self.value=value
++            # Own both returned arrays before any metadata/security callback.
++            r['arrays'].append(value.polynomial);r['arrays'].append(value.moduli_array)
+             if value.ntt_ctx is not ntt_context:raise ValueError('injected original NTT context was not retained')
+             # Reconstruct authenticated wire metadata; no computed result is relabeled.
+             value._ckks_scale=row['scale'];value._ckks_nsd=row['nsd'];value.validate()
+-            r['arrays'].append(value.polynomial);value.polynomial.block_until_ready();guard()
++            value.polynomial.block_until_ready();guard()
+             backend.secure(ctx,[value]);guard()
+             if metadata(value,profile)!={k:row[k]for k in('level','scale','nsd')}:raise ValueError('materialized actual metadata differs')
+             r['state']=state(value,profile);self.check();return value
+@@ -90,9 +92,6 @@
+         same_state(r['state'],numerical_plan()['profile']);return r['value']
+     def close(self,primary=None):
+         primary=protect_body(primary)
+-        if self in _CLOSED:
+-            if primary is not None:raise primary
+-            return
+         if self in _CLOSED:
+             if primary is not None:raise primary
+             return
+@@ -157,6 +156,9 @@
+         if r['consumer']is None or r['value']is not r['consumer'].value:raise ValueError('original complete input consumer required')
+         return r['value']
+     def close(self,primary=None):
++        if self in _CLOSED:
++            if primary is not None:raise primary
++            return
+         r=_record(self)
+         if r['closed']:
+             if primary is not None:raise primary

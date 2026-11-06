@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="3" time="0.050" timestamp="2026-11-04T04:28:01.823406+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_review" name="test_constructor_fstat_failure_closes_acquired_directory" time="0.001"><failure message="AssertionError: Acquired directory descriptor was not retired&#10;assert [] == [13]&#10;  &#10;  Right contains one more item: 13&#10;  Use -v to get more diff">tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-642/test_constructor_fstat_failure0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7551033090f0&gt;
+
+    def test_constructor_fstat_failure_closes_acquired_directory(tmp_path,monkeypatch):
+        opened=[];closed=[];real_open=os.open;real_close=os.close;real_fstat=os.fstat
+        def acquire(*args,**kwargs):
+            fd=real_open(*args,**kwargs);opened.append(fd);return fd
+        def status(fd):
+            if fd in opened:raise OSError('initial fstat failure')
+            return real_fstat(fd)
+        def release(fd):closed.append(fd);return real_close(fd)
+        monkeypatch.setattr(r.os,'open',acquire);monkeypatch.setattr(r.os,'fstat',status);monkeypatch.setattr(r.os,'close',release)
+        try:
+            with pytest.raises(OSError):r.Publication(tmp_path/'out')
+&gt;           assert closed==opened,'Acquired directory descriptor was not retired'
+E           AssertionError: Acquired directory descriptor was not retired
+E           assert [] == [13]
+E             
+E             Right contains one more item: 13
+E             Use -v to get more diff
+
+/tmp/qwen-initial-terminal-verifier-review-20261104/source-bound-negative-v1/test_review.py:20: AssertionError</failure></testcase><testcase classname="test_review" name="test_nested_cleanup_only_cancellation_priority[KeyboardInterrupt]" time="0.001"><failure message="OSError: earlier file close only&#10;review cleanup close failure: KeyboardInterrupt">tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-642/test_nested_cleanup_only_cance0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x755103309e00&gt;
+kind = &lt;class 'KeyboardInterrupt'&gt;
+
+    @pytest.mark.parametrize('kind',[KeyboardInterrupt,SystemExit])
+    def test_nested_cleanup_only_cancellation_priority(tmp_path,monkeypatch,kind):
+        path=tmp_path/'data.json';path.write_text('{}')
+        publication=r.Publication(tmp_path/'out');owner=publication.fd
+        real_close=os.close;calls=[];cancel=kind('later directory close')
+        def close(fd):
+            calls.append(fd);real_close(fd)
+            if fd==owner:raise cancel
+            raise OSError('earlier file close only')
+        monkeypatch.setattr(r.os,'close',close)
+        primary=None
+        with pytest.raises(kind) as caught:
+&gt;           try:r.read(path)
+                ^^^^^^^^^^^^
+
+/tmp/qwen-initial-terminal-verifier-review-20261104/source-bound-negative-v1/test_review.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/tmp/qwen-initial-terminal-verifier-review-20261104/source-bound-negative-v1/reviewer.py:65: in read
+    finally: close(fd,primary)
+             ^^^^^^^^^^^^^^^^^
+/tmp/qwen-initial-terminal-verifier-review-20261104/source-bound-negative-v1/reviewer.py:42: in close
+    try: os.close(fd)
+         ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fd = 14
+
+    def close(fd):
+        calls.append(fd);real_close(fd)
+        if fd==owner:raise cancel
+&gt;       raise OSError('earlier file close only')
+E       OSError: earlier file close only
+E       review cleanup close failure: KeyboardInterrupt
+
+/tmp/qwen-initial-terminal-verifier-review-20261104/source-bound-negative-v1/test_review.py:34: OSError</failure></testcase><testcase classname="test_review" name="test_nested_cleanup_only_cancellation_priority[SystemExit]" time="0.001"><failure message="OSError: earlier file close only&#10;review cleanup close failure: SystemExit">tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-642/test_nested_cleanup_only_cance1')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7551033a8830&gt;
+kind = &lt;class 'SystemExit'&gt;
+
+    @pytest.mark.parametrize('kind',[KeyboardInterrupt,SystemExit])
+    def test_nested_cleanup_only_cancellation_priority(tmp_path,monkeypatch,kind):
+        path=tmp_path/'data.json';path.write_text('{}')
+        publication=r.Publication(tmp_path/'out');owner=publication.fd
+        real_close=os.close;calls=[];cancel=kind('later directory close')
+        def close(fd):
+            calls.append(fd);real_close(fd)
+            if fd==owner:raise cancel
+            raise OSError('earlier file close only')
+        monkeypatch.setattr(r.os,'close',close)
+        primary=None
+        with pytest.raises(kind) as caught:
+&gt;           try:r.read(path)
+                ^^^^^^^^^^^^
+
+/tmp/qwen-initial-terminal-verifier-review-20261104/source-bound-negative-v1/test_review.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/tmp/qwen-initial-terminal-verifier-review-20261104/source-bound-negative-v1/reviewer.py:65: in read
+    finally: close(fd,primary)
+             ^^^^^^^^^^^^^^^^^
+/tmp/qwen-initial-terminal-verifier-review-20261104/source-bound-negative-v1/reviewer.py:42: in close
+    try: os.close(fd)
+         ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fd = 14
+
+    def close(fd):
+        calls.append(fd);real_close(fd)
+        if fd==owner:raise cancel
+&gt;       raise OSError('earlier file close only')
+E       OSError: earlier file close only
+E       review cleanup close failure: SystemExit
+
+/tmp/qwen-initial-terminal-verifier-review-20261104/source-bound-negative-v1/test_review.py:34: OSError</failure></testcase></testsuite></testsuites>

@@ -1,0 +1,19 @@
+--- /tmp/qwen-toy5-actual-key-io-layer-20261104/q5_owned_io.py
++++ q5_owned_io.py
+@@ -3,7 +3,7 @@
+ No buffered file writer survives raw descriptor retirement. Actual capacity
+ for payload, encoded buffer and returned bytes remains externally unresolved.
+ """
+-import io,os,stat
++import io,os,stat,re
+ from cleanup_origin import protect_body
+ 
+ CHUNK=1<<20
+@@ -46,6 +46,7 @@
+ def publish(owner,name,write,limit):
+     """Borrow retained original directory owners; sole local raw-FD close."""
+     from q5_checkpoint_transport import state,_hash,finish
++    if type(name)is not str or re.fullmatch(r'[A-Za-z0-9_-]{1,80}\.(?:npz|npy|json)',name)is None:raise ValueError('one fixed flat artifact name required')
+     owner.check();raw=encode(write,limit);owner.check()
+     root=owner.root;parent=owner.parent;root_check=root.check;parent_check=parent.check
+     fd=None;primary=None

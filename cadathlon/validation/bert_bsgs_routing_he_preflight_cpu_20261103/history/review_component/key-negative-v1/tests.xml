@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.025" timestamp="2026-11-03T16:42:19.422250+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_key_read" name="test_fdopen_failure_has_no_lost_descriptor" time="0.002"><failure message="AssertionError: lost descriptors: [14]&#10;assert not [14]">tmp_path = PosixPath('/tmp/pytest-of-jianming_gatech/pytest-392/test_fdopen_failure_has_no_los0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x743d37370770&gt;
+
+    def test_fdopen_failure_has_no_lost_descriptor(tmp_path,monkeypatch):
+        p=tmp_path/'public.json';p.write_bytes(b'{}')
+        real_open=os.open;real_dup=os.dup;opened=[]
+        def opening(*a,**k):
+            fd=real_open(*a,**k);opened.append(fd);return fd
+        def duplicate(*a,**k):
+            fd=real_dup(*a,**k);opened.append(fd);return fd
+        def failing(*a,**k):raise RuntimeError('failed fdopen handoff')
+        with monkeypatch.context() as m:
+            m.setattr(os,'open',opening);m.setattr(os,'dup',duplicate);m.setattr(os,'fdopen',failing)
+            with pytest.raises(RuntimeError,match='failed fdopen'):gate.read(p)
+        leaked=[]
+        for fd in opened:
+            try:os.fstat(fd)
+            except OSError:continue
+            leaked.append(fd);os.close(fd)
+&gt;       assert not leaked,'lost descriptors: '+repr(leaked)
+E       AssertionError: lost descriptors: [14]
+E       assert not [14]
+
+test_key_read.py:22: AssertionError</failure></testcase></testsuite></testsuites>

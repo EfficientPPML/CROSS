@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/tmp/bert-prepared-bsgs-server-component-20261104/installed_server_probe.py", line 48, in <module>
+    r=run(**vars(p.parse_args()));print(json.dumps({'passed':r['passed'],'denied_count':r['denied_count']}));raise SystemExit(0 if r['passed'] else 1)
+  File "/tmp/bert-prepared-bsgs-server-component-20261104/installed_server_probe.py", line 45, in run
+    return common.finish(output,report,body,termination_signals,cleanup_signals)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/bert-prepared-bsgs-server-component-20261104/combined_common.py", line 190, in finish
+    write(path,report);body(report)
+                       ~~~~^^^^^^^^
+  File "/tmp/bert-prepared-bsgs-server-component-20261104/installed_server_probe.py", line 20, in body
+    import key_gen
+ModuleNotFoundError: No module named 'key_gen'

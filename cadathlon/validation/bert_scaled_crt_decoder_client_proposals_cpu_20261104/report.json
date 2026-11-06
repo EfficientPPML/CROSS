@@ -1,0 +1,187 @@
+{
+  "actual_client": false,
+  "backend_imported": false,
+  "call_chain": [
+    "file_stages.client_decrypt_decode",
+    "key_contexts.load_client/_crypto",
+    "jaxite_word.CKKSContext == jaxite_word.ckks_ctx.CKKSContext",
+    "CKKSContext.decrypt_slots",
+    "_fast_decrypt_decode",
+    "_fast_decode",
+    "_scale_centered_crt_coefficient"
+  ],
+  "clients": {
+    "combined125": {
+      "changed_files": {
+        "README_CLIENT.md": {
+          "after": "34663c609989497ab8800211e678f170fb000aa1627c98fa31e01f99ce724c2c",
+          "before": "4ecc06c6e90fb802e81ad34d080ccd607d2a4ec8f7b15059676cbecbe0323de7"
+        },
+        "client_source_guard.py": {
+          "after": "e0121d5ad3682e286e0fb03aabed8f9a129714c1ec05bd7925ca159c49c0ca71",
+          "before": "b8afb1e88f005fcc9ff58464c051236c571d8e64ae28558c124577c112e0c366"
+        },
+        "runtime/jaxite_word/ckks_ctx.py": {
+          "after": "9675b300d507fd9c6a3d03656c9df325d8da68a9331b4c92def0512784d0dc26",
+          "before": "bc978cb7412b55416f7ed634a689ae616a263b0f47fd9eef996ba244f2505db6"
+        },
+        "test_client_source_guard.py": {
+          "after": "1b704540bfce95d62864d4222cafa3afe97ede7dec14cec1730a22e754705ac8",
+          "before": "3ebf000e068441d7d17f086f374a5bc628f108ea8a2187a18ff32fdaddb5d15d"
+        }
+      },
+      "critical_resolution_guard_unchanged": true,
+      "default_or_separate_receipt_contract_unchanged": true,
+      "installed_probe_executed": false,
+      "module_resolution": {
+        "ckks_ctx": "runtime/jaxite_word/ckks_ctx.py",
+        "jaxite_word.ckks_ctx": "runtime/jaxite_word/ckks_ctx.py"
+      },
+      "overlays": {
+        "input_gate.py": "6476dcc96764a3ac61807f551184fcc180a52d7486c4a22484254cfdb79e9451",
+        "key_gate.py": "19f791eeb448d44d09e7a02e194539d318e8409104086910f7af3dfd3bce075b",
+        "runtime/jaxite_word/ckks_ctx.py": "9675b300d507fd9c6a3d03656c9df325d8da68a9331b4c92def0512784d0dc26",
+        "runtime/stage/client_keys.py": "d6a2aac4e8ecf483e250a793a341cc6e451e2e9471ad8725e7699f720c7cfa76",
+        "runtime/stage/file_stage_io.py": "e50d0ea824ab0be181bd891c725f371ce9f594b79a72e7215b7c8cb8f4e37a42",
+        "runtime/stage/file_stages.py": "f3889816f897f5c96a79c7f16340f851460c7b71b216b818589c2eaa17ee85db",
+        "runtime/stage/key_contexts.py": "056627ee3080f3d6ec7445ceb2f25171b49c7fc08eb256449a656b100f5853f0",
+        "runtime/stage/request_lifecycle.py": "3d8b80f949ca2cdf7ee7cbe88fe848fb654ed79c1356724cc9f4294edb71039a",
+        "runtime/stage/transport.py": "d9c393184957c8ee26b05818a5ac9e647b0e0528b7a8eba4f191e3fbce837a49"
+      },
+      "parent89_unchanged_count": 80,
+      "parent_source_manifest_sha256": "f5fd949507f210a7b40b0b0cf508268f6a625911c7dcb6526cb0870a9dc269d7",
+      "protected_unchanged": {
+        "boundaries.py": "17da164c2cc04a05e806962717689234872847822a2ec24147ac134f00a1ad78",
+        "client_89_report.json": "274ec333531f42e0ca76cd8b6ec2ef508dcf0dd9c1366ac9350c3e52f093c424",
+        "client_89_sources.json": "4caa7697ea5260f0ea88f144452873fc87d71d551e9d8033a909da03cfb48882",
+        "client_metrics.py": "68aa909ad63de83bf2065c240c1ced24aecb6e27faef2178992183ded91251d0",
+        "combined_server_gate.py": "00c14c4773d18aec42be2283b958ff80ba85c292f9e3bc310d236f4e54e73d51",
+        "combined_server_preflight.json": "31f9120534e1d23843b3f7a5ec7e68c77963ac7456e5e0b492557aedd26b4315",
+        "combined_server_preflight_sources.tar.gz": "fd46274e075565bcec545cca13f03470d4b9506b6327ffd7f403a756acbcaa94",
+        "combined_server_sources.json": "3699090915c2fa08783fdf1fe57e7d3acd84131dfd858b27bfbcac329da544c4",
+        "dependencies.json": "e2c1c593ff0c4ca19f49919965b02bde8c7778c19c50c91daadbd9c12ff2ac08",
+        "key_gate.py": "19f791eeb448d44d09e7a02e194539d318e8409104086910f7af3dfd3bce075b",
+        "key_source_manifest.json": "b98e852d6111a63bbe2f25c5e811c8b56469100e85c3a3af7a26f86688adf4c7",
+        "model_gate.py": "162b2eb4ef2d8c32c7405273b77f5709b61a101b60b03e29bb6f3cad37b62d55",
+        "runtime/stage/client_keys.py": "d6a2aac4e8ecf483e250a793a341cc6e451e2e9471ad8725e7699f720c7cfa76",
+        "runtime/stage/file_stages.py": "f3889816f897f5c96a79c7f16340f851460c7b71b216b818589c2eaa17ee85db",
+        "runtime/stage/key_contexts.py": "056627ee3080f3d6ec7445ceb2f25171b49c7fc08eb256449a656b100f5853f0",
+        "runtime/stage/request_lifecycle.py": "3d8b80f949ca2cdf7ee7cbe88fe848fb654ed79c1356724cc9f4294edb71039a",
+        "runtime/stage/server_inputs/candidate_manifest.json": "4e2277beea7189aa1d77b168c500c8a175f6c630afa520fcc6b38cb5a179cff9",
+        "source_origin.json": "822e22818935ad0ff20dcb07f386aea423dac6d0d7a66c935cb3c6f00e632e3e",
+        "stage3_gate.py": "4a1eb00824a611a9463598dcc67e6acbcee29f004e74f5d1dc3a219e57ff9514",
+        "stage3_source_manifest.json": "71a2baea2ac12c47c41414636945611714257f9f86fc6190946e42d625490e70",
+        "stage4_gate.py": "a5df19a833a1e37f00dda867ce5bef15942707f1e1a95987439e74b88e6a5e74",
+        "stage4_source_manifest.json": "057293de3cbc37400daa7461d2d9be05aaa77734a999dc54876ec972e1ae567a"
+      },
+      "source_archive_sha256": "6fd87ede77b605bac56c53f8b636d76aeacc1fc9160749e9c056a476e56d00fb",
+      "source_bytes": 14285472,
+      "source_count": 125,
+      "source_manifest_sha256": "6b2b1985c1f9e7298bf47cf8559fd8a2122b0ad854289fed8674c2c05e8475a0",
+      "source_root": "/tmp/bert-scaled-crt-decoder-client-proposals-20261104/combined125/source",
+      "tests_executed": false,
+      "unchanged_count": 121
+    },
+    "original122": {
+      "changed_files": {
+        "README_CLIENT.md": {
+          "after": "c3afda10fc55b760295ebf8fcf1e102d0e95f1c96dcec94a99827ae8450f99eb",
+          "before": "28c2e005d0613659534996ab451abe3b6ace96696985cf31c1dfe112ce15fd97"
+        },
+        "client_source_guard.py": {
+          "after": "d3f1def1b35b7dd1575dfb8608ed1157cea9d1d4b0d5d0682493fd0b08ac1e40",
+          "before": "7ba4a12b0c1fce0ea6f24cabcf7a1ee9878ca285e7c26c87cf712deb225290ec"
+        },
+        "runtime/jaxite_word/ckks_ctx.py": {
+          "after": "9675b300d507fd9c6a3d03656c9df325d8da68a9331b4c92def0512784d0dc26",
+          "before": "bc978cb7412b55416f7ed634a689ae616a263b0f47fd9eef996ba244f2505db6"
+        },
+        "test_client_source_guard.py": {
+          "after": "a04d056fd80fe662eb218fb3e4645a93a8c8a7fa65cb45adca7a596922a88da7",
+          "before": "2edab67bdca582df960f17487c5d80a4671e60f8ddb38bf32c0ebeb6af93b03d"
+        }
+      },
+      "critical_resolution_guard_unchanged": true,
+      "default_or_separate_receipt_contract_unchanged": true,
+      "installed_probe_executed": false,
+      "module_resolution": {
+        "ckks_ctx": "runtime/jaxite_word/ckks_ctx.py",
+        "jaxite_word.ckks_ctx": "runtime/jaxite_word/ckks_ctx.py"
+      },
+      "overlays": {
+        "input_gate.py": "6476dcc96764a3ac61807f551184fcc180a52d7486c4a22484254cfdb79e9451",
+        "key_gate.py": "19f791eeb448d44d09e7a02e194539d318e8409104086910f7af3dfd3bce075b",
+        "runtime/jaxite_word/ckks_ctx.py": "9675b300d507fd9c6a3d03656c9df325d8da68a9331b4c92def0512784d0dc26",
+        "runtime/stage/client_keys.py": "d6a2aac4e8ecf483e250a793a341cc6e451e2e9471ad8725e7699f720c7cfa76",
+        "runtime/stage/file_stage_io.py": "e50d0ea824ab0be181bd891c725f371ce9f594b79a72e7215b7c8cb8f4e37a42",
+        "runtime/stage/key_contexts.py": "056627ee3080f3d6ec7445ceb2f25171b49c7fc08eb256449a656b100f5853f0",
+        "runtime/stage/request_lifecycle.py": "de6f72504035b17d5c1dea4e3456c5dc269cdebc1f96bbe153a9b18b36c100a4",
+        "runtime/stage/transport.py": "d9c393184957c8ee26b05818a5ac9e647b0e0528b7a8eba4f191e3fbce837a49"
+      },
+      "parent89_unchanged_count": 81,
+      "parent_source_manifest_sha256": "49ff2d27e11ce773d27baec448fc1bbb0672fbf2ff6e9e8b94ca14ceda126a56",
+      "protected_unchanged": {
+        "boundaries.py": "17da164c2cc04a05e806962717689234872847822a2ec24147ac134f00a1ad78",
+        "client_89_report.json": "274ec333531f42e0ca76cd8b6ec2ef508dcf0dd9c1366ac9350c3e52f093c424",
+        "client_89_sources.json": "4caa7697ea5260f0ea88f144452873fc87d71d551e9d8033a909da03cfb48882",
+        "client_metrics.py": "68aa909ad63de83bf2065c240c1ced24aecb6e27faef2178992183ded91251d0",
+        "dependencies.json": "e2c1c593ff0c4ca19f49919965b02bde8c7778c19c50c91daadbd9c12ff2ac08",
+        "key_gate.py": "19f791eeb448d44d09e7a02e194539d318e8409104086910f7af3dfd3bce075b",
+        "key_source_manifest.json": "b98e852d6111a63bbe2f25c5e811c8b56469100e85c3a3af7a26f86688adf4c7",
+        "model_gate.py": "162b2eb4ef2d8c32c7405273b77f5709b61a101b60b03e29bb6f3cad37b62d55",
+        "runtime/stage/client_keys.py": "d6a2aac4e8ecf483e250a793a341cc6e451e2e9471ad8725e7699f720c7cfa76",
+        "runtime/stage/file_stages.py": "e991067627dedf893b898c0a56c0b54605db9dab5881024ee8085f7adc7fb064",
+        "runtime/stage/key_contexts.py": "056627ee3080f3d6ec7445ceb2f25171b49c7fc08eb256449a656b100f5853f0",
+        "runtime/stage/request_lifecycle.py": "de6f72504035b17d5c1dea4e3456c5dc269cdebc1f96bbe153a9b18b36c100a4",
+        "runtime/stage/server_inputs/candidate_manifest.json": "4e2277beea7189aa1d77b168c500c8a175f6c630afa520fcc6b38cb5a179cff9",
+        "source_origin.json": "822e22818935ad0ff20dcb07f386aea423dac6d0d7a66c935cb3c6f00e632e3e",
+        "stage3_gate.py": "4a1eb00824a611a9463598dcc67e6acbcee29f004e74f5d1dc3a219e57ff9514",
+        "stage3_source_manifest.json": "71a2baea2ac12c47c41414636945611714257f9f86fc6190946e42d625490e70",
+        "stage4_gate.py": "a5df19a833a1e37f00dda867ce5bef15942707f1e1a95987439e74b88e6a5e74",
+        "stage4_source_manifest.json": "057293de3cbc37400daa7461d2d9be05aaa77734a999dc54876ec972e1ae567a"
+      },
+      "source_archive_sha256": "20fb4e7b818ad26fa0e69037c2558b017f995f7e5401c74390abca31fa84ec6f",
+      "source_bytes": 8712165,
+      "source_count": 122,
+      "source_manifest_sha256": "6e3e30ad643921e9546be144e7da0dce485e9dd1be088f31f62f35cd2aa4c5f9",
+      "source_root": "/tmp/bert-scaled-crt-decoder-client-proposals-20261104/original122/source",
+      "tests_executed": false,
+      "unchanged_count": 118
+    }
+  },
+  "decoder": {
+    "exact_module_AST_delta": "one added scaling helper plus two _fast_decode call substitutions",
+    "path": "/tmp/ckks-scaled-crt-decoder-candidate-v2-20261104/checkout/jaxite_word/ckks_ctx.py",
+    "predecessor_sha256": "bc978cb7412b55416f7ed634a689ae616a263b0f47fd9eef996ba244f2505db6",
+    "proof_report_sha256": "2b897eb81f65ab2ff5f1dc3ecb17f2092c8aa514a75dceaead415a7aa53b9503",
+    "proof_scope": "clear synthetic CPU CRT/FFT arithmetic; no HE/model result",
+    "proof_source_archive_sha256": "1bd06ce0d036698bffcbc06eabe4e131107b30aee5fcb7ba08768b9dd0ee0afb",
+    "proof_source_count": 207,
+    "proof_source_manifest_sha256": "9d9190b2a3c65f831f69fe30af6ece7b0b94f05bf83e9a21310ca32f99fda2aa",
+    "proof_tests": 35,
+    "sha256": "9675b300d507fd9c6a3d03656c9df325d8da68a9331b4c92def0512784d0dc26"
+  },
+  "final_BERT_response": {
+    "level": 2,
+    "max_centered_coefficient_bits": 180,
+    "moduli": 6,
+    "observed_ciphertext_read": false,
+    "overflow_fallback_needed_for_valid_final_coefficients": false,
+    "payload_bytes": 6291456,
+    "product": "1751670000465438285501548491304630284018762886332809217",
+    "q": [
+      2146959361,
+      860618753,
+      983826433,
+      862978049,
+      998244353,
+      1118568449
+    ],
+    "q_product_bits": 181
+  },
+  "full_preflight_executed": false,
+  "launch_authorized": false,
+  "private_payload_read": false,
+  "schema": "bert-scaled-crt-client-source-proposal-v1",
+  "source_only": true
+}

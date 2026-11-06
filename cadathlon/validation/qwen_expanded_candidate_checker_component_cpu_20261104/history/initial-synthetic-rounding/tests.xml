@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="49" time="1.357" timestamp="2026-11-04T03:52:18.074815+00:00" hostname="t1v-n-a4e6c486-w-0"><testcase classname="test_dispatch" name="test_complete3200_and_unchanged_aggregates" time="0.031" /><testcase classname="test_dispatch" name="test_own_candidate_free_trace_not_initial_generator_or_teacher" time="0.034" /><testcase classname="test_dispatch" name="test_finite_numeric_failure_keeps_actual_candidate_suffix[0]" time="0.028" /><testcase classname="test_dispatch" name="test_finite_numeric_failure_keeps_actual_candidate_suffix[1]" time="0.028" /><testcase classname="test_dispatch" name="test_finite_numeric_failure_keeps_actual_candidate_suffix[2]" time="0.028" /><testcase classname="test_dispatch" name="test_finite_numeric_failure_keeps_actual_candidate_suffix[3]" time="0.035" /><testcase classname="test_dispatch" name="test_candidate_domain_stop_preserves_denominators_and_teacher_continues[0-teacher]" time="0.045" /><testcase classname="test_dispatch" name="test_candidate_domain_stop_preserves_denominators_and_teacher_continues[0-free]" time="0.045" /><testcase classname="test_dispatch" name="test_candidate_domain_stop_preserves_denominators_and_teacher_continues[0-prefill]" time="0.044" /><testcase classname="test_dispatch" name="test_candidate_domain_stop_preserves_denominators_and_teacher_continues[2-teacher]" time="0.045" /><testcase classname="test_dispatch" name="test_candidate_domain_stop_preserves_denominators_and_teacher_continues[2-free]" time="0.045" /><testcase classname="test_dispatch" name="test_candidate_domain_stop_preserves_denominators_and_teacher_continues[2-prefill]" time="0.045" /><testcase classname="test_dispatch" name="test_invalid_native_exact_comparison_never_authorizes_revision[prefill]" time="0.057" /><testcase classname="test_dispatch" name="test_invalid_native_exact_comparison_never_authorizes_revision[teacher]" time="0.050" /><testcase classname="test_dispatch" name="test_invalid_native_exact_comparison_never_authorizes_revision[free]" time="0.051" /><testcase classname="test_dispatch" name="test_incomplete_terminal_cannot_authorize_revision[complete]" time="0.028" /><testcase classname="test_dispatch" name="test_incomplete_terminal_cannot_authorize_revision[source_verified]" time="0.028" /><testcase classname="test_dispatch" name="test_incomplete_terminal_cannot_authorize_revision[assets_verified]" time="0.028" /><testcase classname="test_dispatch" name="test_incomplete_terminal_cannot_authorize_revision[cleanup_completed]" time="0.028" /><testcase classname="test_dispatch" name="test_incomplete_terminal_cannot_authorize_revision[signal_restoration_completed]" time="0.028" /><testcase classname="test_dispatch" name="test_incomplete_terminal_cannot_authorize_revision[child_reaped]" time="0.036" /><testcase classname="test_dispatch" name="test_incomplete_terminal_cannot_authorize_revision[child_group_absent]" time="0.028" /><testcase classname="test_dispatch" name="test_incomplete_terminal_cannot_authorize_revision[returncode]" time="0.034" /><testcase classname="test_dispatch" name="test_budget_maximum_three_and_pass_freezes_before_validation" time="0.212" /><testcase classname="test_dispatch" name="test_active_interrupted_attempt_cannot_reset_budget" time="0.042" /><testcase classname="test_dispatch" name="test_strict_candidate_adapter_contract[bad0]" time="0.000" /><testcase classname="test_dispatch" name="test_strict_candidate_adapter_contract[bad1]" time="0.000" /><testcase classname="test_dispatch" name="test_strict_candidate_adapter_contract[bad2]" time="0.000" /><testcase classname="test_dispatch" name="test_strict_candidate_adapter_contract[bad3]" time="0.000" /><testcase classname="test_dispatch" name="test_strict_candidate_adapter_contract[bad4]" time="0.000" /><testcase classname="test_dispatch" name="test_infrastructure_failures_escape_no_complete_ledger[KeyboardInterrupt]" time="0.010" /><testcase classname="test_dispatch" name="test_infrastructure_failures_escape_no_complete_ledger[SystemExit]" time="0.010" /><testcase classname="test_dispatch" name="test_infrastructure_failures_escape_no_complete_ledger[RuntimeError]" time="0.010" /><testcase classname="test_dispatch" name="test_infrastructure_failures_escape_no_complete_ledger[MemoryError]" time="0.010" /><testcase classname="test_capture" name="test_single_wrapper421_outputs113_variances28_blocks_and_original_return[1]" time="0.015"><failure message="AssertionError: &#10;Arrays are not equal&#10;&#10;Mismatched elements: 3 / 4 (75%)&#10;Mismatch at indices:&#10; [0, 0, 1]: 101.0999984741211 (ACTUAL), 101.10000002384186 (DESIRED)&#10; [0, 0, 2]: 101.19999694824219 (ACTUAL), 101.20000004768372 (DESIRED)&#10; [0, 0, 3]: 101.30000305175781 (ACTUAL), 101.29999995231628 (DESIRED)&#10;Max absolute difference among violations: 3.09944153e-06&#10;Max relative difference among violations: 3.06268926e-08&#10; ACTUAL: array([[[101.      , 101.099998, 101.199997, 101.300003]]])&#10;[+1 more line; full report in element text]">backend = (namespace(training=False, model=namespace(layers=[&lt;test_capture.Target object at 0x77140d0efe00&gt;, &lt;test_capture.Targe... object at 0x77140c504530&gt;), (&lt;test_capture.Tensor object at 0x77140a42e750&gt;, &lt;object object at 0x77140c504520&gt;), ...])
+S = 1
+
+    @pytest.mark.parametrize('S',[1,3,32])
+    def test_single_wrapper421_outputs113_variances28_blocks_and_original_return(backend,S):
+     model,state,module,original,calls,returns=backend
+     with NativeCaptureWithInputs(model)as capture:
+      _,_,_,inactive=emit(model,module,S);assert not capture.operators and not capture.book.ranges
+      capture.begin(S);x,q,k,actual=emit(model,module,S);result=capture.end()
+      assert len(result['operators'])==421 and len(result['blocks'])==28
+      assert result['inputs']['norm_input_sites']==113 and result['inputs']['silu_gate_sites']==28
+      assert len(calls)==56 and all(actual[i]is returns[28+i]for i in range(28))
+      assert all(row[-1]=={'unchanged':True}for row in calls)
+      # Distinct variance INPUT and learned-weight output namespaces.
+      expected=float(np.float32(np.mean(x.data[0,0]**2)+np.float32(1e-6)))
+      assert result['inputs']['ranges']['0.input.inverse_sqrt']['minimum']==expected
+&gt;     np.testing.assert_array_equal(result['operators']['0.input.inverse_sqrt'],x.data.astype(float)+100)
+E     AssertionError: 
+E     Arrays are not equal
+E     
+E     Mismatched elements: 3 / 4 (75%)
+E     Mismatch at indices:
+E      [0, 0, 1]: 101.0999984741211 (ACTUAL), 101.10000002384186 (DESIRED)
+E      [0, 0, 2]: 101.19999694824219 (ACTUAL), 101.20000004768372 (DESIRED)
+E      [0, 0, 3]: 101.30000305175781 (ACTUAL), 101.29999995231628 (DESIRED)
+E     Max absolute difference among violations: 3.09944153e-06
+E     Max relative difference among violations: 3.06268926e-08
+E      ACTUAL: array([[[101.      , 101.099998, 101.199997, 101.300003]]])
+E      DESIRED: array([[[101. , 101.1, 101.2, 101.3]]])
+
+test_capture.py:86: AssertionError</failure></testcase><testcase classname="test_capture" name="test_single_wrapper421_outputs113_variances28_blocks_and_original_return[3]" time="0.015"><failure message="AssertionError: &#10;Arrays are not equal&#10;&#10;Mismatched elements: 9 / 12 (75%)&#10;First 5 mismatches are at indices:&#10; [0, 0, 1]: 101.0999984741211 (ACTUAL), 101.10000002384186 (DESIRED)&#10; [0, 0, 2]: 101.19999694824219 (ACTUAL), 101.20000004768372 (DESIRED)&#10; [0, 0, 3]: 101.30000305175781 (ACTUAL), 101.29999995231628 (DESIRED)&#10; [0, 1, 0]: 101.4000015258789 (ACTUAL), 101.39999997615814 (DESIRED)&#10; [0, 1, 2]: 101.5999984741211 (ACTUAL), 101.60000002384186 (DESIRED)&#10;[+8 more lines; full report in element text]">backend = (namespace(training=False, model=namespace(layers=[&lt;test_capture.Target object at 0x77140a4123c0&gt;, &lt;test_capture.Targe... object at 0x77140c504920&gt;), (&lt;test_capture.Tensor object at 0x77140ac24650&gt;, &lt;object object at 0x77140c504910&gt;), ...])
+S = 3
+
+    @pytest.mark.parametrize('S',[1,3,32])
+    def test_single_wrapper421_outputs113_variances28_blocks_and_original_return(backend,S):
+     model,state,module,original,calls,returns=backend
+     with NativeCaptureWithInputs(model)as capture:
+      _,_,_,inactive=emit(model,module,S);assert not capture.operators and not capture.book.ranges
+      capture.begin(S);x,q,k,actual=emit(model,module,S);result=capture.end()
+      assert len(result['operators'])==421 and len(result['blocks'])==28
+      assert result['inputs']['norm_input_sites']==113 and result['inputs']['silu_gate_sites']==28
+      assert len(calls)==56 and all(actual[i]is returns[28+i]for i in range(28))
+      assert all(row[-1]=={'unchanged':True}for row in calls)
+      # Distinct variance INPUT and learned-weight output namespaces.
+      expected=float(np.float32(np.mean(x.data[0,0]**2)+np.float32(1e-6)))
+      assert result['inputs']['ranges']['0.input.inverse_sqrt']['minimum']==expected
+&gt;     np.testing.assert_array_equal(result['operators']['0.input.inverse_sqrt'],x.data.astype(float)+100)
+E     AssertionError: 
+E     Arrays are not equal
+E     
+E     Mismatched elements: 9 / 12 (75%)
+E     First 5 mismatches are at indices:
+E      [0, 0, 1]: 101.0999984741211 (ACTUAL), 101.10000002384186 (DESIRED)
+E      [0, 0, 2]: 101.19999694824219 (ACTUAL), 101.20000004768372 (DESIRED)
+E      [0, 0, 3]: 101.30000305175781 (ACTUAL), 101.29999995231628 (DESIRED)
+E      [0, 1, 0]: 101.4000015258789 (ACTUAL), 101.39999997615814 (DESIRED)
+E      [0, 1, 2]: 101.5999984741211 (ACTUAL), 101.60000002384186 (DESIRED)
+E     Max absolute difference among violations: 3.09944153e-06
+E     Max relative difference among violations: 3.06268926e-08
+E      ACTUAL: array([[[101.      , 101.099998, 101.199997, 101.300003],
+E             [101.400002, 101.5     , 101.599998, 101.699997],
+E             [101.800003, 101.900002, 102.      , 102.099998]]])
+E      DESIRED: array([[[101. , 101.1, 101.2, 101.3],
+E             [101.4, 101.5, 101.6, 101.7],
+E             [101.8, 101.9, 102. , 102.1]]])
+
+test_capture.py:86: AssertionError</failure></testcase><testcase classname="test_capture" name="test_single_wrapper421_outputs113_variances28_blocks_and_original_return[32]" time="0.049"><failure message="AssertionError: &#10;Arrays are not equal&#10;&#10;Mismatched elements: 102 / 128 (79.7%)&#10;First 5 mismatches are at indices:&#10; [0, 0, 1]: 101.0999984741211 (ACTUAL), 101.10000002384186 (DESIRED)&#10; [0, 0, 2]: 101.19999694824219 (ACTUAL), 101.20000004768372 (DESIRED)&#10; [0, 0, 3]: 101.30000305175781 (ACTUAL), 101.29999995231628 (DESIRED)&#10; [0, 1, 0]: 101.4000015258789 (ACTUAL), 101.39999997615814 (DESIRED)&#10; [0, 1, 2]: 101.5999984741211 (ACTUAL), 101.60000002384186 (DESIRED)&#10;[+8 more lines; full report in element text]">backend = (namespace(training=False, model=namespace(layers=[&lt;test_capture.Target object at 0x77140a4335c0&gt;, &lt;test_capture.Targe... object at 0x77140c504c90&gt;), (&lt;test_capture.Tensor object at 0x77140ac2a6f0&gt;, &lt;object object at 0x77140c504ce0&gt;), ...])
+S = 32
+
+    @pytest.mark.parametrize('S',[1,3,32])
+    def test_single_wrapper421_outputs113_variances28_blocks_and_original_return(backend,S):
+     model,state,module,original,calls,returns=backend
+     with NativeCaptureWithInputs(model)as capture:
+      _,_,_,inactive=emit(model,module,S);assert not capture.operators and not capture.book.ranges
+      capture.begin(S);x,q,k,actual=emit(model,module,S);result=capture.end()
+      assert len(result['operators'])==421 and len(result['blocks'])==28
+      assert result['inputs']['norm_input_sites']==113 and result['inputs']['silu_gate_sites']==28
+      assert len(calls)==56 and all(actual[i]is returns[28+i]for i in range(28))
+      assert all(row[-1]=={'unchanged':True}for row in calls)
+      # Distinct variance INPUT and learned-weight output namespaces.
+      expected=float(np.float32(np.mean(x.data[0,0]**2)+np.float32(1e-6)))
+      assert result['inputs']['ranges']['0.input.inverse_sqrt']['minimum']==expected
+&gt;     np.testing.assert_array_equal(result['operators']['0.input.inverse_sqrt'],x.data.astype(float)+100)
+E     AssertionError: 
+E     Arrays are not equal
+E     
+E     Mismatched elements: 102 / 128 (79.7%)
+E     First 5 mismatches are at indices:
+E      [0, 0, 1]: 101.0999984741211 (ACTUAL), 101.10000002384186 (DESIRED)
+E      [0, 0, 2]: 101.19999694824219 (ACTUAL), 101.20000004768372 (DESIRED)
+E      [0, 0, 3]: 101.30000305175781 (ACTUAL), 101.29999995231628 (DESIRED)
+E      [0, 1, 0]: 101.4000015258789 (ACTUAL), 101.39999997615814 (DESIRED)
+E      [0, 1, 2]: 101.5999984741211 (ACTUAL), 101.60000002384186 (DESIRED)
+E     Max absolute difference among violations: 3.09944153e-06
+E     Max relative difference among violations: 3.06268926e-08
+E      ACTUAL: array([[[101.      , 101.099998, 101.199997, 101.300003],
+E             [101.400002, 101.5     , 101.599998, 101.699997],
+E             [101.800003, 101.900002, 102.      , 102.099998],...
+E      DESIRED: array([[[101. , 101.1, 101.2, 101.3],
+E             [101.4, 101.5, 101.6, 101.7],
+E             [101.8, 101.9, 102. , 102.1],...
+
+test_capture.py:86: AssertionError</failure></testcase><testcase classname="test_capture" name="test_partial_input_or_output_registration_restores_all_handles[1]" time="0.001" /><testcase classname="test_capture" name="test_partial_input_or_output_registration_restores_all_handles[3]" time="0.003" /><testcase classname="test_capture" name="test_partial_input_or_output_registration_restores_all_handles[50]" time="0.001" /><testcase classname="test_capture" name="test_partial_input_or_output_registration_restores_all_handles[500]" time="0.001" /><testcase classname="test_capture" name="test_sticky_body_cleanup_preserved_and_all_removal_attempted[KeyboardInterrupt]" time="0.001" /><testcase classname="test_capture" name="test_sticky_body_cleanup_preserved_and_all_removal_attempted[SystemExit]" time="0.001" /><testcase classname="test_capture" name="test_competing_existing_wrapper_rejected_before_install[_expanded_native_observer]" time="0.000" /><testcase classname="test_capture" name="test_competing_existing_wrapper_rejected_before_install[_strict_native_capture]" time="0.000" /><testcase classname="test_capture" name="test_competing_existing_wrapper_rejected_before_install[_expanded_candidate_capture]" time="0.000" /><testcase classname="test_capture" name="test_our_wrapper_rejects_nested_old_observer_too" time="0.001" /><testcase classname="test_capture" name="test_saved_remove_accessor_and_incomplete_capture" time="0.003" /><testcase classname="test_capture" name="test_nonfinite_input_stops_before_output_capture" time="0.001" /></testsuite></testsuites>

@@ -1,0 +1,15 @@
+.........................................F.................              [100%]
+=================================== FAILURES ===================================
+________ test_external_digest_and_reviewed_archive_reject_substitution _________
+
+    def test_external_digest_and_reviewed_archive_reject_substitution():
+        data=fixture();blobs,pins=encode(data)
+        with pytest.raises(ValueError):a.authenticate_synthetic(blobs[0]+b' ',*blobs[1:],pins=pins)
+>       data[-1]=s.canonical({'substitute.py':s.digest(b'other')})
+        ^^^^^^^^
+E       TypeError: 'tuple' object does not support item assignment
+
+test_selector.py:101: TypeError
+=========================== short test summary info ============================
+FAILED test_selector.py::test_external_digest_and_reviewed_archive_reject_substitution
+1 failed, 58 passed in 3.56s

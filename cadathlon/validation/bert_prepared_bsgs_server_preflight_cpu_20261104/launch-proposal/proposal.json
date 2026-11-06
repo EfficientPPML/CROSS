@@ -1,0 +1,181 @@
+{
+  "actual_launch_authorized": false,
+  "borrowed_root_identities": {
+    "borrowed_upload": {
+      "identity": [
+        66305,
+        2383744
+      ],
+      "path": "/tmp/cross-bert-input-encryption-7b255c2357c94060b73e474a1f8ef5fa/upload"
+    },
+    "key_root": {
+      "identity": [
+        24,
+        1563
+      ],
+      "path": "/dev/shm/cross-full-bert-keys-143b3f5c1573427d841760a3c9d5d33d"
+    },
+    "model_root": {
+      "identity": [
+        66305,
+        2383041
+      ],
+      "path": "/tmp/cross-bert-public-model-b51668856dab42a3846ba1b7c7a71d53"
+    },
+    "original_io": {
+      "identity": [
+        66305,
+        2383254
+      ],
+      "path": "/tmp/cross-bert-input-encryption-7b255c2357c94060b73e474a1f8ef5fa"
+    }
+  },
+  "client_preflight": {
+    "actual_decode": false,
+    "installed_denials": 21,
+    "report_sha256": "c695723f88ced9e66a1dc134bc0277e7e50e4f07de463659bfb6f278814637b2",
+    "sources": 115,
+    "tests": 198
+  },
+  "command": [
+    "env",
+    "-i",
+    "PATH=/usr/local/bin:/usr/bin:/bin",
+    "HOME=/home/jianming_gatech",
+    "LANG=C.UTF-8",
+    "JAX_PLATFORMS=cpu",
+    "OMP_NUM_THREADS=4",
+    "OPENBLAS_NUM_THREADS=4",
+    "MKL_NUM_THREADS=4",
+    "NUMEXPR_NUM_THREADS=4",
+    "VECLIB_MAXIMUM_THREADS=4",
+    "PYTHONUNBUFFERED=1",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "HF_HUB_OFFLINE=1",
+    "TRANSFORMERS_OFFLINE=1",
+    "taskset",
+    "-c",
+    "100-103",
+    "/tmp/cross-pretrained-validation-env/bin/python",
+    "/tmp/bert-prepared-bsgs-server-component-20261104/combined_collect.py",
+    "--execute",
+    "--output",
+    "/tmp/bert-prepared-bsgs-server-actual-v1-20261104",
+    "--response-root",
+    "/tmp/cross-bert-prepared-bsgs-response-20261104-v1",
+    "--worker-python",
+    "/tmp/cross-pretrained-validation-env/bin/python",
+    "--key-workspace",
+    "/dev/shm/cross-full-bert-keys-143b3f5c1573427d841760a3c9d5d33d",
+    "--model-workspace",
+    "/tmp/cross-bert-public-model-b51668856dab42a3846ba1b7c7a71d53",
+    "--io-workspace",
+    "/tmp/cross-bert-input-encryption-7b255c2357c94060b73e474a1f8ef5fa",
+    "--key-evidence",
+    "/tmp/bert-full-key-generation-component-20261103/actual-v1",
+    "--key-report-sha256",
+    "022cbdf687273e765668184f32cb7cd501d371c4220916e1c8f02574cf3a7f08",
+    "--model-evidence",
+    "/tmp/bert-public-model-stage2-v2-component-20261103/actual-v2",
+    "--model-report-sha256",
+    "5b9589b51828d066706c4c46a6404d8c52fcd67a2c9aa9f3f57c73df8caeefe0",
+    "--stage3-evidence",
+    "/tmp/bert-input-encryption-stage3-component-v3-20261103/actual-v3",
+    "--stage3-report-sha256",
+    "add5e6a3143be3931ad29c018cdee40bdf059497b8bfa987114f39baeb88631e"
+  ],
+  "command_executed": false,
+  "cpu_affinity": [
+    100,
+    101,
+    102,
+    103
+  ],
+  "evidence_root": "/tmp/bert-prepared-bsgs-server-actual-v1-20261104",
+  "exclusions": [
+    "Logical cache cap excludes mmap/master backing, ordinary refresh caches, formatted views, compiler/control/conversion temporaries, ciphertext/intermediate storage, and physical allocator overhead.",
+    "Available memory is a point-in-time host observation, not a peak-allocation proof.",
+    "Original ordinary server download and private request/completed ledger are neither used nor retired.",
+    "No actual server, decryption, new keys, private inputs or tensor/ciphertext bodies read by this proposal.",
+    "No latency/accuracy/ranked claim."
+  ],
+  "existing_public_store": {
+    "available_rotation_keys": 130,
+    "missing": [],
+    "new_key_generation": false,
+    "public_array_npy_bytes": 125380363136,
+    "required_actual_union": 118
+  },
+  "lifecycle": {
+    "all_actual_failures_retain_response": true,
+    "completed_server_required_before_client": true,
+    "exact_execution_copy": true,
+    "failure_kill_grace_seconds": 30,
+    "failure_term_grace_seconds": 30,
+    "healthy_timeout": null,
+    "retained_upload_only_checked": true,
+    "source_manifest_recheck_immediately_before_launch_required": true
+  },
+  "logical_prepared_cache": {
+    "aggregate_logical_bytes": 4294967296,
+    "bytes_per_owner": 2147483648,
+    "entries_per_owner": 2,
+    "owners": [
+      "graph",
+      "linear"
+    ],
+    "refresh": "ordinary"
+  },
+  "memory_snapshot": {
+    "mem_available_bytes": 743292964864,
+    "mem_free_bytes": 703553482752,
+    "peak_memory_bound_established": false,
+    "swap_total_bytes": 0
+  },
+  "new_outputs_absent": true,
+  "new_response_storage_required_bytes": 1080033280,
+  "passed": true,
+  "prepared_at_utc": "2026-11-04T01:28:18.574405+00:00",
+  "prerequisite_reports": {
+    "key": {
+      "evidence": "/tmp/bert-full-key-generation-component-20261103/actual-v1",
+      "sha256": "022cbdf687273e765668184f32cb7cd501d371c4220916e1c8f02574cf3a7f08"
+    },
+    "model": {
+      "evidence": "/tmp/bert-public-model-stage2-v2-component-20261103/actual-v2",
+      "sha256": "5b9589b51828d066706c4c46a6404d8c52fcd67a2c9aa9f3f57c73df8caeefe0"
+    },
+    "stage3": {
+      "evidence": "/tmp/bert-input-encryption-stage3-component-v3-20261103/actual-v3",
+      "sha256": "add5e6a3143be3931ad29c018cdee40bdf059497b8bfa987114f39baeb88631e"
+    }
+  },
+  "schema": "combined-server-launch-proposal-v1",
+  "separate_response_root": "/tmp/cross-bert-prepared-bsgs-response-20261104-v1",
+  "source_archive_sha256": "fd46274e075565bcec545cca13f03470d4b9506b6327ffd7f403a756acbcaa94",
+  "source_count": 286,
+  "source_current_equal": true,
+  "source_inventory_sha256": "3699090915c2fa08783fdf1fe57e7d3acd84131dfd858b27bfbcac329da544c4",
+  "source_report_sha256": "31f9120534e1d23843b3f7a5ec7e68c77963ac7456e5e0b492557aedd26b4315",
+  "stdout_stderr_log": "/tmp/bert-prepared-bsgs-server-actual-v1-20261104.log",
+  "storage_snapshot": {
+    "/dev/shm": {
+      "free_bytes": 432832552960,
+      "identity": [
+        24,
+        1
+      ],
+      "total_bytes": 760920805376
+    },
+    "/tmp": {
+      "free_bytes": 49720381440,
+      "identity": [
+        66305,
+        1577
+      ],
+      "total_bytes": 103865303040
+    }
+  },
+  "threads": 4,
+  "working_directory": "/tmp/bert-prepared-bsgs-server-component-20261104"
+}

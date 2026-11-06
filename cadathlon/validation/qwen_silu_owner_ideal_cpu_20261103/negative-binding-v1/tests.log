@@ -1,0 +1,92 @@
+FFFF                                                                     [100%]
+=================================== FAILURES ===================================
+_ test_binding_accessor_replacement_rejected_before_next_primitive[entry-refresh] _
+
+name = 'refresh', phase = 'entry'
+
+    @pytest.mark.parametrize('name',['refresh','check'])
+    @pytest.mark.parametrize('phase',['entry','first'])
+    def test_binding_accessor_replacement_rejected_before_next_primitive(name,phase):
+        marks=[]
+        def replace():
+            original=getattr(o.refresh_binding,name)
+            setattr(o.refresh_binding,name,lambda *args,**kwargs:original(*args,**kwargs))
+            marks.append(dict(a.calls))
+        def progress(label,value,metadata):
+            if phase=='first' and label=='map':replace()
+        o,a,r=owner(3,progress=progress)
+        if phase=='entry':replace()
+>       with pytest.raises(ValueError,match='accessor|primitive'):o.evaluate_tile(Value(np.zeros(65536),24),tile=0)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_binding_guard.py:19: Failed
+_ test_binding_accessor_replacement_rejected_before_next_primitive[entry-check] _
+
+name = 'check', phase = 'entry'
+
+    @pytest.mark.parametrize('name',['refresh','check'])
+    @pytest.mark.parametrize('phase',['entry','first'])
+    def test_binding_accessor_replacement_rejected_before_next_primitive(name,phase):
+        marks=[]
+        def replace():
+            original=getattr(o.refresh_binding,name)
+            setattr(o.refresh_binding,name,lambda *args,**kwargs:original(*args,**kwargs))
+            marks.append(dict(a.calls))
+        def progress(label,value,metadata):
+            if phase=='first' and label=='map':replace()
+        o,a,r=owner(3,progress=progress)
+        if phase=='entry':replace()
+>       with pytest.raises(ValueError,match='accessor|primitive'):o.evaluate_tile(Value(np.zeros(65536),24),tile=0)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_binding_guard.py:19: Failed
+_ test_binding_accessor_replacement_rejected_before_next_primitive[first-refresh] _
+
+name = 'refresh', phase = 'first'
+
+    @pytest.mark.parametrize('name',['refresh','check'])
+    @pytest.mark.parametrize('phase',['entry','first'])
+    def test_binding_accessor_replacement_rejected_before_next_primitive(name,phase):
+        marks=[]
+        def replace():
+            original=getattr(o.refresh_binding,name)
+            setattr(o.refresh_binding,name,lambda *args,**kwargs:original(*args,**kwargs))
+            marks.append(dict(a.calls))
+        def progress(label,value,metadata):
+            if phase=='first' and label=='map':replace()
+        o,a,r=owner(3,progress=progress)
+        if phase=='entry':replace()
+>       with pytest.raises(ValueError,match='accessor|primitive'):o.evaluate_tile(Value(np.zeros(65536),24),tile=0)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_binding_guard.py:19: Failed
+_ test_binding_accessor_replacement_rejected_before_next_primitive[first-check] _
+
+name = 'check', phase = 'first'
+
+    @pytest.mark.parametrize('name',['refresh','check'])
+    @pytest.mark.parametrize('phase',['entry','first'])
+    def test_binding_accessor_replacement_rejected_before_next_primitive(name,phase):
+        marks=[]
+        def replace():
+            original=getattr(o.refresh_binding,name)
+            setattr(o.refresh_binding,name,lambda *args,**kwargs:original(*args,**kwargs))
+            marks.append(dict(a.calls))
+        def progress(label,value,metadata):
+            if phase=='first' and label=='map':replace()
+        o,a,r=owner(3,progress=progress)
+        if phase=='entry':replace()
+>       with pytest.raises(ValueError,match='accessor|primitive'):o.evaluate_tile(Value(np.zeros(65536),24),tile=0)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+test_binding_guard.py:19: Failed
+=========================== short test summary info ============================
+FAILED test_binding_guard.py::test_binding_accessor_replacement_rejected_before_next_primitive[entry-refresh]
+FAILED test_binding_guard.py::test_binding_accessor_replacement_rejected_before_next_primitive[entry-check]
+FAILED test_binding_guard.py::test_binding_accessor_replacement_rejected_before_next_primitive[first-refresh]
+FAILED test_binding_guard.py::test_binding_accessor_replacement_rejected_before_next_primitive[first-check]
+4 failed in 0.87s

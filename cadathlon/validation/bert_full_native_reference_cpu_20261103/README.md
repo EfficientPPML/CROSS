@@ -1,0 +1,9 @@
+# Independent native references for full BERT composition
+
+This client-only preparation ran the pinned float64/eager `BertForSequenceClassification` through all 12 layers, its actual pooler, and classifier on the same fixed K15 and K128 public examples. Initial original-position embeddings match the prior frozen fixture exactly. The native full128 path and compact valid-token path agree within a fixed 1e-12 gate: K15 maximum layer error 1.422e-14, pooler error 1.444e-15, and logit error 8.882e-16; all K128 comparisons are exactly zero.
+
+The local `client_native_full.npz` contains 32 arrays: each case's initial padded compact embeddings and original positions, twelve valid-row native layer outputs, pooler output, and logits. Only the initial embeddings may be fed into the joined arithmetic owner. Every later native array is an independent comparison reference and must not replace an actual joined intermediate. The private NPZ SHA-256 is `758ff5d71fa3c836f74a974dee97c4a744e17ea283047e2abe15b4675edc202a`; the arrays themselves are excluded from this evidence.
+
+The source-bound run passed 15 boundary and hook-cleanup tests, then native preparation in 3.37 seconds (4.21 seconds total). The owned test subprocess and collector completed with exit zero and were reaped. Four source files and six assets were unchanged, with every source archive member read back. The prior fixed pair source expression was checked before execution, and no labels, polynomial range selection, encryption, or encrypted model were used. The preparation does not establish approximate-model or full encrypted-stage correctness.
+
+Source archive SHA-256: `7c7d25c2a8ff19420807902427ab472c089381b47c021db57d6e3f9a02cf1e4c`. This artifact preserves only sources, hashes, diagnostics, and test evidence. `python verify.py` checks offline provenance and recorded gates without loading a model or private arrays.

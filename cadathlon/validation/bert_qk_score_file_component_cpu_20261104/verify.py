@@ -1,0 +1,37 @@
+from pathlib import Path,PurePosixPath
+import argparse,hashlib,json,tarfile,math
+ROOT=Path(__file__).resolve().parent
+h=lambda b:hashlib.sha256(b).hexdigest()
+load=lambda p:json.loads(p.read_bytes())
+p=argparse.ArgumentParser();p.add_argument('--current',action='store_true');a=p.parse_args()
+index=load(ROOT/'files.sha256.json');files={f.relative_to(ROOT).as_posix():f for f in ROOT.rglob('*')if f.is_file()and f.name!='files.sha256.json'and '__pycache__'not in f.parts};assert set(index)==set(files)and all(h(f.read_bytes())==index[n]for n,f in files.items())
+r=load(ROOT/'measured/report.json');v=load(ROOT/'verification.json');d=ROOT/'measured';before=r['source_hashes_start'];after=r['source_hashes_end']
+assert h((d/'report.json').read_bytes())=='f548bdbfb432516ec74fe608b30bf3a66de17d3ad822b024c46ce9a2b53360a1'and h((d/'sources.tar.gz').read_bytes())==r['source_archive_sha256']=='4f2eacc07d6587b68d88121e38798787446173985df01e2114c4f51eb06c6ac1'
+repo=Path('/tmp/bert-qk-file-component-20261103/checkout');expected={}
+for name,pin in before.items():
+ path=Path(name);member='repository/'+path.relative_to(repo).as_posix()if path.is_relative_to(repo)else'prototype/'+path.name;assert member not in expected;expected[member]=pin
+with tarfile.open(d/'sources.tar.gz')as t:
+ ms=t.getmembers();assert len(ms)==len({m.name for m in ms})==307 and sum(m.size for m in ms)<16<<20;actual={}
+ for m in ms:
+  n=PurePosixPath(m.name);assert m.isfile()and not n.is_absolute()and '..'not in n.parts and m.size<8<<20
+  actual[m.name]=h(t.extractfile(m).read())
+assert actual==expected and before==after and len(before)==307
+assert all(r[k]is True for k in('passed','all_component_gates_passed','all_processes_reaped','owned_component_directory_removed','owned_directory_handle_closed','source_files_unchanged'))
+assert all(r[k]is False for k in('full_attention_evaluated','full_bert_evaluated','mrpc_accuracy_evaluated','scoring_calibrated'))
+assert set(r['stages'])=={'public-preflight','client-preprocess','client-encrypt','keyless-server','client-decrypt'}and r['gate']==1e-6 and r['cpu_affinity']==[144,145,146,147]
+for name,stage in r['stages'].items():
+ assert stage['passed']is True and stage['returncode']==0 and stage['process_reaped']is True
+ observed=load(d/name/'process.json');assert observed==stage and load(d/name/'stdout.json')==stage['result']
+s=r['stages']['keyless-server']['result'];c=r['stages']['client-decrypt']['result'];assert s['server_secret_absent']and s['client_codecs_and_keygen_forbidden']and not s['client_file_access_attempts']and s['no_refresh']and s['input_count']==s['output_count']==2
+assert c['all_slots_checked']==131072 and c['raw_score_gate_nonvacuous']
+for name,level in(('raw_scores',7),('masked_scores',6)):
+ x=c['checks'][name];m=s['checks'][name];assert x['passed']and x['slots_checked']==65536 and x['gate']==1e-6 and 0<=x['max_abs_error']<=1e-6;assert m['level']==level and m['nsd']==1 and m['slots']==65536 and math.isfinite(m['scale'])and m['scale']>0
+ profile=m['ring'][0];assert (profile['degree'],profile['num_q'],profile['num_p'],profile['dnum'],profile['max_level'])==(131072,38,10,4,18)
+ assert abs(sum(math.log2(q)for q in profile['q_towers']+profile['p_towers'])-profile['log2_QP'])<1e-10 and profile['log2_QP']<=3523
+assert c['checks']['raw_scores']['native_target_nonzero_count_above_1e_12']==192 and c['checks']['raw_scores']['reference_all_zero']is False
+assert c['checks']['masked_scores']['reference_all_zero']is True and c['checks']['masked_scores']['max_abs_error']==0
+assert v['passed']and v['component_passed']and v['observed_tool_session']==89248 and v['observed_terminal_exit_code']==0 and v['measured_source_files']==307 and v['owned_private_key_directory_absent']and not v['private_arrays_keys_ciphertexts_copied']
+for name,pin in v['copied_artifact_sha256'].items():assert h((ROOT/name).read_bytes())==pin
+assert load(ROOT/'root-review/review.json')['passed']is True
+if a.current:assert {n:h(Path(n).read_bytes())for n in before}==before
+print(json.dumps(dict(passed=True,files=len(files),sources=307,checked_slots=131072,raw_nonzero_anchors=192,masked_reference_all_zero=True,current=a.current,full_attention=False)))
