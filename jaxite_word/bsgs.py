@@ -430,16 +430,6 @@ class _BSGSMatVecAtLevel:
         (self.level - 1, dummy_giant)
     )
     self.ctx.he_rot.clear()
-    # Low-scale CKKS needs the centered representative at both baby and
-    # post-rescale giant rotations. Preserve high-scale/OpenFHE defaults.
-    if (cache.ff_context_cls is finite_field.BarrettContext
-        and float(self.ctx.parameters['scaling_factor']) < 2**40):
-      if baby_rotation is not None:
-        raw_baby = baby_rotation
-        baby_rotation = lambda *args: raw_baby(*args, centered=True)
-      raw_giant = giant_rotation
-      giant_rotation = lambda *args: raw_giant(*args, centered=True)
-
     # Build one dynamic-operand kernel for eager and memory-bounded execution.
     batch = cache.batch
     ptct_mul = self.ctx.ptct_mul[self.level]._mul_array
@@ -450,12 +440,12 @@ class _BSGSMatVecAtLevel:
     add_out = self.ctx.he_add[self.level - 1]._add_array
     has_baby = bool(baby_indices)
 
-    def baby_body(carry, rotation_state):
-      eval_a, eval_b, coefficient_map = rotation_state
-      rotated = baby_rotation(carry, eval_a, eval_b, coefficient_map)
-      return carry, rotated
+    def baby_fn(ciphertext, eval_a, eval_b, coefficient_map, *, centered=False):
+      def baby_body(carry, rotation_state):
+        step_a, step_b, step_map = rotation_state
+        rotated = baby_rotation(carry, step_a, step_b, step_map, centered=centered)
+        return carry, rotated
 
-    def baby_fn(ciphertext, eval_a, eval_b, coefficient_map):
       if has_baby:
         _, rotated = jax.lax.scan(
             baby_body, ciphertext, (eval_a, eval_b, coefficient_map)
@@ -464,7 +454,8 @@ class _BSGSMatVecAtLevel:
       return ciphertext[None]
 
     def giant_step_fn(
-        all_baby, points, indices, eval_a, eval_b, coefficient_map, j
+        all_baby, points, indices, eval_a, eval_b, coefficient_map, j,
+        *, centered=False
     ):
       # Accumulate plaintext products before one rescale per giant step.
       def inner_body(total, inputs):
@@ -478,14 +469,16 @@ class _BSGSMatVecAtLevel:
       total, _ = jax.lax.scan(inner_body, total, (indices, points))
       total = rescale(total)
       rotated = giant_rotation(
-          total, eval_a, eval_b, coefficient_map
+          total, eval_a, eval_b, coefficient_map, centered=centered
       ).reshape(batch, 2, self.r, self.c, self.num_q_out)
       return jnp.where(j > 0, rotated, total)
 
     group_metadata = [(group[0], group[1]) for group in staged_groups]
 
-    def matvec_fn(ciphertext, eval_a, eval_b, coefficient_map, arrays):
-      all_baby = baby_fn(ciphertext, eval_a, eval_b, coefficient_map)
+    def matvec_fn(ciphertext, eval_a, eval_b, coefficient_map, arrays,
+                  *, centered_baby=False, centered_giant=False):
+      all_baby = baby_fn(ciphertext, eval_a, eval_b, coefficient_map,
+                         centered=centered_baby)
       total = jnp.zeros(
           (batch, 2, self.r, self.c, self.num_q_out), dtype=jnp.uint32
       )
@@ -503,6 +496,7 @@ class _BSGSMatVecAtLevel:
               step_b,
               step_map,
               j,
+              centered=centered_giant,
           )
           return add_out(carry, contribution), None
 
@@ -524,9 +518,10 @@ class _BSGSMatVecAtLevel:
         jnp.stack(baby_map) if baby_map else jnp.zeros((0,), dtype=jnp.int32)
     )
     self._matvec_fn = matvec_fn
-    self._jit_matvec_fn = None if memory_bounded else jax.jit(matvec_fn)
-    self._baby_fn = jax.jit(baby_fn)
-    self._giant_step_fn = jax.jit(giant_step_fn)
+    self._jit_matvec_fn = None if memory_bounded else jax.jit(
+        matvec_fn, static_argnames=('centered_baby', 'centered_giant'))
+    self._baby_fn = jax.jit(baby_fn, static_argnames=('centered',))
+    self._giant_step_fn = jax.jit(giant_step_fn, static_argnames=('centered',))
     self._add_out_fn = jax.jit(add_out)
     self._memory_bounded = memory_bounded
     self._diagonal_map = diagonal_map
@@ -543,7 +538,16 @@ class _BSGSMatVecAtLevel:
         'rotations.'
     )
 
-  def _matvec_array(self, ciphertext, *operands):
+  def _rotation_centering(self, input_scale):
+    if input_scale is None:
+      input_scale = self.ctx.parameters['scaling_factor']
+    output_scale = (float(input_scale) / math.prod(
+        self.q_towers_in[-self.ctx.composite_degree:])) * self._encoded_pt_scale
+    barrett = self.ctx._param_cache.ff_context_cls is finite_field.BarrettContext
+    return dict(centered_baby=barrett and float(input_scale) < 2**40,
+                centered_giant=barrett and output_scale < 2**40)
+
+  def _matvec_array(self, ciphertext, *operands, input_scale=None):
     """Run the eager raw-array kernel for the program compiler."""
     if self._matvec_fn is None or self._memory_bounded:
       raise RuntimeError(
@@ -558,7 +562,8 @@ class _BSGSMatVecAtLevel:
         num_moduli=self.num_q_in,
     )
     return self._matvec_fn(
-        ciphertext, *(operands or self._matvec_operands())
+        ciphertext, *(operands or self._matvec_operands()),
+        **self._rotation_centering(input_scale)
     )
 
   def _matvec_operands(self):
@@ -605,11 +610,12 @@ class _BSGSMatVecAtLevel:
         moduli=self.q_towers_in,
     )
     ciphertext_data = ciphertext.polynomial
+    centering = self._rotation_centering(getattr(ciphertext, '_ckks_scale', None))
 
     if not self._memory_bounded:
       # Execute the fully encoded workload in one compiled call.
       result_data = self._jit_matvec_fn(
-          ciphertext_data, *self._matvec_operands()
+          ciphertext_data, *self._matvec_operands(), **centering
       )
     else:
       # Pre-rotate the ciphertext once, then encode one giant step at a time.
@@ -618,6 +624,7 @@ class _BSGSMatVecAtLevel:
           self._baby_eval_a,
           self._baby_eval_b,
           self._baby_coefficient_map,
+          centered=centering['centered_baby'],
       )
       result_data = jnp.zeros(
           (cache.batch, 2, self.r, self.c, self.num_q_out),
@@ -715,6 +722,7 @@ class _BSGSMatVecAtLevel:
                 giant_b[position],
                 giant_map[position],
                 j_array[position],
+                centered=centering['centered_giant'],
             )
             result_data = self._add_out_fn(result_data, contribution)
             result_data = jax.block_until_ready(result_data)

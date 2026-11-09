@@ -81,3 +81,27 @@ boundary parameters and runtime metadata; see
 [comparison results](../../benchmarks/ship_equivalence/RESULTS.md). The optimized
 Jaxite row includes the separately recorded bounded-rescale compiler patch.
 N32 is a toy functional profile, not a security-qualified application.
+
+## Re-review of 25ac1ff
+
+- Corrected `test_mul_paths_track_their_actual_scales` to expect tensor-first
+  multiplication with one rescale at operand scales 2*q_L and 3*q_L. A separate
+  high-scale test retains coverage of the legacy pre-rescale route.
+- Public centered rotations now validate operand moduli as well as shape.
+- BSGS selects centered baby and giant rotations from the tracked input and
+  computed post-rescale scales. Mapping passes its input scale to the raw kernel;
+  eager and streaming paths are covered with a high nominal context scale.
+- Tensor-first degree-1 multiplication reserves centered/noise headroom for
+  messages bounded by one. Larger encrypted amplitudes require additional
+  headroom that cannot be inferred from scale metadata alone.
+- Restored rank, shape, limb-count and dtype validation at the selector key-switch
+  array boundary.
+
+CPU validation with JAX 0.9.1 and NumPy 2.4.6 used an isolated copy of 25ac1ff
+plus only these review fixes, excluding pending benchmark changes. Suites:
+`ckks_level_ops_test.py`, `ship_test.py`, `bsgs_test.py`, and
+`mapping_compile_test.py`: **151 tests and 23 subtests passed** across the suite
+run and a targeted rerun after correcting the new Mapping test's fixture.
+Negative controls against 25ac1ff reproduced the low-scale modulus-validation,
+capacity, selector-validation and high-nominal-scale BSGS failures.
+These are CPU correctness checks; no new TPU timing or validation is claimed.

@@ -92,6 +92,10 @@ class _BATSwitch:
     return jnp.where(total >= q, total - q, total).astype(jnp.uint32)
 
   def apply_array(self, ct, key):
+    finite_field.check_rank5_array(
+      ct, 'SHIP selector key switch', batch=1, num_elements=2,
+      degree_layout=(self.r, self.c), num_moduli=len(self.q),
+    )
     return self.drop._rescale_array(self.product(self.decompose(ct), key))
 
 

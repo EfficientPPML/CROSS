@@ -1157,7 +1157,7 @@ def _bind_operation(ctx, mapping, operation, bootstrap_target):
     return (
         evaluator.matvec
         if mapping.bsgs_streaming
-        else evaluator._matvec_array
+        else lambda value: evaluator._matvec_array(value, input_scale=input_spec.scale)
     )
   if kind == 'bootstrap':
     from ship.plan import SHIPConfig

@@ -349,13 +349,14 @@ assert SHIPConfig is Flat is Qualified is Root
   )
 
 
-def _review_context(n=32, q_count=6, p_count=7, rotations=()):
+def _review_context(n=32, q_count=6, p_count=7, rotations=(), nominal_scale=None):
   import ckks_ctx
   import key_gen as cross_keys
   q, p = primes(n, q_count, p_count)
   ctx = ckks_ctx.CKKSContext(dict(
     degree=n, num_slots=n//2, q_towers=q, p_towers=p,
-    scaling_factor=q[-1], output_scale=q[-1], p=30, CKKS_M_FACTOR=1,
+    scaling_factor=q[-1] if nominal_scale is None else nominal_scale,
+    output_scale=q[-1], p=30, CKKS_M_FACTOR=1,
     max_bits_in_word=31, composite_degree=1, noise_scale_degree=1,
     **cross_keys.gen_pke_pair(q, p, n)))
   r = 1 << ((n.bit_length()-1)//2)
@@ -526,3 +527,82 @@ def test_low_scale_bsgs_full_ring_baby_and_giant_steps():
   out = op.matvec(ct)
   expected = .5*np.roll(values,-1)+.5*np.roll(values,-128)
   np.testing.assert_allclose(ctx.decrypt_slots(out),expected,atol=2**-10,rtol=0)
+
+
+@pytest.mark.parametrize('scale', [2**30, 2**45])
+def test_public_rotation_rejects_different_moduli_at_same_limb_count(scale):
+  ctx = _review_context(rotations=(1,))
+  ct = ctx.encrypt(ctx.encode_at_level([.1]*ctx.num_slots, 1, scale=ctx.q_towers[-1]))
+  from polynomial import Polynomial
+  ct = Polynomial.from_array(ct.polynomial, dict(
+      batch=1,num_elements=2,degree=ctx.degree,num_moduli=2,precision=32,
+      degree_layout=ctx._param_cache.degree_layout),
+      dict(moduli=list(reversed(ct.moduli))))
+  ct._ckks_scale = float(scale)
+  ct.validate()  # Internally valid, but incompatible with this rotation operator.
+  with pytest.raises(ValueError, match='moduli'):
+    ctx.he_rot[1, 1].rotate(ct)
+
+
+@pytest.mark.parametrize('fraction', [.5, .75, 1.0])
+def test_tensor_first_rejects_product_scale_near_modulus_boundary(fraction):
+  from he_ops import _multiply_post_rescale
+  import math
+  ctx = _review_context()
+  q = ctx.q_towers[:2]
+  scale = math.sqrt(math.prod(q)*fraction)
+  ct = ctx.encrypt(ctx.encode_at_level([.99]*ctx.num_slots,1,scale=scale))
+  with pytest.raises(ValueError, match='headroom'):
+    ctx.he_mul[0].mul(ct, ct)
+  assert _multiply_post_rescale(1, 32, q, scale/4, scale/4)
+
+
+@pytest.mark.parametrize('shape,dtype', [
+    ((2,4,4,2), jnp.uint32), ((2,2,4,4,2), jnp.uint32),
+    ((1,3,4,4,2), jnp.uint32), ((1,2,4,4,1), jnp.uint32),
+    ((1,2,2,8,2), jnp.uint32), ((1,2,4,4,2), jnp.uint64)])
+def test_selector_switch_rejects_invalid_payload(shape, dtype):
+  from ship.kernel import _BATSwitch
+  q,p = primes(16,2,3)
+  switch = _BATSwitch(q,p,4,4)
+  with pytest.raises(ValueError, match='SHIP selector key switch'):
+    switch.apply_array(jnp.zeros(shape,dtype), None)
+
+
+@pytest.mark.parametrize('streaming', [False, True])
+def test_bsgs_uses_tracked_low_scale_in_high_scale_context(streaming):
+  ctx = _review_context(16384,8,9,(1,64,128),nominal_scale=2**45)
+  values = np.random.default_rng(181).uniform(-.125,.125,ctx.num_slots)
+  ct = ctx.encrypt(ctx.encode_at_level(values.tolist(),1,scale=ctx.q_towers[-1]))
+  op = ctx.bsgs_matvec[1,ctx.num_slots,64,128]
+  op.preprocess({1: np.full(ctx.num_slots,.5),128: np.full(ctx.num_slots,.5)},
+                pt_scale=ctx.q_towers[1], memory_bounded=streaming)
+  out = op.matvec(ct)
+  expected = .5*np.roll(values,-1)+.5*np.roll(values,-128)
+  np.testing.assert_allclose(ctx.decrypt_slots(out),expected,atol=2**-10,rtol=0)
+  if not streaming:
+    raw = jax.jit(lambda data: op._matvec_array(data,input_scale=ct._ckks_scale))(ct.polynomial)
+    np.testing.assert_array_equal(raw,out.polynomial)
+
+
+def test_mapping_bsgs_uses_input_spec_scale_in_high_scale_context():
+  from types import SimpleNamespace
+  import mapping as mapping_mod
+  ctx = _review_context(rotations=(1,4),nominal_scale=2**45)
+  values = np.linspace(-.125,.125,ctx.num_slots)
+  ct = ctx.encrypt(ctx.encode_at_level(values.tolist(),1,scale=ctx.q_towers[-1]))
+  diagonals = {1: np.full(ctx.num_slots,.5), 4: np.full(ctx.num_slots,.5)}
+  plan = mapping_mod._MatVecPlan(n=ctx.num_slots,n1=4,
+      active_diagonal_indices=(1,4),pt_scale=float(ctx.q_towers[1]))
+  state = SimpleNamespace(value_specs={
+      'input': SimpleNamespace(level=1,scale=ct._ckks_scale),
+      'linear': SimpleNamespace(level=0)}, operation_plans={'linear':plan},
+      bsgs_n_jobs=1,bsgs_streaming=False)
+  constant = SimpleNamespace(_constant_kind='sparse',as_dict=lambda:diagonals)
+  bound = mapping_mod._bind_operation(ctx,state,
+      ('linear','matvec',('input',),(constant,None,None,None,None)),None)
+  actual = jax.jit(bound)(ct.polynomial)
+  public_op = ctx.bsgs_matvec[1,ctx.num_slots,plan.n1,plan.n2]
+  public_op.preprocess(diagonals,pt_scale=plan.pt_scale)
+  expected = public_op.matvec(ct)
+  np.testing.assert_array_equal(actual,expected.polynomial)

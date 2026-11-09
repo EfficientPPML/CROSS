@@ -73,6 +73,9 @@ def _multiply_post_rescale(cd, degree, q_input, left_scale, right_scale, sigma=3
   operands down to scale one. Reserve six sigma per coefficient at the 2^-10
   integration error target; this is a conservative routing rule, not a bound
   on arbitrary encrypted message amplitudes or a security qualification.
+  Tensor-first capacity reserves the centered sign range and a six-sigma
+  coefficient-noise allowance for unit-bounded messages. Larger messages
+  need additional headroom; their amplitudes cannot be inferred here.
   """
   if cd >= 2:
     return True
@@ -84,12 +87,14 @@ def _multiply_post_rescale(cd, degree, q_input, left_scale, right_scale, sigma=3
   floor = 6 * degree * sigma / (2**-10)
   use_post = min(left_scale, right_scale) / divisor < floor
   if use_post and (
-      math.log2(left_scale) + math.log2(right_scale)
-      > sum(math.log2(q) for q in q_input)
+      math.log2(left_scale + 6 * degree * sigma)
+      + math.log2(right_scale + 6 * degree * sigma)
+      >= sum(math.log2(q) for q in q_input) - 1
   ):
     raise ValueError(
         'multiply: pre-rescale would lose precision and the tensor-first '
-        'product needs more active Q limbs; use a larger input level'
+        'product needs more active Q limbs (centered/noise headroom for '
+        'messages bounded by one); use a larger input level'
     )
   return use_post
 
@@ -381,6 +386,12 @@ class _HERotAtLevel:
     centered = (scale is not None and float(scale) < 2**40
                 and self.cache.ff_context_cls is finite_field.BarrettContext)
     if centered:
+      finite_field.check_ct_operand(
+          self.cache.ff_context_cls, self._herot.sizeQl, ct_in,
+          'ctx.he_rot.rotate', batch=self.cache.batch, num_elements=2,
+          degree_layout=self.cache.degree_layout,
+          moduli=self.cache.q_moduli_at_level(self.level),
+      )
       result = ct_in._clone_with_payload(
         self._herot._rotate_array(ct_in.polynomial, centered=True))
     else:
