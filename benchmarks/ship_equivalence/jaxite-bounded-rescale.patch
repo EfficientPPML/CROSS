@@ -1,0 +1,67 @@
+--- a/jaxite/jaxite_ckks/rescale.py
++++ b/jaxite/jaxite_ckks/rescale.py
+@@ -629,6 +629,7 @@
+       limb_coeffs = self.ntt_last_limb_kernels[i].intt(limb.astype(jnp.uint32))
+       dropped_coeffs.append(limb_coeffs[..., 0].astype(jnp.uint64))
+ 
++    dropped_coeffs = jnp.stack(dropped_coeffs)
+     total_corr = jnp.zeros(
+         (num_elements, self.r, self.c, num_kept), dtype=jnp.uint64
+     )
+@@ -656,7 +657,13 @@
+       red = jnp.where(red >= mod_i32, red - mod_i32, red)
+       return red.astype(jnp.uint64)
+ 
+-    for i in range(self.num_rescales):
++    # Stage the triangular recurrence as one loop instead of an O(K^2)
++    # unrolled fusion graph. Inactive limbs retain their previous value.
++    drop_indices = L - 1 - jnp.arange(self.num_rescales)
++    drop_moduli = initial_moduli[drop_indices].reshape(-1, 1, 1, 1)
++
++    def update_dropped(i, state):
++      total_corr, dropped_coeffs = state
+       m_curr = dropped_coeffs[i]
+       mask = (m_curr >= thresholds[i]).astype(jnp.uint64)
+ 
+@@ -680,25 +687,28 @@
+       red = jnp.where(red >= mod_kept_i32, red - mod_kept_i32, red)
+       total_corr = red.astype(jnp.uint64)
+ 
+-      for j in range(i + 1, self.num_rescales):
+-        idx_m = L - 1 - j
+-        g_v = gammas[i, idx_m]
+-        b_v = betas[i, idx_m]
+-        m_v = initial_moduli[idx_m]
+-
+-        val_v = m_curr * g_v + mask
+-        c_v = barrett_reduce_single(val_v, m_v)
+-
+-        val_next = dropped_coeffs[j] * b_v + c_v
+-        dropped_coeffs[j] = barrett_reduce_single(val_next, m_v)
++      g_v = gammas[i, drop_indices].reshape(-1, 1, 1, 1)
++      b_v = betas[i, drop_indices].reshape(-1, 1, 1, 1)
++      c_v = barrett_reduce_single(m_curr[None] * g_v + mask[None], drop_moduli)
++      next_coeffs = barrett_reduce_single(dropped_coeffs * b_v + c_v, drop_moduli)
++      active = (jnp.arange(self.num_rescales) > i).reshape(-1, 1, 1, 1)
++      dropped_coeffs = jnp.where(active, next_coeffs, dropped_coeffs)
++      return total_corr, dropped_coeffs
++
++    total_corr, _ = jax.lax.fori_loop(
++        0, self.num_rescales, update_dropped, (total_corr, dropped_coeffs)
++    )
+ 
+     ntt_corr = self.ntt_remaining_limbs_kernels[self.num_rescales - 1].ntt(
+         total_corr.astype(jnp.uint32)
+     )
+ 
+     total_scale = jnp.ones((num_kept,), dtype=jnp.uint64)
+-    for i in range(self.num_rescales):
+-      total_scale = (total_scale * betas[i, :num_kept]) % moduli_kept
++    total_scale = jax.lax.fori_loop(
++        0, self.num_rescales,
++        lambda i, scale: (scale * betas[i, :num_kept]) % moduli_kept,
++        total_scale,
++    )
+ 
+     val_final = data_view[..., :num_kept].astype(
+         jnp.uint64

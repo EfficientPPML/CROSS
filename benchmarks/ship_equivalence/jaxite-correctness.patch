@@ -1,0 +1,102 @@
+diff --git a/jaxite/jaxite_ckks/blind_rotate.py b/jaxite/jaxite_ckks/blind_rotate.py
+index daae681..95bb88c 100644
+--- a/jaxite/jaxite_ckks/blind_rotate.py
++++ b/jaxite/jaxite_ckks/blind_rotate.py
+@@ -393,7 +393,12 @@ class BlindRotation:
+ 
+     # Sum over theta (baby steps) for each k
+     # sum_theta: shape (4, 2, degree, num_moduli)
+-    sum_theta = jnp.sum(prod, axis=1)
++    # Reduce each product before summing: the single-product Barrett bound
++    # does not cover a sum of unreduced products (which can also overflow).
++    reduced_products = barrett.modular_reduction(
++        prod, self.mul_kernel.barrett_constants
++    )
++    sum_theta = jnp.sum(reduced_products.astype(jnp.uint64), axis=1)
+ 
+     # Perform modular reduction on the accumulated sum for each k
+     # reduced_theta: shape (4, 2, degree, num_moduli) in uint32
+diff --git a/jaxite/jaxite_ckks/bootstrapping.py b/jaxite/jaxite_ckks/bootstrapping.py
+index 10e9d8c..e84b745 100644
+--- a/jaxite/jaxite_ckks/bootstrapping.py
++++ b/jaxite/jaxite_ckks/bootstrapping.py
+@@ -174,6 +174,7 @@ class SHIP:
+       sk: types.SecretKey,
+       theta: int,
+       random_source: random.RandomSource,
++      output_sk: types.SecretKey | None = None,
+   ):
+     """Precomputes the NTT and tree constants needed for half-bootstrapping."""
+     self.degree = degree
+@@ -194,6 +195,11 @@ class SHIP:
+     s_coeffs_flat = s_coeffs.flatten()
+     nonzero_idx = np.flatnonzero(s_coeffs_flat).tolist()
+     h = len(nonzero_idx)
++    input_q0 = int(sk.moduli[0])
++    if not np.all(np.isin(s_coeffs_flat, [0, 1, input_q0 - 1])):
++      raise ValueError("SHIP input secret must be binary or ternary")
++    if output_sk is not None:
++      sk = output_sk
+ 
+     pq_limbs = q_limbs + p_limbs
+     q0_limbs = [q_limbs[0]]
+@@ -282,7 +288,7 @@ class SHIP:
+     self.mul_kernel_lvl.precompute_constants(ext_moduli_lvl)
+ 
+     self.rescale_kernel_lvl.precompute_constants(
+-        ext_moduli_lvl, num_rescales=1, r=r, c=c
++        ext_moduli_lvl, num_rescales=len(p_limbs), r=r, c=c
+     )
+ 
+     self.add_kernel.precompute_constants(curr_moduli)
+@@ -368,7 +374,7 @@ class SHIP:
+           sk=sk,
+           j=idx,
+           idx=idx,
+-          s_j=1,
++          s_j=1 if s_coeffs_flat[idx] == 1 else -1,
+           theta=theta,
+           q_limbs=q_limbs,
+           p_limbs=p_limbs,
+diff --git a/jaxite/jaxite_ckks/key_gen.py b/jaxite/jaxite_ckks/key_gen.py
+index 6b7648b..a158647 100644
+--- a/jaxite/jaxite_ckks/key_gen.py
++++ b/jaxite/jaxite_ckks/key_gen.py
+@@ -71,10 +71,14 @@ def extend_secret_key(
+     raise ValueError("target_moduli must start with secret_key.moduli")
+ 
+   s_coeffs = ntt_cpu.intt_negacyclic_poly(secret_key.data, current_moduli)
+-  s_coeffs_single = s_coeffs[:, 0]
+-  s_coeffs_extended = np.tile(
+-      s_coeffs_single[:, np.newaxis], (1, len(target_moduli))
++  s_coeffs_single = s_coeffs[:, 0].astype(np.int64)
++  s_coeffs_single = np.where(
++      s_coeffs_single > current_moduli[0] // 2,
++      s_coeffs_single - current_moduli[0], s_coeffs_single,
+   )
++  s_coeffs_extended = np.column_stack(
++      [s_coeffs_single % q for q in target_moduli]
++  ).astype(np.uint64)
+   s_ext_slots = ntt_cpu.ntt_negacyclic_poly(s_coeffs_extended, target_moduli)
+   return SecretKey(s_ext_slots, np.array(target_moduli, dtype=np.uint64))
+ 
+@@ -287,7 +291,9 @@ def gen_hmuxrot_key(
+     dest_sk_ext = sk_ext
+ 
+   p_val = math.prod(p_limbs)
+-  scaled_val0 = (p_val * beta) % all_moduli_u64
++  scaled_val0 = np.array(
++      [(p_val * beta) % modulus for modulus in all_moduli], dtype=np.uint64
++  ).reshape(1, -1)
+ 
+   # key0 is a key-switching key from beta * sk(X^{5^{-j}}) to sk.
+   g = pow(5, -j, 2 * degree)
+@@ -421,7 +427,7 @@ def gen_hybrid_key(
+   random_source = random_source or random.SecureRandomSource()
+   degree = sk.data.shape[0]
+   num_slots = degree // 2
+-  num_giant_steps = num_slots // theta
++  num_giant_steps = (num_slots + theta - 1) // theta
+   all_moduli = q_limbs + p_limbs
+ 
+   sk_ext = extend_secret_key(sk, all_moduli)

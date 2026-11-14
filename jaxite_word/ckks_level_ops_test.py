@@ -379,11 +379,8 @@ class CKKSLevelOpsTest(absltest.TestCase):
         operation = ctx.he_mul[output_level]
 
         unified = operation.mul(left, right)
-        expected_unified = (
-            (left._ckks_scale / divisor) * (right._ckks_scale / divisor)
-            if ctx.composite_degree == 1
-            else left._ckks_scale * right._ckks_scale / divisor
-        )
+        # S/q_L of 2 and 3 selects tensor-first for cd=1 as well.
+        expected_unified = left._ckks_scale * right._ckks_scale / divisor
         self.assertEqual(unified._ckks_scale, expected_unified)
 
         three_elements = operation.hemul_no_relin(left, right)
@@ -402,6 +399,16 @@ class CKKSLevelOpsTest(absltest.TestCase):
             split._ckks_scale,
             left._ckks_scale * right._ckks_scale / divisor,
         )
+
+  def test_high_scale_cd1_mul_keeps_legacy_pre_rescale_metadata(self):
+    level = self.ctx.max_level - 1
+    left = self._polynomial(level + 1, offset=37)
+    right = self._polynomial(level + 1, offset=149)
+    divisor = int(left.moduli[-1])
+    left._ckks_scale = float(divisor * 2**32)
+    right._ckks_scale = float(divisor * 2**33)
+    result = self.ctx.he_mul[level].mul(left, right)
+    self.assertEqual(result._ckks_scale, float(2**65))
 
   def test_binary_mul_array_matches_public_composite_rescale_path(self):
     ctx = self.composite_ctx

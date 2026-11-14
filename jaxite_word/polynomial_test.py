@@ -365,5 +365,33 @@ class PolynomialPrivateArithmeticTest(parameterized.TestCase):
     np.testing.assert_array_equal(self.ct1.get_batch_polynomial(), expected)
 
 
+class PolynomialReductionBoundaryTest(parameterized.TestCase):
+
+  @parameterized.parameters(2147352577, 2146826753, 1071513601, 268042241, 4294967291)
+  def test_tensor_product_near_modulus_boundary(self, q):
+    ff = ff_context.BarrettContext([q])
+
+    def make_poly(elements):
+      return poly.Polynomial(
+        {
+          "batch": 1,
+          "num_elements": elements,
+          "degree": 1,
+          "precision": 32,
+          "num_moduli": 1,
+          "degree_layout": (1, 1),
+        },
+        {"moduli": [q], "ntt_ctx": ff},
+        payload=jnp.full((1, elements, 1, 1, 1), q - 1, dtype=jnp.uint32),
+      )
+
+    low, high = jax.jit(lambda x: x._polynomial_mult_array())(make_poly(4))
+    np.testing.assert_array_equal(np.asarray(low).reshape(-1), [1, 2])
+    np.testing.assert_array_equal(np.asarray(high).reshape(-1), [1])
+    low, high = jax.jit(lambda x: x._polynomial_square_array())(make_poly(2))
+    np.testing.assert_array_equal(np.asarray(low).reshape(-1), [1, 2])
+    np.testing.assert_array_equal(np.asarray(high).reshape(-1), [1])
+
+
 if __name__ == "__main__":
   absltest.main()

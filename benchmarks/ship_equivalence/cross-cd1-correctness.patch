@@ -1,0 +1,58 @@
+diff --git a/jaxite_word/bootstrapping.py b/jaxite_word/bootstrapping.py
+index 6254a76..76809e1 100644
+--- a/jaxite_word/bootstrapping.py
++++ b/jaxite_word/bootstrapping.py
+@@ -1570,8 +1570,9 @@ class Bootstrap:
+     if cd > 1:
+       self._pre = 1.0                    # setup pre for scaleEnc
+     else:
+-      self._pre = self._sf0 / qDouble_f  # setup pre for scaleEnc
+-    self._pre_bootstrap = self._sf0 / qDouble_f  # bootstrap pre for prescale
++      self._pre = qDouble_f / (2.0 ** round(math.log2(qDouble_f)))
++    self._pre_bootstrap = (self._sf0 / qDouble_f if cd > 1
++                           else 2.0 ** (-self._deg))
+     self._post = 2.0 ** self._deg if self._deg >= 0 else 1.0
+     self._scalar = self._post                # = 2^deg (same as post)
+     # OpenFHE source-equivalent transform constants for UNIFORM_TERNARY:
+@@ -1582,7 +1583,7 @@ class Bootstrap:
+     self._corFactor = float(1 << self._correction)
+     self._scaleEnc = self._pre if secret_key_dist == "uniform_ternary" \
+         else 1.0 / self._K
+-    self._scaleDec = qDouble_f / self._sf0
++    self._scaleDec = qDouble_f / self._sf0 if cd > 1 else 1.0 / self._pre
+     self._m_enc = 4 * n_slots
+     self._c2s_normalization_gain = 1.0
+ 
+@@ -3030,7 +3031,9 @@ class Bootstrap:
+     nsd1 = self._get_nsd(ct1)
+     nsd2 = self._get_nsd(ct2)
+ 
+-    if cd >= 2:
++    # One-prime scaling has the same NSD normalization and operator input-level
++    # contract as composite scaling; tensor multiplication itself does not rescale.
++    if cd >= 1:
+       # --- Step 1: pre-rescale any nsd=2 operand to nsd=1 ----------------
+       # Capture original levels for scale tracking.
+       lev_orig1 = self._infer_level(ct1)
+@@ -3094,7 +3097,7 @@ class Bootstrap:
+       sf2 = sf2_orig if sf2_orig is not None else ct2._ckks_scale
+       q_towers = self._cache.q_towers
+ 
+-      if cd >= 2:
++      if cd >= 1:
+         was_nsd2 = (nsd1 == 2 or nsd2 == 2)
+         if was_nsd2:
+           # Each nsd=2 operand was pre-rescaled from its original level
+@@ -4298,6 +4301,12 @@ class Bootstrap:
+       else:
+         sf_base = self._openfhe_scale_at_level(level)
+ 
++    # A sub-resolution constant encodes as zero. This is valid in the
++    # polynomial evaluator even though the public encoder rejects all-zero
++    # quantization (and mirrors _int_crt_factors for scalar multiplication).
++    if abs(scalar * sf_base) < 0.5:
++      return ct
++
+     # Encode the constant via CKKS encode (handles negacyclic NTT correctly).
+     const_slots = [complex(scalar, 0.0)] * self._num_slots
+     from ckks_ctx import _ckks_encode as ckks_encode

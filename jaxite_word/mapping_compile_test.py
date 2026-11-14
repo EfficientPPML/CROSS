@@ -557,7 +557,7 @@ class PlanningTest(absltest.TestCase):
     self.assertEqual(square_mapping.output_spec.level, max_level - 1)
     self.assertTrue(math.isclose(
         square_mapping.output_spec.scale,
-        (input_scale / divisor) ** 2,
+        input_scale**2 / divisor,
     ))
     self.assertEqual(square_mapping.output_spec.nsd, 1)
 
@@ -595,7 +595,7 @@ class PlanningTest(absltest.TestCase):
           _square(name='square0'),
           _square(name='square1'),
           _square(name='square2'),
-      ), ctx)
+      ), ctx, input_scale=1.0)
     with self.assertRaisesRegex(ValueError, 'headroom'):
       _analyzed_mapping(
           _model(_square(name='square')),

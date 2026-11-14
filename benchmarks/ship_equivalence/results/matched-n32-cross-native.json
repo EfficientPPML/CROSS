@@ -1,0 +1,1184 @@
+{
+  "variant": "cross-native",
+  "manifest": {
+    "degree": 32,
+    "q": [
+      2147483137,
+      1073734721,
+      1073730817,
+      1073731649,
+      1073728897,
+      1073733569,
+      1073731073,
+      1073732993,
+      1073731201,
+      1073732609,
+      1073731777,
+      1073744257,
+      1073734913,
+      1073737409,
+      1073735297,
+      1073742913,
+      1073738753,
+      1073742721,
+      1073739649,
+      1073742209,
+      1073740609,
+      1073741953,
+      1073741441
+    ],
+    "p": [
+      1073737537,
+      1073736641,
+      1073736449,
+      1073728193,
+      1073727937,
+      1073727617,
+      1073726977,
+      1073725249,
+      1073723969,
+      1073722753,
+      1073722561,
+      1073721281,
+      1073720897,
+      1073719873,
+      1073719681,
+      1073718721,
+      1073718593,
+      1073717377,
+      1073716993,
+      1073716673,
+      1073715521,
+      1073714881,
+      1073713409,
+      1073712769
+    ],
+    "scale": 1073741441.0,
+    "dnum": 2,
+    "level_budget": [
+      1,
+      1
+    ],
+    "meta_precision": 4,
+    "weight": 5,
+    "theta": 4,
+    "gamma": 8.0,
+    "seed": 42,
+    "magnitude": 0.125,
+    "error_gate": 0.0009765625,
+    "native_correction": 2
+  },
+  "manifest_sha256": "ae75453779c047bdb8088c5d46a5bfc27eca01b288055243421ce18a4ae1b091",
+  "jax_version": "0.9.1",
+  "numpy_version": "2.4.6",
+  "jaxlib_version": "0.9.1",
+  "python_version": "3.11.13",
+  "host": "t1v-n-43c8c27f-w-0",
+  "visible_chips": "0",
+  "harness_sha256": "044f4f9316fa6a223c7295ad3ad0e6c1a4308420de94f8b9ee5277b31f3932d8",
+  "backend": "tpu",
+  "device_kind": "TPU v6 lite",
+  "scope": "full encrypted slot-to-slot bootstrap, output normalization included",
+  "security_qualified": false,
+  "errors": {
+    "ramp": 0.00024100387732303719,
+    "random": 0.0002890824134324302
+  },
+  "post_square_errors": {
+    "ramp": 4.584275482163655e-05,
+    "random": 4.48912446240346e-05
+  },
+  "passed": true,
+  "cross_source": {
+    "commit": "b6c5e530d2506c28a76879823151aab46c8864d7",
+    "patch_sha256": "fdbc896ffb832fb5d1c28d6fbd835b45dd226834c18b1fe59f2af43521d12fdc",
+    "file": "/tmp/cross-pr5-common/jaxite_word/bootstrapping.py"
+  },
+  "libtpu_version": "0.0.35",
+  "xla_flags": "",
+  "stack_limit_bytes": 67108864,
+  "persistent_cache_enabled": false,
+  "stage": "complete",
+  "output_q": [
+    2147483137,
+    1073734721
+  ],
+  "output_scale": 1073741441.0,
+  "output_level": 1,
+  "output_nsd": 1,
+  "slots": 16,
+  "retained_multiplication_levels": 1,
+  "warm_wall_ms": [
+    7904.929843993159,
+    7945.18520400743,
+    7832.977615005802
+  ],
+  "device_profiles": [
+    {
+      "device_active_ms": 386.412856686,
+      "per_device_active_ms": {
+        "/device:TPU:0": 386.412856686
+      },
+      "module_events": {
+        "/device:TPU:0": 131532
+      },
+      "trace": "/tmp/pr5-results-n32/cross-native-traces/0",
+      "trace_source": "raw XPlane; no viewer event cap",
+      "segments": [
+        {
+          "device_active_ms": 1.096425854,
+          "per_device_active_ms": {
+            "/device:TPU:0": 1.096425854
+          },
+          "module_events": {
+            "/device:TPU:0": 494
+          },
+          "device_span_seconds": {
+            "/device:TPU:0": 0.053154174922
+          },
+          "trace": "/tmp/pr5-results-n32/cross-native-traces/0/segment-0/plugins/profile/2026_11_05_03_15_38/t1v-n-43c8c27f-w-0.xplane.pb",
+          "trace_source": "raw XPlane; no viewer event cap",
+          "profiler_warnings": [],
+          "raw_lines": {
+            "/device:TPU:0": [
+              {
+                "name": "XLA Modules",
+                "events": 494
+              },
+              {
+                "name": "XLA Ops",
+                "events": 1664
+              },
+              {
+                "name": "Async XLA Ops",
+                "events": 184
+              },
+              {
+                "name": "TC Overlay",
+                "events": 0
+              }
+            ]
+          },
+          "metric": "union of TPU XLA Modules durations; host work and inter-module idle gaps excluded"
+        },
+        {
+          "device_active_ms": 0.91364649,
+          "per_device_active_ms": {
+            "/device:TPU:0": 0.91364649
+          },
+          "module_events": {
+            "/device:TPU:0": 322
+          },
+          "device_span_seconds": {
+            "/device:TPU:0": 0.111440216328
+          },
+          "trace": "/tmp/pr5-results-n32/cross-native-traces/0/segment-1/plugins/profile/2026_11_05_03_15_38/t1v-n-43c8c27f-w-0.xplane.pb",
+          "trace_source": "raw XPlane; no viewer event cap",
+          "profiler_warnings": [],
+          "raw_lines": {
+            "/device:TPU:0": [
+              {
+                "name": "Scalar Unit",
+                "events": 0
+              },
+              {
+                "name": "XLA Modules",
+                "events": 322
+              },
+              {
+                "name": "XLA Ops",
+                "events": 2668
+              },
+              {
+                "name": "Async XLA Ops",
+                "events": 621
+              },
+              {
+                "name": "TC Overlay",
+                "events": 0
+              }
+            ]
+          },
+          "metric": "union of TPU XLA Modules durations; host work and inter-module idle gaps excluded"
+        },
+        {
+          "device_active_ms": 188.727570784,
+          "per_device_active_ms": {
+            "/device:TPU:0": 188.727570784
+          },
+          "module_events": {
+            "/device:TPU:0": 64069
+          },
+          "device_span_seconds": {
+            "/device:TPU:0": 3.42474558275
+          },
+          "trace": "/tmp/pr5-results-n32/cross-native-traces/0/segment-2/plugins/profile/2026_11_05_03_15_43/t1v-n-43c8c27f-w-0.xplane.pb",
+          "trace_source": "raw XPlane; no viewer event cap",
+          "profiler_warnings": [],
+          "raw_lines": {
+            "/device:TPU:0": [
+              {
+                "name": "Scalar Unit",
+                "events": 0
+              },
+              {
+                "name": "XLA Modules",
+                "events": 64069
+              },
+              {
+                "name": "XLA Ops",
+                "events": 326298
+              },
+              {
+                "name": "Async XLA Ops",
+                "events": 11963
+              },
+              {
+                "name": "TC Overlay",
+                "events": 0
+              }
+            ]
+          },
+          "metric": "union of TPU XLA Modules durations; host work and inter-module idle gaps excluded"
+        },
+        {
+          "device_active_ms": 1.300745,
+          "per_device_active_ms": {
+            "/device:TPU:0": 1.300745
+          },
+          "module_events": {
+            "/device:TPU:0": 467
+          },
+          "device_span_seconds": {
+            "/device:TPU:0": 0.125247102344
+          },
+          "trace": "/tmp/pr5-results-n32/cross-native-traces/0/segment-3/plugins/profile/2026_11_05_03_15_48/t1v-n-43c8c27f-w-0.xplane.pb",
+          "trace_source": "raw XPlane; no viewer event cap",
+          "profiler_warnings": [],
+          "raw_lines": {
+            "/device:TPU:0": [
+              {
+                "name": "XLA Modules",
+                "events": 467
+              },
+              {
+                "name": "XLA Ops",
+                "events": 3284
+              },
+              {
+                "name": "Async XLA Ops",
+                "events": 617
+              },
+              {
+                "name": "TC Overlay",
+                "events": 0
+              }
+            ]
+          },
+          "metric": "union of TPU XLA Modules durations; host work and inter-module idle gaps excluded"
+        },
+        {
+          "device_active_ms": 2.386011954,
+          "per_device_active_ms": {
+            "/device:TPU:0": 2.386011954
+          },
+          "module_events": {
+            "/device:TPU:0": 912
+          },
+          "device_span_seconds": {
+            "/device:TPU:0": 0.437191739922
+          },
+          "trace": "/tmp/pr5-results-n32/cross-native-traces/0/segment-4/plugins/profile/2026_11_05_03_15_48/t1v-n-43c8c27f-w-0.xplane.pb",
+          "trace_source": "raw XPlane; no viewer event cap",
+          "profiler_warnings": [],
+          "raw_lines": {
+            "/device:TPU:0": [
+              {
+                "name": "XLA Modules",
+                "events": 912
+              },
+              {
+                "name": "XLA Ops",
+                "events": 3645
+              },
+              {
+                "name": "Async XLA Ops",
+                "events": 254
+              },
+              {
+                "name": "TC Overlay",
+                "events": 0
+              }
+            ]
+          },
+          "metric": "union of TPU XLA Modules durations; host work and inter-module idle gaps excluded"
+        },
+        {
+          "device_active_ms": 0.920179688,
+          "per_device_active_ms": {
+            "/device:TPU:0": 0.920179688
+          },
+          "module_events": {
+            "/device:TPU:0": 322
+          },
+          "device_span_seconds": {
+            "/device:TPU:0": 0.113908696328
+          },
+          "trace": "/tmp/pr5-results-n32/cross-native-traces/0/segment-5/plugins/profile/2026_11_05_03_15_49/t1v-n-43c8c27f-w-0.xplane.pb",
+          "trace_source": "raw XPlane; no viewer event cap",
+          "profiler_warnings": [],
+          "raw_lines": {
+            "/device:TPU:0": [
+              {
+                "name": "Scalar Unit",
+                "events": 0
+              },
+              {
+                "name": "XLA Modules",
+                "events": 322
+              },
+              {
+                "name": "XLA Ops",
+                "events": 2668
+              },
+              {
+                "name": "Async XLA Ops",
+                "events": 621
+              },
+              {
+                "name": "TC Overlay",
+                "events": 0
+              }
+            ]
+          },
+          "metric": "union of TPU XLA Modules durations; host work and inter-module idle gaps excluded"
+        },
+        {
+          "device_active_ms": 188.530027534,
+          "per_device_active_ms": {
+            "/device:TPU:0": 188.530027534
+          },
+          "module_events": {
+            "/device:TPU:0": 64069
+          },
+          "device_span_seconds": {
+            "/device:TPU:0": 3.559261347672
+          },
+          "trace": "/tmp/pr5-results-n32/cross-native-traces/0/segment-6/plugins/profile/2026_11_05_03_15_54/t1v-n-43c8c27f-w-0.xplane.pb",
+          "trace_source": "raw XPlane; no viewer event cap",
+          "profiler_warnings": [],
+          "raw_lines": {
+            "/device:TPU:0": [
+              {
+                "name": "Scalar Unit",
+                "events": 0
+              },
+              {
+                "name": "XLA Modules",
+                "events": 64069
+              },
+              {
+                "name": "XLA Ops",
+                "events": 326298
+              },
+              {
+                "name": "Async XLA Ops",
+                "events": 11963
+              },
+              {
+                "name": "TC Overlay",
+                "events": 0
+              }
+            ]
+          },
+          "metric": "union of TPU XLA Modules durations; host work and inter-module idle gaps excluded"
+        },
+        {
+          "device_active_ms": 1.305690862,
+          "per_device_active_ms": {
+            "/device:TPU:0": 1.305690862
+          },
+          "module_events": {
+            "/device:TPU:0": 467
+          },
+          "device_span_seconds": {
+            "/device:TPU:0": 0.12238555875
+          },
+          "trace": "/tmp/pr5-results-n32/cross-native-traces/0/segment-7/plugins/profile/2026_11_05_03_15_58/t1v-n-43c8c27f-w-0.xplane.pb",
+          "trace_source": "raw XPlane; no viewer event cap",
+          "profiler_warnings": [],
+          "raw_lines": {
+            "/device:TPU:0": [
+              {
+                "name": "XLA Modules",
+                "events": 467
+              },
+              {
+                "name": "XLA Ops",
+                "events": 3284
+              },
+              {
+                "name": "Async XLA Ops",
+                "events": 617
+              },
+              {
+                "name": "TC Overlay",
+                "events": 0
+              }
+            ]
+          },
+          "metric": "union of TPU XLA Modules durations; host work and inter-module idle gaps excluded"
+        },
+        {
+          "device_active_ms": 1.23255852,
+          "per_device_active_ms": {
+            "/device:TPU:0": 1.23255852
+          },
+          "module_events": {
+            "/device:TPU:0": 410
+          },
+          "device_span_seconds": {
+            "/device:TPU:0": 0.025436556328
+          },
+          "trace": "/tmp/pr5-results-n32/cross-native-traces/0/segment-8/plugins/profile/2026_11_05_03_15_58/t1v-n-43c8c27f-w-0.xplane.pb",
+          "trace_source": "raw XPlane; no viewer event cap",
+          "profiler_warnings": [],
+          "raw_lines": {
+            "/device:TPU:0": [
+              {
+                "name": "XLA Modules",
+                "events": 410
+              },
+              {
+                "name": "XLA Ops",
+                "events": 1935
+              },
+              {
+                "name": "Async XLA Ops",
+                "events": 70
+              },
+              {
+                "name": "TC Overlay",
+                "events": 0
+              }
+            ]
+          },
+          "metric": "union of TPU XLA Modules durations; host work and inter-module idle gaps excluded"
+        }
+      ],
+      "metric": "union of TPU XLA Modules durations, summed over consecutive drained segments; host work and idle gaps excluded"
+    },
+    {
+      "device_active_ms": 386.37210629200007,
+      "per_device_active_ms": {
+        "/device:TPU:0": 386.37210629200007
+      },
+      "module_events": {
+        "/device:TPU:0": 131532
+      },
+      "trace": "/tmp/pr5-results-n32/cross-native-traces/1",
+      "trace_source": "raw XPlane; no viewer event cap",
+      "segments": [
+        {
+          "device_active_ms": 1.108009068,
+          "per_device_active_ms": {
+            "/device:TPU:0": 1.108009068
+          },
+          "module_events": {
+            "/device:TPU:0": 494
+          },
+          "device_span_seconds": {
+            "/device:TPU:0": 0.053912688906
+          },
+          "trace": "/tmp/pr5-results-n32/cross-native-traces/1/segment-0/plugins/profile/2026_11_05_03_16_00/t1v-n-43c8c27f-w-0.xplane.pb",
+          "trace_source": "raw XPlane; no viewer event cap",
+          "profiler_warnings": [],
+          "raw_lines": {
+            "/device:TPU:0": [
+              {
+                "name": "XLA Modules",
+                "events": 494
+              },
+              {
+                "name": "XLA Ops",
+                "events": 1664
+              },
+              {
+                "name": "Async XLA Ops",
+                "events": 184
+              },
+              {
+                "name": "TC Overlay",
+                "events": 0
+              }
+            ]
+          },
+          "metric": "union of TPU XLA Modules durations; host work and inter-module idle gaps excluded"
+        },
+        {
+          "device_active_ms": 0.914573366,
+          "per_device_active_ms": {
+            "/device:TPU:0": 0.914573366
+          },
+          "module_events": {
+            "/device:TPU:0": 322
+          },
+          "device_span_seconds": {
+            "/device:TPU:0": 0.1139346025
+          },
+          "trace": "/tmp/pr5-results-n32/cross-native-traces/1/segment-1/plugins/profile/2026_11_05_03_16_00/t1v-n-43c8c27f-w-0.xplane.pb",
+          "trace_source": "raw XPlane; no viewer event cap",
+          "profiler_warnings": [],
+          "raw_lines": {
+            "/device:TPU:0": [
+              {
+                "name": "Scalar Unit",
+                "events": 0
+              },
+              {
+                "name": "XLA Modules",
+                "events": 322
+              },
+              {
+                "name": "XLA Ops",
+                "events": 2668
+              },
+              {
+                "name": "Async XLA Ops",
+                "events": 621
+              },
+              {
+                "name": "TC Overlay",
+                "events": 0
+              }
+            ]
+          },
+          "metric": "union of TPU XLA Modules durations; host work and inter-module idle gaps excluded"
+        },
+        {
+          "device_active_ms": 188.516310944,
+          "per_device_active_ms": {
+            "/device:TPU:0": 188.516310944
+          },
+          "module_events": {
+            "/device:TPU:0": 64069
+          },
+          "device_span_seconds": {
+            "/device:TPU:0": 3.42768498425
+          },
+          "trace": "/tmp/pr5-results-n32/cross-native-traces/1/segment-2/plugins/profile/2026_11_05_03_16_05/t1v-n-43c8c27f-w-0.xplane.pb",
+          "trace_source": "raw XPlane; no viewer event cap",
+          "profiler_warnings": [],
+          "raw_lines": {
+            "/device:TPU:0": [
+              {
+                "name": "Scalar Unit",
+                "events": 0
+              },
+              {
+                "name": "XLA Modules",
+                "events": 64069
+              },
+              {
+                "name": "XLA Ops",
+                "events": 326298
+              },
+              {
+                "name": "Async XLA Ops",
+                "events": 11963
+              },
+              {
+                "name": "TC Overlay",
+                "events": 0
+              }
+            ]
+          },
+          "metric": "union of TPU XLA Modules durations; host work and inter-module idle gaps excluded"
+        },
+        {
+          "device_active_ms": 1.306829068,
+          "per_device_active_ms": {
+            "/device:TPU:0": 1.306829068
+          },
+          "module_events": {
+            "/device:TPU:0": 467
+          },
+          "device_span_seconds": {
+            "/device:TPU:0": 0.1203439025
+          },
+          "trace": "/tmp/pr5-results-n32/cross-native-traces/1/segment-3/plugins/profile/2026_11_05_03_16_09/t1v-n-43c8c27f-w-0.xplane.pb",
+          "trace_source": "raw XPlane; no viewer event cap",
+          "profiler_warnings": [],
+          "raw_lines": {
+            "/device:TPU:0": [
+              {
+                "name": "Scalar Unit",
+                "events": 0
+              },
+              {
+                "name": "XLA Modules",
+                "events": 467
+              },
+              {
+                "name": "XLA Ops",
+                "events": 3284
+              },
+              {
+                "name": "Async XLA Ops",
+                "events": 617
+              },
+              {
+                "name": "TC Overlay",
+                "events": 0
+              }
+            ]
+          },
+          "metric": "union of TPU XLA Modules durations; host work and inter-module idle gaps excluded"
+        },
+        {
+          "device_active_ms": 2.37679039,
+          "per_device_active_ms": {
+            "/device:TPU:0": 2.37679039
+          },
+          "module_events": {
+            "/device:TPU:0": 912
+          },
+          "device_span_seconds": {
+            "/device:TPU:0": 0.428522718594
+          },
+          "trace": "/tmp/pr5-results-n32/cross-native-traces/1/segment-4/plugins/profile/2026_11_05_03_16_10/t1v-n-43c8c27f-w-0.xplane.pb",
+          "trace_source": "raw XPlane; no viewer event cap",
+          "profiler_warnings": [],
+          "raw_lines": {
+            "/device:TPU:0": [
+              {
+                "name": "XLA Modules",
+                "events": 912
+              },
+              {
+                "name": "XLA Ops",
+                "events": 3645
+              },
+              {
+                "name": "Async XLA Ops",
+                "events": 254
+              },
+              {
+                "name": "TC Overlay",
+                "events": 0
+              }
+            ]
+          },
+          "metric": "union of TPU XLA Modules durations; host work and inter-module idle gaps excluded"
+        },
+        {
+          "device_active_ms": 0.91822844,
+          "per_device_active_ms": {
+            "/device:TPU:0": 0.91822844
+          },
+          "module_events": {
+            "/device:TPU:0": 322
+          },
+          "device_span_seconds": {
+            "/device:TPU:0": 0.113541765078
+          },
+          "trace": "/tmp/pr5-results-n32/cross-native-traces/1/segment-5/plugins/profile/2026_11_05_03_16_10/t1v-n-43c8c27f-w-0.xplane.pb",
+          "trace_source": "raw XPlane; no viewer event cap",
+          "profiler_warnings": [],
+          "raw_lines": {
+            "/device:TPU:0": [
+              {
+                "name": "Scalar Unit",
+                "events": 0
+              },
+              {
+                "name": "XLA Modules",
+                "events": 322
+              },
+              {
+                "name": "XLA Ops",
+                "events": 2668
+              },
+              {
+                "name": "Async XLA Ops",
+                "events": 621
+              },
+              {
+                "name": "TC Overlay",
+                "events": 0
+              }
+            ]
+          },
+          "metric": "union of TPU XLA Modules durations; host work and inter-module idle gaps excluded"
+        },
+        {
+          "device_active_ms": 188.686934544,
+          "per_device_active_ms": {
+            "/device:TPU:0": 188.686934544
+          },
+          "module_events": {
+            "/device:TPU:0": 64069
+          },
+          "device_span_seconds": {
+            "/device:TPU:0": 3.443506565
+          },
+          "trace": "/tmp/pr5-results-n32/cross-native-traces/1/segment-6/plugins/profile/2026_11_05_03_16_15/t1v-n-43c8c27f-w-0.xplane.pb",
+          "trace_source": "raw XPlane; no viewer event cap",
+          "profiler_warnings": [],
+          "raw_lines": {
+            "/device:TPU:0": [
+              {
+                "name": "Scalar Unit",
+                "events": 0
+              },
+              {
+                "name": "XLA Modules",
+                "events": 64069
+              },
+              {
+                "name": "XLA Ops",
+                "events": 326298
+              },
+              {
+                "name": "Async XLA Ops",
+                "events": 11963
+              },
+              {
+                "name": "TC Overlay",
+                "events": 0
+              }
+            ]
+          },
+          "metric": "union of TPU XLA Modules durations; host work and inter-module idle gaps excluded"
+        },
+        {
+          "device_active_ms": 1.305314606,
+          "per_device_active_ms": {
+            "/device:TPU:0": 1.305314606
+          },
+          "module_events": {
+            "/device:TPU:0": 467
+          },
+          "device_span_seconds": {
+            "/device:TPU:0": 0.1193969475
+          },
+          "trace": "/tmp/pr5-results-n32/cross-native-traces/1/segment-7/plugins/profile/2026_11_05_03_16_19/t1v-n-43c8c27f-w-0.xplane.pb",
+          "trace_source": "raw XPlane; no viewer event cap",
+          "profiler_warnings": [],
+          "raw_lines": {
+            "/device:TPU:0": [
+              {
+                "name": "XLA Modules",
+                "events": 467
+              },
+              {
+                "name": "XLA Ops",
+                "events": 3284
+              },
+              {
+                "name": "Async XLA Ops",
+                "events": 617
+              },
+              {
+                "name": "TC Overlay",
+                "events": 0
+              }
+            ]
+          },
+          "metric": "union of TPU XLA Modules durations; host work and inter-module idle gaps excluded"
+        },
+        {
+          "device_active_ms": 1.239115866,
+          "per_device_active_ms": {
+            "/device:TPU:0": 1.239115866
+          },
+          "module_events": {
+            "/device:TPU:0": 410
+          },
+          "device_span_seconds": {
+            "/device:TPU:0": 0.025456611094
+          },
+          "trace": "/tmp/pr5-results-n32/cross-native-traces/1/segment-8/plugins/profile/2026_11_05_03_16_19/t1v-n-43c8c27f-w-0.xplane.pb",
+          "trace_source": "raw XPlane; no viewer event cap",
+          "profiler_warnings": [],
+          "raw_lines": {
+            "/device:TPU:0": [
+              {
+                "name": "XLA Modules",
+                "events": 410
+              },
+              {
+                "name": "XLA Ops",
+                "events": 1935
+              },
+              {
+                "name": "Async XLA Ops",
+                "events": 70
+              },
+              {
+                "name": "TC Overlay",
+                "events": 0
+              }
+            ]
+          },
+          "metric": "union of TPU XLA Modules durations; host work and inter-module idle gaps excluded"
+        }
+      ],
+      "metric": "union of TPU XLA Modules durations, summed over consecutive drained segments; host work and idle gaps excluded"
+    },
+    {
+      "device_active_ms": 386.75102033999997,
+      "per_device_active_ms": {
+        "/device:TPU:0": 386.75102033999997
+      },
+      "module_events": {
+        "/device:TPU:0": 131532
+      },
+      "trace": "/tmp/pr5-results-n32/cross-native-traces/2",
+      "trace_source": "raw XPlane; no viewer event cap",
+      "segments": [
+        {
+          "device_active_ms": 1.096886176,
+          "per_device_active_ms": {
+            "/device:TPU:0": 1.096886176
+          },
+          "module_events": {
+            "/device:TPU:0": 494
+          },
+          "device_span_seconds": {
+            "/device:TPU:0": 0.052292523672
+          },
+          "trace": "/tmp/pr5-results-n32/cross-native-traces/2/segment-0/plugins/profile/2026_11_05_03_16_21/t1v-n-43c8c27f-w-0.xplane.pb",
+          "trace_source": "raw XPlane; no viewer event cap",
+          "profiler_warnings": [],
+          "raw_lines": {
+            "/device:TPU:0": [
+              {
+                "name": "XLA Modules",
+                "events": 494
+              },
+              {
+                "name": "XLA Ops",
+                "events": 1664
+              },
+              {
+                "name": "Async XLA Ops",
+                "events": 184
+              },
+              {
+                "name": "TC Overlay",
+                "events": 0
+              }
+            ]
+          },
+          "metric": "union of TPU XLA Modules durations; host work and inter-module idle gaps excluded"
+        },
+        {
+          "device_active_ms": 0.916021646,
+          "per_device_active_ms": {
+            "/device:TPU:0": 0.916021646
+          },
+          "module_events": {
+            "/device:TPU:0": 322
+          },
+          "device_span_seconds": {
+            "/device:TPU:0": 0.1137535575
+          },
+          "trace": "/tmp/pr5-results-n32/cross-native-traces/2/segment-1/plugins/profile/2026_11_05_03_16_22/t1v-n-43c8c27f-w-0.xplane.pb",
+          "trace_source": "raw XPlane; no viewer event cap",
+          "profiler_warnings": [],
+          "raw_lines": {
+            "/device:TPU:0": [
+              {
+                "name": "Scalar Unit",
+                "events": 0
+              },
+              {
+                "name": "XLA Modules",
+                "events": 322
+              },
+              {
+                "name": "XLA Ops",
+                "events": 2668
+              },
+              {
+                "name": "Async XLA Ops",
+                "events": 621
+              },
+              {
+                "name": "TC Overlay",
+                "events": 0
+              }
+            ]
+          },
+          "metric": "union of TPU XLA Modules durations; host work and inter-module idle gaps excluded"
+        },
+        {
+          "device_active_ms": 188.776538346,
+          "per_device_active_ms": {
+            "/device:TPU:0": 188.776538346
+          },
+          "module_events": {
+            "/device:TPU:0": 64069
+          },
+          "device_span_seconds": {
+            "/device:TPU:0": 3.444544288578
+          },
+          "trace": "/tmp/pr5-results-n32/cross-native-traces/2/segment-2/plugins/profile/2026_11_05_03_16_26/t1v-n-43c8c27f-w-0.xplane.pb",
+          "trace_source": "raw XPlane; no viewer event cap",
+          "profiler_warnings": [],
+          "raw_lines": {
+            "/device:TPU:0": [
+              {
+                "name": "Scalar Unit",
+                "events": 0
+              },
+              {
+                "name": "XLA Modules",
+                "events": 64069
+              },
+              {
+                "name": "XLA Ops",
+                "events": 326298
+              },
+              {
+                "name": "Async XLA Ops",
+                "events": 11963
+              },
+              {
+                "name": "TC Overlay",
+                "events": 0
+              }
+            ]
+          },
+          "metric": "union of TPU XLA Modules durations; host work and inter-module idle gaps excluded"
+        },
+        {
+          "device_active_ms": 1.308745472,
+          "per_device_active_ms": {
+            "/device:TPU:0": 1.308745472
+          },
+          "module_events": {
+            "/device:TPU:0": 467
+          },
+          "device_span_seconds": {
+            "/device:TPU:0": 0.118745105
+          },
+          "trace": "/tmp/pr5-results-n32/cross-native-traces/2/segment-3/plugins/profile/2026_11_05_03_16_30/t1v-n-43c8c27f-w-0.xplane.pb",
+          "trace_source": "raw XPlane; no viewer event cap",
+          "profiler_warnings": [],
+          "raw_lines": {
+            "/device:TPU:0": [
+              {
+                "name": "XLA Modules",
+                "events": 467
+              },
+              {
+                "name": "XLA Ops",
+                "events": 3284
+              },
+              {
+                "name": "Async XLA Ops",
+                "events": 617
+              },
+              {
+                "name": "TC Overlay",
+                "events": 0
+              }
+            ]
+          },
+          "metric": "union of TPU XLA Modules durations; host work and inter-module idle gaps excluded"
+        },
+        {
+          "device_active_ms": 2.372361408,
+          "per_device_active_ms": {
+            "/device:TPU:0": 2.372361408
+          },
+          "module_events": {
+            "/device:TPU:0": 912
+          },
+          "device_span_seconds": {
+            "/device:TPU:0": 0.4267777025
+          },
+          "trace": "/tmp/pr5-results-n32/cross-native-traces/2/segment-4/plugins/profile/2026_11_05_03_16_31/t1v-n-43c8c27f-w-0.xplane.pb",
+          "trace_source": "raw XPlane; no viewer event cap",
+          "profiler_warnings": [],
+          "raw_lines": {
+            "/device:TPU:0": [
+              {
+                "name": "XLA Modules",
+                "events": 912
+              },
+              {
+                "name": "XLA Ops",
+                "events": 3645
+              },
+              {
+                "name": "Async XLA Ops",
+                "events": 254
+              },
+              {
+                "name": "TC Overlay",
+                "events": 0
+              }
+            ]
+          },
+          "metric": "union of TPU XLA Modules durations; host work and inter-module idle gaps excluded"
+        },
+        {
+          "device_active_ms": 0.915555392,
+          "per_device_active_ms": {
+            "/device:TPU:0": 0.915555392
+          },
+          "module_events": {
+            "/device:TPU:0": 322
+          },
+          "device_span_seconds": {
+            "/device:TPU:0": 0.11263199625
+          },
+          "trace": "/tmp/pr5-results-n32/cross-native-traces/2/segment-5/plugins/profile/2026_11_05_03_16_32/t1v-n-43c8c27f-w-0.xplane.pb",
+          "trace_source": "raw XPlane; no viewer event cap",
+          "profiler_warnings": [],
+          "raw_lines": {
+            "/device:TPU:0": [
+              {
+                "name": "Scalar Unit",
+                "events": 0
+              },
+              {
+                "name": "XLA Modules",
+                "events": 322
+              },
+              {
+                "name": "XLA Ops",
+                "events": 2668
+              },
+              {
+                "name": "Async XLA Ops",
+                "events": 621
+              },
+              {
+                "name": "TC Overlay",
+                "events": 0
+              }
+            ]
+          },
+          "metric": "union of TPU XLA Modules durations; host work and inter-module idle gaps excluded"
+        },
+        {
+          "device_active_ms": 188.82449455,
+          "per_device_active_ms": {
+            "/device:TPU:0": 188.82449455
+          },
+          "module_events": {
+            "/device:TPU:0": 64069
+          },
+          "device_span_seconds": {
+            "/device:TPU:0": 3.465298368672
+          },
+          "trace": "/tmp/pr5-results-n32/cross-native-traces/2/segment-6/plugins/profile/2026_11_05_03_16_37/t1v-n-43c8c27f-w-0.xplane.pb",
+          "trace_source": "raw XPlane; no viewer event cap",
+          "profiler_warnings": [],
+          "raw_lines": {
+            "/device:TPU:0": [
+              {
+                "name": "Scalar Unit",
+                "events": 0
+              },
+              {
+                "name": "XLA Modules",
+                "events": 64069
+              },
+              {
+                "name": "XLA Ops",
+                "events": 326298
+              },
+              {
+                "name": "Async XLA Ops",
+                "events": 11963
+              },
+              {
+                "name": "TC Overlay",
+                "events": 0
+              }
+            ]
+          },
+          "metric": "union of TPU XLA Modules durations; host work and inter-module idle gaps excluded"
+        },
+        {
+          "device_active_ms": 1.308606408,
+          "per_device_active_ms": {
+            "/device:TPU:0": 1.308606408
+          },
+          "module_events": {
+            "/device:TPU:0": 467
+          },
+          "device_span_seconds": {
+            "/device:TPU:0": 0.119202293828
+          },
+          "trace": "/tmp/pr5-results-n32/cross-native-traces/2/segment-7/plugins/profile/2026_11_05_03_16_41/t1v-n-43c8c27f-w-0.xplane.pb",
+          "trace_source": "raw XPlane; no viewer event cap",
+          "profiler_warnings": [],
+          "raw_lines": {
+            "/device:TPU:0": [
+              {
+                "name": "XLA Modules",
+                "events": 467
+              },
+              {
+                "name": "XLA Ops",
+                "events": 3284
+              },
+              {
+                "name": "Async XLA Ops",
+                "events": 617
+              },
+              {
+                "name": "TC Overlay",
+                "events": 0
+              }
+            ]
+          },
+          "metric": "union of TPU XLA Modules durations; host work and inter-module idle gaps excluded"
+        },
+        {
+          "device_active_ms": 1.231810942,
+          "per_device_active_ms": {
+            "/device:TPU:0": 1.231810942
+          },
+          "module_events": {
+            "/device:TPU:0": 410
+          },
+          "device_span_seconds": {
+            "/device:TPU:0": 0.025982087422
+          },
+          "trace": "/tmp/pr5-results-n32/cross-native-traces/2/segment-8/plugins/profile/2026_11_05_03_16_41/t1v-n-43c8c27f-w-0.xplane.pb",
+          "trace_source": "raw XPlane; no viewer event cap",
+          "profiler_warnings": [],
+          "raw_lines": {
+            "/device:TPU:0": [
+              {
+                "name": "XLA Modules",
+                "events": 410
+              },
+              {
+                "name": "XLA Ops",
+                "events": 1935
+              },
+              {
+                "name": "Async XLA Ops",
+                "events": 70
+              },
+              {
+                "name": "TC Overlay",
+                "events": 0
+              }
+            ]
+          },
+          "metric": "union of TPU XLA Modules durations; host work and inter-module idle gaps excluded"
+        }
+      ],
+      "metric": "union of TPU XLA Modules durations, summed over consecutive drained segments; host work and idle gaps excluded"
+    }
+  ]
+}

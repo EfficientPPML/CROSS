@@ -1,0 +1,24 @@
+--- a/jaxite_word/bootstrapping.py
++++ b/jaxite_word/bootstrapping.py
+@@ -4288,7 +4288,11 @@
+     #   no tracked scale is available. Using tracked scale avoids the
+     #   0.07-0.5% mismatch between recursive SF and direct prime products
+     #   that accumulates through PS baby-step construction at lower levels.
+-    if noise_scale_deg == 2:
++    direct_nsd2 = noise_scale_deg == 2 and self._composite_degree == 1
++    if direct_nsd2:
++      tracked = getattr(ct, "_ckks_scale", None)
++      sf_base = tracked if tracked is not None else self._openfhe_scale_at_level(level)**2
++    elif noise_scale_deg == 2:
+       has_tracked = hasattr(ct, '_ckks_scale') and ct._ckks_scale is not None
+       if has_tracked and math.isfinite(ct._ckks_scale) and ct._ckks_scale > 0:
+         sf_base = math.sqrt(ct._ckks_scale)
+@@ -4324,7 +4328,7 @@
+     r, c = self._cache.degree_layout
+     pt_arr = jnp.array(encoded_rns, dtype=jnp.uint64).reshape(r, c, num_q)
+ 
+-    if noise_scale_deg == 2:
++    if noise_scale_deg == 2 and not direct_nsd2:
+       # Scale up by S to go from encoding at S to S^2.
+       sf_int = int(round(sf_base))
+       moduli_red = jnp.array(moduli, dtype=jnp.uint64).reshape(1, 1, num_q)
