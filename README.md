@@ -21,6 +21,12 @@ TPU-accelerated, free, immediate, fast, and cheap HE serving for everyone
 🔥 We have delivered a tutorial at ASPLOS'26 to help you get started with CROSS. Please visit [CPA_tutorial](https://efficientppml.github.io/CROSS_Tutorial/) to learn more.
 For questions, please drop an email to our community [email](cpacommunity@googlegroups.com).
 
+The CADathlon competition problem sets that used to live under `cadathlon/` have
+moved to [EfficientPPML/cadathlon-p1](https://github.com/EfficientPPML/cadathlon-p1),
+together with the CROSS runtime they run on. Their complete history from every
+CROSS branch, including the validation evidence, is archived there on the
+`archive/cross/*` branches.
+
 ---
 
 # CROSS: Enable AI Accelerator for Homomorphic Encryption
